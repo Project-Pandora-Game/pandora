@@ -1,15 +1,24 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any */
 import { Assert, GetLogger } from 'pandora-common';
 import type { Container } from 'pixi.js';
 import type { ReactNode } from 'react';
 import ReactReconciler from 'react-reconciler';
 import { ConcurrentRoot } from 'react-reconciler/constants.js';
-import { PixiRootContainer, type PixiUpdateEmitter } from './element.ts';
+import { PixiRootContainer, type PixiInternalElementInstance, type PixiUpdateEmitter } from './element.ts';
 import { PIXI_FIBER_HOST_CONFIG } from './reconciler-config.ts';
+
+type PixiReconciler = ReactReconciler.Reconciler<
+	PixiRootContainer, // Container
+	PixiInternalElementInstance<Container, never, any, any>, // Instance
+	never, // TextInstance
+	never, // SuspenseInstance
+	never, // FormInstance
+	Container // PublicInstance
+>;
 
 /** React reconciler instance with config for working with Pixi elements. */
 // @ts-expect-error: No reconciler typings for React 19 are available yet.
-const PixiFiber = ReactReconciler(PIXI_FIBER_HOST_CONFIG);
+const PixiFiber: PixiReconciler = ReactReconciler(PIXI_FIBER_HOST_CONFIG);
 
 // Inject our fiber into devtools for both debugging and HMR support
 // @ts-expect-error: No reconciler typings for React 19 are available yet.
@@ -45,7 +54,6 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 	const root = new PixiRootContainer(rootContainer);
 
 	// Create a React container for the root
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const container: unknown = (PixiFiber.createContainer as any)(
 		root, // container
 		ConcurrentRoot, // tag

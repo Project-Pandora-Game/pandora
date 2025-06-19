@@ -72,7 +72,7 @@ export type NotificationEntry = {
 export type NotificationSuppressionHook = (notification: Immutable<NotificationEntry>) => boolean;
 
 type NotificationHandlerServiceConfig = Satisfies<{
-	dependencies: Pick<ClientServices, 'accountManager'>;
+	dependencies: Pick<ClientServices, 'accountManager' | 'audio'>;
 	events: false;
 }, ServiceConfigBase>;
 
@@ -175,9 +175,9 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 		if (!soundSource || !volume)
 			return;
 
-		const playAudio = new Audio(soundSource);
-		playAudio.volume = volume;
-		playAudio.play().catch(() => { /* ignore */ });
+		const audio = new Audio(soundSource);
+		audio.volume = volume;
+		this.serviceDeps.audio.playOnce(audio);
 	}
 
 	public getGlobalNotificationSettings(): Immutable<ClientNotificationGlobalSettings> {
@@ -242,6 +242,7 @@ export const NotificationHandlerServiceProvider: ServiceProviderDefinition<Clien
 	ctor: NotificationHandler,
 	dependencies: {
 		accountManager: true,
+		audio: true,
 	},
 };
 

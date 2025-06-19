@@ -162,7 +162,7 @@ export type SpaceListInfo = SpaceBaseInfo & {
 	isOwner: boolean;
 	/** Whether there is a friend contact inside this space. Not filled if this account cannot see extended info of this space. */
 	hasFriend?: boolean;
-	/** List of the space's admin */
+	/** List of the space's owners */
 	owners: AccountId[];
 };
 

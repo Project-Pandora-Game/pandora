@@ -39,6 +39,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>User safety features for emergencies</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
 				<li>Saving item collections in the wardrobe and supporting import/export</li>
+				<li>A notification system that allows detailed customization</li>
 			</ol>
 
 			<p>
@@ -165,17 +166,22 @@ export function WikiIntroduction(): ReactElement {
 				<Link to='/wiki/items#IT_Saving_collections'>More information here</Link>.
 			</p>
 
+			<h4>15. A notification system that allows detailed customization</h4>
+			<p>
+				In the settings, you can decide for which events you want to be notified and how, utilizing different sounds,
+				system notifications, or Pandora's notification list, so you never miss anything you are interested in.
+			</p>
+
 			<hr />
 
 			That's not all of course! We have many exciting features planned for the future. In no particular order:
 			<ul>
-				<li>Expanding the notification options</li>
+				<li>Room templates</li>
+				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>More customization options for items, for instance creating items with their configuration permanently frozen</li>
 				<li>Further improved UI with focus on better usability and potentially more design themes</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>More space features that allow space admins to modify the space-wide rules to customize the experience for everyone inside</li>
-				<li>Room templates</li>
-				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>Key system for locks and more lock types in general</li>
 				<li>Visible locks on worn items with different lock designs</li>
 				<li>Showing and managing relationships between characters</li>

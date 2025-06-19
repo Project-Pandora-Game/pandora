@@ -11,15 +11,15 @@ export class SesEmail extends BaseEmailSender<SentMessageInfo> {
 	}
 
 	public async createTransport(): Promise<Transporter<SentMessageInfo>> {
-		const aws = await import('@aws-sdk/client-ses');
+		const { SESv2Client, SendEmailCommand } = await import('@aws-sdk/client-sesv2');
 		const { defaultProvider } = await import('@aws-sdk/credential-provider-node');
 		const { createTransport } = await import('nodemailer');
-		const ses = new aws.SES({
+		const sesClient = new SESv2Client({
 			region: 'eu-north-1',
 			credentials: defaultProvider({ timeout: 1000 }),
 		});
 		return createTransport({
-			SES: { ses, aws },
+			SES: { sesClient, SendEmailCommand },
 			sendingRate: 1,
 		});
 	}

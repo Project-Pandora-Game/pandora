@@ -146,6 +146,7 @@ export class Space {
 			totalCharacters: this.characterCount,
 			isOwner: this.isOwner(queryingAccount),
 			hasFriend,
+			owners: Array.from(this._owners),
 		});
 	}
 
@@ -153,7 +154,6 @@ export class Space {
 		return ({
 			...this.getListInfo(queryingAccount, accountFriends),
 			...pick(this.config, ['features', 'admin']),
-			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
 			isAllowed: this.isAllowed(queryingAccount),
 			characters: Array.from(this.characters).map((c): SpaceListExtendedInfo['characters'][number] => ({

@@ -64,8 +64,16 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 				),
 		),
 	async execute(interaction) {
+		if (!interaction.isChatInputCommand()) {
+			await interaction.reply({
+				ephemeral: true,
+				content: `Error: Unknown subcommand.`,
+			});
+			return;
+		}
+
 		const member = GetInteractionMember(interaction);
-		const subcommand = interaction.isChatInputCommand() ? interaction.options.getSubcommand() : null;
+		const subcommand = interaction.options.getSubcommand();
 		logger.debug(`Admin command "${subcommand}" used by ${interaction.user.username} (${interaction.user.id}) in guild ${interaction.guild?.id ?? '[none]'}`);
 
 		if (!member || !member.permissions.has(PermissionFlagsBits.Administrator)) {

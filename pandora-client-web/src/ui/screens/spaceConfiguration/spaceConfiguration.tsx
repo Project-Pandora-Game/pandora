@@ -18,7 +18,6 @@ import {
 	SpaceBaseInfoSchema,
 	SpaceDirectoryConfig,
 	SpaceDirectoryConfigSchema,
-	SpaceFeature,
 	SpaceGhostManagementConfigSchema,
 	SpaceId,
 	SpaceInvite,
@@ -54,8 +53,6 @@ import { usePlayer } from '../../../components/gameContext/playerContextProvider
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
-import bodyChange from '../../../icons/body-change.svg';
-import devMode from '../../../icons/developer.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -63,8 +60,9 @@ import { useCurrentAccount } from '../../../services/accountLogic/accountManager
 import { AccountListInput } from '../../components/accountListInput/accountListInput.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceConfiguration.scss';
+import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
+import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
 
-export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
 const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
@@ -84,19 +82,6 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		ghostManagement: null,
 	};
 }
-
-export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon: string; }[] = [
-	{
-		id: 'allowBodyChanges',
-		name: 'Allow changes to character bodies',
-		icon: bodyChange,
-	},
-	{
-		id: 'development',
-		name: 'Development mode',
-		icon: devMode,
-	},
-];
 
 export function SpaceCreate(): ReactElement {
 	return <SpaceConfiguration creation />;
@@ -388,7 +373,7 @@ function SpaceConfigurationGeneral({
 						value={ currentConfig.description }
 						onChange={ (event) => updateConfig({ description: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ DESCRIPTION_TEXTBOX_SIZE }
+						rows={ SPACE_DESCRIPTION_TEXTBOX_SIZE }
 					/>
 					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
@@ -982,66 +967,6 @@ function SpaceInviteExpires({ expires, update }: { expires: number; update: () =
 		<>
 			{ FormatTimeInterval(expires - now, 'short') }
 		</>
-	);
-}
-
-export function SpaceOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceId; name: string; buttonClassName?: string; }): ReactElement | null {
-	const [state, setState] = useState<boolean>(false);
-	return (
-		<>
-			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up your space ownership</Button>
-			{
-				state ? (
-					<SpaceOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
-				) : (
-					null
-				)
-			}
-		</>
-	);
-}
-
-function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; name: string; closeDialog: () => void; }): ReactElement {
-	const directoryConnector = useDirectoryConnector();
-
-	const removeOwnership = useCallback(() => {
-		(async () => {
-			SpaceConfigurationProgress.show('progress', 'Removing ownership...');
-			const result = await directoryConnector.awaitResponse('spaceOwnershipRemove', { id });
-			if (result.result === 'ok') {
-				SpaceConfigurationProgress.show('success', 'Space ownership removed!');
-				closeDialog();
-			} else {
-				SpaceConfigurationProgress.show('error', `Failed to remove space ownership:\n${result.result}`);
-			}
-		})()
-			.catch((err) => {
-				GetLogger('UpdateSpace').warning('Error during space ownership removal', err);
-				SpaceConfigurationProgress.show('error', `Error during space ownership removal:\n${err instanceof Error ? err.message : String(err)}`);
-			});
-	}, [id, closeDialog, directoryConnector]);
-
-	return (
-		<ModalDialog priority={ 10 }>
-			<p>
-				<b>
-					Are you sure that you no longer want ownership of this space?
-				</b>
-			</p>
-			<p>
-				Space name: { name }<br />
-				Space id: { id }
-			</p>
-			<p>
-				Removing yourself as an owner will turn you into an admin instead and free up a space slot in your account's space count limit.<br />
-				Note that a space without any owner gets instantly deleted, kicking everyone currently inside it in the process.<br />
-				You cannot affect other owners - only an owner can give up their own ownership of a space.
-			</p>
-			<Row padding='medium' alignX='space-between'>
-				<Button onClick={ closeDialog }>Cancel</Button>
-				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
-			</Row>
-		</ModalDialog>
 	);
 }
 

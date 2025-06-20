@@ -120,11 +120,11 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				},
 				{
 					text: (
-						// TODO: Update text once notifications menu is implemented
 						<p>
-							The "Notifications" button is work in progress...<br />
-							Currently you can click it to simply clear any pending notifications.<br />
-							Later on we are planning for it to open a list of pending notifications, allowing you to go through them.
+							The "Notifications" button shows a small red number if you have one or more new notifications from events inside Pandora.
+							Clicking on the button shows you the list of your current notifications.<br />
+							In the settings, you can configure in great detail how you want to be notified and about which events.
+							Sound notifications and system notifications from your device's operating system are off per default, but can be activated in the settings.
 						</p>
 					),
 					highlight: [{ query: '.Header .rightHeader > button[title="Notifications"]', inset: true }],

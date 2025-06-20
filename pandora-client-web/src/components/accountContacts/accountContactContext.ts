@@ -8,7 +8,7 @@ import './accountContacts.scss';
 const ACCOUNT_CONTACTS = new Observable<readonly IAccountContact[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export function useAccountContacts(type: IAccountContact['type'] | null) {
+export function useAccountContacts(type: IAccountContact['type'] | null): readonly IAccountContact[] {
 	const rel = useObservable(ACCOUNT_CONTACTS);
 	return useMemo(() => (type === null ? rel : rel.filter((r) => r.type === type)), [rel, type]);
 }
@@ -20,6 +20,10 @@ export function useAccountContact(id: AccountId): IAccountContact | undefined {
 
 export function useFriendStatus() {
 	return useObservable(FRIEND_STATUS);
+}
+
+export function GetCurrentAccountContacts(): readonly IAccountContact[] {
+	return ACCOUNT_CONTACTS.value;
 }
 
 export const AccountContactContext = new class AccountContactContext extends TypedEventEmitter<{

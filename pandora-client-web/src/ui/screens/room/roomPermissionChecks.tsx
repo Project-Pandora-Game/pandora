@@ -8,11 +8,11 @@ import { useCharacterRestrictionManager, type Character } from '../../../charact
 import { IsSpaceAdmin, useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
-import { DeviceOverlayState } from '../../../graphics/room/roomDevice.tsx';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from './roomContext.tsx';
+import { DeviceOverlayState } from './roomState.ts';
 
 /**
  * Watches the current device overlay state and exits the construction mode, if any following cases happen:

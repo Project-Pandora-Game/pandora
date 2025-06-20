@@ -138,4 +138,51 @@
 			}
 		}
 	}
+
+	.notificationTypeSettingsGrid {
+		width: 100%;
+		display: grid;
+		grid-template-columns: 1fr repeat(4, 2em);
+		row-gap: common.spacing('medium');
+		column-gap: common.spacing('small');
+
+		.notificationTypeName {
+			justify-content: start;
+		}
+
+		.notificationTypeReset {
+			margin: 10%;
+		}
+
+		.groupName, .groupSeparator, .notificationTypeSettings {
+			grid-column: 1 / -1;
+		}
+
+		.groupSeparator {
+			width: 100%;
+		}
+
+		.notificationTypeSettings {
+			border-left: 2px solid common.$theme-normal-text;
+			margin-left: 1em;
+			margin-bottom: 1em;
+
+			.selectsArea {
+				display: grid;
+				grid-template-columns: max-content 1fr;
+				gap: common.spacing('medium');
+				align-items: center;
+			}
+		}
+
+		.notificationToggleIcon {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+
+			&.disabled {
+				opacity: 0.25;
+			}
+		}
+	}
 }

@@ -23,7 +23,7 @@ import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { USER_DEBUG } from '../../config/Environment.ts';
-import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter.tsx';
+import { useAssetPreferenceVisibilityCheck } from '../../graphics/common/assetVisibilityCheck.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button, ButtonProps, IconButton } from '../common/button/button.tsx';

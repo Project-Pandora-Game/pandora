@@ -1,12 +1,14 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
-import { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
+import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
+import type { OptionalKeysOf } from 'type-fest';
 import type { ZodSchema, ZodTypeDef } from 'zod';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Row } from '../../common/container/container.tsx';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 
 export interface SettingDriver<T> {
 	currentValue: NoInfer<T | undefined>;
@@ -15,6 +17,12 @@ export interface SettingDriver<T> {
 	onReset?: () => void;
 }
 
+/**
+ * Takes a driver for a settings object and returns a driver for a specific property.
+ * Subsetting driver does not support direct reset, as parent might contain other properties.
+ * @param parentDriver - Driver for the parent settings object
+ * @param property - Property to get driver for
+ */
 export function useSubsettingDriver<const T extends object, const TSetting extends keyof T>(parentDriver: SettingDriver<T>, property: TSetting): SettingDriver<T[TSetting]> {
 	return useMemo((): SettingDriver<T[TSetting]> => ({
 		currentValue: parentDriver.currentValue?.[property],
@@ -29,9 +37,59 @@ export function useSubsettingDriver<const T extends object, const TSetting exten
 	}), [parentDriver, property]);
 }
 
-export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
+/**
+ * Takes a driver for a settings object and returns a driver for a specific optional property.
+ * Supports doing reset by deleting the optional property
+ * @param parentDriver - Driver for the parent settings object
+ * @param property - Property to get driver for, must be optional
+ * @param defaultValue - Required value of the optional property (required to be passed explicitly, as parent default might not include the value)
+ */
+export function useOptionalSubsettingDriver<const T extends object, const TSetting extends OptionalKeysOf<T>>(
+	parentDriver: SettingDriver<T>,
+	property: TSetting,
+	defaultValue: NoInfer<Required<T>[TSetting]>,
+): SettingDriver<Required<T>[TSetting]> {
+	return useMemo((): SettingDriver<Required<T>[TSetting]> => ({
+		currentValue: parentDriver.currentValue?.[property],
+		defaultValue,
+		onChange(newValue) {
+			const result: T = {
+				...(parentDriver.currentValue ?? parentDriver.defaultValue),
+				[property]: newValue,
+			};
+			return parentDriver.onChange(result);
+		},
+		onReset() {
+			const result: T = { ...(parentDriver.currentValue ?? parentDriver.defaultValue) };
+			delete result[property];
+			return parentDriver.onChange(result);
+		},
+	}), [defaultValue, parentDriver, property]);
+}
+
+/**
+ * Takes a driver for a settings and creates a new driver with bidirectional mapping.
+ * This is useful for changing meaning of special values for passing them to generic inputs (e.g. a number to string and back).
+ */
+export function useValueMapDriver<const TIn, const TOut>(
+	parentDriver: SettingDriver<TIn>,
+	forwardMapping: (value: NoInfer<TIn>) => TOut,
+	backwardMapping: NoInfer<(value: TOut) => TIn>,
+): SettingDriver<TOut> {
+	return useMemo((): SettingDriver<TOut> => ({
+		currentValue: parentDriver.currentValue !== undefined ? forwardMapping(parentDriver.currentValue) : undefined,
+		defaultValue: forwardMapping(parentDriver.defaultValue),
+		onChange(newValue) {
+			return parentDriver.onChange(backwardMapping(newValue));
+		},
+		onReset: parentDriver.onReset,
+	}), [parentDriver, forwardMapping, backwardMapping]);
+}
+
+export function ToggleSettingInput({ driver, label, noReset = false, deps = EMPTY_ARRAY }: {
 	driver: Readonly<SettingDriver<boolean>>;
 	label: string;
+	noReset?: boolean;
 	deps?: DependencyList;
 }): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
@@ -63,13 +121,17 @@ export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
 			>
 				{ label }
 			</label>
-			<Button
-				className='slim'
-				onClick={ () => setValue(undefined) }
-				disabled={ value === undefined }
-			>
-				↺
-			</Button>
+			{
+				noReset ? null : (
+					<Button
+						className='slim'
+						onClick={ () => setValue(undefined) }
+						disabled={ value === undefined }
+					>
+						↺
+					</Button>
+				)
+			}
 		</Row>
 	);
 }
@@ -136,12 +198,15 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 	);
 }
 
-export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, deps, children }: {
+export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, disabled, noWrapper = false, noReset = false, deps, children }: {
 	driver: Readonly<SettingDriver<TValue>>;
 	label: ReactNode;
 	stringify: NoInfer<Readonly<Record<TValue, string | (() => string)>>>;
 	optionOrder?: NoInfer<readonly TValue[]>;
 	schema: NoInfer<ZodSchema<TValue, ZodTypeDef, unknown>>;
+	disabled?: boolean;
+	noWrapper?: boolean;
+	noReset?: boolean;
 	deps?: DependencyList;
 	children?: ReactNode;
 }): ReactElement {
@@ -180,8 +245,10 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 		));
 	}, [stringify, optionOrder]);
 
+	const Wrapper = useMemo(() => (noWrapper ? React.Fragment : ({ children: wrapperChildren }: ChildrenProps) => <div className='input-section'>{ wrapperChildren }</div>), [noWrapper]);
+
 	return (
-		<div className='input-section'>
+		<Wrapper>
 			<label htmlFor={ id }>{ label }</label>
 			<Row alignY='center'>
 				<Select
@@ -189,18 +256,23 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 					className='flex-1'
 					value={ value ?? driver.defaultValue }
 					onChange={ onInputChange }
+					disabled={ disabled }
 				>
 					{ options }
 				</Select>
-				<Button
-					className='slim'
-					onClick={ () => setValue(undefined) }
-					disabled={ value === undefined }
-				>
-					↺
-				</Button>
+				{
+					noReset ? null : (
+						<Button
+							className='slim'
+							onClick={ () => setValue(undefined) }
+							disabled={ value === undefined }
+						>
+							↺
+						</Button>
+					)
+				}
 				{ children }
 			</Row>
-		</div>
+		</Wrapper>
 	);
 }

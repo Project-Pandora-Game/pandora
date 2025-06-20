@@ -12,7 +12,7 @@ import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
-import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
+import { NotificationSuppressionHook, useNotificationSuppress } from '../../services/notificationHandler.tsx';
 import { Button } from '../common/button/button.tsx';
 import { DivContainer, Row } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
@@ -67,7 +67,9 @@ function AccountContactHeader({ type }: { type: IAccountContact['type']; }) {
 }
 
 function ClearIncoming() {
-	useNotificationSuppressed(NotificationSource.INCOMING_FRIEND_REQUEST);
+	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
+		return notification.type === 'contactsNewContactRequest';
+	}, []));
 	return null;
 }
 
@@ -121,9 +123,9 @@ function AccountContactsRow({
 					</Button>
 				);
 			case 'pending':
-				return <PendingRequestActions id={ id } />;
+				return <PendingRequestActions id={ id } displayName={ displayName } />;
 			case 'incoming':
-				return <IncomingRequestActions id={ id } />;
+				return <IncomingRequestActions id={ id } displayName={ displayName } />;
 			default:
 				return null;
 		}
@@ -138,7 +140,7 @@ function AccountContactsRow({
 	);
 }
 
-function PendingRequestActions({ id }: { id: AccountId; }) {
+function PendingRequestActions({ id }: { id: AccountId; displayName: string; }) {
 	const directory = useDirectoryConnector();
 	const [cancel, cancelInProgress] = useAsyncEvent(async () => {
 		return await directory.awaitResponse('friendRequest', { id, action: 'cancel' });
@@ -148,17 +150,17 @@ function PendingRequestActions({ id }: { id: AccountId; }) {
 	);
 }
 
-function IncomingRequestActions({ id }: { id: AccountId; }) {
+function IncomingRequestActions({ id, displayName }: { id: AccountId; displayName: string; }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const [accept, acceptInProgress] = useAsyncEvent(async () => {
-		if (await confirm('Confirm addition', `Accept the request to add ${id} to your contacts?`)) {
+		if (await confirm('Confirm addition', `Accept the request to add ${displayName} (${id}) to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
 		}
 		return undefined;
 	}, AccountContactChangeHandleResult);
 	const [decline, declineInProgress] = useAsyncEvent(async () => {
-		if (await confirm('Confirm rejection', `Decline the request to add ${id} to your contacts?`)) {
+		if (await confirm('Confirm rejection', `Decline the request to add ${displayName} (${id}) to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
 		}
 		return undefined;
@@ -220,10 +222,14 @@ function ShowFriends() {
 	);
 }
 
+export function GetAccountDMUrl(target: AccountId): string {
+	return `/contacts/dm/${target}`;
+}
+
 export function useGoToDM(id: AccountId) {
 	const navigate = useNavigatePandora();
 	return useCallback(() => {
-		navigate(`/contacts/dm/${id}`);
+		navigate(GetAccountDMUrl(id));
 	}, [id, navigate]);
 }
 

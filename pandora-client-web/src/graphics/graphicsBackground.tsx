@@ -8,7 +8,7 @@ import { Container } from './baseComponents/container.ts';
 import { PixiMesh } from './baseComponents/mesh.tsx';
 import { Sprite } from './baseComponents/sprite.ts';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
-import { useRoomViewProjection } from './room/roomScene.tsx';
+import { useRoomViewProjection } from './room/roomProjection.tsx';
 import { useTexture } from './useTexture.ts';
 
 export function GraphicsBackground({

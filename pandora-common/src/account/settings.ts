@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ClientNotificationGlobalSettingsSchema } from '../client/notificationDefinition.ts';
+import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
@@ -115,16 +117,8 @@ export const AccountSettingsSchema = z.object({
 	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
 	 */
 	chatCommandHintBehavior: z.enum(['always-show', 'on-tab']),
-	/**
-	 * Sets what sound should be played, when someone enters the room
-	 * @default ''
-	 */
-	notificationRoomEntrySound: z.enum(['', 'alert', 'bell', 'bing', 'dingding']),
-	/**
-	 * Volume of the notification. Stored as int, but will be divided by 100 later
-	 * @default 100
-	 */
-	notificationVolume: z.enum(['0', '25', '50', '75', '100']),
+	notificationGlobalSettings: ClientNotificationGlobalSettingsSchema,
+	notificationTypeSettings: NotificationTypesSettingsSchema,
 	/**
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
@@ -160,8 +154,14 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom',
 	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
-	notificationRoomEntrySound: '',
-	notificationVolume: '100',
+	notificationGlobalSettings: {
+		sound: {
+			sound: '',
+			volume: '100',
+		},
+		usePlatformPopup: false,
+	},
+	notificationTypeSettings: {},
 	tutorialCompleted: EMPTY_ARRAY,
 });
 

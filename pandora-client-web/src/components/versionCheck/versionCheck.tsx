@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMounted } from '../../common/useMounted.ts';
 import { VersionDataSchema, type VersionData } from '../../config/definition.ts';
 import { BUILD_TIME, GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment.ts';
-import { NotificationSource, useNotification } from '../../services/notificationHandler.ts';
 import { Button } from '../common/button/button.tsx';
 import { Row } from '../common/container/container.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
@@ -17,8 +16,6 @@ export function VersionCheck() {
 function VersionCheckImpl() {
 	const [nextVersion, setNextVersion] = useState<VersionData | null>();
 	const [ignoredVersion, setIgnoredVersion] = useState('');
-	const notifiedRef = useRef(false);
-	const notify = useNotification(NotificationSource.VERSION_CHANGED);
 
 	const mounted = useMounted();
 
@@ -28,12 +25,6 @@ function VersionCheckImpl() {
 				.then((version) => {
 					if (mounted && version.gitCommitHash !== GIT_COMMIT_HASH) {
 						setNextVersion(version);
-						if (!notifiedRef.current) {
-							notifiedRef.current = true;
-							notify({
-								// TODO: notification
-							});
-						}
 					} else {
 						setNextVersion(null);
 					}
@@ -41,7 +32,7 @@ function VersionCheckImpl() {
 				.catch(() => { /** noop */ });
 		}, VERSION_CHECK_INTERVAL);
 		return () => clearInterval(cleanup);
-	}, [mounted, notify]);
+	}, [mounted]);
 
 	if (nextVersion == null || nextVersion.gitCommitHash === ignoredVersion) {
 		return null;

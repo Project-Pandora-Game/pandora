@@ -4,7 +4,6 @@ import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import type { Promisable } from 'type-fest';
 import { useLogin } from '../../../networking/account_manager.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { useNotificationPermissionCheck } from '../../gameContext/notificationProvider.tsx';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
 
 const logger = GetLogger('useLoginForm');
@@ -34,12 +33,9 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 		register,
 	} = useForm<UseLoginFormData>({ shouldUseNativeValidation: true, progressive: true });
 	const navigate = useNavigatePandora();
-	const checkNotifications = useNotificationPermissionCheck();
 	const dirty = submitCount > 0;
 
 	const onSubmit = handleSubmit(async ({ username: submittedUsername, password: submittedPassword, token }) => {
-		checkNotifications();
-
 		const username = useAuthData ? authData.username : submittedUsername;
 		const password = useAuthData ? authData.password : submittedPassword;
 

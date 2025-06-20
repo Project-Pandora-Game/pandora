@@ -454,7 +454,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 					} }
 				/>
 				<BackgroundSelectDialog3dBoxSide
-					title='Ceiling'
+					title='▲ Ceiling'
 					current={ current.type === '3dBox' ? current.graphics.ceiling : null }
 					value={ selectedBackground.graphics.ceiling }
 					onChange={ (newValue) => {
@@ -467,7 +467,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 			<Row alignY='center'>
 				<Checkbox checked readOnly onChange={ noop } />
 				<BackgroundSelectDialog3dBoxSide
-					title='Back wall'
+					title='■ Back wall'
 					current={ current.type === '3dBox' ? current.graphics.wallBack : null }
 					value={ selectedBackground.graphics.wallBack }
 					onChange={ (newValue) => {
@@ -487,7 +487,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 					} }
 				/>
 				<BackgroundSelectDialog3dBoxSide
-					title='Left wall'
+					title='◀ Left wall'
 					current={ current.type === '3dBox' ? current.graphics.wallLeft : null }
 					value={ selectedBackground.graphics.wallLeft }
 					onChange={ (newValue) => {
@@ -507,7 +507,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 					} }
 				/>
 				<BackgroundSelectDialog3dBoxSide
-					title='Right wall'
+					title='▶ Right wall'
 					current={ current.type === '3dBox' ? current.graphics.wallRight : null }
 					value={ selectedBackground.graphics.wallRight }
 					onChange={ (newValue) => {
@@ -520,7 +520,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 			<Row alignY='center'>
 				<Checkbox checked readOnly onChange={ noop } />
 				<BackgroundSelectDialog3dBoxSide
-					title='Floor'
+					title='▼ Floor'
 					current={ current.type === '3dBox' ? current.graphics.floor : null }
 					value={ selectedBackground.graphics.floor }
 					onChange={ (newValue) => {

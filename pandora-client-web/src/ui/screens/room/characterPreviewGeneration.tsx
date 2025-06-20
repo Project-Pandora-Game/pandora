@@ -15,7 +15,8 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { useCharacterSettingDriver } from '../../../components/settings/helpers/characterSettings.tsx';
 import { NumberSettingInput, ToggleSettingInput, useSubsettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
-import { GraphicsCharacter, type PointLike } from '../../../graphics/graphicsCharacter.tsx';
+import { type PointLike } from '../../../graphics/common/point.ts';
+import { GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';

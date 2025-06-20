@@ -26,13 +26,21 @@ export const CLIENT_NOTIFICATION_GROUPS = {
 //#region Notification types definitions
 
 // Describes settings for a notification type that is disabled by default
-const DEFAULT_DISABLED: ClientNotificationTypeSetting = {
+/* const DEFAULT_DISABLED: ClientNotificationTypeSetting = {
 	persist: false,
 	popup: false,
 	sound: null,
 	suppression: 'not-suppressed',
+}; */
+// Describes default minimum settings for notification types
+const DEFAULT_MIN: ClientNotificationTypeSetting = {
+	persist: true,
+	popup: false,
+	sound: null,
+	suppression: 'not-suppressed',
 };
-freeze(DEFAULT_DISABLED, true);
+//freeze(DEFAULT_DISABLED, true);
+freeze(DEFAULT_MIN, true);
 
 export const CLIENT_NOTIFICATION_TYPES = {
 	chatMessagesMessage: {
@@ -42,7 +50,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesEmote: {
 		name: 'A character performs custom action (emote)',
@@ -51,7 +59,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesOOC: {
 		name: 'A character says something in OOC',
@@ -60,7 +68,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesWhisper: {
 		name: 'A character whispers something to you',
@@ -69,7 +77,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesOOCWhisper: {
 		name: 'A character whispers something to you OOC',
@@ -78,7 +86,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesAction: {
 		name: 'A character performs an action',
@@ -88,7 +96,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema.nullable(),
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	chatMessagesServer: {
 		name: 'A server message is received (applies only to messages that do not have specific notification)',
@@ -98,7 +106,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			from: CharacterIdSchema.nullable(),
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 	contactsDirectMessageReceivedContact: {
 		name: 'A direct message is received from a contact',
@@ -149,7 +157,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			id: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
+		defaultSettings: DEFAULT_MIN,
 	},
 } as const satisfies Readonly<ClientNotificationTypeDefinitionDataShape>;
 

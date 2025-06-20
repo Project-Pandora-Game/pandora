@@ -29,7 +29,7 @@ export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
 	{ image: scalingBaseimage, scaling }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image' | 'scaling'>,
 	item: Item | null,
-): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; imageUv: Record<BoneName, number>; }> {
+): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; depthComponent?: string; imageUv: Record<BoneName, number>; }> {
 	const [setting, scalingUv] = useMemo((): Immutable<[LayerImageSetting, scalingUv: Record<BoneName, number>]> => {
 		if (scaling) {
 			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
@@ -61,6 +61,7 @@ export function useLayerImageSource(
 		return {
 			setting,
 			image: resultSetting.image,
+			depthComponent: resultSetting.depthComponent,
 			imageUv: resultSetting.uvPose ? {
 				...resultSetting.uvPose,
 				...scalingUv,

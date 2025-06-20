@@ -170,6 +170,7 @@ export async function LoadAssetAutoMeshLayer(
 
 				imageVariants.push({
 					image,
+					depthComponent: (layer.withDepth && image) ? `Depth${image}` : undefined,
 					condition: [combinationCondition],
 				});
 			}

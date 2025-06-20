@@ -1,4 +1,4 @@
-import { Mesh, MeshGeometry, State, Texture } from 'pixi.js';
+import { Mesh, MeshGeometry, State, Texture, type Shader, type TextureShader } from 'pixi.js';
 import { RegisterPixiComponent } from '../reconciler/component.ts';
 import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
@@ -7,6 +7,7 @@ export interface PixiMeshProps {
 	uvs: Float32Array;
 	indices: Uint32Array;
 	texture: Texture;
+	shader?: Shader;
 	state?: State;
 	tint?: number;
 	alpha?: number;
@@ -26,13 +27,14 @@ export interface PixiMeshProps {
  *
  * Through a combination of the above elements you can render anything you want, 2D or 3D!
  */
-export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, PixiMeshProps>('PixiMesh', {
+export const PixiMesh = RegisterPixiComponent<Mesh<MeshGeometry, Shader>, never, ContainerEventMap, PixiMeshProps>('PixiMesh', {
 	create(props) {
 		const {
 			vertices,
 			uvs,
 			indices,
 			texture,
+			shader,
 			state,
 			tint,
 			alpha,
@@ -51,9 +53,16 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			geometry,
 			texture,
 			state,
+			shader,
 		});
 		mesh.tint = tint ?? 0xffffff;
 		mesh.alpha = alpha ?? 1;
+
+		if (shader != null) {
+			shader.resources.uTexture = texture.source;
+			shader.resources.uSampler = texture.source.style;
+			shader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
+		}
 
 		return mesh;
 	},
@@ -73,6 +82,7 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			uvs: oldUvs,
 			indices: oldIndices,
 			texture: oldTexture,
+			shader: oldShader,
 			state: oldState,
 			tint: oldTint,
 			alpha: oldAlpha,
@@ -82,6 +92,7 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			uvs,
 			indices,
 			texture,
+			shader,
 			state,
 			tint,
 			alpha,
@@ -102,8 +113,15 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			updated = true;
 		}
 
-		if (texture !== oldTexture) {
+		if (texture !== oldTexture || shader !== oldShader) {
+			mesh.shader = shader ?? null;
 			mesh.texture = texture;
+			if (shader != null) {
+				(shader as TextureShader).texture = texture;
+				shader.resources.uTexture = texture.source;
+				shader.resources.uSampler = texture.source.style;
+				shader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
+			}
 			updated = true;
 		}
 

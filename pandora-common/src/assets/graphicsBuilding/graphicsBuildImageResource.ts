@@ -63,12 +63,14 @@ export function LoadLayerImageSetting(setting: Immutable<LayerImageSetting>, con
 	const overrides: LayerImageOverride[] = setting.overrides
 		.map((override): LayerImageOverride => ({
 			image: override.image && LoadLayerImage(override.image, context, imageTrimArea),
+			depthComponent: override.depthComponent && LoadLayerImage(override.depthComponent, context, imageTrimArea),
 			uvPose: override.uvPose,
 			condition: CloneDeepMutable(override.condition),
 		}));
 	return {
 		...setting,
 		image: setting.image && LoadLayerImage(setting.image, context, imageTrimArea),
+		depthComponent: setting.depthComponent && LoadLayerImage(setting.depthComponent, context, imageTrimArea),
 		overrides,
 	};
 }

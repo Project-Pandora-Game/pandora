@@ -61,7 +61,7 @@ export const GraphicsSourceAutoMeshLayerSchema = RectangleSchema.extend({
 	graphicalLayers: GraphicsSourceAutoMeshGraphicalLayerSchema.array(),
 	variables: GraphicsSourceAutoMeshLayerVariableSchema.array(),
 
-	withDepth: z.boolean().optional(),
+	withNormalMap: z.boolean().optional(),
 	imageMap: z.record(z.string(), z.string().array()),
 }).strict();
 export type GraphicsSourceAutoMeshLayer = z.infer<typeof GraphicsSourceAutoMeshLayerSchema>;

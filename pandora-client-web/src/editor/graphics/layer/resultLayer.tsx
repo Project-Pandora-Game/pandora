@@ -45,7 +45,7 @@ export function ResultMeshLayer({
 
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
-	const vertices = useLayerVertices(evaluator, points, layer, item);
+	const vertices = useLayerVertices(evaluator, points, layer, item).vertices;
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer

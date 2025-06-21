@@ -3,7 +3,7 @@ import { BoneNameSchema, ConditionSchema } from '../conditions.ts';
 
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
-	depthComponent: z.string().optional(),
+	normalMapImage: z.string().optional(),
 	/**
 	 * Pose to use for calculating UV coordinates of vertices.
 	 *
@@ -100,7 +100,7 @@ export enum LayerSide {
 
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
-	depthComponent: z.string().optional(),
+	normalMapImage: z.string().optional(),
 	/**
 	 * Pose to use for calculating UV coordinates of vertices.
 	 *

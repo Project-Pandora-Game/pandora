@@ -81,7 +81,7 @@ export function SetupMeshLayerSelected({
 	} = useLayerImageSource(evaluator, definition, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
 
 	const asset = layer.asset;
 	const editorAssetTextures = useObservable(asset.textures);
@@ -189,7 +189,7 @@ export function SetupAlphaImageMeshLayerSelected({
 	} = useLayerImageSource(evaluator, definition, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();
@@ -307,7 +307,7 @@ export function SetupAutomeshLayerSelected({
 	});
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, SCALING_IMAGE_UV_EMPTY);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();

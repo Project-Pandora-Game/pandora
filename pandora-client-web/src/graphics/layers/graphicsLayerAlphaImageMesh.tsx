@@ -42,8 +42,8 @@ export function GraphicsLayerAlphaImageMesh({
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
 
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false).vertices;
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
 
 	const alphaImage = image;
 	const alphaMesh = useMemo(() => ({

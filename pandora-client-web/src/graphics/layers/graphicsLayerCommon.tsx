@@ -11,13 +11,13 @@ import {
 	type PointDefinitionCalculated,
 	type Rectangle,
 } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { DEG_TO_RAD, Texture } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ConditionEvaluatorBase } from '../appearanceConditionEvaluator.ts';
 
-type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, Float32Array>;
+type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, LayerVerticesResult>;
 type TransformEvalCacheEntry = {
 	noItem: TransformEvalCacheEntryValue;
 	withItem: WeakMap<Item, TransformEvalCacheEntryValue>;
@@ -25,7 +25,12 @@ type TransformEvalCacheEntry = {
 
 const transformEvalCache = new WeakMap<ConditionEvaluatorBase, TransformEvalCacheEntry>();
 
-export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, item: Item | null, points: Immutable<PointDefinitionCalculated[]>): Float32Array {
+export type LayerVerticesResult = {
+	vertices: Float32Array;
+	vertexRotations: Float32Array;
+};
+
+export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, item: Item | null, points: Immutable<PointDefinitionCalculated[]>): LayerVerticesResult {
 	let cacheEntry: TransformEvalCacheEntry | undefined = transformEvalCache.get(evaluator);
 	if (cacheEntry === undefined) {
 		cacheEntry = {
@@ -45,15 +50,24 @@ export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, it
 		value = itemValue;
 	}
 
-	let result: Float32Array | undefined = value.get(points);
+	let result: LayerVerticesResult | undefined = value.get(points);
 	if (result === undefined) {
-		result = new Float32Array(points
-			.flatMap((point) => evaluator.evalTransform(
-				point.pos,
-				point.transforms,
-				point.mirror,
-				item,
-			)));
+		result = {
+			vertices: new Float32Array(points
+				.flatMap((point) => evaluator.evalTransform(
+					point.pos,
+					point.transforms,
+					point.mirror,
+					item,
+				)),
+			),
+			vertexRotations: new Float32Array(points
+				.map((point) => evaluator.evalTransformAngle(
+					point.transforms,
+					item,
+				) * DEG_TO_RAD),
+			),
+		};
 		value.set(points, result);
 	}
 	return result;
@@ -65,20 +79,23 @@ export function useLayerVertices(
 	layerArea: Immutable<Rectangle>,
 	item: Item | null,
 	normalize: boolean = false,
-): Float32Array {
-	return useMemo((): Float32Array => {
+): LayerVerticesResult {
+	return useMemo((): LayerVerticesResult => {
 		// Eval transform
 		const result = EvalLayerVerticesTransform(evaluator, item, points);
 
 		// Normalize
 		if (normalize) {
-			const normalizedResult = new Float32Array(result.length);
-			for (let i = 0; i < result.length; i++) {
+			const normalizedResult = new Float32Array(result.vertices.length);
+			for (let i = 0; i < result.vertices.length; i++) {
 				const odd = (i % 2) !== 0;
-				normalizedResult[i] = (result[i] - (odd ? layerArea.y : layerArea.x)) /
+				normalizedResult[i] = (result.vertices[i] - (odd ? layerArea.y : layerArea.x)) /
 					(odd ? layerArea.height : layerArea.width);
 			}
-			return normalizedResult;
+			return {
+				...result,
+				vertices: normalizedResult,
+			};
 		}
 		return result;
 	}, [layerArea, evaluator, item, points, normalize]);

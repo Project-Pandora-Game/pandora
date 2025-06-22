@@ -1,3 +1,4 @@
+import { noop } from 'lodash-es';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
@@ -122,19 +123,27 @@ export function GraphicsLayerMesh({
 	}, [triangles, uv, vertices, vertexRotations]);
 
 	const shader = useMemo((): PixiCustomMeshShaderCreator<PIXI.Shader> | undefined => {
-		if (normalMapTexture === PIXI.Texture.WHITE)
+		if (!layer.normalMap)
 			return undefined;
 
-		// normalTexture.source.format = 'rgba8unorm';
+		const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
+		const ambientStrength = 0.1;
+		const { specularStrength, roughness } = layer.normalMap;
 
 		return (existingShader) => {
 			if (existingShader) {
 				existingShader.resources.uTexture = texture.source;
 				existingShader.resources.uSampler = texture.source.style;
-				existingShader.resources.uNormalMap = normalMapTexture.source;
-				existingShader.resources.uNormalSampler = normalMapTexture.source.style;
+				existingShader.resources.uNormalMap = normalMap.source;
+				existingShader.resources.uNormalSampler = normalMap.source.style;
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				existingShader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				existingShader.resources.pbrUniforms.uniforms.uAmbientStrength = ambientStrength;
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				existingShader.resources.pbrUniforms.uniforms.uSpecularStrength = specularStrength;
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				existingShader.resources.pbrUniforms.uniforms.uRoughness = roughness;
 				return existingShader;
 			} else {
 				return new PIXI.Shader({
@@ -142,16 +151,21 @@ export function GraphicsLayerMesh({
 					resources: {
 						uTexture: texture.source,
 						uSampler: texture.source.style,
-						uNormalMap: normalMapTexture.source,
-						uNormalSampler: normalMapTexture.source.style,
+						uNormalMap: normalMap.source,
+						uNormalSampler: normalMap.source.style,
 						textureUniforms: new PIXI.UniformGroup({
 							uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+						}),
+						pbrUniforms: new PIXI.UniformGroup({
+							uAmbientStrength: { type: 'f32', value: ambientStrength },
+							uSpecularStrength: { type: 'f32', value: specularStrength },
+							uRoughness: { type: 'f32', value: roughness },
 						}),
 					},
 				});
 			}
 		};
-	}, [texture, normalMapTexture]);
+	}, [texture, normalMapTexture, layer.normalMap]);
 
 	return (
 		<Container
@@ -185,6 +199,37 @@ export function GraphicsLayerMesh({
 		</Container>
 	);
 }
+
+export const DEFAULT_NORMAL_TEXTURE = new PIXI.Texture({
+	source: new PIXI.BufferImageSource({
+		resource: new Uint8Array([127, 127, 255, 255]),
+		width: 1,
+		height: 1,
+		alphaMode: 'premultiply-alpha-on-upload',
+		label: 'DEFAULT_NORMAL',
+	}),
+	label: 'DEFAULT_NORMAL',
+});
+DEFAULT_NORMAL_TEXTURE.destroy = noop;
+
+/* TODO: Helpers
+
+// Normals from height
+float getHeight(vec2 pos) {
+	return 1. - texture(uDepthTexture, pos).x;
+}
+
+float h = 150.;
+float l = h * getHeight(pos - uPix.xz);
+float r = h * getHeight(pos + uPix.xz);
+float d = h * getHeight(pos - uPix.zy);
+float u = h * getHeight(pos + uPix.zy);
+return normalize(vec3(l-r, u-d, 1.));
+
+// Display normals
+outColor.xyz = packNormal(getNormal(vUV)) * outColor.w;
+
+*/
 
 const glProgram = PIXI.compileHighShaderGlProgram({
 	name: 'mesh',
@@ -226,6 +271,15 @@ vTBN = mat3(T, B, N);
 uniform sampler2D uTexture;
 uniform sampler2D uNormalMap;
 
+vec3 ambientColour = vec3(1., 1., 1.);
+vec3 lightColour = vec3(1., 1., 1.);
+
+vec3 lightDir = normalize(vec3(2.7, -2.5, 3.7));
+
+uniform float uAmbientStrength;
+uniform float uSpecularStrength;
+uniform float uRoughness;
+
 in mat3 vTBN;
 
 vec3 unpackNormal(vec3 color) {
@@ -245,22 +299,43 @@ vec3 getNormal(vec2 pos) {
 	normal = normalize(vTBN * normal);
 	return normal;
 }
-
-float getNormalShadow(vec2 pos) {
-	vec3 lightAngle = normalize(vec3(2.7, -2.5, 3.7));
-	return clamp(1. - (dot(getNormal(pos), lightAngle) + 1.)/2., 0., 1.);
-}
-
 		`,
 				main: /* glsl */`
-float lightStrength = 1. - (0.8 * getNormalShadow(vUV));
-
+vec3 normal = getNormal(vUV);
 outColor = texture(uTexture, vUV);
-outColor.xyz *= lightStrength;
+
+vec3 ambient = clamp(ambientColour * uAmbientStrength, 0., 1.);
+
+float lambertian = clamp(dot(lightDir, normal), 0., 1.);
+vec3 diffuse = (0.4 + 0.6 * lambertian) * lightColour;
+
+vec3 specular = vec3(0.);
+if (lambertian > 0.) {
+	vec3 viewDir = normalize(vec3(0., 0., 1.));
+	float shininess = pow(2., (1.0 - uRoughness) * 4.);
+
+	vec3 reflection = 2.0 * dot(normal, lightDir) * normal - lightDir;
+	float specularStrength = clamp(dot(reflection, viewDir), 0.0, 1.0);
+	specularStrength = pow(specularStrength, shininess);
+	specularStrength *= uSpecularStrength;
+
+	// The specular color is from the light source, not the object
+	if (specularStrength > 0.) {
+		specular = lightColour * specularStrength;
+		diffuse *= 1. - specularStrength;
+	}
+}
+
+outColor *= vColor;
+outColor.xyz *= (ambient + diffuse);
+outColor.xyz += specular * outColor.w;
+		`,
+				// Skip Pixi's final tint step (with vColor) in here. We do it manually in a way it ignores specular light
+				end: `
+finalColor = outColor;
 		`,
 			},
 		},
 		PIXI.roundPixelsBitGl,
 	],
 });
-

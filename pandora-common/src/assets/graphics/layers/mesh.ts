@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ZodBase64Regex } from '../../../validation.ts';
 import { RectangleSchema } from '../common.ts';
 import { BoneNameSchema } from '../conditions.ts';
-import { LayerImageSettingSchema, LayerPrioritySchema, LayerStateOverridesSchema } from './common.ts';
+import { LayerImageSettingSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from './common.ts';
 
 export const GraphicsMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
@@ -14,6 +14,7 @@ export const GraphicsMeshLayerSchema = RectangleSchema.extend({
 	previewOverrides: LayerStateOverridesSchema.optional(),
 	colorizationKey: z.string().optional(),
 
+	normalMap: LayerNormalDataSchema.optional(),
 	image: LayerImageSettingSchema,
 	scaling: z.object({
 		scaleBone: BoneNameSchema,

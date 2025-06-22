@@ -253,6 +253,7 @@ async function LoadAssetImageLayerSingle(
 		Assert(result.type === 'mesh');
 		result.previewOverrides = layer.previewOverrides;
 		result.colorizationKey = layer.colorizationKey;
+		result.normalMap = layer.normalMap;
 	}
 
 	// Adjust layer size of we trimmed it down

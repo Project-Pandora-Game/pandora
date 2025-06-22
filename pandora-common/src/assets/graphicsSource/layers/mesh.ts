@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
 import { BoneNameSchema } from '../../graphics/conditions.ts';
-import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
+import { LayerImageSettingSchema, LayerMirrorSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
@@ -14,6 +14,7 @@ export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	mirror: LayerMirrorSchema,
 	colorizationKey: z.string().optional(),
 
+	normalMap: LayerNormalDataSchema.optional(),
 	image: LayerImageSettingSchema,
 	scaling: z.object({
 		scaleBone: BoneNameSchema,

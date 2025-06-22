@@ -17,6 +17,7 @@ import { useCallback, useId, useState, type ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
@@ -43,6 +44,8 @@ export function LayerAutoMeshUI({ asset, layer }: {
 			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
 			<LayerOffsetSetting layer={ layer } asset={ asset } />
 			<hr />
+			<LayerNormalMapSettings layer={ layer } />
+			<hr />
 			<TabContainer allowWrap>
 				<Tab name='Template'>
 					<hr />
@@ -63,6 +66,92 @@ export function LayerAutoMeshUI({ asset, layer }: {
 					<LayerAutomeshImages layer={ layer } />
 				</Tab>
 			</TabContainer>
+		</>
+	);
+}
+
+function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+	const { normalMap } = useObservable(layer.definition);
+
+	return (
+		<>
+			<label>
+				<Checkbox
+					checked={ normalMap != null }
+					onChange={ (newValue) => {
+						layer.modifyDefinition((d) => {
+							d.normalMap = newValue ? { specularStrength: 0.2, roughness: 0 } : undefined;
+						});
+					} }
+				/>
+				Layer has normal map
+			</label>
+			{
+				normalMap != null ? (
+					<>
+						<Row>
+							<label>Specular strength</label>
+							<NumberInput
+								rangeSlider
+								className='flex-6 zero-width'
+								value={ normalMap.specularStrength }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.specularStrength = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+							<NumberInput
+								className='flex-grow-1'
+								value={ normalMap.specularStrength }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.specularStrength = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+						</Row>
+						<Row>
+							<label>Roughness</label>
+							<NumberInput
+								rangeSlider
+								className='flex-6 zero-width'
+								value={ normalMap.roughness }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.roughness = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+							<NumberInput
+								className='flex-grow-1'
+								value={ normalMap.roughness }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.roughness = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+						</Row>
+					</>
+				) : null
+			}
 		</>
 	);
 }

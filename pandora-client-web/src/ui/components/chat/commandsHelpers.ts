@@ -1,4 +1,4 @@
-import { CommandStepProcessor, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type ItemPath } from 'pandora-common';
+import { CommandStepProcessor, CreateCommand, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type CommandBuilder, type IEmpty, type ItemPath } from 'pandora-common';
 import type { Character } from '../../../character/character.ts';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import type { ICommandExecutionContextClient } from './commandsProcessor.ts';
@@ -258,4 +258,8 @@ export function CommandSelectorItem<const TTargetKey extends string>(targetKey: 
 				});
 		},
 	});
+}
+
+export function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
+	return CreateCommand<ICommandExecutionContextClient>();
 }

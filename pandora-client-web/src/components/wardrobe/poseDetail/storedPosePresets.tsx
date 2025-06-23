@@ -1,10 +1,9 @@
 import { produce } from 'immer';
-import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash-es';
+import { capitalize, clamp, cloneDeep, omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
 	AssetFrameworkPosePresetSchema,
-	CharacterSize,
 	GetLogger,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
 	type AppearanceArmPose,
@@ -12,7 +11,6 @@ import {
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
-	type AssetsPosePreset,
 	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
@@ -20,6 +18,7 @@ import React, { useMemo, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
@@ -27,8 +26,9 @@ import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { GetVisibleBoneName, PoseButton } from '../views/wardrobePoseView.tsx';
+import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
@@ -115,7 +115,7 @@ function usePosePresetContext(): PosePresetContextType {
 }
 
 function PosePresetContextProvider({ setPose, characterState, children }: WardrobeStoredPosePresetsProps & { children: React.ReactNode; }): ReactNode {
-	const stored = useStoredPosePresets();
+	const stored = useObservable(StoredPosePresets);
 	const save = useSaveStoredOutfits();
 
 	const reorder = React.useCallback((id: string, shift: number) => {
@@ -228,33 +228,7 @@ function PosePresetButton({ preset }: { preset: AssetFrameworkPosePresetWithId; 
 	const { setPose, characterState } = usePosePresetContext();
 	const assetManager = characterState.assetManager;
 
-	const loadedPreset = useMemo((): AssetsPosePreset => {
-		const pose: AssetsPosePreset = {
-			...preset.pose,
-			name: preset.name,
-			preview: {
-				y: 0,
-				size: Math.max(CharacterSize.WIDTH, CharacterSize.HEIGHT),
-				basePose: assetManager.randomization.pose,
-			},
-		};
-		if (pose.bones != null) {
-			const bones: Record<string, number> = {};
-			const allBones = assetManager.getAllBones();
-			for (const [bone, value] of Object.entries(pose.bones)) {
-				if (value == null)
-					continue;
-
-				const def = allBones.find((b) => b.name === bone);
-				if (def == null || def.type !== 'pose')
-					continue;
-
-				bones[bone] = value;
-			}
-			pose.bones = bones;
-		}
-		return pose;
-	}, [assetManager, preset]);
+	const loadedPreset = useMemo(() => FixupStoredPosePreset(preset, assetManager), [assetManager, preset]);
 
 	return (
 		<PoseButton
@@ -691,24 +665,4 @@ function useSaveStoredOutfits(): (newStorage: AssetFrameworkPosePresetWithId[], 
 				toast(`Failed to save changes: \n${String(err)}`, TOAST_OPTIONS_ERROR);
 			});
 	}, [directoryConnector]);
-}
-
-/**
- * Loads the saved pose presets from server
- * @returns The saved pose presets or `undefined` if data is not yet ready
- */
-function useStoredPosePresets(): AssetFrameworkPosePresetWithId[] | undefined {
-	const [storedPosePresets, setStoredPosePresets] = React.useState<AssetFrameworkPosePresetWithId[] | undefined>();
-	const directoryConnector = useDirectoryConnector();
-
-	const fetchStoredPosePresets = React.useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('storedPosePresetsGetAll', {});
-		setStoredPosePresets(result.storedPosePresets);
-	}, [directoryConnector]);
-
-	useDirectoryChangeListener('storedPosePresets', () => {
-		fetchStoredPosePresets().catch(noop);
-	}, true);
-
-	return storedPosePresets;
 }

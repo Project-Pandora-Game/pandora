@@ -1,7 +1,8 @@
 import { IEmpty } from '../networking/index.ts';
 import { KnownObject } from '../utility/misc.ts';
+import { CommandSelectorDynamic } from './commandHelpers/dynamicSelector.ts';
+import { CommandSelectorEnum } from './commandHelpers/enumSelector.ts';
 import { CommandExecutorOptions, CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandRunnerFork, CommandStepProcessor, ICommandExecutionContext } from './executor.ts';
-import { CommandSelectorEnum } from './selectors.ts';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,
@@ -75,6 +76,19 @@ export class CommandBuilder<
 				processor,
 			),
 		);
+	}
+
+	public argumentDynamic<ArgumentResultType, ArgumentName extends string>(
+		name: ArgumentName,
+		options: Omit<CommandStepProcessor<ArgumentResultType, Context>, 'parse' | 'autocomplete'>,
+		generate: (context: Context, args: EntryArguments) => Pick<CommandStepProcessor<ArgumentResultType, Context>, 'parse' | 'autocomplete'>,
+	): ArgumentName extends keyof EntryArguments ? never : CommandBuilder<Context, EntryArguments & { [i in ArgumentName]: ArgumentResultType }, StartArguments>;
+	public argumentDynamic<ArgumentName extends string, ArgumentResultType>(
+		name: ArgumentName,
+		options: Omit<CommandStepProcessor<ArgumentResultType, Context>, 'parse' | 'autocomplete'>,
+		generate: (context: Context, args: EntryArguments) => Pick<CommandStepProcessor<ArgumentResultType, Context>, 'parse' | 'autocomplete'>,
+	): CommandBuilder<Context, EntryArguments & { [i in ArgumentName]: ArgumentResultType }, StartArguments> {
+		return this.argument(name, CommandSelectorDynamic(options, generate));
 	}
 
 	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;

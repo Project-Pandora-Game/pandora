@@ -11,6 +11,7 @@ import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialServic
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { DebugContextProvider } from '../error/debugContextProvider.tsx';
 import { RootErrorBoundary } from '../error/rootErrorBoundary.tsx';
+import { StoredPosePresetsLoaderService } from '../wardrobe/poseDetail/customPosePresetStorage.ts';
 import { DirectoryConnectorServices } from './directoryConnectorContextProvider.tsx';
 import { InterfaceSettingsProvider } from './interfaceSettingsProvider.tsx';
 import { NotificationProvider } from './notificationProvider.tsx';
@@ -51,6 +52,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<InterfaceSettingsProvider />
 				<RoomItemDialogsProvider />
 				<CharacterPreviewAutogenerationService />
+				<StoredPosePresetsLoaderService />
 
 				{ children }
 			</PermissionCheckServiceProvider>

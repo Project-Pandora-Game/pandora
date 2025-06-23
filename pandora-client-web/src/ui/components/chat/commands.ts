@@ -1,17 +1,14 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandSelectorEnum, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepOptional, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { ChatMode } from './chatInput.tsx';
-import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers.ts';
+import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
+import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
-
-function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
-	return CreateCommand<ICommandExecutionContextClient>();
-}
 
 function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand<ICommandExecutionContextClient> {
 	const description = GetChatModeDescription({ type, raw });
@@ -448,6 +445,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	},
 	//#endregion
 	//#region Commands to change the player's pose
+	COMMAND_POSEPRESET,
 	{
 		key: ['turn', 't'],
 		description: `Turns yourself around`,

@@ -1,4 +1,4 @@
-import type { CommandStepProcessor } from './executor.ts';
+import type { CommandStepProcessor } from '../executor.ts';
 
 /**
  * Create argument selector that expects one of given options.

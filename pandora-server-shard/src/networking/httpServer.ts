@@ -27,7 +27,8 @@ export const HttpServer = new class HttpServer implements ServerService {
 			res.header('Access-Control-Expose-Headers', 'Content-Length');
 			res.header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Range');
 			if (req.method === 'OPTIONS') {
-				return res.sendStatus(200);
+				res.sendStatus(200);
+				return;
 			} else {
 				return next();
 			}
@@ -56,13 +57,17 @@ export const HttpServer = new class HttpServer implements ServerService {
 			this._server = new NodeHttpsServer({
 				cert: certData,
 				key: keyData,
-			}, expressApp);
+			}, (req, res) => {
+				expressApp(req, res);
+			});
 		} else {
 			// Warn only if we are not behind proxy that handles HTTPS for us
 			if (TRUSTED_REVERSE_PROXY_HOPS === 0) {
 				this._logger.warning('Starting in HTTP-only mode');
 			}
-			this._server = new NodeHttpServer(expressApp);
+			this._server = new NodeHttpServer((req, res) => {
+				expressApp(req, res);
+			});
 		}
 		const server = this._server;
 		// Host assets (only if we are supposed to)
@@ -71,6 +76,14 @@ export const HttpServer = new class HttpServer implements ServerService {
 		}
 		// Host metrics
 		expressApp.use('/metrics', MetricsServe());
+
+		// Error handling
+		const expressErrorHandler: express.ErrorRequestHandler = (err: unknown, req, res, _next): void => {
+			this._logger.error(`Error during handling of '${req.method} ${req.url}':\n`, err);
+			res.sendStatus(500);
+		};
+		expressApp.use(expressErrorHandler);
+
 		// Attach socket.io server
 		new SocketIOServerClient(server);
 		// Keep track of existing connection

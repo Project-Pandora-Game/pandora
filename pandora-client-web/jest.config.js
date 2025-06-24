@@ -21,7 +21,6 @@ export default {
 		'\\.s?css$': '<rootDir>/test/stubs/stylesheetStub.ts',
 		'react-reverse-portal': '<rootDir>/node_modules/react-reverse-portal/dist/cjs/index.js',
 	},
-	resolver: '<rootDir>/test/resolver.cjs',
 	testEnvironment: 'jsdom',
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	extensionsToTreatAsEsm: ['.ts', '.tsx', '.mts'],

@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
 import type { EffectsDefinition } from '../../assets/effects.ts';
 import type { CharacterRestrictionsManager } from '../../character/index.ts';
-import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat/index.ts';
 import type { IChatSegment } from '../../chat/chat.ts';
+import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat/index.ts';
 import type { AppearanceAction, AppearanceActionProcessingResultValid } from '../actionLogic/index.ts';
 import type { CharacterModifierEffectData } from './characterModifierData.ts';
 
@@ -33,7 +33,7 @@ export interface CharacterModifierProperties<TConfig> {
 	 * @param config - Config of this modifier
 	 * @param action - The action the character is attempting to do
 	 * @param player - Restriction manager of player before the action
-	 * @param result - Result of the original action. Not changed as multiple modifers run.
+	 * @param result - Result of the original action. Not changed as multiple modifiers run.
 	 * @returns Whether to `allow` or `block` this action.
 	 */
 	checkCharacterAction?(
@@ -128,8 +128,7 @@ export interface CharacterModifierProperties<TConfig> {
 /** A helper type that contains all of modifier properties hooks without their config argument. */
 export type CharacterModifierPropertiesApplier = {
 	readonly [t in keyof CharacterModifierProperties<unknown>]-?:
-	NonNullable<CharacterModifierProperties<unknown>[t]> extends (config: infer TConfig, ...args: infer Args) => infer Return ?
-	(((...args: Args) => Return) | null) : never;
+	NonNullable<CharacterModifierProperties<unknown>[t]> extends (config: infer TConfig, ...args: infer Args) => infer Return ? (((...args: Args) => Return) | null) : never;
 	// We intentionally make it non-optional and use `null` to avoid forgetting about linking things in `createPropertiesApplier`
 } & {
 	// In addition applier links to the original effect

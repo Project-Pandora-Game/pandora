@@ -21,7 +21,7 @@ describe('SetConsoleOutput()', () => {
 });
 
 describe('Logger', () => {
-	const mockOnMessage = jest.fn((_prefix, _message) => {/**nothing */ });
+	const mockOnMessage = jest.fn<LogOutputDefinition['onMessage']>();
 	const mockFatalHandler = jest.fn();
 	const mockLogOutput: LogOutputDefinition = {
 		logLevel: LogLevel.VERBOSE,

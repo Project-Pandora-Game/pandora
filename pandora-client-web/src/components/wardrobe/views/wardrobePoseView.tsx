@@ -59,6 +59,7 @@ import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -835,14 +836,6 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 			height={ PREVIEW_SIZE }
 		/>
 	);
-}
-
-export function GetVisibleBoneName(name: string): string {
-	return name
-		.replace(/^\w/, (c) => c.toUpperCase())
-		.replace(/_r$/, () => ' Right')
-		.replace(/_l$/, () => ' Left')
-		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
 export function BoneRowElement({ definition, onChange, characterState }: {

@@ -27,7 +27,8 @@ import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
-import { GetVisibleBoneName, PoseButton } from '../views/wardrobePoseView.tsx';
+import { PoseButton } from '../views/wardrobePoseView.tsx';
+import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
 
 import deleteIcon from '../../../assets/icons/delete.svg';

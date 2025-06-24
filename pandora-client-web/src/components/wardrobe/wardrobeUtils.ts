@@ -112,3 +112,11 @@ export function WardrobeCheckResultForConfirmationWarnings(
 
 	return warnings;
 }
+
+export function GetVisibleBoneName(name: string): string {
+	return name
+		.replace(/^\w/, (c) => c.toUpperCase())
+		.replace(/_r$/, () => ' Right')
+		.replace(/_l$/, () => ' Left')
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+}

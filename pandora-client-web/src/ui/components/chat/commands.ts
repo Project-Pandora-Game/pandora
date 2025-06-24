@@ -6,6 +6,7 @@ import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextPr
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { ChatMode } from './chatInput.tsx';
+import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
 import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
@@ -446,6 +447,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	//#endregion
 	//#region Commands to change the player's pose
 	COMMAND_POSEPRESET,
+	COMMAND_POSEMANUAL,
 	{
 		key: ['turn', 't'],
 		description: `Turns yourself around`,

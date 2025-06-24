@@ -19,7 +19,8 @@
 		"allowUnusedPatches": false,
 		"ignorePatchFailures": false,
 		"onlyBuiltDependencies": [
-			"argon2"
+			"argon2",
+			"unrs-resolver"
 		],
 		"ignoredBuiltDependencies": [
 			"core-js-pure"

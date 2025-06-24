@@ -1,15 +1,13 @@
-import promClient from 'prom-client';
-import { performance } from 'perf_hooks';
 import express, { Request, Response } from 'express';
+import { performance } from 'perf_hooks';
+import promClient from 'prom-client';
 
 /** Host the metrics as express endpoint */
 export function MetricsServe(): express.RequestHandler {
-	return (_req: Request, res: Response) => {
+	return async (_req: Request, res: Response) => {
 		res.set('Content-Type', promClient.register.contentType);
-		promClient.register.metrics().then(
-			(data) => res.end(data),
-			(err) => res.status(500).end(err),
-		);
+		const data = await promClient.register.metrics();
+		res.end(data);
 	};
 }
 

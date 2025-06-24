@@ -45,13 +45,17 @@ export const HttpServer = new class HttpServer implements ServerService {
 			this._server = new NodeHttpsServer({
 				cert: certData,
 				key: keyData,
-			}, expressApp);
+			}, (req, res) => {
+				expressApp(req, res);
+			});
 		} else {
 			// Warn only if we are not behind proxy that handles HTTPS for us
 			if (TRUSTED_REVERSE_PROXY_HOPS === 0) {
 				this._logger.warning('Starting in HTTP-only mode');
 			}
-			this._server = new NodeHttpServer(expressApp);
+			this._server = new NodeHttpServer((req, res) => {
+				expressApp(req, res);
+			});
 		}
 		const server = this._server;
 		// Host metrics
@@ -59,6 +63,14 @@ export const HttpServer = new class HttpServer implements ServerService {
 		// APIs
 		expressApp.use('/api/github', GitHubVerifierAPI());
 		expressApp.use('/pandora', PandoraPublicApi());
+
+		// Error handling
+		const expressErrorHandler: express.ErrorRequestHandler = (err: unknown, req, res, _next): void => {
+			this._logger.error(`Error during handling of '${req.method} ${req.url}':\n`, err);
+			res.sendStatus(500);
+		};
+		expressApp.use(expressErrorHandler);
+
 		// Attach socket.io servers
 		new SocketIOServerClient(server);
 		new SocketIOServerShard(server);

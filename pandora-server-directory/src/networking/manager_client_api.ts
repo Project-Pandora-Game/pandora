@@ -11,7 +11,8 @@ export function PandoraPublicApi(): Router {
 		res.header('Access-Control-Expose-Headers', 'Content-Length');
 		res.header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Range');
 		if (req.method === 'OPTIONS') {
-			return res.sendStatus(200);
+			res.sendStatus(200);
+			return;
 		} else {
 			return next();
 		}

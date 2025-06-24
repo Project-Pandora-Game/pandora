@@ -59,25 +59,17 @@ describe('Account Manager', () => {
 			const { result } = renderHookWithTestProviders(useLogout);
 			expect(logoutMock).not.toHaveBeenCalled();
 
-			const original = window.location;
-			const reload = jest.fn();
-			Object.defineProperty(window, 'location', {
-				value: {
-					reload,
-				},
-				writable: true,
-			});
+			const jsdomImplSymbol = Reflect.ownKeys(window.location).find((i) => typeof i === 'symbol')!;
+			const reload = jest
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+				.spyOn((window.location as any)[jsdomImplSymbol], 'reload')
+				.mockImplementation(() => { /* NOOP */ });
+			reload.mockImplementation();
 
 			result.current();
 			expect(logoutMock).toHaveBeenCalledTimes(1);
 			// It triggers window reload
 			expect(reload).toHaveBeenCalledTimes(1);
-
-			// Restore
-			Object.defineProperty(window, 'location', {
-				value: original,
-				writable: true,
-			});
 		});
 	});
 

@@ -40,18 +40,6 @@ describe('DirectoryConnectorContextProvider', () => {
 			renderHookWithTestProviders(() => useDirectoryChangeListener(event, callback));
 			expect(callback).toHaveBeenCalledTimes(1);
 		});
-
-		it.each(directoryChangeEvents)('should fire the %p callback immediately if runImmediate is true', (event) => {
-			renderHookWithTestProviders(() => useDirectoryChangeListener(event, callback, true));
-			expect(callback).toHaveBeenCalledTimes(1);
-		});
-
-		it.each(directoryChangeEvents)(
-			'should not fire the %p callback immediately if runImmediate is false',
-			(event) => {
-				renderHookWithTestProviders(() => useDirectoryChangeListener(event, callback, false));
-				expect(callback).not.toHaveBeenCalled();
-			});
 	});
 
 	describe('useAuthToken', () => {

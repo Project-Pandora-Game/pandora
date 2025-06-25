@@ -6,8 +6,10 @@ import {
 	type AssetManager,
 	type AssetsPosePreset,
 } from 'pandora-common';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { DirectoryConnectionState } from '../../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
 export function FixupStoredPosePreset(preset: Immutable<AssetFrameworkPosePresetWithId>, assetManager: AssetManager): AssetsPosePreset {
@@ -49,17 +51,31 @@ export const StoredPosePresets: ReadonlyObservable<AssetFrameworkPosePresetWithI
  */
 export function StoredPosePresetsLoaderService(): null {
 	const directoryConnector = useDirectoryConnector();
+	const currentAccount = useCurrentAccount();
 
 	const fetchStoredPosePresets = React.useCallback(async () => {
+		if (currentAccount == null) {
+			StoredPosePresetsInternal.value = undefined;
+			return;
+		}
+
 		const result = await directoryConnector.awaitResponse('storedPosePresetsGetAll', {});
 		StoredPosePresetsInternal.value = result.storedPosePresets;
-	}, [directoryConnector]);
+	}, [directoryConnector, currentAccount]);
 
 	useDirectoryChangeListener('storedPosePresets', () => {
 		fetchStoredPosePresets().catch((err) => {
 			GetLogger('StoredPosePresetsLoader').warning('Error getting stored pose presets:', err);
 		});
-	}, true);
+	});
+
+	useEffect(() => {
+		if (directoryConnector.state.value === DirectoryConnectionState.CONNECTED) {
+			fetchStoredPosePresets().catch((err) => {
+				GetLogger('StoredPosePresetsLoader').warning('Error getting stored pose presets (account change):', err);
+			});
+		}
+	}, [directoryConnector, fetchStoredPosePresets]);
 
 	return null;
 }

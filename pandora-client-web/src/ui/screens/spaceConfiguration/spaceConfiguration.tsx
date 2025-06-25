@@ -436,18 +436,21 @@ function SpaceConfigurationGeneral({
 				) : (
 					<div className='input-container'>
 						<label>Features (cannot be changed after creation):</label>
-						<ul>
-							{
-								currentConfig.features.length > 0 ?
-								SPACE_FEATURES
-									.filter((feature) => currentConfig.features.includes(feature.id))
-									.map((feature) => (
-										<li key={ feature.id }>{ feature.name }</li>
-									))
-								:
-								'- None'
-							}
-						</ul>
+						{
+							currentConfig.features.length > 0 ? (
+								<ul>
+									{
+										SPACE_FEATURES
+											.filter((feature) => currentConfig.features.includes(feature.id))
+											.map((feature) => (
+												<li key={ feature.id }>{ feature.name }</li>
+											))
+									}
+								</ul>
+							) : (
+								<span className='text-dim'>None</span>
+							)
+						}
 					</div>
 				)
 			}

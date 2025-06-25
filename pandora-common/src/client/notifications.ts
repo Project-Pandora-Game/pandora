@@ -1,3 +1,4 @@
+import { freeze } from 'immer';
 import { z } from 'zod';
 import { AccountIdSchema } from '../account/account.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
@@ -5,7 +6,6 @@ import { type ChatActionId } from '../chat/chatActions.ts';
 import { KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { ZodCast } from '../validation.ts';
 import { ClientNotificationTypeSettingSchema, type ClientNotificationGroupDefinitionBase, type ClientNotificationTypeDefinitionDataShape, type ClientNotificationTypeSetting } from './notificationDefinition.ts';
-import { freeze } from 'immer';
 
 //#region Notification group definitions
 
@@ -26,21 +26,20 @@ export const CLIENT_NOTIFICATION_GROUPS = {
 //#region Notification types definitions
 
 // Describes settings for a notification type that is disabled by default
-/* const DEFAULT_DISABLED: ClientNotificationTypeSetting = {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEFAULT_DISABLED = freeze<ClientNotificationTypeSetting>({
 	persist: false,
 	popup: false,
 	sound: null,
 	suppression: 'not-suppressed',
-}; */
+}, true);
 // Describes default minimum settings for notification types
-const DEFAULT_MIN: ClientNotificationTypeSetting = {
+const DEFAULT_MIN = freeze<ClientNotificationTypeSetting>({
 	persist: true,
 	popup: false,
 	sound: null,
 	suppression: 'not-suppressed',
-};
-//freeze(DEFAULT_DISABLED, true);
-freeze(DEFAULT_MIN, true);
+}, true);
 
 export const CLIENT_NOTIFICATION_TYPES = {
 	chatMessagesMessage: {

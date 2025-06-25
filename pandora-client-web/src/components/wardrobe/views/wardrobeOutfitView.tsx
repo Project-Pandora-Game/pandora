@@ -706,7 +706,7 @@ function useStoredOutfits(): AssetFrameworkOutfitWithId[] | undefined {
 
 	useDirectoryChangeListener('storedOutfits', () => {
 		fetchStoredOutfits().catch(noop);
-	}, true);
+	});
 
 	return storedOutfits;
 }

@@ -59,7 +59,6 @@ export function useDirectoryConnector(): DirectoryConnector {
 export function useDirectoryChangeListener(
 	event: IDirectoryClientChangeEvents,
 	callback: () => void,
-	runImmediate = true,
 ): void {
 	const directoryConnector = useDirectoryConnector();
 	const callbackRef = useRef<() => void>(noop);
@@ -69,15 +68,22 @@ export function useDirectoryChangeListener(
 	}, [callback, callbackRef]);
 
 	useEffect(() => {
-		if (runImmediate) {
-			callbackRef.current();
-		}
-		return directoryConnector.on('somethingChanged', (changes) => {
-			if (changes.includes(event)) {
+		const cleanup = [
+			directoryConnector.on('somethingChanged', (changes) => {
+				if (changes.includes(event)) {
+					callbackRef.current();
+				}
+			}),
+			directoryConnector.on('connected', () => {
 				callbackRef.current();
-			}
-		});
-	}, [directoryConnector, event, callbackRef, runImmediate]);
+			}),
+		];
+
+		callbackRef.current();
+		return () => {
+			cleanup.forEach((c) => c());
+		};
+	}, [directoryConnector, event, callbackRef]);
 }
 
 export function useAuthToken(): AuthToken | undefined {

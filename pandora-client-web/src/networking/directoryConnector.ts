@@ -72,6 +72,8 @@ type DirectoryConnectorServiceConfig = Satisfies<{
 	events: {
 		/** Emitted when we receive a `somethingChanged` message from directory. */
 		somethingChanged: readonly IDirectoryClientChangeEvents[];
+		/** Emitted when the connector (re)connects to the server */
+		connected: void;
 	};
 }, ServiceConfigBase>;
 
@@ -212,6 +214,9 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	private setState(newState: DirectoryConnectionState): void {
 		const initial = this._state.value === DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
 		this._state.value = newState;
+		if (newState === DirectoryConnectionState.CONNECTED) {
+			this.emit('connected', undefined);
+		}
 
 		if (newState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
 			this._directoryConnectionProgress.show('progress', 'Connecting to Directory...');

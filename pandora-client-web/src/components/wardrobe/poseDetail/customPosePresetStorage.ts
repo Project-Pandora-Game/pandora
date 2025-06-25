@@ -67,7 +67,7 @@ export function StoredPosePresetsLoaderService(): null {
 		fetchStoredPosePresets().catch((err) => {
 			GetLogger('StoredPosePresetsLoader').warning('Error getting stored pose presets:', err);
 		});
-	}, true);
+	});
 
 	useEffect(() => {
 		if (directoryConnector.state.value === DirectoryConnectionState.CONNECTED) {

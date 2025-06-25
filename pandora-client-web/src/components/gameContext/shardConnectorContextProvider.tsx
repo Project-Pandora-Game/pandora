@@ -10,14 +10,14 @@ import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../../observable.ts';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { NotificationSource, useNotification } from '../../services/notificationHandler.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { useDebugContext } from '../error/debugContextProvider.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 import { useGameStateOptional } from './gameStateContextProvider.tsx';
 
 export function ShardConnectorContextProvider(): null {
+	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
 	const directoryState = useObservable(directoryConnector.state);
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
@@ -27,26 +27,14 @@ export function ShardConnectorContextProvider(): null {
 	const shardConnectionInfo = useNullableObservable(shardConnector?.connectionInfo);
 
 	const { setDebugData } = useDebugContext();
-	const notifyChatMessage = useNotification(NotificationSource.CHAT_MESSAGE);
-	const notifyCharacterEntered = useNotification(NotificationSource.ROOM_ENTRY);
-
-	const {
-		notificationRoomEntrySound,
-	} = useAccountSettings();
 
 	const gameState = useNullableObservable(shardConnector?.gameState);
 
 	useEffect(() => {
-		return gameState?.on('messageNotify', notifyChatMessage);
-	}, [gameState, notifyChatMessage]);
-
-	useEffect(() => {
-		return gameState?.on('characterEntered', () => {
-			if (notificationRoomEntrySound !== '') {
-				notifyCharacterEntered({});
-			}
+		return gameState?.on('uiNavigate', (target) => {
+			navigate(target);
 		});
-	}, [gameState, notificationRoomEntrySound, notifyCharacterEntered]);
+	}, [gameState, navigate]);
 
 	useEffect(() => {
 		setDebugData({

@@ -30,28 +30,10 @@ export interface CommandStepProcessor<ResultType, Context extends ICommandExecut
 	autocompleteShowValue?: boolean;
 	/** Custom value to show instead of argument name */
 	autocompleteCustomName?: string;
-}
-
-export function CommandStepOptional<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty>(
-	processor: CommandStepProcessor<ResultType, Context, EntryArguments>,
-): CommandStepProcessor<ResultType | undefined, Context, EntryArguments> {
-	const result: CommandStepProcessor<ResultType | undefined, Context, EntryArguments> = {
-		preparse: processor.preparse,
-		parse(input, context, args) {
-			if (!input) {
-				return { success: true, value: undefined };
-			}
-			return processor.parse(input, context, args);
-		},
-	};
-	if (processor.autocomplete) {
-		const originalAutocomplete = processor.autocomplete.bind(processor);
-		result.autocomplete = (input, context, args) => {
-			const options = originalAutocomplete(input, context, args);
-			return options.length > 0 ? options : [{ replaceValue: '', displayValue: 'none' }];
-		};
-	}
-	return result;
+	/** If set to true, this argument is treated as optional
+	 * @note This doesn't affect actual handling, only presetnation. Use `argumentOptional` on the command builder to achieve correct behavior.
+	 */
+	isOptional?: boolean;
 }
 
 export interface CommandRunner<
@@ -154,8 +136,10 @@ export class CommandRunnerArgParser<
 				this.processor.autocomplete(value, context, args);
 			const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
+			const currentHeader = this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
+				`<${this.processor.autocompleteCustomName ?? this.name}>`;
 			return {
-				header: `\u25b6<${this.processor.autocompleteCustomName ?? this.name}>\u25c0 ${this.next.predictHeader()}`,
+				header: `\u25b6${currentHeader}\u25c0 ${this.next.predictHeader()}`,
 				options: options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
 					...optionProps,
 					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
@@ -170,12 +154,15 @@ export class CommandRunnerArgParser<
 			return null;
 		}
 
+		const processedHeader = this.processor.autocompleteShowValue === true ? (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) :
+			this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
+				`<${this.processor.autocompleteCustomName ?? this.name}>`;
 		const nextResult = this.next.autocomplete(context, {
 			...args,
 			[this.name]: parsed.value,
 		}, rest);
 		return nextResult != null ? {
-			header: (this.processor.autocompleteShowValue === true ? (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) : `<${this.name}>`) + ` ${nextResult.header}`,
+			header: processedHeader + ' ' + nextResult.header,
 			options: nextResult.options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
 				...optionProps,
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
@@ -185,7 +172,9 @@ export class CommandRunnerArgParser<
 	}
 
 	public predictHeader(): string {
-		return `<${this.processor.autocompleteCustomName ?? this.name}> ${this.next.predictHeader()}`;
+		const header = this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
+			`<${this.processor.autocompleteCustomName ?? this.name}>`;
+		return `${header} ${this.next.predictHeader()}`;
 	}
 
 }

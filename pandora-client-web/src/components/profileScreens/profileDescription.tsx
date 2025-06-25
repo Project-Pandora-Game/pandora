@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { RenderedLink } from '../../ui/screens/spaceJoin/spaceJoin.tsx';
+import { RenderedLink } from '../../ui/components/chat/links.tsx';
 
 export function ProfileDescription({ contents }: { contents: string; }): ReactElement {
 	const segments = contents.split(/(https?:\/\/\S+)/);

@@ -82,6 +82,7 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>You can lead several characters at the same time, but you cannot chain following characters.</li>
+				<li>A character can follow another character within the same space, but Pandora will not allow to automatically follow into another space.</li>
 				<li>While having the according <Link to='#CH_Character_permissions'>permission</Link>, other characters are also able to move your character.</li>
 				<li>Space admins are always permitted to move other characters inside their rooms.</li>
 				<li>

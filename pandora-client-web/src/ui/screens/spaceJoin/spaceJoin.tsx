@@ -1,11 +1,11 @@
-import { GetLogger, SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
+import { GetLogger, SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { DivContainer } from '../../../components/common/container/container.tsx';
-import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
-import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch.tsx';
+import { SpaceDetails } from '../spacesSearch/spaceDetails.tsx';
+import { useSpaceExtendedInfo } from '../spacesSearch/useSpaceExtendedInfo.tsx';
+import { INVALID_INVITE_MESSAGES } from './inviteEmbed.tsx';
 import './spaceJoin.scss';
 
 export function SpaceJoin(): ReactElement {
@@ -66,81 +66,5 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 		<div className='spaceJoin'>
 			<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
 		</div>
-	);
-}
-
-const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'], 'success'>, string> = {
-	notFound: 'Unknown space',
-	noAccess: `Invite expired or you don't have access to this space`,
-	noCharacter: 'You need to have a character selected to view invite details',
-};
-
-export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: SpaceId; invite?: string; }): ReactElement {
-	const inviteResult = SpaceInviteIdSchema.safeParse(invite);
-	const [open, setOpen] = React.useState(false);
-	const info = useSpaceExtendedInfo(spaceId, inviteResult.success ? inviteResult.data : undefined);
-
-	if (info == null) {
-		return (
-			<div className='spaceInvite'>Loading Invitation info...</div>
-		);
-	}
-
-	if (info.result !== 'success') {
-		return (
-			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }.</div>
-		);
-	}
-
-	return (
-		<button className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
-			<span>Space Invitation to: { info.data.name }</span>
-			{
-				!open ? null : (
-					<ModalDialog>
-						<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => setOpen(false) } redirectBeforeLeave />
-					</ModalDialog>
-				)
-			}
-		</button>
-	);
-}
-
-const INVITE_PREFIX = '/space/join/';
-export function RenderedLink({ url, index }: { url: URL; index: number; }): ReactElement {
-	switch (url.hostname) {
-		case 'project-pandora.com':
-		case 'www.project-pandora.com':
-			if (url.pathname.startsWith(INVITE_PREFIX)) {
-				const invite = url.searchParams.get('invite') ?? undefined;
-				let spaceId: string | undefined;
-				try {
-					spaceId = decodeURIComponent(url.pathname.slice(INVITE_PREFIX.length));
-				} catch (_error) {
-					// Ignore decoding errors silently
-					spaceId = undefined;
-				}
-				if (spaceId && !spaceId.startsWith('s/')) {
-					spaceId = 's/' + spaceId;
-				}
-				const parsedSpaceId = SpaceIdSchema.safeParse(spaceId);
-				if (!parsedSpaceId.success)
-					break;
-
-				return (
-					<>
-						<ExternalLink href={ url.href }>
-							{ url.href }
-						</ExternalLink>
-						<SpaceInviteEmbed key={ index } spaceId={ parsedSpaceId.data } invite={ invite } />
-					</>
-				);
-			}
-			break;
-	}
-	return (
-		<UntrustedLink key={ index } href={ url.href }>
-			{ url.href }
-		</UntrustedLink>
 	);
 }

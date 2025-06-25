@@ -14,15 +14,12 @@ import {
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
-	SpaceIdSchema,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
-import { z } from 'zod';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
-import { BrowserStorage } from '../../browserStorage.ts';
 import { Character } from '../../character/character.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
@@ -32,13 +29,15 @@ import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
+import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
@@ -46,8 +45,9 @@ import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, SettingDisplayCharacterName, useRoomCharacterOffsets } from './roomCharacter.tsx';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, useRoomCharacterOffsets } from './roomCharacter.tsx';
+import type { RoomProjectionResolver } from './roomProjection.tsx';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -73,27 +73,6 @@ type RoomDeviceProps = {
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
-
-export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
-export const DeviceOverlayStateSchema = z.object({
-	roomConstructionMode: z.boolean(),
-	spaceId: SpaceIdSchema.nullish(),
-	isPlayerAdmin: z.boolean(),
-	canUseHands: z.boolean(),
-});
-
-export const DeviceOverlaySetting = BrowserStorage.create('device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
-export const DeviceOverlayState = BrowserStorage.createSession('device-overlay-state', {
-	roomConstructionMode: false,
-	spaceId: undefined,
-	isPlayerAdmin: false,
-	canUseHands: false,
-}, DeviceOverlayStateSchema);
-
-export function useIsRoomConstructionModeEnabled(): boolean {
-	const { roomConstructionMode } = useObservable(DeviceOverlayState);
-	return roomConstructionMode;
-}
 
 export function RoomDeviceMovementTool({
 	item,

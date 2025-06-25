@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
+	Assert,
 	AssertNever,
 	AssetId,
 	AssignPronouns,
@@ -16,14 +17,15 @@ import {
 	type IChatMessageDeleted,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import {
+import React, {
 	Fragment,
 	ReactElement,
 } from 'react';
+import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
 import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
-import { RenderedLink } from '../../screens/spaceJoin/spaceJoin.tsx';
+import { RenderedLink } from './links.tsx';
 
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -40,13 +42,16 @@ export type IChatNormalMessageProcessed = IChatMessageChat & {
 	repetitions?: number;
 };
 
+export type ChatMessageProcessedDictionaryEntry = string | { text: string; rich: ReactElement; };
+export type ChatMessageProcessedDictionary<TK extends string = string> = Record<TK, ChatMessageProcessedDictionaryEntry>;
+
 export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 	spaceId: SpaceId | null;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
 	repetitions?: number;
-	dictionary?: Record<string, string | ReactElement>;
+	dictionary?: ChatMessageProcessedDictionary;
 };
 
 export type IChatMessageProcessed = IChatNormalMessageProcessed | IChatDeletedMessageProcessed | IChatActionMessageProcessed;
@@ -55,11 +60,19 @@ export function IsActionMessage(message: IChatMessageProcessed): message is ICha
 	return message.type === 'action' || message.type === 'serverMessage';
 }
 
+function ActionMessageDictionaryTemplate(strings: TemplateStringsArray, ...substitutions: ChatMessageProcessedDictionaryEntry[]): ChatMessageProcessedDictionaryEntry {
+	Assert(strings.length === substitutions.length + 1);
+	return {
+		rich: <>{ substitutions.map((v, i) => <React.Fragment key={ i }>{ strings[i] }{ typeof v === 'string' ? v : v.rich }</React.Fragment>) }{ strings[strings.length - 1] }</>,
+		text: substitutions.flatMap((v, i) => [strings[i], typeof v === 'string' ? v : v.text]).concat(strings[strings.length - 1]).join(''),
+	};
+}
+
 function ActionMessagePrepareDictionary(
 	message: IChatActionMessageProcessed,
 	itemDisplayNameType: ItemDisplayNameType,
 ): IChatActionMessageProcessed {
-	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string | ReactElement>> = {};
+	const metaDictionary: Partial<ChatMessageProcessedDictionary<ChatActionDictionaryMetaEntry>> = {};
 
 	const source = message.data?.character;
 	const target = message.data?.target ?? source;
@@ -96,11 +109,17 @@ function ActionMessagePrepareDictionary(
 	const itemContainerPath = message.data?.itemContainerPath;
 
 	if (item) {
-		metaDictionary.ITEM_ASSET_NAME = <ActionTextItemLink item={ item } itemDisplayNameType={ itemDisplayNameType } />;
+		metaDictionary.ITEM_ASSET_NAME = {
+			text: ActionTextItemLinkToString(item, itemDisplayNameType),
+			rich: <ActionTextItemLink item={ item } itemDisplayNameType={ itemDisplayNameType } />,
+		};
 	}
 
 	if (itemPrevious) {
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = <ActionTextItemLink item={ itemPrevious } itemDisplayNameType={ itemDisplayNameType } />;
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = {
+			text: ActionTextItemLinkToString(itemPrevious, itemDisplayNameType),
+			rich: <ActionTextItemLink item={ itemPrevious } itemDisplayNameType={ itemDisplayNameType } />,
+		};
 	}
 
 	if (itemContainerPath) {
@@ -113,25 +132,34 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 			}
 		} else if (itemContainerPath.length === 1) {
-			const asset = <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />;
+			const asset: ChatMessageProcessedDictionaryEntry = {
+				rich: <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />,
+				text: ActionTextItemLinkToString(itemContainerPath[0], itemDisplayNameType),
+			};
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					<>{ asset } in the room inventory</>;
+					ActionMessageDictionaryTemplate`${ asset } in the room inventory`;
 			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = <>{ metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { asset }</>;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>{ metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { asset }</>;
+				metaDictionary.ITEM_CONTAINER_SIMPLE = ActionMessageDictionaryTemplate`${ metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } ${ asset }`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = ActionMessageDictionaryTemplate`${ metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } ${ asset }`;
 			}
 		} else {
-			const assetFirst = <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />;
-			const assetLast = <ActionTextItemLink item={ itemContainerPath[itemContainerPath.length - 1] } itemDisplayNameType={ itemDisplayNameType } />;
+			const assetFirst: ChatMessageProcessedDictionaryEntry = {
+				rich: <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />,
+				text: ActionTextItemLinkToString(itemContainerPath[0], itemDisplayNameType),
+			};
+			const assetLast: ChatMessageProcessedDictionaryEntry = {
+				rich: <ActionTextItemLink item={ itemContainerPath[itemContainerPath.length - 1] } itemDisplayNameType={ itemDisplayNameType } />,
+				text: ActionTextItemLinkToString(itemContainerPath[itemContainerPath.length - 1], itemDisplayNameType),
+			};
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					<>the { assetLast } in { assetFirst } in the room inventory</>;
+					ActionMessageDictionaryTemplate`the ${ assetLast } in ${ assetFirst } in the room inventory`;
 			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { assetFirst }</>;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { assetFirst }</>;
+				metaDictionary.ITEM_CONTAINER_SIMPLE = ActionMessageDictionaryTemplate`the ${ assetLast } in ${ metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } ${ assetFirst }`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = ActionMessageDictionaryTemplate`the ${ assetLast } in ${ metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } ${ assetFirst }`;
 			}
 		}
 	}
@@ -176,6 +204,14 @@ export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index:
 		case 'bold':
 			return <strong key={ index }>{ contents }</strong>;
 	}
+}
+
+export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>, allowLinkInNormal: boolean): string {
+	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
+		const url = new URL(contents);
+		return url.href;
+	}
+	return contents;
 }
 
 function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
@@ -265,7 +301,11 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 	);
 }
 
-export function RenderActionContentPart(originalMessage: string, substitutions: Readonly<Record<string, string | ReactElement>> | undefined): ReactElement {
+export function ActionTextItemLinkToString(item: IChatMessageActionItem, itemDisplayNameType: ItemDisplayNameType): string {
+	return ResolveItemDisplayNameType(DescribeAsset(GetCurrentAssetManager(), item.assetId), item.itemName, itemDisplayNameType);
+}
+
+export function RenderActionContentPart(originalMessage: string, substitutions: Readonly<ChatMessageProcessedDictionary> | undefined): ReactElement {
 	const message: (string | ReactElement)[] = [originalMessage];
 
 	// Do replacements
@@ -282,7 +322,7 @@ export function RenderActionContentPart(originalMessage: string, substitutions: 
 					const split: (string | ReactElement)[] = original.split(key);
 					if (split.length > 1) {
 						for (let j = split.length - 1; j >= 1; j--) {
-							split.splice(j, 0, value);
+							split.splice(j, 0, typeof value === 'string' ? value : value.rich);
 						}
 						message.splice(i, 1, ...split);
 					}
@@ -292,6 +332,35 @@ export function RenderActionContentPart(originalMessage: string, substitutions: 
 	}
 
 	return <Fragment key='actionContent'>{ message.map((e, i) => (<Fragment key={ i }>{ e }</Fragment>)) }</Fragment>;
+}
+
+export function RenderActionContentPartToString(originalMessage: string, substitutions: Readonly<ChatMessageProcessedDictionary> | undefined): string {
+	const message: string[] = [originalMessage];
+
+	// Do replacements
+	if (substitutions != null) {
+		for (const [key, value] of Object
+			.entries(substitutions)
+			// Do the longest substitutions first to avoid small one replacing part of large one
+			.sort(([a], [b]) => b.length - a.length)
+		) {
+			for (let i = message.length - 1; i >= 0; i--) {
+				// Replace keys with values by splitting the original chunk with the key and "joining" with the value
+				const original = message[i];
+				if (typeof original === 'string') {
+					const split: string[] = original.split(key);
+					if (split.length > 1) {
+						for (let j = split.length - 1; j >= 1; j--) {
+							split.splice(j, 0, typeof value === 'string' ? value : value.text);
+						}
+						message.splice(i, 1, ...split);
+					}
+				}
+			}
+		}
+	}
+
+	return message.join('');
 }
 
 export function RenderActionContent(
@@ -326,6 +395,47 @@ export function RenderActionContent(
 		let actionExtraText: string | ReactElement | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(action.id);
 		if (actionExtraText !== undefined) {
 			actionExtraText = RenderActionContentPart(actionExtraText, action.dictionary);
+		}
+		return [
+			actionText,
+			actionExtraText ?? null,
+		];
+	}
+
+	AssertNever(action.type);
+}
+
+export function RenderActionContentToString(
+	action: IChatActionMessageProcessed,
+	assetManager: AssetManager,
+	itemDisplayNameType: ItemDisplayNameType,
+): [content: string | null, extraContent: string | null] {
+	// Append implicit dictionary entries
+	action = ActionMessagePrepareDictionary(action, itemDisplayNameType);
+	let actionText: string | undefined = GetActionText(action, assetManager);
+	if (actionText === undefined) {
+		return [
+			`( ERROR UNKNOWN ACTION '{ action.id }' )`,
+			null,
+		];
+	}
+	// If the message is set to empty, don't show anyting
+	if (!actionText) {
+		return [null, null];
+	}
+
+	actionText = RenderActionContentPartToString(actionText, action.dictionary);
+
+	if (action.type === 'action') {
+		return [
+			`(${ actionText })`,
+			null,
+		];
+	} else if (action.type === 'serverMessage') {
+		// Server messages can have extra info
+		let actionExtraText: string | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(action.id);
+		if (actionExtraText !== undefined) {
+			actionExtraText = RenderActionContentPartToString(actionExtraText, action.dictionary);
 		}
 		return [
 			actionText,

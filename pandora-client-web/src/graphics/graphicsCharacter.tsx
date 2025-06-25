@@ -1,8 +1,6 @@
 import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import {
-	Asset,
-	ASSET_PREFERENCES_DEFAULT,
 	AssetFrameworkCharacterState,
 	AssetId,
 	CharacterSize,
@@ -12,7 +10,6 @@ import {
 	GetLogger,
 	MergeAssetProperties,
 	PseudoRandom,
-	ResolveAssetPreference,
 	type AssetGraphicsDefinition,
 	type LayerPriority,
 	type LayerStateOverrides,
@@ -22,9 +19,10 @@ import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
-import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
 import { Observable, useObservable } from '../observable.ts';
 import { Container } from './baseComponents/container.ts';
+import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
+import type { PointLike } from './common/point.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
@@ -33,11 +31,6 @@ import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
 import { GraphicsLayer } from './layers/graphicsLayer.tsx';
 import { SwapCullingDirectionObservable, type GraphicsLayerProps } from './layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from './reconciler/tick.ts';
-
-export type PointLike = {
-	x: number;
-	y: number;
-};
 
 const logger = GetLogger('GraphicsCharacter');
 
@@ -361,14 +354,4 @@ export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement |
 		return null;
 
 	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } />;
-}
-
-export function useAssetPreferenceVisibilityCheck(): (asset: Asset) => boolean {
-	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;
-	return useCallback((asset: Asset): boolean => {
-		const resolution = ResolveAssetPreference(preferences, asset);
-		if (resolution.preference === 'doNotRender')
-			return false;
-		return true;
-	}, [preferences]);
 }

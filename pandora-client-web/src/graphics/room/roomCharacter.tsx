@@ -13,10 +13,8 @@ import {
 import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import statusIconAway from '../../assets/icons/state-away.svg';
-import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useFetchedResourceText } from '../../common/useFetch.ts';
@@ -29,18 +27,21 @@ import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts';
 import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
+import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
+import type { RoomProjectionResolver } from './roomProjection.tsx';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
@@ -75,8 +76,6 @@ export const PIVOT_TO_LABEL_OFFSET = 100;
 export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 export const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
 export const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
-
-export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
 export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
 	/** Scale generated from pose */

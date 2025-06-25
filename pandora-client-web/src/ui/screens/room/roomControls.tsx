@@ -23,8 +23,6 @@ import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, u
 import { usePlayer, usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
-import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
@@ -33,6 +31,7 @@ import { BackgroundSelectDialog } from '../spaceConfiguration/backgroundSelect.t
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;

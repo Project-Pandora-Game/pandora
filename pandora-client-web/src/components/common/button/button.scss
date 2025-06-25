@@ -34,6 +34,10 @@
 				background: map.get($theme-data, "disabled-background");
 				color: map.get($theme-data, "disabled-color");
 				border-color: map.get($theme-data, "disabled-border");
+
+				img, canvas {
+					filter: map.get($theme-data, "disabled-icon-filter");
+				}
 			}
 
 			img, canvas {

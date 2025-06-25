@@ -12,8 +12,10 @@ import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
 import type { ClientServices } from './clientServices.ts';
 
+export type ShardConnectorDependencies = Pick<ClientServices, 'directoryConnector' | 'accountManager' | 'notificationHandler'>;
+
 type ShardConnectionManagerServiceConfig = Satisfies<{
-	dependencies: Pick<ClientServices, 'directoryConnector' | 'accountManager'>;
+	dependencies: ShardConnectorDependencies;
 	events: false;
 }, ServiceConfigBase>;
 
@@ -50,15 +52,13 @@ export class ShardConnectionManager extends Service<ShardConnectionManagerServic
 	}
 
 	private _connectToShard(info: IDirectoryCharacterConnectionInfo): void {
-		const { directoryConnector, accountManager } = this.serviceDeps;
-
 		if (this._shardConnector.value?.connectionInfoMatches(info)) {
 			return;
 		}
 		this._disconnectFromShard();
 		this.logger.debug('Requesting connect to shard: ', info);
 
-		const shardConnector = new ShardConnector(info, directoryConnector, accountManager);
+		const shardConnector = new ShardConnector(info, this.serviceDeps);
 		this._shardConnector.value = shardConnector;
 		shardConnector.connect(SocketIOConnector);
 	}
@@ -78,5 +78,6 @@ export const ShardConnectionManagerServiceProvider: ServiceProviderDefinition<Cl
 	dependencies: {
 		directoryConnector: true,
 		accountManager: true,
+		notificationHandler: true,
 	},
 };

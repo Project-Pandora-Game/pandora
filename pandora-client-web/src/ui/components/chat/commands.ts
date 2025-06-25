@@ -1,17 +1,16 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandSelectorEnum, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { ChatMode } from './chatInput.tsx';
-import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers.ts';
+import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';
+import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
+import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
+import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
-
-function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
-	return CreateCommand<ICommandExecutionContextClient>();
-}
 
 function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand<ICommandExecutionContextClient> {
 	const description = GetChatModeDescription({ type, raw });
@@ -179,10 +178,11 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
-		longDescription: `Sends a message to the selected <target> character which only they will see. (alternative command: '/w')` + LONGDESC_THIRD_PERSON,
-		usage: '<target> [message]',
+		longDescription: `Sends a message to the selected <target> character which only they will see. (alternative command: '/w')\n` +
+			'By not specifying a message, you will switch to permanent whisper mode. Use the command again with empty target to leave this mode.',
+		usage: '[target] [message]',
 		handler: CreateClientCommand()
-			.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'otherCharacter' })))
+			.argumentOptional('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {
 				if (!target) {
 					inputHandlerContext.setTarget(null);
@@ -387,39 +387,33 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				dealOpenly: {
 					description: `Deal one card from the space's deck openly to a player. Only possible for the game creator.`,
 					handler: ctx
-						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
 						.handler(({ shardConnector }, { target }) => {
-							if (target) { //Deal card to a player
-								shardConnector.sendMessage('gamblingAction', {
-									type: 'cards',
-									action: {
-										action: 'dealOpenly',
-										targetId: target.data.id,
-									},
-								});
-								return true;
-							} else {
-								return false;
-							}
+							//Deal card to a player
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: {
+									action: 'dealOpenly',
+									targetId: target.data.id,
+								},
+							});
+							return true;
 						}),
 				},
 				deal: {
 					description: `Deal one card from the space's deck hidden to a player. Only possible for the game creator.`,
 					handler: ctx
-						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
 						.handler(({ shardConnector }, { target }) => {
-							if (target) { //Deal card to a player
-								shardConnector.sendMessage('gamblingAction', {
-									type: 'cards',
-									action: {
-										action: 'deal',
-										targetId: target.data.id,
-									},
-								});
-								return true;
-							} else {
-								return false;
-							}
+							//Deal card to a player
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: {
+									action: 'deal',
+									targetId: target.data.id,
+								},
+							});
+							return true;
 						}),
 				},
 				reveal: {
@@ -447,7 +441,14 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			})),
 	},
 	//#endregion
+	//#region Commands to move player
+	COMMAND_LEAD,
+	COMMAND_FOLLOW,
+	COMMAND_STOPFOLLOW,
+	//#endregion
 	//#region Commands to change the player's pose
+	COMMAND_POSEPRESET,
+	COMMAND_POSEMANUAL,
 	{
 		key: ['turn', 't'],
 		description: `Turns yourself around`,
@@ -463,7 +464,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					type: 'pose',
 					target: player.data.id,
 					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
-				}).catch(() => { /** TODO */ });
+				}).catch(() => { /* TODO */ });
 				return true;
 			}),
 	},
@@ -484,7 +485,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					legs: {
 						pose: 'standing',
 					},
-				}).catch(() => { /** TODO */ });
+				}).catch(() => { /* TODO */ });
 				return true;
 			}),
 	},
@@ -505,7 +506,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					legs: {
 						pose: 'kneeling',
 					},
-				}).catch(() => { /** TODO */ });
+				}).catch(() => { /* TODO */ });
 				return true;
 			}),
 	},
@@ -526,7 +527,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					legs: {
 						pose: 'sitting',
 					},
-				}).catch(() => { /** TODO */ });
+				}).catch(() => { /* TODO */ });
 				return true;
 			}),
 	},
@@ -599,7 +600,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						moduleType: 'typed',
 						setVariant: newBlush,
 					},
-				}).catch(() => { /** TODO  **/ });
+				}).catch(() => { /* TODO */ });
 				return true;
 			}),
 	},

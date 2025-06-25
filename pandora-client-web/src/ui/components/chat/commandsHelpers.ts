@@ -1,4 +1,4 @@
-import { CommandStepProcessor, CreateCommand, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type CommandBuilder, type IEmpty, type ItemPath } from 'pandora-common';
+import { CommandStepProcessor, CreateCommand, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type AssetFrameworkCharacterState, type CommandBuilder, type IEmpty, type ItemPath } from 'pandora-common';
 import type { Character } from '../../../character/character.ts';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import type { ICommandExecutionContextClient } from './commandsProcessor.ts';
@@ -8,12 +8,16 @@ type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExec
 
 export type SelfSelect = 'none' | 'otherCharacter' | 'any';
 
-export const CommandSelectorCharacter = ({ allowSelf }: {
+export const CommandSelectorCharacter = ({ allowSelf, filter }: {
 	allowSelf: SelfSelect;
-}): CommandStepProcessor<Character<ICharacterRoomData>, ICommandClientNeededContext<'gameState'>> => ({
+	filter?: (character: { character: Character<ICharacterRoomData>; characterState: AssetFrameworkCharacterState; }) => boolean;
+}): CommandStepProcessor<Character<ICharacterRoomData>, ICommandClientNeededContext<'gameState' | 'globalState'>> => ({
 	preparse: 'quotedArgTrimmed',
-	parse(selector, { gameState }, _args) {
-		const characters = gameState.characters.value;
+	parse(selector, { gameState, globalState }, _args) {
+		const characters = gameState.characters.value.filter((character) => {
+			const characterState = globalState.getCharacterState(character.id);
+			return characterState != null;
+		});
 
 		if (!selector) {
 			return {
@@ -90,10 +94,17 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 			};
 		}
 	},
-	autocomplete(selector, { gameState }, _args) {
+	autocomplete(selector, { gameState, globalState }, _args) {
 		const characters = gameState.characters.value
 			.filter((c) => allowSelf === 'any' || !c.isPlayer())
-			.filter((c) => allowSelf !== 'none' || c.data.accountId !== gameState.player?.data.accountId);
+			.filter((c) => allowSelf !== 'none' || c.data.accountId !== gameState.player?.data.accountId)
+			.filter((character) => {
+				const characterState = globalState.getCharacterState(character.id);
+				if (characterState == null)
+					return false;
+
+				return filter == null || filter({ character, characterState });
+			});
 		// Prefer using id, if the input looks anything like an id
 		if (/^c?[0-9]+$/.test(selector)) {
 			if (selector.startsWith('c')) {
@@ -117,7 +128,7 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 	},
 });
 
-export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<ActionTargetSelector, ICommandClientNeededContext<'gameState'>> {
+export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<ActionTargetSelector, ICommandClientNeededContext<'gameState' | 'globalState'>> {
 	const characterSubprocessor = CommandSelectorCharacter({ allowSelf: 'any' });
 
 	return ({

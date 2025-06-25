@@ -21,7 +21,7 @@ import type { IClientCommand, ICommandExecutionContextClient } from '../commands
 
 export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> = {
 	key: ['posemanual', 'pm'],
-	usage: '<bone | arms | armLeft | armRight | armOrder | legs | legOrder | rotation> ...',
+	usage: '<bone | arms | armLeft | armRight | armOrder | legs | legOrder | rotation> …',
 	description: `Alter details of your character's pose`,
 	longDescription: `(alternative command: '/pm')`,
 	handler: CreateClientCommand()
@@ -33,7 +33,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 					leftArm: { ...arms, ...leftArm },
 					rightArm: { ...arms, ...rightArm },
 					...copy,
-				}).catch(() => { /** TODO */ });
+				}).catch(() => { /* TODO */ });
 			}
 
 			function armHandler(arm: Satisfies<'leftArm' | 'rightArm' | 'arms', keyof PartialAppearancePose>) {

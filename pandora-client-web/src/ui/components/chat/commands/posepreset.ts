@@ -51,7 +51,7 @@ export const COMMAND_POSEPRESET: IClientCommand<ICommandExecutionContextClient> 
 				leftArm: { ...arms, ...leftArm },
 				rightArm: { ...arms, ...rightArm },
 				...copy,
-			}).catch(() => { /** TODO */ });
+			}).catch(() => { /* TODO */ });
 			return true;
 		}),
 };

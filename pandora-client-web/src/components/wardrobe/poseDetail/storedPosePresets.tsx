@@ -62,12 +62,17 @@ function WardrobeStoredPosePresetsContent(): ReactNode {
 	const closeEditSaved = React.useCallback(() => setShowEditSaved(false), []);
 
 	const { presets } = usePosePresetContext();
-	const empty = presets.length === 0;
+	const empty = presets == null || presets.length === 0;
 
 	return (
 		<>
 			<Row alignY={ empty ? 'center' : 'start' } padding={ empty ? 'small' : undefined } gap='small'>
 				{
+					presets == null ? (
+						<span className='flex-1'>
+							Loading...
+						</span>
+					) :
 					empty ? (
 						<>
 							<span className='flex-1'>
@@ -92,14 +97,14 @@ function WardrobeStoredPosePresetsContent(): ReactNode {
 					)
 				}
 			</Row>
-			{ showEditSaved && <PosePresetEditDialog close={ closeEditSaved } /> }
+			{ (showEditSaved && presets != null) && <PosePresetEditDialog close={ closeEditSaved } /> }
 			<PosePresetEditing />
 		</>
 	);
 }
 
 type PosePresetContextType = WardrobeStoredPosePresetsProps & {
-	presets: AssetFrameworkPosePresetWithId[];
+	presets: AssetFrameworkPosePresetWithId[] | undefined;
 	edit: AssetFrameworkPosePresetWithId | null;
 	setEdit: (preset: AssetFrameworkPosePresetWithId | null) => void;
 	reorder: (id: string, shift: number) => void;
@@ -173,8 +178,8 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 
 	const [edit, setEdit] = React.useState<AssetFrameworkPosePresetWithId | null>(null);
 
-	const context = React.useMemo(() => ({
-		presets: stored ?? [],
+	const context = React.useMemo((): PosePresetContextType => ({
+		presets: stored,
 		reorder,
 		remove,
 		update,
@@ -327,7 +332,7 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 	}, [preset, setEdit]);
 
 	const title = React.useMemo(() => {
-		if (presets.some((p) => p.id === preset.id)) {
+		if (presets?.some((p) => p.id === preset.id)) {
 			return 'Edit saved pose';
 		}
 		return 'Save current pose';
@@ -577,7 +582,7 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 					</tr>
 				</thead>
 				<tbody>
-					{ presets.map((preset) => <PosePresetEditRow key={ preset.id } preset={ preset } />) }
+					{ presets?.map((preset) => <PosePresetEditRow key={ preset.id } preset={ preset } />) }
 				</tbody>
 			</table>
 		</DraggableDialog>

@@ -284,6 +284,16 @@ function SpaceConfigurationGeneral({
 	updateConfig,
 }: SpaceConfigurationTabProps): ReactElement {
 	const idPrefix = useId();
+	const currentAccount = useCurrentAccount();
+	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
+
+	let spaceFeatures = SPACE_FEATURES;
+
+	if (!isDeveloper) {
+		spaceFeatures = spaceFeatures.filter((x) => {
+			return x.id !== 'development';
+		});
+	}
 
 	return (
 		<>
@@ -401,9 +411,9 @@ function SpaceConfigurationGeneral({
 			{
 				creation ? (
 					<div className='input-container'>
-						<label>Features (cannot be changed after creation)</label>
+						<label>Features (cannot be changed after creation):</label>
 						{
-							SPACE_FEATURES.map((feature) => (
+							spaceFeatures.map((feature) => (
 								<div key={ feature.id }>
 									<Checkbox
 										id={ `${idPrefix}-feature-${feature.id}` }
@@ -425,14 +435,17 @@ function SpaceConfigurationGeneral({
 					</div>
 				) : (
 					<div className='input-container'>
-						<label>Features (cannot be changed after creation)</label>
+						<label>Features (cannot be changed after creation):</label>
 						<ul>
 							{
+								currentConfig.features.length > 0 ?
 								SPACE_FEATURES
 									.filter((feature) => currentConfig.features.includes(feature.id))
 									.map((feature) => (
 										<li key={ feature.id }>{ feature.name }</li>
 									))
+								:
+								'- None'
 							}
 						</ul>
 					</div>

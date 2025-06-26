@@ -274,21 +274,3 @@ export function CommandSelectorItem<const TTargetKey extends string>(targetKey: 
 export function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
 }
-export const CommandSelectorNumber = (): CommandStepProcessor<number> => ({
-	preparse: 'quotedArgTrimmed',
-	parse(selector) {
-		if (!/^[0-9]+$/.test(selector)) {
-			return {
-				success: false,
-				error: 'Expected number',
-			};
-		}
-
-		const number = Number.parseInt(selector, 10);
-
-		return {
-			success: true,
-			value: number,
-		};
-	},
-});

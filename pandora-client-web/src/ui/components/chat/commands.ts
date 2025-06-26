@@ -9,7 +9,7 @@ import { ChatMode } from './chatInput.tsx';
 import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';
 import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
-import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand, CommandSelectorNumber } from './commandsHelpers.ts';
+import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
 function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand<ICommandExecutionContextClient> {

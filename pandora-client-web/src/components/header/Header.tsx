@@ -210,7 +210,7 @@ function StatusSelector({ open, close }: {
 	const directory = useDirectoryConnector();
 
 	return (
-		<div className={ open ? 'statusSelectorMenuContainer open' : 'statusSelectorMenuContainer' }>
+		<div className={ open ? 'statusSelectorMenuContainer open' : 'statusSelectorMenuContainer' } inert={ !open }>
 			<div className='statusSelectorMenu'>
 				{
 					AccountOnlineStatusSchema.options.map((o) => (
@@ -375,7 +375,7 @@ function OverlayHeader({ onClose: close, visible }: {
 }): ReactElement {
 	return (
 		<DialogInPortal priority={ 5 } location='mainOverlay'>
-			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') }>
+			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') } inert={ !visible }>
 				<Column className='content'>
 					<LeftHeader onAnyClick={ close } />
 					<hr />

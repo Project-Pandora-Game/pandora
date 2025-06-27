@@ -31,6 +31,10 @@ export interface DivContainerProps extends CommonProps {
 	padding?: Exclude<ScssSpacing, 'none'>;
 	/** Defaults to `medium` */
 	gap?: ScssSpacing;
+
+	// Global properties
+	/** @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/inert */
+	inert?: boolean;
 }
 
 export function DivContainer({
@@ -47,6 +51,7 @@ export function DivContainer({
 	overflowY,
 	padding,
 	gap = 'medium',
+	inert,
 }: DivContainerProps): ReactElement {
 	return (
 		<div
@@ -65,6 +70,7 @@ export function DivContainer({
 				`gap-${gap}`,
 				className,
 			) }
+			inert={ inert }
 		>
 			{ children }
 		</div>

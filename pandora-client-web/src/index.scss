@@ -33,8 +33,11 @@ div.main-container {
 	position: relative;
 	background: common.$theme-normal-background;
 	color: common.$theme-normal-text;
-	flex: 1;
+	height: 100%;
+	width: 100%;
+	contain: strict;
 	overflow: hidden;
+	overflow: clip;
 
 	> .Toastify {
 		position: relative;

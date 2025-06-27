@@ -28,7 +28,7 @@ export class CardGameCard {
 	private faceDown: boolean;
 
 	/**
-	 * @returns {string}
+	 * @returns Formatted String representing a card
 	 */
 	public toString() {
 		return `${this.rank}${this.suit}`;
@@ -42,8 +42,7 @@ export class CardGameCard {
 	}
 
 	/**
-	 * Return the state of a card
-	 * @returns {boolean}
+	 * @returns Return the state of a card (face-up, face-down)
 	 */
 	public isRevealed() {
 		return !this.faceDown;
@@ -51,8 +50,8 @@ export class CardGameCard {
 
 	/**
 	 * Creates an instance of CardGameCard.
-	 * @param {CardGameSuit} s
-	 * @param {CardGameRank} r
+	 * @param s - Suit of a card
+	 * @param r - Rank of a card
 	 */
 	constructor(s: CardGameSuit, r: CardGameRank) {
 		this.suit = s;
@@ -64,9 +63,8 @@ export class CardGameCard {
 /**
  * Helper function.
  * Creates a string of given card arrays
- * @export
- * @param {...CardArray[]} cardGroups
- * @returns {string}
+ * @param cardGroups - The card arrays that need to be formatted
+ * @returns A String, repesenting the cards
  */
 export function CardArraysToString(...cardGroups: CardArray[]) {
 	const cards = cardGroups.flat();
@@ -86,8 +84,7 @@ class CardDeck {
 	}
 
 	/**
-	 * Returns how many cards are left in the deck
-	 * @readonly
+	 * @returns Returns how many cards are left in the deck
 	 */
 	public get cardsLeft() {
 		return this.deck.length;
@@ -106,8 +103,7 @@ class CardDeck {
 	}
 
 	/**
-	 * Returns the next card from the top of the deck
-	 * @returns CardGameCard | undefined
+	 * @returns Returns the next card from the top of the deck or undefined, if the deck is empty
 	 */
 	public deal() {
 		//
@@ -116,7 +112,7 @@ class CardDeck {
 
 	/**
 	 * Creates an instance of CardDeck.
-	 * @param {CardGameCard[]} [cards]
+	 * @param cards - An optional deck of cards. If left out a deck of 52 cards will be created
 	 */
 	constructor(cards?: CardGameCard[]) {
 		// Parameter used solely for debugging puposes
@@ -133,8 +129,7 @@ class CardPlayer {
 	private hand: CardArray = [];
 
 	/**
-	 * Returns the player's id
-	 * @returns `c${number}`
+	 * @returns Returns the player's id
 	 */
 	public getId() {
 		return this.id;
@@ -142,8 +137,8 @@ class CardPlayer {
 
 	/**
 	 * Store a card that is dealt either face up or face down
-	 * @param {CardGameCard} c
-	 * @param {boolean} [open=false]
+	 * @param c - The cartd to add to the player's hand
+	 * @param open - Defines wether the card is dealt openly (true) or not (false)
 	 */
 	public receiveCard(c: CardGameCard, open: boolean = false) {
 		if (open) c.reveal();
@@ -151,9 +146,8 @@ class CardPlayer {
 	}
 
 	/**
-	 * Returns an array of cards. Either all reveiled or all hidden cards
-	 * @param {boolean} revealed
-	 * @returns CardArray
+	 * @param revealed - Defines if the function should return the revealed cards (true) or the hidden ones (false)
+	 * @returns Returns an array of cards. Either all reveiled or all hidden cards
 	 */
 	public getCards(revealed: boolean) {
 		const cards = revealed ? this.hand.filter((c) => c.isRevealed()) : this.hand.filter((c) => !c.isRevealed());
@@ -161,8 +155,7 @@ class CardPlayer {
 	}
 
 	/**
-	 * Returns an array of all cards the player currently holds and sets their status to 'reveiled'
-	 * @returns CardArray
+	 * @returns Returns an array of all cards the player currently holds and sets their status to 'reveiled'
 	 */
 	public showHand() {
 		this.hand.forEach((c) => c.reveal());
@@ -171,7 +164,7 @@ class CardPlayer {
 
 	/**
 	 * Creates an instance of CardPlayer.
-	 * @param {CharacterId} id
+	 * @param id - The ID of the player that should be created
 	 */
 	constructor(id: CharacterId) {
 		this.id = id;
@@ -188,8 +181,8 @@ export class CardGameGame {
 
 	/**
 	 * Add a player to the game, if they didn't join already
-	 * @param {CharacterId} c
-	 * @returns true or false, depending on if the player has been added or not
+	 * @param c - The ID of the player that should be added to the game
+	 * @returns true if the player has been added or false in the other case
 	 */
 	public joinGame(c: CharacterId) {
 		if (!this.players.some((p) => p.getId() === c)) {
@@ -202,7 +195,7 @@ export class CardGameGame {
 
 	/**
 	 * Remove a player from the list of players
-	 * @param {CharacterId} c
+	 * @param c - The ID of the player that needs to be removed
 	 */
 	public leaveGame(c: CharacterId) {
 		this.players = this.players.filter((p) => p.getId() !== c);
@@ -211,11 +204,10 @@ export class CardGameGame {
 	/**
 	 * Deal a number of cards, either to a player or to the current space (c == null)
 	 * A card can be dealt either open or face down
-#
-	 * @param {number} n
-	 * @param {CharacterId} [c]
-	 * @param {boolean} [open=false]
-	 * @returns {(CardArray | null)}
+	 * @param n - How many cards should be dealt
+	 * @param c - The ID of the player who should receive the cards. If omitted the cards are dealt openly to the table
+	 * @param open - Wether or not the cards should be dealt openly (true) or face-down (false, default)
+	 * @returns An array of the dealt cards or null, if the deck did not have enough cards for the request
 	 */
 	public dealTo(n: number, c?: CharacterId, open: boolean = false): CardArray | null {
 		if (n > this.deck.cardsLeft) return null;
@@ -240,7 +232,7 @@ export class CardGameGame {
 
 	/**
 	 * Make a player show their current cards
-	 * @param {CharacterId} c
+	 * @param c - ID of the player who should show their hand
 	 */
 	public revealHand(c: CharacterId) {
 		this.players.find((p) => p.getId() === c)?.showHand();
@@ -248,8 +240,8 @@ export class CardGameGame {
 
 	/**
 	 * Check, if the given player is part of the game
-	 * @param {CharacterId} c
-	 * @returns {boolean}
+	 * @param c - The ID of the player who should be checked
+	 * @returns True, if the player is part of the game, false, if not
 	 */
 	public isPlayer(c: CharacterId) {
 		return this.players.find((p) => p.getId() === c);
@@ -258,9 +250,9 @@ export class CardGameGame {
 	/**
 	 * Get the cards, a player is holding. Either all cards or only those
 	 * that have been revealed previously
-	 * @param {CharacterId} c
-	 * @param {boolean} revealedOnly
-	 * @returns {string} A list of cards
+	 * @param c - The ID od the player
+	 * @param revealedOnly - get only the already revealed cards (true) or all (false)
+	 * @returns A formatted list of cards
 	 */
 	public getPlayerHand(c: CharacterId, revealedOnly: boolean) {
 		const player = this.players.find((p) => p.getId() === c);
@@ -272,16 +264,14 @@ export class CardGameGame {
 	}
 
 	/**
-	 * Returns a list of all current players
-	 * @returns {`c${number}`[]}
+	 * @returns Returns an array of all current players
 	 */
 	public getPlayerIds() {
 		return this.players.map((p) => p.getId());
 	}
 
 	/**
-	 * Returns the cards that are on the table
-	 * @returns {string}
+	 * @returns Returns a formatted string of the cards that are on the table
 	 */
 	public getSpaceHand() {
 		return CardArraysToString(this.spaceHand);
@@ -289,24 +279,22 @@ export class CardGameGame {
 
 	/**
 	 * Checks, if the current player is the game's dealer
-	 * @param {CharacterId} p The player to check
-	 * @returns {boolean}
+	 * @param p - The player to check
+	 * @returns True if the given player is the game's dealer, false, if not
 	 */
 	public isDealer(p: CharacterId) {
 		return p === this.dealer;
 	}
 
 	/**
-	 * Get the game's dealer ID
-	 * @returns {`c${number}`}
+	 * @returns The game's dealer ID
 	 */
 	public getDealerId() {
 		return this.dealer;
 	}
 
 	/**
-	 * Returns true, if the game is public
-	 * @returns {boolean}
+	 * @returns True, if the game is public, false, if not
 	 */
 	public isPublic() {
 		return this.public;
@@ -315,10 +303,9 @@ export class CardGameGame {
 	/**
 	 * Creates a game, sets the game to be either public or private and
 	 * can also take a preset deck of cards (currently used for testing only atm)
-	 * @param {CharacterId} dealer
-	 * @param {boolean} p
-	 * @param {CardDeck} [d]
-	 * @memberof CardGameGame
+	 * @param dealer - ID of the player who will be the game's host
+	 * @param p - True, if the game should be public, false otherwise
+	 * @param d - An optional deck of cards. Used mainly for testing
 	 */
 	constructor(dealer: CharacterId, p: boolean, d?: CardDeck) {
 		this.players = [];

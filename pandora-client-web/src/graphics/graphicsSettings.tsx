@@ -15,7 +15,10 @@ export const GraphicsSettingsSchema = z.object({
 	// Quality
 	renderResolution: z.number().int().min(0).max(100),
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
+	/** Non-disabled alphamasking suppresses antialias. */
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
+	/** Whether to tell browser we prefer antialiasing. Requires page reload. */
+	antialias: z.boolean(),
 });
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
@@ -27,6 +30,7 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	renderResolution: 100,
 	textureResolution: 'auto',
 	alphamaskEngine: 'disabled',
+	antialias: true,
 } as const;
 
 export const GraphicsSettingsStorage = BrowserStorage.create<Partial<Immutable<GraphicsSettings>>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
@@ -36,6 +40,11 @@ GraphicsSettingsStorage.subscribe(() => {
 	// Do the cleanup asynchronously so things have time to unload if they were loaded
 	setTimeout(() => {
 		GraphicsManagerInstance.value?.loader.gc();
+
+		// Check if effective antialias changed and reload the page
+		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias()) {
+			globalThis.location.reload();
+		}
 	}, 500);
 });
 
@@ -53,6 +62,15 @@ export function SetGraphicsSettings(changes: Partial<GraphicsSettings>): void {
 		...changes,
 	};
 }
+
+export function GetGraphicsEffectiveAntialias(): boolean {
+	const { antialias, alphamaskEngine } = ({
+		...GRAPHICS_SETTINGS_DEFAULT,
+		...GraphicsSettingsStorage.value,
+	});
+	return antialias && alphamaskEngine === 'disabled';
+}
+const LOAD_TIME_EFFECTIVE_ANTIALIAS = GetGraphicsEffectiveAntialias();
 
 export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {
 	GraphicsSettingsStorage.produce((v) => {

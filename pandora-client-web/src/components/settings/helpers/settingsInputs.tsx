@@ -86,10 +86,11 @@ export function useValueMapDriver<const TIn, const TOut>(
 	}), [parentDriver, forwardMapping, backwardMapping]);
 }
 
-export function ToggleSettingInput({ driver, label, noReset = false, deps = EMPTY_ARRAY }: {
+export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY }: {
 	driver: Readonly<SettingDriver<boolean>>;
-	label: string;
+	label: ReactNode;
 	noReset?: boolean;
+	disabled?: boolean;
 	deps?: DependencyList;
 }): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
@@ -114,6 +115,7 @@ export function ToggleSettingInput({ driver, label, noReset = false, deps = EMPT
 				id={ id }
 				checked={ value ?? driver.defaultValue }
 				onChange={ setValue }
+				disabled={ disabled }
 			/>
 			<label
 				htmlFor={ id }

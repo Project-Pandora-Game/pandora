@@ -128,10 +128,12 @@ function ChatroomSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Chatroom UI</legend>
-			<ChatroomGraphicsRatio />
-			<ChatroomChatFontSize />
-			<ChatroomChatCommandHintBehavior />
-			<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
+			<Column gap='large'>
+				<ChatroomGraphicsRatio />
+				<ChatroomChatFontSize />
+				<ChatroomChatCommandHintBehavior />
+				<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
+			</Column>
 		</fieldset>
 	);
 }
@@ -232,10 +234,12 @@ function RoomGraphicsSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Room graphics UI</legend>
-			<ChatroomCharacterAwayStatusIconDisplay />
-			<ChatroomCharacterNameFontSize />
-			<ChatroomOfflineCharacters />
-			<ChatroomCharacterPosintStyle />
+			<Column gap='large'>
+				<ChatroomCharacterAwayStatusIconDisplay />
+				<ChatroomCharacterNameFontSize />
+				<ChatroomOfflineCharacters />
+				<ChatroomCharacterPosintStyle />
+			</Column>
 		</fieldset>
 	);
 }
@@ -277,15 +281,17 @@ function WardrobeSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Wardrobe UI</legend>
-			<WardrobeShowExtraButtons />
-			<WardrobeHoverPreview />
-			<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Pose" menu' />
-			<SelectAccountSettings setting='wardrobePosingCategoryDefault' label='Select the default category in the "Pose" menu' stringify={ WARDROBE_POSING_CATEGORY_DEFAULT } />
-			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
-			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
-			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
-			<SelectAccountSettings setting='wardrobeItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
-			<SelectAccountSettings setting='wardrobeItemRequireFreeHandsToUseDefault' label='Bound usage pre-selection when creating new items' stringify={ WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT } />
+			<Column gap='large'>
+				<WardrobeShowExtraButtons />
+				<WardrobeHoverPreview />
+				<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Pose" menu' />
+				<SelectAccountSettings setting='wardrobePosingCategoryDefault' label='Select the default category in the "Pose" menu' stringify={ WARDROBE_POSING_CATEGORY_DEFAULT } />
+				<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+				<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+				<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+				<SelectAccountSettings setting='wardrobeItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
+				<SelectAccountSettings setting='wardrobeItemRequireFreeHandsToUseDefault' label='Bound usage pre-selection when creating new items' stringify={ WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT } />
+			</Column>
 		</fieldset>
 	);
 }

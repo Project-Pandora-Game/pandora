@@ -40,41 +40,43 @@ function NotificationGlobalSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Global settings</legend>
-			<h2>Sound</h2>
-			<SelectSettingInput
-				driver={ defaultVolumeDriver }
-				label='Sound notifications volume'
-				stringify={ NOTIFICATION_AUDIO_VOLUME }
-				optionOrder={ ['100', '75', '50', '25', '0'] }
-				schema={ ClientNotificationSoundVolumeSchema }
-			/>
-			<SelectSettingInput
-				driver={ defaultSoundDriver }
-				label='Default notification sound'
-				stringify={ NOTIFICATION_AUDIO_NAMES }
-				schema={ ClientNotificationSoundSchema }
-			>
-				<Button
-					className='slim'
-					disabled={ defaultSound === '' }
-					onClick={ () => {
-						const sound = NOTIFICATION_AUDIO_SOUNDS[defaultSound];
-						if (sound != null) {
-							const audio = new Audio(sound);
-							audio.volume = Number(defaultVolume) / 100;
-							audio.play().catch(() => { /*ignore*/ });
-						}
-					} }
+			<Column gap='large'>
+				<h2>Sound</h2>
+				<SelectSettingInput
+					driver={ defaultVolumeDriver }
+					label='Sound notifications volume'
+					stringify={ NOTIFICATION_AUDIO_VOLUME }
+					optionOrder={ ['100', '75', '50', '25', '0'] }
+					schema={ ClientNotificationSoundVolumeSchema }
+				/>
+				<SelectSettingInput
+					driver={ defaultSoundDriver }
+					label='Default notification sound'
+					stringify={ NOTIFICATION_AUDIO_NAMES }
+					schema={ ClientNotificationSoundSchema }
 				>
-					Test
-				</Button>
-			</SelectSettingInput>
-			<h2>Popups</h2>
-			<ToggleSettingInput
-				driver={ useSubsettingDriver(globalSettingsDriver, 'usePlatformPopup') }
-				label='Use system popups, if available (requires additional browser permission)'
-			/>
-			<NotificationPermissionRequest />
+					<Button
+						className='slim'
+						disabled={ defaultSound === '' }
+						onClick={ () => {
+							const sound = NOTIFICATION_AUDIO_SOUNDS[defaultSound];
+							if (sound != null) {
+								const audio = new Audio(sound);
+								audio.volume = Number(defaultVolume) / 100;
+								audio.play().catch(() => { /*ignore*/ });
+							}
+						} }
+					>
+						Test
+					</Button>
+				</SelectSettingInput>
+				<h2>Popups</h2>
+				<ToggleSettingInput
+					driver={ useSubsettingDriver(globalSettingsDriver, 'usePlatformPopup') }
+					label='Use system popups, if available (requires additional browser permission)'
+				/>
+				<NotificationPermissionRequest />
+			</Column>
 		</fieldset>
 	);
 }

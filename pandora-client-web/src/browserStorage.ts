@@ -40,7 +40,12 @@ export class BrowserStorage<T> extends Observable<T> {
 			const parsedValue = JSON.parse(value) as unknown;
 			const validated = this.validate.safeParse(parsedValue);
 			if (validated.success) {
-				this.value = validated.data;
+				try {
+					this._saveInhibit = true;
+					this.value = validated.data;
+				} finally {
+					this._saveInhibit = false;
+				}
 			}
 		}
 	}

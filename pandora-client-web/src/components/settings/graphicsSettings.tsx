@@ -2,7 +2,7 @@ import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
-import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAutomaticResolution } from '../../services/screenResolution/screenResolution.ts';
 import { Button } from '../common/button/button.tsx';
@@ -32,16 +32,18 @@ function EffectsSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Effects</legend>
-			<ToggleSettingInput
-				driver={ useGraphicsSettingDriver('effectBlinking') }
-				label='Eye blinking of characters'
-			/>
-			<SelectSettingInput<GraphicsSettings['smoothMovement']>
-				driver={ useGraphicsSettingDriver('smoothMovement') }
-				label='Smooth movement'
-				stringify={ SMOOTH_MOVEMENT_DESCRIPTIONS }
-				schema={ GraphicsSettingsSchema.shape.smoothMovement }
-			/>
+			<Column gap='large'>
+				<ToggleSettingInput
+					driver={ useGraphicsSettingDriver('effectBlinking') }
+					label='Eye blinking of characters'
+				/>
+				<SelectSettingInput<GraphicsSettings['smoothMovement']>
+					driver={ useGraphicsSettingDriver('smoothMovement') }
+					label='Smooth movement'
+					stringify={ SMOOTH_MOVEMENT_DESCRIPTIONS }
+					schema={ GraphicsSettingsSchema.shape.smoothMovement }
+				/>
+			</Column>
 		</fieldset>
 	);
 }
@@ -64,67 +66,101 @@ function QualitySettings(): ReactElement {
 	}), [automaticTextureResolution]);
 
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
+	const currentGraphicsSettings = useGraphicsSettings();
 
 	return (
 		<fieldset>
 			<legend>Quality</legend>
-			<SelectSettingInput<string>
-				driver={ {
-					currentValue: renderResolutionDriver.currentValue?.toString(),
-					defaultValue: renderResolutionDriver.defaultValue.toString(),
-					onChange(v) {
-						const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
-						return renderResolutionDriver.onChange(newValue);
-					},
-					onReset: renderResolutionDriver.onReset,
-				} }
-				label='Render resolution'
-				stringify={
-					Object.fromEntries(
-						([100, 90, 80, 65, 50, 25, 0])
-							.map((v) => [v.toString(), `${v}%`]),
-					)
-				}
-				optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
-				schema={ z.string() }
-			/>
-			<SelectSettingInput<GraphicsSettings['textureResolution']>
-				driver={ useGraphicsSettingDriver('textureResolution') }
-				label='Texture resolution'
-				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
-				optionOrder={ ['auto', '1', '0.5', '0.25'] }
-				schema={ GraphicsSettingsSchema.shape.textureResolution }
-			/>
-			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
-				driver={ useGraphicsSettingDriver('alphamaskEngine') }
-				label={
-					<>
-						Alphamasking engine
-						<ContextHelpButton>
-							<p>
-								Alphamasks allow assets to hide parts of other assets beneath them, so they do not clip through.<br />
-								Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
-								While not using an alphamasking engine will cause clipping with assets, <br />
-								we decided to disable it by default, as many people are encountering performance issues due to it.
-							</p>
+			<Column gap='large'>
+				<SelectSettingInput<string>
+					driver={ {
+						currentValue: renderResolutionDriver.currentValue?.toString(),
+						defaultValue: renderResolutionDriver.defaultValue.toString(),
+						onChange(v) {
+							const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
+							return renderResolutionDriver.onChange(newValue);
+						},
+						onReset: renderResolutionDriver.onReset,
+					} }
+					label='Render resolution'
+					stringify={
+						Object.fromEntries(
+							([100, 90, 80, 65, 50, 25, 0])
+								.map((v) => [v.toString(), `${v}%`]),
+						)
+					}
+					optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
+					schema={ z.string() }
+				/>
+				<SelectSettingInput<GraphicsSettings['textureResolution']>
+					driver={ useGraphicsSettingDriver('textureResolution') }
+					label='Texture resolution'
+					stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
+					optionOrder={ ['auto', '1', '0.5', '0.25'] }
+					schema={ GraphicsSettingsSchema.shape.textureResolution }
+				/>
+				<Column gap='none'>
+					<ToggleSettingInput
+						driver={ useGraphicsSettingDriver('antialias') }
+						disabled={ currentGraphicsSettings.alphamaskEngine !== 'disabled' }
+						label={
+							currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
+								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
+							) : (
+								<>
+									Use antialiasing (if supported by your browser)
+									<span className='warning-box inline slim' title='Changing this setting will reload the page'>
+										↺
+									</span>
+								</>
+							)
+						}
+					/>
+					{
+						currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
+							<span>Unavailable as "Alphamasking engine" is not set to "Ignore masks"</span>
+						) : null
+					}
+				</Column>
+				<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
+					driver={ useGraphicsSettingDriver('alphamaskEngine') }
+					label={
+						<>
+							Alphamasking engine
+							{
+								currentGraphicsSettings.antialias ? (
+									<span className='warning-box inline slim' title='Changing this setting might reload the page'>
+										↺
+									</span>
+								) : null
+							}
+							<ContextHelpButton>
+								<p>
+									Alphamasks allow assets to hide parts of other assets beneath them, so they do not clip through.<br />
+									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
+									While not using an alphamasking engine will cause clipping with assets, <br />
+									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
+									Our current implementation of alphamasking is also not compatible with Antialiasing.
+								</p>
 
-							<p>
-								We have a planned rework that should allow alphamasks to work again without the performance impact, <br />
-								but it will take some time until this is implemented and adopted by assets.
-							</p>
+								<p>
+									We have a planned rework that should allow alphamasks to work again without the performance impact, <br />
+									but it will take some time until this is implemented and adopted by assets.
+								</p>
 
-							<p>
-								If you do have a powerful computer, you can attempt to re-enable this option. <br />
-								In that case we recommend using the "Custom Pandora shader" option.
-							</p>
-						</ContextHelpButton>
-						<br />
-						<strong>The current implementation is known to cause lag on most devices</strong>
-					</>
-				}
-				stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }
-				schema={ GraphicsSettingsSchema.shape.alphamaskEngine }
-			/>
+								<p>
+									If you do have a powerful computer, you can attempt to re-enable this option. <br />
+									In that case we recommend using the "Custom Pandora shader" option.
+								</p>
+							</ContextHelpButton>
+							<br />
+							<strong>The current implementation is known to cause lag on most devices</strong>
+						</>
+					}
+					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }
+					schema={ GraphicsSettingsSchema.shape.alphamaskEngine }
+				/>
+			</Column>
 		</fieldset>
 	);
 }

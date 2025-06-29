@@ -103,23 +103,26 @@ export function GraphicsLayerMeshNormals({
 		const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
 		const ambientStrength = 0.1;
 		const { specularStrength, roughness } = normalMapData;
+		// eslint-disable-next-line no-bitwise
+		const colorAlpha = PIXI.Color.shared.setValue(color).toBgrNumber() + (((255) | 0) << 24);
 
 		return (existingShader) => {
 			if (existingShader) {
+				/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 				existingShader.resources.uTexture = texture.source;
 				existingShader.resources.uSampler = texture.source.style;
 				existingShader.resources.uNormalMap = normalMap.source;
 				existingShader.resources.uNormalSampler = normalMap.source.style;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				existingShader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				PIXI.color32BitToUniform(colorAlpha, existingShader.resources.textureUniforms.uniforms.uBaseColor as Float32Array, 0);
 				existingShader.resources.pbrUniforms.uniforms.uAmbientStrength = ambientStrength;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				existingShader.resources.pbrUniforms.uniforms.uSpecularStrength = specularStrength;
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				existingShader.resources.pbrUniforms.uniforms.uRoughness = roughness;
+				/* eslint-enable @typescript-eslint/no-unsafe-member-access */
 				return existingShader;
 			} else {
+				const uBaseColor = new Float32Array([1, 1, 1, 1]);
+				PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
 				return new PIXI.Shader({
 					glProgram: NORMAL_MESH_GL_PROGRAM,
 					resources: {
@@ -129,6 +132,7 @@ export function GraphicsLayerMeshNormals({
 						uNormalSampler: normalMap.source.style,
 						textureUniforms: new PIXI.UniformGroup({
 							uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+							uBaseColor: { value: uBaseColor, type: 'vec4<f32>' },
 						}),
 						pbrUniforms: new PIXI.UniformGroup({
 							uAmbientStrength: { type: 'f32', value: ambientStrength },
@@ -139,14 +143,13 @@ export function GraphicsLayerMeshNormals({
 				});
 			}
 		};
-	}, [texture, normalMapTexture, normalMapData]);
+	}, [texture, normalMapTexture, normalMapData, color]);
 
 	return (
 		<PixiCustomMesh
 			geometry={ geometry }
 			shader={ shader }
 			state={ state }
-			tint={ color }
 			alpha={ alpha }
 		/>
 	);

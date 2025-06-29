@@ -19,6 +19,7 @@ export function GraphicsLayerMesh({
 	displayUvPose = false,
 	state,
 	getTexture,
+	debugConfig,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement {
 
@@ -70,6 +71,7 @@ export function GraphicsLayerMesh({
 						state={ cullingState }
 						color={ color }
 						alpha={ alpha }
+						debugConfig={ debugConfig }
 					/>
 				) : (
 					<PixiMesh

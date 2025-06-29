@@ -415,6 +415,7 @@ function RoomCharacterDisplay({
 				angle={ rotationAngle }
 				useBlinking
 				movementTransitionDuration={ movementTransitionDuration }
+				debugConfig={ debugConfig }
 			>
 				{
 					!debugConfig?.characterDebugOverlay ? null : (

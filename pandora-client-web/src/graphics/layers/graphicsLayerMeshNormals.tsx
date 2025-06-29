@@ -1,8 +1,10 @@
+import type { Immutable } from 'immer';
 import type { LayerNormalData } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
+import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
-import { DEFAULT_NORMAL_TEXTURE, NORMAL_MESH_GL_PROGRAM } from './graphicsLayerMeshNormalsShader.ts';
+import { DEFAULT_NORMAL_TEXTURE, NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM, NORMAL_MESH_GL_PROGRAM } from './graphicsLayerMeshNormalsShader.ts';
 
 export interface GraphicsLayerMeshNormalsProps {
 	vertices: Float32Array;
@@ -15,6 +17,7 @@ export interface GraphicsLayerMeshNormalsProps {
 	state: PIXI.State;
 	color: number;
 	alpha: number;
+	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
 
 export function GraphicsLayerMeshNormals({
@@ -28,6 +31,7 @@ export function GraphicsLayerMeshNormals({
 	state,
 	color,
 	alpha,
+	debugConfig,
 }: GraphicsLayerMeshNormalsProps): ReactElement {
 
 	const geometry = useCallback<PixiCustomMeshGeometryCreator<PIXI.Geometry>>((existingGeometry) => {
@@ -100,6 +104,8 @@ export function GraphicsLayerMeshNormals({
 	}, [triangles, uvs, vertices, vertexRotations]);
 
 	const shader = useMemo((): PixiCustomMeshShaderCreator<PIXI.Shader> => {
+		const program = debugConfig?.displayNormalMap ? NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM : NORMAL_MESH_GL_PROGRAM;
+
 		const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
 		const ambientStrength = 0.1;
 		const { specularStrength, roughness } = normalMapData;
@@ -107,43 +113,62 @@ export function GraphicsLayerMeshNormals({
 		const colorAlpha = PIXI.Color.shared.setValue(color).toBgrNumber() + (((255) | 0) << 24);
 
 		return (existingShader) => {
-			if (existingShader) {
+			if (existingShader && existingShader.glProgram === program) {
 				/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 				existingShader.resources.uTexture = texture.source;
 				existingShader.resources.uSampler = texture.source.style;
 				existingShader.resources.uNormalMap = normalMap.source;
 				existingShader.resources.uNormalSampler = normalMap.source.style;
 				existingShader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
-				PIXI.color32BitToUniform(colorAlpha, existingShader.resources.textureUniforms.uniforms.uBaseColor as Float32Array, 0);
-				existingShader.resources.pbrUniforms.uniforms.uAmbientStrength = ambientStrength;
-				existingShader.resources.pbrUniforms.uniforms.uSpecularStrength = specularStrength;
-				existingShader.resources.pbrUniforms.uniforms.uRoughness = roughness;
+				if (!debugConfig?.displayNormalMap) {
+					PIXI.color32BitToUniform(colorAlpha, existingShader.resources.textureUniforms.uniforms.uBaseColor as Float32Array, 0);
+					existingShader.resources.pbrUniforms.uniforms.uAmbientStrength = ambientStrength;
+					existingShader.resources.pbrUniforms.uniforms.uSpecularStrength = specularStrength;
+					existingShader.resources.pbrUniforms.uniforms.uRoughness = roughness;
+				}
 				/* eslint-enable @typescript-eslint/no-unsafe-member-access */
 				return existingShader;
 			} else {
-				const uBaseColor = new Float32Array([1, 1, 1, 1]);
-				PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
-				return new PIXI.Shader({
-					glProgram: NORMAL_MESH_GL_PROGRAM,
-					resources: {
-						uTexture: texture.source,
-						uSampler: texture.source.style,
-						uNormalMap: normalMap.source,
-						uNormalSampler: normalMap.source.style,
-						textureUniforms: new PIXI.UniformGroup({
-							uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
-							uBaseColor: { value: uBaseColor, type: 'vec4<f32>' },
-						}),
-						pbrUniforms: new PIXI.UniformGroup({
-							uAmbientStrength: { type: 'f32', value: ambientStrength },
-							uSpecularStrength: { type: 'f32', value: specularStrength },
-							uRoughness: { type: 'f32', value: roughness },
-						}),
-					},
-				});
+				if (debugConfig?.displayNormalMap) {
+					const uBaseColor = new Float32Array([1, 1, 1, 1]);
+					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
+					return new PIXI.Shader({
+						glProgram: program,
+						resources: {
+							uTexture: texture.source,
+							uSampler: texture.source.style,
+							uNormalMap: normalMap.source,
+							uNormalSampler: normalMap.source.style,
+							textureUniforms: new PIXI.UniformGroup({
+								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+							}),
+						},
+					});
+				} else {
+					const uBaseColor = new Float32Array([1, 1, 1, 1]);
+					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
+					return new PIXI.Shader({
+						glProgram: program,
+						resources: {
+							uTexture: texture.source,
+							uSampler: texture.source.style,
+							uNormalMap: normalMap.source,
+							uNormalSampler: normalMap.source.style,
+							textureUniforms: new PIXI.UniformGroup({
+								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+								uBaseColor: { value: uBaseColor, type: 'vec4<f32>' },
+							}),
+							pbrUniforms: new PIXI.UniformGroup({
+								uAmbientStrength: { type: 'f32', value: ambientStrength },
+								uSpecularStrength: { type: 'f32', value: specularStrength },
+								uRoughness: { type: 'f32', value: roughness },
+							}),
+						},
+					});
+				}
 			}
 		};
-	}, [texture, normalMapTexture, normalMapData, color]);
+	}, [texture, normalMapTexture, normalMapData, color, debugConfig]);
 
 	return (
 		<PixiCustomMesh

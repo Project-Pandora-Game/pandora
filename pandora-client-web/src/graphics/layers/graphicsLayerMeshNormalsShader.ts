@@ -13,7 +13,7 @@ export const DEFAULT_NORMAL_TEXTURE = new PIXI.Texture({
 });
 DEFAULT_NORMAL_TEXTURE.destroy = noop;
 
-/* TODO: Helpers
+/* Helper for calculating normals from height (to be reused later when we want to do that)
 
 // Normals from height
 float getHeight(vec2 pos) {
@@ -26,25 +26,17 @@ float r = h * getHeight(pos + uPix.xz);
 float d = h * getHeight(pos - uPix.zy);
 float u = h * getHeight(pos + uPix.zy);
 return normalize(vec3(l-r, u-d, 1.));
-
-// Display normals
-outColor.xyz = packNormal(getNormal(vUV)) * outColor.w;
-
 */
 
-export const NORMAL_MESH_GL_PROGRAM = PIXI.compileHighShaderGlProgram({
-	name: 'mesh',
-	bits: [
-		PIXI.localUniformBitGl,
-		{
-			name: 'texture-bit',
-			vertex: {
-				header: /* glsl */`
+const SHADER_NORMALS_BIT_GL: PIXI.HighShaderBit = {
+	name: 'normals-bit',
+	vertex: {
+		header: /* glsl */`
 uniform mat3 uTextureMatrix;
 in float aRotation; // Rotation in radians per vertex
 out mat3 vTBN;
 		`,
-				main: /* glsl */`
+		main: /* glsl */`
 uv = (uTextureMatrix * vec3(uv, 1.0)).xy;
 
 float cosA = cos(aRotation);
@@ -64,23 +56,13 @@ B.xy = normalize(model2D * B.xy);
 
 vTBN = mat3(T, B, N);
 		`,
-			},
-			fragment: {
-				header: /* glsl */`
+	},
+	fragment: {
+		header: /* glsl */`
 #version 300 es
 
 uniform sampler2D uTexture;
 uniform sampler2D uNormalMap;
-
-vec3 ambientColour = vec3(1., 1., 1.);
-vec3 lightColour = vec3(1., 1., 1.);
-uniform vec4 uBaseColor;
-
-vec3 lightDir = normalize(vec3(2.7, -2.5, 3.7));
-
-uniform float uAmbientStrength;
-uniform float uSpecularStrength;
-uniform float uRoughness;
 
 in mat3 vTBN;
 
@@ -101,6 +83,28 @@ vec3 getNormal(vec2 pos) {
 	normal = normalize(vTBN * normal);
 	return normal;
 }
+		`,
+	},
+};
+
+export const NORMAL_MESH_GL_PROGRAM = PIXI.compileHighShaderGlProgram({
+	name: 'mesh',
+	bits: [
+		PIXI.localUniformBitGl,
+		SHADER_NORMALS_BIT_GL,
+		{
+			name: 'normal-mesh-texture-bit',
+			fragment: {
+				header: /* glsl */`
+vec3 ambientColour = vec3(1., 1., 1.);
+vec3 lightColour = vec3(1., 1., 1.);
+uniform vec4 uBaseColor;
+
+vec3 lightDir = normalize(vec3(2.7, -2.5, 3.7));
+
+uniform float uAmbientStrength;
+uniform float uSpecularStrength;
+uniform float uRoughness;
 		`,
 				main: /* glsl */`
 vec3 normal = getNormal(vUV);
@@ -131,6 +135,26 @@ if (lambertian > 0.) {
 outColor *= uBaseColor;
 outColor.xyz *= (ambient + diffuse);
 outColor.xyz += specular * outColor.w;
+		`,
+			},
+		},
+		PIXI.roundPixelsBitGl,
+	],
+});
+
+export const NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM = PIXI.compileHighShaderGlProgram({
+	name: 'mesh',
+	bits: [
+		PIXI.localUniformBitGl,
+		SHADER_NORMALS_BIT_GL,
+		{
+			name: 'normal-mesh-texture-bit',
+			fragment: {
+				main: /* glsl */`
+vec3 normal = getNormal(vUV);
+outColor = texture(uTexture, vUV);
+
+outColor.xyz = packNormal(normal) * outColor.w;
 		`,
 			},
 		},

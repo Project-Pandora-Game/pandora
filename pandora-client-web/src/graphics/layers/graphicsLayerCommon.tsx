@@ -15,6 +15,7 @@ import { DEG_TO_RAD, Texture } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useObservable, type ReadonlyObservable } from '../../observable.ts';
+import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { ConditionEvaluatorBase } from '../appearanceConditionEvaluator.ts';
 
 type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, LayerVerticesResult>;
@@ -123,6 +124,7 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 	characterBlinking?: ReadonlyObservable<boolean>;
 
 	getTexture?: (path: string) => Texture;
+	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
 
 export const ContextCullClockwise = createContext<boolean>(false);

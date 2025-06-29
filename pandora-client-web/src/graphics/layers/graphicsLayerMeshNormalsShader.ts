@@ -74,6 +74,7 @@ uniform sampler2D uNormalMap;
 
 vec3 ambientColour = vec3(1., 1., 1.);
 vec3 lightColour = vec3(1., 1., 1.);
+uniform vec4 uBaseColor;
 
 vec3 lightDir = normalize(vec3(2.7, -2.5, 3.7));
 
@@ -127,13 +128,9 @@ if (lambertian > 0.) {
 	}
 }
 
-outColor *= vColor;
+outColor *= uBaseColor;
 outColor.xyz *= (ambient + diffuse);
 outColor.xyz += specular * outColor.w;
-		`,
-				// Skip Pixi's final tint step (with vColor) in here. We do it manually in a way it ignores specular light
-				end: `
-finalColor = outColor;
 		`,
 			},
 		},

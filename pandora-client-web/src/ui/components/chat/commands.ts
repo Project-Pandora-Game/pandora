@@ -1,5 +1,5 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandSelectorNumber, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -9,6 +9,7 @@ import { ChatMode } from './chatInput.tsx';
 import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';
 import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
+import { COMMAND_CARDGAME } from './commands/cardgame.ts';
 import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
@@ -321,158 +322,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
-	{
-		key: ['cards'],
-		description: 'Play a game of cards',
-		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
-		'check' your hand or 'reveal' the cards that were dealt to all players, ending the game.`,
-		usage: 'create [public]| stop | join | dealTable [#cards] | dealOpenly <target> [#cards] | deal <target> [#cards] | check | show | reveal',
-		handler: CreateClientCommand()
-			.fork('action', (ctx) => ({
-				create: {
-					description: 'Create a new game with a deck of 52 cards for the current space. Either visible for the public or private (default)',
-					usage: '[public]',
-					handler: ctx
-						.argument('options', {
-							autocompleteCustomName: '[public]',
-							preparse: 'allTrimmed',
-							parse: (input) => {
-								return { success: true, value: { publicGame: input.toLocaleUpperCase() === 'PUBLIC' } };
-							},
-						})
-						.handler(({ shardConnector }, { options }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: {
-									action: 'create',
-									public: options.publicGame,
-								},
-							});
-							return true;
-						}),
-				},
-				stop: {
-					description: 'Stop an ongoing game. Only possible for the creator of the game.',
-					usage: '',
-					handler: ctx
-						.handler(({ shardConnector }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: { action: 'stop' },
-							});
-							return true;
-						}),
-				},
-				join: {
-					description: 'Join an ongoing game.',
-					usage: '',
-					handler: ctx
-						.handler(({ shardConnector }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: { action: 'join' },
-							});
-							return true;
-						}),
-				},
-				dealTable: {
-					description: `Deal cards from the space's deck to the space's table. Only possible for the game creator.`,
-					usage: '[#cards]',
-					handler: ctx
-						.argument('cards', CommandSelectorNumber())
-						.handler(({ shardConnector }, { cards }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: {
-									action: 'dealTable',
-									number: cards,
-								},
-							});
-							return true;
-						}),
-				},
-				dealOpenly: {
-					description: `Deal cards from the space's deck openly to a player. Only possible for the game creator.`,
-					usage: '<target> [#cards]',
-					handler: ctx
-						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
-						.argument('cards', CommandSelectorNumber())
-						.handler(({ shardConnector }, { target, cards }) => {
-							if (target) {
-								shardConnector.sendMessage('gamblingAction', {
-									type: 'cards',
-									action: {
-										action: 'dealOpenly',
-										targetId: target.data.id,
-										number: cards,
-									},
-								});
-								return true;
-							} else {
-								return false;
-							}
-						}),
-				},
-				deal: {
-					description: `Deal cards from the space's deck hidden to a player. Only possible for the game creator.`,
-					usage: '<target> [#cards]',
-					handler: ctx
-						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
-						.argument('cards', CommandSelectorNumber())
-						.handler(({ shardConnector }, { target, cards }) => {
-							if (target) {
-								shardConnector.sendMessage('gamblingAction', {
-									type: 'cards',
-									action: {
-										action: 'deal',
-										targetId: target.data.id,
-										number: cards,
-									},
-								});
-								return true;
-							} else {
-								return false;
-							}
-						}),
-				},
-				reveal: {
-					description: `Reveal the cards of all players. Only available for the game's creator.`,
-					usage: '',
-					handler: ctx
-						.handler(({ shardConnector }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: { action: 'reveal' },
-							});
-							return true;
-						}),
-				},
-				check: {
-					description: 'Have a look at the cards that were dealt and revealed',
-					usage: '',
-					handler: ctx
-						.handler(({ shardConnector }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: { action: 'check' },
-							});
-							return true;
-						}),
-				},
-				show: {
-					description: 'Show your current cards to all players',
-					usage: '',
-					handler: ctx
-						.handler(({ shardConnector }) => {
-							shardConnector.sendMessage('gamblingAction', {
-								type: 'cards',
-								action: { action: 'show' },
-							});
-							return true;
-						}),
-				},
-			})),
-	},
+	COMMAND_CARDGAME,
 	//#endregion
 	//#region Commands to move player
 	COMMAND_LEAD,

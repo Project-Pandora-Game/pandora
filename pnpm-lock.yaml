@@ -94,10 +94,10 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.10.2)
+        version: 6.0.3(pixi.js@8.11.0)
       pixi.js:
-        specifier: 8.10.2
-        version: 8.10.2
+        specifier: 8.11.0
+        version: 8.11.0
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -5098,8 +5098,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.10.2:
-    resolution: {integrity: sha512-utRKxzTwNsIhaxOikxIBxKPfxuOyVkPvdYipY23ZEyWSYhONosrQlcB9nymeIcbsrsuSdwExX0eTnHTDjTN3UQ==}
+  pixi.js@8.11.0:
+    resolution: {integrity: sha512-dyuThzncsgEgJZnvd/A/5x6IkUERbK+phXqUQrI+0C6WE+8xqGH5VChRTLecemhgZF0kQ+gZOM3tJTX9937xpg==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -12507,11 +12507,11 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-viewport@6.0.3(pixi.js@8.10.2):
+  pixi-viewport@6.0.3(pixi.js@8.11.0):
     dependencies:
-      pixi.js: 8.10.2
+      pixi.js: 8.11.0
 
-  pixi.js@8.10.2:
+  pixi.js@8.11.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12

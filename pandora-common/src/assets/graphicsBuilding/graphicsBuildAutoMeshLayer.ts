@@ -170,6 +170,7 @@ export async function LoadAssetAutoMeshLayer(
 
 				imageVariants.push({
 					image,
+					normalMapImage: (layer.normalMap != null && image) ? `normal_map/${image}` : undefined,
 					condition: [combinationCondition],
 				});
 			}
@@ -187,6 +188,7 @@ export async function LoadAssetAutoMeshLayer(
 				previewOverrides: graphicalLayer.previewOverrides,
 				mirror: templatePart.mirror ?? LayerMirror.NONE,
 				colorizationKey: graphicalLayer.colorizationKey,
+				normalMap: layer.normalMap,
 				image: {
 					image: '',
 					overrides: imageVariants,

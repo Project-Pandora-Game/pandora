@@ -1,5 +1,5 @@
-import type { Draft, Immutable } from 'immer';
-import { capitalize } from 'lodash-es';
+import { produce, type Draft, type Immutable } from 'immer';
+import { capitalize, snakeCase } from 'lodash-es';
 import {
 	Assert,
 	AssertNever,
@@ -13,10 +13,11 @@ import {
 	type GraphicsSourceAutoMeshGraphicalLayer,
 	type GraphicsSourceAutoMeshLayerVariable,
 } from 'pandora-common';
-import { useCallback, useId, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
@@ -43,6 +44,8 @@ export function LayerAutoMeshUI({ asset, layer }: {
 			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
 			<LayerOffsetSetting layer={ layer } asset={ asset } />
 			<hr />
+			<LayerNormalMapSettings layer={ layer } />
+			<hr />
 			<TabContainer allowWrap>
 				<Tab name='Template'>
 					<hr />
@@ -63,6 +66,92 @@ export function LayerAutoMeshUI({ asset, layer }: {
 					<LayerAutomeshImages layer={ layer } />
 				</Tab>
 			</TabContainer>
+		</>
+	);
+}
+
+function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+	const { normalMap } = useObservable(layer.definition);
+
+	return (
+		<>
+			<label>
+				<Checkbox
+					checked={ normalMap != null }
+					onChange={ (newValue) => {
+						layer.modifyDefinition((d) => {
+							d.normalMap = newValue ? { specularStrength: 0.2, roughness: 0 } : undefined;
+						});
+					} }
+				/>
+				Layer has normal map
+			</label>
+			{
+				normalMap != null ? (
+					<>
+						<Row>
+							<label>Specular strength</label>
+							<NumberInput
+								rangeSlider
+								className='flex-6 zero-width'
+								value={ normalMap.specularStrength }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.specularStrength = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+							<NumberInput
+								className='flex-grow-1'
+								value={ normalMap.specularStrength }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.specularStrength = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+						</Row>
+						<Row>
+							<label>Roughness</label>
+							<NumberInput
+								rangeSlider
+								className='flex-6 zero-width'
+								value={ normalMap.roughness }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.roughness = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+							<NumberInput
+								className='flex-grow-1'
+								value={ normalMap.roughness }
+								onChange={ (newValue) => {
+									layer.modifyDefinition((d) => {
+										Assert(d.normalMap != null);
+										d.normalMap.roughness = newValue;
+									});
+								} }
+								min={ 0 }
+								max={ 1 }
+								step={ 0.01 }
+							/>
+						</Row>
+					</>
+				) : null
+			}
 		</>
 	);
 }
@@ -786,6 +875,9 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 	const { variables, graphicalLayers, imageMap } = useObservable(layer.definition);
 	const imageList = useObservable(layer.asset.loadedTextures);
 
+	const [autofillDialogTarget, setAutofillDialogTarget] = useState<null | true | string>(null);
+	const [autofillPrefixes, setAutofillPrefixes] = useState<readonly string[]>([]);
+
 	if (asset == null)
 		return null;
 
@@ -842,6 +934,16 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 			uiVariants.push(
 				<Column key={ combinationId }>
 					<strong>{ combinationName }</strong>
+					<Row alignX='start'>
+						<Button
+							slim
+							onClick={ () => {
+								setAutofillDialogTarget(combinationId);
+							} }
+						>
+							🪄 Auto-fill this combination
+						</Button>
+					</Row>
 					{
 						graphicalLayers.map((l, li) => (
 							<Row key={ li } alignY='center'>
@@ -873,7 +975,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 	}
 
 	return (
-		<Column gap='medium'>
+		<Column gap='large'>
 			{
 				Object.keys(imageMap)
 					.filter((k) => !validCombinationIds.has(k))
@@ -924,7 +1026,180 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 						</Column>
 					))
 			}
+			<Row alignX='start'>
+				<Button
+					slim
+					onClick={ () => {
+						setAutofillDialogTarget(true);
+					} }
+				>
+					🪄 Auto-fill all images
+				</Button>
+			</Row>
 			{ uiVariants }
+			{
+				autofillDialogTarget != null ? (
+					<LayerAutomeshFillImagesDialog
+						layer={ layer }
+						asset={ asset }
+						close={ () => {
+							setAutofillDialogTarget(null);
+						} }
+						prefixes={ autofillPrefixes }
+						setPrefixes={ setAutofillPrefixes }
+						limitToCombination={ typeof autofillDialogTarget === 'string' && validCombinationIds.has(autofillDialogTarget) ? autofillDialogTarget : undefined }
+					/>
+				) : null
+			}
 		</Column>
+	);
+}
+
+function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefixes, limitToCombination }: {
+	layer: EditorAssetGraphicsLayer<'autoMesh'>;
+	asset: Asset;
+	close: () => void;
+	prefixes: readonly string[];
+	setPrefixes: React.Dispatch<React.SetStateAction<readonly string[]>>;
+	limitToCombination?: string;
+}): ReactElement {
+	Assert(layer.asset.id === asset.id);
+
+	const [overwriteAll, setOverwriteAll] = useState(false);
+
+	const assetManager = useAssetManager();
+	const { variables, graphicalLayers } = useObservable(layer.definition);
+	const imageList = useObservable(layer.asset.loadedTextures);
+
+	useEffect(() => {
+		if (graphicalLayers.length !== prefixes.length) {
+			setPrefixes(graphicalLayers.map((l) => snakeCase(l.name)));
+		}
+	}, [graphicalLayers, prefixes, setPrefixes]);
+
+	const combinations = useMemo(() => {
+		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+		const variants: AutoMeshLayerGenerateVariableValue[][] = [];
+
+		for (const variable of variables) {
+			const values = AutoMeshLayerGenerateVariableData(variable, buildContext);
+			Assert(values.length > 0, 'Generating variable variants returned empty result');
+			variants.push(values);
+		}
+		return (variants.length > 0 ? Array.from(GenerateMultipleListsFullJoin(variants)) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]]);
+	}, [layer, asset, assetManager, variables]);
+
+	const apply = useCallback(() => {
+		if (prefixes.length !== graphicalLayers.length)
+			return;
+
+		const validCombinationIds = new Set<string>();
+
+		layer.modifyDefinition((d) => {
+			for (const combination of combinations) {
+				const combinationId = combination.map((c) => c.id).join(':');
+				validCombinationIds.add(combinationId);
+
+				if (limitToCombination != null && limitToCombination !== combinationId)
+					continue;
+
+				let imageLayers: string[] | undefined = d.imageMap[combinationId];
+				if (overwriteAll || imageLayers == null || imageLayers.length !== graphicalLayers.length) {
+					imageLayers = new Array<string>(graphicalLayers.length).fill('');
+				}
+
+				for (let gli = 0; gli < graphicalLayers.length; gli++) {
+					const image = [prefixes[gli], ...combination.map((s) => s.id)].join('_') + '.png';
+					if (!imageLayers[gli] && imageList.includes(image)) {
+						imageLayers[gli] = image;
+					}
+				}
+
+				d.imageMap[combinationId] = imageLayers;
+			}
+
+			if (limitToCombination == null) {
+				for (const key of Object.keys(d.imageMap)) {
+					if (!validCombinationIds.has(key)) {
+						delete d.imageMap[key];
+					}
+				}
+			}
+		});
+
+		close();
+	}, [combinations, graphicalLayers, imageList, layer, prefixes, overwriteAll, limitToCombination, close]);
+
+	return (
+		<ModalDialog>
+			<Column>
+				<h2>Automatically fill images based on name</h2>
+				<span className='contain-inline-size'>
+					This will take names of the layers below and ids of each variable and join them using '_' to try finding matching image.
+					Any wrongly-formatted combination will be reset, otherwise the setting bellow is followed.
+				</span>
+				<label>
+					<Checkbox
+						checked={ overwriteAll }
+						onChange={ setOverwriteAll }
+					/>
+					Reset all assignments
+				</label>
+				<table>
+					<thead>
+						<tr>
+							<th>Layer</th>
+							<th>Prefix</th>
+							<th>Matches</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							graphicalLayers.map((l, i) => (
+								<tr key={ i }>
+									<td>{ l.name }</td>
+									<td>
+										<TextInput
+											value={ prefixes.length === graphicalLayers.length ? prefixes[i] : '' }
+											disabled={ prefixes.length !== graphicalLayers.length }
+											onChange={ (newValue) => {
+												setPrefixes((v) => produce(v, (d) => {
+													Assert(d.length === graphicalLayers.length);
+													d[i] = newValue;
+												}));
+											} }
+										/>
+									</td>
+									<td>
+										{
+											combinations.reduce<number>((count, c) => {
+												const prefix = prefixes.length === graphicalLayers.length ? prefixes[i] : '';
+												if (!prefix || limitToCombination != null && limitToCombination !== c.map((s) => s.id).join(':'))
+													return count;
+												const image = [prefix, ...c.map((s) => s.id)].join('_') + '.png';
+												return count + (imageList.includes(image) ? 1 : 0);
+											}, 0)
+										}
+									</td>
+								</tr>
+							))
+						}
+					</tbody>
+				</table>
+				<Row alignX='space-between'>
+					<Button
+						onClick={ close }
+					>
+						Cancel
+					</Button>
+					<Button
+						onClick={ apply }
+						disabled={ prefixes.length !== graphicalLayers.length }
+					>
+						Apply
+					</Button>
+				</Row>
+			</Column>
+		</ModalDialog>
 	);
 }

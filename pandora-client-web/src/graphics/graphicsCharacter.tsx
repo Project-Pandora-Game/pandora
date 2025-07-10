@@ -20,6 +20,7 @@ import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { Observable, useObservable } from '../observable.ts';
+import type { ChatroomDebugConfig } from '../ui/screens/room/roomDebug.tsx';
 import { Container } from './baseComponents/container.ts';
 import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
 import type { PointLike } from './common/point.ts';
@@ -49,6 +50,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];
 	zIndex?: number;
+	debugConfig?: Immutable<ChatroomDebugConfig>;
 
 	/**
 	 * Whether the blinking condition should be used for the graphics layer evaluators.
@@ -107,6 +109,7 @@ export function GraphicsCharacterWithManager({
 	children,
 	graphicsGetter,
 	layerStateOverrideGetter,
+	debugConfig,
 	useBlinking = false,
 	movementTransitionDuration = 0,
 	perPropertyMovementTransitionDuration,
@@ -293,13 +296,14 @@ export function GraphicsCharacterWithManager({
 					state={ layerState.state }
 					characterState={ effectiveCharacterState }
 					characterBlinking={ characterBlinking }
+					debugConfig={ debugConfig }
 				>
 					{ lowerLayer }
 				</LayerElement>
 			));
 		}
 		return result;
-	}, [Layer, effectiveCharacterState, layers, view, characterBlinking]);
+	}, [Layer, effectiveCharacterState, layers, view, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

@@ -3,6 +3,7 @@ import { GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
 import { USER_DEBUG } from '../config/Environment.ts';
+import { GetGraphicsEffectiveAntialias } from './graphicsSettings.tsx';
 
 const SHARED_APP_MAX_COUNT = 2;
 
@@ -11,8 +12,8 @@ export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	resolution: window.devicePixelRatio || 1,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
 	backgroundAlpha: 0,
-	// Antialias **NEEDS** to be explicitly disabled - having it enabled causes seams when using filters (such as alpha masks)
-	antialias: false,
+	// Antialias is controlled by settings. See the settings for more details
+	antialias: GetGraphicsEffectiveAntialias(),
 };
 
 export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {

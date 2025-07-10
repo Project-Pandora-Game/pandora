@@ -24,14 +24,6 @@ export interface IModuleTypedOption<TProperties> {
 	/** If this variant should be autoselected as default; otherwise first one is used */
 	default?: true;
 
-	/**
-	 * Message to show when switching to this variant.
-	 * Can be either:
-	 * - string, which is shown always
-	 * - Object which maps previous setting to message to switch from it (with `_` usable as default)
-	 */
-	switchMessage?: string | Partial<Record<string | '_', string>>;
-
 	/** Variant will store the time it was selected */
 	storeTime?: true;
 	/** Variant will store the the character that selected it */
@@ -224,25 +216,10 @@ export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknow
 				false;
 	}
 
-	public doAction({ messageHandler, processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties, TStaticData> | null {
+	public doAction({ processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties, TStaticData> | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
-
-		// Get chat message about switching to this variant
-		const switchMessage = newVariant.switchMessage == null ? undefined :
-			// If switch message is a string, use it
-			typeof newVariant.switchMessage === 'string' ? newVariant.switchMessage :
-				// Otherwise try to get message for previous variant, falling back to default
-				(newVariant.switchMessage[this.activeVariant.id] ?? newVariant.switchMessage._);
-
-		// If we have non-empty switch message, queue it
-		if (switchMessage) {
-			messageHandler({
-				id: 'custom',
-				customText: switchMessage,
-			});
-		}
 
 		return this.withProps({
 			activeVariant: newVariant,

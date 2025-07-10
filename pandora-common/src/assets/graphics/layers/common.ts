@@ -3,6 +3,7 @@ import { BoneNameSchema, ConditionSchema } from '../conditions.ts';
 
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
+	normalMapImage: z.string().optional(),
 	/**
 	 * Pose to use for calculating UV coordinates of vertices.
 	 *
@@ -99,6 +100,7 @@ export enum LayerSide {
 
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
+	normalMapImage: z.string().optional(),
 	/**
 	 * Pose to use for calculating UV coordinates of vertices.
 	 *
@@ -119,3 +121,9 @@ export function MirrorPriority(priority: LayerPriority): LayerPriority {
 	const mirrorPriority = PRIORITY_ORDER_MIRROR[priority];
 	return mirrorPriority != null ? mirrorPriority : priority;
 }
+
+export const LayerNormalDataSchema = z.object({
+	specularStrength: z.number().nonnegative(),
+	roughness: z.number().nonnegative(),
+});
+export type LayerNormalData = z.infer<typeof LayerNormalDataSchema>;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
 import { AttributeNameSchema } from '../../graphics/conditions.ts';
-import { LayerImageOverrideSchema, LayerMirrorSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
+import { LayerImageOverrideSchema, LayerMirrorSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
 	name: z.string(),
@@ -61,6 +61,7 @@ export const GraphicsSourceAutoMeshLayerSchema = RectangleSchema.extend({
 	graphicalLayers: GraphicsSourceAutoMeshGraphicalLayerSchema.array(),
 	variables: GraphicsSourceAutoMeshLayerVariableSchema.array(),
 
+	normalMap: LayerNormalDataSchema.optional(),
 	imageMap: z.record(z.string(), z.string().array()),
 }).strict();
 export type GraphicsSourceAutoMeshLayer = z.infer<typeof GraphicsSourceAutoMeshLayerSchema>;

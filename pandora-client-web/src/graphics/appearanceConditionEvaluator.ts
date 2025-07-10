@@ -96,6 +96,26 @@ export abstract class ConditionEvaluatorBase {
 		}
 		return [resX, resY];
 	}
+
+	public evalTransformAngle(transforms: Immutable<TransformDefinition[]>, item: Item | null): number {
+		let angle = 0;
+		for (const transform of transforms) {
+			const { type, condition } = transform;
+			if (this.valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
+				continue;
+			}
+			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
+				continue;
+			}
+			if (type === 'const-rotate' || type === 'rotate') {
+				const boneName = transform.bone;
+				const rotation = this.valueOverrides ? (this.valueOverrides[boneName] ?? 0) : this.getBoneLikeValue(boneName);
+				const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
+				angle += value;
+			}
+		}
+		return angle;
+	}
 	//#endregion
 
 	public evalBoneTransform(bone: string, matrix?: Matrix): Matrix {

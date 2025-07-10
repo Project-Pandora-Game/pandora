@@ -7,6 +7,7 @@ import { Container } from '../baseComponents/container.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { useTexture } from '../useTexture.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
+import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
 export function GraphicsLayerMesh({
 	characterState,
@@ -18,6 +19,7 @@ export function GraphicsLayerMesh({
 	displayUvPose = false,
 	state,
 	getTexture,
+	debugConfig,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement {
 
@@ -29,14 +31,16 @@ export function GraphicsLayerMesh({
 	const {
 		image,
 		imageUv,
+		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
 
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
+	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image, undefined, getTexture);
+	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*', undefined, getTexture);
 
 	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
 
@@ -54,15 +58,33 @@ export function GraphicsLayerMesh({
 			zIndex={ zIndex }
 			sortableChildren
 		>
-			<PixiMesh
-				state={ cullingState }
-				vertices={ vertices }
-				uvs={ uv }
-				indices={ triangles }
-				texture={ texture }
-				tint={ color }
-				alpha={ alpha }
-			/>
+			{
+				layer.normalMap != null ? (
+					<GraphicsLayerMeshNormals
+						vertices={ vertices }
+						vertexRotations={ vertexRotations }
+						uvs={ uv }
+						triangles={ triangles }
+						texture={ texture }
+						normalMapTexture={ normalMapTexture }
+						normalMapData={ layer.normalMap }
+						state={ cullingState }
+						color={ color }
+						alpha={ alpha }
+						debugConfig={ debugConfig }
+					/>
+				) : (
+					<PixiMesh
+						state={ cullingState }
+						vertices={ vertices }
+						uvs={ uv }
+						indices={ triangles }
+						texture={ texture }
+						tint={ color }
+						alpha={ alpha }
+					/>
+				)
+			}
 			<Container zIndex={ lowerZIndex }>
 				{ children }
 			</Container>

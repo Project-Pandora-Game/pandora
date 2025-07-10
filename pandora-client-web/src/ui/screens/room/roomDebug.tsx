@@ -19,6 +19,7 @@ const ChatroomDebugConfigSchema = z.object({
 	roomScalingHelperData: RoomBackgroundCalibrationDataSchema.omit({ imageSize: true }).nullable(),
 	characterDebugOverlay: z.boolean().catch(false),
 	deviceDebugOverlay: z.boolean().catch(false),
+	displayNormalMap: z.boolean().catch(false),
 });
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
@@ -27,6 +28,7 @@ const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 	roomScalingHelperData: null,
 	characterDebugOverlay: false,
 	deviceDebugOverlay: false,
+	displayNormalMap: false,
 };
 
 export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | undefined;
@@ -325,6 +327,18 @@ export function ChatroomDebugConfigView(): ReactElement {
 					onChange={ (newValue) => {
 						applyChange({
 							deviceDebugOverlay: newValue,
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='chatroom-debug-normal-map-override'>Display normal map for assets with it</label>
+				<Checkbox
+					id='chatroom-debug-normal-map-override'
+					checked={ chatroomDebugConfig.displayNormalMap }
+					onChange={ (newValue) => {
+						applyChange({
+							displayNormalMap: newValue,
 						});
 					} }
 				/>

@@ -193,6 +193,10 @@
 	contain: size;
 }
 
+.contain-inline-size {
+	contain: inline-size;
+}
+
 .pointer-events-disable {
 	pointer-events: none;
 }
@@ -210,6 +214,14 @@
 
 	p {
 		margin: 0.25em 0;
+	}
+
+	&.inline {
+		display: inline-flex;
+	}
+
+	&.slim {
+		padding: 0.1em 0.3em;
 	}
 }
 

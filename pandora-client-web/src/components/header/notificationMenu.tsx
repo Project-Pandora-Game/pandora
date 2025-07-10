@@ -22,7 +22,7 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 
 	return (
 		<DialogInPortal priority={ 6 } location='mainOverlay'>
-			<Column className={ classNames('OverlayNotificationMenu', visible ? null : 'hide') } padding='medium'>
+			<Column className={ classNames('OverlayNotificationMenu', visible ? null : 'hide') } inert={ !visible } padding='medium'>
 				<Row alignX='space-between'>
 					<IconButton
 						onClick={ clearNotifications }

@@ -92,8 +92,8 @@ export function MirrorTransform(transform: Immutable<TransformDefinition>): Tran
 	}
 }
 
-export function MirrorImageOverride({ image, condition }: Immutable<LayerImageOverride>): LayerImageOverride {
-	return { image, condition: MirrorCondition(condition) };
+export function MirrorImageOverride({ condition, ...rest }: Immutable<LayerImageOverride>): LayerImageOverride {
+	return { ...rest, condition: MirrorCondition(condition) };
 }
 
 export function MirrorLayerImageSetting(setting: Immutable<LayerImageSetting>): LayerImageSetting {

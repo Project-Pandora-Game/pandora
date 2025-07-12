@@ -52,7 +52,11 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Change body parts'>
 					<InventoryAssetView
-						title='Add a new bodypart'
+						header={ (
+							<div className='toolbar'>
+								<span>Add a new bodypart</span>
+							</div>
+						) }
 						assets={ assetList.filter(filter) }
 						attributesFilterOptions={ bodyFilterAttributes }
 						container={ EMPTY_ARRAY }

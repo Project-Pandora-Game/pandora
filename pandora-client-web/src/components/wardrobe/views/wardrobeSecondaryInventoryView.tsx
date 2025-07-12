@@ -9,12 +9,10 @@ import {
 	ItemPath,
 	type AppearanceItems,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
-import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { Button } from '../../common/button/button.tsx';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
@@ -22,8 +20,8 @@ import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes.ts';
 import { InventoryItemViewDropArea } from './wardrobeItemView.tsx';
 
-export function SecondaryInventoryView({ title, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
-	title: string;
+export function SecondaryInventoryView({ header, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
+	header?: ReactNode;
 	secondaryTarget: ActionTargetSelector;
 	secondaryTargetContainer?: ItemContainerPath;
 	quickActionTarget: ActionTargetSelector;
@@ -32,7 +30,6 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 	const { globalState } = useWardrobeActionContext();
 	const { extraItemActions, heldItem } = useWardrobeContext();
 	const { wardrobeExtraActionButtons } = useAccountSettings();
-	const navigate = useNavigatePandora();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ target, item }) => {
 		if (!wardrobeExtraActionButtons)
@@ -65,17 +62,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 
 	return (
 		<div className='inventoryView'>
-			<div className='toolbar'>
-				<span>{ title }</span>
-				{
-					secondaryTarget.type === 'roomInventory' ? (
-						<Button className='slim' onClick={ () =>
-							navigate('/wardrobe/room-inventory') } >
-							Switch to room inventory
-						</Button>
-					) : null
-				}
-			</div>
+			{ header }
 			<div className='Scrollbar'>
 				<div className='list reverse withDropButtons'>
 					{

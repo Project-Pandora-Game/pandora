@@ -9,10 +9,16 @@ import {
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
+import diskIcon from '../../assets/icons/disk.svg';
+import plusIcon from '../../assets/icons/plus.svg';
+import storageIcon from '../../assets/icons/storage.svg';
 import { useObservable } from '../../observable.ts';
-import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { useNavigatePandora } from '../../routing/navigate.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column } from '../common/container/container.tsx';
+import { useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail.tsx';
 import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail.tsx';
 import { InventoryAssetView } from './views/wardrobeAssetView.tsx';
@@ -95,18 +101,18 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 }
 
 export function WardrobeItemManipulation(): ReactElement {
+	const navigate = useNavigatePandora();
 	const { targetSelector, heldItem, setHeldItem, focuser } = useWardrobeContext();
+	const characters = useSpaceCharacters();
 	const assetList = useAssetManager().assetList;
 
 	const currentFocus = useObservable(focuser.current);
 
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
+	const [otherPaneTarget, setOtherPaneTarget] = useState<ActionTargetSelector | 'create' | 'saved' | null>(null);
 
 	const appearance = useWardrobeTargetItems(targetSelector);
 	const title = targetSelector.type === 'character' ? 'Currently worn items' : 'Room inventory used';
-
-	const isRoomInventory = targetSelector.type === 'roomInventory' && currentFocus.container.length === 0;
-	const roomInventoryTarget = useMemo((): ActionTargetSelector => ({ type: 'roomInventory' }), []);
 
 	const singleItemContainer = useMemo<boolean>(() => {
 		let items = appearance;
@@ -132,36 +138,102 @@ export function WardrobeItemManipulation(): ReactElement {
 				title={ title }
 				filter={ preFilter }
 			/>
-			<TabContainer className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
+			<Column className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
 				{
-					!isRoomInventory ? (
-						<Tab name='Room inventory'>
-							<SecondaryInventoryView
-								title='Use items in room inventory'
-								secondaryTarget={ roomInventoryTarget }
-								quickActionTarget={ targetSelector }
-								quickActionTargetContainer={ currentFocus.container }
-							/>
-						</Tab>
-					) : null
+					otherPaneTarget == null ? (
+						<Column className='inventoryViewGhost' alignX='center' alignY='center'>
+							<Column>
+								<Button
+									className='align-start'
+									onClick={ () => {
+										setOtherPaneTarget({ type: 'roomInventory' });
+									} }
+								>
+									<img src={ storageIcon } />Room inventory
+								</Button>
+								<Button
+									className='align-start'
+									onClick={ () => {
+										setOtherPaneTarget('create');
+									} }
+								>
+									<img src={ plusIcon } />Create new item
+								</Button>
+								<Button
+									className='align-start'
+									onClick={ () => {
+										setOtherPaneTarget('saved');
+									} }
+								>
+									<img src={ diskIcon } />Saved items
+								</Button>
+							</Column>
+						</Column>
+					) : otherPaneTarget === 'create' ? (
+						<InventoryAssetView
+							header={ (
+								<div className='toolbar'>
+									<Button onClick={ () => {
+										setOtherPaneTarget(null);
+									} }>
+										◄ Back
+									</Button>
+									<span>Create and use a new item</span>
+								</div>
+							) }
+							assets={ assetList.filter((asset) => {
+								return preFilter(asset) && containerContentsFilter(asset);
+							}) }
+							attributesFilterOptions={ assetFilterAttributes }
+							container={ currentFocus.container }
+							spawnStyle={ singleItemContainer ? 'spawn' : 'pickup' }
+						/>
+					) : otherPaneTarget === 'saved' ? (
+						<InventoryOutfitView
+							header={ (
+								<div className='toolbar'>
+									<Button onClick={ () => {
+										setOtherPaneTarget(null);
+									} }>
+										◄ Back
+									</Button>
+									<span>Saved items</span>
+								</div>
+							) }
+							targetContainer={ currentFocus.container }
+						/>
+					) : (
+						<SecondaryInventoryView
+							header={ (
+								<div className='toolbar'>
+									<Button onClick={ () => {
+										setOtherPaneTarget(null);
+									} }>
+										◄ Back
+									</Button>
+									<span>
+										{ (
+											otherPaneTarget.type === 'roomInventory' ? 'Room inventory' :
+											otherPaneTarget.type === 'character' ? `${ characters.find((c) => c.id === otherPaneTarget.characterId)?.name ?? '[unknown]' } (${otherPaneTarget.characterId})` :
+											AssertNever(otherPaneTarget)
+										) }
+									</span>
+									{
+										otherPaneTarget.type === 'roomInventory' ? (
+											<Button className='slim' onClick={ () => navigate('/wardrobe/room-inventory') } >
+												Switch to room inventory
+											</Button>
+										) : null
+									}
+								</div>
+							) }
+							secondaryTarget={ otherPaneTarget }
+							quickActionTarget={ targetSelector }
+							quickActionTargetContainer={ currentFocus.container }
+						/>
+					)
 				}
-				<Tab name='Create new item'>
-					<InventoryAssetView
-						title='Create and use a new item'
-						assets={ assetList.filter((asset) => {
-							return preFilter(asset) && containerContentsFilter(asset);
-						}) }
-						attributesFilterOptions={ assetFilterAttributes }
-						container={ currentFocus.container }
-						spawnStyle={ singleItemContainer ? 'spawn' : 'pickup' }
-					/>
-				</Tab>
-				<Tab name='Saved items'>
-					<InventoryOutfitView
-						targetContainer={ currentFocus.container }
-					/>
-				</Tab>
-			</TabContainer>
+			</Column>
 			{
 				focusType === 'item' && WardrobeFocusesItem(currentFocus) ? (
 					<div className='flex-col flex-1'>

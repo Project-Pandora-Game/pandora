@@ -121,6 +121,14 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
+.inventoryViewGhost {
+	flex: 1;
+	overflow: auto;
+	min-width: min(20em, 90vw);
+
+	border: 1px solid common.$theme-separator;
+}
+
 .inventoryView {
 	@include common.flex(column);
 	flex: 1;
@@ -130,6 +138,10 @@ $drop-overlay-gap: 0.3em;
 	background: common.$theme-wardrobe-view-background;
 	color: common.$theme-wardrobe-view-text;
 	border: 2px solid common.$theme-separator;
+
+	&.itemEdit {
+		border-color: common.$theme-separator-highlight;
+	}
 
 	.toolbar {
 		flex-shrink: 0;
@@ -219,6 +231,12 @@ $drop-overlay-gap: 0.3em;
 				canvas {
 					max-width: 100%;
 					max-height: 100%;
+				}
+
+				img {
+					max-width: 65%;
+					max-height: 65%;
+					object-fit: contain;
 				}
 			}
 		}

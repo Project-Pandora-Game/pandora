@@ -12,6 +12,7 @@ import { Navigate } from 'react-router';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
 import closedDoor from '../../../assets/icons/closed-door.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
+import plusIcon from '../../../assets/icons/plus.svg';
 import publicDoor from '../../../assets/icons/public-door.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
@@ -172,7 +173,7 @@ function SpaceSearchList({ list }: {
 					{
 						ownSpaces.length >= account.spaceOwnershipLimit ? null : (
 							<button className='spacesSearchListEntry noDescription' onClick={ () => navigate('/spaces/create') } >
-								<div className='icon'>➕</div>
+								<div className='icon small'><img src={ plusIcon } alt='Create space' /></div>
 								<div className='entry'>Create a new space</div>
 							</button>
 						)

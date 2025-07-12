@@ -15,6 +15,7 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import filterIcon from '../../../assets/icons/filter.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import listIcon from '../../../assets/icons/list.svg';
 import { useCharacterDataOptional, type Character } from '../../../character/character.ts';
@@ -30,8 +31,8 @@ import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetP
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
 
-export function InventoryAssetView({ title, children, assets, container, attributesFilterOptions, spawnStyle }: {
-	title: string;
+export function InventoryAssetView({ header, children, assets, container, attributesFilterOptions, spawnStyle }: {
+	header?: ReactNode;
 	children?: ReactNode;
 	assets: readonly Asset[];
 	container: ItemContainerPath;
@@ -61,7 +62,7 @@ export function InventoryAssetView({ title, children, assets, container, attribu
 
 	return (
 		<WardrobeAssetList
-			title={ title }
+			header={ header }
 			overlay={
 				heldItem.type !== 'nothing' ? (
 					<InventoryAssetDropArea />
@@ -83,8 +84,8 @@ export interface WardrobeAssetListItemProps {
 	listMode: boolean;
 }
 
-export function WardrobeAssetList({ title, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
-	title: string;
+export function WardrobeAssetList({ header, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
+	header?: ReactNode;
 	children?: ReactNode;
 	overlay?: ReactNode;
 	assets: readonly Asset[];
@@ -97,6 +98,7 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 	const assetManager = useAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
+	const [showAttributeFilters, setShowAttributeFilters] = useState(false);
 	const [attribute, setAttribute] = useReducer((old: string, wantToSet: string) => {
 		return wantToSet === old ? '' : wantToSet;
 	}, '');
@@ -133,12 +135,26 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 	// Clear filter when looking from different focus
 	useEffect(() => {
 		setFilter('');
+		setAttribute('');
+		setShowAttributeFilters(false);
 	}, [container, setFilter]);
 
 	return (
 		<div className='inventoryView wardrobeAssetList'>
+			{ header }
 			<div className='toolbar'>
-				<span>{ title }</span>
+				{
+					attributesFilterOptions != null ? (
+						<IconButton
+							theme={ attribute !== '' ? 'defaultActive' : 'default' }
+							src={ filterIcon }
+							alt='Filter based on attributes'
+							onClick={ () => {
+								setShowAttributeFilters((v) => !v);
+							} }
+						/>
+					) : null
+				}
 				<div className='filter'>
 					<TextInput ref={ filterInput }
 						placeholder='Filter by name'
@@ -146,12 +162,13 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 						onChange={ setFilter }
 					/>
 				</div>
+				<div className='flex-1' />
 				<ListViewToggle
 					listMode={ listMode }
 					setListMode={ setListMode }
 				/>
 			</div>
-			{ attributesFilterOptions == null ? null : (
+			{ (attributesFilterOptions == null || !showAttributeFilters) ? null : (
 				<div className='toolbar wrap attributeFilter'>
 					{ attributesFilterOptions.map((a) => (
 						<AttributeButton

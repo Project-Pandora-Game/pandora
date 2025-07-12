@@ -52,9 +52,7 @@ export function WardrobeItemPreferences(): ReactElement {
 						/>
 					</Tab>
 					<Tab name='Items'>
-						<WardrobePreferencesItemPicker
-							title='Choose item'
-						/>
+						<WardrobePreferencesItemPicker />
 					</Tab>
 				</TabContainer>
 				<WardrobePreferencesConfiguration focus={ focus } />
@@ -63,9 +61,7 @@ export function WardrobeItemPreferences(): ReactElement {
 	);
 }
 
-export function WardrobePreferencesItemPicker({ title }: {
-	title: string;
-}): ReactElement | null {
+export function WardrobePreferencesItemPicker(): ReactElement | null {
 	const assetManager = useAssetManager();
 	const assetList = assetManager.assetList;
 
@@ -76,7 +72,6 @@ export function WardrobePreferencesItemPicker({ title }: {
 
 	return (
 		<WardrobeAssetList
-			title={ title }
 			assets={ assetList.filter((asset) => {
 				return !asset.isType('roomDevice') && !asset.isType('roomDeviceWearablePart');
 			}) }

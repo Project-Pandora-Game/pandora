@@ -256,7 +256,11 @@ export function EditorWardrobeUI(): ReactElement {
 				<hr className='fill-x' />
 				<FieldsetToggle legend='Add Items' className='no-padding' open={ false } persistent='wardrobe-add-items'>
 					<InventoryAssetView
-						title='Create and use a new item'
+						header={ (
+							<div className='toolbar'>
+								<span>Create and use a new item</span>
+							</div>
+						) }
 						assets={ assetList.filter((asset) => {
 							return containerContentsFilter(asset);
 						}) }

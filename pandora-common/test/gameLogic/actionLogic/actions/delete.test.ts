@@ -10,7 +10,7 @@ describe('ActionDelete', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -46,7 +46,7 @@ describe('ActionDelete', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/body/front_hair1',
 				'a/headwear/top_hat',
 			]),
@@ -81,7 +81,7 @@ describe('ActionDelete', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/headwear/top_hat',
 			]),
 		]);
@@ -114,7 +114,7 @@ describe('ActionDelete', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/headwear/top_hat',
 			]),
 		]);
@@ -147,7 +147,7 @@ describe('ActionDelete', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room),
+			(space) => TestCreateCharacterState(assetManager, character, space),
 		]);
 
 		// Do the action

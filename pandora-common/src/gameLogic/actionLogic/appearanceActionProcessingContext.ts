@@ -5,6 +5,7 @@ import type {
 	ActionCharacterSelector,
 	ActionHandlerMessage,
 	ActionHandlerMessageWithTarget,
+	ActionRoomSelector,
 	ActionTarget,
 	ActionTargetCharacter,
 	ActionTargetRoomInventory,
@@ -104,8 +105,13 @@ export class AppearanceActionProcessingContext {
 		return char.getAppearance(this.manipulator.currentState);
 	}
 
-	public getTargetRoomInventory(): ActionTargetRoomInventory {
-		return new RoomInventory(this.manipulator.currentState.room);
+	public getTargetRoomInventory(target: ActionRoomSelector): ActionTargetRoomInventory | null {
+		const room = this.manipulator.currentState.space.getRoom(target.roomId);
+
+		if (room == null)
+			return null;
+
+		return new RoomInventory(room);
 	}
 
 	public getTarget(target: ActionTargetSelector): ActionTarget | null {
@@ -113,8 +119,8 @@ export class AppearanceActionProcessingContext {
 			return this.getTargetCharacter(target);
 		}
 
-		if (target.type === 'roomInventory') {
-			return this.getTargetRoomInventory();
+		if (target.type === 'room') {
+			return this.getTargetRoomInventory(target);
 		}
 
 		AssertNever(target);

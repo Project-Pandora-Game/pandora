@@ -5,7 +5,7 @@ import {
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
-	AssetFrameworkRoomState,
+	AssetFrameworkSpaceState,
 	GetDefaultAppearanceBundle,
 	type AssetId,
 	type AssetManager,
@@ -16,7 +16,7 @@ import {
 } from '../../src/index.ts';
 
 /** Create a character state in a deterministic way */
-export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter, roomState: AssetFrameworkRoomState, additionalAssets?: (AssetId | Immutable<ItemTemplate>)[]): AssetFrameworkCharacterState {
+export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter, spaceState: AssetFrameworkSpaceState, additionalAssets?: (AssetId | Immutable<ItemTemplate>)[]): AssetFrameworkCharacterState {
 	const TEST_ASSETS: AssetId[] = [
 		'a/body/base',
 		'a/body/head',
@@ -55,25 +55,25 @@ export function TestCreateCharacterState(assetManager: AssetManager, logicCharac
 	freeze(baseBundle, true);
 
 	// Load the state
-	const characterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, logicCharacter.id, baseBundle, roomState, undefined);
+	const characterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, logicCharacter.id, baseBundle, spaceState, undefined);
 
 	// Check the character state actually matches the bundle
-	expect(characterState.isValid(roomState)).toBe(true);
+	expect(characterState.isValid(spaceState)).toBe(true);
 	expect(characterState.exportToBundle()).toEqual(baseBundle);
 
 	return characterState;
 }
 
-export function TestCreateGlobalState(assetManager: AssetManager, spaceId: SpaceId | null = null, characters?: ((roomState: AssetFrameworkRoomState) => AssetFrameworkCharacterState)[]): AssetFrameworkGlobalState {
+export function TestCreateGlobalState(assetManager: AssetManager, spaceId: SpaceId | null = null, characters?: ((spaceState: AssetFrameworkSpaceState) => AssetFrameworkCharacterState)[]): AssetFrameworkGlobalState {
 	let state = AssetFrameworkGlobalState.createDefault(
 		assetManager,
-		AssetFrameworkRoomState.createDefault(assetManager, spaceId),
+		AssetFrameworkSpaceState.createDefault(assetManager, spaceId),
 	);
 
 	const characterIds: CharacterId[] = [];
 	if (characters != null) {
 		for (const characterGenerator of characters) {
-			const character = characterGenerator(state.room);
+			const character = characterGenerator(state.space);
 			characterIds.push(character.id);
 			state = state.withCharacter(character.id, character);
 		}
@@ -89,7 +89,7 @@ export function TestCreateGlobalState(assetManager: AssetManager, spaceId: Space
 }
 
 export function TestVerifyGlobalStateExportImport(state: AssetFrameworkGlobalState): void {
-	const spaceId = state.room.spaceId;
+	const spaceId = state.space.spaceId;
 
 	// Do an export to server bundle and load a new appearance from it
 	const bundle = state.exportToBundle();
@@ -110,11 +110,11 @@ export function TestVerifyGlobalStateExportImport(state: AssetFrameworkGlobalSta
 
 export function TestVerifyGlobalStateDelta(originalState: AssetFrameworkGlobalState, targetState: AssetFrameworkGlobalState): void {
 	Assert(originalState.assetManager === targetState.assetManager);
-	Assert(originalState.room.spaceId === targetState.room.spaceId);
+	Assert(originalState.space.spaceId === targetState.space.spaceId);
 	if (originalState === targetState)
 		return;
 
-	const spaceId = targetState.room.spaceId;
+	const spaceId = targetState.space.spaceId;
 
 	// The states should have a different state id
 	// (this is technically flaky, but the chance of a collission here is really small)

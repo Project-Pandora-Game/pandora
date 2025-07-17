@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AccountIdSchema } from '../account/index.ts';
+import { SpaceStateBundleSchema } from '../assets/index.ts';
 import { AppearanceBundleSchema } from '../assets/state/characterStateTypes.ts';
-import { RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
 import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifiers/characterModifierData.ts';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
@@ -54,9 +54,8 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	preview: z.unknown().optional(),
 	/** The space the character is currently in. `null` means personal space. */
 	currentSpace: SpaceIdSchema.nullable().default(null),
-	// TODO(spaces): Migrate this to be a personalSpace data
-	personalRoom: z.object({
-		inventory: z.lazy(() => RoomInventoryBundleSchema),
+	personalSpace: z.object({
+		spaceState: SpaceStateBundleSchema,
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
@@ -77,7 +76,7 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'name',
 	'profileDescription',
 	'appearance',
-	'personalRoom',
+	'personalSpace',
 	'settings',
 	'interactionConfig',
 	'assetPreferences',

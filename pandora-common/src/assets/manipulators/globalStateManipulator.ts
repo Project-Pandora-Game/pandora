@@ -1,7 +1,7 @@
 import type { CharacterId } from '../../character/index.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers.ts';
-import { ActionTargetSelector } from '../appearanceTypes.ts';
+import { ActionTargetSelector, type RoomId } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { FilterItemWearable, type AppearanceItems } from '../item/index.ts';
 import type { AssetFrameworkCharacterState } from '../state/characterState.ts';
@@ -20,7 +20,7 @@ export class AssetFrameworkGlobalStateManipulator {
 	public getManipulatorFor(target: ActionTargetSelector): AppearanceRootManipulator {
 		if (target.type === 'character') {
 			return new AppearanceCharacterManipulator(this, target);
-		} else if (target.type === 'roomInventory') {
+		} else if (target.type === 'room') {
 			return new AppearanceRootManipulator(this, target);
 		}
 		AssertNever(target);
@@ -48,8 +48,8 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
-	public produceRoomState(producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
-		const newState = this.currentState.produceRoomState(producer);
+	public produceRoomState(roomId: RoomId, producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
+		const newState = this.currentState.produceSpaceState((s) => s.produceRoom(roomId, producer));
 
 		if (!newState)
 			return false;
@@ -73,8 +73,9 @@ export class AssetFrameworkGlobalStateManipulator {
 				target.characterId,
 				(character) => character.produceWithItems(wearableItems),
 			);
-		} else if (target.type === 'roomInventory') {
+		} else if (target.type === 'room') {
 			return this.produceRoomState(
+				target.roomId,
 				(room) => room.produceWithItems(newItems),
 			);
 		}

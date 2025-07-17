@@ -24,7 +24,7 @@ This modifier prevents the character from unlocking any lock on other characters
 		) {
 			if (action.target.type === 'character' && action.target.characterId !== player.character.id) {
 				return 'block';
-			} else if (action.target.type === 'roomInventory' && config.affectRoomInventory) {
+			} else if (action.target.type === 'room' && config.affectRoomInventory) {
 				return 'block';
 			}
 		}

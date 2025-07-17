@@ -64,7 +64,15 @@ export class ValidatedCollection<T extends Document> {
 	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
 		const migrationLogger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
 		const oldCollection = db.collection<TOldType>(migration.oldCollectionName ?? this.name);
-		const oldStream = ValidatingAsyncIter(migrationLogger, oldCollection, migration.oldSchema);
+		let success = true;
+		const oldStream = ValidatingAsyncIter(
+			migrationLogger,
+			oldCollection,
+			migration.oldSchema,
+			() => {
+				success = false;
+			},
+		);
 
 		const process: DbManualMigrationProcess<T, TOldType> = {
 			self: this,
@@ -76,6 +84,11 @@ export class ValidatedCollection<T extends Document> {
 		};
 
 		await migration.migrate(process);
+
+		if (!success) {
+			migrationLogger.fatal('Database migration failed.');
+			throw new Error('Database migration failed');
+		}
 	}
 
 	public async create(db: Db, migration?: DbAutomaticMigration): Promise<Collection<T>> {
@@ -229,7 +242,12 @@ export class ValidatedCollection<T extends Document> {
 	}
 }
 
-async function* ValidatingAsyncIter<T extends Document>(logger: Logger, document: Collection<T>, schema: ZodType<T, ZodTypeDef, unknown>): AsyncGenerator<T | null, void, unknown> {
+async function* ValidatingAsyncIter<T extends Document>(
+	logger: Logger,
+	document: Collection<T>,
+	schema: ZodType<T, ZodTypeDef, unknown>,
+	onError: () => void,
+): AsyncGenerator<T | null, void, unknown> {
 	for await (const originalData of document.find().stream()) {
 		const documentId: ObjectId = originalData._id;
 		Assert(documentId instanceof ObjectId);
@@ -237,6 +255,7 @@ async function* ValidatingAsyncIter<T extends Document>(logger: Logger, document
 		const parsedData = schema.safeParse(originalData);
 		if (!parsedData.success) {
 			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, parsedData.error);
+			onError();
 			yield null;
 		} else {
 			yield parsedData.data;

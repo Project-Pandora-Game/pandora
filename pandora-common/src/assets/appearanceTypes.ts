@@ -1,12 +1,16 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager.ts';
-import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat/index.ts';
+import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoom } from '../chat/index.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
+import { ZodTemplateString } from '../validation.ts';
 import { ItemIdSchema, type Item } from './item/base.ts';
 import type { AppearanceItems } from './item/items.ts';
 import type { AssetFrameworkCharacterState } from './state/characterState.ts';
+
+export const RoomIdSchema = ZodTemplateString<`room:${string}`>(z.string(), /^room:/);
+export type RoomId = z.infer<typeof RoomIdSchema>;
 
 export const ItemContainerPathSchema = z.array(
 	z.object({
@@ -31,13 +35,14 @@ export const CharacterSelectorSchema = z.object({
 });
 export type ActionCharacterSelector = z.infer<typeof CharacterSelectorSchema>;
 
-export const RoomInventorySelectorSchema = z.object({
+export const RoomSelectorSchema = z.object({
 	/** The item is to be found in room inventory */
-	type: z.literal('roomInventory'),
+	type: z.literal('room'),
+	roomId: RoomIdSchema,
 });
-export type ActionRoomInventorySelector = z.infer<typeof RoomInventorySelectorSchema>;
+export type ActionRoomSelector = z.infer<typeof RoomSelectorSchema>;
 
-export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [CharacterSelectorSchema, RoomInventorySelectorSchema]);
+export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [CharacterSelectorSchema, RoomSelectorSchema]);
 export type ActionTargetSelector = z.infer<typeof ActionTargetSelectorSchema>;
 
 export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMessageAction['data']>, 'character' | 'target'> {
@@ -49,8 +54,8 @@ export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMess
 export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
 
 export type ActionHandlerMessageTargetCharacter = Pick<IChatMessageActionTargetCharacter, 'type' | 'id'>;
-export type ActionHandlerMessageTargetRoomInventory = IChatMessageActionTargetRoomInventory;
-export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoomInventory;
+export type ActionHandlerMessageTargetRoom = IChatMessageActionTargetRoom;
+export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoom;
 
 export interface ActionHandlerMessageWithTarget extends ActionHandlerMessageTemplate {
 	target?: ActionHandlerMessageTarget;

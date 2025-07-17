@@ -10,7 +10,7 @@ describe('ActionCreate', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room),
+			(space) => TestCreateCharacterState(assetManager, character, space),
 		]);
 
 		// Do the action
@@ -47,8 +47,8 @@ describe('ActionCreate', () => {
 		);
 		Assert(frontHair.isType('bodypart'));
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => {
-				const baseCharacterState = TestCreateCharacterState(assetManager, character, room);
+			(space) => {
+				const baseCharacterState = TestCreateCharacterState(assetManager, character, space);
 				return baseCharacterState.produceWithItems([
 					...baseCharacterState.items,
 					frontHair,
@@ -82,7 +82,7 @@ describe('ActionCreate', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room),
+			(space) => TestCreateCharacterState(assetManager, character, space),
 		]);
 
 		// Do the action
@@ -111,7 +111,7 @@ describe('ActionCreate', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room),
+			(space) => TestCreateCharacterState(assetManager, character, space),
 		]);
 
 		// Do the action
@@ -140,7 +140,7 @@ describe('ActionCreate', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room),
+			(space) => TestCreateCharacterState(assetManager, character, space),
 		]);
 
 		// Do the actions

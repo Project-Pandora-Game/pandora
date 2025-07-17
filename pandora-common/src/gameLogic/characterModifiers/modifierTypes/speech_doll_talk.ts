@@ -42,12 +42,12 @@ _Note: Setting '0' means this part is not limited._
 		if (message.type !== 'chat')
 			return { result: 'ok' };
 
-		const allowedWordSet = new Set(config.wordAllowlist);
+		const allowedWordSet = new Set(config.wordAllowlist.map((w) => w.toLocaleLowerCase()));
 		const fullText = message.parts.map((p) => p[1]).join('');
 		const words = Array.from(fullText.matchAll(/[^\t\p{Z}\v.:!?~,;^]+/gmu)).map((i) => i[0]);
 		if (config.maxNumberOfWords && words.length > config.maxNumberOfWords)
 			return { result: 'block', reason: 'The message contains more words than allowed.' };
-		const filteredWords = words.filter((w) => !allowedWordSet.has(w));
+		const filteredWords = words.filter((w) => !allowedWordSet.has(w.toLocaleLowerCase()));
 		if (config.maxWordLength && filteredWords.some((word) => word.length > config.maxWordLength))
 			return { result: 'block', reason: 'The message contains words that are longer than allowed.' };
 		return { result: 'ok' };

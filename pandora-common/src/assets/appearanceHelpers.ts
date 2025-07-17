@@ -235,9 +235,10 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 				type: 'character',
 				id: this._target.characterId,
 			};
-		} else if (this._target.type === 'roomInventory') {
+		} else if (this._target.type === 'room') {
 			target = {
-				type: 'roomInventory',
+				type: 'room',
+				roomId: this._target.roomId,
 			};
 		} else {
 			AssertNever(this._target);

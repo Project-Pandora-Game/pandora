@@ -1,4 +1,4 @@
-import { AccountId, GetLogger, RoomInventoryBundle, SpaceDirectoryConfig } from 'pandora-common';
+import { AccountId, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle } from 'pandora-common';
 import { Character } from '../character/character.ts';
 import { Space } from './space.ts';
 
@@ -26,12 +26,12 @@ export class PersonalSpace extends Space {
 		};
 	}
 
-	constructor(character: Character, inventory: RoomInventoryBundle) {
-		super(null, inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
+	constructor(character: Character, spaceState: SpaceStateBundle) {
+		super(null, spaceState, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}
 
-	protected override _onDataModified(_data: 'inventory'): void {
+	protected override _onDataModified(_data: 'spaceState'): void {
 		this._character.onPersonalSpaceChanged();
 	}
 }

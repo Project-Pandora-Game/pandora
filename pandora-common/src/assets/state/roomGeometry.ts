@@ -1,10 +1,11 @@
-import { freeze, produce, type Immutable } from 'immer';
+import { freeze, produce, type Draft, type Immutable } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
 import { z } from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
+import { RoomIdSchema } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { CharacterSize } from '../graphics/graphics.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
@@ -183,6 +184,7 @@ export type CharacterRoomPositionFollow = z.infer<typeof CharacterRoomPositionFo
 export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('normal'),
+		room: RoomIdSchema.catch('room:default'),
 		position: CharacterRoomPositionSchema,
 		following: CharacterRoomPositionFollowSchema.optional(),
 	}),
@@ -260,41 +262,48 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 				character = character.produceWithSpacePosition(produce(character.position, (d) => {
 					delete d.following;
 				}));
-			} else if (following.followType === 'relativeLock') {
-				// In relative lock always maintain relative position
-				const position: Writable<CharacterRoomPosition> = CloneDeepMutable(followTarget.position.position);
-				for (let i = 0; i <= 2; i++) {
-					position[i] += following.delta[i];
-				}
-				const { minX, maxX, minY, maxY } = GetRoomPositionBounds(globalState.room.roomBackground);
-				position[0] = clamp(position[0], minX, maxX);
-				position[1] = clamp(position[1], minY, maxY);
-				if (!isEqual(position, character.position.position)) {
-					character = character.produceWithSpacePosition(produce(character.position, (d) => {
-						d.position = position;
-					}));
-				}
-			} else if (following.followType === 'leash') {
-				// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
-				const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(character.position.position);
-				for (let i = 0; i <= 2; i++) {
-					deltaVector[i] -= followTarget.position.position[i];
-				}
-				const currentDistance = Math.hypot(...deltaVector);
-				if (currentDistance > following.distance) {
-					const ratio = following.distance / currentDistance;
-					for (let i = 0; i <= 2; i++) {
-						deltaVector[i] = followTarget.position.position[i] + Math.round(deltaVector[i] * ratio);
-					}
-					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(globalState.room.roomBackground);
-					deltaVector[0] = clamp(deltaVector[0], minX, maxX);
-					deltaVector[1] = clamp(deltaVector[1], minY, maxY);
-					character = character.produceWithSpacePosition(produce(character.position, (d) => {
-						d.position = deltaVector;
-					}));
-				}
 			} else {
-				AssertNever(following);
+				const targetCharacterRoom = globalState.space.getRoom(followTarget.position.room);
+				Assert(targetCharacterRoom != null);
+
+				if (following.followType === 'relativeLock') {
+					// In relative lock always maintain relative position
+					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(followTarget.position);
+					position.room = targetCharacterRoom.id;
+					for (let i = 0; i <= 2; i++) {
+						position.position[i] += following.delta[i];
+					}
+					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
+					position.position[0] = clamp(position.position[0], minX, maxX);
+					position.position[1] = clamp(position.position[1], minY, maxY);
+					if (!isEqual(position, character.position)) {
+						character = character.produceWithSpacePosition(position);
+					}
+				} else if (following.followType === 'leash') {
+					// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
+					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(followTarget.position);
+					position.room = targetCharacterRoom.id;
+					const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(position.position);
+					for (let i = 0; i <= 2; i++) {
+						deltaVector[i] -= followTarget.position.position[i];
+					}
+					const currentDistance = Math.hypot(...deltaVector);
+					if (currentDistance > following.distance) {
+						const ratio = following.distance / currentDistance;
+						for (let i = 0; i <= 2; i++) {
+							deltaVector[i] = followTarget.position.position[i] + Math.round(deltaVector[i] * ratio);
+						}
+						const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
+						deltaVector[0] = clamp(deltaVector[0], minX, maxX);
+						deltaVector[1] = clamp(deltaVector[1], minY, maxY);
+						position.position = deltaVector;
+					}
+					if (!isEqual(position, character.position)) {
+						character = character.produceWithSpacePosition(position);
+					}
+				} else {
+					AssertNever(following);
+				}
 			}
 		}
 

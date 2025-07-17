@@ -34,8 +34,8 @@ import {
 	KnownObject,
 	Logger,
 	NOT_NARROWING_FALSE,
-	ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ResolveAssetPreference,
+	SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	SpaceId,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
@@ -174,7 +174,7 @@ export class Character {
 		this.connectSecret = connectSecret;
 		this.lastOnline = Date.now();
 
-		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE));
+		this._personalSpace = new PersonalSpace(this, data.personalSpace?.spaceState ?? CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE));
 
 		const originalInteractionConfig = data.interactionConfig;
 		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);
@@ -551,10 +551,10 @@ export class Character {
 		for (const key of keys) {
 			if (key === 'appearance') {
 				data.appearance = this.getCharacterAppearanceBundle();
-			} else if (key === 'personalRoom') {
-				const roomState = this._personalSpace.currentState.room;
-				data.personalRoom = {
-					inventory: roomState.exportToBundle(),
+			} else if (key === 'personalSpace') {
+				const spaceState = this._personalSpace.currentState.space;
+				data.personalSpace = {
+					spaceState: spaceState.exportToBundle(),
 				};
 			} else {
 				(data as Record<string, unknown>)[key] = this.data[key];
@@ -620,7 +620,7 @@ export class Character {
 	}
 
 	public onPersonalSpaceChanged(): void {
-		this.modified.add('personalRoom');
+		this.modified.add('personalSpace');
 	}
 
 	private _onPublicSettingsChanged(): void {

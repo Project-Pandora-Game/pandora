@@ -1,13 +1,12 @@
 import type { Immutable } from 'immer';
-import { cloneDeep } from 'lodash-es';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account.ts';
-import type { AssetFrameworkGlobalState } from '../assets/index.ts';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
+import type { AssetFrameworkGlobalState } from '../assets/state/globalState.ts';
+import { SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE, SpaceStateBundleSchema } from '../assets/state/spaceState.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterModifierEffectData } from '../gameLogic/index.ts';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
-import { ArrayToRecordKeys } from '../utility/misc.ts';
+import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
 import { ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
 
 export const ShardFeatureSchema = z.enum(['development']);
@@ -200,7 +199,7 @@ export const SpaceDataSchema = z.object({
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
-	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE)),
+	spaceState: SpaceStateBundleSchema.default(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
 });
 /** Space data stored in database */
@@ -210,7 +209,7 @@ export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'invit
 export const SpaceDataDirectoryUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataDirectoryUpdate = z.infer<typeof SpaceDataDirectoryUpdateSchema>;
 
-export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['inventory'] as const satisfies readonly Exclude<keyof SpaceData, ((typeof SPACE_DIRECTORY_PROPERTIES)[number])>[];
+export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['spaceState'] as const satisfies readonly Exclude<keyof SpaceData, ((typeof SPACE_DIRECTORY_PROPERTIES)[number])>[];
 export const SpaceDataShardUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataShardUpdate = z.infer<typeof SpaceDataShardUpdateSchema>;
 

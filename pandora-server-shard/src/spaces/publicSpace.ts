@@ -36,7 +36,7 @@ export class PublicSpace extends Space {
 	}
 
 	constructor(data: SpaceData) {
-		super(data.id, data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
+		super(data.id, data.spaceState, GetLogger('Space', `[PublicSpace ${data.id}]`));
 		this.id = data.id;
 		this.data = data;
 	}
@@ -117,7 +117,7 @@ export class PublicSpace extends Space {
 		}
 	}
 
-	protected override _onDataModified(data: 'inventory'): void {
+	protected override _onDataModified(data: 'spaceState'): void {
 		this._modified.add(data);
 	}
 
@@ -132,9 +132,8 @@ export class PublicSpace extends Space {
 
 		const data: SpaceDataShardUpdate = {};
 
-		if (keys.includes('inventory')) {
-			const roomState = this.currentState.room;
-			data.inventory = roomState.exportToBundle();
+		if (keys.includes('spaceState')) {
+			data.spaceState = this.currentState.space.exportToBundle();
 		}
 
 		try {

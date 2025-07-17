@@ -10,7 +10,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -47,7 +47,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -84,7 +84,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',
@@ -121,7 +121,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',
@@ -158,7 +158,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -194,7 +194,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -230,7 +230,7 @@ describe('ActionMoveItem', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
 		const baseState = TestCreateGlobalState(assetManager, null, [
-			(room) => TestCreateCharacterState(assetManager, character, room, [
+			(space) => TestCreateCharacterState(assetManager, character, space, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',

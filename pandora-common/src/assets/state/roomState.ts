@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { RoomIdSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { Item } from '../item/base.ts';
@@ -13,6 +14,7 @@ import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roo
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
 
 export const RoomInventoryBundleSchema = z.object({
+	id: RoomIdSchema,
 	items: AppearanceItemsBundleSchema,
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
 	clientOnly: z.boolean().optional(),
@@ -22,36 +24,39 @@ export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
 export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
 
 export const RoomInventoryClientDeltaBundleSchema = z.object({
+	id: RoomIdSchema,
 	items: AppearanceItemsDeltaBundleSchema.optional(),
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 });
 export type RoomInventoryClientDeltaBundle = z.infer<typeof RoomInventoryClientDeltaBundleSchema>;
 
 export const ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomInventoryBundle>>({
+	id: 'room:default',
 	items: [],
 	roomGeometry: { type: 'defaultPublicSpace' },
 }, true);
 
 export const ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomInventoryBundle>>({
+	id: 'room:default',
 	items: [],
 	roomGeometry: { type: 'defaultPersonalSpace' },
 }, true);
 
 type AssetFrameworkRoomStateProps = {
 	readonly assetManager: AssetManager;
-	readonly spaceId: SpaceId | null;
+	readonly id: RoomId;
 	readonly items: AppearanceItems;
 	readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	readonly roomBackground: Immutable<RoomBackgroundData>;
 };
 
 /**
- * State of an space. Immutable.
+ * State of a room. Immutable.
  */
 export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
-	public readonly type = 'roomInventory';
+	public readonly id: RoomId;
+
 	public readonly assetManager: AssetManager;
-	public readonly spaceId: SpaceId | null;
 
 	public readonly items: AppearanceItems;
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
@@ -60,8 +65,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	private constructor(props: AssetFrameworkRoomStateProps);
 	private constructor(old: AssetFrameworkRoomState, override: Partial<AssetFrameworkRoomStateProps>);
 	private constructor(props: AssetFrameworkRoomStateProps, override?: Partial<AssetFrameworkRoomStateProps>) {
+		this.id = override?.id ?? props.id;
 		this.assetManager = override?.assetManager ?? props.assetManager;
-		this.spaceId = override?.spaceId ?? props.spaceId;
 		this.items = override?.items ?? props.items;
 		this.roomGeometryConfig = override?.roomGeometryConfig ?? props.roomGeometryConfig;
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
@@ -86,6 +91,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	public exportToBundle(): RoomInventoryBundle {
 		return {
+			id: this.id,
 			items: this.items.map((item) => item.exportToBundle({})),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 		};
@@ -94,6 +100,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public exportToClientBundle(options: IExportOptions = {}): RoomInventoryClientBundle {
 		options.clientOnly = true;
 		return {
+			id: this.id,
 			items: this.items.map((item) => item.exportToBundle(options)),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			clientOnly: true,
@@ -102,10 +109,11 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	public exportToClientDeltaBundle(originalState: AssetFrameworkRoomState, options: IExportOptions = {}): RoomInventoryClientDeltaBundle {
 		Assert(this.assetManager === originalState.assetManager);
-		Assert(this.spaceId === originalState.spaceId);
 		options.clientOnly = true;
 
-		const result: RoomInventoryClientDeltaBundle = {};
+		const result: RoomInventoryClientDeltaBundle = {
+			id: this.id,
+		};
 
 		if (this.items !== originalState.items) {
 			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
@@ -118,6 +126,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	}
 
 	public applyClientDeltaBundle(bundle: RoomInventoryClientDeltaBundle, logger: Logger | undefined): AssetFrameworkRoomState {
+		Assert(this.id === bundle.id);
 		const update: Writable<Partial<AssetFrameworkRoomStateProps>> = {};
 
 		if (bundle.items !== undefined) {
@@ -150,15 +159,6 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometryConfig: newGeometry,
 			roomBackground,
 		});
-	}
-
-	public static createDefault(assetManager: AssetManager, spaceId: SpaceId | null): AssetFrameworkRoomState {
-		return AssetFrameworkRoomState.loadFromBundle(
-			assetManager,
-			spaceId != null ? ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
-			spaceId,
-			undefined,
-		);
 	}
 
 	public static loadFromBundle(assetManager: AssetManager, bundle: Immutable<RoomInventoryBundle>, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkRoomState {
@@ -196,8 +196,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		// Create the final state
 		const resultState = freeze(new AssetFrameworkRoomState({
+			id: parsed.id,
 			assetManager,
-			spaceId,
 			items: newItems,
 			roomGeometryConfig,
 			roomBackground,

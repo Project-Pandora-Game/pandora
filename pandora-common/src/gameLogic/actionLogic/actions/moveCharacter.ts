@@ -47,9 +47,13 @@ export function ActionMoveCharacter({
 
 	if (action.moveTo.type === 'normal') {
 		const spaceContext = processingContext.getSpaceContext();
+		// Target room must exist
+		const room = processingContext.manipulator.currentState.space.getRoom(action.moveTo.room);
+		if (room == null)
+			return processingContext.invalid();
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!spaceContext.features.includes('development')) {
-			if (!IsValidRoomPosition(processingContext.manipulator.currentState.room.roomBackground, action.moveTo.position)) {
+			if (!IsValidRoomPosition(room.roomBackground, action.moveTo.position)) {
 				return processingContext.invalid();
 			}
 		}

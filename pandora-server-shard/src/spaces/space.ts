@@ -12,7 +12,7 @@ import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateContainer,
-	AssetFrameworkRoomState,
+	AssetFrameworkSpaceState,
 	AssetManager,
 	CardGameGame,
 	CharacterId,
@@ -26,8 +26,6 @@ import {
 	IClientMessage,
 	IShardClient,
 	Logger,
-	RoomInventory,
-	RoomInventoryBundle,
 	ServerRoom,
 	SpaceCharacterModifierEffectCalculateUpdate,
 	SpaceClientInfo,
@@ -41,6 +39,7 @@ import {
 	type IClientShardNormalResult,
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
+	type SpaceStateBundle,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import type { Character } from '../character/character.ts';
@@ -76,31 +75,31 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public cardGame: CardGameGame | null = null;
 
-	constructor(id: SpaceId | null, inventory: RoomInventoryBundle, logger: Logger) {
+	constructor(id: SpaceId | null, spaceState: SpaceStateBundle, logger: Logger) {
 		super();
 		this.id = id;
 		this.logger = logger;
 		this.logger.verbose('Loaded');
 
-		if (inventory.clientOnly) {
-			this.logger.error('Room inventory is client-only');
+		if (spaceState.clientOnly) {
+			this.logger.error('Space state is client-only');
 		}
 
 		const initialState = AssetFrameworkGlobalState.createDefault(
 			assetManager,
-			AssetFrameworkRoomState
-				.loadFromBundle(assetManager, inventory, id, this.logger.prefixMessages('Room inventory load:')),
+			AssetFrameworkSpaceState
+				.loadFromBundle(assetManager, spaceState, id, this.logger.prefixMessages('Room inventory load:')),
 		).runAutomaticActions();
 
 		// Check if room state changed and if it did queue saving the changes
 		{
 			// HACK: The JSON wrapping is because exported bundle might have undefined fields, which lodash doesn't handle well
-			const inventoryBefore: unknown = JSON.parse(JSON.stringify(inventory));
-			const inventoryAfter: unknown = JSON.parse(JSON.stringify(initialState.room.exportToBundle()));
-			if (!isEqual(inventoryBefore, inventoryAfter)) {
-				this.logger.verbose('Room inventory changed during load, queuing update of migrated data\n', diffString(inventoryBefore, inventoryAfter, { color: false }));
+			const spaceStateBefore: unknown = JSON.parse(JSON.stringify(spaceState));
+			const spaceStateAfter: unknown = JSON.parse(JSON.stringify(initialState.space.exportToBundle()));
+			if (!isEqual(spaceStateBefore, spaceStateAfter)) {
+				this.logger.verbose('Room inventory changed during load, queuing update of migrated data\n', diffString(spaceStateBefore, spaceStateAfter, { color: false }));
 				queueMicrotask(() => {
-					this._onDataModified('inventory');
+					this._onDataModified('spaceState');
 				});
 			}
 		}
@@ -175,8 +174,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	private _onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
 		const changes = newState.listChanges(oldState);
 
-		if (changes.room) {
-			this._onDataModified('inventory');
+		if (changes.space) {
+			this._onDataModified('spaceState');
 		}
 
 		for (const character of changes.characters) {
@@ -198,7 +197,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		});
 	}
 
-	protected abstract _onDataModified(data: 'inventory'): void;
+	protected abstract _onDataModified(data: 'spaceState'): void;
 
 	public getInfo(): SpaceClientInfo {
 		return {
@@ -293,12 +292,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return Array.from(this.characters.values()).find((c) => c.id === id) ?? null;
 	}
 
-	public getRoomInventory(): RoomInventory {
-		const state = this.currentState.room;
-		AssertNotNullable(state);
-		return new RoomInventory(state);
-	}
-
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
@@ -306,14 +299,14 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			const originalState = this._gameState.currentState;
 			let newState = originalState;
 
-			// Add the character to the room
+			// Add the character to the space
 			this.characters.add(character);
 			const characterState = AssetFrameworkCharacterState
 				.loadFromBundle(
 					assetManager,
 					character.id,
 					appearance,
-					newState.room,
+					newState.space,
 					logger,
 				);
 			newState = newState.withCharacter(character.id, characterState);

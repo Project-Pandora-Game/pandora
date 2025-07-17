@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { ItemId } from '../assets/index.ts';
 import type { AssetId } from '../assets/base.ts';
+import type { ItemId, RoomId } from '../assets/index.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { PronounKey } from '../character/pronouns.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
@@ -94,11 +94,12 @@ export type IChatMessageActionContainerPath = {
 	module: string;
 }[];
 
-export type IChatMessageActionTargetRoomInventory = {
-	type: 'roomInventory';
+export type IChatMessageActionTargetRoom = {
+	type: 'room';
+	roomId: RoomId;
 };
 
-export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoomInventory;
+export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoom;
 
 export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';

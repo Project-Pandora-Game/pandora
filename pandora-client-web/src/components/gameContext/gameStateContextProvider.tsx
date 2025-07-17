@@ -32,7 +32,6 @@ import {
 	PermissionConfig,
 	PermissionGroup,
 	PermissionSetup,
-	RoomInventory,
 	SpaceClientInfo,
 	SpaceFeature,
 	SpaceId,
@@ -865,24 +864,6 @@ export function useGlobalState(context: GameState | null): AssetFrameworkGlobalS
 
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
-}
-
-export function useRoomInventory(context: GameState): RoomInventory | null {
-	const state = useGlobalState(context);
-
-	return useMemo(() => (state.room ? new RoomInventory(state.room) : null), [state]);
-}
-
-export function useRoomInventoryItem(context: GameState, item: ItemPath | null | undefined): Item | undefined {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (item ? roomInventory?.getItem(item) : undefined), [roomInventory, item]);
-}
-
-export function useRoomInventoryItems(context: GameState): readonly Item[] {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
 }
 
 export type FindItemResultEntry = {

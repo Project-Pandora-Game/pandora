@@ -5,7 +5,6 @@ import {
 	AppearanceActionProcessingResult,
 	AppearanceItems,
 	Assert,
-	AssertNever,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	Item,
@@ -25,19 +24,10 @@ export function useWardrobeTargetItems(target: ActionTargetSelector | null): App
 	const { globalState } = useWardrobeActionContext();
 
 	const items = useMemo<AppearanceItems | null>(() => {
-		if (target == null) {
+		if (target == null)
 			return null;
-		} else if (target.type === 'character') {
-			return globalState.getItems({
-				type: 'character',
-				characterId: target.characterId,
-			});
-		} else if (target.type === 'roomInventory') {
-			return globalState.getItems({
-				type: 'roomInventory',
-			});
-		}
-		AssertNever(target);
+
+		return globalState.getItems(target);
 	}, [globalState, target]);
 
 	return items ?? EMPTY_ARRAY;

@@ -260,6 +260,7 @@ function RoomCharacterInteractiveImpl({
 			},
 			moveTo: {
 				type: 'normal',
+				room: characterState.currentRoom,
 				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
 			},
 		});

@@ -128,12 +128,20 @@ export const CommandSelectorCharacter = ({ allowSelf, filter }: {
 	},
 });
 
-export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<ActionTargetSelector, ICommandClientNeededContext<'gameState' | 'globalState'>> {
+export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<ActionTargetSelector, ICommandClientNeededContext<'gameState' | 'globalState' | 'player'>> {
 	const characterSubprocessor = CommandSelectorCharacter({ allowSelf: 'any' });
 
 	return ({
 		preparse: 'quotedArgTrimmed',
 		parse(selector, context, args) {
+			const playerState = context.globalState.getCharacterState(context.player.id);
+			if (!playerState) {
+				return {
+					success: false,
+					error: 'Internal error: Failed to get player state',
+				};
+			}
+
 			if (!selector) {
 				return {
 					success: false,
@@ -144,7 +152,10 @@ export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<Act
 			if (selector === 'room') {
 				return {
 					success: true,
-					value: { type: 'roomInventory' },
+					value: {
+						type: 'room',
+						roomId: playerState.currentRoom,
+					},
 				};
 			}
 

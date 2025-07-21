@@ -1,4 +1,4 @@
-import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -19,9 +19,10 @@ import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/ac
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { usePlayer, usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -38,6 +39,9 @@ export function RoomControls(): ReactElement | null {
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
 	const navigate = useNavigatePandora();
+	const gameState = useGameStateOptional();
+	const globalState = useGlobalState(gameState);
+	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 
 	const friends = useFriendStatus();
 	const sortedCharacters = useMemo(() => {
@@ -77,14 +81,14 @@ export function RoomControls(): ReactElement | null {
 		return characters.toReversed().sort(charactersSortFunction);
 	}, [characters, friends, player?.data.accountId]);
 
-	if (!characters || !player) {
+	if (!characters || !player || playerState == null) {
 		return null;
 	}
 
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >
+				<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
 					<img src={ storageIcon } />Room inventory
 				</Button>
 				<Button onClick={ () => navigate('/space/configuration') }>
@@ -111,12 +115,12 @@ export function RoomControls(): ReactElement | null {
 
 export function PersonalSpaceControls(): ReactElement {
 	const navigate = useNavigatePandora();
-	const player = usePlayer();
+	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
-	const gameState = useGameState();
-	const globalState = useGlobalState(gameState);
-
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+
+	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
+	Assert(currentRoomState != null);
 
 	return (
 		<Column padding='medium' className='controls'>
@@ -155,7 +159,7 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >
+				<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
 					<img src={ storageIcon } />Room inventory
 				</Button>
 				<Button
@@ -163,10 +167,15 @@ export function PersonalSpaceControls(): ReactElement {
 				>
 					Change room background
 				</Button>
-				{ showBackgrounds ? <BackgroundSelectDialog
-					hide={ () => setShowBackgrounds(false) }
-					current={ globalState.room.roomGeometryConfig }
-				/> : null }
+				{
+					showBackgrounds ? (
+						<BackgroundSelectDialog
+							hide={ () => setShowBackgrounds(false) }
+							room={ currentRoomState.id }
+							current={ currentRoomState.roomGeometryConfig }
+						/>
+					) : null
+				}
 			</Row>
 			<div className='character-info'>
 				<DisplayCharacter char={ player } />

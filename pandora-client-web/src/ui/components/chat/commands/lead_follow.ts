@@ -23,6 +23,7 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 							target: { type: 'character', characterId: follower.id },
 							moveTo: {
 								type: 'normal',
+								room: target.currentRoom,
 								position: CloneDeepMutable(follower.position.position),
 								following: {
 									followType: 'relativeLock',
@@ -53,6 +54,7 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 							target: { type: 'character', characterId: follower.id },
 							moveTo: {
 								type: 'normal',
+								room: target.currentRoom,
 								position: CloneDeepMutable(follower.position.position),
 								following: {
 									followType: 'leash',
@@ -110,6 +112,7 @@ export const COMMAND_STOPFOLLOW: IClientCommand<ICommandExecutionContextClient> 
 				target: { type: 'character', characterId: target.id },
 				moveTo: {
 					type: 'normal',
+					room: target.currentRoom,
 					position: CloneDeepMutable(target.position.position),
 					following: undefined,
 				},

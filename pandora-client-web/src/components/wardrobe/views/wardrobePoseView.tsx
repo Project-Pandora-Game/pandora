@@ -7,7 +7,7 @@ import {
 	ArmRotationSchema,
 	Assert,
 	AssetFrameworkCharacterState,
-	AssetFrameworkRoomState,
+	AssetFrameworkSpaceState,
 	AssetsPosePreset,
 	AssetsPosePresets,
 	BONE_MAX,
@@ -760,7 +760,7 @@ async function GeneratePosePreview(
 
 	const pose = MergePartialAppearancePoses(preset, preset.optional);
 
-	const spaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
+	const spaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
 	const previewCharacterState = AssetFrameworkCharacterState
 		.createDefault(assetManager, 'c0', spaceState)
 		.produceWithPose(preview.basePose ?? {}, 'pose')
@@ -908,6 +908,7 @@ function RoomManualYOffsetControl({ characterState }: {
 			},
 			moveTo: {
 				type: 'normal',
+				room: characterState.currentRoom,
 				position: [position[0], position[1], newYOffset],
 			},
 		});

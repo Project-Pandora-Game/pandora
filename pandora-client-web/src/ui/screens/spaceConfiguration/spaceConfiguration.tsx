@@ -600,7 +600,7 @@ function SpaceConfigurationRoom({
 	const gameState = useGameState();
 	const globalState = useGlobalState(gameState);
 
-	if (creation || currentSpaceInfo == null || globalState.room.spaceId !== currentSpaceInfo.id) {
+	if (creation || currentSpaceInfo == null || globalState.space.spaceId !== currentSpaceInfo.id) {
 		return (
 			<strong>Room configuration can only be changed from inside the space</strong>
 		);

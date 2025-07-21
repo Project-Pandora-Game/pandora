@@ -39,7 +39,7 @@ export function WardrobeItemConfigMenu({
 }: {
 	item: ItemPath;
 }): ReactElement {
-	const { targetSelector, focuser } = useWardrobeContext();
+	const { targetSelector, currentRoomSelector, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const wornItemRef = useRef(wornItem);
 
@@ -47,7 +47,7 @@ export function WardrobeItemConfigMenu({
 	const containerItem = useWardrobeTargetItem(targetSelector, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
-	const isRoomInventory = targetSelector.type === 'roomInventory' && item.container.length === 0;
+	const isRoomInventory = targetSelector.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		focuser.reset();
@@ -136,7 +136,7 @@ export function WardrobeItemConfigMenu({
 									type: 'transfer',
 									source: targetSelector,
 									item,
-									target: { type: 'roomInventory' },
+									target: currentRoomSelector,
 									container: [],
 								} }
 								onExecute={ close }
@@ -170,7 +170,7 @@ export function WardrobeItemConfigMenu({
 				}
 				{
 					wornItem.isType('roomDeviceWearablePart') ? (
-						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } />
+						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ currentRoomSelector } />
 					) : null
 				}
 				{

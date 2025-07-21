@@ -1,6 +1,6 @@
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type ICharacterRoomData } from 'pandora-common';
+import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type AssetFrameworkRoomState, type ICharacterRoomData, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ICharacter, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
@@ -14,14 +14,15 @@ import { usePlayer } from '../../../components/gameContext/playerContextProvider
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import type { WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
+import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
 
-function StoreDeviceMenu({ device, close }: {
+function StoreDeviceMenu({ roomState, device, close }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
@@ -31,9 +32,12 @@ function StoreDeviceMenu({ device, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: {
+			type: 'room',
+			roomId: roomState.id,
+		},
 		deployment: { deployed: false },
-	}), [device]);
+	}), [device.id, roomState.id]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const available = roomConstructionMode && checkResult != null && checkResult.valid;
@@ -54,7 +58,8 @@ function StoreDeviceMenu({ device, close }: {
 	);
 }
 
-function MoveDeviceMenu({ device, close }: {
+function MoveDeviceMenu({ roomState, device, close }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
@@ -64,9 +69,12 @@ function MoveDeviceMenu({ device, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: {
+			type: 'room',
+			roomId: roomState.id,
+		},
 		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
-	}), [device]);
+	}), [device, roomState.id]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const available = roomConstructionMode && checkResult != null && checkResult.valid;
@@ -95,7 +103,8 @@ function MoveDeviceMenu({ device, close }: {
 	);
 }
 
-function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
+function DeviceSlotClear({ roomState, device, slot, children, close }: ChildrenProps & {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	slot: string;
 	close: () => void;
@@ -106,9 +115,12 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: {
+			type: 'room',
+			roomId: roomState.id,
+		},
 		slot,
-	}), [device, slot]);
+	}), [device.id, roomState.id, slot]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.valid;
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
@@ -120,7 +132,8 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	);
 }
 
-function LeaveDeviceMenu({ device, close }: {
+function LeaveDeviceMenu({ roomState, device, close }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
@@ -130,13 +143,14 @@ function LeaveDeviceMenu({ device, close }: {
 		return null;
 
 	return (
-		<DeviceSlotClear device={ device } slot={ slot } close={ close }>
+		<DeviceSlotClear roomState={ roomState } device={ device } slot={ slot } close={ close }>
 			Exit the device
 		</DeviceSlotClear>
 	);
 }
 
-function OccupyDeviceSlotMenu({ device, slot, character, close }: {
+function OccupyDeviceSlotMenu({ roomState, device, slot, character, close }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	slot: string;
 	character: ICharacter<ICharacterRoomData>;
@@ -150,14 +164,17 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: {
+			type: 'room',
+			roomId: roomState.id,
+		},
 		slot,
 		character: {
 			type: 'character',
 			characterId: character.id,
 		},
 		itemId: `i/${nanoid()}` as const,
-	}), [device, slot, character]);
+	}), [device.id, roomState.id, slot, character.id]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.valid;
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
@@ -176,9 +193,10 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
-	slot: string;
+function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
+	slot: string;
 	position: Readonly<PointLike>;
 	close: () => void;
 	closeSlot: () => void;
@@ -215,7 +233,7 @@ function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
 					{ character?.name } ({ occupancy })
 				</button>
 				<hr />
-				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
+				<DeviceSlotClear roomState={ roomState } device={ device } slot={ slot } close={ close }>
 					{ (character)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
@@ -237,7 +255,7 @@ function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
 				Enter:
 			</span>
 			{ characters.map((char) => (
-				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
+				<OccupyDeviceSlotMenu key={ char.id } roomState={ roomState } device={ device } slot={ slot } character={ char } close={ close } />
 			)) }
 			<hr />
 			<button onClick={ closeSlot }>
@@ -247,7 +265,8 @@ function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
 	);
 }
 
-function DeviceMainMenu({ device, position, close }: {
+function DeviceMainMenu({ roomState, device, position, close }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
 	close: () => void;
@@ -264,17 +283,18 @@ function DeviceMainMenu({ device, position, close }: {
 					</button>
 				)) }
 				<hr />
-				<LeaveDeviceMenu device={ device } close={ close } />
-				<MoveDeviceMenu device={ device } close={ close } />
-				<StoreDeviceMenu device={ device } close={ close } />
+				<LeaveDeviceMenu roomState={ roomState } device={ device } close={ close } />
+				<MoveDeviceMenu roomState={ roomState } device={ device } close={ close } />
+				<StoreDeviceMenu roomState={ roomState } device={ device } close={ close } />
 			</>
 		);
 	}
 
 	return (
 		<DeviceSlotMenu
-			slot={ slot }
+			roomState={ roomState }
 			device={ device }
+			slot={ slot }
 			position={ position }
 			close={ close }
 			closeSlot={ () => setSlot(null) }
@@ -282,7 +302,8 @@ function DeviceMainMenu({ device, position, close }: {
 	);
 }
 
-function DeviceContextMenuCurrent({ device, position, onClose }: {
+function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
+	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
 	onClose: () => void;
@@ -310,12 +331,13 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 						<WardrobeActionContextProvider player={ player }>
 							<button onClick={ () => {
 								onCloseActual();
-								navigate('/wardrobe/room-inventory', { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
+								navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }), { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
 							} }>
 								{ device.asset.definition.name }
 							</button>
 							{ menu === 'main' && (
 								<DeviceMainMenu
+									roomState={ roomState }
 									device={ device }
 									position={ position }
 									close={ onCloseActual }
@@ -332,14 +354,16 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 	);
 }
 
-export function DeviceContextMenu({ deviceItemId, position, onClose }: {
+export function DeviceContextMenu({ room, deviceItemId, position, onClose }: {
+	room: RoomId;
 	deviceItemId: ItemId;
 	position: Readonly<PointLike>;
 	onClose: () => void;
 }): ReactElement | null {
 	const globalState = useGlobalState(useGameState());
+	const roomState = globalState.space.getRoom(room);
 	const item = useMemo(() => {
-		const actual = globalState.getItems({ type: 'roomInventory' });
+		const actual = globalState.getItems({ type: 'room', roomId: room });
 		if (!actual)
 			return null;
 
@@ -347,18 +371,19 @@ export function DeviceContextMenu({ deviceItemId, position, onClose }: {
 			container: [],
 			itemId: deviceItemId,
 		});
-	}, [globalState, deviceItemId]);
+	}, [globalState, room, deviceItemId]);
 
 	useEffect(() => {
-		if (!item?.isType('roomDevice'))
+		if (roomState == null || !item?.isType('roomDevice'))
 			onClose();
-	}, [item, onClose]);
+	}, [roomState, item, onClose]);
 
-	if (!item?.isType('roomDevice'))
+	if (roomState == null || !item?.isType('roomDevice'))
 		return null;
 
 	return (
 		<DeviceContextMenuCurrent
+			roomState={ roomState }
 			device={ item }
 			position={ position }
 			onClose={ onClose }

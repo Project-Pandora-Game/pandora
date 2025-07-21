@@ -53,7 +53,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
 	const focusedInRoom = useObservable(focuser.inRoom);
-	Assert(!focusedInRoom, 'EditorWardrobeContextProvider does not support in-room focus');
+	Assert(focusedInRoom == null, 'EditorWardrobeContextProvider does not support in-room focus');
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
@@ -181,10 +181,17 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 	}), [character, globalState, actions, editor]);
 
+	const characterState = globalState.getCharacterState(character.id);
+	Assert(characterState != null);
+
 	const context = useMemo((): WardrobeContext => ({
 		targetSelector: {
 			type: 'character',
 			characterId: character.id,
+		},
+		currentRoomSelector: {
+			type: 'room',
+			roomId: characterState.currentRoom,
 		},
 		heldItem,
 		setHeldItem,
@@ -193,7 +200,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-	}), [character, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+	}), [character, characterState.currentRoom, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeActionContext.Provider value={ actionContext }>

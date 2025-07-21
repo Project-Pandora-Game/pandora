@@ -316,7 +316,8 @@ export function DescribeContainer({ target, container, globalState }: {
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	if (container.length === 0) {
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>the room inventory</>;
 		} else {
 			return <DescribeSpaceCharacter id={ target.characterId } />;
@@ -324,7 +325,8 @@ export function DescribeContainer({ target, container, globalState }: {
 	} else if (container.length === 1) {
 		const item = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? null } />;
 
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>{ item } in the room inventory</>;
 		} else {
 			return <><DescribeSpaceCharacter id={ target.characterId } form='possessive' /> { item }</>;
@@ -338,7 +340,8 @@ export function DescribeContainer({ target, container, globalState }: {
 			}) ?? null } />
 		);
 
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>the { itemLast } in { itemFirst } in the room inventory</>;
 		} else {
 			return <>the { itemLast } in <DescribeSpaceCharacter id={ target.characterId } form='possessive' /> { itemFirst }</>;

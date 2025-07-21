@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character.ts';
-import { IsSpaceAdmin, useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useActionSpaceContext, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { useObservable } from '../../../observable.ts';
@@ -61,11 +61,25 @@ export function useRoomConstructionModeCheckProvider(): void {
  * @param target - The character to be moved. If `null` is used, the check always fails.
  */
 export function useCanMoveCharacter(target: Character | null): 'allowed' | 'forbidden' | 'prompt' | null {
-	const action = useMemo((): AppearanceAction | null => target != null ? ({
-		type: 'moveCharacter',
-		target: { type: 'character', characterId: target.id },
-		moveTo: { type: 'normal', position: [0, 0, 0] },
-	}) : null, [target]);
+	const globalState = useGlobalState(useGameStateOptional());
+	const action = useMemo((): AppearanceAction | null => {
+		if (target == null || globalState == null)
+			return null;
+
+		const targetState = globalState.getCharacterState(target.id);
+		if (targetState == null)
+			return null;
+
+		return {
+			type: 'moveCharacter',
+			target: { type: 'character', characterId: target.id },
+			moveTo: {
+				type: 'normal',
+				room: targetState.currentRoom,
+				position: [0, 0, 0],
+			},
+		};
+	}, [target, globalState]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 
 	return useMemo((): 'allowed' | 'forbidden' | 'prompt' | null => {

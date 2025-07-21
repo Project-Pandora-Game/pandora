@@ -124,7 +124,8 @@ function ActionMessagePrepareDictionary(
 
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					`the room inventory`;
 			} else {
@@ -137,7 +138,8 @@ function ActionMessagePrepareDictionary(
 				text: ActionTextItemLinkToString(itemContainerPath[0], itemDisplayNameType),
 			};
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					ActionMessageDictionaryTemplate`${ asset } in the room inventory`;
 			} else {
@@ -154,7 +156,8 @@ function ActionMessagePrepareDictionary(
 				text: ActionTextItemLinkToString(itemContainerPath[itemContainerPath.length - 1], itemDisplayNameType),
 			};
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					ActionMessageDictionaryTemplate`the ${ assetLast } in ${ assetFirst } in the room inventory`;
 			} else {

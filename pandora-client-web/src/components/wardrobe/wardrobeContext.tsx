@@ -1,10 +1,12 @@
 import {
 	ActionTargetSelector,
+	Assert,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	ItemId,
+	type ActionRoomSelector,
 } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Observable, useObservable } from '../../observable.ts';
@@ -20,7 +22,11 @@ export function WardrobeContextProvider({ target, initialFocus, children }: {
 }): ReactElement {
 	const {
 		globalState,
+		player,
 	} = useWardrobeActionContext();
+
+	const playerState = globalState.getCharacterState(player.id);
+	Assert(playerState != null);
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
 	const initialFocusDone = useRef(false);
@@ -39,9 +45,10 @@ export function WardrobeContextProvider({ target, initialFocus, children }: {
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(initialFocus?.itemId ?? null);
 
 	const actualTargetSelector = useMemo((): ActionTargetSelector => {
-		if (focuserInRoom) {
+		if (focuserInRoom != null) {
 			return {
-				type: 'roomInventory',
+				type: 'room',
+				roomId: focuserInRoom,
 			};
 		}
 		return target;
@@ -59,6 +66,10 @@ export function WardrobeContextProvider({ target, initialFocus, children }: {
 
 	const context = useMemo((): WardrobeContext => ({
 		targetSelector: actualTargetSelector,
+		currentRoomSelector: {
+			type: 'room',
+			roomId: playerState.currentRoom,
+		},
 		heldItem,
 		setHeldItem,
 		scrollToItem,
@@ -66,7 +77,7 @@ export function WardrobeContextProvider({ target, initialFocus, children }: {
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-	}), [actualTargetSelector, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+	}), [actualTargetSelector, playerState.currentRoom, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -81,14 +92,13 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 	return ctx;
 }
 
-export function WardrobeContextSelectRoomInventoryProvider({ children }: { children: ReactNode; }): ReactElement {
+export function WardrobeContextSelectRoomInventoryProvider({ room, children }: { room: ActionRoomSelector; children: ReactNode; }): ReactElement {
 	const ctx = useWardrobeContext();
 	const value = useMemo<WardrobeContext>(() => ({
 		...ctx,
-		targetSelector: {
-			type: 'roomInventory',
-		},
-	}), [ctx]);
+		targetSelector: room,
+		currentRoomSelector: room,
+	}), [room, ctx]);
 
 	return (
 		<wardrobeContext.Provider value={ value }>
@@ -101,7 +111,11 @@ export function WardrobeContextSelectRoomInventoryProvider({ children }: { child
 export function WardrobeExternalContextProvider({ target, children }: { target: ActionTargetSelector; children: ReactNode; }): ReactElement {
 	const {
 		globalState,
+		player,
 	} = useWardrobeActionContext();
+
+	const playerState = globalState.getCharacterState(player.id);
+	Assert(playerState != null);
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
 	const focuserInRoom = useObservable(focuser.inRoom);
@@ -112,9 +126,10 @@ export function WardrobeExternalContextProvider({ target, children }: { target: 
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actualTargetSelector = useMemo((): ActionTargetSelector => {
-		if (focuserInRoom) {
+		if (focuserInRoom != null) {
 			return {
-				type: 'roomInventory',
+				type: 'room',
+				roomId: focuserInRoom,
 			};
 		}
 		return target;
@@ -132,6 +147,10 @@ export function WardrobeExternalContextProvider({ target, children }: { target: 
 
 	const context = useMemo((): WardrobeContext => ({
 		targetSelector: actualTargetSelector,
+		currentRoomSelector: {
+			type: 'room',
+			roomId: playerState.currentRoom,
+		},
 		heldItem,
 		setHeldItem,
 		scrollToItem,
@@ -139,7 +158,7 @@ export function WardrobeExternalContextProvider({ target, children }: { target: 
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-	}), [actualTargetSelector, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+	}), [actualTargetSelector, playerState.currentRoom, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

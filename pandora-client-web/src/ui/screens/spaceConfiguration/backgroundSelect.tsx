@@ -16,6 +16,7 @@ import {
 	type AppearanceAction,
 	type RoomBackground3dBoxSide,
 	type RoomGeometryConfig,
+	type RoomId,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
@@ -77,8 +78,9 @@ const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: 
 	},
 };
 
-export function BackgroundSelectDialog({ hide, current }: {
+export function BackgroundSelectDialog({ hide, room, current }: {
 	hide: () => void;
+	room: RoomId;
 	current: Immutable<RoomGeometryConfig>;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
@@ -88,8 +90,9 @@ export function BackgroundSelectDialog({ hide, current }: {
 
 	const updateBackgroundAction = useMemo((): AppearanceAction => ({
 		type: 'roomConfigure',
+		roomId: room,
 		roomGeometry: CloneDeepMutable(selectedBackground),
-	}), [selectedBackground]);
+	}), [room, selectedBackground]);
 
 	return (
 		<ModalDialog position='top'>

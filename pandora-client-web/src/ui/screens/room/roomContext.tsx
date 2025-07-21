@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { Assert, AssertNever, AssertNotNullable, ICharacterRoomData, ItemId, ItemRoomDevice, type CharacterId } from 'pandora-common';
+import { Assert, AssertNever, AssertNotNullable, ICharacterRoomData, ItemId, type CharacterId, type RoomId } from 'pandora-common';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -23,21 +23,24 @@ export type IRoomSceneMode = {
 	deviceItemId: ItemId;
 };
 
+type IRoomContextMenuDeviceFocus = {
+	type: 'device';
+	room: RoomId;
+	deviceItemId: ItemId;
+	position: Readonly<PointLike>;
+};
+
 export type IRoomContextMenuFocus = {
 	type: 'character';
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
-} | {
-	type: 'device';
-	deviceItemId: ItemId;
-	position: Readonly<PointLike>;
-};
+} | IRoomContextMenuDeviceFocus;
 
 type RoomScreenContext = {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	contextMenuFocus: Readonly<IRoomContextMenuFocus> | null;
-	openContextMenu: (target: Character<ICharacterRoomData> | ItemRoomDevice | null, position: Readonly<PointLike> | null) => void;
+	openContextMenu: (target: Character<ICharacterRoomData> | Omit<IRoomContextMenuDeviceFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
 };
 
 export const roomScreenContext = createContext<RoomScreenContext | null>(null);
@@ -73,10 +76,11 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 				character: target,
 				position,
 			});
-		} else if (target instanceof ItemRoomDevice) {
+		} else if (target.type === 'device') {
 			setContextMenuFocus({
 				type: 'device',
-				deviceItemId: target.id,
+				room: target.room,
+				deviceItemId: target.deviceItemId,
 				position,
 			});
 		} else {
@@ -116,6 +120,7 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 				{
 				contextMenuFocus?.type === 'device' ? (
 					<DeviceContextMenu
+						room={ contextMenuFocus.room }
 						deviceItemId={ contextMenuFocus.deviceItemId }
 						position={ contextMenuFocus.position }
 						onClose={ closeContextMenu }

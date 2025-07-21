@@ -133,7 +133,7 @@ export function InventoryItemView({
 					)
 				}
 				<div className='flex-1' />
-				{ targetSelector.type === 'roomInventory' ?
+				{ targetSelector.type === 'room' ?
 					<Button className='slim' onClick={ () => {
 						focuser.reset();
 						navigate('/wardrobe');

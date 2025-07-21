@@ -11,6 +11,8 @@ import {
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
+	type ActionRoomSelector,
+	type RoomId,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ReactElement } from 'react';
@@ -32,6 +34,7 @@ export type WardrobeHeldItem = {
 
 export interface WardrobeContext {
 	targetSelector: ActionTargetSelector;
+	currentRoomSelector: ActionRoomSelector;
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
 	scrollToItem: ItemId | null;
@@ -64,9 +67,9 @@ export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleTy
 }
 
 export class WardrobeFocuser {
-	private readonly _stack: { container: ItemContainerPath; itemId: ItemId | null; inRoom: boolean; }[] = [];
+	private readonly _stack: { container: ItemContainerPath; itemId: ItemId | null; inRoom: RoomId | null; }[] = [];
 	private readonly _current = new Observable<WardrobeFocus>({ container: [], itemId: null });
-	private readonly _inRoom = new Observable<boolean>(false);
+	private readonly _inRoom = new Observable<RoomId | null>(null);
 	private _disabled: string | null = null;
 	private _disabledContainers: string | null = null;
 
@@ -74,12 +77,12 @@ export class WardrobeFocuser {
 		return this._current;
 	}
 
-	public get inRoom(): ReadonlyObservable<boolean> {
+	public get inRoom(): ReadonlyObservable<RoomId | null> {
 		return this._inRoom;
 	}
 
 	public reset(): void {
-		this._inRoom.value = false;
+		this._inRoom.value = null;
 		const current = this._current.value;
 		if (current.container.length === 0 && current.itemId == null) {
 			return;
@@ -112,7 +115,7 @@ export class WardrobeFocuser {
 		});
 
 		this._current.value = newFocus;
-		this._inRoom.value = target.type === 'roomInventory';
+		this._inRoom.value = target.type === 'room' ? target.roomId : null;
 	}
 
 	/** Set a new focus without pushing entry on the history stack */
@@ -123,7 +126,7 @@ export class WardrobeFocuser {
 			throw new Error(this._disabledContainers);
 
 		this._current.value = newFocus;
-		this._inRoom.value = target.type === 'roomInventory';
+		this._inRoom.value = target.type === 'room' ? target.roomId : null;
 	}
 
 	public focusItemId(itemId: ItemId | null): void {

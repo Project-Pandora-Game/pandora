@@ -26,6 +26,7 @@ import { InventoryItemView } from './views/wardrobeItemView.tsx';
 import { InventoryOutfitView } from './views/wardrobeOutfitView.tsx';
 import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView.tsx';
 import { useWardrobeContext } from './wardrobeContext.tsx';
+import { ActionTargetToWardrobeUrl } from './wardrobeNavigation.tsx';
 import { WardrobeFocus } from './wardrobeTypes.ts';
 import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils.ts';
 
@@ -40,7 +41,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		if (targetSelector.type === 'roomInventory') {
+		if (targetSelector.type === 'room') {
 			return asset.isType('roomDevice') ||
 				asset.isType('lock') ||
 				asset.isType('personal');
@@ -102,7 +103,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 
 export function WardrobeItemManipulation(): ReactElement {
 	const navigate = useNavigatePandora();
-	const { targetSelector, heldItem, setHeldItem, focuser } = useWardrobeContext();
+	const { targetSelector, currentRoomSelector, heldItem, setHeldItem, focuser } = useWardrobeContext();
 	const characters = useSpaceCharacters();
 	const assetList = useAssetManager().assetList;
 
@@ -146,10 +147,10 @@ export function WardrobeItemManipulation(): ReactElement {
 								<Button
 									className='align-start'
 									onClick={ () => {
-										setOtherPaneTarget({ type: 'roomInventory' });
+										setOtherPaneTarget(currentRoomSelector);
 									} }
 								>
-									<img src={ storageIcon } />Room inventory
+									<img src={ storageIcon } />Current room's inventory
 								</Button>
 								<Button
 									className='align-start'
@@ -213,14 +214,14 @@ export function WardrobeItemManipulation(): ReactElement {
 									</Button>
 									<span>
 										{ (
-											otherPaneTarget.type === 'roomInventory' ? 'Room inventory' :
+											otherPaneTarget.type === 'room' ? 'Room inventory' : // TODO: Should this show room name?
 											otherPaneTarget.type === 'character' ? `${ characters.find((c) => c.id === otherPaneTarget.characterId)?.name ?? '[unknown]' } (${otherPaneTarget.characterId})` :
 											AssertNever(otherPaneTarget)
 										) }
 									</span>
 									{
-										otherPaneTarget.type === 'roomInventory' ? (
-											<Button className='slim' onClick={ () => navigate('/wardrobe/room-inventory') } >
+										otherPaneTarget.type === 'room' ? (
+											<Button className='slim' onClick={ () => navigate(ActionTargetToWardrobeUrl(otherPaneTarget)) } >
 												Switch to room inventory
 											</Button>
 										) : null

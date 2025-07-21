@@ -201,8 +201,8 @@ function RoomItemDialogContentInfo({ item, path, target, close }: RoomItemDialog
 	);
 }
 
-function RoomItemDialogContentQuickActions({ path, target, close }: RoomItemDialogContentProps): ReactElement {
-	const isRoomInventory = target.type === 'roomInventory' && path.container.length === 0;
+function RoomItemDialogContentQuickActions({ path, target, room, close }: RoomItemDialogContentProps): ReactElement {
+	const isRoomInventory = target.type === 'room' && path.container.length === 0;
 
 	const containerPath = SplitContainerPath(path.container);
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
@@ -243,7 +243,7 @@ function RoomItemDialogContentQuickActions({ path, target, close }: RoomItemDial
 							type: 'transfer',
 							source: target,
 							item: path,
-							target: { type: 'roomInventory' },
+							target: room,
 							container: [],
 						} }
 					>

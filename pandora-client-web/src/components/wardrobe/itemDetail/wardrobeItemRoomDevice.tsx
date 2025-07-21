@@ -8,6 +8,7 @@ import {
 	ItemPath,
 	RoomDeviceDeploymentPosition,
 	RoomDeviceSlot,
+	type ActionRoomSelector,
 	type AppearanceAction,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
@@ -251,16 +252,17 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	);
 }
 
-export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
+export function WardrobeRoomDeviceWearable({ roomDeviceWearable, room }: {
 	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
+	room: ActionRoomSelector;
 	item: ItemPath;
 }): ReactElement | null {
 	const roomDeviceLink = roomDeviceWearable.roomDeviceLink;
 	const { globalState } = useWardrobeActionContext();
 	const roomDevice = useMemo(() => (roomDeviceLink != null
-		? globalState.getItems({ type: 'roomInventory' })?.find((it) => it.id === roomDeviceLink.device)
+		? globalState.getItems(room)?.find((it) => it.id === roomDeviceLink.device)
 		: undefined
-	), [globalState, roomDeviceLink]);
+	), [globalState, room, roomDeviceLink]);
 
 	if (roomDeviceLink == null || roomDevice == null) {
 		return (
@@ -278,7 +280,7 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 				<Column padding='medium'>
 					<WardrobeActionButton action={ {
 						type: 'roomDeviceLeave',
-						target: { type: 'roomInventory' },
+						target: room,
 						item: {
 							container: [],
 							itemId: roomDeviceLink.device,
@@ -289,13 +291,13 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 					</WardrobeActionButton>
 				</Column>
 			</FieldsetToggle>
-			<WardrobeContextSelectRoomInventoryProvider>
+			<WardrobeContextSelectRoomInventoryProvider room={ room }>
 				{
 					Array.from(roomDevice.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Device module: ${m.config.name}` } key={ moduleName }>
 								<WardrobeModuleConfig
-									target={ { type: 'roomInventory' } }
+									target={ room }
 									item={ { container: [], itemId: roomDeviceLink.device } }
 									moduleName={ moduleName } m={ m }
 								/>

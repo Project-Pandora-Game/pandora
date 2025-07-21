@@ -1,5 +1,5 @@
 import { Draft } from 'immer';
-import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
+import { Assert, AssertNotNullable, CloneDeepMutable, ICharacterRoomData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import { ReactElement } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
@@ -10,6 +10,7 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 
@@ -42,9 +43,11 @@ export function useDebugConfig(): ChatroomDebugConfig {
 
 export function ChatroomDebugConfigView(): ReactElement {
 	const gameState = useGameState();
-	const globalState = useGlobalState(gameState);
+	const { globalState, playerState } = usePlayerState();
+	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
+	Assert(currentRoomState != null);
 	const spaceConfig = useObservable(gameState.currentSpace).config;
-	const roomBackground = globalState.room.roomBackground;
+	const roomBackground = currentRoomState.roomBackground;
 
 	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage) ?? DEFAULT_DEBUG_CONFIG;
 

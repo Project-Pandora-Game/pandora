@@ -8,7 +8,7 @@ import {
 	AssetFrameworkOutfit,
 	AssetFrameworkOutfitSchema,
 	AssetFrameworkOutfitWithId,
-	AssetFrameworkRoomState,
+	AssetFrameworkSpaceState,
 	CloneDeepMutable,
 	CreateItemBundleFromTemplate,
 	GetDefaultAppearanceBundle,
@@ -367,17 +367,23 @@ function OutfitPreview({ outfit }: {
 			}
 		}
 
+		const currentRoom = globalState.space.getRoom(baseCharacterState.currentRoom);
+
 		const characterBundle: AppearanceBundle = GetDefaultAppearanceBundle();
 		characterBundle.items = templateBundle;
 		characterBundle.requestedPose = CloneDeepMutable(baseCharacterState.requestedPose);
-		const previewSpaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
+		characterBundle.position = CloneDeepMutable(baseCharacterState.position);
+		let previewSpaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
+		if (currentRoom != null) {
+			previewSpaceState = previewSpaceState.withRooms([currentRoom]);
+		}
 		const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
 		return [
 			previewCharacterState,
 			AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState)
 				.withCharacter(previewCharacterState.id, previewCharacterState),
 		];
-	}, [assetManager, baseCharacterState, outfit, player]);
+	}, [assetManager, baseCharacterState, globalState.space, outfit, player]);
 
 	useEffect(() => {
 		if (!isHovering || !wardrobeHoverPreview)

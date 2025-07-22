@@ -23,7 +23,10 @@ export function WardrobeItemName({
 }
 
 export function ResolveItemDisplayName(item: Item, itemDisplayNameType: ItemDisplayNameType): string {
-	return ResolveItemDisplayNameType(item.asset.definition.name, item.name, itemDisplayNameType);
+	if (item.isType('roomDeviceWearablePart'))
+		return ResolveItemDisplayNameType(item.asset.definition.name, item.roomDevice?.name, itemDisplayNameType);
+	else
+		return ResolveItemDisplayNameType(item.asset.definition.name, item.name, itemDisplayNameType);
 }
 
 export function ResolveItemDisplayNameType(original: string, custom: string | null | undefined, itemDisplayNameType: ItemDisplayNameType): string {

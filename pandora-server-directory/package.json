@@ -60,7 +60,7 @@
 		"zod": "3.25.76"
 	},
 	"devDependencies": {
-		"@jest/globals": "30.0.4",
+		"@jest/globals": "30.0.5",
 		"@types/async-lock": "1.4.2",
 		"@types/express": "5.0.3",
 		"@types/json-diff": "1.0.3",
@@ -70,7 +70,7 @@
 		"@types/semver": "7.7.0",
 		"@types/wtfnode": "0.7.3",
 		"discord-api-types": "0.38.16",
-		"jest": "30.0.4",
+		"jest": "30.0.5",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",
 		"ts-jest": "29.4.0",

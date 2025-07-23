@@ -7,6 +7,7 @@ import { FilterItemWearable, type AppearanceItems } from '../item/index.ts';
 import type { AssetFrameworkCharacterState } from '../state/characterState.ts';
 import type { AssetFrameworkGlobalState } from '../state/globalState.ts';
 import type { AssetFrameworkRoomState } from '../state/roomState.ts';
+import type { AssetFrameworkSpaceState } from '../state/spaceState.ts';
 
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;
@@ -48,14 +49,18 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
-	public produceRoomState(roomId: RoomId, producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
-		const newState = this.currentState.produceSpaceState((s) => s.produceRoom(roomId, producer));
+	public produceSpaceState(producer: (currentState: AssetFrameworkSpaceState) => AssetFrameworkSpaceState | null): boolean {
+		const newState = this.currentState.produceSpaceState(producer);
 
 		if (!newState)
 			return false;
 
 		this.currentState = newState;
 		return true;
+	}
+
+	public produceRoomState(roomId: RoomId, producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
+		return this.produceSpaceState((s) => s.produceRoom(roomId, producer));
 	}
 
 	public getItems(target: ActionTargetSelector): AppearanceItems {

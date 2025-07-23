@@ -100,6 +100,10 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		}
 	}
 
+	if (action.type === 'spaceRoomLayout' && action.subaction.type === 'deleteRoom') {
+		warnings.push(`Deleting a room deletes all items stored inside and cannot be easily undone`);
+	}
+
 	return warnings;
 }
 

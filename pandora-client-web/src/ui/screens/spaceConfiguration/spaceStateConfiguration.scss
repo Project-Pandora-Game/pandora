@@ -1,0 +1,37 @@
+@use '../../../styles/common';
+
+.SpaceStateConfigurationUi {
+	.spaceLayout {
+		height: min(max(50vh, 20em), 80vh);
+		width: 100%;
+		contain: size;
+
+		.roomList {
+			.roomListItem {
+				min-height: 3em;
+				gap: 0.5em;
+
+				.name {
+					margin: 3px;
+					flex: 1;
+				}
+
+				.icon {
+					height: 1.5em;
+					width: 1.5em;
+					margin: 0.75em;
+				}
+			}
+		}
+	}
+
+	.roomConfiguration {
+		.backgroundInfo {
+			img {
+				max-width: min(24em, 33vw);
+				max-height: min(24em, 50vh);
+				object-fit: scale-down;
+			}
+		}
+	}
+}

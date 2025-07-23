@@ -14,7 +14,7 @@ import {
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
-	type AssetFrameworkRoomState
+	type AssetFrameworkRoomState,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';

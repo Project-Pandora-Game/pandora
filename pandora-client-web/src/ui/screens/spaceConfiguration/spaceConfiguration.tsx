@@ -23,16 +23,13 @@ import {
 	SpaceInvite,
 	SpacePublicSettingSchema,
 	ZodMatcher,
-	type AssetFrameworkGlobalState,
 	type CurrentSpaceInfo,
 	type IDirectoryAccountInfo,
-	type RoomBackgroundData,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
-import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import { CopyToClipboard } from '../../../common/clipboard.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -58,10 +55,10 @@ import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.t
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { AccountListInput } from '../../components/accountListInput/accountListInput.tsx';
-import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
+import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -189,7 +186,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRights } />
 				</Tab>
 				<Tab name='Room management'>
-					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRoom } />
+					<SpaceConfigurationRoom { ...tabProps } />
 				</Tab>
 				{
 					currentConfig.features.includes('development') && isDeveloper ? (
@@ -608,38 +605,10 @@ function SpaceConfigurationRoom({
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<SpaceConfigurationRoomInner
+			<SpaceStateConfigurationUi
 				globalState={ globalState }
 			/>
 		</WardrobeActionContextProvider>
-	);
-}
-
-type SpaceConfigurationRoomInnerProps = {
-	globalState: AssetFrameworkGlobalState;
-};
-
-function SpaceConfigurationRoomInner({
-	globalState,
-}: SpaceConfigurationRoomInnerProps): ReactElement {
-	const [showBackgrounds, setShowBackgrounds] = useState(false);
-
-	return (
-		<fieldset>
-			<legend>Room background</legend>
-			{ showBackgrounds && <BackgroundSelectDialog
-				hide={ () => setShowBackgrounds(false) }
-				current={ globalState.room.roomGeometryConfig }
-			/> }
-			<Column>
-				<BackgroundInfo background={ globalState.room.roomBackground } />
-				<Button
-					onClick={ () => setShowBackgrounds(true) }
-				>
-					Select a background
-				</Button>
-			</Column>
-		</fieldset>
 	);
 }
 
@@ -1014,20 +983,6 @@ function NumberListWarning({ values, invalid }: {
 
 	return (
 		<Column gap='none'>{ invalidWarning }</Column>
-	);
-}
-
-function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundData>; }): ReactElement | null {
-	if (background.graphics.type !== 'image' || background.graphics.image.startsWith('#')) {
-		return null;
-	}
-
-	return (
-		<Row alignX='center' className='backgroundInfo'>
-			<div className='preview'>
-				<img src={ GetAssetsSourceUrl() + background.graphics.image } />
-			</div>
-		</Row>
 	);
 }
 

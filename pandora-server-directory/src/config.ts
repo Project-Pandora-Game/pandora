@@ -115,6 +115,12 @@ export const EnvParser = CreateEnvParser({
 	LOGIN_ATTEMPT_WINDOW: EnvTimeInterval().default('15m'),
 	/** Max failed login attempts before requiring a captcha */
 	LOGIN_ATTEMPT_LIMIT: z.number().int().positive().default(30),
+	/** Killswitch for registration */
+	PANDORA_DISABLE_REGISTRATION: z.boolean().default(false),
+	/** Killswitch for email verification and verification resend */
+	PANDORA_DISABLE_EMAIL_VERIFICATION: z.boolean().default(false),
+	/** Killswitch for password reset */
+	PANDORA_DISABLE_PASSWORD_RESET: z.boolean().default(false),
 
 	//#endregion
 });

@@ -1,12 +1,16 @@
 import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
+import { Link } from 'react-router';
+import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
 import { useDirectoryRegister } from '../../../networking/account_manager.ts';
 import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
@@ -23,6 +27,23 @@ export interface RegistrationFormData {
 }
 
 export function RegistrationForm(): ReactElement {
+	const { disableRegistration } = useObservable(useDirectoryConnector().directoryStatus);
+
+	if (disableRegistration) {
+		return (
+			<Column alignX='center'>
+				<div className='warning-box'>
+					<strong>Registration is currently disabled</strong>
+				</div>
+				<Link to='/login'>Already have an account? <strong>Sign in</strong></Link>
+			</Column>
+		);
+	}
+
+	return <RegistrationFormInner />;
+}
+
+function RegistrationFormInner(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const directoryRegister = useDirectoryRegister();
@@ -103,6 +124,8 @@ export function RegistrationForm(): ReactElement {
 			setInvalidBetaKey(betaKey);
 		} else if (result === 'invalidCaptcha') {
 			setCaptchaFailed(true);
+		} else if (result === 'failed') {
+			toast('Registration failed', TOAST_OPTIONS_ERROR);
 		} else {
 			AssertNever(result);
 		}

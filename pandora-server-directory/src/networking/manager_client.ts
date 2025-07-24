@@ -15,7 +15,14 @@ import { ShardTokenStore } from '../shard/shardTokenStore.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
 import { Sleep } from '../utility.ts';
 import type { ClientConnection } from './connection_client.ts';
-const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
+const {
+	BETA_KEY_ENABLED,
+	HCAPTCHA_SECRET_KEY,
+	HCAPTCHA_SITE_KEY,
+	PANDORA_DISABLE_REGISTRATION,
+	PANDORA_DISABLE_EMAIL_VERIFICATION,
+	PANDORA_DISABLE_PASSWORD_RESET,
+} = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -271,6 +278,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_REGISTRATION)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check during registration`);
 			return { result: 'invalidCaptcha' };
@@ -295,6 +305,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_EMAIL_VERIFICATION)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail`);
 			return { result: 'invalidCaptcha' };
@@ -309,6 +322,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handleResendVerificationEmailAdvanced({ username, passwordSha512, email, captchaToken, overrideEmail }: IClientDirectoryArgument['resendVerificationEmailAdvanced'], connection: ClientConnection): IClientDirectoryPromiseResult['resendVerificationEmailAdvanced'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (PANDORA_DISABLE_EMAIL_VERIFICATION)
+			return { result: 'failed' };
 
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail (advanced)`);
@@ -335,6 +351,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_PASSWORD_RESET)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting a password reset`);
 			return { result: 'invalidCaptcha' };
@@ -349,6 +368,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryArgument['passwordResetConfirm'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordResetConfirm'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (PANDORA_DISABLE_PASSWORD_RESET)
+			return { result: 'failed' };
 
 		const account = await accountManager.loadAccountByUsername(username);
 		if (!await account?.secure.finishPasswordReset(token, passwordSha512)) {
@@ -1057,6 +1079,15 @@ function MakeStatus(): IDirectoryStatus {
 	}
 	if (HCAPTCHA_SECRET_KEY && HCAPTCHA_SECRET_KEY) {
 		result.captchaSiteKey = HCAPTCHA_SITE_KEY;
+	}
+	if (PANDORA_DISABLE_REGISTRATION) {
+		result.disableRegistration = true;
+	}
+	if (PANDORA_DISABLE_EMAIL_VERIFICATION) {
+		result.disableEmailVerification = true;
+	}
+	if (PANDORA_DISABLE_PASSWORD_RESET) {
+		result.disablePasswordReset = true;
 	}
 	if (ConnectionManagerClient.announcement != null) {
 		result.announcement = cloneDeep(ConnectionManagerClient.announcement);

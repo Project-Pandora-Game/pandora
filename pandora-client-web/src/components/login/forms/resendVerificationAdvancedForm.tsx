@@ -1,14 +1,18 @@
 import { AssertNever, FormatTimeInterval, IsEmail, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager.ts';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
 export interface ResendVerificationAdvancedFormData {
 	username: string;
@@ -17,6 +21,23 @@ export interface ResendVerificationAdvancedFormData {
 }
 
 export function ResendVerificationAdvancedForm(): ReactElement {
+	const { disableEmailVerification } = useObservable(useDirectoryConnector().directoryStatus);
+
+	if (disableEmailVerification) {
+		return (
+			<Column alignX='center'>
+				<div className='warning-box'>
+					<strong>Email verification is currently disabled</strong>
+				</div>
+				<Link to='/login'>◄ Return to login</Link>
+			</Column>
+		);
+	}
+
+	return <ResendVerificationAdvancedFormInner />;
+}
+
+function ResendVerificationAdvancedFormInner(): ReactElement {
 	const navigate = useNavigatePandora();
 	const resendVerificationAdvanced = useDirectoryResendVerificationAdvanced();
 	const [errorMessage, setErrorMessage] = useState('');
@@ -70,6 +91,9 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 				break;
 			case 'rateLimited':
 				showError('Rate limited, please try again in: ' + FormatTimeInterval(result.time, 'two-most-significant'));
+				break;
+			case 'failed':
+				showError('Request failed');
 				break;
 			default:
 				AssertNever(result);

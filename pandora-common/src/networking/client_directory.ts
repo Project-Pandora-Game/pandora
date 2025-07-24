@@ -113,14 +113,14 @@ export const ClientDirectorySchema = {
 			betaKey: z.string().optional(),
 			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha'; }>(),
+		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha' | 'failed'; }>(),
 	},
 	resendVerificationEmail: {
 		request: z.object({
 			email: EmailAddressSchema,
 			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha'; }>(),
+		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha' | 'failed'; }>(),
 	},
 	resendVerificationEmailAdvanced: {
 		request: z.object({
@@ -130,7 +130,7 @@ export const ClientDirectorySchema = {
 			captchaToken: z.string().optional(),
 			overrideEmail: z.boolean(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'emailTaken' | 'alreadyActivated' | 'invalidCaptcha' | 'invalidEmail'; } | {
+		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'emailTaken' | 'alreadyActivated' | 'invalidCaptcha' | 'invalidEmail' | 'failed'; } | {
 			result: 'rateLimited';
 			time: number;
 		}>(),
@@ -140,7 +140,7 @@ export const ClientDirectorySchema = {
 			email: EmailAddressSchema,
 			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha'; }>(),
+		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha' | 'failed'; }>(),
 	},
 	passwordResetConfirm: {
 		request: z.object({
@@ -148,7 +148,7 @@ export const ClientDirectorySchema = {
 			passwordSha512: PasswordSha512Schema,
 			token: SimpleTokenSchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'unknownCredentials'; }>(),
+		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'failed'; }>(),
 	},
 	//#endregion Before Login
 

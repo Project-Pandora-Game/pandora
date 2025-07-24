@@ -1,13 +1,17 @@
 import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager.ts';
+import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
 export interface ResetPasswordFormData {
 	username: string;
@@ -17,6 +21,23 @@ export interface ResetPasswordFormData {
 }
 
 export function ResetPasswordForm(): ReactElement {
+	const { disablePasswordReset } = useObservable(useDirectoryConnector().directoryStatus);
+
+	if (disablePasswordReset) {
+		return (
+			<Column alignX='center'>
+				<div className='warning-box'>
+					<strong>Password reset is currently disabled</strong>
+				</div>
+				<Link to='/login'>◄ Return to login</Link>
+			</Column>
+		);
+	}
+
+	return <ResetPasswordFormInner />;
+}
+
+function ResetPasswordFormInner(): ReactElement {
 	const navigate = useNavigatePandora();
 	const [errorMessage, setErrorMessage] = useState('');
 	const passwordResetConfirm = useDirectoryPasswordResetConfirm();
@@ -41,6 +62,8 @@ export function ResetPasswordForm(): ReactElement {
 		} else if (result === 'unknownCredentials') {
 			// Invalid user data
 			setErrorMessage('Invalid username or token');
+		} else if (result === 'failed') {
+			setErrorMessage('Request failed');
 		} else {
 			AssertNever(result);
 		}

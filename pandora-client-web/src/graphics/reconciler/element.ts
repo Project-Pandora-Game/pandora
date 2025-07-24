@@ -138,7 +138,7 @@ export class PixiInternalElementInstance<
 		this._applyAutoProps(null, initialProps);
 	}
 
-	private _getLogger(): Logger {
+	public _getLogger(): Logger {
 		return GetLogger('PixiElementInstance', `[PixiElementInstance ${this.type}]`);
 	}
 
@@ -190,15 +190,15 @@ export class PixiInternalElementInstance<
 	 * After destroy the object can never be used again.
 	 */
 	public destroy() {
+		if (this._destroyed) {
+			// We get called twice here, for some reason...
+			// We can safely ignore this, as it doesn't seem to be causing any issues.
+			return;
+		}
 		if (this.instance.destroyed) {
-			if (!this._destroyed) {
-				this._getLogger().warning('Attempt to destroy already destroyed instance. The instance was not destroyed by the fiber!');
-				this._destroyed = true;
-				this.root.instantiatedElements.delete(this);
-			} else {
-				// We get called twice here, for some reason...
-				// We can safely ignore this, as it doesn't seem to be causing any issues.
-			}
+			this._getLogger().warning('Attempt to destroy already destroyed instance. The instance was not destroyed by the fiber!');
+			this._destroyed = true;
+			this.root.instantiatedElements.delete(this);
 			return;
 		}
 

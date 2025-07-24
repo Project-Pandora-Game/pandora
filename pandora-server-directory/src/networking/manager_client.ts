@@ -19,6 +19,7 @@ const {
 	BETA_KEY_ENABLED,
 	HCAPTCHA_SECRET_KEY,
 	HCAPTCHA_SITE_KEY,
+	PANDORA_ANNOUNCEMENT_DEFAULT,
 	PANDORA_DISABLE_REGISTRATION,
 	PANDORA_DISABLE_EMAIL_VERIFICATION,
 	PANDORA_DISABLE_PASSWORD_RESET,
@@ -1091,6 +1092,8 @@ function MakeStatus(): IDirectoryStatus {
 	}
 	if (ConnectionManagerClient.announcement != null) {
 		result.announcement = cloneDeep(ConnectionManagerClient.announcement);
+	} else if (PANDORA_ANNOUNCEMENT_DEFAULT != null) {
+		result.announcement = cloneDeep(PANDORA_ANNOUNCEMENT_DEFAULT);
 	}
 	return result;
 }

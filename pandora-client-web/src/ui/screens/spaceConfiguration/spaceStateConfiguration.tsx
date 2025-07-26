@@ -1,17 +1,21 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
+	LIMIT_ROOM_NAME_LENGTH,
 	RoomId,
+	RoomNameSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useState } from 'react';
+import { ReactElement, useId, useState } from 'react';
 import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceStateConfiguration.scss';
@@ -46,7 +50,7 @@ export function SpaceStateConfigurationUi({
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>
-								<span className='name'>{ r.id }</span>
+								<span className='name'>{ r.name || r.id }</span>
 							</button>
 						))
 					}
@@ -86,11 +90,14 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 	roomState: AssetFrameworkRoomState;
 	close: () => void;
 }): ReactElement {
+	const id = useId();
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [name, setName] = useState<string | null>(null);
+	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
 
 	return (
 		<fieldset className='roomConfiguration'>
-			<legend>Room "{ roomState.id }"</legend>
+			<legend>Room "{ roomState.name || roomState.id }"</legend>
 			{ showBackgrounds && <BackgroundSelectDialog
 				hide={ () => setShowBackgrounds(false) }
 				room={ roomState.id }
@@ -136,6 +143,29 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						<span>Newly joining characters appear in this room</span>
 					) : null
 				}
+				<Column>
+					<Row alignY='center'>
+						<label htmlFor={ id + ':room-name' }>Room name</label>
+						<TextInput
+							id={ id + ':room-name' }
+							value={ name ?? roomState.name }
+							onChange={ setName }
+						/>
+						<GameLogicActionButton
+							action={ {
+								type: 'roomConfigure',
+								roomId: roomState.id,
+								name: name ?? roomState.name,
+							} }
+							disabled={ name == null || name === roomState.name || nameValueError !== undefined }
+						>
+							Save
+						</GameLogicActionButton>
+					</Row>
+					{ nameValueError ? (
+						<FormError error={ nameValueError } />
+					) : null }
+				</Column>
 				<BackgroundInfo background={ roomState.roomBackground } />
 				<Button
 					onClick={ () => setShowBackgrounds(true) }

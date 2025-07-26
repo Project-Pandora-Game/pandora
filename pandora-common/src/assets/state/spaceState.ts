@@ -10,10 +10,10 @@ import { RoomIdSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import type { IExportOptions } from '../modules/common.ts';
-import { AssetFrameworkRoomState, ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomInventoryBundleSchema, RoomInventoryClientDeltaBundleSchema } from './roomState.ts';
+import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomBundleSchema, RoomClientDeltaBundleSchema } from './roomState.ts';
 
 export const SpaceStateBundleSchema = z.object({
-	rooms: ZodArrayWithInvalidDrop(RoomInventoryBundleSchema, z.record(z.unknown())),
+	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.unknown())),
 	clientOnly: z.boolean().optional(),
 });
 
@@ -23,18 +23,18 @@ export type SpaceStateClientBundle = SpaceStateBundle & { clientOnly: true; };
 export const SpaceStateClientDeltaBundleSchema = z.object({
 	rooms: z.object({
 		list: RoomIdSchema.array().optional(),
-		deltas: RoomInventoryClientDeltaBundleSchema.array().optional(),
-		bundles: RoomInventoryBundleSchema.array().optional(),
+		deltas: RoomClientDeltaBundleSchema.array().optional(),
+		bundles: RoomBundleSchema.array().optional(),
 	}).optional(),
 });
 export type SpaceStateClientDeltaBundle = z.infer<typeof SpaceStateClientDeltaBundleSchema>;
 
 export const SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<SpaceStateBundle>>({
-	rooms: [ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE],
+	rooms: [ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE],
 }, true);
 
 export const SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<SpaceStateBundle>>({
-	rooms: [ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE],
+	rooms: [ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE],
 }, true);
 
 type AssetFrameworkSpaceStateProps = {
@@ -229,7 +229,7 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 			logger?.warning('Space has no rooms, adding default');
 			rooms.push(AssetFrameworkRoomState.loadFromBundle(
 				assetManager,
-				(spaceId != null ? ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE),
+				(spaceId != null ? ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE),
 				spaceId,
 				logger,
 			));

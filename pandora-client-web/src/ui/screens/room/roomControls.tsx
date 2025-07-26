@@ -318,7 +318,7 @@ function DisplayRooms({ player, playerState, characters, globalState }: {
 						for (const room of sortedRooms) {
 							result.push(
 								<fieldset key={ room.id } className='room'>
-									<legend><span>{ room.id }</span></legend>
+									<legend><span>{ room.name || room.id }</span></legend>
 									{
 										(room.id !== playerState.currentRoom && playerState.position.following == null) ? (
 											<Row alignX='end'>
@@ -490,7 +490,7 @@ function DisplayCharacter({ char, globalState }: {
 							} }
 							className='slim'
 						>
-							Move to current room
+							Move to my current room
 						</GameLogicActionButton>
 					) : null }
 				</Row>

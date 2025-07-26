@@ -25,7 +25,7 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 	]),
 });
 
-/** Moves an item within inventory, reordering the worn order. */
+/** Manipulates rooms and their layout within the space. */
 export function ActionSpaceRoomLayout({
 	action,
 	processingContext,
@@ -40,6 +40,7 @@ export function ActionSpaceRoomLayout({
 				...s.rooms,
 				AssetFrameworkRoomState.loadFromBundle(s.assetManager, {
 					id: `room:${nanoid()}`,
+					name: '',
 					items: [],
 					roomGeometry: {
 						type: 'defaultPublicSpace',

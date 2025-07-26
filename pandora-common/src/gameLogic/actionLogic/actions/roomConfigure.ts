@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
+import { RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
@@ -8,8 +8,9 @@ import type { AppearanceActionHandlerArg } from './_common.ts';
 export const AppearanceActionRoomConfigure = z.object({
 	type: z.literal('roomConfigure'),
 	roomId: RoomIdSchema,
+	name: RoomNameSchema.optional(),
 	/** Room geometry to set */
-	roomGeometry: RoomGeometryConfigSchema?.optional(),
+	roomGeometry: RoomGeometryConfigSchema.optional(),
 });
 
 /** Moves an item within inventory, reordering the worn order. */
@@ -19,8 +20,16 @@ export function ActionRoomConfigure({
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomConfigure>>): AppearanceActionProcessingResult {
 	const {
 		roomId,
+		name,
 		roomGeometry,
 	} = action;
+
+	if (name != null) {
+		processingContext.checkPlayerIsSpaceAdmin();
+
+		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withName(name)))
+			return processingContext.invalid();
+	}
 
 	if (roomGeometry != null) {
 		processingContext.checkPlayerIsSpaceAdmin();

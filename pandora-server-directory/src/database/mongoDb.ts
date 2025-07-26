@@ -21,7 +21,7 @@ import {
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
 	RoomGeometryConfigSchema,
-	RoomInventoryBundleSchema,
+	RoomBundleSchema,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
@@ -978,7 +978,7 @@ export default class MongoDatabase implements PandoraDatabase {
 					/** The ID of the background or custom data */
 					background: z.union([z.string(), z.object({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
 				}),
-				inventory: RoomInventoryBundleSchema.partial().optional(),
+				inventory: RoomBundleSchema.partial().optional(),
 			}),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
 				for await (const space of oldStream) {
@@ -1092,6 +1092,7 @@ export default class MongoDatabase implements PandoraDatabase {
 						rooms: [
 							{
 								id: 'room:default',
+								name: 'Unnamed room',
 								items: space.inventory.items,
 								roomGeometry: space.inventory.roomGeometry,
 							},
@@ -1138,6 +1139,7 @@ export default class MongoDatabase implements PandoraDatabase {
 						rooms: [
 							{
 								id: 'room:default',
+								name: 'My personal room',
 								items: character.personalRoom.inventory.items,
 								roomGeometry: character.personalRoom.inventory.roomGeometry,
 							},

@@ -531,7 +531,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 						</>
 					),
-					highlight: [{ query: '.character-info legend.player > button:has(.colorStrip)' }],
+					highlight: [{ query: '.character-info fieldset.character legend.player > button:has(.colorStrip)' }],
 					conditions: [{
 						type: 'elementQuery',
 						query: '.context-menu',

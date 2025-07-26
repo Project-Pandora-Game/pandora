@@ -233,7 +233,7 @@ export function RoomGraphicsScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<Container zIndex={ 10 } sortableChildren>
+			<Container key={ room } zIndex={ 10 } sortableChildren>
 				{
 					characters.map((character) => {
 						const characterState = globalState.characters.get(character.id);

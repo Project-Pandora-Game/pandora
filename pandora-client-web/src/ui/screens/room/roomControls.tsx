@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -12,6 +12,7 @@ import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterDataMultiple } from '../../../character/character.ts';
+import { PlayerCharacter } from '../../../character/player.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
@@ -19,9 +20,10 @@ import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/ac
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
@@ -43,45 +45,7 @@ export function RoomControls(): ReactElement | null {
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 
-	const friends = useFriendStatus();
-	const sortedCharacters = useMemo(() => {
-		const enum CharOrder {
-			PLAYER,
-			ONLINE_FRIEND,
-			ONLINE,
-			FRIEND,
-			OFFLINE,
-		}
-
-		const getCharOrder = (character: Character<ICharacterRoomData>) => {
-			const isPlayer = character.isPlayer();
-			const isSameAccount = character.data.accountId === player?.data.accountId;
-			const isOnline = character.data.onlineStatus !== 'offline';
-			const isFriend = friends.some((friend) => friend.id === character.data.accountId);
-
-			if (isPlayer)
-				return CharOrder.PLAYER;
-
-			if (isOnline && (isFriend || isSameAccount))
-				return CharOrder.ONLINE_FRIEND;
-
-			if (isOnline)
-				return CharOrder.ONLINE;
-
-			if (isFriend || isSameAccount)
-				return CharOrder.FRIEND;
-
-			return CharOrder.OFFLINE;
-		};
-
-		const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
-			return getCharOrder(character1) - getCharOrder(character2);
-		};
-
-		return characters.toReversed().sort(charactersSortFunction);
-	}, [characters, friends, player?.data.accountId]);
-
-	if (!characters || !player || playerState == null) {
+	if (globalState == null || !player || playerState == null) {
 		return null;
 	}
 
@@ -100,12 +64,12 @@ export function RoomControls(): ReactElement | null {
 			<span>
 				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
-			<div className='character-info'>
-				{
-					sortedCharacters
-						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
-				}
-			</div>
+			<DisplayRooms
+				player={ player }
+				playerState={ playerState }
+				characters={ characters }
+				globalState={ globalState }
+			/>
 			<DeviceOverlaySelector />
 			&nbsp;
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
@@ -177,9 +141,12 @@ export function PersonalSpaceControls(): ReactElement {
 					) : null
 				}
 			</Row>
-			<div className='character-info'>
-				<DisplayCharacter char={ player } />
-			</div>
+			<DisplayRooms
+				player={ player }
+				playerState={ playerState }
+				characters={ useMemo(() => [player], [player]) }
+				globalState={ globalState }
+			/>
 			<Row padding='small'>
 				<Button onClick={ () => navigate('/spaces/search') } >
 					<img src={ listIcon } />List of spaces
@@ -288,13 +255,138 @@ function DeviceOverlaySelector(): ReactElement {
 	);
 }
 
-function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): ReactElement {
+function DisplayRooms({ player, playerState, characters, globalState }: {
+	player: PlayerCharacter;
+	playerState: AssetFrameworkCharacterState;
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+}): ReactElement {
+	const friends = useFriendStatus();
+	const sortedCharacters = useMemo(() => {
+		const enum CharOrder {
+			PLAYER,
+			ONLINE_FRIEND,
+			ONLINE,
+			FRIEND,
+			OFFLINE,
+		}
+
+		const getCharOrder = (character: Character<ICharacterRoomData>) => {
+			const isPlayer = character.isPlayer();
+			const isSameAccount = character.data.accountId === player?.data.accountId;
+			const isOnline = character.data.onlineStatus !== 'offline';
+			const isFriend = friends.some((friend) => friend.id === character.data.accountId);
+
+			if (isPlayer)
+				return CharOrder.PLAYER;
+
+			if (isOnline && (isFriend || isSameAccount))
+				return CharOrder.ONLINE_FRIEND;
+
+			if (isOnline)
+				return CharOrder.ONLINE;
+
+			if (isFriend || isSameAccount)
+				return CharOrder.FRIEND;
+
+			return CharOrder.OFFLINE;
+		};
+
+		const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
+			return getCharOrder(character1) - getCharOrder(character2);
+		};
+
+		return characters.toReversed().sort(charactersSortFunction);
+	}, [characters, friends, player?.data.accountId]);
+
+	return (
+		<div className='character-info'>
+			{
+				useMemo(() => {
+					const result: ReactElement[] = [];
+					const seenCharacters = new Set<Character<ICharacterRoomData>>();
+
+					if (globalState.space.rooms.length > 1) {
+						const sortedRooms = globalState.space.rooms.toSorted((a, b) => {
+							if ((a.id === playerState.currentRoom) !== (b.id === playerState.currentRoom)) {
+								return (a.id === playerState.currentRoom) ? -1 : 1;
+							}
+
+							return 0;
+						});
+
+						for (const room of sortedRooms) {
+							result.push(
+								<fieldset key={ room.id } className='room'>
+									<legend><span>{ room.id }</span></legend>
+									{
+										(room.id !== playerState.currentRoom && playerState.position.following == null) ? (
+											<Row alignX='end'>
+												<GameLogicActionButton
+													action={ {
+														type: 'moveCharacter',
+														target: { type: 'character', characterId: playerState.id },
+														moveTo: {
+															type: 'normal',
+															room: room.id,
+															position: GenerateInitialRoomPosition(room.roomBackground),
+														},
+													} }
+													className='slim'
+												>
+													Move to this room
+												</GameLogicActionButton>
+											</Row>
+										) : null
+									}
+									<Column gap='small'>
+										{
+											sortedCharacters
+												.filter((c) => globalState.getCharacterState(c.id)?.currentRoom === room.id)
+												.map((c) => {
+													seenCharacters.add(c);
+													return (
+														<DisplayCharacter
+															key={ c.id }
+															char={ c }
+															globalState={ globalState }
+														/>
+													);
+												})
+										}
+									</Column>
+								</fieldset>,
+							);
+						}
+					}
+
+					const missedCharacters = sortedCharacters.filter((c) => !seenCharacters.has(c));
+					for (const c of missedCharacters) {
+						result.push(
+							<DisplayCharacter
+								key={ c.id }
+								char={ c }
+								globalState={ globalState }
+							/>,
+						);
+					}
+
+					return result;
+				}, [globalState, playerState, sortedCharacters])
+			}
+		</div>
+	);
+}
+
+function DisplayCharacter({ char, globalState }: {
+	char: Character<ICharacterRoomData>;
+	globalState: AssetFrameworkGlobalState;
+}): ReactElement {
 	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigatePandora();
 	const location = useLocation();
-	const globalState = useGlobalState(useGameState());
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
 	const {
@@ -305,7 +397,9 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const state = useCharacterState(globalState, char.id);
 	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 
-	const isPlayer = char.id === playerId;
+	const isPlayer = char.isPlayer();
+	const playerRoomId = (playerId != null ? globalState.getCharacterState(playerId) : undefined)?.currentRoom ?? null;
+	const playerRoom = playerRoomId != null ? globalState.space.getRoom(playerRoomId) : null;
 
 	const icons = useMemo((): ReactNode[] => {
 		const result: ReactNode[] = [];
@@ -323,7 +417,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	}, [char, openContextMenu]);
 
 	return (
-		<fieldset>
+		<fieldset className='character'>
 			<legend className={ char.isPlayer() ? 'player' : '' }>
 				<button onClick={ openMenu }>
 					<span>
@@ -383,6 +477,22 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
 						</Button>
 					) }
+					{ (state != null && playerRoom != null && state.currentRoom !== playerRoom.id) ? (
+						<GameLogicActionButton
+							action={ {
+								type: 'moveCharacter',
+								target: { type: 'character', characterId: char.id },
+								moveTo: {
+									type: 'normal',
+									room: playerRoom.id,
+									position: GenerateInitialRoomPosition(playerRoom.roomBackground),
+								},
+							} }
+							className='slim'
+						>
+							Move to current room
+						</GameLogicActionButton>
+					) : null }
 				</Row>
 			</Column>
 		</fieldset>

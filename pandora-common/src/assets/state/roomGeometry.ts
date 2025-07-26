@@ -268,10 +268,10 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 
 				if (following.followType === 'relativeLock') {
 					// In relative lock always maintain relative position
-					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(followTarget.position);
+					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
 					position.room = targetCharacterRoom.id;
 					for (let i = 0; i <= 2; i++) {
-						position.position[i] += following.delta[i];
+						position.position[i] = followTarget.position.position[i] + following.delta[i];
 					}
 					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
 					position.position[0] = clamp(position.position[0], minX, maxX);
@@ -281,7 +281,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					}
 				} else if (following.followType === 'leash') {
 					// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
-					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(followTarget.position);
+					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
 					position.room = targetCharacterRoom.id;
 					const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(position.position);
 					for (let i = 0; i <= 2; i++) {

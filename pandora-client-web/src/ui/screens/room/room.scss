@@ -46,7 +46,50 @@
 .character-info {
 	margin-bottom: common.spacing('large');
 
-	fieldset {
+	fieldset.room {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid common.$theme-room-controls-room-border;
+		border-radius: 0.5em;
+		margin-bottom: 0.5em;
+
+		>legend {
+			display: flex;
+			flex-flow: row wrap;
+			border: 1px solid common.$theme-room-controls-room-border;
+			border-radius: 0.5em;
+			overflow: hidden;
+			padding: 0;
+			margin: 0 auto;
+
+			background: common.$theme-room-controls-room-border;
+			gap: 1px;
+
+			>span, >button {
+				font-size: 1em;
+				padding: 0 0.3em;
+				border: solid transparent 0.2em;
+				flex-grow: 1;
+
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+
+				background: common.$theme-room-controls-character-background;
+				color: common.$theme-room-controls-character-text;
+			}
+
+			>button:hover {
+				background: common.$theme-room-controls-character-hover-background;
+			}
+
+			>button:focus-visible {
+				border-color: common.$theme-room-controls-character-visiblefocus-outline;
+			}
+		}
+	}
+
+	fieldset.character {
 		display: flex;
 		flex-direction: column;
 		background: common.$theme-room-controls-charactercontent-background;

@@ -65,10 +65,10 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					conditions: [{ type: 'never' }],
 					highlight: [
 						{
-							query: '.character-info fieldset:has(legend.player)',
+							query: '.character-info fieldset.character:has(legend.player)',
 						},
 						{
-							query: '.character-info fieldset:has(legend.player) .Button',
+							query: '.character-info fieldset.character:has(legend.player) .Button',
 							filter: (e) => e.innerText.includes('Wardrobe'),
 						},
 					],

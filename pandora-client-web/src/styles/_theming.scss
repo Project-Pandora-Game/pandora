@@ -434,7 +434,8 @@ $theme-room-controls-background: $theme-normal-background;
 $theme-room-controls-text: $theme-normal-text;
 $theme-room-controls-border: $theme-separator;
 
-$theme-room-controls-character-border: #444;
+$theme-room-controls-room-border: #505358;
+$theme-room-controls-character-border: $theme-separator;
 $theme-room-controls-character-background: #111315;
 $theme-room-controls-character-text: #eee;
 $theme-room-controls-character-hover-background: color-mix(in srgb, #15171a, $theme-accent-color 35%);

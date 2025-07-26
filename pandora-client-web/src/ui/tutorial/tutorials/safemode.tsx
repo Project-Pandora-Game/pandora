@@ -107,10 +107,10 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 					}],
 					highlight: [
 						{
-							query: '.character-info fieldset:has(legend.player)',
+							query: '.character-info fieldset.character:has(legend.player)',
 						},
 						{
-							query: '.character-info fieldset:has(legend.player) .Button',
+							query: '.character-info fieldset.character:has(legend.player) .Button',
 							filter: (e) => e.innerText.includes('Enter safemode'),
 						},
 					],
@@ -230,7 +230,7 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 					),
 					highlight: [
 						{
-							query: '.character-info fieldset:has(legend.player)',
+							query: '.character-info fieldset.character:has(legend.player)',
 						},
 					],
 					conditions: [{ type: 'next' }],

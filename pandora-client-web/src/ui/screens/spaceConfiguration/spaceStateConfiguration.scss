@@ -6,6 +6,61 @@
 		width: 100%;
 		contain: size;
 
+		.RoomGrid {
+			flex: 2;
+			contain: size;
+			display: grid;
+			padding: 0.25em;
+			grid-auto-columns: 1fr;
+			grid-auto-rows: 1fr;
+			gap: common.spacing('tiny');
+			place-items: center;
+
+			.room {
+				@include common.center-flex(column);
+				position: relative;
+				contain: size;
+				width: 100%;
+				height: 100%;
+				background: common.$theme-normal-background-secondary;
+				border: 2px solid transparent;
+
+				&.selected {
+					border-color: common.$theme-separator-highlight;
+				}
+
+				&.filler {
+					background: transparent;
+					border-color: common.$theme-normal-background-secondary;
+				}
+
+				canvas {
+					max-width: 100%;
+					max-height: 100%;
+				}
+
+				.coordinates {
+					position: absolute;
+					left: 0.25em;
+					top: 0.25em;
+					max-width: calc(100% - 0.5em);
+					font-size: smaller;
+				}
+
+				.label {
+					position: absolute;
+					margin: 0 auto;
+					bottom: 0.25em;
+					max-width: calc(100% - 0.5em);
+					overflow: hidden;
+					text-overflow: ellipsis;
+					overflow-wrap: break-word;
+					color: common.$theme-normal-text;
+					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+				}
+			}
+		}
+
 		.roomList {
 			.roomListItem {
 				min-height: 3em;

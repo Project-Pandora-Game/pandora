@@ -7,6 +7,7 @@ import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../..
 import { RoomIdSchema, RoomNameSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
+import { IntegerCoordinatesSchema, type Coordinates } from '../graphics/common.ts';
 import { Item } from '../item/base.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema, ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, type AppearanceItems } from '../item/items.ts';
 import type { IExportOptions } from '../modules/common.ts';
@@ -17,6 +18,7 @@ export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
 	name: RoomNameSchema.catch(''),
 	items: AppearanceItemsBundleSchema,
+	position: IntegerCoordinatesSchema.catch({ x: 0, y: 0 }),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
 	clientOnly: z.boolean().optional(),
 });
@@ -28,6 +30,7 @@ export const RoomClientDeltaBundleSchema = z.object({
 	id: RoomIdSchema,
 	name: RoomNameSchema.optional(),
 	items: AppearanceItemsDeltaBundleSchema.optional(),
+	position: IntegerCoordinatesSchema.optional(),
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 });
 export type RoomClientDeltaBundle = z.infer<typeof RoomClientDeltaBundleSchema>;
@@ -36,6 +39,7 @@ export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
 	id: 'room:default',
 	name: 'Unnamed room',
 	items: [],
+	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPublicSpace' },
 }, true);
 
@@ -43,6 +47,7 @@ export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>(
 	id: 'room:default',
 	name: 'My personal room',
 	items: [],
+	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPersonalSpace' },
 }, true);
 
@@ -51,6 +56,7 @@ type AssetFrameworkRoomStateProps = {
 	readonly id: RoomId;
 	readonly name: string;
 	readonly items: AppearanceItems;
+	readonly position: Immutable<Coordinates>;
 	readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	readonly roomBackground: Immutable<RoomBackgroundData>;
 };
@@ -65,6 +71,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	public readonly name: string;
 	public readonly items: AppearanceItems;
+	public readonly position: Immutable<Coordinates>;
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	public readonly roomBackground: Immutable<RoomBackgroundData>;
 
@@ -75,6 +82,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		this.assetManager = override?.assetManager ?? props.assetManager;
 		this.name = override?.name ?? props.name;
 		this.items = override?.items ?? props.items;
+		this.position = override?.position ?? props.position;
 		this.roomGeometryConfig = override?.roomGeometryConfig ?? props.roomGeometryConfig;
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
 	}
@@ -85,6 +93,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	@MemoizeNoArg
 	public validate(): AppearanceValidationResult {
+		if (!Number.isSafeInteger(this.position.x) || !Number.isSafeInteger(this.position.y))
+			return { success: false, error: { problem: 'invalid' } };
+
 		{
 			const r = ValidateRoomInventoryItems(this.assetManager, this.items);
 			if (!r.success)
@@ -101,6 +112,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			id: this.id,
 			name: this.name,
 			items: this.items.map((item) => item.exportToBundle({})),
+			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 		};
 	}
@@ -111,6 +123,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			id: this.id,
 			name: this.name,
 			items: this.items.map((item) => item.exportToBundle(options)),
+			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			clientOnly: true,
 		};
@@ -129,6 +142,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		}
 		if (this.items !== originalState.items) {
 			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
+		}
+		if (this.position !== originalState.position) {
+			result.position = CloneDeepMutable(this.position);
 		}
 		if (this.roomGeometryConfig !== originalState.roomGeometryConfig) {
 			result.roomGeometry = CloneDeepMutable(this.roomGeometryConfig);
@@ -149,6 +165,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			update.items = ApplyAppearanceItemsDeltaBundle(this.assetManager, this.items, bundle.items, logger);
 		}
 
+		if (bundle.position !== undefined) {
+			update.position = freeze(bundle.position, true);
+		}
+
 		if (bundle.roomGeometry !== undefined) {
 			update.roomGeometryConfig = bundle.roomGeometry;
 			const roomBackground = ResolveBackground(this.assetManager, bundle.roomGeometry);
@@ -164,6 +184,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	public withName(name: string): AssetFrameworkRoomState {
 		return new AssetFrameworkRoomState(this, { name });
+	}
+
+	public withPosition(position: Immutable<Coordinates>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { position: freeze(position, true) });
 	}
 
 	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {
@@ -220,6 +244,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			assetManager,
 			name: parsed.name,
 			items: newItems,
+			position: freeze(parsed.position, true),
 			roomGeometryConfig,
 			roomBackground,
 		}), true);

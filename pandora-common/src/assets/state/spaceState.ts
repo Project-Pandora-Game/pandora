@@ -9,6 +9,7 @@ import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { RoomIdSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
+import type { Coordinates } from '../graphics/common.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomBundleSchema, RoomClientDeltaBundleSchema } from './roomState.ts';
 
@@ -82,6 +83,7 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		}
 
 		const roomIds = new Set<RoomId>();
+		const usedCoordinates: Immutable<Coordinates>[] = [];
 		for (const room of this.rooms) {
 			// ID must be unique
 			if (roomIds.has(room.id)) {
@@ -93,6 +95,17 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				};
 			}
 			roomIds.add(room.id);
+
+			// Rooms must not overlap
+			if (usedCoordinates.some((c) => room.position.x === c.x && room.position.y === c.y)) {
+				return {
+					success: false,
+					error: {
+						problem: 'invalid',
+					},
+				};
+			}
+			usedCoordinates.push(room.position);
 
 			const r = room.validate();
 			if (!r.success)
@@ -233,6 +246,21 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				spaceId,
 				logger,
 			));
+		}
+
+		// Fixup room coordinates
+		const usedCoordinates: Immutable<Coordinates>[] = [];
+		for (let i = 0; i < rooms.length; i++) {
+			let room = rooms[i];
+			while (usedCoordinates.some((c) => c.x === room.position.x && c.y === room.position.y)) {
+				// Shift rooms that overlap to the right
+				room = room.withPosition({ x: room.position.x + 1, y: room.position.y });
+			}
+			if (rooms[i] !== room) {
+				logger?.warning(`Room @ ${rooms[i].position.x}, ${rooms[i].position.y} overlaps with another room, shifting to ${room.position.x}. ${room.position.y}`);
+			}
+			rooms[i] = room;
+			usedCoordinates.push(room.position);
 		}
 
 		// Create the final state

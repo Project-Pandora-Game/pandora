@@ -1,22 +1,31 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
+import { isEqual } from 'lodash-es';
 import {
+	CloneDeepMutable,
 	LIMIT_ROOM_NAME_LENGTH,
 	RoomId,
 	RoomNameSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
+	type AssetFrameworkSpaceState,
+	type Coordinates,
 	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useId, useState } from 'react';
+import { ReactElement, useId, useMemo, useState } from 'react';
 import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceStateConfiguration.scss';
 
@@ -34,7 +43,10 @@ export function SpaceStateConfigurationUi({
 	return (
 		<Column className='SpaceStateConfigurationUi fill contain-size' alignX='center' overflowY='auto'>
 			<Row className='spaceLayout'>
-				<div className='flex-2' />
+				<RoomGrid
+					spaceState={ globalState.space }
+					selectedRoom={ selectedRoom }
+				/>
 				<Column className='roomList fill-y flex-1' padding='medium' overflowY='auto'>
 					{
 						globalState.space.rooms.map((r) => (
@@ -69,19 +81,97 @@ export function SpaceStateConfigurationUi({
 				</Column>
 			</Row>
 			<hr className='fill-x' />
+			<Column className='fill-x flex-1 contain-size' alignX='center'>
+				{
+					selectedRoomState != null ? (
+						<RoomConfiguration
+							key={ selectedRoomState.id }
+							isEntryRoom={ globalState.space.rooms[0].id === selectedRoom }
+							roomState={ selectedRoomState }
+							close={ () => {
+								setSelectedRoom(null);
+							} }
+						/>
+					) : null
+				}
+			</Column>
+		</Column>
+	);
+}
+
+function RoomGrid({ spaceState, selectedRoom }: {
+	spaceState: AssetFrameworkSpaceState;
+	selectedRoom: RoomId | null;
+}): ReactElement {
+	const [minCoords] = useMemo((): [Immutable<Coordinates>, Immutable<Coordinates>] => {
+		const minCoordsTmp: Coordinates = { x: 0, y: 0 };
+		const maxCoordsTmp: Coordinates = { x: 0, y: 0 };
+
+		for (const room of spaceState.rooms) {
+			minCoordsTmp.x = Math.min(minCoordsTmp.x, room.position.x);
+			minCoordsTmp.y = Math.min(minCoordsTmp.y, room.position.y);
+			maxCoordsTmp.x = Math.max(minCoordsTmp.x, room.position.x);
+			maxCoordsTmp.y = Math.max(minCoordsTmp.y, room.position.y);
+		}
+
+		return [minCoordsTmp, maxCoordsTmp];
+	}, [spaceState]);
+
+	const previewSize = 256 * (window.devicePixelRatio || 1);
+
+	return (
+		<div className='RoomGrid'>
 			{
-				selectedRoomState != null ? (
-					<RoomConfiguration
-						key={ selectedRoomState.id }
-						isEntryRoom={ globalState.space.rooms[0].id === selectedRoom }
-						roomState={ selectedRoomState }
-						close={ () => {
-							setSelectedRoom(null);
+				spaceState.rooms.map((r) => {
+					const previewScale = Math.min(previewSize / r.roomBackground.imageSize[0], previewSize / r.roomBackground.imageSize[1]);
+
+					return (
+						<div
+							key={ r.id }
+							className={ classNames(
+								'room',
+								r.id === selectedRoom ? 'selected' : null,
+							) }
+							style={ {
+								gridColumn: `${ r.position.x - minCoords.x + 1 } / span 1`,
+								gridRow: `${ r.position.y - minCoords.y + 1 } / span 1`,
+							} }
+						>
+							<GraphicsSceneBackgroundRenderer
+								renderArea={ { x: 0, y: 0, width: 1.5 * previewSize, height: previewSize } }
+								resolution={ 1 }
+								backgroundColor={ 0x000000 }
+								backgroundAlpha={ 0 }
+								forwardContexts={ [serviceManagerContext] }
+							>
+								<Container
+									scale={ { x: previewScale, y: previewScale } }
+									x={ ((1.5 * previewSize) - previewScale * r.roomBackground.imageSize[0]) / 2 }
+									y={ (previewSize - previewScale * r.roomBackground.imageSize[1]) / 2 }
+								>
+									<GraphicsBackground
+										background={ r.roomBackground }
+									/>
+								</Container>
+							</GraphicsSceneBackgroundRenderer>
+							<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
+							<span className='label'>{ r.name || r.id }</span>
+						</div>
+					);
+				})
+			}
+			{
+				(!spaceState.rooms.some((r) => r.position.x === 0 && r.position.y === 0)) ? (
+					// Always show 0, 0
+					<div
+						style={ {
+							gridColumn: `${ 0 - minCoords.x + 1 } / span 1`,
+							gridRow: `${ 0 - minCoords.y + 1 } / span 1`,
 						} }
 					/>
 				) : null
 			}
-		</Column>
+		</div>
 	);
 }
 
@@ -94,6 +184,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [name, setName] = useState<string | null>(null);
 	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
+	const [positionChange, setPositionChange] = useState<Immutable<Coordinates> | null>(null);
 
 	return (
 		<fieldset className='roomConfiguration'>
@@ -165,6 +256,44 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 					{ nameValueError ? (
 						<FormError error={ nameValueError } />
 					) : null }
+				</Column>
+				<Column>
+					<Row alignY='center'>
+						<label>Room position</label>
+						<NumberInput
+							className='zero-width flex-1'
+							value={ (positionChange ?? roomState.position)?.x }
+							onChange={ (x) => {
+								setPositionChange({
+									...(positionChange ?? roomState.position),
+									x,
+								});
+							} }
+						/>
+						<NumberInput
+							className='zero-width flex-1'
+							value={ (positionChange ?? roomState.position)?.y }
+							onChange={ (y) => {
+								setPositionChange({
+									...(positionChange ?? roomState.position),
+									y,
+								});
+							} }
+						/>
+						<GameLogicActionButton
+							action={ {
+								type: 'spaceRoomLayout',
+								subaction: {
+									type: 'moveRoom',
+									id: roomState.id,
+									position: CloneDeepMutable(positionChange ?? roomState.position),
+								},
+							} }
+							disabled={ positionChange == null || isEqual(positionChange, roomState.position) }
+						>
+							Move
+						</GameLogicActionButton>
+					</Row>
 				</Column>
 				<BackgroundInfo background={ roomState.roomBackground } />
 				<Button

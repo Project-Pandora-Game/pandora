@@ -27,16 +27,28 @@ _Note: Setting '0' means this part is not limited._
 				min: 0,
 			},
 		},
+		wordAllowlist: {
+			name: 'Words that can still be used',
+			type: 'stringList',
+			default: [],
+			options: {
+				maxCount: 100,
+				maxEntryLength: 24,
+				matchEntry: /^\p{L}+$/igu,
+			},
+		},
 	},
 	checkChatMessage(config, message) {
 		if (message.type !== 'chat')
 			return { result: 'ok' };
 
+		const allowedWordSet = new Set(config.wordAllowlist.map((w) => w.toLowerCase()));
 		const fullText = message.parts.map((p) => p[1]).join('');
 		const words = Array.from(fullText.matchAll(/[^\t\p{Z}\v.:!?~,;^]+/gmu)).map((i) => i[0]);
 		if (config.maxNumberOfWords && words.length > config.maxNumberOfWords)
 			return { result: 'block', reason: 'The message contains more words than allowed.' };
-		if (config.maxWordLength && words.some((word) => word.length > config.maxWordLength))
+		const filteredWords = words.filter((w) => !allowedWordSet.has(w.toLowerCase()));
+		if (config.maxWordLength && filteredWords.some((word) => word.length > config.maxWordLength))
 			return { result: 'block', reason: 'The message contains words that are longer than allowed.' };
 		return { result: 'ok' };
 	},

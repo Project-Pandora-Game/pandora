@@ -17,7 +17,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.ts';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';

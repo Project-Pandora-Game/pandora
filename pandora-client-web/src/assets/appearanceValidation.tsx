@@ -1,3 +1,4 @@
+/* eslint-disable react/destructuring-assignment */
 import {
 	AppearanceActionProblem,
 	AssertNever,
@@ -7,6 +8,7 @@ import {
 	type ItemDisplayNameType,
 	type LockActionProblem,
 } from 'pandora-common';
+import type { ReactNode } from 'react';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
 import { AssetManagerClient } from './assetManager.tsx';
@@ -62,7 +64,7 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 	AssertNever(problem);
 }
 
-export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): string {
+export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): ReactNode {
 	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(
 		assetManager.getAssetById(asset)?.definition.name.toLocaleLowerCase() ?? `[UNKNOWN ASSET '${asset}']`,
 		itemName,
@@ -171,7 +173,22 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				const attributeName = negative ? e.requirement.substring(1) : e.requirement;
 				const description = DescribeAttribute(assetManager, attributeName);
 				if (e.asset) {
-					return `The ${describeItem(e.asset, e.itemName)} ${negative ? 'conflicts with' : 'requires'} "${description}" (${negative ? 'must not' : 'must'} be worn under the ${describeItem(e.asset, e.itemName)}).`;
+					if (negative) {
+						return `The ${describeItem(e.asset, e.itemName)} conflicts with "${description}" (must not be worn under the ${describeItem(e.asset, e.itemName)}).`;
+					} else {
+						return (
+							<>
+								The { describeItem(e.asset, e.itemName) } requires "{ description }" (must be worn under the { describeItem(e.asset, e.itemName) }).<br />
+								The following assets can be used to satisfy this requirement (in at least one configuration):
+								<ul>
+									{ assetManager.assetList
+										.filter((a) => a.isWearable())
+										.filter((a) => a.staticAttributes.has(attributeName))
+										.map((a) => <li key={ a.id }>{ a.definition.name }</li>) }
+								</ul>
+							</>
+						);
+					}
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be "${description}".`;
 				}

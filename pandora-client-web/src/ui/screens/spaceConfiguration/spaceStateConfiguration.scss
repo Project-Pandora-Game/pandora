@@ -60,13 +60,13 @@
 					bottom: 0.25em;
 					max-width: calc(100% - 0.5em);
 					max-height: 80%;
+					border-radius: 0.25em;
 					padding: 1px;
-					overflow: hidden;
+					overflow: clip;
 					text-overflow: ellipsis;
 					overflow-wrap: break-word;
 					color: common.$theme-normal-text;
 					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
-					border-radius: 0.25em;
 				}
 			}
 		}
@@ -79,6 +79,9 @@
 				.name {
 					margin: 3px;
 					flex: 1;
+					max-width: 100%;
+					overflow: clip;
+					text-overflow: ellipsis;
 				}
 
 				.icon {

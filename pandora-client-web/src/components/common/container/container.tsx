@@ -1,10 +1,10 @@
 import classNames from 'classnames';
-import { ReactElement } from 'react';
+import { ReactElement, type DetailedHTMLProps, type HTMLAttributes } from 'react';
 import { CommonProps } from '../../../common/reactTypes.ts';
 import { ScssOverflow, ScssSpacing } from '../../../styles/constants.ts';
 import './container.scss';
 
-export interface DivContainerProps extends CommonProps {
+export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style'> {
 	// Flex properties
 
 	/** Default: row */
@@ -52,9 +52,11 @@ export function DivContainer({
 	padding,
 	gap = 'medium',
 	inert,
+	...props
 }: DivContainerProps): ReactElement {
 	return (
 		<div
+			{ ...props }
 			id={ id }
 			className={ classNames(
 				'div-container',

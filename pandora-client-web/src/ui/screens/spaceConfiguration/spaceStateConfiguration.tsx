@@ -12,7 +12,7 @@ import {
 	type Coordinates,
 	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useId, useMemo, useState } from 'react';
+import { ReactElement, useId, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
@@ -21,6 +21,7 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
@@ -46,6 +47,7 @@ export function SpaceStateConfigurationUi({
 				<RoomGrid
 					spaceState={ globalState.space }
 					selectedRoom={ selectedRoom }
+					setSelectedRoom={ setSelectedRoom }
 				/>
 				<Column className='roomList fill-y flex-1' padding='medium' overflowY='auto'>
 					{
@@ -99,9 +101,10 @@ export function SpaceStateConfigurationUi({
 	);
 }
 
-function RoomGrid({ spaceState, selectedRoom }: {
+function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 	spaceState: AssetFrameworkSpaceState;
 	selectedRoom: RoomId | null;
+	setSelectedRoom: Dispatch<SetStateAction<RoomId | null>>;
 }): ReactElement {
 	const [minCoords] = useMemo((): [Immutable<Coordinates>, Immutable<Coordinates>] => {
 		const minCoordsTmp: Coordinates = { x: 0, y: 0 };
@@ -124,39 +127,47 @@ function RoomGrid({ spaceState, selectedRoom }: {
 			{
 				spaceState.rooms.map((r) => {
 					const previewScale = Math.min(previewSize / r.roomBackground.imageSize[0], previewSize / r.roomBackground.imageSize[1]);
+					const previewSizeX = Math.ceil(previewScale * r.roomBackground.imageSize[0]);
+					const previewSizeY = Math.ceil(previewScale * r.roomBackground.imageSize[1]);
 
 					return (
-						<div
+						<SelectionIndicator
 							key={ r.id }
-							className={ classNames(
-								'room',
-								r.id === selectedRoom ? 'selected' : null,
-							) }
+							selected={ r.id === selectedRoom }
+							className='room'
 							style={ {
 								gridColumn: `${ r.position.x - minCoords.x + 1 } / span 1`,
 								gridRow: `${ r.position.y - minCoords.y + 1 } / span 1`,
 							} }
 						>
-							<GraphicsSceneBackgroundRenderer
-								renderArea={ { x: 0, y: 0, width: 1.5 * previewSize, height: previewSize } }
-								resolution={ 1 }
-								backgroundColor={ 0x000000 }
-								backgroundAlpha={ 0 }
-								forwardContexts={ [serviceManagerContext] }
+							<Button
+								slim
+								className='IconButton'
+								onClick={ () => {
+									setSelectedRoom((v) => v === r.id ? null : r.id);
+								} }
 							>
-								<Container
-									scale={ { x: previewScale, y: previewScale } }
-									x={ ((1.5 * previewSize) - previewScale * r.roomBackground.imageSize[0]) / 2 }
-									y={ (previewSize - previewScale * r.roomBackground.imageSize[1]) / 2 }
+								<GraphicsSceneBackgroundRenderer
+									renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
+									resolution={ 1 }
+									backgroundColor={ 0x000000 }
+									backgroundAlpha={ 0 }
+									forwardContexts={ [serviceManagerContext] }
 								>
-									<GraphicsBackground
-										background={ r.roomBackground }
-									/>
-								</Container>
-							</GraphicsSceneBackgroundRenderer>
-							<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
-							<span className='label'>{ r.name || r.id }</span>
-						</div>
+									<Container
+										scale={ { x: previewScale, y: previewScale } }
+										x={ (previewSizeX - previewScale * r.roomBackground.imageSize[0]) / 2 }
+										y={ (previewSizeY - previewScale * r.roomBackground.imageSize[1]) / 2 }
+									>
+										<GraphicsBackground
+											background={ r.roomBackground }
+										/>
+									</Container>
+								</GraphicsSceneBackgroundRenderer>
+								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
+								<span className='label'>{ r.name || r.id }</span>
+							</Button>
+						</SelectionIndicator>
 					);
 				})
 			}

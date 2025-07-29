@@ -212,6 +212,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The text is not valid.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
+			case 'tooManyRooms':
+				return `The space can contain at most ${e.limit} rooms.`;
 			case 'invalid':
 				return `This action results in a generally invalid state.`;
 		}

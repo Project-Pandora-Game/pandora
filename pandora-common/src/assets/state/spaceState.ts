@@ -12,6 +12,7 @@ import type { AssetManager } from '../assetManager.ts';
 import type { Coordinates } from '../graphics/common.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomBundleSchema, RoomClientDeltaBundleSchema } from './roomState.ts';
+import { LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 
 export const SpaceStateBundleSchema = z.object({
 	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.unknown())),
@@ -78,6 +79,17 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				success: false,
 				error: {
 					problem: 'invalid',
+				},
+			};
+		}
+
+		// Room count is limited
+		if (this.rooms.length > LIMIT_SPACE_ROOM_COUNT) {
+			return {
+				success: false,
+				error: {
+					problem: 'tooManyRooms',
+					limit: LIMIT_SPACE_ROOM_COUNT,
 				},
 			};
 		}
@@ -235,7 +247,7 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		const fixup = bundle?.clientOnly !== true;
 		const parsed: SpaceStateBundle = SpaceStateBundleSchema.parse(bundle);
 
-		const rooms = parsed.rooms.map((r) => AssetFrameworkRoomState.loadFromBundle(assetManager, r, spaceId, logger));
+		let rooms = parsed.rooms.map((r) => AssetFrameworkRoomState.loadFromBundle(assetManager, r, spaceId, logger));
 
 		if (rooms.length < 1) {
 			Assert(fixup, 'DESYNC: Space without rooms');
@@ -246,6 +258,9 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				spaceId,
 				logger,
 			));
+		}
+		if (rooms.length > LIMIT_SPACE_ROOM_COUNT) {
+			rooms = rooms.slice(0, LIMIT_SPACE_ROOM_COUNT);
 		}
 
 		// Fixup room coordinates

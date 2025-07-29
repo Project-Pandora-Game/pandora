@@ -33,6 +33,8 @@ export const LIMIT_SPACE_NAME_LENGTH = 48;
 /** The pattern used for validating space's name */
 export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 
+/** The maximum count of rooms per space */
+export const LIMIT_SPACE_ROOM_COUNT = 16;
 /** The maximum length of a room name */
 export const LIMIT_ROOM_NAME_LENGTH = 48;
 /** The pattern used for validating room name */

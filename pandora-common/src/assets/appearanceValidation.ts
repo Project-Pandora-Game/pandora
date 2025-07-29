@@ -50,6 +50,11 @@ export type AppearanceValidationError =
 	| {
 		problem: 'canOnlyBeInOneDevice';
 	}
+	| {
+		/** Number of rooms in a space is limited */
+		problem: 'tooManyRooms';
+		limit: number;
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
 		problem: 'invalid';

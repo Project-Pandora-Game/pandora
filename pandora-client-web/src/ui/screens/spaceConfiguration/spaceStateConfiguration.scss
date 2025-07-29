@@ -17,21 +17,24 @@
 			place-items: center;
 
 			.room {
-				@include common.center-flex(column);
-				position: relative;
 				contain: size;
 				width: 100%;
 				height: 100%;
-				background: common.$theme-normal-background-secondary;
-				border: 2px solid transparent;
-
-				&.selected {
-					border-color: common.$theme-separator-highlight;
-				}
+				padding: 1px;
+				overflow: clip;
 
 				&.filler {
 					background: transparent;
 					border-color: common.$theme-normal-background-secondary;
+				}
+
+				> button {
+					@include common.center-flex(column);
+					position: relative;
+					contain: size;
+					width: 100%;
+					height: 100%;
+					overflow: clip;
 				}
 
 				canvas {
@@ -41,10 +44,13 @@
 
 				.coordinates {
 					position: absolute;
-					left: 0.25em;
-					top: 0.25em;
+					top: 0;
+					left: 0;
+					border-radius: common.spacing('small') 0 common.spacing('small') 0;
 					max-width: calc(100% - 0.5em);
+					padding: 1px;
 					font-size: smaller;
+					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
 				}
 
 				.label {
@@ -52,11 +58,14 @@
 					margin: 0 auto;
 					bottom: 0.25em;
 					max-width: calc(100% - 0.5em);
+					max-height: 80%;
+					padding: 1px;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					overflow-wrap: break-word;
 					color: common.$theme-normal-text;
 					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+					border-radius: 0.25em;
 				}
 			}
 		}

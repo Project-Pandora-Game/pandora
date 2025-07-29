@@ -12,7 +12,7 @@ import {
 	type Coordinates,
 	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useId, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
@@ -119,11 +119,28 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 
 		return [minCoordsTmp, maxCoordsTmp];
 	}, [spaceState]);
+	const roomGridDiv = useRef<HTMLDivElement>(null);
+	const suppressScroll = useRef<RoomId>(null);
 
 	const previewSize = 256 * (window.devicePixelRatio || 1);
 
+	const selectedRoomState = selectedRoom != null ? spaceState.getRoom(selectedRoom) : null;
+	const { x: selectedX, y: selectedY } = selectedRoomState?.position ?? { x: 0, y: 0 };
+	useEffect(() => {
+		if (roomGridDiv.current != null && selectedRoom != null && selectedRoom !== suppressScroll.current) {
+			suppressScroll.current = null; // Reset scroll suppress in case another room was focused outside
+			const roomTile = Array.from(roomGridDiv.current.childNodes)
+				.filter((c) => c instanceof HTMLElement)
+				.find((c) => c.dataset.roomId === selectedRoom);
+
+			if (roomTile != null) {
+				roomTile.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+			}
+		}
+	}, [selectedRoom, selectedX, selectedY]);
+
 	return (
-		<div className='RoomGrid'>
+		<div className='RoomGrid' ref={ roomGridDiv }>
 			{
 				spaceState.rooms.map((r) => {
 					const previewScale = Math.min(previewSize / r.roomBackground.imageSize[0], previewSize / r.roomBackground.imageSize[1]);
@@ -139,11 +156,13 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 								gridColumn: `${ r.position.x - minCoords.x + 1 } / span 1`,
 								gridRow: `${ r.position.y - minCoords.y + 1 } / span 1`,
 							} }
+							data-room-id={ r.id }
 						>
 							<Button
 								slim
 								className='IconButton'
 								onClick={ () => {
+									suppressScroll.current = r.id;
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>

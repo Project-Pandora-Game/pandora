@@ -605,9 +605,11 @@ function SpaceConfigurationRoom({
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<SpaceStateConfigurationUi
-				globalState={ globalState }
-			/>
+			<Column className='fill contain-size' overflowY='auto'>
+				<SpaceStateConfigurationUi
+					globalState={ globalState }
+				/>
+			</Column>
 		</WardrobeActionContextProvider>
 	);
 }

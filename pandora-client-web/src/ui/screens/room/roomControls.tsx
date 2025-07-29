@@ -6,6 +6,7 @@ import React, {
 	type ReactNode,
 } from 'react';
 import { useLocation } from 'react-router';
+import crossIcon from '../../../assets/icons/cross.svg';
 import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
@@ -18,21 +19,28 @@ import { Select, type SelectProps } from '../../../common/userInteraction/select
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
 import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/accountContacts/accountContacts.tsx';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
-import { Button } from '../../../components/common/button/button.tsx';
-import { Column, Row } from '../../../components/common/container/container.tsx';
+import { Button, IconButton } from '../../../components/common/button/button.tsx';
+import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
-import { BackgroundSelectDialog } from '../spaceConfiguration/backgroundSelect.tsx';
+import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
+import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName } from './roomState.ts';
 
@@ -51,13 +59,21 @@ export function RoomControls(): ReactElement | null {
 
 	return (
 		<Column padding='medium' className='controls'>
-			<Row padding='small'>
-				<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
-					<img src={ storageIcon } />Room inventory
-				</Button>
-				<Button onClick={ () => navigate('/space/configuration') }>
-					<img src={ settingIcon } />Space configuration
-				</Button>
+			<Row alignX='space-between'>
+				<DivContainer padding='small' direction={ globalState.space.rooms.length > 1 ? 'column' : 'row' }>
+					<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
+						<img src={ storageIcon } />Room inventory
+					</Button>
+					<Button onClick={ () => navigate('/space/configuration') }>
+						<img src={ settingIcon } />Space configuration
+					</Button>
+				</DivContainer>
+				<DisplayRoomsGrid
+					player={ player }
+					playerState={ playerState }
+					characters={ characters }
+					globalState={ globalState }
+				/>
 			</Row>
 			&nbsp;
 			<SpaceVisibilityWarning />
@@ -122,24 +138,41 @@ export function PersonalSpaceControls(): ReactElement {
 					</span>
 				</ContextHelpButton>
 			</span>
-			<Row padding='small'>
-				<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
-					<img src={ storageIcon } />Room inventory
-				</Button>
-				<Button
-					onClick={ () => setShowBackgrounds(true) }
-				>
-					Change room background
-				</Button>
-				{
-					showBackgrounds ? (
-						<BackgroundSelectDialog
-							hide={ () => setShowBackgrounds(false) }
-							room={ currentRoomState.id }
-							current={ currentRoomState.roomGeometryConfig }
-						/>
-					) : null
-				}
+			<Row alignX='space-between'>
+				<DivContainer padding='small' direction={ globalState.space.rooms.length > 1 ? 'column' : 'row' }>
+					<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
+						<img src={ storageIcon } />Room inventory
+					</Button>
+					<Button
+						onClick={ () => setShowBackgrounds(true) }
+					>
+						Change space layout
+					</Button>
+					{
+						showBackgrounds ? (
+							<ModalDialog className='max-size'>
+								<Row alignX='end'>
+									<IconButton
+										onClick={ () => setShowBackgrounds(false) }
+										theme='default'
+										src={ crossIcon }
+										alt='Close'
+										style={ { height: '3em' } }
+									/>
+								</Row>
+								<SpaceStateConfigurationUi
+									globalState={ globalState }
+								/>
+							</ModalDialog>
+						) : null
+					}
+				</DivContainer>
+				<DisplayRoomsGrid
+					player={ player }
+					playerState={ playerState }
+					characters={ useMemo(() => [player], [player]) }
+					globalState={ globalState }
+				/>
 			</Row>
 			<DisplayRooms
 				player={ player }
@@ -252,6 +285,86 @@ function DeviceOverlaySelector(): ReactElement {
 				/>
 			</div>
 		</>
+	);
+}
+
+function DisplayRoomsGrid({ playerState, globalState }: {
+	player: PlayerCharacter;
+	playerState: AssetFrameworkCharacterState;
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+}): ReactElement | null {
+	const playerRoom = globalState.space.getRoom(playerState.currentRoom);
+
+	if (globalState.space.rooms.length <= 1 || playerRoom == null)
+		return null;
+
+	const { x: centerX, y: centerY } = playerRoom.position;
+	const previewSize = 256 * (window.devicePixelRatio || 1);
+
+	return (
+		<div className='RoomControlsRoomGrid'>
+			{
+				[centerY - 1, centerY, centerY + 1].flatMap((y) => [centerX - 1, centerX, centerX + 1].map((x) => {
+					const room = globalState.space.rooms.find((r) => r.position.x === x && r.position.y === y);
+					if (room == null || (y !== centerY && x !== centerX)) {
+						// Filler when there is no room, or for corners
+						return (
+							<div key={ `${y}:${x}` } />
+						);
+					} else {
+						const previewScale = Math.min(previewSize / room.roomBackground.imageSize[0], previewSize / room.roomBackground.imageSize[1]);
+						const previewSizeX = Math.ceil(previewScale * room.roomBackground.imageSize[0]);
+						const previewSizeY = Math.ceil(previewScale * room.roomBackground.imageSize[1]);
+
+						return (
+							<SelectionIndicator
+								key={ room.id }
+								selected={ playerState.currentRoom === room.id }
+								className='room'
+								data-room-id={ room.id }
+								align='center'
+								justify='center'
+							>
+								<GameLogicActionButton
+									key={ room.id }
+									data-room-id={ room.id }
+									className='IconButton slim'
+									disabled={ playerState.currentRoom === room.id }
+									action={ {
+										type: 'moveCharacter',
+										target: { type: 'character', characterId: playerState.id },
+										moveTo: {
+											type: 'normal',
+											room: room.id,
+											position: GenerateInitialRoomPosition(room.roomBackground),
+										},
+									} }
+								>
+									<GraphicsSceneBackgroundRenderer
+										renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
+										resolution={ 1 }
+										backgroundColor={ 0x000000 }
+										backgroundAlpha={ 0 }
+										forwardContexts={ [serviceManagerContext] }
+									>
+										<Container
+											scale={ { x: previewScale, y: previewScale } }
+											x={ (previewSizeX - previewScale * room.roomBackground.imageSize[0]) / 2 }
+											y={ (previewSizeY - previewScale * room.roomBackground.imageSize[1]) / 2 }
+										>
+											<GraphicsBackground
+												background={ room.roomBackground } />
+										</Container>
+									</GraphicsSceneBackgroundRenderer>
+									<span className='label'>{ room.name || room.id }</span>
+								</GameLogicActionButton>
+							</SelectionIndicator>
+						);
+					}
+				}))
+			}
+		</div>
 	);
 }
 

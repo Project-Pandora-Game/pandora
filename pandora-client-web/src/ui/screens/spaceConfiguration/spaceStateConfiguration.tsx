@@ -37,12 +37,12 @@ export type SpaceStateConfigurationUiProps = {
 export function SpaceStateConfigurationUi({
 	globalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
-	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(null);
+	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(globalState.space.rooms.length === 1 ? globalState.space.rooms[0].id : null);
 
 	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
 
 	return (
-		<Column className='SpaceStateConfigurationUi fill contain-size' alignX='center' overflowY='auto'>
+		<Column className='SpaceStateConfigurationUi' alignX='center'>
 			<Row className='spaceLayout'>
 				<RoomGrid
 					spaceState={ globalState.space }

@@ -330,7 +330,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 									key={ room.id }
 									data-room-id={ room.id }
 									className='IconButton slim'
-									disabled={ playerState.currentRoom === room.id }
+									disabled={ playerState.currentRoom === room.id || playerState.position.following != null }
 									action={ {
 										type: 'moveCharacter',
 										target: { type: 'character', characterId: playerState.id },
@@ -433,7 +433,7 @@ function DisplayRooms({ player, playerState, characters, globalState }: {
 								<fieldset key={ room.id } className='room'>
 									<legend><span>{ room.name || room.id }</span></legend>
 									{
-										(room.id !== playerState.currentRoom && playerState.position.following == null) ? (
+										(room.id !== playerState.currentRoom) ? (
 											<Row alignX='end'>
 												<GameLogicActionButton
 													action={ {
@@ -445,6 +445,7 @@ function DisplayRooms({ player, playerState, characters, globalState }: {
 															position: GenerateInitialRoomPosition(room.roomBackground),
 														},
 													} }
+													disabled={ playerState.position.following != null }
 													className='slim'
 												>
 													Move to this room
@@ -601,6 +602,7 @@ function DisplayCharacter({ char, globalState }: {
 									position: GenerateInitialRoomPosition(playerRoom.roomBackground),
 								},
 							} }
+							disabled={ state.position.following != null }
 							className='slim'
 						>
 							Move to my current room

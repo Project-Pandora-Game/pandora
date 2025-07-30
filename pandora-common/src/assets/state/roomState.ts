@@ -87,6 +87,16 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
 	}
 
+	/**
+	 * Returns a distance between this and another room.
+	 * Currently the distance is a manhattan distance, but this might change in the future.
+	 * @param otherRoom The room to calculate distance to
+	 * @returns Non-negative distance between rooms
+	 */
+	public getDistanceToRoom(otherRoom: AssetFrameworkRoomState): number {
+		return Math.abs(this.position.x - otherRoom.position.x) + Math.abs(this.position.y - otherRoom.position.y);
+	}
+
 	public isValid(): boolean {
 		return this.validate().success;
 	}

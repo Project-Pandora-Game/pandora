@@ -13,6 +13,7 @@ import { Button } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
+import { ExternalLink } from '../../common/link/externalLink.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
 
@@ -140,7 +141,7 @@ function RegistrationFormInner(): ReactElement {
 					type='text'
 					id='registration-username'
 					autoComplete='username'
-					placeholder='mona'
+					placeholder='e.g. mona'
 					register={ register }
 					name='username'
 					options={ {
@@ -156,7 +157,7 @@ function RegistrationFormInner(): ReactElement {
 					type='text'
 					id='registration-display-name'
 					autoComplete='off'
-					placeholder='Mona the Maid'
+					placeholder='e.g. Mona the Maid'
 					register={ register }
 					name='displayName'
 					options={ {
@@ -172,7 +173,6 @@ function RegistrationFormInner(): ReactElement {
 					type='email'
 					id='registration-email'
 					autoComplete='email'
-					placeholder='mona@project-pandora.com'
 					register={ register }
 					name='email'
 					options={ {
@@ -237,7 +237,16 @@ function RegistrationFormInner(): ReactElement {
 					<FormFieldError error={ errors.betaKey } />
 				</FormField> }
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit' disabled={ isSubmitting }>Register</Button>
+			<p>
+				<Button type='submit' disabled={ isSubmitting }>Register</Button>
+			</p>
+			{ betaKeyRequired ?
+				<p>
+					You can get a beta key on our <ExternalLink href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
+				</p> :
+				<p>
+					We also recommend to join our <ExternalLink href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
+				</p> }
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>
 	);

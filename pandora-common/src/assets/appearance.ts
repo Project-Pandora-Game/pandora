@@ -14,6 +14,7 @@ import type { AppearanceItems } from './item/items.ts';
 import type { AssetFrameworkCharacterState } from './state/characterState.ts';
 import type { RestrictionOverride } from './state/characterStateTypes.ts';
 import type { AssetFrameworkGlobalState } from './state/globalState.ts';
+import type { AssetFrameworkRoomState } from './state/roomState.ts';
 
 /**
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.
@@ -70,5 +71,9 @@ export class CharacterAppearance implements ActionTargetCharacter {
 
 	public getRestrictionOverride(): RestrictionOverride | undefined {
 		return this.characterState.restrictionOverride;
+	}
+
+	public getCurrentRoom(): AssetFrameworkRoomState | null {
+		return this.gameState.space.getRoom(this.characterState.currentRoom);
 	}
 }

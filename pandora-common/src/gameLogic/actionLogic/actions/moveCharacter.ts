@@ -19,8 +19,10 @@ export function ActionMoveCharacter({
 	processingContext,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionMoveCharacter>>): AppearanceActionProcessingResult {
 	const player = processingContext.getPlayerRestrictionManager();
+	const playerRoom = player.appearance.getCurrentRoom();
 	const target = processingContext.getCharacter(action.target.characterId);
-	if (!target)
+	const originalRoom = target?.appearance.getCurrentRoom();
+	if (playerRoom == null || target == null || originalRoom == null)
 		return processingContext.invalid();
 
 	const originalPosition = target.appearance.characterState.position;
@@ -39,8 +41,9 @@ export function ActionMoveCharacter({
 			});
 		}
 	} else {
-		// Admins can move others freely, non-admins need permission
+		// Admins can move others freely, non-admins need to be able to interact with target and a permission
 		if (!player.isCurrentSpaceAdmin()) {
+			processingContext.checkInteractWithTarget(target.appearance);
 			processingContext.addInteraction(target.character, 'moveCharacter');
 		}
 	}
@@ -51,6 +54,15 @@ export function ActionMoveCharacter({
 		const room = processingContext.manipulator.currentState.space.getRoom(action.moveTo.room);
 		if (room == null)
 			return processingContext.invalid();
+		// And be in range of both starting point and current player (ignored for admins)
+		if (!player.isCurrentSpaceAdmin()) {
+			if (originalRoom.getDistanceToRoom(room) > 1) {
+				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
+			}
+			if (playerRoom.getDistanceToRoom(room) > 1) {
+				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
+			}
+		}
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!spaceContext.features.includes('development')) {
 			if (!IsValidRoomPosition(room.roomBackground, action.moveTo.position)) {
@@ -68,12 +80,17 @@ export function ActionMoveCharacter({
 			processingContext.addInteraction(target.character, 'moveCharacter');
 			// ... and generic access permission to the follow target (to prevent people annoying people)
 			const followTarget = processingContext.getCharacter(action.moveTo.following.target);
-			if (followTarget == null)
+			const followTargetRoom = followTarget?.appearance.getCurrentRoom();
+			if (followTarget == null || followTargetRoom == null)
 				return processingContext.invalid();
 			player.checkInteractWithTarget(processingContext, followTarget.appearance);
 			// And check that the target can actually be followed
 			if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
 				return processingContext.invalid('characterMoveCannotFollowTarget');
+			}
+			// And check the follow target is not too far from the current player (not the player following)
+			if (playerRoom.getDistanceToRoom(followTargetRoom) > 1) {
+				processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
 			}
 			// Messages if follow starts
 			if ((originalPosition.following?.target) !== action.moveTo.following?.target) {

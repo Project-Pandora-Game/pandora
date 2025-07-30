@@ -147,6 +147,17 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot customize other people's items.`;
 			case 'inRoomDevice':
 				return `You cannot do this while in a room device.`;
+			case 'tooFar':
+				switch (e.subtype) {
+					case 'characterInteraction':
+						return `The target character is too far for you to interact with them.`;
+					case 'roomTarget':
+						return `The target room is too far.`;
+					case 'followTarget':
+						return `The follow target is too far.`;
+				}
+				AssertNever(e.subtype);
+				break;
 			case 'blockedByCharacterModifier':
 				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
 			case 'characterModifierLocked':

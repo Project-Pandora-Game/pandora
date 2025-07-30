@@ -9,6 +9,7 @@ import { ZodTemplateString, ZodTruncate } from '../validation.ts';
 import { ItemIdSchema, type Item } from './item/base.ts';
 import type { AppearanceItems } from './item/items.ts';
 import type { AssetFrameworkCharacterState } from './state/characterState.ts';
+import type { AssetFrameworkRoomState } from './state/roomState.ts';
 
 export const RoomIdSchema = ZodTemplateString<`room:${string}`>(z.string(), /^room:/);
 export type RoomId = z.infer<typeof RoomIdSchema>;
@@ -81,6 +82,7 @@ export interface ActionTargetCharacter extends ActionTargetBase {
 	readonly characterState: AssetFrameworkCharacterState;
 
 	getRestrictionManager(spaceContext: ActionSpaceContext): CharacterRestrictionsManager;
+	getCurrentRoom(): AssetFrameworkRoomState | null;
 }
 
 export interface ActionTargetRoomInventory extends ActionTargetBase {

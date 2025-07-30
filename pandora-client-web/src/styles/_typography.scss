@@ -40,6 +40,10 @@ a {
 	&:focus-visible {
 		outline: common.$theme-link-visiblefocus-outline solid 0.15em;
 	}
+
+	&.inline {
+		display: inline;
+	}
 }
 
 p {

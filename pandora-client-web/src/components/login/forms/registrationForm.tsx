@@ -220,7 +220,7 @@ function RegistrationFormInner(): ReactElement {
 				/>
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
-			{ betaKeyRequired &&
+			{ betaKeyRequired ? (
 				<FormField>
 					<label htmlFor='registration-beta-key'>Beta key</label>
 					<FormInput
@@ -235,18 +235,14 @@ function RegistrationFormInner(): ReactElement {
 						} }
 					/>
 					<FormFieldError error={ errors.betaKey } />
-				</FormField> }
+				</FormField>
+			) : null }
+			<span className='FormText'>
+				{ betaKeyRequired ? 'You can get a beta key on our ' : 'We also recommend to join our ' }
+				<ExternalLink className='inline' href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
+			</span>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<p>
-				<Button type='submit' disabled={ isSubmitting }>Register</Button>
-			</p>
-			{ betaKeyRequired ?
-				<p>
-					You can get a beta key on our <ExternalLink href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
-				</p> :
-				<p>
-					We also recommend to join our <ExternalLink href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
-				</p> }
+			<Button type='submit' disabled={ isSubmitting }>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>
 	);

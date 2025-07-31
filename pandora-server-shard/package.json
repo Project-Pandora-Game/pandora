@@ -62,7 +62,7 @@
 		"@types/lodash-es": "4.17.12",
 		"@types/node": "22.17.0",
 		"@types/wtfnode": "0.7.3",
-		"discord-api-types": "0.38.17",
+		"discord-api-types": "0.38.18",
 		"jest": "30.0.5",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",

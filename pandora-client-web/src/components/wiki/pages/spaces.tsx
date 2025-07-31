@@ -1,4 +1,4 @@
-import { LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from 'pandora-common';
+import { LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
 import { Link } from 'react-router';
 
@@ -12,11 +12,11 @@ export function WikiSpaces(): ReactElement {
 			<p>
 				A space in Pandora always exists in the state it was set up, even when it was empty for a long time.
 				You can decorate every room inside a space with room items/furniture and it can theoretically be joined by up
-				to { LIMIT_SPACE_MAX_CHARACTER_NUMBER } characters at the same time.<br />
+				to { LIMIT_SPACE_MAX_CHARACTER_NUMBER } characters at the same time. A space can contain up to { LIMIT_SPACE_ROOM_COUNT } rooms.<br />
 				The "Chat"-tab next to the room view can also be switched to:
 			</p>
 			<ul>
-				<li>the "Room"-tab that gives you interaction and configuration possibilities for the room your are currently in, as well as the space the room is a part of</li>
+				<li>the "Room"-tab that gives you interaction and configuration possibilities, lets you move between rooms, and shows the location of all characters inside the space</li>
 				<li>the "Pose"-tab that lets you change your character's pose</li>
 				<li>the "Expressions"-tab that lets you change your character's facial expressions and body states</li>
 			</ul>
@@ -24,6 +24,7 @@ export function WikiSpaces(): ReactElement {
 			<h3>Space-specific features</h3>
 			<ul>
 				<li><Link to='#SP_Room_layout'>Room layout</Link></li>
+				<li><Link to='#SP_Multiple_rooms'>Multiple rooms per space</Link></li>
 				<li><Link to='#SP_Space_ownership'>Space ownership</Link></li>
 				<li><Link to='#SP_Space_deletion'>Space deletion</Link></li>
 				<li><Link to='#SP_Space_persistence'>Space persistence</Link></li>
@@ -49,6 +50,21 @@ export function WikiSpaces(): ReactElement {
 				<li>You can drag the canvas freely to see a different part of it while zoomed in.</li>
 				<li>If you experience performance issues, you can lower/disable graphics related features in Pandora's settings.</li>
 			</ul>
+
+			<h4 id='SP_Multiple_rooms'>Multiple rooms per space</h4>
+			<p>
+				The up to { LIMIT_SPACE_ROOM_COUNT } rooms per space are freely placed on a rectangular grid by the space's admins to create a layout/map of the space.
+				This grid is also used to move between rooms and can be found under the "Room"-tab. A character can only move to a room that is a direct
+				neighbor of the current room in the four cardinal directions. So, for instance, if there is a gap on the grid between the current room and the room to the west, you
+				cannot move to that room, unless there is another path through a chain of rooms. Admins of a space can freely move their character
+				or other characters, though.<br />
+				Note that rooms are not a privacy barrier and the chat is space-wide, so every message can be seen from every room of the same space.
+				If you want privacy or hide something or someone, you should use a space that is private.<br />
+				Interactions with other characters, such as wardrobe changes or making them follow, are only possible if both characters are within the same room
+				or in a directly neighboring room. But you can still see the location of every character from everywhere, can open their profile, or preview how they
+				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.<br />
+				Room designs can also be exported and imported as a template - so you can swap empty rooms at any time.
+			</p>
 
 			<h4 id='SP_Space_ownership'>Space ownership</h4>
 			<p>
@@ -171,10 +187,6 @@ export function WikiSpaces(): ReactElement {
 					or swapping to different eyes, nose, genitals.
 				</li>
 				<li>
-					Allow changes to character pronouns: Determines if any character inside the space can change their pronouns, so with which gender they are mentioned,
-					while inside the space.
-				</li>
-				<li>
 					Development mode: On a development server, spaces can be created in development mode. This enables use of many development tools, such as
 					room background calibration tool. Those can however break things when used incorrectly. Because of
 					that <strong>this option is not available on the public server for non-developers</strong>.
@@ -196,9 +208,10 @@ export function WikiSpaces(): ReactElement {
 					Alternatively, you can look up the player account id of a character inside the space up in the "Room"-Tab. It is the last number behind the name.<br />
 					The easiest way is to simply click on the name below a character and select "Admin" in the context menu.
 				</li>
+				<li>You can also add more rooms to the space, give each a name and a room background/design, or move them to a different coordinate on the space grid.</li>
 				<li>
-					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> or gender pronouns
-					when inside this space. This currently cannot be changed later on.
+					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
+					This currently cannot be changed later on.
 				</li>
 			</ul>
 
@@ -229,13 +242,14 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Room_inventory'>Room inventory</h4>
 			<p>
-				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted
+				Every room has its own room inventory that shows all items that are inside the current room and can be picked up or used by other characters, if permitted
 				by the space configuration, or the <Link to='/wiki/characters#CH_Character_permissions'>character permissions</Link> of the targeted character.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
 				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving
 				up <Link to='#SP_Space_ownership'>ownership</Link> of a space.
 				Clicking on an item in the list opens its edit-view on the right
 				side. <Link to='/wiki/items#IT_Room-level_items'>Room devices</Link> can be deployed to the room background in the edit-view by permitted parties.
+				You can also move items from one room to another, inside the same space.
 			</p>
 
 		</>

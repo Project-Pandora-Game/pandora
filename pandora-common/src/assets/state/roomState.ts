@@ -104,7 +104,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	@MemoizeNoArg
 	public validate(): AppearanceValidationResult {
 		if (!Number.isSafeInteger(this.position.x) || !Number.isSafeInteger(this.position.y))
-			return { success: false, error: { problem: 'invalid' } };
+			return { success: false, error: { problem: 'roomError', problemDetail: 'invalidPosition' } };
 
 		{
 			const r = ValidateRoomInventoryItems(this.assetManager, this.items);

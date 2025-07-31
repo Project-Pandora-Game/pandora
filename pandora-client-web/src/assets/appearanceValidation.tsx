@@ -78,6 +78,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					return `You cannot delete manifestation of a room device. Use the device's menu to exit it instead.`;
 				case 'noDeleteDeployedRoomDevice':
 					return `You cannot delete a deployed room device. Use the device's menu to store it first.`;
+				case 'noDeleteOccupiedRoom':
+					return `You cannot delete a room with characters inside it.`;
 				case 'characterMoveCannotFollowTarget':
 					return `The target character cannot be followed. Only characters in a room that are not following someone can be followed.`;
 			}
@@ -225,6 +227,16 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `Character can only be in a single device at a time.`;
 			case 'tooManyRooms':
 				return `The space can contain at most ${e.limit} rooms.`;
+			case 'roomError':
+				switch (e.problemDetail) {
+					case 'roomsOverlap':
+						return `Rooms cannot overlap (a single space tile cannot contain multiple rooms).`;
+					case 'invalidPosition':
+						return `Room's position is not valid (most likely too large or too small)`;
+					default:
+						AssertNever(e);
+				}
+				break;
 			case 'invalid':
 				return `This action results in a generally invalid state.`;
 		}

@@ -72,7 +72,16 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
+
+		processingContext.queueMessage({ id: 'spaceLayoutChange' });
 	} else if (subaction.type === 'deleteRoom') {
+		if (
+			Array.from(processingContext.manipulator.currentState.characters.values())
+				.some((c) => c.currentRoom === subaction.id)
+		) {
+			return processingContext.invalid('noDeleteOccupiedRoom');
+		}
+
 		if (!processingContext.manipulator.produceSpaceState((s) => {
 			const index = s.rooms.findIndex((r) => r.id === subaction.id);
 			if (index < 0)
@@ -82,6 +91,8 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
+
+		processingContext.queueMessage({ id: 'spaceLayoutChange' });
 	} else if (subaction.type === 'reorderRoomList') {
 		if (!processingContext.manipulator.produceSpaceState((s) => {
 			const index = s.rooms.findIndex((r) => r.id === subaction.id);
@@ -97,14 +108,16 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
+
+		// Intentionally no message
 	} else if (subaction.type === 'moveRoom') {
 		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position)))
 			return processingContext.invalid();
+
+		processingContext.queueMessage({ id: 'spaceLayoutChange' });
 	} else {
 		AssertNever(subaction);
 	}
-
-	// TODO: Make chat messages
 
 	return processingContext.finalize();
 }

@@ -113,7 +113,8 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				return {
 					success: false,
 					error: {
-						problem: 'invalid',
+						problem: 'roomError',
+						problemDetail: 'roomsOverlap',
 					},
 				};
 			}

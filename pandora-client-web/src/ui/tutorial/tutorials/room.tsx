@@ -196,7 +196,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								<i>
-									Note: The room background is just an image and cannot be interacted with.<br />
+									Note: The room background, which is either a static image or consists of walls & ceiling & floor, cannot be interacted with.<br />
 									Later, you will learn about items placeable into the room that can be interacted with.
 								</i>
 							</p>
@@ -468,7 +468,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								You can find more about personal spaces in the context help or in the wiki.
 							</p>
 							<p>
-								The other type of space is a public (or private/invite-only) space.<br />
+								The other type of space is a public (or private/invite-only) space. Any space contains one or more rooms.<br />
 								Those will be covered by a later tutorial.
 							</p>
 						</>
@@ -512,7 +512,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								That said, the part we would like to point out right now is the list of characters currently inside this space near the top of the tab.<br />
-								As this is a personal space, you can only see yourself here, but in other spaces you can always see everyone currently inside using this list.
+								As this is a personal space, you can only see yourself here, but in other spaces you can always see everyone currently inside and in which rooms they are using this list.
 							</p>
 						</>
 					),

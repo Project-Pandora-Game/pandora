@@ -43,7 +43,11 @@ export function SpaceStateConfigurationUi({
 
 	return (
 		<Column className='SpaceStateConfigurationUi' alignX='center'>
-			<Row className='spaceLayout'>
+			<Row
+				className={ classNames(
+					'spaceLayout',
+					globalState.space.rooms.length === 1 ? 'singleRoom' : null,
+				) }>
 				<RoomGrid
 					spaceState={ globalState.space }
 					selectedRoom={ selectedRoom }

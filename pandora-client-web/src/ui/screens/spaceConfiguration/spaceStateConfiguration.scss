@@ -6,6 +6,10 @@
 		width: 100%;
 		contain: size;
 
+		&.singleRoom {
+			height: max(15vh, 10em);
+		}
+
 		.RoomGrid {
 			flex: 2;
 			contain: size;

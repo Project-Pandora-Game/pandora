@@ -61,11 +61,11 @@ export function RoomControls(): ReactElement | null {
 		<Column padding='medium' className='controls'>
 			<Row alignX='space-between'>
 				<DivContainer padding='small' direction={ globalState.space.rooms.length > 1 ? 'column' : 'row' }>
-					<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
-						<img src={ storageIcon } />Room inventory
+					<Button slim onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }>
+						<img src={ storageIcon } /><span>Room<br />inventory</span>
 					</Button>
-					<Button onClick={ () => navigate('/space/configuration') }>
-						<img src={ settingIcon } />Space configuration
+					<Button slim onClick={ () => navigate('/space/configuration') }>
+						<img src={ settingIcon } /><span>Space<br />configuration</span>
 					</Button>
 				</DivContainer>
 				<DisplayRoomsGrid
@@ -331,6 +331,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 									data-room-id={ room.id }
 									className='IconButton slim'
 									disabled={ playerState.currentRoom === room.id || playerState.position.following != null }
+									title={ 'Move to ' + room.name }
 									action={ {
 										type: 'moveCharacter',
 										target: { type: 'character', characterId: playerState.id },

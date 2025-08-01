@@ -57,15 +57,25 @@ export function RoomControls(): ReactElement | null {
 		return null;
 	}
 
+	const multipleRooms = globalState.space.rooms.length > 1;
+
 	return (
 		<Column padding='medium' className='controls'>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ globalState.space.rooms.length > 1 ? 'column' : 'row' }>
-					<Button slim onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }>
-						<img src={ storageIcon } /><span>Room<br />inventory</span>
+				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+					>
+						<img src={ storageIcon } />
+						<div>Room<br />inventory</div>
 					</Button>
-					<Button slim onClick={ () => navigate('/space/configuration') }>
-						<img src={ settingIcon } /><span>Space<br />configuration</span>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => navigate('/space/configuration') }
+					>
+						<img src={ settingIcon } />
+						<div>Space<br />configuration</div>
 					</Button>
 				</DivContainer>
 				<DisplayRoomsGrid
@@ -75,7 +85,7 @@ export function RoomControls(): ReactElement | null {
 					globalState={ globalState }
 				/>
 			</Row>
-			&nbsp;
+			{ multipleRooms ? null : '\u00a0' }
 			<SpaceVisibilityWarning />
 			<span>
 				These characters are in the space <b>{ spaceConfig.name }</b>:
@@ -99,6 +109,7 @@ export function PersonalSpaceControls(): ReactElement {
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
+	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
 	Assert(currentRoomState != null);
 
@@ -139,14 +150,21 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ globalState.space.rooms.length > 1 ? 'column' : 'row' }>
-					<Button onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) } >
-						<img src={ storageIcon } />Room inventory
+				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+					<Button
+						slim
+						className='half-slim align-start'
+						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+					>
+						<img src={ storageIcon } />
+						<div>Room<br />inventory</div>
 					</Button>
 					<Button
+						className='half-slim align-start'
 						onClick={ () => setShowBackgrounds(true) }
 					>
-						Change space layout
+						<img src={ settingIcon } />
+						<div>Change<br />space layout</div>
 					</Button>
 					{
 						showBackgrounds ? (
@@ -174,6 +192,7 @@ export function PersonalSpaceControls(): ReactElement {
 					globalState={ globalState }
 				/>
 			</Row>
+			{ multipleRooms ? null : '\u00a0' }
 			<DisplayRooms
 				player={ player }
 				playerState={ playerState }
@@ -331,7 +350,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 									data-room-id={ room.id }
 									className='IconButton slim'
 									disabled={ playerState.currentRoom === room.id || playerState.position.following != null }
-									title={ 'Move to ' + room.name }
+									title={ 'Move to ' + (room.name || room.id) }
 									action={ {
 										type: 'moveCharacter',
 										target: { type: 'character', characterId: playerState.id },

@@ -51,8 +51,14 @@
 		padding: 0.1em 0.3em;
 	}
 
+	&.half-slim {
+		gap: 0.3em;
+		padding: 0.2em 0.6em;
+	}
+
 	&.align-start {
 		justify-content: start;
+		text-align: start;
 	}
 
 	&.hideDisabled:disabled {

@@ -129,6 +129,16 @@ $drop-overlay-gap: 0.3em;
 	border: 1px solid common.$theme-separator;
 }
 
+.WardrobeCollapsableSection {
+	height: 0px;
+	overflow: clip;
+	transition: all 200ms linear;
+
+	&.open {
+		height: max-content;
+	}
+}
+
 .inventoryView {
 	@include common.flex(column);
 	flex: 1;

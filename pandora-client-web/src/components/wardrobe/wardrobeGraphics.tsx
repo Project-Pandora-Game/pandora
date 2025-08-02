@@ -403,15 +403,25 @@ export function RoomPreview({
 				/>
 				<Container zIndex={ 10 } sortableChildren>
 					{
-						characters.map((character) => (
-							<RoomCharacter
-								key={ character.data.id }
-								globalState={ globalState }
-								character={ character }
-								projectionResolver={ projectionResolver }
-								showName={ false }
-							/>
-						))
+						characters.map((character) => {
+							const characterState = globalState.characters.get(character.id);
+							if (characterState == null ||
+								characterState.position.type !== 'normal' ||
+								characterState.currentRoom !== roomState.id
+							) {
+								return null;
+							}
+
+							return (
+								<RoomCharacter
+									key={ character.data.id }
+									globalState={ globalState }
+									character={ character }
+									projectionResolver={ projectionResolver }
+									showName={ false }
+								/>
+							);
+						})
 					}
 					{
 						roomDevices.map((device) => (device.isDeployed() ? (

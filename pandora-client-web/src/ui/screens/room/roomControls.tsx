@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -388,49 +388,57 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 	);
 }
 
-function DisplayRooms({ player, playerState, characters, globalState }: {
+export function SortSpaceCharacters(characters: readonly Character<ICharacterRoomData>[], friends: readonly IAccountFriendStatus[]): Character<ICharacterRoomData>[] {
+	const enum CharOrder {
+		PLAYER,
+		ONLINE_FRIEND,
+		ONLINE,
+		FRIEND,
+		OFFLINE,
+	}
+
+	const player = characters.find((c) => c.isPlayer());
+
+	const getCharOrder = (character: Character<ICharacterRoomData>) => {
+		const isPlayer = character.isPlayer();
+		const isSameAccount = character.data.accountId === player?.data.accountId;
+		const isOnline = character.data.onlineStatus !== 'offline';
+		const isFriend = friends.some((friend) => friend.id === character.data.accountId);
+
+		if (isPlayer)
+			return CharOrder.PLAYER;
+
+		if (isOnline && (isFriend || isSameAccount))
+			return CharOrder.ONLINE_FRIEND;
+
+		if (isOnline)
+			return CharOrder.ONLINE;
+
+		if (isFriend || isSameAccount)
+			return CharOrder.FRIEND;
+
+		return CharOrder.OFFLINE;
+	};
+
+	const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
+		const order = getCharOrder(character1) - getCharOrder(character2);
+		if (order !== 0)
+			return order;
+
+		return character1.name.localeCompare(character2.name);
+	};
+
+	return characters.toSorted(charactersSortFunction);
+}
+
+function DisplayRooms({ playerState, characters, globalState }: {
 	player: PlayerCharacter;
 	playerState: AssetFrameworkCharacterState;
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const friends = useFriendStatus();
-	const sortedCharacters = useMemo(() => {
-		const enum CharOrder {
-			PLAYER,
-			ONLINE_FRIEND,
-			ONLINE,
-			FRIEND,
-			OFFLINE,
-		}
-
-		const getCharOrder = (character: Character<ICharacterRoomData>) => {
-			const isPlayer = character.isPlayer();
-			const isSameAccount = character.data.accountId === player?.data.accountId;
-			const isOnline = character.data.onlineStatus !== 'offline';
-			const isFriend = friends.some((friend) => friend.id === character.data.accountId);
-
-			if (isPlayer)
-				return CharOrder.PLAYER;
-
-			if (isOnline && (isFriend || isSameAccount))
-				return CharOrder.ONLINE_FRIEND;
-
-			if (isOnline)
-				return CharOrder.ONLINE;
-
-			if (isFriend || isSameAccount)
-				return CharOrder.FRIEND;
-
-			return CharOrder.OFFLINE;
-		};
-
-		const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
-			return getCharOrder(character1) - getCharOrder(character2);
-		};
-
-		return characters.toReversed().sort(charactersSortFunction);
-	}, [characters, friends, player?.data.accountId]);
+	const sortedCharacters = useMemo(() => SortSpaceCharacters(characters, friends), [characters, friends]);
 
 	return (
 		<div className='character-info'>

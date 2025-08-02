@@ -90,6 +90,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	public readonly roomBackground: Immutable<RoomBackgroundData>;
 
+	public get displayName(): string {
+		return this.name || this.id;
+	}
+
 	private constructor(props: AssetFrameworkRoomStateProps);
 	private constructor(old: AssetFrameworkRoomState, override: Partial<AssetFrameworkRoomStateProps>);
 	private constructor(props: AssetFrameworkRoomStateProps, override?: Partial<AssetFrameworkRoomStateProps>) {

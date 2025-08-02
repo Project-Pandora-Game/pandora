@@ -1,5 +1,9 @@
 @use 'common';
 
+:root {
+	interpolate-size: allow-keywords;
+}
+
 html, body {
 	font-family: common.$theme-font-family;
 	font-feature-settings: common.$theme-font-features;
@@ -115,6 +119,8 @@ meter {
 	height: 0.75em;
 
 	&::-webkit-meter-bar {
+		height: 0.75em;
+		border-radius: 2em;
 		background: common.$theme-meter-background; // Chromium
 	}
 

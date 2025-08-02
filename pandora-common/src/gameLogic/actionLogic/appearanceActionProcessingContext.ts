@@ -8,7 +8,7 @@ import type {
 	ActionRoomSelector,
 	ActionTarget,
 	ActionTargetCharacter,
-	ActionTargetRoomInventory,
+	ActionTargetRoom,
 	ActionTargetSelector,
 	ItemContainerPath,
 	ItemPath,
@@ -105,7 +105,7 @@ export class AppearanceActionProcessingContext {
 		return char.getAppearance(this.manipulator.currentState);
 	}
 
-	public getTargetRoomInventory(target: ActionRoomSelector): ActionTargetRoomInventory | null {
+	public getTargetRoom(target: ActionRoomSelector): ActionTargetRoom | null {
 		const room = this.manipulator.currentState.space.getRoom(target.roomId);
 
 		if (room == null)
@@ -120,7 +120,7 @@ export class AppearanceActionProcessingContext {
 		}
 
 		if (target.type === 'room') {
-			return this.getTargetRoomInventory(target);
+			return this.getTargetRoom(target);
 		}
 
 		AssertNever(target);
@@ -207,7 +207,7 @@ export class AppearanceActionProcessingContext {
 		}
 	}
 
-	public checkInteractWithTarget(target: ActionTargetCharacter | null): void {
+	public checkInteractWithTarget(target: ActionTarget): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
 		restrictionManager.checkInteractWithTarget(this, target);
 	}
@@ -258,54 +258,41 @@ export class AppearanceActionProcessingContext {
 	}
 
 	/**
-	 * Resolves target container to a character that should be checked for manipulation permissions
+	 * Resolves target container to the actual target that should be checked for manipulation permissions
 	 * @param target - The physical target of the action
 	 * @param container - The container path to the container the action is being performed on
-	 * @returns The character that should be checked for permission, or `null` if the action doesn't need permissions from a character
+	 * @returns The target that should be checked for permission
 	 */
-	public resolveTargetCharacter(target: ActionTarget, container: ItemContainerPath): ActionTargetCharacter | null {
+	public resolvePermissionTarget(target: ActionTarget, container: ItemContainerPath): ActionTarget {
 		// If we are already targetting a character, the result will be this character
 		if (target.type === 'character')
 			return target;
 
+		// If there is no target item, return the current target
 		const parent = SplitContainerPath(container);
 		if (parent == null)
-			return null;
-
-		// If the target container is nested, then check the parent first (parent takes priority)
-		const parentTarget = this.resolveTargetCharacter(target, parent.itemPath.container);
-		if (parentTarget != null)
-			return parentTarget;
+			return target;
 
 		const item = target.getItem(parent.itemPath);
-		if (item == null)
-			return null;
 
 		// Room device modules can choose different target character
-		if (item.isType('roomDevice')) {
+		if (item?.isType('roomDevice')) {
 			const itemModule = item.getModules().get(parent.module);
-			if (itemModule == null)
-				return null;
+			const slotName = itemModule?.config.staticConfig.slotName;
+			const characterId = slotName != null ? item.slotOccupancy.get(slotName) : null;
 
-			const slotName = itemModule.config.staticConfig.slotName;
-			if (slotName == null) {
-				return null;
+			if (characterId != null) {
+				// We have a character id to target, resolve it into the character (if not found, then return original - can happen when character gets kicked)
+				return this.getTargetCharacter({
+					type: 'character',
+					characterId,
+				}) ?? target;
 			}
 
-			const characterId = item.slotOccupancy.get(slotName);
-			if (characterId == null) {
-				return null;
-			}
-
-			// We have a character id to target, resolve it into the character
-			return this.getTargetCharacter({
-				type: 'character',
-				characterId,
-			});
 		}
 
-		// Nothing to re-target
-		return null;
+		// Check the parent if current item has no re-targetting rule
+		return this.resolvePermissionTarget(target, parent.itemPath.container);
 	}
 }
 

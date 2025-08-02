@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import { ItemModuleActionSchema } from '../../../assets/modules.ts';
-import { Assert } from '../../../utility/index.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceModuleActionContext } from '../appearanceActions.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -39,15 +38,11 @@ export function ActionModuleAction({
 	const { container, itemId } = action.item;
 	const containerManipulator = rootManipulator.getContainer(container);
 
-	const targetCharacter = processingContext.resolveTargetCharacter(target, [...container, { item: itemId, module: action.module }]);
-	Assert(target.type !== 'character' || target === targetCharacter);
-
 	// Do change and store chat messages
 	if (!containerManipulator.modifyItem(itemId, (it) => {
 		const actionContext: AppearanceModuleActionContext = {
 			processingContext,
 			target,
-			targetCharacter,
 			module: [
 				...container,
 				{

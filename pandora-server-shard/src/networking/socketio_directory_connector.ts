@@ -323,7 +323,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		// Skips any checks if force-allow is enabled
 		if (!restrictionManager.forceAllowRoomLeave()) {
 			// The character must not have leave-restricting effect (this doesn't affect personal spaces)
-			if (restrictionManager.getEffects().blockRoomLeave && inPublicSpace)
+			if (restrictionManager.getEffects().blockSpaceLeave && inPublicSpace)
 				return { result: 'restricted' };
 		}
 

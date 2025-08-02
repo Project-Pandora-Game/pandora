@@ -14,16 +14,16 @@ export type EffectsDefinition = MuffleSettings & HearingImpairmentSettings & {
 	blockHands: boolean;
 
 	/**
-	 * Prevents character from moving herself within the room, even if admin.
+	 * Prevents character from moving herself within the room or to another room, even if admin.
 	 * Moving others as admin is still possible.
 	 */
 	blockRoomMovement: boolean;
 
 	/**
-	 * Prevents character from leaving the room.
+	 * Prevents character from leaving the space.
 	 * Note that character can still be kicked/banned out of the space or is removed if the space itself gets destroyed.
 	 */
-	blockRoomLeave: boolean;
+	blockSpaceLeave: boolean;
 
 	/**
 	 * Blinds the character.
@@ -64,7 +64,7 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	// others
 	blockHands: false,
 	blockRoomMovement: false,
-	blockRoomLeave: false,
+	blockSpaceLeave: false,
 	blind: 0,
 	blurVision: 0,
 };
@@ -88,7 +88,7 @@ export const EFFECT_NAMES: Record<EffectName, string> = {
 	// others
 	blockHands: 'Blocks hands',
 	blockRoomMovement: 'Blocks room movement',
-	blockRoomLeave: 'Blocks leaving space',
+	blockSpaceLeave: 'Blocks leaving space',
 	blind: 'Blindness',
 	blurVision: 'Vision blur',
 };

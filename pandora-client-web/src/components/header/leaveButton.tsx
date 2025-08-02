@@ -107,7 +107,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	const directoryConnector = useDirectoryConnector();
 	const globalState = useGlobalState(useGameState());
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
-	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
+	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onLeave = useCallback(() => {

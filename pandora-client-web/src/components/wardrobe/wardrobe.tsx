@@ -6,7 +6,7 @@ import {
 	ICharacterRoomData,
 	RoomIdSchema,
 	type ActionCharacterSelector,
-	type ActionTargetSelector,
+	type ActionRoomSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
@@ -108,7 +108,7 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	AssertNotNullable(player);
 
 	const { roomId: roomIdParam } = useParams();
-	const roomTarget = useMemo((): ActionTargetSelector | null => {
+	const roomTarget = useMemo((): ActionRoomSelector | null => {
 		try {
 			const parsedRoomId = RoomIdSchema.safeParse(roomIdParam ? decodeURIComponent(roomIdParam) : roomIdParam);
 			if (parsedRoomId.success) {
@@ -138,13 +138,15 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	return (
 		<WardrobeActionContextProvider player={ player }>
 			<WardrobeContextProvider target={ roomTarget } initialFocus={ initialFocus }>
-				<WardrobeRoom />
+				<WardrobeRoom room={ roomTarget } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
 	);
 }
 
-function WardrobeRoom(): ReactElement {
+function WardrobeRoom({ room }: {
+	room: Immutable<ActionRoomSelector>;
+}): ReactElement {
 	const navigate = useNavigatePandora();
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();
@@ -153,7 +155,7 @@ function WardrobeRoom(): ReactElement {
 	const { actionPreviewState, currentRoomSelector } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
 
-	const roomState = (globalPreviewState ?? globalState).space.getRoom(currentRoomSelector.roomId);
+	const roomState = (globalPreviewState ?? globalState).space.getRoom(room.roomId);
 
 	return (
 		<div className='wardrobe'>
@@ -170,7 +172,7 @@ function WardrobeRoom(): ReactElement {
 					) : null
 				}
 				<TabContainer className='flex-1'>
-					<Tab name='Room inventory'>
+					<Tab name={ room.roomId === currentRoomSelector.roomId ? 'Current room\'s inventory' : `Room inventory (${ globalState.space.getRoom(room.roomId)?.displayName ?? '[unknown room]' })` }>
 						<div className='wardrobe-pane'>
 							<WardrobeItemManipulation />
 						</div>

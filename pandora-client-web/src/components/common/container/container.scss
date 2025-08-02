@@ -31,16 +31,16 @@
 		justify-content: flex-end;
 	}
 	&.justify-center {
-		justify-content: center;
+		justify-content: safe center;
 	}
 	&.justify-space-between {
-		justify-content: space-between;
+		justify-content: safe space-between;
 	}
 	&.justify-space-around {
-		justify-content: space-around;
+		justify-content: safe space-around;
 	}
 	&.justify-space-evenly {
-		justify-content: space-evenly;
+		justify-content: safe space-evenly;
 	}
 
 	&.align-start {
@@ -50,7 +50,7 @@
 		align-items: flex-end;
 	}
 	&.align-center {
-		align-items: center;
+		align-items: safe center;
 	}
 	&.align-stretch {
 		align-items: stretch;

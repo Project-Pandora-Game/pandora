@@ -4,12 +4,15 @@ import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { RoomIdSchema, RoomNameSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { IntegerCoordinatesSchema, type Coordinates } from '../graphics/common.ts';
-import { Item } from '../item/base.ts';
+import { Item, type IItemCreationContext } from '../item/base.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema, ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, type AppearanceItems } from '../item/items.ts';
+import { RoomDeviceDeploymentSchema } from '../item/roomDevice.ts';
+import { ItemTemplateSchema } from '../item/unified.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
@@ -25,6 +28,18 @@ export const RoomBundleSchema = z.object({
 
 export type RoomBundle = z.infer<typeof RoomBundleSchema>;
 export type RoomClientBundle = RoomBundle & { clientOnly: true; };
+
+export const RoomTemplateItemTemplateSchema = ItemTemplateSchema.and(z.object({
+	roomDeviceDeployment: RoomDeviceDeploymentSchema.optional().catch(undefined),
+}));
+export type RoomTemplateItemTemplate = z.infer<typeof RoomTemplateItemTemplateSchema>;
+
+export const RoomTemplateSchema = z.object({
+	name: RoomNameSchema.catch(''),
+	items: ZodArrayWithInvalidDrop(RoomTemplateItemTemplateSchema, z.unknown()).catch(() => []),
+	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+});
+export type RoomTemplate = z.infer<typeof RoomTemplateSchema>;
 
 export const RoomClientDeltaBundleSchema = z.object({
 	id: RoomIdSchema,
@@ -114,6 +129,24 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		return {
 			success: true,
+		};
+	}
+
+	public exportToTemplate({ includeAllItems }: {
+		includeAllItems: boolean;
+	}): RoomTemplate {
+		return {
+			name: this.name,
+			items: this.items
+				.filter((i) => includeAllItems || i.isType('roomDevice'))
+				.map((i) => {
+					const template: RoomTemplateItemTemplate = i.exportToTemplate();
+					if (i.isType('roomDevice')) {
+						template.roomDeviceDeployment = CloneDeepMutable(i.deployment);
+					}
+					return template;
+				}),
+			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 		};
 	}
 
@@ -213,6 +246,63 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometryConfig: newGeometry,
 			roomBackground,
 		});
+	}
+
+	public static createFromTemplate(
+		template: Immutable<RoomTemplate>,
+		id: RoomId,
+		position: Coordinates,
+		assetManager: AssetManager,
+		spaceId: SpaceId | null,
+		creator: IItemCreationContext['creator'],
+	): AssetFrameworkRoomState {
+		// Load all items
+		const loadedItems: Item[] = [];
+		for (const itemTemplate of template.items) {
+			// Load asset and skip if unknown
+			let item = assetManager.createItemFromTemplate(itemTemplate, creator);
+			if (item != null) {
+				if (item.isType('roomDevice') && itemTemplate.roomDeviceDeployment != null && itemTemplate.roomDeviceDeployment.deployed) {
+					item = item.changeDeployment({
+						deployed: true,
+						position: {
+							x: itemTemplate.roomDeviceDeployment.x,
+							y: itemTemplate.roomDeviceDeployment.y,
+							yOffset: itemTemplate.roomDeviceDeployment.yOffset,
+						},
+					});
+				}
+
+				loadedItems.push(item);
+			}
+		}
+
+		// Validate and add all items
+		const newItems = RoomInventoryLoadAndValidate(assetManager, loadedItems);
+
+		// Validate room geometry
+		let roomGeometryConfig: Immutable<RoomGeometryConfig> = CloneDeepMutable(template.roomGeometry);
+		let roomBackground = ResolveBackground(assetManager, roomGeometryConfig);
+		if (roomBackground == null) {
+			roomGeometryConfig = (spaceId != null ? ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE).roomGeometry;
+			roomBackground = ResolveBackground(assetManager, roomGeometryConfig);
+			AssertNotNullable(roomBackground);
+		}
+
+		// Create the final state
+		const resultState = freeze(new AssetFrameworkRoomState({
+			id,
+			assetManager,
+			name: template.name,
+			items: newItems,
+			position: CloneDeepMutable(position),
+			roomGeometryConfig,
+			roomBackground,
+		}), true);
+
+		Assert(resultState.isValid(), 'State is invalid after creation from template');
+
+		return resultState;
 	}
 
 	public static loadFromBundle(assetManager: AssetManager, bundle: Immutable<RoomBundle>, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkRoomState {

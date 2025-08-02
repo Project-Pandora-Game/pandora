@@ -96,14 +96,12 @@
 			}
 		}
 	}
+}
 
-	.roomConfiguration {
-		.backgroundInfo {
-			img {
-				max-width: min(24em, 33vw);
-				max-height: min(24em, 50vh);
-				object-fit: scale-down;
-			}
-		}
+.RoomConfigurationBackgroundPreview {
+	img, canvas {
+		max-width: min(24em, 33vw);
+		max-height: min(24em, 50vh);
+		object-fit: scale-down;
 	}
 }

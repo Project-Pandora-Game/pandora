@@ -270,7 +270,7 @@ interface GraphicsSceneBackgroundRendererProps extends Omit<GraphicsSceneRendere
 }
 
 const backgroundRenderingQueue = new CalculationQueue({
-	normal: 75,
+	normal: 25,
 });
 
 class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>> {

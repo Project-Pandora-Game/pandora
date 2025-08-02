@@ -258,6 +258,17 @@ export class CharacterRestrictionsManager {
 				type: 'safemodeInteractOther',
 			});
 		}
+
+		// Check distance to target (can interact with characters in current room and neighbor rooms)
+		const playerRoom = this.appearance.getCurrentRoom();
+		const targetRoom = target.getCurrentRoom();
+		if (playerRoom != null && targetRoom != null) {
+			if (playerRoom.getDistanceToRoom(targetRoom) > 1) {
+				context.addRestriction({ type: 'tooFar', subtype: 'characterInteraction' });
+			}
+		} else {
+			context.addRestriction({ type: 'invalid' });
+		}
 	}
 
 	public checkUseAsset(context: AppearanceActionProcessingContext, targetCharacter: ActionTargetCharacter | null, asset: Asset): void {

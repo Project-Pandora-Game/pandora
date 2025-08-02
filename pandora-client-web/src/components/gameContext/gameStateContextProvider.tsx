@@ -32,7 +32,6 @@ import {
 	PermissionConfig,
 	PermissionGroup,
 	PermissionSetup,
-	RoomInventory,
 	SpaceClientInfo,
 	SpaceFeature,
 	SpaceId,
@@ -40,6 +39,7 @@ import {
 	TypedEventEmitter,
 	ZodCast,
 	type AccountId,
+	type ActionRoomSelector,
 	type ActionTargetSelector,
 	type AppearanceAction,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
@@ -867,28 +867,11 @@ export function useCharacterState(globalState: AssetFrameworkGlobalState, id: Ch
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
 
-export function useRoomInventory(context: GameState): RoomInventory | null {
-	const state = useGlobalState(context);
-
-	return useMemo(() => (state.room ? new RoomInventory(state.room) : null), [state]);
-}
-
-export function useRoomInventoryItem(context: GameState, item: ItemPath | null | undefined): Item | undefined {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (item ? roomInventory?.getItem(item) : undefined), [roomInventory, item]);
-}
-
-export function useRoomInventoryItems(context: GameState): readonly Item[] {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
-}
-
 export type FindItemResultEntry = {
 	item: Item;
 	target: ActionTargetSelector;
 	path: ItemPath;
+	room: ActionRoomSelector;
 };
 export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
 const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
@@ -905,7 +888,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 	}
 	const result: Readonly<FindItemResultEntry>[] = [];
 
-	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath): void {
+	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath, room: ActionRoomSelector): void {
 		for (const item of items) {
 			if (item.id === id) {
 				result.push({
@@ -915,6 +898,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 						container,
 						itemId: item.id,
 					},
+					room,
 				});
 			}
 
@@ -922,15 +906,17 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 				processContainer(module.getContents(), target, [
 					...container,
 					{ item: item.id, module: moduleName },
-				]);
+				], room);
 			}
 		}
 	}
 
 	for (const character of globalState.characters.values()) {
-		processContainer(character.items, { type: 'character', characterId: character.id }, []);
+		processContainer(character.items, { type: 'character', characterId: character.id }, [], { type: 'room', roomId: character.currentRoom });
 	}
-	processContainer(globalState.room.items, { type: 'roomInventory' }, []);
+	for (const room of globalState.space.rooms) {
+		processContainer(room.items, { type: 'room', roomId: room.id }, [], { type: 'room', roomId: room.id });
+	}
 
 	freeze(result);
 	cache.set(id, result);

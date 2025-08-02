@@ -5,6 +5,7 @@ import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
 	AccountId,
+	AppearanceItemsBundleSchema,
 	ArrayToRecordKeys,
 	Assert,
 	AssertNotNullable,
@@ -19,7 +20,8 @@ import {
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
-	RoomInventoryBundleSchema,
+	RoomGeometryConfigSchema,
+	RoomBundleSchema,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
@@ -33,6 +35,7 @@ import {
 	ZodTemplateString,
 	type ICharacterDataShard,
 	type RoomGeometryConfig,
+	type SpaceStateBundle,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config.ts';
@@ -975,11 +978,11 @@ export default class MongoDatabase implements PandoraDatabase {
 					/** The ID of the background or custom data */
 					background: z.union([z.string(), z.object({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
 				}),
-				inventory: RoomInventoryBundleSchema.partial({ roomGeometry: true }),
+				inventory: RoomBundleSchema.partial().optional(),
 			}),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
 				for await (const space of oldStream) {
-					if (space == null || space.config.background == null)
+					if (space == null || space.inventory == null || space.config.background == null)
 						continue;
 
 					requireFullMigration = true;
@@ -1012,9 +1015,15 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 
 		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true, personalRoom: true }).extend({
+			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true }).extend({
 				roomId: SpaceIdSchema.nullable().catch(null).optional(),
 				position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
+				personalRoom: z.object({
+					inventory: z.object({
+						items: AppearanceItemsBundleSchema,
+						roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+					}),
+				}).optional(),
 			}),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
 				for await (const character of oldStream) {
@@ -1028,6 +1037,7 @@ export default class MongoDatabase implements PandoraDatabase {
 					if (newAppearance != null) {
 						newAppearance.position = {
 							type: 'normal',
+							room: 'room:default',
 							position: character.position,
 						};
 						newAppearance.space = character.roomId ?? null;
@@ -1048,6 +1058,106 @@ export default class MongoDatabase implements PandoraDatabase {
 							$set: {
 								appearance: newAppearance,
 								personalRoom: newPersonalRoom,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		//#endregion
+
+		//#region Multiple rooms per space (07/2025)
+
+		await spaceCollection.doManualMigration(this._client, this._db, {
+			oldSchema: SpaceDataSchema
+				.pick({ id: true, spaceState: true })
+				.partial({ spaceState: true })
+				.extend({
+					inventory: z.object({
+						items: AppearanceItemsBundleSchema,
+						roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+					}).optional(),
+				}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const space of oldStream) {
+					if (space == null || space.inventory == null || space.spaceState != null)
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating space ${space.id} for multiple rooms`);
+
+					const newSpaceState: SpaceStateBundle = {
+						rooms: [
+							{
+								id: 'room:default',
+								name: 'Unnamed room',
+								items: space.inventory.items,
+								position: { x: 0, y: 0 },
+								roomGeometry: space.inventory.roomGeometry,
+							},
+						],
+					};
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: space.id },
+						{
+							$unset: {
+								inventory: true,
+							},
+							$set: {
+								spaceState: newSpaceState,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDatabaseDataSchema
+				.pick({ id: true, personalSpace: true })
+				.partial({ personalSpace: true })
+				.extend({
+					personalRoom: z.object({
+						inventory: z.object({
+							items: AppearanceItemsBundleSchema,
+							roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+						}),
+					}).optional(),
+				}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null || character.personalRoom == null || character.personalSpace != null)
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character ${character.id} space for multiple rooms`);
+
+					const newSpaceState: SpaceStateBundle = {
+						rooms: [
+							{
+								id: 'room:default',
+								name: 'My personal room',
+								items: character.personalRoom.inventory.items,
+								position: { x: 0, y: 0 },
+								roomGeometry: character.personalRoom.inventory.roomGeometry,
+							},
+						],
+					};
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$unset: {
+								personalRoom: true,
+							},
+							$set: {
+								personalSpace: {
+									spaceState: newSpaceState,
+								},
 							},
 						},
 					);

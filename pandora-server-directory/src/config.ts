@@ -1,4 +1,4 @@
-import { CreateEnvParser, EnvTimeInterval } from 'pandora-common';
+import { CreateEnvParser, DirectoryStatusAnnouncementSchema, EnvTimeInterval } from 'pandora-common';
 import { z } from 'zod';
 
 export const EnvParser = CreateEnvParser({
@@ -19,6 +19,12 @@ export const EnvParser = CreateEnvParser({
 	ADMIN_ENDPOINT_TOKEN: z.string().default(''),
 	/** How many hops are we after a trusted reverse proxy */
 	TRUSTED_REVERSE_PROXY_HOPS: z.number().default(0),
+	/** If set, this data is sent as a notification announcement if there is no other announcement currently set. */
+	PANDORA_ANNOUNCEMENT_DEFAULT: z.preprocess((arg) => {
+		if (typeof arg !== 'string' || !arg)
+			return undefined;
+		return JSON.parse(arg);
+	}, DirectoryStatusAnnouncementSchema.optional()),
 
 	//#endregion
 
@@ -115,6 +121,12 @@ export const EnvParser = CreateEnvParser({
 	LOGIN_ATTEMPT_WINDOW: EnvTimeInterval().default('15m'),
 	/** Max failed login attempts before requiring a captcha */
 	LOGIN_ATTEMPT_LIMIT: z.number().int().positive().default(30),
+	/** Killswitch for registration */
+	PANDORA_DISABLE_REGISTRATION: z.boolean().default(false),
+	/** Killswitch for email verification and verification resend */
+	PANDORA_DISABLE_EMAIL_VERIFICATION: z.boolean().default(false),
+	/** Killswitch for password reset */
+	PANDORA_DISABLE_PASSWORD_RESET: z.boolean().default(false),
 
 	//#endregion
 });

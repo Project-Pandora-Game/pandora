@@ -24,7 +24,7 @@ type LoginCallback = (username: string, password: string, verificationToken?: st
  */
 type CreateNewCharacterCallback = () => Promise<boolean>;
 
-export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha';
+export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha' | 'failed';
 
 /**
  * Attempt to register a new account with the directory
@@ -51,7 +51,7 @@ type RegisterCallback = (
  * @param captchaToken - Captcha token, if required
  * @returns Promise of response from the directory
  */
-type ResendVerificationCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha'>;
+type ResendVerificationCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha' | 'failed'>;
 
 /**
  * Attempt to request a new verification email
@@ -69,7 +69,7 @@ type ResendVerificationAdvancedCallback = (username: string, password: string, e
  * @param captchaToken - Captcha token, if required
  * @returns Promise of response from the directory
  */
-type PasswordResetCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha'>;
+type PasswordResetCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha' | 'failed'>;
 
 /**
  * Reset a password using a token
@@ -80,7 +80,7 @@ type PasswordResetCallback = (email: string, captchaToken?: string) => Promise<'
  */
 type PasswordResetConfirmCallback = (username: string,
 	token: string,
-	password: string) => Promise<'ok' | 'unknownCredentials'>;
+	password: string) => Promise<'ok' | 'unknownCredentials' | 'failed'>;
 
 //#endregion
 

@@ -13,7 +13,7 @@ This is the same effect that some restraining items have.
 
 	applyCharacterEffects() {
 		return {
-			blockRoomLeave: true,
+			blockSpaceLeave: true,
 		};
 	},
 });

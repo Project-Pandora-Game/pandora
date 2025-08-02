@@ -5,7 +5,6 @@ import {
 	AppearanceActionProcessingResult,
 	AppearanceItems,
 	Assert,
-	AssertNever,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	Item,
@@ -25,19 +24,10 @@ export function useWardrobeTargetItems(target: ActionTargetSelector | null): App
 	const { globalState } = useWardrobeActionContext();
 
 	const items = useMemo<AppearanceItems | null>(() => {
-		if (target == null) {
+		if (target == null)
 			return null;
-		} else if (target.type === 'character') {
-			return globalState.getItems({
-				type: 'character',
-				characterId: target.characterId,
-			});
-		} else if (target.type === 'roomInventory') {
-			return globalState.getItems({
-				type: 'roomInventory',
-			});
-		}
-		AssertNever(target);
+
+		return globalState.getItems(target);
 	}, [globalState, target]);
 
 	return items ?? EMPTY_ARRAY;
@@ -108,6 +98,10 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		) {
 			warnings.push(`Storing an occupied room device will remove all characters from it`);
 		}
+	}
+
+	if (action.type === 'spaceRoomLayout' && action.subaction.type === 'deleteRoom') {
+		warnings.push(`Deleting a room deletes all items stored inside and cannot be easily undone`);
 	}
 
 	return warnings;

@@ -383,7 +383,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								In the middle of the character there is also third button that allows you to quickly switch to character posing mode.
 							</p>
 							<p>
-								Feel free to experiment with movingyour character and then click next.
+								Feel free to experiment with moving your character and then click next.
 							</p>
 						</>
 					),
@@ -577,6 +577,10 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								As chat is a core part of Pandora, it also is a powerful tool.<br />
 								While this tutorial will only introduce the basics, you can find more details about it in the <ExternalLink href='https://project-pandora.com/wiki/spaces'>"Spaces" wiki page</ExternalLink>.
+							</p>
+							<p>
+								<strong>Important note:</strong> The chat is shared space-wide and not only within the room you are currently inside.
+								That means that anything you write openly to characters you see in your room can also be seen by other users in other rooms of the same space.
 							</p>
 						</>
 					),

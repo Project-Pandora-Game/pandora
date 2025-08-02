@@ -1,10 +1,9 @@
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
-import { IntegerCoordinatesSchema, type Coordinates } from '../../../assets/graphics/common.ts';
-import { AssetFrameworkRoomState } from '../../../assets/state/roomState.ts';
-import { GenerateSpiralCurve } from '../../../math/spaceFillingCurves.ts';
-import { AssertNever } from '../../../utility/misc.ts';
+import { IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
+import { AssetFrameworkRoomState, RoomTemplateSchema } from '../../../assets/state/roomState.ts';
+import { AssertNever, CloneDeepMutable } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -13,6 +12,8 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 	subaction: z.discriminatedUnion('type', [
 		z.object({
 			type: z.literal('createRoom'),
+			template: RoomTemplateSchema,
+			position: IntegerCoordinatesSchema,
 		}),
 		z.object({
 			type: z.literal('deleteRoom'),
@@ -48,26 +49,16 @@ export function ActionSpaceRoomLayout({
 			if (playerRoom == null)
 				return null;
 
-			// Find a position for the room as closest free spot to the user
-			let position: Coordinates = { x: 0, y: 0 };
-			for (const c of GenerateSpiralCurve(playerRoom.position.x, playerRoom.position.y)) {
-				if (!s.rooms.some((r) => r.position.x === c.x && r.position.y === c.y)) {
-					position = c;
-					break;
-				}
-			}
-
 			return s.withRooms([
 				...s.rooms,
-				AssetFrameworkRoomState.loadFromBundle(s.assetManager, {
-					id: `room:${nanoid()}`,
-					name: '',
-					items: [],
-					position,
-					roomGeometry: {
-						type: 'defaultPublicSpace',
-					},
-				}, s.spaceId, undefined),
+				AssetFrameworkRoomState.createFromTemplate(
+					subaction.template,
+					`room:${nanoid()}`,
+					CloneDeepMutable(subaction.position),
+					processingContext.assetManager,
+					s.spaceId,
+					processingContext.player,
+				),
 			]);
 		})) {
 			return processingContext.invalid();

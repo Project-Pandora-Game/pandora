@@ -144,7 +144,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	 * What overflow style should be used for the dialog content
 	 * @default 'auto'
 	 */
-	contentOverflow?: 'auto' | 'hidden';
+	contentOverflow?: 'auto' | 'hidden' | 'clip';
 	/**
 	 * Whether to allow click events to bubble through to the parent or not.
 	 * @default false

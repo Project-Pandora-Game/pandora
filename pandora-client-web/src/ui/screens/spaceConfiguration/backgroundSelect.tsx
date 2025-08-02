@@ -78,14 +78,112 @@ const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: 
 	},
 };
 
+export function BackgroundSelectUi({ value, onChange, activeValue }: {
+	value: Immutable<RoomGeometryConfig>;
+	onChange: (newValue: Immutable<RoomGeometryConfig>) => void;
+	/** Value that is being used until the change is confirmed */
+	activeValue?: Immutable<RoomGeometryConfig>;
+}): ReactElement {
+	const assetManager = useAssetManager();
+	const id = useId();
+
+	return (
+		<div className='BackgroundSelect'>
+			<div className='header'>
+				<div className='header-filter'>
+					<span>Select a background for the room</span>
+				</div>
+			</div>
+			<Row alignY='center'>
+				<label htmlFor={ id + ':background-type' }>Background type:</label>
+				<Select
+					className='flex-1'
+					id={ id + ':background-type' }
+					value={ value.type }
+					onChange={ (e) => {
+						const type = e.target.value as RoomGeometryConfig['type'];
+						if (value.type === type)
+							return;
+
+						switch (type) {
+							case 'defaultPersonalSpace':
+							case 'defaultPublicSpace':
+								onChange({ type });
+								break;
+							case 'premade':
+								onChange({
+									type: 'premade',
+									id: ParseNotNullable(assetManager.getBackgrounds()[0]).id,
+								});
+								break;
+							case 'plain':
+								onChange(DEFAULT_PLAIN_BACKGROUND);
+								break;
+							case '3dBox':
+								onChange(DEFAULT_BACKGROUND_3D_BOX);
+								break;
+							default:
+								AssertNever(type);
+								break;
+						}
+					} }
+				>
+					<option value='3dBox'>Custom 3D box</option>
+					{
+							assetManager.getBackgrounds().length > 0 ? (
+								<option value='premade'>Static image background</option>
+							) : null
+					}
+					<option value='plain'>Solid-color background</option>
+					<option value='defaultPublicSpace'>Default background for new spaces</option>
+					<option value='defaultPersonalSpace'>Default background for personal space</option>
+				</Select>
+			</Row>
+			{
+					value.type === 'defaultPersonalSpace' ? (
+						null
+					) :
+					value.type === 'defaultPublicSpace' ? (
+						null
+					) :
+					value.type === 'premade' ? (
+						<BackgroundSelectDialogPremade
+							current={ activeValue }
+							selectedBackground={ value }
+							setSelectedBackground={ onChange }
+						/>
+					) :
+					value.type === 'plain' ? (
+						<Column className='solidBackgroundOptions' padding='medium'>
+							<label>Background color</label>
+							<Row alignY='center'>
+								<ColorInput
+									initialValue={ value.image }
+									onChange={ (color) => onChange({ ...value, image: color }) }
+									title='Background color'
+									classNameTextInput='flex-1'
+								/>
+							</Row>
+						</Column>
+					) :
+					value.type === '3dBox' ? (
+						<BackgroundSelectDialog3dBox
+							current={ activeValue }
+							selectedBackground={ value }
+							setSelectedBackground={ onChange }
+						/>
+					) :
+					AssertNever(value.type)
+			}
+		</div>
+	);
+}
+
 export function BackgroundSelectDialog({ hide, room, current }: {
 	hide: () => void;
 	room: RoomId;
 	current: Immutable<RoomGeometryConfig>;
-}): ReactElement | null {
-	const assetManager = useAssetManager();
-	const id = useId();
-
+}): ReactElement {
 	const [selectedBackground, setSelectedBackground] = useState<Immutable<RoomGeometryConfig>>(current);
 
 	const updateBackgroundAction = useMemo((): AppearanceAction => ({
@@ -95,95 +193,14 @@ export function BackgroundSelectDialog({ hide, room, current }: {
 	}), [room, selectedBackground]);
 
 	return (
-		<ModalDialog position='top'>
-			<div className='backgroundSelect'>
-				<div className='header'>
-					<div className='header-filter'>
-						<span>Select a background for the room</span>
-					</div>
-				</div>
-				<Row alignY='center'>
-					<label htmlFor={ id + ':background-type' }>Background type:</label>
-					<Select
-						className='flex-1'
-						id={ id + ':background-type' }
-						value={ selectedBackground.type }
-						onChange={ (e) => {
-							const type = e.target.value as RoomGeometryConfig['type'];
-							if (selectedBackground.type === type)
-								return;
-
-							switch (type) {
-								case 'defaultPersonalSpace':
-								case 'defaultPublicSpace':
-									setSelectedBackground({ type });
-									break;
-								case 'premade':
-									setSelectedBackground({
-										type: 'premade',
-										id: ParseNotNullable(assetManager.getBackgrounds()[0]).id,
-									});
-									break;
-								case 'plain':
-									setSelectedBackground(DEFAULT_PLAIN_BACKGROUND);
-									break;
-								case '3dBox':
-									setSelectedBackground(DEFAULT_BACKGROUND_3D_BOX);
-									break;
-								default:
-									AssertNever(type);
-									break;
-							}
-						} }
-					>
-						<option value='3dBox'>Custom 3D box</option>
-						{
-							assetManager.getBackgrounds().length > 0 ? (
-								<option value='premade'>Static image background</option>
-							) : null
-						}
-						<option value='plain'>Solid-color background</option>
-						<option value='defaultPublicSpace'>Default background for new spaces</option>
-						<option value='defaultPersonalSpace'>Default background for personal space</option>
-					</Select>
-				</Row>
-				{
-					selectedBackground.type === 'defaultPersonalSpace' ? (
-						null
-					) :
-					selectedBackground.type === 'defaultPublicSpace' ? (
-						null
-					) :
-					selectedBackground.type === 'premade' ? (
-						<BackgroundSelectDialogPremade
-							current={ current }
-							selectedBackground={ selectedBackground }
-							setSelectedBackground={ setSelectedBackground }
-						/>
-					) :
-					selectedBackground.type === 'plain' ? (
-						<Column className='solidBackgroundOptions' padding='medium'>
-							<label>Background color</label>
-							<Row alignY='center'>
-								<ColorInput
-									initialValue={ selectedBackground.image }
-									onChange={ (color) => setSelectedBackground({ ...selectedBackground, image: color }) }
-									title='Background color'
-									classNameTextInput='flex-1'
-								/>
-							</Row>
-						</Column>
-					) :
-					selectedBackground.type === '3dBox' ? (
-						<BackgroundSelectDialog3dBox
-							current={ current }
-							selectedBackground={ selectedBackground }
-							setSelectedBackground={ setSelectedBackground }
-						/>
-					) :
-					AssertNever(selectedBackground.type)
-				}
-				<Row className='footer' alignX='space-between' wrap>
+		<ModalDialog position='top' priority={ 3 }>
+			<Column>
+				<BackgroundSelectUi
+					value={ selectedBackground }
+					onChange={ setSelectedBackground }
+					activeValue={ current }
+				/>
+				<Row className='fill-x' alignX='space-between' wrap>
 					<Button onClick={ hide }>Cancel</Button>
 					<GameLogicActionButton
 						action={ updateBackgroundAction }
@@ -192,13 +209,13 @@ export function BackgroundSelectDialog({ hide, room, current }: {
 						Update room background
 					</GameLogicActionButton>
 				</Row>
-			</div>
+			</Column>
 		</ModalDialog>
 	);
 }
 
 function BackgroundSelectDialogPremade({ current, selectedBackground, setSelectedBackground }: {
-	current: Immutable<RoomGeometryConfig>;
+	current?: Immutable<RoomGeometryConfig>;
 	selectedBackground: Extract<Immutable<RoomGeometryConfig>, { type: 'premade'; }>;
 	setSelectedBackground: (newBackground: Immutable<RoomGeometryConfig>) => void;
 }): ReactElement {
@@ -252,7 +269,7 @@ function BackgroundSelectDialogPremade({ current, selectedBackground, setSelecte
 						<SelectionIndicator key={ b.id }
 							padding='tiny'
 							selected={ selectedBackground.type === 'premade' && selectedBackground.id === b.id }
-							active={ current.type === 'premade' && current.id === b.id }
+							active={ current?.type === 'premade' && current.id === b.id }
 						>
 							<Button
 								className='fill'
@@ -282,7 +299,7 @@ function BackgroundSelectDialogPremade({ current, selectedBackground, setSelecte
 }
 
 function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedBackground }: {
-	current: Immutable<RoomGeometryConfig>;
+	current?: Immutable<RoomGeometryConfig>;
 	selectedBackground: Extract<Immutable<RoomGeometryConfig>, { type: '3dBox'; }>;
 	setSelectedBackground: (newBackground: Immutable<RoomGeometryConfig>) => void;
 }): ReactElement {
@@ -458,7 +475,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				/>
 				<BackgroundSelectDialog3dBoxSide
 					title='▲ Ceiling'
-					current={ current.type === '3dBox' ? current.graphics.ceiling : null }
+					current={ current?.type === '3dBox' ? current.graphics.ceiling : null }
 					value={ selectedBackground.graphics.ceiling }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
@@ -471,7 +488,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				<Checkbox checked readOnly onChange={ noop } />
 				<BackgroundSelectDialog3dBoxSide
 					title='■ Back wall'
-					current={ current.type === '3dBox' ? current.graphics.wallBack : null }
+					current={ current?.type === '3dBox' ? current.graphics.wallBack : null }
 					value={ selectedBackground.graphics.wallBack }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
@@ -491,7 +508,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				/>
 				<BackgroundSelectDialog3dBoxSide
 					title='◀ Left wall'
-					current={ current.type === '3dBox' ? current.graphics.wallLeft : null }
+					current={ current?.type === '3dBox' ? current.graphics.wallLeft : null }
 					value={ selectedBackground.graphics.wallLeft }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
@@ -511,7 +528,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				/>
 				<BackgroundSelectDialog3dBoxSide
 					title='▶ Right wall'
-					current={ current.type === '3dBox' ? current.graphics.wallRight : null }
+					current={ current?.type === '3dBox' ? current.graphics.wallRight : null }
 					value={ selectedBackground.graphics.wallRight }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
@@ -524,7 +541,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				<Checkbox checked readOnly onChange={ noop } />
 				<BackgroundSelectDialog3dBoxSide
 					title='▼ Floor'
-					current={ current.type === '3dBox' ? current.graphics.floor : null }
+					current={ current?.type === '3dBox' ? current.graphics.floor : null }
 					value={ selectedBackground.graphics.floor }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
@@ -601,8 +618,8 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 	const assetManager = useAssetManager();
 
 	return (
-		<ModalDialog position='top'>
-			<div className='backgroundSelect'>
+		<ModalDialog position='top' priority={ 4 }>
+			<div className='BackgroundSelect'>
 				<div className='header'>
 					<div className='header-filter'>
 						<span>Select a texture for { title.toLowerCase() }</span>

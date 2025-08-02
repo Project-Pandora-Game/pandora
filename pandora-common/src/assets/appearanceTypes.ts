@@ -85,8 +85,9 @@ export interface ActionTargetCharacter extends ActionTargetBase {
 	getCurrentRoom(): AssetFrameworkRoomState | null;
 }
 
-export interface ActionTargetRoomInventory extends ActionTargetBase {
-	readonly type: 'roomInventory';
+export interface ActionTargetRoom extends ActionTargetBase {
+	readonly type: 'room';
+	readonly roomState: AssetFrameworkRoomState;
 }
 
-export type ActionTarget = ActionTargetCharacter | ActionTargetRoomInventory;
+export type ActionTarget = ActionTargetCharacter | ActionTargetRoom;

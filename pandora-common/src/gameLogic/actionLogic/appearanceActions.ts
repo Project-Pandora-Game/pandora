@@ -1,11 +1,11 @@
 import { freeze, type Immutable } from 'immer';
-import type { GameLogicCharacter } from '../index.ts';
+import { ActionMessageTemplateHandler, ActionTarget } from '../../assets/appearanceTypes.ts';
 import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets/index.ts';
-import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes.ts';
 import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
 import { CharacterId } from '../../character/characterTypes.ts';
 import type { ActionSpaceContext } from '../../space/space.ts';
+import type { GameLogicCharacter } from '../index.ts';
 import { ApplyAction, type AppearanceAction } from './actions/_index.ts';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext.ts';
 
@@ -32,8 +32,6 @@ export interface AppearanceModuleActionContext {
 	item: Item;
 	/** The name of the module the action is being performed on */
 	moduleName: string;
-	/** Character that should be checked for manipulation permissions */
-	targetCharacter: ActionTargetCharacter | null;
 
 	messageHandler: ActionMessageTemplateHandler;
 	addProblem: (problem: ModuleActionProblem) => void;

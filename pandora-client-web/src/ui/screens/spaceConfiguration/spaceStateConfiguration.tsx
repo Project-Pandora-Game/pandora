@@ -1,33 +1,45 @@
 import classNames from 'classnames';
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
+	AssertNotNullable,
 	CloneDeepMutable,
+	GenerateSpiralCurve,
 	LIMIT_ROOM_NAME_LENGTH,
+	ResolveBackground,
 	RoomId,
 	RoomNameSchema,
+	RoomTemplateSchema,
+	type AppearanceAction,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type AssetFrameworkSpaceState,
 	type Coordinates,
 	type RoomBackgroundData,
+	type RoomTemplate,
 } from 'pandora-common';
 import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import exportIcon from '../../../assets/icons/export.svg';
+import importIcon from '../../../assets/icons/import.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
+import { useCharacterAppearance } from '../../../character/character.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column, Row } from '../../../components/common/container/container.tsx';
+import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { ExportDialog } from '../../../components/exportImport/exportDialog.tsx';
+import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
-import { BackgroundSelectDialog } from './backgroundSelect.tsx';
+import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
 import './spaceStateConfiguration.scss';
 
 export type SpaceStateConfigurationUiProps = {
@@ -38,6 +50,7 @@ export function SpaceStateConfigurationUi({
 	globalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
 	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(globalState.space.rooms.length === 1 ? globalState.space.rooms[0].id : null);
+	const [showRoomCreation, setShowRoomCreation] = useState(false);
 
 	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
 
@@ -72,19 +85,29 @@ export function SpaceStateConfigurationUi({
 							</button>
 						))
 					}
-					<GameLogicActionButton
-						className='roomListItem'
-						action={ {
-							type: 'spaceRoomLayout',
-							subaction: {
-								type: 'createRoom',
-							},
+					<button
+						className={ classNames(
+							'wardrobeActionButton',
+							'roomListItem',
+							showRoomCreation ? 'selected' : null,
+							'allowed',
+						) }
+						onClick={ () => {
+							setShowRoomCreation(true);
 						} }
 					>
 						<img src={ plusIcon } className='icon' alt='Create room' />
 						<span className='name'>Create a new room</span>
-					</GameLogicActionButton>
+					</button>
 				</Column>
+				{ showRoomCreation ? (
+					<RoomCreation
+						globalState={ globalState }
+						close={ () => {
+							setShowRoomCreation(false);
+						} }
+					/>
+				) : null }
 			</Row>
 			<hr className='fill-x' />
 			<Column className='fill-x flex-1 contain-size' alignX='center'>
@@ -126,8 +149,6 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 	const roomGridDiv = useRef<HTMLDivElement>(null);
 	const suppressScroll = useRef<RoomId>(null);
 
-	const previewSize = 256 * (window.devicePixelRatio || 1);
-
 	const selectedRoomState = selectedRoom != null ? spaceState.getRoom(selectedRoom) : null;
 	const { x: selectedX, y: selectedY } = selectedRoomState?.position ?? { x: 0, y: 0 };
 	useEffect(() => {
@@ -147,10 +168,6 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 		<div className='RoomGrid' ref={ roomGridDiv }>
 			{
 				spaceState.rooms.map((r) => {
-					const previewScale = Math.min(previewSize / r.roomBackground.imageSize[0], previewSize / r.roomBackground.imageSize[1]);
-					const previewSizeX = Math.ceil(previewScale * r.roomBackground.imageSize[0]);
-					const previewSizeY = Math.ceil(previewScale * r.roomBackground.imageSize[1]);
-
 					return (
 						<SelectionIndicator
 							key={ r.id }
@@ -170,23 +187,7 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>
-								<GraphicsSceneBackgroundRenderer
-									renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
-									resolution={ 1 }
-									backgroundColor={ 0x000000 }
-									backgroundAlpha={ 0 }
-									forwardContexts={ [serviceManagerContext] }
-								>
-									<Container
-										scale={ { x: previewScale, y: previewScale } }
-										x={ (previewSizeX - previewScale * r.roomBackground.imageSize[0]) / 2 }
-										y={ (previewSizeY - previewScale * r.roomBackground.imageSize[1]) / 2 }
-									>
-										<GraphicsBackground
-											background={ r.roomBackground }
-										/>
-									</Container>
-								</GraphicsSceneBackgroundRenderer>
+								<BackgroundPreview background={ r.roomBackground } previewSize={ 256 * (window.devicePixelRatio || 1) } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
 								<span className='label'>{ r.name || r.id }</span>
 							</Button>
@@ -262,6 +263,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 					>
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
+					<RoomExportButton roomState={ roomState } />
 				</Row>
 				{
 					isEntryRoom ? (
@@ -329,27 +331,249 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						</GameLogicActionButton>
 					</Row>
 				</Column>
-				<BackgroundInfo background={ roomState.roomBackground } />
-				<Button
-					onClick={ () => setShowBackgrounds(true) }
-				>
-					Select a background
-				</Button>
+				<Row alignY='start'>
+					<Button
+						onClick={ () => setShowBackgrounds(true) }
+					>
+						Select a background
+					</Button>
+					<BackgroundPreview
+						background={ roomState.roomBackground }
+						previewSize={ 384 * (window.devicePixelRatio || 1) }
+						className='flex-1'
+					/>
+				</Row>
 			</Column>
 		</fieldset>
 	);
 }
 
-function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundData>; }): ReactElement | null {
-	if (background.graphics.type !== 'image' || background.graphics.image.startsWith('#')) {
-		return null;
+function RoomCreation({ globalState, close }: {
+	globalState: AssetFrameworkGlobalState;
+	close: () => void;
+}): ReactElement {
+	const id = useId();
+	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [showImportDialog, setShowImportDialog] = useState(false);
+
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const playerAppearance = useCharacterAppearance(globalState, player);
+
+	const [roomTemplate, setRoomTemplate] = useState((): RoomTemplate => ({
+		name: '',
+		items: [],
+		roomGeometry: {
+			type: 'defaultPublicSpace',
+		},
+	}));
+	const [position, setPosition] = useState((): Immutable<Coordinates> => {
+		const playerRoom = playerAppearance.getCurrentRoom();
+
+		for (const c of GenerateSpiralCurve(playerRoom?.position.x ?? 0, playerRoom?.position.y ?? 0)) {
+			if (!globalState.space.rooms.some((r) => r.position.x === c.x && r.position.y === c.y)) {
+				return c;
+			}
+		}
+
+		return { x: 0, y: 0 };
+	});
+
+	const nameValueError = FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(roomTemplate.name);
+	const roomBackground = useMemo(() => ResolveBackground(globalState.assetManager, roomTemplate.roomGeometry), [globalState.assetManager, roomTemplate.roomGeometry]);
+
+	const newRoomAction = useMemo((): AppearanceAction => ({
+		type: 'spaceRoomLayout',
+		subaction: {
+			type: 'createRoom',
+			template: CloneDeepMutable(roomTemplate),
+			position: CloneDeepMutable(position),
+		},
+	}), [roomTemplate, position]);
+
+	if (showImportDialog) {
+		return (
+			<ImportDialog
+				expectedType='RoomTemplate'
+				expectedVersion={ 1 }
+				dataSchema={ RoomTemplateSchema }
+				closeDialog={ () => {
+					setShowImportDialog(false);
+				} }
+				onImport={ (importData) => {
+					setRoomTemplate(importData);
+					setShowImportDialog(false);
+				} }
+			/>
+		);
 	}
 
 	return (
-		<Row alignX='center' className='backgroundInfo'>
-			<div className='preview'>
-				<img src={ GetAssetsSourceUrl() + background.graphics.image } />
-			</div>
-		</Row>
+		<ModalDialog priority={ 1 } position='top'>
+			{ showBackgrounds ? (
+				<ModalDialog position='top' priority={ 3 }>
+					<BackgroundSelectUi
+						value={ roomTemplate.roomGeometry }
+						onChange={ (newGeometry) => {
+							setRoomTemplate((v) => produce(v, (d) => {
+								d.roomGeometry = CloneDeepMutable(newGeometry);
+							}));
+						} }
+					/>
+					<Row className='fill-x' padding='medium' alignX='space-around'>
+						<Button
+							onClick={ () => {
+								setShowBackgrounds(false);
+							} }>
+							Close
+						</Button>
+					</Row>
+				</ModalDialog>
+			) : null }
+			<Column>
+				<Row padding='medium' alignX='end'>
+					<Button
+						onClick={ () => setShowImportDialog(true) }
+					>
+						<img src={ importIcon } alt='Import' crossOrigin='anonymous' /> Import
+					</Button>
+				</Row>
+				<Column>
+					<Row alignY='center'>
+						<label htmlFor={ id + ':room-name' }>Room name</label>
+						<TextInput
+							id={ id + ':room-name' }
+							value={ roomTemplate.name }
+							onChange={ (newValue) => {
+								setRoomTemplate((t) => produce(t, (d) => {
+									d.name = newValue;
+								}));
+							} }
+						/>
+					</Row>
+					{ nameValueError ? (
+						<FormError error={ nameValueError } />
+					) : null }
+				</Column>
+				<Column>
+					<Row alignY='center'>
+						<label>Room position</label>
+						<NumberInput
+							className='zero-width flex-1'
+							value={ position.x }
+							onChange={ (x) => {
+								setPosition({
+									...position,
+									x,
+								});
+							} }
+						/>
+						<NumberInput
+							className='zero-width flex-1'
+							value={ position.y }
+							onChange={ (y) => {
+								setPosition({
+									...position,
+									y,
+								});
+							} }
+						/>
+					</Row>
+				</Column>
+				<Row alignY='start'>
+					<Button
+						onClick={ () => setShowBackgrounds(true) }
+					>
+						Select a background
+					</Button>
+					<BackgroundPreview
+						background={ roomBackground }
+						previewSize={ 384 * (window.devicePixelRatio || 1) }
+						className='flex-1'
+					/>
+				</Row>
+				<Row alignX='space-between' padding='medium'>
+					<Button
+						onClick={ close }
+					>
+						Cancel
+					</Button>
+					<GameLogicActionButton
+						action={ newRoomAction }
+						onExecute={ close }
+						disabled={ nameValueError != null }
+					>
+						Create room
+					</GameLogicActionButton>
+				</Row>
+			</Column>
+		</ModalDialog>
+	);
+}
+
+function BackgroundPreview({ background, previewSize, className }: {
+	background: Immutable<RoomBackgroundData> | null;
+	previewSize: number;
+	className?: string;
+}): ReactElement | null {
+	if (background == null) {
+		return null;
+	}
+
+	const previewScale = Math.min(previewSize / background.imageSize[0], previewSize / background.imageSize[1]);
+	const previewSizeX = Math.ceil(previewScale * background.imageSize[0]);
+	const previewSizeY = Math.ceil(previewScale * background.imageSize[1]);
+
+	return (
+		<DivContainer className={ classNames('RoomConfigurationBackgroundPreview', className) }>
+			<GraphicsSceneBackgroundRenderer
+				renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
+				resolution={ 1 }
+				backgroundColor={ 0x000000 }
+				backgroundAlpha={ 0 }
+				forwardContexts={ [serviceManagerContext] }
+			>
+				<Container
+					scale={ { x: previewScale, y: previewScale } }
+					x={ (previewSizeX - previewScale * background.imageSize[0]) / 2 }
+					y={ (previewSizeY - previewScale * background.imageSize[1]) / 2 }
+				>
+					<GraphicsBackground
+						background={ background }
+					/>
+				</Container>
+			</GraphicsSceneBackgroundRenderer>
+		</DivContainer>
+	);
+}
+
+function RoomExportButton({ roomState }: {
+	roomState: AssetFrameworkRoomState;
+}): ReactElement {
+	const [showExportDialog, setShowExportDialog] = useState(false);
+	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
+
+	return (
+		<>
+			<button
+				className='wardrobeActionButton allowed'
+				onClick={ () => {
+					setShowExportDialog(true);
+				} }
+			>
+				<img src={ exportIcon } alt='Export room' />&nbsp;Export
+			</button>
+			{
+				showExportDialog ? (
+					<ExportDialog
+						exportType='RoomTemplate'
+						exportVersion={ 1 }
+						dataSchema={ RoomTemplateSchema }
+						data={ roomTemplate }
+						closeDialog={ () => setShowExportDialog(false) }
+					/>
+				) : null
+			}
+		</>
 	);
 }

@@ -98,7 +98,7 @@
 
 //#region Overflow
 
-@each $type in (visible, hidden, auto, scroll) {
+@each $type in (visible, hidden, clip, auto, scroll) {
 	.overflow-#{$type} {
 		overflow: $type;
 	}

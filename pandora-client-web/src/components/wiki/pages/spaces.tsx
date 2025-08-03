@@ -57,14 +57,18 @@ export function WikiSpaces(): ReactElement {
 				This grid is also used to move between rooms and can be found under the "Room"-tab. A character can only move to a room that is a direct
 				neighbor of the current room in the four cardinal directions. So, for instance, if there is a gap on the grid between the current room and the room to the west, you
 				cannot move to that room, unless there is another path through a chain of rooms. Admins of a space can freely move their character
-				or other characters, though.<br />
+				or other characters, though. They can also interact with all room inventories from everywhere.<br />
 				Note that rooms are not a privacy barrier and the chat is space-wide, so every message can be seen from every room of the same space.
 				If you want privacy or hide something or someone, you should use a space that is private.<br />
-				Interactions with other characters, such as wardrobe changes or making them follow, are only possible if both characters are within the same room
-				or in a directly neighboring room. But you can still see the location of every character from everywhere, can open their profile, or preview how they
-				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.<br />
-				Room designs can also be exported and imported as a template - so you can swap empty rooms at any time.
+				Interactions with rooms or characters in those rooms are only possible if you are in that room or in a directly neighboring room.
+				But you can still see the location of every character from everywhere, can open their profile, or preview how they
+				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.
 			</p>
+			<ul>
+				<li>The ordered list of rooms next to the room grid in the space configuration's room management view is there to define the order of the listed rooms under the "Room"-tab</li>
+				<li>In that ordered room list in the room management view, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
+				<li>Room designs can also be exported and imported as a template when creating a new room</li>
+			</ul>
 
 			<h4 id='SP_Space_ownership'>Space ownership</h4>
 			<p>
@@ -246,10 +250,12 @@ export function WikiSpaces(): ReactElement {
 				by the space configuration, or the <Link to='/wiki/characters#CH_Character_permissions'>character permissions</Link> of the targeted character.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
 				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving
-				up <Link to='#SP_Space_ownership'>ownership</Link> of a space.
+				up <Link to='#SP_Space_ownership'>ownership</Link> of a space.<br />
 				Clicking on an item in the list opens its edit-view on the right
-				side. <Link to='/wiki/items#IT_Room-level_items'>Room devices</Link> can be deployed to the room background in the edit-view by permitted parties.
-				You can also move items from one room to another, inside the same space.
+				side. <Link to='/wiki/items#IT_Room-level_items'>Room devices</Link> can be deployed to the room background by admins of that space.
+				You can also move items from one room to another, inside the same space.<br />
+				Note that admins can interact with any room inventory from anywhere in the same space, but other users can only interact with the inventory of
+				the room their character is inside, as well as with the room inventories of directly neighboring rooms in the four cardinal directions.
 			</p>
 
 		</>

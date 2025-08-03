@@ -3,7 +3,6 @@ import { isEqual } from 'lodash-es';
 import {
 	ActionTargetSelector,
 	AppearanceAction,
-	AppearanceActionProcessingContext,
 	AppearanceItems,
 	AppearanceItemsCalculateTotalCount,
 	AssertNever,
@@ -15,26 +14,26 @@ import {
 	ITEM_LIMIT_ROOM_INVENTORY,
 	ItemContainerPath,
 	ItemId,
-	ItemInteractionType,
 	ItemPath,
 	SplitContainerPath,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
-import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import storageIcon from '../../../assets/icons/storage.svg';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../common/button/button.tsx';
-import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeHeldItem } from '../wardrobeTypes.ts';
-import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils.ts';
+import { useWardrobeContainerAccessCheck, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils.ts';
 
 export function InventoryItemView({
 	className,
@@ -45,7 +44,6 @@ export function InventoryItemView({
 	title: string;
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
-	const { actions, globalState } = useWardrobeActionContext();
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const { targetSelector, heldItem, focuser } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
@@ -53,21 +51,7 @@ export function InventoryItemView({
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigatePandora();
 
-	const containerAccessCheckInitial = useMemo(() => {
-		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		const actionTarget = processingContext.getTarget(targetSelector);
-		if (actionTarget == null)
-			return processingContext.invalid();
-
-		const containerPath = SplitContainerPath(focus.container);
-		if (containerPath != null) {
-			processingContext.checkCanUseItemModule(actionTarget, containerPath.itemPath, containerPath.module, ItemInteractionType.MODIFY);
-		}
-
-		return processingContext.finalize();
-	}, [actions, globalState, targetSelector, focus]);
-
-	const containerAccessCheck = useCheckAddPermissions(containerAccessCheckInitial);
+	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, focus.container);
 
 	const [displayedItems, containerModule, containerSteps] = useMemo<[AppearanceItems, IItemModule | undefined, readonly string[]]>(() => {
 		let items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
@@ -142,55 +126,77 @@ export function InventoryItemView({
 					</Button>
 					: '' }
 			</div>
+			<Column className='flex-1' overflowX='clip' overflowY='auto'>
+				<InventoryItemViewContent
+					targetSelector={ targetSelector }
+					container={ focus.container }
+					containerModule={ containerModule }
+					items={ displayedItems }
+				>
+					{
+						heldItem.type !== 'nothing' ? (
+							<div className='overlay' />
+						) : null
+					}
+				</InventoryItemViewContent>
+			</Column>
+		</div>
+	);
+}
+
+function InventoryItemViewContent({ children, targetSelector, container, containerModule, items }: {
+	children?: ReactNode;
+	targetSelector: ActionTargetSelector;
+	container: ItemContainerPath;
+	containerModule: IItemModule | undefined;
+	items: AppearanceItems;
+}): ReactElement {
+	const { heldItem, focuser } = useWardrobeContext();
+	const focus = useObservable(focuser.current);
+
+	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, container);
+
+	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
+
+	return containerAccessCheck.valid ? (
+		<div className='list reverse withDropButtons'>
+			{ children }
 			{
-				containerAccessCheck.valid ? (
-					<div className='Scrollbar'>
-						<div className='list reverse withDropButtons'>
+				items.map((i) => (
+					<React.Fragment key={ i.id }>
+						<div className='overlayDropContainer'>
 							{
 								heldItem.type !== 'nothing' ? (
-									<div className='overlay' />
+									<InventoryItemViewDropArea
+										target={ targetSelector }
+										container={ container }
+										insertBefore={ i.id }
+									/>
 								) : null
 							}
-							{
-								displayedItems.map((i) => (
-									<React.Fragment key={ i.id }>
-										<div className='overlayDropContainer'>
-											{
-												heldItem.type !== 'nothing' ? (
-													<InventoryItemViewDropArea
-														target={ targetSelector }
-														container={ focus.container }
-														insertBefore={ i.id }
-													/>
-												) : null
-											}
-										</div>
-										<InventoryItemViewList
-											item={ { container: focus.container, itemId: i.id } }
-											selected={ i.id === focus.itemId }
-											singleItemContainer={ singleItemContainer }
-										/>
-									</React.Fragment>
-								))
-							}
-							<div className='overlayDropContainer'>
-								{
-									heldItem.type !== 'nothing' ? (
-										<InventoryItemViewDropArea
-											target={ targetSelector }
-											container={ focus.container }
-										/>
-									) : null
-								}
-							</div>
 						</div>
-					</div>
-				) : (
-					<div className='flex-1 center-flex'>
-						<strong className='wardrobeProblemMessage'>You are not allowed to view the contents of this container.</strong>
-					</div>
-				)
+						<InventoryItemViewList
+							item={ { container, itemId: i.id } }
+							selected={ isEqual(focus.container, container) && i.id === focus.itemId }
+							singleItemContainer={ singleItemContainer }
+						/>
+					</React.Fragment>
+				))
 			}
+			<div className='overlayDropContainer'>
+				{
+					heldItem.type !== 'nothing' ? (
+						<InventoryItemViewDropArea
+							target={ targetSelector }
+							container={ container }
+						/>
+					) : null
+				}
+			</div>
+		</div>
+	) : (
+		<div className='flex-1 center-flex'>
+			<strong className='wardrobeProblemMessage'>You are not allowed to view the contents of this container.</strong>
 		</div>
 	);
 }
@@ -291,6 +297,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 	const { targetSelector, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const extraActions = useObservable(extraItemActions);
+	const [showContent, setShowContent] = useState(false);
 
 	const ref = useRef<HTMLDivElement>(null);
 	useEffect(() => {
@@ -316,77 +323,148 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 	}
 
 	const asset = wornItem.asset;
+	const storageModuleName = asset.definition.storageModule;
+	const storageModule = storageModuleName != null ? wornItem.getModules().get(storageModuleName) : undefined;
 
 	return (
-		<div ref={ ref } tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
-			if (singleItemContainer)
-				return;
+		<Column gap='none'>
+			<div ref={ ref } tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
+				if (singleItemContainer)
+					return;
 
-			focuser.focus({
-				container: item.container,
-				itemId: selected ? null : item.itemId,
-			}, targetSelector);
-		} }>
-			{
-				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
-			}
-			<InventoryAssetPreview asset={ asset } small={ true } />
-			<WardrobeItemName item={ wornItem } />
-			<div className='quickActions'>
+				focuser.focus({
+					container: item.container,
+					itemId: selected ? null : item.itemId,
+				}, targetSelector);
+			} }>
 				{
-					singleItemContainer ? null : (
-						asset.isType('bodypart') ? (
-							<>
-								<WardrobeActionButton action={ {
-									type: 'move',
-									target: targetSelector,
-									item,
-									shift: 1,
-								} } autohide hideReserveSpace>
-									▲
-								</WardrobeActionButton>
-								<WardrobeActionButton action={ {
-									type: 'move',
-									target: targetSelector,
-									item,
-									shift: -1,
-								} } autohide hideReserveSpace>
-									▼
-								</WardrobeActionButton>
-							</>
-						) : null
-					)
+					ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 				}
-				{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
+				<InventoryAssetPreview asset={ asset } small={ true } />
+				<WardrobeItemName item={ wornItem } />
+				<div className='quickActions'>
+					{ storageModuleName != null && storageModule != null ? (
+						<ViewStorageButton
+							showContent={ showContent }
+							setShowContent={ setShowContent }
+							targetSelector={ targetSelector }
+							container={ [
+								...item.container,
+								{
+									item: item.itemId,
+									module: storageModuleName,
+								},
+							] }
+						/>
+					) : null }
+					{
+						singleItemContainer ? null : (
+							asset.isType('bodypart') ? (
+								<>
+									<WardrobeActionButton action={ {
+										type: 'move',
+										target: targetSelector,
+										item,
+										shift: 1,
+									} } autohide hideReserveSpace>
+										▲
+									</WardrobeActionButton>
+									<WardrobeActionButton action={ {
+										type: 'move',
+										target: targetSelector,
+										item,
+										shift: -1,
+									} } autohide hideReserveSpace>
+										▼
+									</WardrobeActionButton>
+								</>
+							) : null
+						)
+					}
+					{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
+					{
+						singleItemContainer ? null : (
+							<button
+								className='wardrobeActionButton allowed'
+								onClick={ (ev) => {
+									ev.stopPropagation();
+									setHeldItem(heldItemSelector);
+								} }
+							>
+								<img src={ arrowAllIcon } alt='Quick-action mode' />
+							</button>
+						)
+					}
+				</div>
 				{
-					singleItemContainer ? null : (
-						<button
-							className='wardrobeActionButton allowed'
+					isHeld ? (
+						<div
+							className='overlayDrop inventoryViewItem allowed'
+							tabIndex={ 0 }
 							onClick={ (ev) => {
+								ev.preventDefault();
 								ev.stopPropagation();
-								setHeldItem(heldItemSelector);
+								setHeldItem({ type: 'nothing' });
 							} }
 						>
-							<img src={ arrowAllIcon } alt='Quick-action mode' />
-						</button>
-					)
+							Cancel
+						</div>
+					) : null
 				}
 			</div>
-			{
-				isHeld ? (
-					<div
-						className='overlayDrop inventoryViewItem allowed'
-						tabIndex={ 0 }
-						onClick={ (ev) => {
-							ev.preventDefault();
-							ev.stopPropagation();
-							setHeldItem({ type: 'nothing' });
-						} }
+			{ storageModuleName != null && storageModule != null && showContent ? (
+				<Column className='innerStorageWrapper'>
+					<InventoryItemViewContent
+						targetSelector={ targetSelector }
+						container={ [
+							...item.container,
+							{
+								item: item.itemId,
+								module: storageModuleName,
+							},
+						] }
+						containerModule={ storageModule }
+						items={ wornItem.getModuleItems(storageModuleName) }
 					>
-						Cancel
-					</div>
-				) : null
-			}
-		</div>
+						{
+							heldItem.type !== 'nothing' ? (
+								<div className='overlay' />
+							) : null
+						}
+					</InventoryItemViewContent>
+				</Column>
+			) : null }
+		</Column>
 	);
 }
+
+export function ViewStorageButton({ showContent, setShowContent, targetSelector, container }: {
+	showContent: boolean;
+	setShowContent: React.Dispatch<React.SetStateAction<boolean>>;
+	targetSelector: ActionTargetSelector;
+	container: ItemContainerPath;
+}): React.ReactNode {
+	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, container);
+
+	useEffect(() => {
+		if (showContent && !containerAccessCheck.valid) {
+			setShowContent(false);
+		}
+	}, [showContent, setShowContent, containerAccessCheck]);
+
+	return (
+		<WardrobeActionButtonElement
+			check={ containerAccessCheck }
+			className={ classNames(
+				showContent ? 'selected' : null,
+			) }
+			onClick={ () => {
+				setShowContent((v) => containerAccessCheck.valid && !v);
+			} }
+			title='View contents'
+		>
+			<img src={ storageIcon } alt='View contents' />
+		</WardrobeActionButtonElement>
+	);
+}
+

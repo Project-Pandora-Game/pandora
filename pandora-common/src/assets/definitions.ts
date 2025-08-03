@@ -134,6 +134,11 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	 *  - only 'maybe' and 'prevent' are allowed since 'favorite', 'normal', and 'doNotRender' does not make sense
 	 */
 	assetPreferenceDefault?: AssetPreferenceType & ('maybe' | 'prevent');
+
+	/**
+	 * If this item has a significant storage, this can be set to the id of the storage module, allowing easier access to it from the wardrobe.
+	 */
+	storageModule?: string;
 }
 
 export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'bodypart', A> {

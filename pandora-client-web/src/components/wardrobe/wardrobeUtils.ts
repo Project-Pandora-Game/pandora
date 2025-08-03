@@ -2,17 +2,22 @@ import type { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceAction,
+	AppearanceActionProcessingContext,
 	AppearanceActionProcessingResult,
 	AppearanceItems,
 	Assert,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	Item,
+	ItemInteractionType,
 	ItemPath,
+	SplitContainerPath,
 	type ActionTargetSelector,
+	type ItemContainerPath,
 } from 'pandora-common';
 import { useMemo } from 'react';
 import { ICharacter } from '../../character/character.ts';
+import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
 import { WardrobeFocus } from './wardrobeTypes.ts';
 
@@ -51,6 +56,26 @@ export function useWardrobeTargetItem(target: ActionTargetSelector | null, itemP
 		}
 		return current.find((it) => it.id === itemId);
 	}, [items, itemPath]);
+}
+
+export function useWardrobeContainerAccessCheck(target: ActionTargetSelector, container: ItemContainerPath): AppearanceActionProcessingResult {
+	const { actions, globalState } = useWardrobeActionContext();
+
+	const containerAccessCheckInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		const actionTarget = processingContext.getTarget(target);
+		if (actionTarget == null)
+			return processingContext.invalid();
+
+		const containerPath = SplitContainerPath(container);
+		if (containerPath != null) {
+			processingContext.checkCanUseItemModule(actionTarget, containerPath.itemPath, containerPath.module, ItemInteractionType.MODIFY);
+		}
+
+		return processingContext.finalize();
+	}, [actions, globalState, target, container]);
+
+	return useCheckAddPermissions(containerAccessCheckInitial);
 }
 
 export function WardrobeCheckResultForConfirmationWarnings(

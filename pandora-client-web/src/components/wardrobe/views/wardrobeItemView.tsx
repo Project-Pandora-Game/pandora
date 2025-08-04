@@ -34,6 +34,8 @@ import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, Wardrob
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeHeldItem } from '../wardrobeTypes.ts';
 import { useWardrobeContainerAccessCheck, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils.ts';
+import { useGameState, useGlobalState } from '../../gameContext/gameStateContextProvider.tsx';
+import { usePlayerId } from '../../gameContext/playerContextProvider.tsx';
 
 export function InventoryItemView({
 	className,
@@ -50,6 +52,8 @@ export function InventoryItemView({
 	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigatePandora();
+	const globalState = useGlobalState(useGameState());
+	const playerId = usePlayerId();
 
 	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, focus.container);
 
@@ -94,6 +98,12 @@ export function InventoryItemView({
 		}
 	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck, targetSelector]);
 
+	let currentRoomId = '';
+
+	if (playerId) {
+		currentRoomId = globalState.getCharacterState(playerId)?.currentRoom ?? '';
+	}
+
 	return (
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
@@ -117,14 +127,20 @@ export function InventoryItemView({
 					)
 				}
 				<div className='flex-1' />
-				{ targetSelector.type === 'room' ?
+				{ targetSelector.type === 'room' && focus.container.length <= 0 ?
 					<Button className='slim' onClick={ () => {
 						focuser.reset();
 						navigate('/wardrobe');
 					} } >
 						Switch to your wardrobe
 					</Button>
-					: '' }
+					:
+					<Button className='slim' onClick={ () => {
+						focuser.reset();
+						navigate(`/wardrobe/room/${encodeURIComponent(currentRoomId)}`);
+					} } >
+						Switch to current room's inventory
+					</Button> }
 			</div>
 			<Column className='flex-1' overflowX='clip' overflowY='auto'>
 				<InventoryItemViewContent

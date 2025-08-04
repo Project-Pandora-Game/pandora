@@ -209,7 +209,11 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 				className={ classNames(
 					'message',
 					message.type,
-					isPrivate && 'private',
+					(
+						isPrivate ? 'private' :
+						message.room !== message.receivedRoomId ? 'dim' :
+						null
+					),
 					editingClass,
 				) }
 				style={ style }
@@ -437,12 +441,13 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 	return before + message.from.name + after;
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, children, extraContent, defaultUnfolded = false }: {
+export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number;
 	edited: boolean;
 	repetitions?: number;
+	dim?: boolean;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -474,6 +479,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 				'message',
 				type,
 				extraContent !== null ? 'foldable' : null,
+				dim ? 'dim' : null,
 			) }
 			style={ style }
 			onClick={ () => setFolded(!folded) }
@@ -516,6 +522,7 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			messageTime={ message.time }
 			edited={ false }
 			repetitions={ message.repetitions }
+			dim={ message.rooms != null && !message.rooms.includes(message.receivedRoomId) }
 			extraContent={ extraContent != null ? (
 				<>
 					{ extraContent }

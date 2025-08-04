@@ -1,10 +1,12 @@
 import type { Immutable } from 'immer';
 import { sortBy } from 'lodash-es';
-import type { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
+import { AssertNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type CharacterActionAttempt, type ICharacterRoomData } from 'pandora-common';
 import { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character.ts';
+import type { PlayerCharacter } from '../../../character/player.ts';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { useGlobalState, type GameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ActionAttemptCancelButton, ActionAttemptConfirmButton, ActionAttemptInterruptButton } from '../../../components/wardrobe/views/wardrobeActionAttempt.tsx';
 import { useObservable } from '../../../observable.ts';
 import { ActionMessageElement } from './chat.tsx';
@@ -18,6 +20,8 @@ interface ChatInjectedMessageDescriptor {
 export function useChatInjectedMessages(gameState: GameState): readonly ChatInjectedMessageDescriptor[] {
 	const currentState = useGlobalState(gameState);
 	const characters = useObservable(gameState.characters);
+	const player = usePlayer();
+	AssertNotNullable(player);
 
 	return useMemo((): readonly ChatInjectedMessageDescriptor[] => {
 		const result: ChatInjectedMessageDescriptor[] = [];
@@ -26,20 +30,23 @@ export function useChatInjectedMessages(gameState: GameState): readonly ChatInje
 		for (const character of characters) {
 			const characterState = currentState.getCharacterState(character.id);
 			if (characterState?.attemptingAction != null) {
-				result.push(MessageForAttemptedAction(character, characterState, currentState, characterState.attemptingAction));
+				result.push(MessageForAttemptedAction(character, characterState, currentState, player, characterState.attemptingAction));
 			}
 		}
 
 		return sortBy(result, (m) => m.time);
-	}, [currentState, characters]);
+	}, [currentState, characters, player]);
 }
 
 function MessageForAttemptedAction(
 	character: Character<ICharacterRoomData>,
 	characterState: AssetFrameworkCharacterState,
 	globalState: AssetFrameworkGlobalState,
+	player: PlayerCharacter,
 	action: Immutable<CharacterActionAttempt>,
 ): ChatInjectedMessageDescriptor {
+	const playerState = globalState.getCharacterState(player.id);
+
 	return {
 		time: action.start,
 		element: (
@@ -48,6 +55,7 @@ function MessageForAttemptedAction(
 				type='serverMessage'
 				messageTime={ action.start }
 				edited={ false }
+				dim={ playerState != null && playerState.currentRoom !== characterState.currentRoom }
 				extraContent={
 					<Column>
 						<span>

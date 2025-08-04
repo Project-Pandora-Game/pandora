@@ -16,6 +16,7 @@ import {
 	type IChatMessageChat,
 	type IChatMessageDeleted,
 	type ItemDisplayNameType,
+	type RoomId,
 } from 'pandora-common';
 import React, {
 	Fragment,
@@ -30,13 +31,19 @@ import { RenderedLink } from './links.tsx';
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 };
 
 export type IChatNormalMessageProcessed = IChatMessageChat & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 	edited?: boolean;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
 	repetitions?: number;
@@ -48,7 +55,10 @@ export type ChatMessageProcessedDictionary<TK extends string = string> = Record<
 export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
 	repetitions?: number;
 	dictionary?: ChatMessageProcessedDictionary;

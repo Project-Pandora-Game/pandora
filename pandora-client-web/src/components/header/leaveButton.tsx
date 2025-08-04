@@ -2,6 +2,7 @@ import { Immutable } from 'immer';
 import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
+import listIcon from '../../assets/icons/list.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import onoffIcon from '../../assets/icons/on-off.svg';
 import peopleIcon from '../../assets/icons/people-arrows.svg';
@@ -9,6 +10,7 @@ import { PlayerCharacter } from '../../character/player.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useLogout } from '../../networking/account_manager.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
@@ -82,6 +84,8 @@ function DialogLeave(): ReactElement {
 function SpaceLeave(): ReactElement {
 	const player = usePlayer();
 	const space = useSpaceInfoOptional();
+	const navigate = useNavigatePandora();
+	const closeDialog = useContext(leaveButtonContext);
 
 	return (
 		<fieldset>
@@ -90,7 +94,15 @@ function SpaceLeave(): ReactElement {
 				(player && space?.id) ? (
 					<SpaceLeaveInner player={ player } config={ space.config } spaceId={ space.id } />
 				) : player ? (
-					<span>Currently in { player.name }'s personal space</span>
+					<>
+						<span>Currently in { player.name }'s personal space</span>
+						<Button onClick={ () => {
+							navigate('/spaces/search');
+							closeDialog();
+						} } >
+							<img src={ listIcon } />List other spaces
+						</Button>
+					</>
 				) : (
 					<span>No character selected</span>
 				)

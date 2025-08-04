@@ -46,7 +46,10 @@ export function ActionRestrictionOverrideChange({
 		id = `${action.mode}Enter`;
 	}
 
-	processingContext.queueMessage({ id });
+	processingContext.queueMessage({
+		id,
+		rooms: [],
+	});
 
 	return processingContext.finalize();
 }

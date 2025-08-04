@@ -131,8 +131,12 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public queueMessage(message: ActionHandlerMessageWithTarget): void {
+		const playerState = this.getPlayerRestrictionManager().appearance.characterState;
+		const playerRoom = playerState.currentRoom;
+
 		this._pendingMessages.push({
 			...message,
+			rooms: message.rooms != null && !message.rooms.includes(playerRoom) ? [playerRoom, ...message.rooms] : message.rooms,
 			character: {
 				type: 'character',
 				id: this.player.id,

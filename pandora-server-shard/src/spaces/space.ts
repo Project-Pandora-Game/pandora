@@ -37,6 +37,7 @@ import {
 	type CurrentSpaceInfo,
 	type IChatMessageAction,
 	type IClientShardNormalResult,
+	type RoomId,
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
 	type SpaceStateBundle,
@@ -50,11 +51,17 @@ const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 /** Time (in ms) as interval for space's periodic actions (like saving of modified data or message cleanup) happen */
 export const SPACE_TICK_INTERVAL = 60_000;
 
+/** metadata about a chat message that was sent by a user. */
+type MessageHistoryMetadata = {
+	time: number;
+	room: RoomId;
+};
+
 export abstract class Space extends ServerRoom<IShardClient> {
 	public readonly id: SpaceId | null;
 
 	protected readonly characters: Set<Character> = new Set();
-	protected readonly history = new Map<CharacterId, Map<number, number>>();
+	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
 	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; target?: CharacterId; }>();
 	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
 	protected readonly tickInterval: NodeJS.Timeout;
@@ -149,7 +156,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		// Cleanup of old messages
 		const now = Date.now();
 		for (const [characterId, history] of this.history) {
-			for (const [id, time] of history) {
+			for (const [id, { time }] of history) {
 				if (time + MESSAGE_EDIT_TIMEOUT < now) {
 					history.delete(id);
 				}
@@ -361,6 +368,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 					this.handleActionMessage({
 						id: 'gamblingCardGameStopped',
+						rooms: null,
 						character: {
 							type: 'character',
 							id: character.id,
@@ -460,56 +468,53 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		const queue: IChatMessage[] = [];
 		const now = Date.now();
+		let originRoom = player.appearance.characterState.currentRoom;
 		let history = this.history.get(from.id);
 		if (!history) {
-			this.history.set(from.id, history = new Map<number, number>());
-			if (editId) {
+			this.history.set(from.id, history = new Map<number, MessageHistoryMetadata>());
+		} else if (history.has(id)) {
+			// invalid message, already exists
+			return {
+				result: 'blocked',
+				reason: 'Duplicate message',
+			};
+		}
+		if (editId) {
+			const originalMetadata = history.get(editId);
+			if (!originalMetadata) {
 				// invalid message, nothing to edit
 				return {
 					result: 'blocked',
 					reason: 'Edited message not found',
 				};
 			}
-		} else {
-			if (history.has(id)) {
-				// invalid message, already exists
+			history.delete(editId);
+			if (originalMetadata.time + MESSAGE_EDIT_TIMEOUT < now) {
+				// invalid message, too old
 				return {
 					result: 'blocked',
-					reason: 'Duplicate message',
+					reason: 'Edited message is too old to be edited',
 				};
 			}
-			if (editId) {
-				const insert = history.get(editId);
-				if (!insert) {
-					// invalid message, nothing to edit
-					return {
-						result: 'blocked',
-						reason: 'Edited message not found',
-					};
-				}
-				history.delete(editId);
-				if (insert + MESSAGE_EDIT_TIMEOUT < now) {
-					// invalid message, too old
-					return {
-						result: 'blocked',
-						reason: 'Edited message is too old to be edited',
-					};
-				}
-				queue.push({
-					type: 'deleted',
-					id: editId,
-					from: from.id,
-					time: this.nextMessageTime(),
-				});
-			}
+			originRoom = originalMetadata.room;
+			queue.push({
+				type: 'deleted',
+				id: editId,
+				from: from.id,
+				time: this.nextMessageTime(),
+			});
 		}
-		history.set(id, now);
+		history.set(id, {
+			time: now,
+			room: originRoom,
+		});
 		for (const message of messages) {
 			if (!IsTargeted(message)) {
 				queue.push({
 					type: message.type,
 					id,
 					insertId: editId,
+					room: originRoom,
 					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
 					parts: message.parts,
 					time: this.nextMessageTime(),
@@ -523,6 +528,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					type: message.type,
 					id,
 					insertId: editId,
+					room: originRoom,
 					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
 					to: { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor },
 					parts: message.parts,
@@ -542,6 +548,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public mapActionMessageToChatMessage({
 		id,
 		customText,
+		rooms,
 		character,
 		target,
 		sendTo,
@@ -556,6 +563,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			type: 'action',
 			id,
 			customText,
+			rooms,
 			sendTo,
 			time: this.nextMessageTime(),
 			data: {
@@ -595,9 +603,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public processDirectoryMessages(messages: IChatMessageDirectoryAction[]): void {
 		this._queueMessages(messages
 			.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
-			.map((m) => ({
+			.map((m): IChatMessage => ({
 				...omit(m, ['directoryTime']),
 				time: this.nextMessageTime(),
+				rooms: null,
 				data: m.data ? {
 					character: this._getCharacterActionInfo(m.data.character),
 					target: this._getCharacterActionInfo(m.data.targetCharacter),

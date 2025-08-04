@@ -1,6 +1,6 @@
 import { freeze, type Immutable } from 'immer';
-import { ActionMessageTemplateHandler, ActionTarget } from '../../assets/appearanceTypes.ts';
-import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets/index.ts';
+import { ActionTarget } from '../../assets/appearanceTypes.ts';
+import type { ActionHandlerMessageTemplate, CharacterActionAttempt, Item, ItemContainerPath } from '../../assets/index.ts';
 import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
 import { CharacterId } from '../../character/characterTypes.ts';
@@ -33,7 +33,7 @@ export interface AppearanceModuleActionContext {
 	/** The name of the module the action is being performed on */
 	moduleName: string;
 
-	messageHandler: ActionMessageTemplateHandler;
+	messageHandler: (message: ActionHandlerMessageTemplate) => void;
 	addProblem: (problem: ModuleActionProblem) => void;
 	addData: (data: ModuleActionData) => void;
 }

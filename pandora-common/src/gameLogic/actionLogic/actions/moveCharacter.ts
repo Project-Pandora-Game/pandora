@@ -4,6 +4,7 @@ import { CharacterCanBeFollowed, CharacterSpacePositionSchema, IsValidRoomPositi
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
+import { uniq } from 'lodash-es';
 
 export const AppearanceActionMoveCharacter = z.object({
 	type: z.literal('moveCharacter'),
@@ -97,6 +98,7 @@ export function ActionMoveCharacter({
 				if (action.target.characterId === player.appearance.id) {
 					processingContext.queueMessage({
 						id: 'characterPositionFollowStartFollow',
+						rooms: uniq([originalRoom.id, followTargetRoom.id]),
 						target: {
 							type: 'character',
 							id: followTarget.appearance.id,
@@ -105,6 +107,7 @@ export function ActionMoveCharacter({
 				} else {
 					processingContext.queueMessage({
 						id: 'characterPositionFollowStartLead',
+						rooms: uniq([originalRoom.id, followTargetRoom.id]),
 						target: {
 							type: 'character',
 							id: target.appearance.id,
@@ -118,6 +121,7 @@ export function ActionMoveCharacter({
 				if (action.target.characterId === player.appearance.id) {
 					processingContext.queueMessage({
 						id: 'characterPositionFollowStopFollow',
+						rooms: [originalRoom.id],
 						target: {
 							type: 'character',
 							id: originalPosition.following.target,
@@ -126,6 +130,7 @@ export function ActionMoveCharacter({
 				} else {
 					processingContext.queueMessage({
 						id: 'characterPositionFollowStopLead',
+						rooms: [originalRoom.id],
 						target: {
 							type: 'character',
 							id: target.appearance.id,

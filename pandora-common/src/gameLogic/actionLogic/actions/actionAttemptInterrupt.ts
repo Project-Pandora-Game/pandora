@@ -45,6 +45,7 @@ export function ActionAttemptInterrupt({
 
 	processingContext.queueMessage({
 		id: 'actionInterrupted',
+		rooms: [target.characterState.currentRoom],
 		target: {
 			type: 'character',
 			id: action.target.characterId,

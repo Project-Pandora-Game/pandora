@@ -55,7 +55,6 @@ export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMess
 	customText?: string;
 	dictionary?: Record<string, string>;
 }
-export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
 
 export type ActionHandlerMessageTargetCharacter = Pick<IChatMessageActionTargetCharacter, 'type' | 'id'>;
 export type ActionHandlerMessageTargetRoom = IChatMessageActionTargetRoom;
@@ -63,6 +62,12 @@ export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | A
 
 export interface ActionHandlerMessageWithTarget extends ActionHandlerMessageTemplate {
 	target?: ActionHandlerMessageTarget;
+	/**
+	 * Rooms for which the action message is relevant.
+	 * Messages concerning the whole space should set this to `null`.
+	 * Player's current room is always added automatically (using `AppearanceActionProcessingContext`).
+	 */
+	rooms: RoomId[] | null;
 }
 
 export interface ActionHandlerMessage extends ActionHandlerMessageWithTarget {

@@ -327,11 +327,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			type: 'character',
 			id: client.character.id,
 		};
+		const characterRoom = client.character.getRestrictionManager().appearance.characterState.currentRoom;
 
 		switch (game.type) {
 			case 'coinFlip':
 				space.handleActionMessage({
 					id: 'gamblingCoin',
+					rooms: [characterRoom],
 					character,
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
 				});
@@ -345,6 +347,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (game.hidden) {
 					space.handleActionMessage({
 						id: 'gamblingDiceHidden',
+						rooms: [characterRoom],
 						character,
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
@@ -354,6 +357,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					});
 					space.handleActionMessage({
 						id: 'gamblingDiceHiddenResult',
+						rooms: [characterRoom],
 						character,
 						sendTo: [client.character.id],
 						dictionary: {
@@ -366,6 +370,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				} else {
 					space.handleActionMessage({
 						id: 'gamblingDice',
+						rooms: [characterRoom],
 						character,
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
@@ -401,6 +406,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					}
 					space.handleActionMessage({
 						id: 'gamblingRockPaperScissorsResult',
+						rooms: null,
 						character,
 						dictionary: {
 							'ROCK_CHARACTERS': rock.length > 0 ? NaturalListJoin(rock) : 'no one',
@@ -412,6 +418,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					this.rockPaperScissorsStatus.set(client.character, { time: Date.now(), choice: game.choice });
 					space.handleActionMessage({
 						id: 'gamblingRockPaperScissorsSet',
+						rooms: null,
 						character,
 					});
 				}
@@ -427,6 +434,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								// only one game can be there at a time
 								space.handleActionMessage({
 									id: 'gamblingCardGameAlreadyCreated',
+									rooms: null,
 									character,
 									sendTo: [client.character.id],
 									dictionary: {
@@ -439,6 +447,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								if (space.cardGame.isDealer(client.character.id) || space.isAdmin(client.character)) {
 									space.handleActionMessage({
 										id: 'gamblingCardGameStopped',
+										rooms: null,
 										character,
 										sendTo: receivers,
 									});
@@ -446,6 +455,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameNotAllowed',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -460,6 +470,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										.filter((name): name is string => !! name);
 									space.handleActionMessage({
 										id: 'gamblingCardGameJoined',
+										rooms: null,
 										character,
 										sendTo: receivers,
 										dictionary: {
@@ -468,6 +479,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									});
 									space.handleActionMessage({
 										id: 'gamblingCardGameYouJoined',
+										rooms: null,
 										character,
 										sendTo: [client.character.id],
 										dictionary: {
@@ -478,6 +490,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameJoinedAlready',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -491,12 +504,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									if (!cards) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
+											rooms: null,
 											sendTo: [client.character.id],
 										});
 									} else {
 										//Dealt to the room openly
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealOpen',
+											rooms: null,
 											character,
 											sendTo: receivers,
 											dictionary: {
@@ -507,6 +522,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameNotAllowed',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -519,6 +535,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									if (!space.cardGame.isPlayer(game.action.targetId)) {
 										space.handleActionMessage({
 											id: 'gamblingCardNotAPlayer',
+											rooms: null,
 											sendTo: [client.character.id],
 										});
 										break; //Done on purpose
@@ -527,12 +544,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									if (!card) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
+											rooms: null,
 											sendTo: [client.character.id],
 										});
 									} else {
 										//Deal to the player openly
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealPlayerOpen',
+											rooms: null,
 											character,
 											sendTo: receivers,
 											target: { type: 'character', id: game.action.targetId },
@@ -544,6 +563,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameNotAllowed',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -556,6 +576,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									if (!space.cardGame.isPlayer(game.action.targetId)) {
 										space.handleActionMessage({
 											id: 'gamblingCardNotAPlayer',
+											rooms: null,
 											sendTo: [client.character.id],
 										});
 										break; //Done on purpose
@@ -564,11 +585,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									if (!cards) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
+											rooms: null,
 											sendTo: [client.character.id],
 										});
 									} else {
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealPlayerSecret',
+											rooms: null,
 											character,
 											target: { type: 'character', id: game.action.targetId },
 											sendTo: receivers,
@@ -578,6 +601,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealToYou',
+											rooms: null,
 											character,
 											sendTo: [game.action.targetId],
 											dictionary: {
@@ -588,6 +612,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameNotAllowed',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -599,6 +624,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								const spaceHand = space.cardGame.getSpaceHand();
 								space.handleActionMessage({
 									id: 'gamblingCardGameHandCheck',
+									rooms: null,
 									character,
 									sendTo: [client.character.id],
 									dictionary: {
@@ -611,6 +637,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								space.cardGame.getPlayerIds().filter((p) => p !== character.id).
 									forEach((id) => space.handleActionMessage({
 										id: 'gamblingCardGamePlayerCheck',
+										rooms: null,
 										character,
 										sendTo: [character.id],
 										dictionary: {
@@ -627,6 +654,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									// Remind players of the cards on the table
 									space.handleActionMessage({
 										id: 'gamblingCardGameRoomCards',
+										rooms: null,
 										character,
 										sendTo: receivers,
 										dictionary: {
@@ -637,6 +665,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									//Show the cards of all players
 									space.cardGame.getPlayerIds().forEach((id) => space.handleActionMessage({
 										id: 'gamblingCardGameHandShow',
+										rooms: null,
 										character,
 										sendTo: receivers,
 										dictionary: {
@@ -648,6 +677,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameNotAllowed',
+										rooms: null,
 										sendTo: [client.character.id],
 										character,
 									});
@@ -658,6 +688,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								space.cardGame.revealHand(client.character.id);
 								space.handleActionMessage({
 									id: 'gamblingCardGameHandShow',
+									rooms: null,
 									character,
 									sendTo: receivers,
 									dictionary: {
@@ -675,11 +706,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							space.cardGame = new CardGameGame(character.id, game.action.public);
 							space.handleActionMessage({
 								id: 'gamblingCardGameCreation',
+								rooms: null,
 								character,
 							});
 						} else {
 							space.handleActionMessage({
 								id: 'gamblingCardGameNoGame',
+								rooms: null,
 								sendTo: [client.character.id],
 								character,
 							});
@@ -827,6 +860,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id !== target) {
 			space.handleActionMessage({
 				id: 'characterModifierAdd',
+				rooms: null,
 				character: {
 					type: 'character',
 					id: client.character.id,
@@ -889,6 +923,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id !== target) {
 			space.handleActionMessage({
 				id: 'characterModifierReorder',
+				rooms: null,
 				character: {
 					type: 'character',
 					id: client.character.id,
@@ -939,6 +974,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id !== target) {
 			space.handleActionMessage({
 				id: 'characterModifierRemove',
+				rooms: null,
 				character: {
 					type: 'character',
 					id: client.character.id,
@@ -1002,6 +1038,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.conditions != null || config.config != null) {
 					space.handleActionMessage({
 						id: 'characterModifierChange',
+						rooms: null,
 						character,
 						sendTo: [target],
 						dictionary: {
@@ -1012,6 +1049,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.lockExceptions != null) {
 					space.handleActionMessage({
 						id: 'characterModifierLockExceptionsChange',
+						rooms: null,
 						character,
 						sendTo: [target],
 						dictionary: {
@@ -1022,6 +1060,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.name != null && config.name !== modifierInstance.name) {
 					space.handleActionMessage({
 						id: 'characterModifierRename',
+						rooms: null,
 						character,
 						sendTo: [target],
 						dictionary: {
@@ -1033,6 +1072,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.enabled != null && config.enabled !== modifierInstance.enabled) {
 					space.handleActionMessage({
 						id: config.enabled ? 'characterModifierEnable' : 'characterModifierDisable',
+						rooms: null,
 						character,
 						sendTo: [target],
 						dictionary: {
@@ -1123,6 +1163,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						const lockAsset = player.appearance.getAssetManager().getAssetById(action.lockAsset);
 						space.handleActionMessage({
 							id: 'characterModifierLockAdd',
+							rooms: null,
 							character,
 							sendTo: [target],
 							dictionary: {
@@ -1138,6 +1179,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					case 'removeLock':
 						space.handleActionMessage({
 							id: 'characterModifierLockRemove',
+							rooms: null,
 							character,
 							sendTo: [target],
 							dictionary: {
@@ -1150,6 +1192,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'lock':
 								space.handleActionMessage({
 									id: 'characterModifierLockLock',
+									rooms: null,
 									character,
 									sendTo: [target],
 									dictionary: {
@@ -1160,6 +1203,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'unlock':
 								space.handleActionMessage({
 									id: 'characterModifierLockUnlock',
+									rooms: null,
 									character,
 									sendTo: [target],
 									dictionary: {
@@ -1173,6 +1217,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'updateFingerprint':
 								space.handleActionMessage({
 									id: 'characterModifierLockUpdateFingerprint',
+									rooms: null,
 									character,
 									sendTo: [target],
 									dictionary: {

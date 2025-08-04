@@ -354,10 +354,11 @@ export class GameState extends TypedEventEmitter<{
 
 	public onMessage(incoming: IChatMessage[]): number {
 		const spaceId = this.currentSpace.value.id;
+		const roomId = this.player.getAppearance(this.globalState.currentState).characterState.currentRoom;
 
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map<IChatMessage & { spaceId: SpaceId | null; }>((m) => ({ ...m, spaceId }));
+			.map((m): IChatMessageProcessed => ({ ...m, spaceId, receivedRoomId: roomId }));
 
 		this._lastMessageTime = messages
 			.map((m) => m.time)

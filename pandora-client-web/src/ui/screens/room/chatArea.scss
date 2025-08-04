@@ -75,8 +75,12 @@
 				display: none;
 			}
 
+			&.dim {
+				opacity: common.$theme-chat-dim-opacity;
+			}
+
 			&.private {
-				opacity: 0.7;
+				opacity: common.$theme-chat-private-opacity;
 			}
 
 			> .info {

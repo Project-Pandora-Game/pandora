@@ -32,10 +32,9 @@ import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobe
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { ActionTargetToWardrobeUrl } from '../wardrobeNavigation.tsx';
 import { WardrobeHeldItem } from '../wardrobeTypes.ts';
 import { useWardrobeContainerAccessCheck, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils.ts';
-import { useGameState, useGlobalState } from '../../gameContext/gameStateContextProvider.tsx';
-import { usePlayerId } from '../../gameContext/playerContextProvider.tsx';
 
 export function InventoryItemView({
 	className,
@@ -47,13 +46,11 @@ export function InventoryItemView({
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
-	const { targetSelector, heldItem, focuser } = useWardrobeContext();
+	const { targetSelector, heldItem, focuser, currentRoomSelector } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigatePandora();
-	const globalState = useGlobalState(useGameState());
-	const playerId = usePlayerId();
 
 	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, focus.container);
 
@@ -98,12 +95,6 @@ export function InventoryItemView({
 		}
 	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck, targetSelector]);
 
-	let currentRoomId = '';
-
-	if (playerId) {
-		currentRoomId = globalState.getCharacterState(playerId)?.currentRoom ?? '';
-	}
-
 	return (
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
@@ -127,20 +118,25 @@ export function InventoryItemView({
 					)
 				}
 				<div className='flex-1' />
-				{ targetSelector.type === 'room' && focus.container.length <= 0 ?
-					<Button className='slim' onClick={ () => {
-						focuser.reset();
-						navigate('/wardrobe');
-					} } >
-						Switch to your wardrobe
-					</Button>
-					:
-					<Button className='slim' onClick={ () => {
-						focuser.reset();
-						navigate(`/wardrobe/room/${encodeURIComponent(currentRoomId)}`);
-					} } >
-						Switch to current room's inventory
-					</Button> }
+				{
+					(focus.container.length <= 0) ? (
+						targetSelector.type === 'room' ? (
+							<Button className='slim' onClick={ () => {
+								focuser.reset();
+								navigate('/wardrobe');
+							} } >
+								Switch to your wardrobe
+							</Button>
+						) : (
+							<Button className='slim' onClick={ () => {
+								focuser.reset();
+								navigate(ActionTargetToWardrobeUrl(currentRoomSelector));
+							} } >
+								Switch to current room's inventory
+							</Button>
+						)
+					) : null
+				}
 			</div>
 			<Column className='flex-1' overflowX='clip' overflowY='auto'>
 				<InventoryItemViewContent

@@ -201,13 +201,13 @@ export function WardrobeItemManipulation(): ReactElement {
 											AssertNever(otherPaneTarget)
 										) }
 									</span>
-									{
-										otherPaneTarget.type === 'room' ? (
-											<Button className='slim' onClick={ () => navigate(ActionTargetToWardrobeUrl(otherPaneTarget)) } >
-												Switch to room inventory
-											</Button>
-										) : null
-									}
+									<Button className='slim' onClick={ () => navigate(ActionTargetToWardrobeUrl(otherPaneTarget)) } >
+										Switch to {
+											otherPaneTarget.type === 'room' ? 'room inventory' :
+											otherPaneTarget.type === 'character' ? 'this character' :
+											AssertNever(otherPaneTarget)
+										}
+									</Button>
 								</div>
 							) }
 							secondaryTarget={ otherPaneTarget }

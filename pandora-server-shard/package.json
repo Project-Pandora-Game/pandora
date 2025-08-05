@@ -11,9 +11,9 @@
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && tsc -p ./tsconfig.json",
-		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --enable-source-maps -r dotenv/config dist/index.js --development\"",
-		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --inspect=25861 --enable-source-maps -r dotenv/config dist/index.js --development\"",
-		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
+		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --enable-source-maps --env-file=.env dist/index.js --development\"",
+		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --inspect=25861 --enable-source-maps --env-file=.env dist/index.js --development\"",
+		"start": "node --enable-source-maps --env-file=.env dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "pnpm run '/type-check:.*/'",
@@ -40,7 +40,6 @@
 	},
 	"dependencies": {
 		"async-lock": "1.4.1",
-		"dotenv": "16.6.1",
 		"express": "5.1.0",
 		"immer": "10.1.1",
 		"json-diff": "1.0.6",

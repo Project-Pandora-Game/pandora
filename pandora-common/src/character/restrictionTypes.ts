@@ -97,6 +97,10 @@ export type Restriction =
 		type: 'inRoomDevice';
 	}
 	| {
+		type: 'tooFar';
+		subtype: 'characterInteraction' | 'roomTarget' | 'followTarget';
+	}
+	| {
 		type: 'blockedByCharacterModifier';
 		modifierId: CharacterModifierId;
 		modifierType: CharacterModifierType;

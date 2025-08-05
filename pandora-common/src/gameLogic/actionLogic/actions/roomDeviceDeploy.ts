@@ -61,7 +61,12 @@ export function ActionRoomDeviceDeploy({
 
 		if (!processingContext.manipulator.produceCharacterState(
 			characterId,
-			(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, true),
+			(character) => {
+				const room = processingContext.manipulator.currentState.space.getRoom(character.currentRoom);
+				if (room == null)
+					return null;
+				return character.updateRoomStateLink(room, true);
+			},
 		)) {
 			return processingContext.invalid();
 		}

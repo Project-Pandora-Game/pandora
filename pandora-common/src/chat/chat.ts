@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { ItemId } from '../assets/index.ts';
 import type { AssetId } from '../assets/base.ts';
+import type { ItemId, RoomId } from '../assets/index.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { PronounKey } from '../character/pronouns.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
@@ -60,12 +60,13 @@ export type IChatMessageChatCharacter = { id: CharacterId; name: string; labelCo
 export type IChatMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	id: number;
 	insertId?: number;
+	/** Room the message was said in */
+	room: RoomId;
+	from: IChatMessageChatCharacter;
 } & ({
 	type: 'me' | 'emote';
-	from: IChatMessageChatCharacter;
 } | {
 	type: 'chat' | 'ooc';
-	from: IChatMessageChatCharacter;
 	to?: IChatMessageChatCharacter;
 });
 
@@ -94,11 +95,12 @@ export type IChatMessageActionContainerPath = {
 	module: string;
 }[];
 
-export type IChatMessageActionTargetRoomInventory = {
-	type: 'roomInventory';
+export type IChatMessageActionTargetRoom = {
+	type: 'room';
+	roomId: RoomId;
 };
 
-export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoomInventory;
+export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoom;
 
 export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';
@@ -108,6 +110,8 @@ export type IChatMessageAction = {
 	customText?: string;
 	/** The array of characters the message should be sent to */
 	sendTo?: CharacterId[];
+	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
+	rooms: RoomId[] | null;
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
 		character?: IChatMessageActionTargetCharacter;
@@ -129,7 +133,7 @@ export type IChatMessage = IChatMessageBase & {
 	time: number;
 };
 
-export type IChatMessageDirectoryAction = Omit<IChatMessageAction, 'data'> & {
+export type IChatMessageDirectoryAction = Omit<IChatMessageAction, 'data' | 'rooms'> & {
 	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
 	directoryTime: number;
 	data?: {

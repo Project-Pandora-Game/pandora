@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { min } from 'lodash-es';
 import {
+	Assert,
 	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
@@ -12,6 +13,7 @@ import {
 	Rectangle,
 	RoomBackgroundData,
 	SpaceClientInfo,
+	type AssetFrameworkRoomState,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
@@ -139,7 +141,9 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 }): ReactElement {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
-	const roomBackground = globalState.room.roomBackground;
+	const roomState = globalState.space.getRoom(characterState.currentRoom);
+	Assert(roomState != null, 'Character room not found');
+	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, { worldWidth }) => {
@@ -242,10 +246,11 @@ function WardrobeRoomBackground({
 export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
+	roomState: AssetFrameworkRoomState;
 	info: SpaceClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
-	const { focuser } = useWardrobeContext();
+	const { focuser, currentRoomSelector } = useWardrobeContext();
 	const currentFocus = useObservable(focuser.current);
 
 	const overlay = (
@@ -266,13 +271,13 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 		if (itemId == null)
 			return undefined;
 
-		const item = globalState.room?.items.find((i) => i.id === itemId);
+		const item = globalState.getItems(currentRoomSelector)?.find((i) => i.id === itemId);
 
 		if (item == null || !item.isType('roomDevice') || !item.isDeployed())
 			return undefined;
 
 		return item;
-	}, [currentFocus, globalState]);
+	}, [currentFocus, currentRoomSelector, globalState]);
 
 	return (
 		<RoomPreview
@@ -287,6 +292,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
+	roomState: AssetFrameworkRoomState;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }
@@ -294,11 +300,11 @@ interface RoomPreviewProps {
 export function RoomPreview({
 	characters,
 	globalState,
+	roomState,
 	overlay,
 	focusDevice,
 }: RoomPreviewProps): ReactElement {
-	const roomState = globalState.room;
-	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
+	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
@@ -397,21 +403,32 @@ export function RoomPreview({
 				/>
 				<Container zIndex={ 10 } sortableChildren>
 					{
-						characters.map((character) => (
-							<RoomCharacter
-								key={ character.data.id }
-								globalState={ globalState }
-								character={ character }
-								projectionResolver={ projectionResolver }
-								showName={ false }
-							/>
-						))
+						characters.map((character) => {
+							const characterState = globalState.characters.get(character.id);
+							if (characterState == null ||
+								characterState.position.type !== 'normal' ||
+								characterState.currentRoom !== roomState.id
+							) {
+								return null;
+							}
+
+							return (
+								<RoomCharacter
+									key={ character.data.id }
+									globalState={ globalState }
+									character={ character }
+									projectionResolver={ projectionResolver }
+									showName={ false }
+								/>
+							);
+						})
 					}
 					{
 						roomDevices.map((device) => (device.isDeployed() ? (
 							<RoomDevice
 								key={ device.id }
 								globalState={ globalState }
+								roomState={ roomState }
 								item={ device }
 								deployment={ device.deployment }
 								projectionResolver={ projectionResolver }

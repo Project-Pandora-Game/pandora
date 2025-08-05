@@ -108,7 +108,11 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 			const logger = GetLogger('PixiRoot');
 			for (const instance of Array.from(root.instantiatedElements)) {
 				logger.warning(`Cleaning up forgotten instance '${instance.type}':`, instance);
-				instance.destroy();
+				try {
+					instance.destroy();
+				} catch (error) {
+					logger.error('Error during forgotten instance destroy:', error);
+				}
 			}
 
 			// By now everything should definitely be cleaned up

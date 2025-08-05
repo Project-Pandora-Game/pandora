@@ -23,11 +23,17 @@
 		color: common.$theme-dialog-text;
 	}
 
+	&.max-size .dialog-content {
+		width: calc(100% - 1em);
+		height: calc(100% - 1em);
+	}
+
 	&.top {
 		justify-content: start;
 
 		.dialog-content {
 			margin-top: 4em;
+			max-height: calc(100% - 4.5em);
 		}
 	}
 }

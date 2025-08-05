@@ -31,7 +31,7 @@
 		justify-content: flex-end;
 	}
 	&.justify-center {
-		justify-content: center;
+		justify-content: safe center;
 	}
 	&.justify-space-between {
 		justify-content: space-between;
@@ -50,7 +50,7 @@
 		align-items: flex-end;
 	}
 	&.align-center {
-		align-items: center;
+		align-items: safe center;
 	}
 	&.align-stretch {
 		align-items: stretch;

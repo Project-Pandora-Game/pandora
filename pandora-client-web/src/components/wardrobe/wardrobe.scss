@@ -121,6 +121,24 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
+.inventoryViewGhost {
+	flex: 1;
+	overflow: auto;
+	min-width: min(20em, 90vw);
+
+	border: 1px solid common.$theme-separator;
+}
+
+.WardrobeCollapsableSection {
+	height: 0px;
+	overflow: clip;
+	transition: all 200ms linear;
+
+	&.open {
+		height: max-content;
+	}
+}
+
 .inventoryView {
 	@include common.flex(column);
 	flex: 1;
@@ -130,6 +148,10 @@ $drop-overlay-gap: 0.3em;
 	background: common.$theme-wardrobe-view-background;
 	color: common.$theme-wardrobe-view-text;
 	border: 2px solid common.$theme-separator;
+
+	&.itemEdit {
+		border-color: common.$theme-separator-highlight;
+	}
 
 	.toolbar {
 		flex-shrink: 0;
@@ -220,6 +242,12 @@ $drop-overlay-gap: 0.3em;
 					max-width: 100%;
 					max-height: 100%;
 				}
+
+				img {
+					max-width: 65%;
+					max-height: 65%;
+					object-fit: contain;
+				}
 			}
 		}
 	}
@@ -284,6 +312,12 @@ $drop-overlay-gap: 0.3em;
 
 				@include common.center-flex;
 			}
+		}
+
+		.innerStorageWrapper {
+			border-left: 3px solid common.$theme-separator-highlight;
+			padding: 0.25em 0 0.25em 0.5em;
+			margin-bottom: 0.75em;
 		}
 	}
 

@@ -13,9 +13,9 @@ export type WardrobeLocationState = z.infer<typeof WardrobeLocationStateSchema>;
 
 export function ActionTargetToWardrobeUrl(target: ActionTargetSelector): string {
 	if (target.type === 'character') {
-		return `/wardrobe/character/${target.characterId}`;
-	} else if (target.type === 'roomInventory') {
-		return '/wardrobe/room-inventory';
+		return `/wardrobe/character/${encodeURIComponent(target.characterId)}`;
+	} else if (target.type === 'room') {
+		return `/wardrobe/room/${encodeURIComponent(target.roomId)}`;
 	}
 	AssertNever(target);
 }

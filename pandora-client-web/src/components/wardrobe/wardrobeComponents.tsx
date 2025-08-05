@@ -17,7 +17,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.ts';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -606,7 +606,7 @@ export function StorageUsageMeter({ title, used, limit }: {
 	return (
 		<Column gap='tiny' alignY='center' padding='small'>
 			<span>{ title }: { used } / { limit } ({ Math.ceil(100 * used / limit) }%)</span>
-			<meter min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
+			<meter className='fill-x' min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
 		</Column>
 	);
 }

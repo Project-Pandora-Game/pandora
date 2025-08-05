@@ -20,7 +20,7 @@ import {
 } from 'pandora-common';
 import { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.ts';
+import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import type { ICharacter } from '../../character/character.ts';
 import type { PlayerCharacter } from '../../character/player.ts';

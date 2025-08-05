@@ -1,14 +1,19 @@
 import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
+import { Link } from 'react-router';
+import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
 import { useDirectoryRegister } from '../../../networking/account_manager.ts';
 import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
+import { ExternalLink } from '../../common/link/externalLink.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
 
@@ -23,6 +28,23 @@ export interface RegistrationFormData {
 }
 
 export function RegistrationForm(): ReactElement {
+	const { disableRegistration } = useObservable(useDirectoryConnector().directoryStatus);
+
+	if (disableRegistration) {
+		return (
+			<Column alignX='center'>
+				<div className='warning-box'>
+					<strong>Registration is currently disabled</strong>
+				</div>
+				<Link to='/login'>Already have an account? <strong>Sign in</strong></Link>
+			</Column>
+		);
+	}
+
+	return <RegistrationFormInner />;
+}
+
+function RegistrationFormInner(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const directoryRegister = useDirectoryRegister();
@@ -103,6 +125,8 @@ export function RegistrationForm(): ReactElement {
 			setInvalidBetaKey(betaKey);
 		} else if (result === 'invalidCaptcha') {
 			setCaptchaFailed(true);
+		} else if (result === 'failed') {
+			toast('Registration failed', TOAST_OPTIONS_ERROR);
 		} else {
 			AssertNever(result);
 		}
@@ -117,7 +141,7 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-username'
 					autoComplete='username'
-					placeholder='mona'
+					placeholder='e.g. mona'
 					register={ register }
 					name='username'
 					options={ {
@@ -133,7 +157,7 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-display-name'
 					autoComplete='off'
-					placeholder='Mona the Maid'
+					placeholder='e.g. Mona the Maid'
 					register={ register }
 					name='displayName'
 					options={ {
@@ -149,7 +173,6 @@ export function RegistrationForm(): ReactElement {
 					type='email'
 					id='registration-email'
 					autoComplete='email'
-					placeholder='mona@project-pandora.com'
 					register={ register }
 					name='email'
 					options={ {
@@ -197,7 +220,7 @@ export function RegistrationForm(): ReactElement {
 				/>
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
-			{ betaKeyRequired &&
+			{ betaKeyRequired ? (
 				<FormField>
 					<label htmlFor='registration-beta-key'>Beta key</label>
 					<FormInput
@@ -212,7 +235,12 @@ export function RegistrationForm(): ReactElement {
 						} }
 					/>
 					<FormFieldError error={ errors.betaKey } />
-				</FormField> }
+				</FormField>
+			) : null }
+			<span className='FormText'>
+				{ betaKeyRequired ? 'You can get a beta key on our ' : 'We also recommend to join our ' }
+				<ExternalLink className='inline' href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
+			</span>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			<Button type='submit' disabled={ isSubmitting }>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>

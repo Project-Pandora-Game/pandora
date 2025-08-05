@@ -1,11 +1,10 @@
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { execSync } from 'child_process';
-import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import { config } from 'dotenv';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { loadEnvFile } from 'node:process';
 import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
@@ -21,7 +20,7 @@ const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString()
 const BUILD_TIME = 1000 * Math.floor(Date.now() / 1000);
 
 // Load .env file
-config();
+loadEnvFile('./.env');
 
 // Load options from environment
 
@@ -100,6 +99,7 @@ export default function (env: WebpackEnv): webpack.Configuration {
 		},
 		output: {
 			path: DIST_DIR,
+			clean: true,
 			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
 			publicPath: '/',
 		},
@@ -126,7 +126,6 @@ export default function (env: WebpackEnv): webpack.Configuration {
 
 function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 	const plugins: webpack.WebpackPluginInstance[] = [
-		new CleanWebpackPlugin({ verbose: true }),
 		new ForkTsCheckerWebpackPlugin({
 			async: false,
 			typescript: {

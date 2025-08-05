@@ -56,6 +56,7 @@ function MessageForAttemptedAction(
 				messageTime={ action.start }
 				edited={ false }
 				dim={ playerState != null && playerState.currentRoom !== characterState.currentRoom }
+				rooms={ [characterState.currentRoom] }
 				extraContent={
 					<Column>
 						<span>

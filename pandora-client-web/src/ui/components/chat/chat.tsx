@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, CharacterId, IChatMessageChat, type AccountSettings, type HexColorString } from 'pandora-common';
+import { AssertNever, CharacterId, IChatMessageChat, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -219,7 +219,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 				style={ style }
 				onContextMenu={ self ? onContextMenu : undefined }
 			>
-				<DisplayInfo messageTime={ message.time } edited={ message.edited ?? false } />
+				<DisplayInfo messageTime={ message.time } edited={ message.edited ?? false } rooms={ [message.room] } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
 				{ ...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc')) }
@@ -308,12 +308,14 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ messageTime, edited }: {
+function DisplayInfo({ messageTime, edited, rooms }: {
 	messageTime: number;
 	edited: boolean;
+	rooms: RoomId[] | null;
 }): ReactElement {
 	const time = useMemo(() => new Date(messageTime), [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
+	const roomId = useGameState().player.getAppearance(useGameState().globalState.currentState).characterState.currentRoom;
 
 	useEffect(() => {
 		if (full)
@@ -329,6 +331,12 @@ function DisplayInfo({ messageTime, edited }: {
 
 	return (
 		<span className='info'>
+			{ rooms ? (
+				rooms.length > 1 ?
+					'[multiple rooms] ' :
+					rooms[0] === roomId ? null :
+						` [${ rooms[0].slice(0, 30) }` + `${ rooms[0].length > 30 ? '...' : '' }` + '] '
+				) : null }
 			{ full
 				? <time>{ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)}` }</time>
 				: <time>{ time.toLocaleTimeString('en-IE').substring(0, 5) }</time> }
@@ -441,13 +449,14 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 	return before + message.from.name + after;
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, children, extraContent, defaultUnfolded = false }: {
+export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number;
 	edited: boolean;
 	repetitions?: number;
 	dim?: boolean;
+	rooms: RoomId[] | null;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -484,7 +493,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			style={ style }
 			onClick={ () => setFolded(!folded) }
 		>
-			<DisplayInfo messageTime={ messageTime } edited={ edited } />
+			<DisplayInfo messageTime={ messageTime } edited={ edited } rooms={ rooms } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ children }
 			{ extraContent != null && folded ? ' ( ... )' : null }
@@ -523,6 +532,7 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			edited={ false }
 			repetitions={ message.repetitions }
 			dim={ message.rooms != null && !message.rooms.includes(message.receivedRoomId) }
+			rooms={ message.rooms }
 			extraContent={ extraContent != null ? (
 				<>
 					{ extraContent }

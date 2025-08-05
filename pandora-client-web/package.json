@@ -67,7 +67,6 @@
 		"@types/react-dom": "19.1.7",
 		"@types/react-reconciler": "0.32.0",
 		"@types/webpack": "5.28.5",
-		"clean-webpack-plugin": "4.0.0",
 		"cross-env": "10.0.0",
 		"css-loader": "7.1.2",
 		"css-minimizer-webpack-plugin": "7.0.2",

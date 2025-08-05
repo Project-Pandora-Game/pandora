@@ -33,35 +33,33 @@ type React19HostConfig<
 	TimeoutHandle,
 	NoTimeout,
 	TransitionStatus,
-> = (
-		Omit<
-			ReactReconciler.HostConfig<
-				Type,
-				Props,
-				Container,
-				Instance,
-				TextInstance,
-				SuspenseInstance,
-				HydratableInstance,
-				FormInstance,
-				PublicInstance,
-				HostContext,
-				ChildSet,
-				TimeoutHandle,
-				NoTimeout,
-				TransitionStatus
-			>,
-			'HostTransitionContext'
-		> & {
-			// Fix typing of React.Context
-			HostTransitionContext: React.Context<TransitionStatus>;
+> = (Omit<
+	ReactReconciler.HostConfig<
+		Type,
+		Props,
+		Container,
+		Instance,
+		TextInstance,
+		SuspenseInstance,
+		HydratableInstance,
+		FormInstance,
+		PublicInstance,
+		HostContext,
+		ChildSet,
+		TimeoutHandle,
+		NoTimeout,
+		TransitionStatus
+	>,
+	'HostTransitionContext'
+> & {
+	// Fix typing of React.Context
+	HostTransitionContext: React.Context<TransitionStatus>;
 
-			// Extras from Pandora's research
-			rendererPackageName: string;
-			rendererVersion: string;
-			extraDevToolsConfig: unknown;
-		}
-	);
+	// Extras from Pandora's research
+	rendererPackageName: string;
+	rendererVersion: string;
+	extraDevToolsConfig: unknown;
+});
 
 export type PixiHostConfig = React19HostConfig<
 	string, // Type

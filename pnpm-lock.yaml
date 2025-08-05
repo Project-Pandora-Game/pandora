@@ -193,8 +193,8 @@ importers:
         specifier: 4.0.4
         version: 4.0.4(postcss@8.5.6)
       dotenv:
-        specifier: 16.6.1
-        version: 16.6.1
+        specifier: 17.2.1
+        version: 17.2.1
       file-loader:
         specifier: 6.2.0
         version: 6.2.0(webpack@5.101.0)
@@ -359,8 +359,8 @@ importers:
         specifier: 14.21.0
         version: 14.21.0
       dotenv:
-        specifier: 16.6.1
-        version: 16.6.1
+        specifier: 17.2.1
+        version: 17.2.1
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -462,8 +462,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       dotenv:
-        specifier: 16.6.1
-        version: 16.6.1
+        specifier: 17.2.1
+        version: 17.2.1
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -3236,8 +3236,8 @@ packages:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
     engines: {node: '>=8'}
 
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+  dotenv@17.2.1:
+    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
     engines: {node: '>=12'}
 
   dreamopt@0.8.0:
@@ -10223,7 +10223,7 @@ snapshots:
     dependencies:
       is-obj: 2.0.0
 
-  dotenv@16.6.1: {}
+  dotenv@17.2.1: {}
 
   dreamopt@0.8.0:
     dependencies:

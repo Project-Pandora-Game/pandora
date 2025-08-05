@@ -28,6 +28,11 @@ import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDet
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { RenderedLink } from './links.tsx';
 
+export type ChatMessageProcessedRoomData = {
+	id: RoomId;
+	name: string;
+};
+
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
@@ -42,6 +47,8 @@ export type IChatNormalMessageProcessed = IChatMessageChat & {
 	time: number;
 	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Room the message was said in */
+	roomData: ChatMessageProcessedRoomData;
 	/** Id of a room the player character was in when the message was received. */
 	receivedRoomId: RoomId;
 	edited?: boolean;
@@ -57,6 +64,8 @@ export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'>
 	time: number;
 	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
+	roomsData: ChatMessageProcessedRoomData[] | null;
 	/** Id of a room the player character was in when the message was received. */
 	receivedRoomId: RoomId;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */

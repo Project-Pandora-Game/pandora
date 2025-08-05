@@ -89,6 +89,20 @@
 				font-style: italic;
 				font-size: 0.6em;
 				margin-right: 0.2em;
+
+				> span {
+					// Reverse display direction
+					float: right;
+				}
+
+				.roomInfo {
+					.roomName {
+						max-width: min(15vw, 10em);
+						overflow: hidden;
+						text-wrap: nowrap;
+						text-overflow: ellipsis;
+					}
+				}
 			}
 
 			> .repetitionCount {

@@ -2,6 +2,7 @@ import { freeze, Immutable } from 'immer';
 import { isEqual, noop } from 'lodash-es';
 import {
 	ActionSpaceContext,
+	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateClientBundle,
@@ -47,6 +48,7 @@ import {
 	type IClientShardPromiseResult,
 	type ItemContainerPath,
 	type ItemId,
+	type RoomId,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -61,7 +63,7 @@ import { Observable, useNullableObservable, useObservable } from '../../observab
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
-import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
+import { IChatMessageProcessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 import { useShardConnector } from './shardConnectorContextProvider.tsx';
@@ -356,9 +358,28 @@ export class GameState extends TypedEventEmitter<{
 		const spaceId = this.currentSpace.value.id;
 		const roomId = this.player.getAppearance(this.globalState.currentState).characterState.currentRoom;
 
+		const processRoom = (id: RoomId): ChatMessageProcessedRoomData => ({
+			id,
+			name: this.globalState.currentState.space.getRoom(id)?.displayName ?? id,
+		});
+
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map((m): IChatMessageProcessed => ({ ...m, spaceId, receivedRoomId: roomId }));
+			.map((m): IChatMessageProcessed => {
+				switch (m.type) {
+					case 'chat':
+					case 'ooc':
+					case 'me':
+					case 'emote':
+						return ({ ...m, spaceId, roomData: processRoom(m.room), receivedRoomId: roomId });
+					case 'action':
+					case 'serverMessage':
+						return ({ ...m, spaceId, roomsData: m.rooms?.map(processRoom) ?? null, receivedRoomId: roomId });
+					case 'deleted':
+						return ({ ...m, spaceId, receivedRoomId: roomId });
+				}
+				AssertNever(m);
+			});
 
 		this._lastMessageTime = messages
 			.map((m) => m.time)

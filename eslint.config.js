@@ -130,7 +130,7 @@ export default tsEslint.config(
 					},
 				},
 			],
-			'@stylistic/quotes': ['warn', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': true }],
+			'@stylistic/quotes': ['warn', 'single', { 'avoidEscape': true, 'allowTemplateLiterals': 'always' }],
 			'@stylistic/jsx-quotes': ['warn', 'prefer-single'],
 			'@stylistic/brace-style': ['warn', '1tbs'],
 			'@stylistic/space-before-function-paren': [
@@ -367,7 +367,6 @@ export default tsEslint.config(
 			'@stylistic/jsx-curly-newline': ['warn', 'consistent'],
 			'@stylistic/jsx-curly-spacing': ['warn', { 'when': 'always', 'children': true }],
 			'@stylistic/jsx-equals-spacing': ['warn', 'never'],
-			'@stylistic/jsx-indent': ['warn', 'tab'],
 			'@stylistic/jsx-pascal-case': 'warn',
 			'@stylistic/jsx-props-no-multi-spaces': 'warn',
 			'@stylistic/jsx-tag-spacing': 'warn',

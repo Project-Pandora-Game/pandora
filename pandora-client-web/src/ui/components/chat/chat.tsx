@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, CharacterId, IChatMessageChat, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
+import { AssertNever, CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -23,7 +23,7 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput.tsx';
-import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
+import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
 export function Chat(): ReactElement | null {
@@ -219,7 +219,12 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 				style={ style }
 				onContextMenu={ self ? onContextMenu : undefined }
 			>
-				<DisplayInfo messageTime={ message.time } edited={ message.edited ?? false } rooms={ [message.room] } />
+				<DisplayInfo
+					messageTime={ message.time }
+					edited={ message.edited ?? false }
+					rooms={ [message.roomData] }
+					receivedRoomId={ message.receivedRoomId }
+				/>
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
 				{ ...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc')) }
@@ -308,14 +313,14 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ messageTime, edited, rooms }: {
+function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
 	messageTime: number;
 	edited: boolean;
-	rooms: RoomId[] | null;
+	rooms: readonly ChatMessageProcessedRoomData[] | null;
+	receivedRoomId: RoomId;
 }): ReactElement {
 	const time = useMemo(() => new Date(messageTime), [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
-	const roomId = useGameState().player.getAppearance(useGameState().globalState.currentState).characterState.currentRoom;
 
 	useEffect(() => {
 		if (full)
@@ -331,17 +336,18 @@ function DisplayInfo({ messageTime, edited, rooms }: {
 
 	return (
 		<span className='info'>
-			{ rooms ? (
-				rooms.length > 1 ?
-					'[multiple rooms] ' :
-					rooms[0] === roomId ? null :
-						` [${ rooms[0].slice(0, 30) }` + `${ rooms[0].length > 30 ? '...' : '' }` + '] '
-				) : null }
-			{ full
-				? <time>{ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)}` }</time>
-				: <time>{ time.toLocaleTimeString('en-IE').substring(0, 5) }</time> }
-			{ edited ? <span> [edited]</span> : null }
-			{ /* Space so copied text looks nicer */ ' ' }
+			<span>
+				{
+					full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
+					(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')
+				}
+			</span>
+			{ edited ? <span>[edited] </span> : null }
+			{ rooms && rooms.length > 0 && (rooms.length > 1 || rooms[0].id !== receivedRoomId) ? (
+				<span className='roomInfo' title={ NaturalListJoin(rooms.map((r) => r.name)) }>
+					{ rooms.length > 1 ? '[multiple rooms] ' : <>[<span className='roomName'>{ rooms[0].name }</span>] </> }
+				</span>
+			) : null }
 		</span>
 	);
 }
@@ -449,14 +455,15 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 	return before + message.from.name + after;
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, children, extraContent, defaultUnfolded = false }: {
+export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number;
 	edited: boolean;
 	repetitions?: number;
 	dim?: boolean;
-	rooms: RoomId[] | null;
+	rooms: readonly ChatMessageProcessedRoomData[] | null;
+	receivedRoomId: RoomId;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -493,7 +500,12 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			style={ style }
 			onClick={ () => setFolded(!folded) }
 		>
-			<DisplayInfo messageTime={ messageTime } edited={ edited } rooms={ rooms } />
+			<DisplayInfo
+				messageTime={ messageTime }
+				edited={ edited }
+				rooms={ rooms }
+				receivedRoomId={ receivedRoomId }
+			/>
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ children }
 			{ extraContent != null && folded ? ' ( ... )' : null }
@@ -532,7 +544,8 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			edited={ false }
 			repetitions={ message.repetitions }
 			dim={ message.rooms != null && !message.rooms.includes(message.receivedRoomId) }
-			rooms={ message.rooms }
+			rooms={ message.roomsData }
+			receivedRoomId={ message.receivedRoomId }
 			extraContent={ extraContent != null ? (
 				<>
 					{ extraContent }

@@ -56,7 +56,11 @@ function MessageForAttemptedAction(
 				messageTime={ action.start }
 				edited={ false }
 				dim={ playerState != null && playerState.currentRoom !== characterState.currentRoom }
-				rooms={ [characterState.currentRoom] }
+				rooms={ [{
+					id: characterState.currentRoom,
+					name: globalState.space.getRoom(characterState.currentRoom)?.displayName ?? characterState.currentRoom,
+				}] }
+				receivedRoomId={ playerState?.currentRoom ?? characterState.currentRoom }
 				extraContent={
 					<Column>
 						<span>

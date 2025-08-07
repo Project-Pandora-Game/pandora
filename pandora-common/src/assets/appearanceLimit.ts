@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import { ZodEnum } from 'zod';
-import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
+import { Assert, CloneDeepMutable, IntervalSetIntersection, IsNotNullable, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
 import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionLegsPosePoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from './graphics/index.ts';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearanceLegsPose, AppearancePose } from './state/characterStatePose.ts';
@@ -196,18 +196,18 @@ class TreeNode {
 		if (other.children == null)
 			return next;
 
-		const nodes: TreeNode[] = [];
+		let nodes: TreeNode[];
 
 		if (next.children == null) {
-			nodes.push(...other.children
+			nodes = other.children
 				.map((child) => child.intersectionWithLimit(next.limit, true))
-				.filter((child): child is TreeNode => child != null));
+				.filter(IsNotNullable);
 		} else {
 			const children = next.children;
-			nodes.push(...other.children
+			nodes = other.children
 				.flatMap((otherChild) => children
-					.map((child) => child.intersection(otherChild))
-					.filter((child): child is TreeNode => child != null)));
+					.map((child) => child.intersection(otherChild)?.intersectionWithLimit(next.limit, true))
+					.filter(IsNotNullable));
 		}
 
 		return TreeNode.fromResult(next.limit, nodes);
@@ -233,7 +233,7 @@ class TreeNode {
 		const childLimiter = newLimit.prune(this.limit);
 		const newChildren = this.children
 			.map((child) => child.intersectionWithLimit(childLimiter, true))
-			.filter((child): child is TreeNode => child != null);
+			.filter(IsNotNullable);
 
 		return TreeNode.fromResult(newLimit, newChildren);
 	}

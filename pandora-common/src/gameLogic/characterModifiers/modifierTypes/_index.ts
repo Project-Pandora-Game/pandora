@@ -13,6 +13,7 @@ import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
 import { block_lock_unlock_self } from './block_lock_unlock_self.ts';
 import { block_removing_items_others } from './block_removing_items_others.ts';
 import { block_removing_items_self } from './block_removing_items_self.ts';
+import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { effect_blind } from './effect_blind.ts';
 import { effect_block_hands } from './effect_block_hands.ts';
 import { effect_block_room_movement } from './effect_block_room_movement.ts';
@@ -44,6 +45,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_lock_unlock_self,
 	block_removing_items_others,
 	block_removing_items_self,
+	block_changing_pose_self,
 	effect_blind,
 	effect_block_hands,
 	effect_block_room_movement,

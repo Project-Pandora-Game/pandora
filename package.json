@@ -57,7 +57,7 @@
 		"jest": "30.0.5",
 		"nyc": "17.1.0",
 		"rimraf": "6.0.1",
-		"typescript": "5.8.3",
+		"typescript": "5.9.2",
 		"typescript-eslint": "8.39.0"
 	}
 }

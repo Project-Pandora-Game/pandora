@@ -111,6 +111,13 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const userIsOwner = !!info.isOwner;
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
 	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
+	const player = usePlayer();
+
+	const namedOwners = [];
+	namedOwners.push(info.owners.map((i) => {
+		const result = contacts.find((s) => s.id === i);
+		return result?.id === i ? `${ result.displayName } (${ i })` : i === player?.data.accountId ? 'me' : i.toLocaleString();
+	}));
 
 	const featureIcons = useMemo((): [icon: string, name: string, extraClassNames?: string][] => {
 		const result = SPACE_FEATURES
@@ -138,7 +145,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 				Details for { isPublic ? 'public' : 'private' } space <b className='spaceName'>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
-				Owned by: { info.owners.join(', ') }
+				Owned by: { namedOwners.join(', ') }
 			</Row>
 			<Row className='features' wrap>
 				{

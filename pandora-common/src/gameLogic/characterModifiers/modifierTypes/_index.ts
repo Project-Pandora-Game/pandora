@@ -5,15 +5,16 @@ import type { CharacterModifierConditionChain } from '../conditions/index.ts';
 import type { CharacterModifierTypeDefinitionBase } from '../helpers/modifierDefinition.ts';
 
 import { block_adding_new_modifiers } from './block_adding_new_modifiers.ts';
+import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { block_creating_items } from './block_creating_items.ts';
 import { block_deleting_items } from './block_deleting_items.ts';
+import { block_entering_defined_rooms } from './block_entering_defined_rooms.ts';
 import { block_equipping_items_others } from './block_equipping_items_others.ts';
 import { block_equipping_items_self } from './block_equipping_items_self.ts';
 import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
 import { block_lock_unlock_self } from './block_lock_unlock_self.ts';
 import { block_removing_items_others } from './block_removing_items_others.ts';
 import { block_removing_items_self } from './block_removing_items_self.ts';
-import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { effect_blind } from './effect_blind.ts';
 import { effect_block_hands } from './effect_block_hands.ts';
 import { effect_block_room_movement } from './effect_block_room_movement.ts';
@@ -37,15 +38,16 @@ import { speech_specific_sounds_only } from './speech_specific_sounds_only.ts';
 /** Catalogue of all character modifier types */
 export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_adding_new_modifiers,
+	block_changing_pose_self,
 	block_creating_items,
 	block_deleting_items,
+	block_entering_defined_rooms,
 	block_equipping_items_others,
 	block_equipping_items_self,
 	block_lock_unlock_others,
 	block_lock_unlock_self,
 	block_removing_items_others,
 	block_removing_items_self,
-	block_changing_pose_self,
 	effect_blind,
 	effect_block_hands,
 	effect_block_room_movement,

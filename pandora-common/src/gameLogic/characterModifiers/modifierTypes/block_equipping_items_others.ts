@@ -7,7 +7,7 @@ export const block_equipping_items_others = DefineCharacterModifier({
 	typeId: 'block_equipping_items_others',
 	visibleName: 'Block: Forbid equipping items on others',
 	description: `
-This modifier the character from equipping items on other characters, be it new items, items from a storage item, or from room inventory.
+This modifier prevents the character from equipping items on other characters, be it new items, items from a storage item, or from room inventory.
 	`,
 	strictnessCategory: 'normal',
 	config: {

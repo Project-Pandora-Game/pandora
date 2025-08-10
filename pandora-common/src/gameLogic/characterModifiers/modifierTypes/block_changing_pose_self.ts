@@ -12,7 +12,7 @@ Other characters can still change the pose of this character normally, if they h
 	strictnessCategory: 'normal',
 	config: {
 		limitTurning: {
-			name: 'Prevent turning the body',
+			name: 'Prevent turning around',
 			type: 'toggle',
 			default: true,
 		},

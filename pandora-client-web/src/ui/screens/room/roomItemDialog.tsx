@@ -176,7 +176,7 @@ function RoomItemDialogContentSection({ name, open, onHeaderClick, children }: C
 	);
 }
 
-function RoomItemDialogContentInfo({ item, path, target, close }: RoomItemDialogContentProps): ReactElement {
+function RoomItemDialogContentInfo({ item, path, target }: RoomItemDialogContentProps): ReactElement {
 	const navigate = useNavigatePandora();
 
 	return (
@@ -188,7 +188,6 @@ function RoomItemDialogContentInfo({ item, path, target, close }: RoomItemDialog
 					src={ shirtIcon }
 					className='wardrobeLinkButton'
 					onClick={ () => {
-						close();
 						navigate(
 							ActionTargetToWardrobeUrl(target),
 							{ state: { initialFocus: path } satisfies WardrobeLocationState },

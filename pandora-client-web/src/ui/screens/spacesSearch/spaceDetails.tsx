@@ -26,6 +26,7 @@ import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfoOpti
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from '../spaceConfiguration/spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from '../spaceConfiguration/spaceOwnershipRemoval.tsx';
 import './spacesSearch.scss';
@@ -111,12 +112,14 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const userIsOwner = !!info.isOwner;
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
 	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
-	const player = usePlayer();
+	const playerAccount = useCurrentAccount();
 
 	const namedOwners = [];
 	namedOwners.push(info.owners.map((i) => {
-		const result = contacts.find((s) => s.id === i);
-		return result?.id === i ? `${ result.displayName } (${ i })` : i === player?.data.accountId ? 'me' : i.toLocaleString();
+		const contact = contacts.find((s) => s.id === i);
+		return (i === playerAccount?.id) ? `${ playerAccount.displayName } (${ i }) [You]` :
+			(contact != null) ? `${ contact.displayName } (${ i })` :
+			i.toString();
 	}));
 
 	const featureIcons = useMemo((): [icon: string, name: string, extraClassNames?: string][] => {

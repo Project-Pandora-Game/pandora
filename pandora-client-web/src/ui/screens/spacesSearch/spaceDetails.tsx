@@ -114,13 +114,12 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
 	const playerAccount = useCurrentAccount();
 
-	const namedOwners = [];
-	namedOwners.push(info.owners.map((i) => {
+	const namedOwners = info.owners.map((i) => {
 		const contact = contacts.find((s) => s.id === i);
 		return (i === playerAccount?.id) ? `${ playerAccount.displayName } (${ i }) [You]` :
 			(contact != null) ? `${ contact.displayName } (${ i })` :
 			i.toString();
-	}));
+	});
 
 	const featureIcons = useMemo((): [icon: string, name: string, extraClassNames?: string][] => {
 		const result = SPACE_FEATURES

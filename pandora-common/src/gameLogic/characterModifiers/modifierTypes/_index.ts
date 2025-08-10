@@ -8,7 +8,7 @@ import { block_adding_new_modifiers } from './block_adding_new_modifiers.ts';
 import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { block_creating_items } from './block_creating_items.ts';
 import { block_deleting_items } from './block_deleting_items.ts';
-import { block_entering_defined_rooms } from './block_entering_defined_rooms.ts';
+import { block_entering_specific_rooms } from './block_entering_specific_rooms.ts';
 import { block_equipping_items_others } from './block_equipping_items_others.ts';
 import { block_equipping_items_self } from './block_equipping_items_self.ts';
 import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
@@ -41,7 +41,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_changing_pose_self,
 	block_creating_items,
 	block_deleting_items,
-	block_entering_defined_rooms,
+	block_entering_specific_rooms,
 	block_equipping_items_others,
 	block_equipping_items_self,
 	block_lock_unlock_others,

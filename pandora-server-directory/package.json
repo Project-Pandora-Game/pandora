@@ -42,7 +42,7 @@
 		"@aws-sdk/credential-provider-node": "3.864.0",
 		"@octokit/auth-oauth-app": "9.0.1",
 		"@octokit/rest": "22.0.0",
-		"argon2": "0.43.1",
+		"argon2": "0.44.0",
 		"async-lock": "1.4.1",
 		"discord.js": "14.21.0",
 		"express": "5.1.0",

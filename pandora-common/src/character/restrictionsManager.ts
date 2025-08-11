@@ -1,4 +1,4 @@
-import type { Immutable } from 'immer';
+import { castImmutable, type Immutable } from 'immer';
 import { clamp } from 'lodash-es';
 import type { CharacterAppearance } from '../assets/appearance.ts';
 import { SplitContainerPath } from '../assets/appearanceHelpers.ts';
@@ -16,9 +16,9 @@ import { Muffler } from '../chat/muffling.ts';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers/index.ts';
-import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic/index.ts';
+import type { CharacterModifierEffectData, CharacterModifierEffectDataSpecific, CharacterModifierPropertiesApplier, CharacterModifierSpecificConfig, CharacterModifierType } from '../gameLogic/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
-import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc.ts';
+import { Assert, AssertNever, IsNotNullable, MemoizeNoArg } from '../utility/misc.ts';
 import { ItemInteractionType } from './restrictionTypes.ts';
 
 /**
@@ -48,6 +48,21 @@ export class CharacterRestrictionsManager {
 	@MemoizeNoArg
 	public getModifierEffects(): readonly Immutable<CharacterModifierEffectData>[] {
 		return this.spaceContext.getCharacterModifierEffects(this.appearance.id, this.appearance.gameState);
+	}
+
+	public getModifierEffectsByType<const TType extends CharacterModifierType>(type: TType): readonly Immutable<CharacterModifierEffectDataSpecific<TType>>[] {
+		return this.getModifierEffects()
+			.map((e): Immutable<CharacterModifierEffectDataSpecific<TType>> | undefined => {
+				if (e.type !== type)
+					return undefined;
+
+				return {
+					id: e.id,
+					type: castImmutable(type),
+					config: castImmutable<CharacterModifierSpecificConfig<TType>>(CHARACTER_MODIFIER_TYPE_DEFINITION[e.type].parseConfig(e)),
+				};
+			})
+			.filter(IsNotNullable);
 	}
 
 	@MemoizeNoArg

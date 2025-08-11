@@ -24,6 +24,7 @@ export interface CharacterModifierTypeConstructedDefinition<TType extends string
 	readonly configDefinition: TConfig;
 	readonly configSchema: CharacterModifierBuildConfigurationSchemaType<TConfig>;
 
+	parseConfig(effect: CharacterModifierEffectData): CharacterModifierConfiguration<TConfig>;
 	createPropertiesApplier(effect: CharacterModifierEffectData): CharacterModifierPropertiesApplier;
 }
 /** Character modifier type configuration data */
@@ -61,10 +62,15 @@ export function DefineCharacterModifier<
 						AssertNever(intermediateConfig.strictnessCategory),
 		configDefinition: intermediateConfig.config,
 		configSchema,
-		createPropertiesApplier(effect): CharacterModifierPropertiesApplier {
+		parseConfig(effect) {
 			Assert(effect.type === intermediateConfig.typeId, 'Different modifier type passed');
 			const parsedConfig = configSchema.parse(effect.config);
-			Assert(isEqual(parsedConfig, effect.config), 'Incompatible configuration passed to character modifier properties applier');
+			Assert(isEqual(parsedConfig, effect.config), 'Incompatible configuration passed to character modifier definition');
+
+			return parsedConfig;
+		},
+		createPropertiesApplier(effect): CharacterModifierPropertiesApplier {
+			const parsedConfig = this.parseConfig(effect);
 
 			return {
 				applyCharacterEffects: intermediateConfig.applyCharacterEffects?.bind(globalThis, parsedConfig) ?? null,

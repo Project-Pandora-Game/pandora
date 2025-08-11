@@ -23,7 +23,7 @@ import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
-import { AutoCompleteHint, ChatFocusMode, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput.tsx';
+import { AutoCompleteHint, ChatFocusMode, ChatInputArea, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
@@ -31,7 +31,9 @@ export function Chat(): ReactElement | null {
 	const gameState = useGameState();
 	const messages = useChatMessages();
 	const injectedMessages = useChatInjectedMessages(gameState);
-	const focusMode = useObservable(ChatFocusMode);
+	const focusModeSetting = useObservable(ChatFocusMode);
+	const focusModeForced = useChatFocusModeForced();
+	const focusMode = focusModeForced ?? focusModeSetting;
 
 	const shardConnector = useShardConnector();
 	const { interfaceChatroomChatFontSize } = useAccountSettings();

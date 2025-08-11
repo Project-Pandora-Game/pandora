@@ -4,11 +4,12 @@ import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import settingsIcon from '../../../assets/icons/setting.svg';
 import focusIcon from '../../../assets/icons/focus.svg';
+import settingsIcon from '../../../assets/icons/setting.svg';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent.ts';
@@ -17,7 +18,7 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { ChatSendError, IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useCharacterSettings, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { Observable, useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
@@ -26,7 +27,6 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useService } from '../../../services/serviceProvider.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
-import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 
 type Editing = {
 	target: number;
@@ -55,6 +55,10 @@ export const chatInputContext = createContext<IChatInputHandler | null>(null);
  * In focus mode, messages from other rooms that would be dimmed are instead hidden altogether.
  */
 export const ChatFocusMode = new Observable<boolean>(false);
+
+export function useChatFocusModeForced(): boolean | null {
+	return usePlayerRestrictionManager().getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
+}
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -522,7 +526,9 @@ function TypingIndicator(): ReactElement {
 		setShowSelector(!showSelector);
 	}, [showSelector, setShowSelector]);
 
-	const focusMode = useObservable(ChatFocusMode);
+	const focusModeSetting = useObservable(ChatFocusMode);
+	const focusModeForced = useChatFocusModeForced();
+	const focusMode = focusModeForced ?? focusModeSetting;
 	statuses = statuses
 		.filter((s) => {
 			// Hide typing state of characters in other rooms
@@ -544,7 +550,11 @@ function TypingIndicator(): ReactElement {
 	return (
 		<div className='typing-indicator' onClick={ onClick }>
 			{ focusMode ? (
-				<img src={ focusIcon } alt='Focus mode' title='Focus mode - messages from other rooms are hidden' />
+				<img
+					src={ focusIcon }
+					alt='Focus mode'
+					title='Focus mode - messages from other rooms are hidden'
+				/>
 			) : null }
 			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
@@ -769,7 +779,9 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 function ChatModeSelector(): ReactElement | null {
 	const id = useId();
 	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
-	const focusMode = useObservable(ChatFocusMode);
+	const focusModeSetting = useObservable(ChatFocusMode);
+	const focusModeForced = useChatFocusModeForced();
+	const focusMode = focusModeForced ?? focusModeSetting;
 	const ref = useRef<HTMLSelectElement>(null);
 	const hasTarget = target !== null;
 
@@ -841,12 +853,16 @@ function ChatModeSelector(): ReactElement | null {
 					onChange={ (newValue) => {
 						ChatFocusMode.value = newValue;
 					} }
+					disabled={ focusModeForced != null }
 					id={ `${id}:focus-mode-toggle` }
 				/>
 				<img src={ focusIcon } alt='Focus mode' />
 				<label htmlFor={ `${id}:focus-mode-toggle` }>
 					Enable focus mode - hide messages from other rooms
 				</label>
+				{ focusModeForced != null ? (
+					<span>(controlled by a character modifier)</span>
+				) : null }
 			</div>
 		</>
 	);

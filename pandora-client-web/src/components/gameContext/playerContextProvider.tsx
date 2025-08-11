@@ -1,10 +1,20 @@
 import type { Immutable } from 'immer';
-import { AssertNotNullable, AssetFrameworkCharacterState, CHARACTER_SETTINGS_DEFAULT, CharacterId, ICharacterPrivateData, ICharacterRoomData, type AssetFrameworkGlobalState, type CharacterSettings } from 'pandora-common';
+import {
+	AssertNotNullable,
+	AssetFrameworkCharacterState,
+	CHARACTER_SETTINGS_DEFAULT,
+	CharacterId,
+	ICharacterPrivateData,
+	ICharacterRoomData,
+	type AssetFrameworkGlobalState,
+	type CharacterRestrictionsManager,
+	type CharacterSettings,
+} from 'pandora-common';
 import { useMemo } from 'react';
 import { useCharacterDataOptional } from '../../character/character.ts';
 import { PlayerCharacter } from '../../character/player.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useCharacterState, useGameState, useGlobalState } from './gameStateContextProvider.tsx';
+import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState } from './gameStateContextProvider.tsx';
 import { useShardConnector } from './shardConnectorContextProvider.tsx';
 
 export function usePlayer(): PlayerCharacter | null {
@@ -27,6 +37,12 @@ export function usePlayerState(): {
 		globalState,
 		playerState,
 	}), [player, globalState, playerState]);
+}
+
+export function usePlayerRestrictionManager(): CharacterRestrictionsManager {
+	const { player, globalState } = usePlayerState();
+	const spaceContext = useActionSpaceContext();
+	return useMemo(() => player.getRestrictionManager(globalState, spaceContext), [player, globalState, spaceContext]);
 }
 
 export function usePlayerData(): Readonly<ICharacterPrivateData & ICharacterRoomData> | null {

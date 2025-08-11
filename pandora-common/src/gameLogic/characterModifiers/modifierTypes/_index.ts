@@ -5,6 +5,7 @@ import type { CharacterModifierConditionChain } from '../conditions/index.ts';
 import type { CharacterModifierTypeDefinitionBase } from '../helpers/modifierDefinition.ts';
 
 import { block_adding_new_modifiers } from './block_adding_new_modifiers.ts';
+import { block_changing_following_state } from './block_changing_following_state.ts';
 import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { block_creating_items } from './block_creating_items.ts';
 import { block_deleting_items } from './block_deleting_items.ts';
@@ -38,6 +39,7 @@ import { speech_specific_sounds_only } from './speech_specific_sounds_only.ts';
 /** Catalogue of all character modifier types */
 export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_adding_new_modifiers,
+	block_changing_following_state,
 	block_changing_pose_self,
 	block_creating_items,
 	block_deleting_items,

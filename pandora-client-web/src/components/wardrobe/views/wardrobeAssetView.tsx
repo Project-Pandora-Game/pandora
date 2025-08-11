@@ -12,18 +12,22 @@ import {
 	ResolveAssetPreference,
 	type ICharacterRoomData,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { z } from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import filterIcon from '../../../assets/icons/filter.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import listIcon from '../../../assets/icons/list.svg';
+import { BrowserStorage } from '../../../browserStorage.ts';
 import { useCharacterDataOptional, type Character } from '../../../character/character.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
+import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
-import { IconButton } from '../../common/button/button.tsx';
+import { Button, IconButton } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
@@ -84,6 +88,8 @@ export interface WardrobeAssetListItemProps {
 	listMode: boolean;
 }
 
+const WardrobeAssetListViewMode = BrowserStorage.create('wardrobe.asset_list.view', 'list', z.enum(['list', 'grid']));
+
 export function WardrobeAssetList({ header, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
 	header?: ReactNode;
 	children?: ReactNode;
@@ -96,38 +102,46 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 	ListItemComponent: React.ComponentType<WardrobeAssetListItemProps>;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const [listMode, setListMode] = useState(true);
+	const viewMode = useObservable(WardrobeAssetListViewMode);
 	const [filter, setFilter] = useState('');
-	const [showAttributeFilters, setShowAttributeFilters] = useState(false);
-	const [attribute, setAttribute] = useReducer((old: string, wantToSet: string) => {
-		return wantToSet === old ? '' : wantToSet;
-	}, '');
+	/** Null = nothing selected, '' = show everything, attribute name = filter to that attribute */
+	const [attribute, setAttribute] = useState<null | '' | string>(null);
+
+	// If there is at most one attribute or all assets match it, do not display filters
+	const finalAttributeFilterOptions = useMemo(() => (
+		(attributesFilterOptions == null ||
+		attributesFilterOptions.length < 1 ||
+		attributesFilterOptions.length === 1 && assets.every((a) => a.staticAttributes.has(attributesFilterOptions[0]))) ? undefined : attributesFilterOptions
+	), [attributesFilterOptions, assets]);
 
 	const flt = filter.toLowerCase().trim().split(/\s+/);
 	const filteredAssets = useMemo(() => (
 		assets
 			// Some assets cannot be manually spawned, so ignore those
 			.filter((asset) => asset.canBeSpawned())
-			.filter((asset) => flt.every((f) => {
-				const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
-				return asset.definition.name.toLowerCase().includes(f) &&
-					((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
-						(
-							asset.staticAttributes.has(attribute) &&
-							!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
-								?.some((a) => asset.staticAttributes.has(a))
-						) : true
-					);
-			}))
-	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
+			.filter((asset) => {
+				if (attribute == null || attribute === '' || !finalAttributeFilterOptions?.includes(attribute))
+					return true;
+
+				const attributeDefinition = assetManager.getAttributeDefinition(attribute);
+				return (
+					asset.staticAttributes.has(attribute) &&
+					!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
+						?.some((a) => asset.staticAttributes.has(a))
+				);
+			})
+			.filter((asset) => flt.every((f) => (
+				asset.definition.name.toLowerCase().includes(f)
+			)))
+	), [assetManager, assets, flt, finalAttributeFilterOptions, attribute]);
 
 	const sortedAssets = useOrderedAssets(filteredAssets, itemSortIgnorePreferenceOrdering);
 
 	useEffect(() => {
-		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
-			setAttribute('');
+		if (attribute != null && attribute !== '' && !finalAttributeFilterOptions?.includes(attribute)) {
+			setAttribute(null);
 		}
-	}, [attribute, attributesFilterOptions]);
+	}, [attribute, finalAttributeFilterOptions]);
 
 	const filterInput = useRef<TextInput>(null);
 	useInputAutofocus(filterInput);
@@ -135,25 +149,26 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 	// Clear filter when looking from different focus
 	useEffect(() => {
 		setFilter('');
-		setAttribute('');
-		setShowAttributeFilters(false);
+		setAttribute(null);
 	}, [container, setFilter]);
+
+	const showFilterSelect = attribute == null && finalAttributeFilterOptions != null && !filter.trim();
 
 	return (
 		<div className='inventoryView wardrobeAssetList'>
 			{ header }
 			<div className='toolbar'>
 				{
-					attributesFilterOptions != null ? (
-						<IconButton
-							theme={ attribute !== '' ? 'defaultActive' : 'default' }
-							src={ filterIcon }
-							alt='Filter based on attributes'
-							onClick={ () => {
-								setShowAttributeFilters((v) => !v);
-							} }
-						/>
-					) : null
+					<IconButton
+						theme={ (attribute != null && attribute !== '') ? 'defaultActive' : 'default' }
+						src={ filterIcon }
+						alt='Reset filters'
+						disabled={ attribute == null && !filter }
+						onClick={ () => {
+							setAttribute(null);
+							setFilter('');
+						} }
+					/>
 				}
 				<div className='filter'>
 					<TextInput ref={ filterInput }
@@ -164,23 +179,13 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 				</div>
 				<div className='flex-1' />
 				<ListViewToggle
-					listMode={ listMode }
-					setListMode={ setListMode }
+					listMode={ viewMode === 'list' }
+					setListMode={ (listMode) => {
+						WardrobeAssetListViewMode.value = listMode ? 'list' : 'grid';
+					} }
+					disabled={ showFilterSelect }
 				/>
 			</div>
-			{ (attributesFilterOptions == null || !showAttributeFilters) ? null : (
-				<div className='toolbar wrap attributeFilter'>
-					{ attributesFilterOptions.map((a) => (
-						<AttributeButton
-							key={ a }
-							attribute={ a }
-							theme={ attribute === a ? 'defaultActive' : 'default' }
-							onClick={ () => setAttribute(a) }
-							slim
-						/>
-					)) }
-				</div>
-			) }
 			{ children }
 			<div className='listContainer'>
 				{
@@ -190,28 +195,57 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 						</div>
 					) : null
 				}
-				<div className='Scrollbar'>
-					<div className={ listMode ? 'list' : 'grid' }>
-						{
-							sortedAssets.map((a) => (
-								<ListItemComponent
-									key={ a.id }
-									asset={ a }
-									container={ container }
-									listMode={ listMode }
-								/>
-							))
-						}
-					</div>
-				</div>
+
+				{
+					showFilterSelect ? (
+						<Column className='flex-1' alignX='center' alignY='center' padding='medium' overflowY='auto'>
+							<div className='initialAttributeList'>
+								{ finalAttributeFilterOptions.map((a) => (
+									<AttributeButton
+										key={ a }
+										attribute={ a }
+										theme='default'
+										className='align-start IconButton'
+										onClick={ () => setAttribute(a) }
+										long
+									/>
+								)) }
+							</div>
+							<Button
+								className='align-start'
+								onClick={ () => {
+									setAttribute('');
+								} }
+							>
+								View all assets
+							</Button>
+						</Column>
+					) : (
+						<Column className='flex-1' overflowX='clip' overflowY='auto'>
+							<div className={ viewMode === 'list' ? 'list' : 'grid' }>
+								{
+									sortedAssets.map((a) => (
+										<ListItemComponent
+											key={ a.id }
+											asset={ a }
+											container={ container }
+											listMode={ viewMode === 'list' }
+										/>
+									))
+								}
+							</div>
+						</Column>
+					)
+				}
 			</div>
 		</div>
 	);
 }
 
-function ListViewToggle({ listMode, setListMode }: {
+function ListViewToggle({ listMode, setListMode, disabled }: {
 	listMode: boolean;
 	setListMode: (newValue: boolean) => void;
+	disabled: boolean;
 }): ReactElement {
 	const isNarrowScreen = useIsNarrowScreen();
 
@@ -222,6 +256,8 @@ function ListViewToggle({ listMode, setListMode }: {
 				<IconButton
 					onClick={ () => setListMode(false) }
 					theme='default'
+					className='hideDisabled'
+					disabled={ disabled }
 					src={ gridIcon }
 					alt='Grid view mode'
 				/>
@@ -231,6 +267,8 @@ function ListViewToggle({ listMode, setListMode }: {
 				<IconButton
 					onClick={ () => setListMode(true) }
 					theme='default'
+					className='hideDisabled'
+					disabled={ disabled }
 					src={ listIcon }
 					alt='List view mode'
 				/>
@@ -243,12 +281,16 @@ function ListViewToggle({ listMode, setListMode }: {
 			<IconButton
 				onClick={ () => setListMode(false) }
 				theme={ listMode ? 'default' : 'defaultActive' }
+				className='hideDisabled'
+				disabled={ disabled }
 				src={ gridIcon }
 				alt='Grid view mode'
 			/>
 			<IconButton
 				onClick={ () => setListMode(true) }
 				theme={ listMode ? 'defaultActive' : 'default' }
+				className='hideDisabled'
+				disabled={ disabled }
 				src={ listIcon }
 				alt='List view mode'
 			/>

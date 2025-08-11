@@ -465,8 +465,9 @@ export function WardrobeActionRandomizeButton({
 	);
 }
 
-export function AttributeButton({ attribute, ...buttonProps }: {
+export function AttributeButton({ attribute, long = false, ...buttonProps }: {
 	attribute: string;
+	long?: boolean;
 } & Omit<ButtonProps, 'children'>): ReactElement {
 	const assetManager = useAssetManager();
 	const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
@@ -477,7 +478,7 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 
 	return (
 		<>
-			{ icon ? (
+			{ (icon && !long) ? (
 				<IconButton ref={ setButtonRef }
 					{ ...buttonProps }
 					src={ icon }
@@ -490,6 +491,7 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 					className={ classNames(buttonProps.className, 'iconHeightButton') }
 					data-attribute={ attribute }
 				>
+					{ icon ? <img src={ icon } alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` } crossOrigin='anonymous' /> : null }
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }

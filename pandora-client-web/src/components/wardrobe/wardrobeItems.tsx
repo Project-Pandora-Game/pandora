@@ -46,23 +46,17 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		if (targetSelector.type === 'room') {
-			return asset.isType('roomDevice') ||
-				asset.isType('lock') ||
-				asset.isType('personal');
-		}
-		if (targetSelector.type === 'character') {
+
+		// When focused on a character, only display wearable assets
+		if (targetSelector.type === 'character' && currentFocus.container.length === 0) {
 			return asset.isType('roomDeviceWearablePart') ||
-				(
-					asset.isType('lock') &&
-					currentFocus.container.length !== 0
-				) ||
-				(
-					asset.isType('personal') &&
-					(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
-				);
+				(asset.isType('personal') && asset.definition.wearable !== false);
 		}
-		AssertNever(targetSelector);
+
+		// Otherwise display all non-special assets (not bodyparts or room device wearable parts)
+		return asset.isType('roomDevice') ||
+			asset.isType('lock') ||
+			asset.isType('personal');
 	}, [targetSelector, currentFocus]);
 
 	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);

@@ -279,6 +279,19 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	.initialAttributeList {
+		display: grid;
+		width: 100%;
+		grid-template-columns: repeat(auto-fit, 15em);
+		grid-template-rows: min-content auto;
+		gap: common.spacing('medium');
+		justify-content: center;
+
+		.Button {
+			height: 2.75em;
+		}
+	}
+
 	.Scrollbar {
 		flex: 1;
 		overflow: auto;
@@ -333,14 +346,8 @@ $drop-overlay-gap: 0.3em;
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(auto-fill, minmax(8em, 1fr));
 		grid-template-rows: min-content auto;
-	}
-
-	@media (min-width: 1536px) {
-		.grid {
-			grid-template-columns: repeat(4, 1fr);
-		}
 	}
 
 	.description {

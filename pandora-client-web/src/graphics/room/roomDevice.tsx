@@ -18,7 +18,7 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
@@ -372,10 +372,6 @@ function RoomDeviceCharacterNames({
 	projectionResolver,
 }: Pick<RoomDeviceProps, 'item' | 'deployment' | 'projectionResolver'>): ReactElement {
 	const {
-		openContextMenu,
-	} = useRoomScreenContext();
-
-	const {
 		interfaceChatroomCharacterNameFontSize,
 	} = useAccountSettings();
 
@@ -414,52 +410,84 @@ function RoomDeviceCharacterNames({
 					for (const slot of Object.keys(item.asset.definition.slots)) {
 						const characterId = item.slotOccupancy.get(slot);
 						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
-						let held = false;
 
 						if (character == null)
 							continue;
 
-						result.push(
-							<Container
-								key={ character.id }
-								position={ { x, y: y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) } }
-								scale={ { x: scale, y: scale } }
-								sortableChildren
-								cursor='pointer'
-								eventMode='static'
-								hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-								onpointerdown={ (ev) => {
-									if (ev.button !== 1) {
-										ev.stopPropagation();
-										held = true;
-									}
-								} }
-								onpointerup={ (ev) => {
-									if (held) {
-										ev.stopPropagation();
-										held = false;
-										openContextMenu(character, {
-											x: ev.pageX,
-											y: ev.pageY,
-										});
-									}
-								} }
-								onpointerupoutside={ () => {
-									held = false;
-								} }
-								zIndex={ -deploymentY - 0.5 }
-							>
-								<RoomCharacterLabel
-									character={ character }
-								/>
-							</Container>,
-						);
+						result.push(<RoomDeviceCharacterName
+							key={ character.id }
+							character={ character }
+							x={ x }
+							y={ y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) }
+							zIndex={ -deploymentY - 0.5 }
+							scale={ scale }
+							spacing={ spacing }
+						/>);
 					}
 
 					return result;
-				}, [characters, deploymentY, fontScale, item, openContextMenu, scale, x, y, yOffsetExtra])
+				}, [characters, deploymentY, fontScale, item, scale, x, y, yOffsetExtra])
 			}
 		</>
+	);
+}
+
+function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
+	character: Character;
+	x: number;
+	y: number;
+	zIndex: number;
+	scale: number;
+	spacing: number;
+}): ReactElement {
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
+	const [hover, setHover] = useState(false);
+	const [held, setHeld] = useState(false);
+
+	return (
+		<Container
+			key={ character.id }
+			position={ { x, y } }
+			scale={ { x: scale, y: scale } }
+			sortableChildren
+			cursor='pointer'
+			eventMode='static'
+			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
+			onpointerdown={ (ev) => {
+				if (ev.button !== 1) {
+					ev.stopPropagation();
+					setHeld(true);
+				}
+			} }
+			onpointerup={ (ev) => {
+				if (held) {
+					ev.stopPropagation();
+					setHeld(false);
+					openContextMenu(character, {
+						x: ev.pageX,
+						y: ev.pageY,
+					});
+				}
+			} }
+			onpointerupoutside={ () => {
+				setHeld(false);
+			} }
+			onpointerenter={ () => {
+				setHover(true);
+			} }
+			onpointerleave={ () => {
+				setHover(false);
+			} }
+			zIndex={ zIndex }
+		>
+			<RoomCharacterLabel
+				character={ character }
+				theme={ held ? 'active' : hover ? 'hover' : 'normal' }
+			/>
+		</Container>
 	);
 }
 

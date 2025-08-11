@@ -11,13 +11,14 @@ import {
 	SpaceClientInfo,
 } from 'pandora-common';
 import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
-import { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import statusIconAway from '../../assets/icons/state-away.svg';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useFetchedResourceText } from '../../common/useFetch.ts';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
@@ -352,15 +353,18 @@ function RoomCharacterDisplay({
 	eventMode,
 	cursor,
 	hitArea,
-	onPointerDown,
+	onPointerDown: onPointerDownOuter,
 	onPointerMove,
-	onPointerUp,
+	onPointerUp: onPointerUpOuter,
 }: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
+
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 
 	const {
 		position,
@@ -388,6 +392,24 @@ function RoomCharacterDisplay({
 		quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION :
 		CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
 
+	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
+		setHeld(true);
+		onPointerDownOuter?.(event);
+	}, [onPointerDownOuter]);
+
+	const onPointerUp = useCallback((event: FederatedPointerEvent) => {
+		setHeld(false);
+		onPointerUpOuter?.(event);
+	}, [onPointerUpOuter]);
+
+	const onPointerEnter = useCallback((_event: FederatedPointerEvent) => {
+		setHover(true);
+	}, []);
+
+	const onPointerLeave = useCallback((_event: FederatedPointerEvent) => {
+		setHover(false);
+	}, []);
+
 	if (roomDeviceLink != null)
 		return null;
 
@@ -405,6 +427,8 @@ function RoomCharacterDisplay({
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
 			onglobalpointermove={ onPointerMove }
+			onpointerenter={ onPointerEnter }
+			onpointerleave={ onPointerLeave }
 			transitionDuration={ movementTransitionDuration }
 			tickerRef={ transitionTickerRef }
 		>
@@ -431,6 +455,7 @@ function RoomCharacterDisplay({
 					<RoomCharacterLabel
 						position={ { x: labelX, y: labelY } }
 						character={ character }
+						theme={ held ? 'active' : hover ? 'hover' : 'normal' }
 					/>
 				) : null
 			}
@@ -445,9 +470,10 @@ function RoomCharacterDisplay({
 	);
 }
 
-export function RoomCharacterLabel({ position, character }: {
+export function RoomCharacterLabel({ position, character, theme }: {
 	position?: PixiPointLike;
 	character: Character<ICharacterRoomData>;
+	theme: 'normal' | 'hover' | 'active';
 }): ReactElement {
 	const {
 		name,
@@ -459,6 +485,7 @@ export function RoomCharacterLabel({ position, character }: {
 		interfaceChatroomCharacterAwayStatusIconDisplay,
 		interfaceChatroomOfflineCharacterFilter,
 		interfaceChatroomCharacterNameFontSize,
+		interfaceAccentColor,
 	} = useAccountSettings();
 
 	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
@@ -496,7 +523,15 @@ export function RoomCharacterLabel({ position, character }: {
 		fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
 		align: 'center',
 		dropShadow: { blur: 4 },
-	}), [fontScale, labelColor]);
+		stroke: {
+			color: new Color('#222222').mixSrgb(new Color(interfaceAccentColor), theme === 'active' ? 0.65 : 0.35).toHex(),
+			width: (
+				theme === 'active' || theme === 'hover' ? 6 :
+				theme === 'normal' ? 0 :
+				AssertNever(theme)
+			),
+		},
+	}), [fontScale, interfaceAccentColor, labelColor, theme]);
 
 	const nameMeasure = useMemo(() => CanvasTextMetrics.measureText(name, style), [name, style]);
 

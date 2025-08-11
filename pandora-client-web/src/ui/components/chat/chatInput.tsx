@@ -1,10 +1,11 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
 import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import settingsIcon from '../../../assets/icons/setting.svg';
+import focusIcon from '../../../assets/icons/focus.svg';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -16,15 +17,16 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { ChatSendError, IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { useCharacterSettings, usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
-import { useNullableObservable } from '../../../observable.ts';
+import { Observable, useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 
 type Editing = {
 	target: number;
@@ -48,6 +50,11 @@ export type IChatInputHandler = {
 };
 
 export const chatInputContext = createContext<IChatInputHandler | null>(null);
+/**
+ * Whether the chat is in focus mode or not.
+ * In focus mode, messages from other rooms that would be dimmed are instead hidden altogether.
+ */
+export const ChatFocusMode = new Observable<boolean>(false);
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -506,7 +513,8 @@ export function useChatInput(): IChatInputHandler {
 
 function TypingIndicator(): ReactElement {
 	let statuses = useChatCharacterStatus();
-	const playerId = usePlayerId();
+	const { player, globalState, playerState } = usePlayerState();
+	const playerId = player.id;
 	const { showSelector, setShowSelector } = useChatInput();
 
 	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
@@ -514,7 +522,18 @@ function TypingIndicator(): ReactElement {
 		setShowSelector(!showSelector);
 	}, [showSelector, setShowSelector]);
 
-	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
+	const focusMode = useObservable(ChatFocusMode);
+	statuses = statuses
+		.filter((s) => {
+			// Hide typing state of characters in other rooms
+			if (focusMode) {
+				const characterState = globalState.getCharacterState(s.data.id);
+				if (characterState != null && characterState.currentRoom !== playerState.currentRoom)
+					return false;
+			}
+
+			return s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering');
+		});
 
 	const extra: ReactNode[] = [];
 	if (statuses.filter((s) => s.status === 'typing').length > 3) {
@@ -524,6 +543,9 @@ function TypingIndicator(): ReactElement {
 
 	return (
 		<div className='typing-indicator' onClick={ onClick }>
+			{ focusMode ? (
+				<img src={ focusIcon } alt='Focus mode' title='Focus mode - messages from other rooms are hidden' />
+			) : null }
 			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
 					<span key={ data.id }>
@@ -535,7 +557,7 @@ function TypingIndicator(): ReactElement {
 				)) }
 				{ extra }
 			</Row>
-			<img src={ settingsIcon } alt={ 'Change chat mode' } />
+			<img src={ settingsIcon } alt='Change chat mode' />
 		</div>
 	);
 }
@@ -745,7 +767,9 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 }
 
 function ChatModeSelector(): ReactElement | null {
+	const id = useId();
 	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
+	const focusMode = useObservable(ChatFocusMode);
 	const ref = useRef<HTMLSelectElement>(null);
 	const hasTarget = target !== null;
 
@@ -765,6 +789,10 @@ function ChatModeSelector(): ReactElement | null {
 		setShowSelector(false);
 	}, [setMode, setShowSelector]);
 
+	const stopPropagation = useCallback((ev: SyntheticEvent) => {
+		ev.stopPropagation();
+	}, []);
+
 	useEffect(() => {
 		const handler = (ev: MouseEvent) => {
 			if (!showSelector || ref.current == null || ref.current.contains(ev.target as Node) || ev.target === ref.current)
@@ -780,31 +808,46 @@ function ChatModeSelector(): ReactElement | null {
 		return null;
 
 	return (
-		<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
-			<option value=''>
-				Chat mode: Normal Chat
-			</option>
-			<option value='raw_chat'>
-				Chat mode: Chat (without formatting)
-			</option>
-			<option value='me' disabled={ hasTarget }>
-				Chat mode: Me
-			</option>
-			<option value='raw_me' disabled={ hasTarget }>
-				Chat mode: Me (without formatting)
-			</option>
-			<option value='emote' disabled={ hasTarget }>
-				Chat mode: Emote
-			</option>
-			<option value='raw_emote' disabled={ hasTarget }>
-				Chat mode: Emote (without formatting)
-			</option>
-			<option value='ooc'>
-				Chat mode: OOC
-			</option>
-			<option value='raw_ooc'>
-				Chat mode: OOC (without formatting)
-			</option>
-		</Select>
+		<>
+			<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
+				<option value=''>
+					Chat mode: Normal Chat
+				</option>
+				<option value='raw_chat'>
+					Chat mode: Chat (without formatting)
+				</option>
+				<option value='me' disabled={ hasTarget }>
+					Chat mode: Me
+				</option>
+				<option value='raw_me' disabled={ hasTarget }>
+					Chat mode: Me (without formatting)
+				</option>
+				<option value='emote' disabled={ hasTarget }>
+					Chat mode: Emote
+				</option>
+				<option value='raw_emote' disabled={ hasTarget }>
+					Chat mode: Emote (without formatting)
+				</option>
+				<option value='ooc'>
+					Chat mode: OOC
+				</option>
+				<option value='raw_ooc'>
+					Chat mode: OOC (without formatting)
+				</option>
+			</Select>
+			<div className='input-modifiers padding-small' onClick={ stopPropagation }>
+				<Checkbox
+					checked={ focusMode }
+					onChange={ (newValue) => {
+						ChatFocusMode.value = newValue;
+					} }
+					id={ `${id}:focus-mode-toggle` }
+				/>
+				<img src={ focusIcon } alt='Focus mode' />
+				<label htmlFor={ `${id}:focus-mode-toggle` }>
+					Enable focus mode - hide messages from other rooms
+				</label>
+			</div>
+		</>
 	);
 }

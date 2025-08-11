@@ -134,6 +134,12 @@
 				border-left: 2px solid common.$theme-chat-editedMessage-notch;
 			}
 		}
+
+		&.hideDimmed {
+			.message.dim {
+				display: none;
+			}
+		}
 	}
 
 	textarea {
@@ -179,12 +185,17 @@
 	color: common.$theme-chat-indicator-text;
 	padding-left: 0.5em;
 	gap: 0.5em;
+
+	img {
+		height: 1em;
+	}
 }
 
 .typing-indicator, .unread-messages-indicator {
 	min-height: 1.5em;
 	overflow: hidden;
 	white-space: nowrap;
+	flex-wrap: nowrap;
 }
 
 .typing-indicator {
@@ -193,11 +204,6 @@
 
 	&:hover {
 		background: common.$theme-chat-indicator-interactive-hover-background;
-	}
-
-	img {
-		height: 1em;
-		filter: brightness(0) saturate(100%) invert(100%);
 	}
 }
 

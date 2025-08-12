@@ -31,6 +31,10 @@ export class PublicSpace extends Space {
 		return this.data.owners;
 	}
 
+	public override get ownerInvites(): readonly AccountId[] {
+		return this.data.ownerInvites;
+	}
+
 	public override get config(): SpaceDirectoryConfig {
 		return this.data.config;
 	}
@@ -50,6 +54,8 @@ export class PublicSpace extends Space {
 			this.data.accessId = data.accessId;
 		}
 		this.data.config = data.config;
+		this.data.owners = data.owners;
+		this.data.ownerInvites = data.ownerInvites;
 
 		const update: GameStateUpdate = {
 			info: this.getInfo(),
@@ -148,13 +154,13 @@ export class PublicSpace extends Space {
 		}
 	}
 
-	public static async load(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null> {
+	public static async load(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'> | null> {
 		const space = await GetDatabase().getSpaceData(id, accessId);
 		if (space === false) {
 			return null;
 		}
 		const result = await SpaceDataSchema
-			.omit({ config: true, accessId: true, owners: true })
+			.omit({ config: true, accessId: true, owners: true, ownerInvites: true })
 			.safeParseAsync(space);
 		if (!result.success) {
 			GetLogger('Space').error(`Failed to load space ${id}: `, result.error);

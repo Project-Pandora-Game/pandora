@@ -131,7 +131,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceLeave: this.handleSpaceLeave.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
-			spaceOwnershipRemove: this.handleSpaceOwnershipRemove.bind(this),
+			spaceOwnership: this.handleSpaceOwnership.bind(this),
 			spaceInvite: this.handleSpaceInvite.bind(this),
 
 			// Outfits
@@ -610,20 +610,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleSpaceOwnershipRemove({ id }: IClientDirectoryArgument['spaceOwnershipRemove'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceOwnershipRemove'] {
+	private async handleSpaceOwnership(request: IClientDirectoryArgument['spaceOwnership'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceOwnership'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const space = await SpaceManager.loadSpace(id);
+		const account = connection.account;
+		const space = await SpaceManager.loadSpace(request.space);
 
 		if (space == null) {
-			logger.verbose(`${connection.id} failed to give up space ownership: not a space owner`);
-			return { result: 'notAnOwner' };
+			logger.verbose(`${connection.id} failed manage space ownership ('${request.action}'): Space not found`);
+			return { result: 'notFound' };
 		}
 
-		const result = await space.removeOwner(connection.account.id);
+		if (request.action === 'abandon') {
+			const result = await space.removeOwner(account.id);
+			return { result };
+		} else if (request.action === 'invite') {
+			const result = await space.inviteOwner(request.target, account);
+			return { result };
+		} else if (request.action === 'inviteCancel') {
+			const result = await space.inviteOwnerCancel(request.target, account);
+			return { result };
+		} else if (request.action === 'inviteRefuse') {
+			const result = await space.inviteOwnerCancel(account.id, account);
+			return { result };
+		} else if (request.action === 'inviteAccept') {
+			const result = await space.inviteOwnerAccept(account);
+			return { result };
+		}
 
-		return { result };
+		AssertNever(request.action);
 	}
 
 	private async handleSpaceInvite(req: IClientDirectoryArgument['spaceInvite'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceInvite'] {

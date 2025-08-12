@@ -51,12 +51,13 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { PersistentToast, TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { AccountListInput } from '../../components/accountListInput/accountListInput.tsx';
+import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
+import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
 import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
 import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
 
@@ -465,6 +466,7 @@ function SpaceConfigurationRights({
 	isPlayerAdmin,
 }: SpaceConfigurationTabProps): ReactElement {
 	const idPrefix = useId();
+	const directoryConnector = useDirectoryConnector();
 
 	const accountId = currentAccount.id;
 	const owners: readonly AccountId[] = useMemo(() => (
@@ -501,9 +503,50 @@ function SpaceConfigurationRights({
 								allowSelf
 							/>
 						</Column>
-						{ !creation && currentSpaceInfo?.id != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } /> : null }
+						<Column>
+							{ !creation && currentSpaceInfo?.id != null && isPlayerOwner ? (
+								<>
+									<SpaceOwnershipRemoval id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } />
+									<SpaceOwnershipInvitation id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } />
+								</>
+							) : null }
+						</Column>
 					</Row>
 				</div>
+				{ (currentSpaceInfo?.config?.ownerInvites != null && currentSpaceInfo.config.ownerInvites.length > 0) ? (
+					<div className='input-container'>
+						<label>Pending owner invitations</label>
+						<AccountListInputActions
+							value={ currentSpaceInfo.config.ownerInvites }
+							onRemove={ isPlayerOwner ? (async (account) => {
+								if (currentSpaceInfo.id == null)
+									return;
+
+								const result = await directoryConnector.awaitResponse('spaceOwnership', {
+									action: 'inviteCancel',
+									space: currentSpaceInfo.id,
+									target: account,
+								});
+								if (result.result === 'ok') {
+									toast('Successfully cancelled ownership invitation', TOAST_OPTIONS_SUCCESS);
+								} else {
+									const reason = result.result === 'failed' ? 'Action failed, try again later.' :
+										`Unexpected error '${result.result}'`;
+
+									toast(`Failed to remove invitation:\n${reason}`, TOAST_OPTIONS_ERROR);
+								}
+							}) : undefined }
+						/>
+					</div>
+				) : null }
+				{ (currentSpaceInfo?.id != null && currentSpaceInfo?.config?.ownerInvites?.includes(accountId)) ? (
+					<fieldset>
+						<legend>Ownership invitation</legend>
+						<SpaceOwnershipInvitationConfirm
+							spaceId={ currentSpaceInfo.id }
+						/>
+					</fieldset>
+				) : null }
 			</fieldset>
 			<fieldset>
 				<legend>Admins</legend>

@@ -299,16 +299,29 @@ export class Shard {
 
 		reasons.forEach((r) => this.updateReasons.add(r));
 		if (this.updatePending == null) {
-			const update = this.updatePending = CreateManuallyResolvedPromise();
+			this.updatePending = CreateManuallyResolvedPromise();
 			setTimeout(() => {
+				const update = this.updatePending;
+				// If someone resolved the update meanwhile, do nothing
+				if (update == null)
+					return;
+
+				this.updatePending = null;
 				this._sendUpdate()
 					.then((result) => {
-						if (result && this.updatePending === update) {
-							this.updatePending = null;
+						if (result) {
 							update.resolve();
+						} else {
+							// If update failed, requeue it
+							if (this.updatePending == null) {
+								this.updatePending = update;
+							} else {
+								this.updatePending.promise.then(update.resolve, update.reject);
+							}
 						}
 					}, (error) => {
 						this.logger.fatal('Error while running sendUpdate:', error);
+						update.reject(new Error('Update failed', { cause: error }));
 					});
 			}, 100);
 		}
@@ -381,6 +394,7 @@ export class Shard {
 			accessId: s.accessId,
 			config: s.getConfig(),
 			owners: Array.from(s.owners),
+			ownerInvites: Array.from(s.ownerInvites),
 		}));
 	}
 

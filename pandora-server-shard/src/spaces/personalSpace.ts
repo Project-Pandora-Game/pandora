@@ -1,4 +1,4 @@
-import { AccountId, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle } from 'pandora-common';
+import { AccountId, EMPTY_ARRAY, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle } from 'pandora-common';
 import { Character } from '../character/character.ts';
 import { Space } from './space.ts';
 
@@ -7,6 +7,10 @@ export class PersonalSpace extends Space {
 
 	public override get owners(): readonly AccountId[] {
 		return [this._character.accountId];
+	}
+
+	public override get ownerInvites(): readonly AccountId[] {
+		return EMPTY_ARRAY;
 	}
 
 	public override get config(): SpaceDirectoryConfig {

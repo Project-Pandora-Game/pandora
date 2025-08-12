@@ -320,13 +320,13 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 }
 
 function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
-	messageTime: number;
+	messageTime: number | null;
 	edited: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
-	receivedRoomId: RoomId;
+	receivedRoomId: RoomId | null;
 }): ReactElement {
-	const time = useMemo(() => new Date(messageTime), [messageTime]);
-	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
+	const time = useMemo(() => messageTime != null ? new Date(messageTime) : null, [messageTime]);
+	const [full, setFull] = useState(new Date().getDate() !== time?.getDate());
 
 	useEffect(() => {
 		if (full)
@@ -342,12 +342,14 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
 
 	return (
 		<span className='info'>
-			<span>
-				{
-					full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
-					(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')
-				}
-			</span>
+			{ time != null ? (
+				<span>
+					{
+						full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
+						(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')
+					}
+				</span>
+			) : null }
 			{ edited ? <span>[edited] </span> : null }
 			{ rooms && rooms.length > 0 && (rooms.length > 1 || rooms[0].id !== receivedRoomId) ? (
 				<span className='roomInfo' title={ NaturalListJoin(rooms.map((r) => r.name)) }>
@@ -464,12 +466,12 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
-	messageTime: number;
+	messageTime: number | null;
 	edited: boolean;
 	repetitions?: number;
 	dim?: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
-	receivedRoomId: RoomId;
+	receivedRoomId: RoomId | null;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -514,7 +516,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			/>
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ children }
-			{ extraContent != null && folded ? ' ( ... )' : null }
+			{ extraContent != null && folded ? ' ( \u2026 )' : null }
 			{
 				repetitions > 1 ? (
 					<> <span className='repetitionCount' ref={ repetitionCountRef }>&#xD7;{ repetitions }</span></>

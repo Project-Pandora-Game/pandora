@@ -76,6 +76,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	private _lastSentModifierEffects: SpaceCharacterModifierEffectData = {};
 
 	public abstract get owners(): readonly AccountId[];
+	public abstract get ownerInvites(): readonly AccountId[];
 	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
@@ -210,6 +211,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return {
 			...this.config,
 			owners: this.owners.slice(),
+			ownerInvites: this.ownerInvites.slice(),
 		};
 	}
 

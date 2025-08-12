@@ -183,6 +183,8 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 export const SpaceClientInfoSchema = SpaceDirectoryConfigSchema.extend({
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
+	/** Account IDs of accounts invited to own this space */
+	ownerInvites: AccountIdSchema.array(),
 });
 export type SpaceClientInfo = z.infer<typeof SpaceClientInfoSchema>;
 
@@ -198,6 +200,8 @@ export const SpaceDataSchema = z.object({
 	accessId: z.string(),
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
+	/** Account IDs of accounts invited to own this space */
+	ownerInvites: AccountIdSchema.array().default([]),
 	config: SpaceDirectoryConfigSchema,
 	spaceState: SpaceStateBundleSchema.default(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
@@ -205,7 +209,7 @@ export const SpaceDataSchema = z.object({
 /** Space data stored in database */
 export type SpaceData = z.infer<typeof SpaceDataSchema>;
 
-export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'invites'] as const satisfies readonly (keyof SpaceData)[];
+export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'ownerInvites', 'invites'] as const satisfies readonly (keyof SpaceData)[];
 export const SpaceDataDirectoryUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataDirectoryUpdate = z.infer<typeof SpaceDataDirectoryUpdateSchema>;
 
@@ -213,7 +217,7 @@ export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['spaceState'] as const satisfi
 export const SpaceDataShardUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataShardUpdate = z.infer<typeof SpaceDataShardUpdateSchema>;
 
-export const SPACE_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'accessId', 'invites'] as const satisfies readonly (keyof SpaceData)[];
+export const SPACE_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'ownerInvites', 'accessId', 'invites'] as const satisfies readonly (keyof SpaceData)[];
 /** Space data from database, only those relevant to Directory */
 export const SpaceDirectoryDataSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, true));
 /** Space data from database, only those relevant to Directory */

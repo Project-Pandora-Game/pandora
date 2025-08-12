@@ -56,6 +56,7 @@ export const SpaceManager = new class SpaceManager {
 			config: definition.config,
 			accessId: definition.accessId,
 			owners: definition.owners,
+			ownerInvites: definition.ownerInvites,
 		});
 		this._spaces.set(id, space);
 		spacesMetric.set(this._spaces.size);

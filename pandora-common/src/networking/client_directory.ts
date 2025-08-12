@@ -340,11 +340,37 @@ export const ClientDirectorySchema = {
 		}),
 		response: null,
 	},
-	spaceOwnershipRemove: {
-		request: z.object({
-			id: SpaceIdSchema,
-		}),
-		response: ZodCast<{ result: 'ok' | 'notAnOwner'; }>(),
+	spaceOwnership: {
+		request: z.discriminatedUnion('action', [
+			z.object({
+				/** Drop own ownership of a space */
+				action: z.literal('abandon'),
+				space: SpaceIdSchema,
+			}),
+			z.object({
+				/** Invite an admin to become an owner of the space, or cancel the invitation */
+				action: z.enum(['invite', 'inviteCancel']),
+				space: SpaceIdSchema,
+				target: AccountIdSchema,
+			}),
+			z.object({
+				/** Accept or refuse an ownership invitation */
+				action: z.enum(['inviteAccept', 'inviteRefuse']),
+				space: SpaceIdSchema,
+			}),
+		]),
+		response: ZodCast<{
+			result:
+			| 'ok'
+			| 'failed' // Generic failure
+			| 'notFound' // Space not found
+			| 'notAnOwner' // abandon, invite, inviteCancel: You need to be an owner of the space to do this
+			| 'targetNotAdmin' // invite: Target needs to already be an admin to promote to owner
+			| 'targetNotAllowed' // invite: Target needs to be present or on contacts list to promote to owner
+			| 'inviteNotFound' // inviteCancel, inviteAccept, inviteRefuse: There is no pending invite for target/player
+			| 'spaceOwnershipLimitReached' // inviteAccept: Too many spaces owned
+			;
+		}>(),
 	},
 	spaceInvite: {
 		request: z.discriminatedUnion('action', [

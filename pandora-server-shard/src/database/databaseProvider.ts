@@ -30,7 +30,7 @@ export interface ShardDatabase extends ServerService {
 	 * @param id - Id of the space
 	 * @param accessId - Access id for accessing the data
 	 */
-	getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null | false>;
+	getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'> | null | false>;
 
 	/**
 	 * Update a spaces's data

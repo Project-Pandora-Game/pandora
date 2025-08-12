@@ -48,6 +48,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 		accessId: '',
 		spaceState: CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
 		invites: [],
+		ownerInvites: [],
 		...data,
 	};
 }

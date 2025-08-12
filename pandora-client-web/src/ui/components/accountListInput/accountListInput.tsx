@@ -1,21 +1,18 @@
 import classNames from 'classnames';
-import { AccountIdSchema, Assert, CompareAccountIds, GetLogger, type AccountId, type ICharacterRoomData } from 'pandora-common';
+import { CompareAccountIds, GetLogger, type AccountId } from 'pandora-common';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
-import { useCharacterDataMultiple } from '../../../character/character.ts';
-import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
-import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { useResolveAccountName, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useResolveAccountName } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import './accountListInput.scss';
+import { AccountListInputQuickSelectDialog, type AccountListInputAddButtonProps } from './accountListInputSelectionDialog.tsx';
 
 export interface AccountListInputProps {
 	value: readonly AccountId[];
@@ -121,12 +118,12 @@ export function AccountListInputActions({
 	);
 }
 
-function AccountListInputActionsAddButton({ addId, onExecute, children, actionContext, slim, disabled }: AccountListInputAddButtonProps<AccountListInputActionsContext>) {
+function AccountListInputActionsAddButton({ accountId, onExecute, children, actionContext, slim, disabled }: AccountListInputAddButtonProps<AccountListInputActionsContext>) {
 	return (
 		<Button
 			onClick={ () => {
-				if (addId != null) {
-					actionContext.executeAdd(addId, onExecute);
+				if (accountId != null) {
+					actionContext.executeAdd(accountId, onExecute);
 				}
 			} }
 			disabled={ disabled || actionContext.processing }
@@ -149,14 +146,6 @@ function AccountListInputActionsRemoveButton({ removeId, actionContext }: Accoun
 			disabled={ actionContext.processing }
 		/>
 	);
-}
-
-export interface AccountListInputAddButtonProps<TActionContext> extends ChildrenProps {
-	addId: AccountId | null;
-	slim: boolean;
-	onExecute?: () => void;
-	disabled: boolean;
-	actionContext: TActionContext;
 }
 
 export interface AccountListInputRemoveButtonProps<TActionContext> {
@@ -225,8 +214,8 @@ export function AccountListInputActionButtons<TActionContext>({
 			}
 			{
 				(AddButton != null && showDialog) ? (
-					<AccountListQuickSelectDialog
-						value={ value }
+					<AccountListInputQuickSelectDialog
+						alreadyPresent={ value }
 						close={ () => {
 							setShowDialog(false);
 						} }
@@ -262,131 +251,5 @@ function AccountListItem<TActionContext>({ id, RemoveButton, actionContext }: {
 				) : null
 			}
 		</Row>
-	);
-}
-
-type QuickListAccountInfo = {
-	id: AccountId;
-	name: string;
-	characters: ICharacterRoomData[];
-};
-
-function AccountListQuickSelectDialog<TActionContext>({ value, allowSelf, close, AddButton, actionContext }: {
-	value: readonly AccountId[];
-	close: () => void;
-	allowSelf: boolean;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	AddButton: React.FC<AccountListInputAddButtonProps<TActionContext>>;
-	actionContext: TActionContext;
-}): ReactElement {
-	const currentAccount = useCurrentAccount();
-	Assert(currentAccount != null);
-	const [dialogAccountId, setDialogAccountId] = useState<AccountId | null>(null);
-
-	const spaceCharacters = useSpaceCharacters();
-	const spaceCharactersData = useCharacterDataMultiple(spaceCharacters);
-
-	const quickList = useMemo((): QuickListAccountInfo[] => {
-		const result: QuickListAccountInfo[] = [
-			{
-				id: currentAccount.id,
-				name: currentAccount.displayName,
-				characters: [],
-			},
-		];
-
-		for (const character of spaceCharactersData) {
-			let account = result.find((a) => a.id === character.accountId);
-			if (account == null) {
-				account = {
-					id: character.accountId,
-					name: character.accountDisplayName,
-					characters: [],
-				};
-				result.push(account);
-			}
-			account.characters.push(character);
-		}
-
-		for (const account of result) {
-			account.characters.sort((a, b) => a.name.localeCompare(b.name));
-		}
-
-		return result.sort((a, b) => {
-			if ((a.id === currentAccount.id) !== (b.id === currentAccount.id)) {
-				return (a.id === currentAccount.id) ? -1 : 1;
-			}
-
-			return a.name.localeCompare(b.name);
-		});
-	}, [currentAccount, spaceCharactersData]);
-
-	const resolvedName = useResolveAccountName(dialogAccountId ?? 0) ?? '[unknown]';
-
-	return (
-		<ModalDialog>
-			<Column>
-				<h2>Select account</h2>
-				<Row alignY='center'>
-					<label>Name:</label>
-					<span>{ dialogAccountId == null ? '...' : resolvedName }</span>
-				</Row>
-				<Row alignY='center'>
-					<label>Id:</label>
-					<TextInput
-						className='flex-1'
-						value={ dialogAccountId?.toString(10) ?? '' }
-						onChange={ (newValue) => {
-							const parsedInputValue = AccountIdSchema.safeParse(Number.parseInt(newValue));
-							if (parsedInputValue.success) {
-								setDialogAccountId(parsedInputValue.data);
-							}
-						} } />
-				</Row>
-				<Row alignX='space-between'>
-					<Button
-						onClick={ () => {
-							close();
-						} }
-					>
-						Cancel
-					</Button>
-					<AddButton
-						addId={ dialogAccountId }
-						actionContext={ actionContext }
-						onExecute={ close }
-						slim={ false }
-						disabled={ dialogAccountId == null || value.includes(dialogAccountId) }
-					>
-						Confirm
-					</AddButton>
-				</Row>
-				<hr className='fill-x' />
-				<fieldset>
-					<legend>Quick selection</legend>
-					<Column alignX='start'>
-						{
-							quickList
-								.filter((a) => allowSelf || a.id !== currentAccount.id)
-								.map((a) => (
-									<AddButton
-										key={ a.id }
-										addId={ a.id }
-										actionContext={ actionContext }
-										onExecute={ close }
-										slim
-										disabled={ value.includes(a.id) }
-									>
-										<Column alignX='start' gap='tiny'>
-											<span>{ a.name } ({ a.id })  { (a.id === currentAccount.id) ? '[You]' : '' }  { value.includes(a.id) ? '[Already in the list]' : '' }</span>
-											{ a.characters.length > 0 ? <>({ a.characters.map((c) => c.name).join(', ') })</> : null }
-										</Column>
-									</AddButton>
-								))
-						}
-					</Column>
-				</fieldset>
-			</Column>
-		</ModalDialog>
 	);
 }

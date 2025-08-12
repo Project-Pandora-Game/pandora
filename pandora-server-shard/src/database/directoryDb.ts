@@ -38,7 +38,7 @@ export default class DirectoryDatabase implements ShardDatabase {
 		return result === 'success';
 	}
 
-	public async getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null | false> {
+	public async getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'> | null | false> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
@@ -49,7 +49,7 @@ export default class DirectoryDatabase implements ShardDatabase {
 
 		return omit(
 			result,
-			['config', 'accessId', 'owners'],
+			['config', 'accessId', 'owners', 'ownerInvites'],
 		);
 	}
 

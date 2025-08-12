@@ -32,6 +32,7 @@ export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 	config: true,
 	accessId: true,
 	owners: true,
+	ownerInvites: true,
 });
 export type IShardSpaceDefinition = z.infer<typeof ShardSpaceDefinitionSchema>;
 

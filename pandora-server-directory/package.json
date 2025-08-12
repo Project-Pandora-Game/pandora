@@ -68,7 +68,7 @@
 		"@types/nodemailer": "6.4.17",
 		"@types/semver": "7.7.0",
 		"@types/wtfnode": "0.7.3",
-		"discord-api-types": "0.38.18",
+		"discord-api-types": "0.38.19",
 		"jest": "30.0.5",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",

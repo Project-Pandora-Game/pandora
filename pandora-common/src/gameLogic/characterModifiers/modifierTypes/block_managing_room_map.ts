@@ -10,5 +10,5 @@ This modifier prevents the character from being able to add, remove, reposition,
 	strictnessCategory: 'strict',
 	config: {},
 
-	// Implemented externally on client only
+	// Implemented externally
 });

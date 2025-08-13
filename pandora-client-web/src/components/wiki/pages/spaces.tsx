@@ -65,8 +65,8 @@ export function WikiSpaces(): ReactElement {
 				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.
 			</p>
 			<ul>
-				<li>The ordered list of rooms next to the room grid in the space configuration's room management view is there to define the order of the listed rooms under the "Room"-tab</li>
-				<li>In that ordered room list in the room management view, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
+				<li>The ordered list of rooms next to the room grid in the space configuration's "Room management"-tab is there to define the order of the listed rooms under the "Room"-tab</li>
+				<li>In that ordered room list in the "Room management"-tab, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
 				<li>Room designs can also be exported and imported as a template when creating a new room</li>
 			</ul>
 
@@ -131,13 +131,13 @@ export function WikiSpaces(): ReactElement {
 				Spaces in Pandora that are publicly listed can be joined unless a user is banned from it or the space is full.
 				A private space can only be seen and joined by owners, admins and people on the allow list of said space. To invite other users to a private space,
 				they have to either be added to one of these lists or be invited by an admin in order to join.
-				The admin and "allowed users" lists can be found in the "visitor management"-tab of the space configuration view. Note that these lists
+				The admin and "allowed users" lists can be found in the "Rights management"-tab of the space configuration view. Note that these lists
 				work with user account IDs and not with character IDs.
 			</p>
 			<ul>
 				<li>To invite other users to a space, you can send them a direct message with a "join-me" type invite via the "/invite" command.</li>
 				<li>
-					As a space admin you can also create more powerful and configurable "space-bound" type invite links in the "visitor management"-tab of the
+					As a space admin you can also create more powerful and configurable "space-bound" type invite links in the "Rights management"-tab of the
 					space configuration view that you can share with others. More details about invite links in the <Link to='#SP_Space_invites'>"Space invites"</Link> section.
 				</li>
 				<li>When a user's account is banned from a space, the user cannot join it.</li>
@@ -155,7 +155,7 @@ export function WikiSpaces(): ReactElement {
 			<h4 id='SP_Space_invites'>Space invites</h4>
 			<p>
 				Pandora also has two different types of space invites: "space-bound" and "join-me" invite links.<br />
-				"Space-bound" invite links can only be created by space owners and admins in the "visitor management"-tab of the
+				"Space-bound" invite links can only be created by space owners and admins in the "Rights management"-tab of the
 				space configuration view. They are highly configurable.
 			</p>
 			<ul>

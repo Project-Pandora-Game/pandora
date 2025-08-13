@@ -269,6 +269,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				</Button>
 				<IconButton
 					slim
+					className='smallIcon'
 					onClick={ onDelete }
 					disabled={ processing || onDelete == null }
 					src={ crossImage }

@@ -143,6 +143,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				switch (e.reason) {
 					case 'notAdmin':
 						return `You must be a room admin or a room owner to do this.`;
+					case 'blockedByModifier':
+						return `A character modifier is preventing you to do this.`;
 				}
 				break;
 			case 'itemCustomizeOther':

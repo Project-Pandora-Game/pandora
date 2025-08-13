@@ -88,7 +88,7 @@ export type Restriction =
 	}
 	| {
 		type: 'modifyRoomRestriction';
-		reason: 'notAdmin';
+		reason: 'notAdmin' | 'blockedByModifier';
 	}
 	| {
 		type: 'itemCustomizeOther';

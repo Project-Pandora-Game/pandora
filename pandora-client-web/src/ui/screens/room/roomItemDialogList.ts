@@ -9,7 +9,7 @@ export interface RoomItemDialogDefinition {
 export const RoomItemDialogs = new Observable<readonly Readonly<RoomItemDialogDefinition>[]>([]);
 export const RoomItemDialogsShouldShow = new Observable<number>(0);
 
-export function OpenRoomItemDialog(itemId: ItemId): void {
+export function OpenRoomItemDialog(itemId: ItemId, pinned = false): void {
 	const currentDialog = RoomItemDialogs.value.findIndex((d) => d.itemId === itemId);
 	RoomItemDialogs.produceImmer((d) => {
 		if (currentDialog >= 0) {
@@ -19,8 +19,17 @@ export function OpenRoomItemDialog(itemId: ItemId): void {
 		} else {
 			d.push({
 				itemId,
-				pinned: false,
+				pinned,
 			});
 		}
 	});
+}
+
+export function CheckItemDialogOpen(itemId: ItemId): boolean {
+	const currentDialog = RoomItemDialogs.value.findIndex((d) => d.itemId === itemId);
+	if (currentDialog >= 0) {
+		return true;
+	} else {
+		return false;
+	}
 }

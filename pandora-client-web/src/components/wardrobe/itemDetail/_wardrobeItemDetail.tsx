@@ -16,10 +16,12 @@ import { toast } from 'react-toastify';
 import { z } from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import pinIcon from '../../../assets/icons/pin-solid.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { CheckItemDialogOpen, OpenRoomItemDialog } from '../../../ui/screens/room/roomItemDialogList.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -86,12 +88,24 @@ export function WardrobeItemConfigMenu({
 				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{
 					!singleItemContainer ? (
-						<IconButton
-							onClick={ close }
-							theme='default'
-							src={ crossIcon }
-							alt='Close item details'
-						/>
+						<>
+							<IconButton
+								onClick={ () => {
+									OpenRoomItemDialog(item.itemId, true);
+									close();
+								} }
+								theme={ CheckItemDialogOpen(item.itemId) ? 'defaultActive' : 'default' }
+								src={ pinIcon }
+								alt='Open as room popup'
+								title='Open as room popup'
+							/>
+							<IconButton
+								onClick={ close }
+								theme='default'
+								src={ crossIcon }
+								alt='Close item details'
+							/>
+						</>
 					) : null
 				}
 			</div>

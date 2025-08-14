@@ -208,14 +208,6 @@ export class AppearanceActionProcessingContext {
 					reason: 'notAdmin',
 				},
 			});
-		} else if (restrictionManager.getModifierEffectsByType('block_managing_room_map')[0] ?? null) {
-			this.addProblem({
-				result: 'restrictionError',
-				restriction: {
-					type: 'modifyRoomRestriction',
-					reason: 'blockedByModifier',
-				},
-			});
 		}
 	}
 

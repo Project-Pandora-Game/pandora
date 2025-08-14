@@ -14,7 +14,9 @@ export function WikiItems(): ReactElement {
 				Almost all items have a customizable color. Some items also have one or more item modules. Aside from general modules, there can
 				be a <Link to='#IT_Storage_modules'>storage module</Link> or <Link to='#IT_Lock_module'>lock modules</Link> on
 				an item, depending on what it is. These features can be accessed in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> by clicking
-				on items.
+				on items.<br />
+				You can also open a popup with basic info about an item while in the room & chat view, by either clicking on the item name in any server messages in the chat,
+				by using the "/inspect" <Link to='/wiki/chat#CHA_Chat_commands'>command</Link>, or by clicking the "pin"-button in the detailed view of an item in the wardrobe at the top.
 			</p>
 			<p>
 				Aside from regular items that can be worn and used by characters, there are also locks, body parts, and room-level items that can freely be placed on a
@@ -79,6 +81,7 @@ export function WikiItems(): ReactElement {
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
 				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
+				<li>While a character is inside a slot of a room device, you can see all the item's relevant config options also on the worn part of the device in their wardrobe - so no need to go to the room inventory for that.</li>
 				<li>
 					Warning: Room devices can get someone stuck in an empty private space, which would make
 					using <Link to='/wiki/characters#SA_Safemode'>safemode</Link> the only way out, unless the affected user is permitted to invite someone else to the space.

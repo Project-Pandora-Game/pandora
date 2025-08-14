@@ -70,6 +70,7 @@
 
 		img, canvas {
 			height: 100%;
+			max-width: 100%;
 			user-select: none;
 			pointer-events: none;
 			object-fit: contain;

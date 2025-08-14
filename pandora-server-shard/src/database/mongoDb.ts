@@ -70,10 +70,10 @@ export default class MongoDatabase implements ShardDatabase {
 		return matchedCount === 1;
 	}
 
-	public async getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null | false> {
+	public async getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'> | null | false> {
 		const result = await this._spaces
 			.find({ id, accessId })
-			.project<Omit<SpaceData, 'config' | 'accessId' | 'owners'>>({ config: 0, accessId: 0, owners: 0 }).toArray();
+			.project<Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'>>({ config: 0, accessId: 0, owners: 0, ownerInvites: 0 }).toArray();
 		if (result.length !== 1)
 			return null;
 		return result[0];

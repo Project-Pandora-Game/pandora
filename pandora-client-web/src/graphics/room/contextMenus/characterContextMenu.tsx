@@ -505,6 +505,7 @@ function CharacterFollowDialog(): ReactElement {
 		},
 		moveTo: {
 			type: 'normal',
+			room: (playerFollows ? characterState : playerState).currentRoom,
 			position: (playerFollows ? playerState : characterState).position.position,
 			following: followData,
 		},

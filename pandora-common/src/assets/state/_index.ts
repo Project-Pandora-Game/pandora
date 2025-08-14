@@ -4,3 +4,4 @@ export * from './characterStateTypes.ts';
 export * from './globalState.ts';
 export * from './roomGeometry.ts';
 export * from './roomState.ts';
+export * from './spaceState.ts';

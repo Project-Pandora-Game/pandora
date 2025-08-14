@@ -17,7 +17,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.ts';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -465,8 +465,9 @@ export function WardrobeActionRandomizeButton({
 	);
 }
 
-export function AttributeButton({ attribute, ...buttonProps }: {
+export function AttributeButton({ attribute, long = false, ...buttonProps }: {
 	attribute: string;
+	long?: boolean;
 } & Omit<ButtonProps, 'children'>): ReactElement {
 	const assetManager = useAssetManager();
 	const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
@@ -477,7 +478,7 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 
 	return (
 		<>
-			{ icon ? (
+			{ (icon && !long) ? (
 				<IconButton ref={ setButtonRef }
 					{ ...buttonProps }
 					src={ icon }
@@ -490,6 +491,7 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 					className={ classNames(buttonProps.className, 'iconHeightButton') }
 					data-attribute={ attribute }
 				>
+					{ icon ? <img src={ icon } alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` } crossOrigin='anonymous' /> : null }
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }
@@ -606,7 +608,7 @@ export function StorageUsageMeter({ title, used, limit }: {
 	return (
 		<Column gap='tiny' alignY='center' padding='small'>
 			<span>{ title }: { used } / { limit } ({ Math.ceil(100 * used / limit) }%)</span>
-			<meter min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
+			<meter className='fill-x' min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
 		</Column>
 	);
 }

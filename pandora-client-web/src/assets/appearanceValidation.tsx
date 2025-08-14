@@ -1,15 +1,17 @@
+/* eslint-disable react/destructuring-assignment */
 import {
 	AppearanceActionProblem,
 	AssertNever,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	type AssetId,
+	type AssetManager,
 	type GameLogicActionSlowdownReason,
 	type ItemDisplayNameType,
 	type LockActionProblem,
 } from 'pandora-common';
+import type { ReactNode } from 'react';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
-import { AssetManagerClient } from './assetManager.tsx';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -62,7 +64,7 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 	AssertNever(problem);
 }
 
-export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): string {
+export function RenderAppearanceActionProblem(assetManager: AssetManager, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): ReactNode {
 	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(
 		assetManager.getAssetById(asset)?.definition.name.toLocaleLowerCase() ?? `[UNKNOWN ASSET '${asset}']`,
 		itemName,
@@ -76,6 +78,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					return `You cannot delete manifestation of a room device. Use the device's menu to exit it instead.`;
 				case 'noDeleteDeployedRoomDevice':
 					return `You cannot delete a deployed room device. Use the device's menu to store it first.`;
+				case 'noDeleteOccupiedRoom':
+					return `You cannot delete a room with characters inside it.`;
+				case 'characterMoveCannotFollow':
+					return `The character cannot currently follow another character. Only characters outside of room devices that are not being followed can follow someone.`;
 				case 'characterMoveCannotFollowTarget':
 					return `The target character cannot be followed. Only characters in a room that are not following someone can be followed.`;
 			}
@@ -145,6 +151,17 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot customize other people's items.`;
 			case 'inRoomDevice':
 				return `You cannot do this while in a room device.`;
+			case 'tooFar':
+				switch (e.subtype) {
+					case 'characterInteraction':
+						return `The target character is too far for you to interact with them.`;
+					case 'roomTarget':
+						return `The target room is too far.`;
+					case 'followTarget':
+						return `The follow target is too far.`;
+				}
+				AssertNever(e.subtype);
+				break;
 			case 'blockedByCharacterModifier':
 				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
 			case 'characterModifierLocked':
@@ -171,7 +188,22 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				const attributeName = negative ? e.requirement.substring(1) : e.requirement;
 				const description = DescribeAttribute(assetManager, attributeName);
 				if (e.asset) {
-					return `The ${describeItem(e.asset, e.itemName)} ${negative ? 'conflicts with' : 'requires'} "${description}" (${negative ? 'must not' : 'must'} be worn under the ${describeItem(e.asset, e.itemName)}).`;
+					if (negative) {
+						return `The ${describeItem(e.asset, e.itemName)} conflicts with "${description}" (must not be worn under the ${describeItem(e.asset, e.itemName)}).`;
+					} else {
+						return (
+							<>
+								The { describeItem(e.asset, e.itemName) } requires "{ description }" (must be worn under the { describeItem(e.asset, e.itemName) }).<br />
+								The following assets can be used to satisfy this requirement (in at least one configuration):
+								<ul>
+									{ assetManager.getAllAssets()
+										.filter((a) => a.isWearable())
+										.filter((a) => a.staticAttributes.has(attributeName))
+										.map((a) => <li key={ a.id }>{ a.definition.name }</li>) }
+								</ul>
+							</>
+						);
+					}
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be "${description}".`;
 				}
@@ -195,6 +227,18 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The text is not valid.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
+			case 'tooManyRooms':
+				return `The space can contain at most ${e.limit} rooms.`;
+			case 'roomError':
+				switch (e.problemDetail) {
+					case 'roomsOverlap':
+						return `Rooms cannot overlap (a single space tile cannot contain multiple rooms).`;
+					case 'invalidPosition':
+						return `Room's position is not valid (most likely too large or too small)`;
+					default:
+						AssertNever(e);
+				}
+				break;
 			case 'invalid':
 				return `This action results in a generally invalid state.`;
 		}

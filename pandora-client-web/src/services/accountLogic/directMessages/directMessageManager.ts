@@ -258,7 +258,9 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		const newMessage = message.edited == null && message.source !== accountManager.currentAccount.value?.id;
 		chat.addMessage(message, newMessage);
 		this._sortChats();
-		this.emit('newMessage', chat);
+		if (newMessage) {
+			this.emit('newMessage', chat);
+		}
 	}
 
 	public handleDirectMessageAction({ id, action }: IDirectoryClientArgument['directMessageAction']): void {

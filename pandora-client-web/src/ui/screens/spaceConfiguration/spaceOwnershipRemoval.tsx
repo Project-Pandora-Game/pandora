@@ -36,7 +36,10 @@ function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; n
 	const removeOwnership = useCallback(() => {
 		(async () => {
 			OwnershipRemovalProgress.show('progress', 'Removing ownership...');
-			const result = await directoryConnector.awaitResponse('spaceOwnershipRemove', { id });
+			const result = await directoryConnector.awaitResponse('spaceOwnership', {
+				action: 'abandon',
+				space: id,
+			});
 			if (result.result === 'ok') {
 				OwnershipRemovalProgress.show('success', 'Space ownership removed!');
 				closeDialog();
@@ -68,7 +71,7 @@ function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; n
 			</p>
 			<Row padding='medium' alignX='space-between'>
 				<Button onClick={ closeDialog }>Cancel</Button>
-				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
+				<Button theme='danger' onClick={ removeOwnership }>Remove your ownership!</Button>
 			</Row>
 		</ModalDialog>
 	);

@@ -2,8 +2,11 @@ import type { Immutable } from 'immer';
 import {
 	AssertNotNullable,
 	CharacterIdSchema,
+	GetLogger,
 	ICharacterRoomData,
-	type ActionTargetSelector,
+	RoomIdSchema,
+	type ActionCharacterSelector,
+	type ActionRoomSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
@@ -32,7 +35,7 @@ export function WardrobeRouter(): ReactElement | null {
 		<Routes>
 			<Route index element={ <WardrobeRouterPlayer /> } />
 			<Route path='character/:characterId' element={ <WardrobeRouterCharacter /> } />
-			<Route path='room-inventory' element={ <WardrobeRouterRoomInventory /> } />
+			<Route path='room/:roomId' element={ <WardrobeRouterRoomInventory /> } />
 
 			<Route path='*' element={ <Navigate to='/' replace /> } />
 		</Routes>
@@ -57,14 +60,27 @@ function WardrobeRouterCharacter(): ReactElement {
 	AssertNotNullable(player);
 	const characters = useSpaceCharacters();
 
-	const { characterId } = useParams();
-	const parsedCharacterId = CharacterIdSchema.safeParse(characterId);
+	const { characterId: characterIdParam } = useParams();
+	const characterTarget = useMemo((): ActionCharacterSelector | null => {
+		try {
+			const parsedCharacterId = CharacterIdSchema.safeParse(characterIdParam ? decodeURIComponent(characterIdParam) : characterIdParam);
+			if (parsedCharacterId.success) {
+				return {
+					type: 'character',
+					characterId: parsedCharacterId.data,
+				};
+			}
+		} catch (error) {
+			GetLogger('WardrobeRouterCharacter').warning('Error decoding characterId', error);
+		}
+		return null;
+	}, [characterIdParam]);
 
 	const character = useMemo((): Character<ICharacterRoomData> | null => {
-		if (!parsedCharacterId.success)
+		if (characterTarget == null)
 			return null;
-		return characters?.find((c) => c.data.id === parsedCharacterId.data) ?? null;
-	}, [characters, parsedCharacterId]);
+		return characters?.find((c) => c.data.id === characterTarget.characterId) ?? null;
+	}, [characters, characterTarget]);
 
 	const location = useLocation();
 	const initialFocus = useMemo((): WardrobeLocationState['initialFocus'] => {
@@ -91,9 +107,21 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
 
-	const roomTarget = useMemo((): ActionTargetSelector => ({
-		type: 'roomInventory',
-	}), []);
+	const { roomId: roomIdParam } = useParams();
+	const roomTarget = useMemo((): ActionRoomSelector | null => {
+		try {
+			const parsedRoomId = RoomIdSchema.safeParse(roomIdParam ? decodeURIComponent(roomIdParam) : roomIdParam);
+			if (parsedRoomId.success) {
+				return {
+					type: 'room',
+					roomId: parsedRoomId.data,
+				};
+			}
+		} catch (error) {
+			GetLogger('WardrobeRouterRoomInventory').warning('Error decoding roomId', error);
+		}
+		return null;
+	}, [roomIdParam]);
 
 	const location = useLocation();
 	const initialFocus = useMemo((): WardrobeLocationState['initialFocus'] => {
@@ -104,39 +132,47 @@ function WardrobeRouterRoomInventory(): ReactElement {
 		return undefined;
 	}, [location]);
 
+	if (roomTarget == null)
+		return <Link to='/'>◄ Back</Link>;
+
 	return (
 		<WardrobeActionContextProvider player={ player }>
 			<WardrobeContextProvider target={ roomTarget } initialFocus={ initialFocus }>
-				<WardrobeRoom />
+				<WardrobeRoom room={ roomTarget } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
 	);
 }
 
-function WardrobeRoom(): ReactElement {
+function WardrobeRoom({ room }: {
+	room: Immutable<ActionRoomSelector>;
+}): ReactElement {
 	const navigate = useNavigatePandora();
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();
-	const roomInfo = useObservable(gameState.currentSpace).config;
+	const spaceInfo = useObservable(gameState.currentSpace).config;
 	const { globalState } = useWardrobeActionContext();
-	const { actionPreviewState } = useWardrobeContext();
+	const { actionPreviewState, currentRoomSelector } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
+
+	const roomState = (globalPreviewState ?? globalState).space.getRoom(room.roomId);
 
 	return (
 		<div className='wardrobe'>
 			<div className='wardrobeMain'>
 				{
-					(roomInfo != null && characters != null) ? (
+					(spaceInfo != null && characters != null && roomState != null) ? (
 						<WardrobeRoomPreview
 							characters={ characters }
 							globalState={ globalPreviewState ?? globalState }
-							info={ roomInfo }
+							roomState={ roomState }
+							info={ spaceInfo }
 							isPreview={ globalPreviewState != null }
 						/>
 					) : null
 				}
 				<TabContainer className='flex-1'>
-					<Tab name='Room inventory'>
+					<Tab name={ room.roomId === currentRoomSelector.roomId ? 'Current room\'s inventory' : `Room inventory (${ globalState.space.getRoom(room.roomId)?.displayName ?? '[unknown room]' })` }>
 						<div className='wardrobe-pane'>
 							<WardrobeItemManipulation />
 						</div>

@@ -44,7 +44,7 @@ class CommandBuilderStep<
 	}
 }
 
-export interface CommandForkDescriptor<Context extends ICommandExecutionContext, StartArguments extends Record<string, never>> {
+export interface CommandForkDescriptor<Context extends ICommandExecutionContext, StartArguments extends Record<string, never> = Record<never, never>> {
 	description: string;
 	handler: CommandRunner<Context, StartArguments>;
 }

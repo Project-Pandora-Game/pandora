@@ -254,6 +254,10 @@ async function LoadAssetImageLayerSingle(
 		result.previewOverrides = layer.previewOverrides;
 		result.colorizationKey = layer.colorizationKey;
 		result.normalMap = layer.normalMap;
+
+		if (result.colorizationKey != null && !context.builtAssetData.colorizationKeys.has(result.colorizationKey)) {
+			logger.warning(`Layer has colorizationKey '${result.colorizationKey}' outside of defined colorization keys [${[...context.builtAssetData.colorizationKeys].join(', ')}]`);
+		}
 	}
 
 	// Adjust layer size of we trimmed it down
@@ -286,6 +290,9 @@ export async function LoadAssetImageLayer(
 			produce(layer, (d) => {
 				d.priority = MirrorPriority(d.priority);
 				d.pointType = d.pointType?.map(MirrorBoneLike);
+				if (d.type === 'mesh' && d.colorizationKey != null) {
+					d.colorizationKey = MirrorBoneLike(d.colorizationKey);
+				}
 				d.image = MirrorLayerImageSetting(d.image);
 				d.scaling = d.scaling && {
 					...d.scaling,

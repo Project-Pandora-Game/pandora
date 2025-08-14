@@ -6,7 +6,7 @@
 	display: inline-flex;
 	gap: 0.5em;
 
-	border-radius: 0.2em;
+	border-radius: common.spacing('small');
 	padding: 0.8em 1.2em;
 	border: 1px solid;
 
@@ -51,6 +51,16 @@
 		padding: 0.1em 0.3em;
 	}
 
+	&.half-slim {
+		gap: 0.3em;
+		padding: 0.2em 0.6em;
+	}
+
+	&.align-start {
+		justify-content: start;
+		text-align: start;
+	}
+
 	&.hideDisabled:disabled {
 		visibility: hidden !important;
 	}
@@ -59,8 +69,8 @@
 		padding: 0.3em;
 
 		img, canvas {
-			width: 100%;
 			height: 100%;
+			max-width: 100%;
 			user-select: none;
 			pointer-events: none;
 			object-fit: contain;

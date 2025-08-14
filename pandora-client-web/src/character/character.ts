@@ -142,5 +142,5 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 }
 
 export function useCharacterRestrictionManager(character: ICharacter, globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
-	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
+	return useMemo(() => character.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
 }

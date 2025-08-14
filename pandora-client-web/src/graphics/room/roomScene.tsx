@@ -1,6 +1,7 @@
 import { Immutable } from 'immer';
 import { clamp } from 'lodash-es';
 import {
+	Assert,
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
@@ -12,6 +13,7 @@ import {
 	RoomBackgroundData,
 	SpaceClientInfo,
 	SpaceIdSchema,
+	type RoomId,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
@@ -51,6 +53,7 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 };
 
 interface RoomGraphicsSceneProps extends CommonProps {
+	room: RoomId;
 	characters: readonly Character<ICharacterRoomData>[];
 	gameState: GameState;
 	globalState: AssetFrameworkGlobalState;
@@ -71,6 +74,7 @@ export function RoomGraphicsScene({
 	id,
 	className,
 	children,
+	room,
 	characters,
 	gameState,
 	globalState,
@@ -82,8 +86,9 @@ export function RoomGraphicsScene({
 		roomSceneMode,
 	} = useRoomScreenContext();
 
-	const roomState = globalState.room;
-	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
+	const roomState = globalState.space.getRoom(room);
+	Assert(roomState != null, 'Room to display not found');
+	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && roomState.roomBackground.graphics.type === 'image' && info.features.includes('development')) {
 			return CalculateBackgroundDataFromCalibrationData(roomState.roomBackground.graphics.image, {
@@ -94,7 +99,7 @@ export function RoomGraphicsScene({
 
 		return roomState.roomBackground;
 	}, [roomState, info, debugConfig]);
-	const spaceId = roomState.spaceId;
+	const spaceId = globalState.space.spaceId;
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
@@ -228,24 +233,35 @@ export function RoomGraphicsScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<Container zIndex={ 10 } sortableChildren>
+			<Container key={ room } zIndex={ 10 } sortableChildren>
 				{
-					characters.map((character) => (
-						<RoomCharacterInteractive
-							key={ character.id }
-							globalState={ globalState }
-							character={ character }
-							spaceInfo={ info }
-							debugConfig={ debugConfig }
-							projectionResolver={ projectionResolver }
-						/>
-					))
+					characters.map((character) => {
+						const characterState = globalState.characters.get(character.id);
+						if (characterState == null ||
+							characterState.position.type !== 'normal' ||
+							characterState.currentRoom !== room
+						) {
+							return null;
+						}
+
+						return (
+							<RoomCharacterInteractive
+								key={ character.id }
+								globalState={ globalState }
+								character={ character }
+								spaceInfo={ info }
+								debugConfig={ debugConfig }
+								projectionResolver={ projectionResolver }
+							/>
+						);
+					})
 				}
 				{
 					roomDevices.map((device) => (device.isDeployed() ? (
 						<RoomDeviceInteractive
 							key={ device.id }
 							globalState={ globalState }
+							roomState={ roomState }
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
@@ -284,6 +300,7 @@ export function RoomGraphicsScene({
 						<RoomDeviceMovementTool
 							key={ device.id }
 							globalState={ globalState }
+							roomState={ roomState }
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
@@ -406,6 +423,7 @@ export function RoomScene({ className }: {
 	return (
 		<RoomGraphicsScene
 			className={ className }
+			room={ playerState.currentRoom }
 			characters={ characters }
 			gameState={ gameState }
 			globalState={ globalState }

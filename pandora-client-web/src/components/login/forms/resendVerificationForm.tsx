@@ -1,18 +1,41 @@
 import { AssertNever, IsEmail } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link } from 'react-router';
+import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerification } from '../../../networking/account_manager.ts';
+import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
+import { Column } from '../../common/container/container.tsx';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
 export interface ResendVerificationFormData {
 	email: string;
 }
 
 export function ResendVerificationForm(): ReactElement {
+	const { disableEmailVerification } = useObservable(useDirectoryConnector().directoryStatus);
+
+	if (disableEmailVerification) {
+		return (
+			<Column alignX='center'>
+				<div className='warning-box'>
+					<strong>Email verification is currently disabled</strong>
+				</div>
+				<Link to='/login'>◄ Return to login</Link>
+			</Column>
+		);
+	}
+
+	return <ResendVerificationFormInner />;
+}
+
+function ResendVerificationFormInner(): ReactElement {
 	const navigate = useNavigatePandora();
 	const resendVerification = useDirectoryResendVerification();
 	const [captchaToken, setCaptchaToken] = useState('');
@@ -38,6 +61,8 @@ export function ResendVerificationForm(): ReactElement {
 			return;
 		} else if (result === 'invalidCaptcha') {
 			setCaptchaFailed(true);
+		} else if (result === 'failed') {
+			toast('Request failed', TOAST_OPTIONS_ERROR);
 		} else {
 			AssertNever(result);
 		}

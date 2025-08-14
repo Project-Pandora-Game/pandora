@@ -69,7 +69,7 @@ export const AppearanceBundleSchema = z.object({
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(undefined),
 	attemptingAction: CharacterActionAttemptSchema.optional().catch(undefined),
 	/** Character's position within a space */
-	position: CharacterSpacePositionSchema.catch({ type: 'normal', position: [0, 0, 0] }),
+	position: CharacterSpacePositionSchema.catch({ type: 'normal', room: 'room:default', position: [0, 0, 0] }),
 	/** Character's current space - mainly used for detecting space change (as shard has no control over that) and resetting relevant data when needed. */
 	space: SpaceIdSchema.nullable().catch(null),
 	clientOnly: z.boolean().optional(),
@@ -91,7 +91,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	return {
 		items: [],
 		requestedPose: GetDefaultAppearancePose(),
-		position: { type: 'normal', position: [0, 0, 0] },
+		position: { type: 'normal', room: 'room:default', position: [0, 0, 0] },
 		space: null,
 	};
 }

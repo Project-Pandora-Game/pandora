@@ -83,7 +83,12 @@ export function ActionRoomDeviceEnter({
 
 	if (!processingContext.manipulator.produceCharacterState(
 		action.character.characterId,
-		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, false),
+		(character) => {
+			const room = processingContext.manipulator.currentState.space.getRoom(character.currentRoom);
+			if (room == null)
+				return null;
+			return character.updateRoomStateLink(room, false);
+		},
 	))
 		return processingContext.invalid();
 

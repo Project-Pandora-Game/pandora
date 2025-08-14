@@ -60,10 +60,14 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
-				In Pandora, a user created space can consist of one or (in the future) several rooms and everything is persistent
+				In Pandora, a user created space can consist of one or more connected rooms and everything is persistent
 				(settings, <Link to='/wiki/spaces#SP_Room_inventory'>inventory</Link>,
-				and <Link to='/wiki/items#IT_Room-level_items'>room devices</Link> remain even after everyone has left). Every account can own a
-				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
+				and kinky or decorative <Link to='/wiki/items#IT_Room-level_items'>room items</Link> remain even after everyone has left).<br />
+				You can export templates of your room designs and share them with other users or archive them to create a certain room on demand.
+			</p>
+			<p>
+				Every account can own several spaces.
+				A space only gets deleted when it no longer has any owners.<br />
 				Spaces set to public are visible if the configured condition is met (either someone is online inside or an admin is online inside).
 				You can always see spaces where you are either owner, admin, or on the allow list (even if they are private or empty).
 			</p>
@@ -151,7 +155,7 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>13. A permission feature that allows the user to set who is allowed to do what</h4>
 			<p>
-				You can see and change the current permissions in the Pandora settings. Permissions are character-specific and not
+				You can see and change the current permissions in the Pandora settings in great detail. Permissions are character-specific and not
 				account-wide. <Link to='/wiki/characters#CH_Character_permissions'>More information here</Link>.
 			</p>
 
@@ -176,8 +180,6 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future. In no particular order:
 			<ul>
-				<li>Room templates</li>
-				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>More customization options for items, for instance creating items with their configuration permanently frozen</li>
 				<li>Further improved UI with focus on better usability and potentially more design themes</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>

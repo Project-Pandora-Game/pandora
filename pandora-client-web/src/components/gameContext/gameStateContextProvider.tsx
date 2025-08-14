@@ -2,6 +2,7 @@ import { freeze, Immutable } from 'immer';
 import { isEqual, noop } from 'lodash-es';
 import {
 	ActionSpaceContext,
+	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateClientBundle,
@@ -32,7 +33,6 @@ import {
 	PermissionConfig,
 	PermissionGroup,
 	PermissionSetup,
-	RoomInventory,
 	SpaceClientInfo,
 	SpaceFeature,
 	SpaceId,
@@ -40,6 +40,7 @@ import {
 	TypedEventEmitter,
 	ZodCast,
 	type AccountId,
+	type ActionRoomSelector,
 	type ActionTargetSelector,
 	type AppearanceAction,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
@@ -47,6 +48,7 @@ import {
 	type IClientShardPromiseResult,
 	type ItemContainerPath,
 	type ItemId,
+	type RoomId,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -61,7 +63,7 @@ import { Observable, useNullableObservable, useObservable } from '../../observab
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
-import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
+import { IChatMessageProcessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 import { useShardConnector } from './shardConnectorContextProvider.tsx';
@@ -223,6 +225,14 @@ export class GameState extends TypedEventEmitter<{
 		});
 	}
 
+	public getCurrentSpaceContext(): ActionSpaceContext {
+		return MakeActionSpaceContext(
+			this.currentSpace.value,
+			this._shard.serviceDeps.accountManager.currentAccount.value,
+			this.characterModifierEffects.value,
+		);
+	}
+
 	//#region Handler
 
 	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
@@ -354,10 +364,30 @@ export class GameState extends TypedEventEmitter<{
 
 	public onMessage(incoming: IChatMessage[]): number {
 		const spaceId = this.currentSpace.value.id;
+		const roomId = this.player.getAppearance(this.globalState.currentState).characterState.currentRoom;
+
+		const processRoom = (id: RoomId): ChatMessageProcessedRoomData => ({
+			id,
+			name: this.globalState.currentState.space.getRoom(id)?.displayName ?? id,
+		});
 
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map<IChatMessage & { spaceId: SpaceId | null; }>((m) => ({ ...m, spaceId }));
+			.map((m): IChatMessageProcessed => {
+				switch (m.type) {
+					case 'chat':
+					case 'ooc':
+					case 'me':
+					case 'emote':
+						return ({ ...m, spaceId, roomData: processRoom(m.room), receivedRoomId: roomId });
+					case 'action':
+					case 'serverMessage':
+						return ({ ...m, spaceId, roomsData: m.rooms?.map(processRoom) ?? null, receivedRoomId: roomId });
+					case 'deleted':
+						return ({ ...m, spaceId, receivedRoomId: roomId });
+				}
+				AssertNever(m);
+			});
 
 		this._lastMessageTime = messages
 			.map((m) => m.time)
@@ -629,7 +659,7 @@ export class GameState extends TypedEventEmitter<{
 		{
 			const restrictionManager = this.player.getRestrictionManager(
 				this.globalState.currentState,
-				MakeActionSpaceContext(this.currentSpace.value, this._shard.serviceDeps.accountManager.currentAccount.value, this.characterModifierEffects.value),
+				this.getCurrentSpaceContext(),
 			);
 			for (const checkMessage of messages) {
 				const blockCheck = restrictionManager.checkChatMessage(checkMessage);
@@ -867,28 +897,11 @@ export function useCharacterState(globalState: AssetFrameworkGlobalState, id: Ch
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
 
-export function useRoomInventory(context: GameState): RoomInventory | null {
-	const state = useGlobalState(context);
-
-	return useMemo(() => (state.room ? new RoomInventory(state.room) : null), [state]);
-}
-
-export function useRoomInventoryItem(context: GameState, item: ItemPath | null | undefined): Item | undefined {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (item ? roomInventory?.getItem(item) : undefined), [roomInventory, item]);
-}
-
-export function useRoomInventoryItems(context: GameState): readonly Item[] {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
-}
-
 export type FindItemResultEntry = {
 	item: Item;
 	target: ActionTargetSelector;
 	path: ItemPath;
+	room: ActionRoomSelector;
 };
 export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
 const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
@@ -905,7 +918,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 	}
 	const result: Readonly<FindItemResultEntry>[] = [];
 
-	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath): void {
+	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath, room: ActionRoomSelector): void {
 		for (const item of items) {
 			if (item.id === id) {
 				result.push({
@@ -915,6 +928,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 						container,
 						itemId: item.id,
 					},
+					room,
 				});
 			}
 
@@ -922,15 +936,17 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 				processContainer(module.getContents(), target, [
 					...container,
 					{ item: item.id, module: moduleName },
-				]);
+				], room);
 			}
 		}
 	}
 
 	for (const character of globalState.characters.values()) {
-		processContainer(character.items, { type: 'character', characterId: character.id }, []);
+		processContainer(character.items, { type: 'character', characterId: character.id }, [], { type: 'room', roomId: character.currentRoom });
 	}
-	processContainer(globalState.room.items, { type: 'roomInventory' }, []);
+	for (const room of globalState.space.rooms) {
+		processContainer(room.items, { type: 'room', roomId: room.id }, [], { type: 'room', roomId: room.id });
+	}
 
 	freeze(result);
 	cache.set(id, result);

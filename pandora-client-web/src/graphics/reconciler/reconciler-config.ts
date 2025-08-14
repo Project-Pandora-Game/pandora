@@ -187,7 +187,11 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		// This method isn't really documented by React.
 		// At the moment it appears it is called for all components when React doesn't intend to reuse them anymore,
 		// but it also appears it is called multiple times.
-		node.destroy();
+		try {
+			node.destroy();
+		} catch (error) {
+			node._getLogger().error('Error during instance destroy:', error);
+		}
 	},
 	requestPostPaintCallback() {
 		// Noop

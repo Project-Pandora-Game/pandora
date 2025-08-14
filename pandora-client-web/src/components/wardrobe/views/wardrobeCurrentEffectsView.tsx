@@ -22,8 +22,8 @@ export function WardrobeCurrentEffectsView({ character, globalState }: {
 		if (effects.blockRoomMovement) {
 			result.push(<li key='blockRoomMovement'>Cannot move within the room</li>);
 		}
-		if (effects.blockRoomLeave) {
-			result.push(<li key='blockRoomLeave'>Cannot leave the current space</li>);
+		if (effects.blockSpaceLeave) {
+			result.push(<li key='blockSpaceLeave'>Cannot leave the current space</li>);
 		}
 		if (effects.blind > 0) {
 			result.push(<li key='blind'>{ effects.blind >= 10 ? 'Fully blinded' : `${10 * effects.blind}% blinded` }</li>);

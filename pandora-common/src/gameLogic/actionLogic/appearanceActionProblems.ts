@@ -3,7 +3,12 @@ import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules
 import type { Restriction } from '../../character/restrictionTypes.ts';
 import type { CharacterModifierActionError } from '../characterModifiers/characterModifierData.ts';
 
-export type InvalidActionReason = 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice' | 'characterMoveCannotFollowTarget';
+export type InvalidActionReason =
+	| 'noDeleteRoomDeviceWearable'
+	| 'noDeleteDeployedRoomDevice'
+	| 'noDeleteOccupiedRoom'
+	| 'characterMoveCannotFollow'
+	| 'characterMoveCannotFollowTarget';
 
 export type AppearanceActionProblem =
 	| {
@@ -16,22 +21,28 @@ export type AppearanceActionProblem =
 		result: 'tooSoon';
 	}
 	| {
+		// Something went wrong while processing the action.
+		// Invalid or missing reference is the most common reason, but it could also include actions that are simply impossible.
 		result: 'invalidAction';
 		reason?: InvalidActionReason;
 	}
 	| {
+		// Interaction with item module failed. More specific problems are described by individual module types.
 		result: 'moduleActionError';
 		reason: ModuleActionProblem;
 	}
 	| {
+		// Character modifier prevented the action. Reason is specific to a modifier type.
 		result: 'characterModifierActionError';
 		reason: CharacterModifierActionError;
 	}
 	| {
+		// While the action is valid, the player is not permitted to perform the action.
 		result: 'restrictionError';
 		restriction: Restriction;
 	}
 	| {
+		// The action itself is valid, but resulting state is invalid (unsatisfied requirement, conflict, ...)
 		result: 'validationError';
 		validationError: AppearanceValidationError;
 	};

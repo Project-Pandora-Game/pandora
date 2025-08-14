@@ -6,7 +6,7 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	ICharacterData,
-	ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE,
+	SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	SpaceData,
 	SpaceDirectoryConfig,
 	SpaceId,
@@ -46,8 +46,9 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
 		id: id ?? `s/${nanoid()}`,
 		accessId: '',
-		inventory: CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE),
+		spaceState: CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
 		invites: [],
+		ownerInvites: [],
 		...data,
 	};
 }

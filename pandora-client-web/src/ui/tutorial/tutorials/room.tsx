@@ -196,7 +196,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								<i>
-									Note: The room background is just an image and cannot be interacted with.<br />
+									Note: The room background, which is either a static image or consists of walls & ceiling & floor, cannot be interacted with.<br />
 									Later, you will learn about items placeable into the room that can be interacted with.
 								</i>
 							</p>
@@ -383,7 +383,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								In the middle of the character there is also third button that allows you to quickly switch to character posing mode.
 							</p>
 							<p>
-								Feel free to experiment with movingyour character and then click next.
+								Feel free to experiment with moving your character and then click next.
 							</p>
 						</>
 					),
@@ -468,7 +468,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								You can find more about personal spaces in the context help or in the wiki.
 							</p>
 							<p>
-								The other type of space is a public (or private/invite-only) space.<br />
+								The other type of space is a public (or private/invite-only) space. Any space contains one or more rooms.<br />
 								Those will be covered by a later tutorial.
 							</p>
 						</>
@@ -512,7 +512,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								That said, the part we would like to point out right now is the list of characters currently inside this space near the top of the tab.<br />
-								As this is a personal space, you can only see yourself here, but in other spaces you can always see everyone currently inside using this list.
+								As this is a personal space, you can only see yourself here, but in other spaces you can always see everyone currently inside and in which rooms they are using this list.
 							</p>
 						</>
 					),
@@ -531,7 +531,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 						</>
 					),
-					highlight: [{ query: '.character-info legend.player > button:has(.colorStrip)' }],
+					highlight: [{ query: '.character-info fieldset.character legend.player > button:has(.colorStrip)' }],
 					conditions: [{
 						type: 'elementQuery',
 						query: '.context-menu',
@@ -577,6 +577,10 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								As chat is a core part of Pandora, it also is a powerful tool.<br />
 								While this tutorial will only introduce the basics, you can find more details about it in the <ExternalLink href='https://project-pandora.com/wiki/spaces'>"Spaces" wiki page</ExternalLink>.
+							</p>
+							<p>
+								<strong>Important note:</strong> The chat is shared space-wide and not only within the room you are currently inside.
+								That means that anything you write openly to characters you see in your room can also be seen by other users in other rooms of the same space.
 							</p>
 						</>
 					),

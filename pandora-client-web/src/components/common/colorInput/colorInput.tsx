@@ -258,7 +258,7 @@ export class Color {
 	public static maxValue: number = 255;
 	public static maxAlpha: number = 255;
 
-	public readonly rbg: ColorArray;
+	public readonly rgb: ColorArray;
 	public readonly hsv: ColorArray;
 	public readonly alpha: number;
 
@@ -293,7 +293,7 @@ export class Color {
 	public setAlpha(alpha: number) {
 		alpha = clamp(alpha, 0, Color.maxAlpha);
 		return new Color({
-			rgb: this.rbg,
+			rgb: this.rgb,
 			hsv: this.hsv,
 			alpha,
 		});
@@ -308,8 +308,8 @@ export class Color {
 	}
 
 	public writeCss(style: CSSStyleDeclaration) {
-		style.setProperty('--rgb', `rgb(${this.rbg[0]}, ${this.rbg[1]}, ${this.rbg[2]})`);
-		style.setProperty('--rgba', `rgba(${this.rbg[0]}, ${this.rbg[1]}, ${this.rbg[2]}, ${this.alpha / Color.maxAlpha})`);
+		style.setProperty('--rgb', `rgb(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]})`);
+		style.setProperty('--rgba', `rgba(${this.rgb[0]}, ${this.rgb[1]}, ${this.rgb[2]}, ${this.alpha / Color.maxAlpha})`);
 
 		const hue = this.hue / Color.maxHue;
 		const saturation = this.saturation / Color.maxSaturation;
@@ -335,32 +335,45 @@ export class Color {
 	}
 
 	public toHex(): HexRGBAColorString {
-		const [r, g, b] = this.rbg;
+		const [r, g, b] = this.rgb;
 		if (this.alpha === Color.maxAlpha) {
 			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
 		}
 		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}` as HexRGBAColorString;
 	}
 
+	/** Mix this color with another color, in ratios this:other (1-otherRatio):otherRatio */
+	public mixSrgb(otherColor: Color, otherRatio: number): Color {
+		const thisRatio = 1 - otherRatio;
+		return new Color({
+			rgb: [
+				thisRatio * this.rgb[0] + otherRatio * otherColor.rgb[0],
+				thisRatio * this.rgb[1] + otherRatio * otherColor.rgb[1],
+				thisRatio * this.rgb[2] + otherRatio * otherColor.rgb[2],
+			],
+			alpha: thisRatio * this.alpha + otherRatio * otherColor.alpha,
+		});
+	}
+
 	constructor(color: Color);
 	constructor(color: HexColorString | HexRGBAColorString);
-	constructor(color: { rgb?: ColorArray; hsv: ColorArray; alpha: number; } | { rgba: ColorArray; hsv?: ColorArray; alpha: number; });
+	constructor(color: { rgb?: ColorArray; hsv: ColorArray; alpha: number; } | { rgb: ColorArray; hsv?: ColorArray; alpha: number; });
 	constructor(color: HexColorString | HexRGBAColorString | Color | { rgb?: ColorArray; hsv?: ColorArray; alpha: number; }) {
 		if (color instanceof Color) {
-			this.rbg = color.rbg;
+			this.rgb = color.rgb;
 			this.hsv = color.hsv;
 			this.alpha = color.alpha;
 			return;
 		}
 		if (typeof color === 'string') {
 			const [r, g, b, a] = Color.hexToRgba(color);
-			this.rbg = [r, g, b];
-			this.hsv = Color.rgbToHsv(this.rbg);
+			this.rgb = [r, g, b];
+			this.hsv = Color.rgbToHsv(this.rgb);
 			this.alpha = a;
 			return;
 		}
-		this.rbg = color.rgb ?? (color.hsv ? Color.hsvToRgb(color.hsv) : [0, 0, 0]);
-		this.hsv = color.hsv ?? Color.rgbToHsv(this.rbg);
+		this.rgb = color.rgb ?? (color.hsv ? Color.hsvToRgb(color.hsv) : [0, 0, 0]);
+		this.hsv = color.hsv ?? Color.rgbToHsv(this.rgb);
 		this.alpha = color.alpha;
 	}
 

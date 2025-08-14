@@ -277,7 +277,7 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 	const directoryConnector = useDirectoryConnector();
 	const { player, globalState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
-	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
+	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
 
 	const [leave, processing] = useAsyncEvent(
 		(e: React.MouseEvent<HTMLButtonElement>) => {

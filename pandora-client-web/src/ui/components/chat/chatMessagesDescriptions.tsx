@@ -62,6 +62,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
 		case 'roomConfigure':
 			return <DescribeGameLogicActionRoomConfigure action={ action } { ...props } />;
+		case 'spaceRoomLayout':
+			return <DescribeGameLogicActionSpaceRoomLayout action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
 			return <DescribeGameLogicActionInterrupt action={ action } { ...props } />;
 	}
@@ -292,6 +294,10 @@ function DescribeGameLogicActionRoomConfigure(_props: DescribeGameLogicActionPro
 	return <>Update the room's configuration.</>;
 }
 
+function DescribeGameLogicActionSpaceRoomLayout(_props: DescribeGameLogicActionProps<'spaceRoomLayout'>): ReactElement {
+	return <>Update the space's layout.</>;
+}
+
 function DescribeGameLogicActionInterrupt({ action }: DescribeGameLogicActionProps<'actionAttemptInterrupt'>): ReactElement {
 	return <>Interrupt <DescribeSpaceCharacter id={ action.target.characterId } form='possessive' /> attempted action.</>;
 }
@@ -316,7 +322,8 @@ export function DescribeContainer({ target, container, globalState }: {
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	if (container.length === 0) {
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>the room inventory</>;
 		} else {
 			return <DescribeSpaceCharacter id={ target.characterId } />;
@@ -324,7 +331,8 @@ export function DescribeContainer({ target, container, globalState }: {
 	} else if (container.length === 1) {
 		const item = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? null } />;
 
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>{ item } in the room inventory</>;
 		} else {
 			return <><DescribeSpaceCharacter id={ target.characterId } form='possessive' /> { item }</>;
@@ -338,7 +346,8 @@ export function DescribeContainer({ target, container, globalState }: {
 			}) ?? null } />
 		);
 
-		if (target.type === 'roomInventory') {
+		if (target.type === 'room') {
+			// TODO: Should this now include name of the room?
 			return <>the { itemLast } in { itemFirst } in the room inventory</>;
 		} else {
 			return <>the { itemLast } in <DescribeSpaceCharacter id={ target.characterId } form='possessive' /> { itemFirst }</>;

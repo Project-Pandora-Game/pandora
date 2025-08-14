@@ -16,6 +16,7 @@ import {
 import type { PlayerCharacter } from '../../../../character/player.ts';
 import type { GameState } from '../../../../components/gameContext/gameStateContextProvider.tsx';
 import { GetVisibleBoneName } from '../../../../components/wardrobe/wardrobeUtils.ts';
+import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
 
@@ -26,14 +27,14 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 	longDescription: `(alternative command: '/pm')`,
 	handler: CreateClientCommand()
 		.fork('type', (forkCtx) => {
-			function doPose(gameState: GameState, player: PlayerCharacter, { arms, leftArm, rightArm, ...copy }: PartialAppearancePose) {
-				gameState.doImmediateAction({
+			function doPose(gameState: GameState, player: PlayerCharacter, { arms, leftArm, rightArm, ...copy }: PartialAppearancePose): boolean {
+				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.id,
 					leftArm: { ...arms, ...leftArm },
 					rightArm: { ...arms, ...rightArm },
 					...copy,
-				}).catch(() => { /* TODO */ });
+				});
 			}
 
 			function armHandler(arm: Satisfies<'leftArm' | 'rightArm' | 'arms', keyof PartialAppearancePose>) {
@@ -43,8 +44,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 						handler: armForkCtx
 							.argument('value', CommandSelectorEnum(ArmPoseSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 							.handler(({ gameState, player }, { value }) => {
-								doPose(gameState, player, { [arm]: { position: value } });
-								return true;
+								return doPose(gameState, player, { [arm]: { position: value } });
 							}),
 					},
 					fingers: {
@@ -52,8 +52,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 						handler: armForkCtx
 							.argument('value', CommandSelectorEnum(ArmFingersSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 							.handler(({ gameState, player }, { value }) => {
-								doPose(gameState, player, { [arm]: { fingers: value } });
-								return true;
+								return doPose(gameState, player, { [arm]: { fingers: value } });
 							}),
 					},
 					rotation: {
@@ -61,8 +60,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 						handler: armForkCtx
 							.argument('value', CommandSelectorEnum(ArmRotationSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 							.handler(({ gameState, player }, { value }) => {
-								doPose(gameState, player, { [arm]: { rotation: value } });
-								return true;
+								return doPose(gameState, player, { [arm]: { rotation: value } });
 							}),
 					},
 				}));
@@ -129,8 +127,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 								}
 							}
 
-							doPose(gameState, player, { bones: setBones });
-							return true;
+							return doPose(gameState, player, { bones: setBones });
 						}),
 				},
 				arms: {
@@ -150,8 +147,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 					handler: forkCtx
 						.argument('value', CommandSelectorEnum(ArmSegmentOrderSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 						.handler(({ gameState, player }, { value }) => {
-							doPose(gameState, player, { armsOrder: { upper: value } });
-							return true;
+							return doPose(gameState, player, { armsOrder: { upper: value } });
 						}),
 				},
 				legs: {
@@ -162,8 +158,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 							handler: armForkCtx
 								.argument('value', CommandSelectorEnum(LegsPoseSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 								.handler(({ gameState, player }, { value }) => {
-									doPose(gameState, player, { legs: { pose: value } });
-									return true;
+									return doPose(gameState, player, { legs: { pose: value } });
 								}),
 						},
 					})),
@@ -173,8 +168,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 					handler: forkCtx
 						.argument('value', CommandSelectorEnum(LegSideOrderSchema.options.map((o) => [o, capitalize(lowerCase(o))])))
 						.handler(({ gameState, player }, { value }) => {
-							doPose(gameState, player, { legs: { upper: value } });
-							return true;
+							return doPose(gameState, player, { legs: { upper: value } });
 						}),
 				},
 				rotation: {
@@ -204,8 +198,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 							BONE_MAX,
 						);
 
-						doPose(gameState, player, { bones: { character_rotation: rotation } });
-						return true;
+						return doPose(gameState, player, { bones: { character_rotation: rotation } });
 					}),
 				},
 			};

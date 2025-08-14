@@ -1,7 +1,7 @@
 import { remove } from 'lodash-es';
 import type { CharacterId } from '../character/index.ts';
 import { Assert, AssertNever } from '../utility/misc.ts';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes.ts';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath, RoomId } from './appearanceTypes.ts';
 import { AppearanceItemsFixBodypartOrder } from './appearanceValidation.ts';
 import type { AssetManager } from './assetManager.ts';
 import type { Item, ItemId } from './item/index.ts';
@@ -230,15 +230,22 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		message.itemContainerPath ??= [];
 
 		let target: ActionHandlerMessageTarget;
+		const rooms: RoomId[] = [];
 		if (this._target.type === 'character') {
 			target = {
 				type: 'character',
 				id: this._target.characterId,
 			};
-		} else if (this._target.type === 'roomInventory') {
+			const room = this.currentState.getCharacterState(this._target.characterId)?.currentRoom;
+			if (room != null) {
+				rooms.push(room);
+			}
+		} else if (this._target.type === 'room') {
 			target = {
-				type: 'roomInventory',
+				type: 'room',
+				roomId: this._target.roomId,
 			};
+			rooms.push(this._target.roomId);
 		} else {
 			AssertNever(this._target);
 		}
@@ -246,6 +253,7 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		return {
 			...message,
 			target,
+			rooms,
 		};
 	}
 }

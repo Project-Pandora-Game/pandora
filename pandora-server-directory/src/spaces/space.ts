@@ -1,6 +1,6 @@
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument, type SpaceDirectoryData } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -15,6 +15,7 @@ export class Space {
 	public readonly id: SpaceId;
 	private readonly config: SpaceDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
+	private readonly _ownerInvites: Set<AccountId>;
 	private _invites: SpaceInvite[];
 	private _deletionPending = false;
 
@@ -31,6 +32,10 @@ export class Space {
 
 	public get name(): string {
 		return this.config.name;
+	}
+
+	public get ownerInvites(): ReadonlySet<AccountId> {
+		return this._ownerInvites;
 	}
 
 	public get owners(): ReadonlySet<AccountId> {
@@ -55,21 +60,31 @@ export class Space {
 
 	private readonly logger: Logger;
 
-	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string, invites: SpaceInvite[]) {
+	constructor({ id, config, owners, ownerInvites, accessId, invites }: SpaceDirectoryData) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
+		this._ownerInvites = new Set(ownerInvites);
 		this._invites = invites;
 		this.accessId = accessId;
 		this.logger = GetLogger('Space', `[Space ${this.id}]`);
 
 		// Make sure things that should are unique
 		this.config.features = uniq(this.config.features);
-		this.config.admin = uniq(this.config.admin);
+		this._cleanupLists();
+
+		this.logger.debug('Loaded');
+	}
+
+	private _cleanupLists(): void {
+		this.config.admin = uniq(this.config.admin).filter((id) => !this._owners.has(id));
 		this.config.banned = this._cleanupBanList(uniq(this.config.banned));
 		this.config.allow = this._cleanupAllowList(uniq(this.config.allow));
 
-		this.logger.debug('Loaded');
+		for (const oi of this._ownerInvites) {
+			if (!this.config.admin.includes(oi))
+				this._ownerInvites.delete(oi);
+		}
 	}
 
 	private _cleanupBanList(list: AccountId[]): AccountId[] {
@@ -204,6 +219,98 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
+	public async inviteOwner(target: AccountId, source: Account): Promise<'ok' | 'failed' | 'notAnOwner' | 'targetNotAdmin' | 'targetNotAllowed'> {
+		if (!this.isValid)
+			return 'failed';
+		if (!this.isOwner(source))
+			return 'notAnOwner';
+
+		// If already invited or an owner, NOOP
+		if (this._ownerInvites.has(target) || this._owners.has(target))
+			return 'ok';
+
+		// Target needs to already be an admin
+		if (!this.config.admin.includes(target))
+			return 'targetNotAdmin';
+
+		// Target needs to be in space or an contact to avoid spam
+		if (!Array.from(this.characters).some((c) => c.baseInfo.account.id === target) &&
+			!(await source.contacts.getFriendsIds()).has(target)
+		) {
+			return 'targetNotAllowed';
+		}
+
+		// Success: Add the invite and update everyone about it
+		this._ownerInvites.add(target);
+		this._cleanupLists();
+
+		await Promise.all([
+			this._assignedShard?.update('spaces'),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+				ownerInvites: Array.from(this._ownerInvites),
+			}, null),
+		]);
+
+		return 'ok';
+	}
+
+	@AsyncSynchronized('object')
+	public async inviteOwnerCancel(target: AccountId, source: Account): Promise<'ok' | 'failed' | 'notAnOwner' | 'inviteNotFound'> {
+		if (!this.isValid)
+			return 'failed';
+		// Owner can cancel invites and anyone can cancel their own
+		if (!this.isOwner(source) && target !== source.id)
+			return 'notAnOwner';
+		if (!this._ownerInvites.has(target))
+			return 'inviteNotFound';
+
+		// Success: Remove the invite and update everyone about it
+		this._ownerInvites.delete(target);
+		this._cleanupLists();
+
+		await Promise.all([
+			this._assignedShard?.update('spaces'),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+				ownerInvites: Array.from(this._ownerInvites),
+			}, null),
+		]);
+
+		return 'ok';
+	}
+
+	@AsyncSynchronized('object')
+	public async inviteOwnerAccept(account: Account): Promise<'ok' | 'failed' | 'inviteNotFound' | 'spaceOwnershipLimitReached'> {
+		if (!this.isValid)
+			return 'failed';
+		if (this.isOwner(account))
+			return 'ok';
+		if (!this._ownerInvites.has(account.id))
+			return 'inviteNotFound';
+
+		// Check the target can take on another space
+		const ownedSpaces = await GetDatabase().getSpacesWithOwner(account.id);
+		if (ownedSpaces.length + 1 > account.spaceOwnershipLimit)
+			return 'spaceOwnershipLimitReached';
+
+		// Success: Turn the invite into full ownership
+		this._owners.add(account.id);
+		this._ownerInvites.delete(account.id);
+		this._cleanupLists();
+
+		await GetDatabase().updateSpace(this.id, {
+			config: cloneDeep(this.config),
+			owners: Array.from(this._owners),
+			ownerInvites: Array.from(this._ownerInvites),
+		}, null);
+
+		await this._assignedShard?.update('spaces');
+
+		return 'ok';
+	}
+
+	@AsyncSynchronized('object')
 	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok'> {
 		// Ignore if space is invalidated
 		if (!this.isValid) {
@@ -225,11 +332,14 @@ export class Space {
 			this.config.admin = uniq(changes.admin);
 		}
 		if (changes.banned) {
-			this.config.banned = this._cleanupBanList(uniq(changes.banned));
-			await this._removeBannedCharacters(source);
+			this.config.banned = uniq(changes.banned);
 		}
 		if (changes.allow) {
-			this.config.allow = this._cleanupAllowList(uniq(changes.allow));
+			this.config.allow = uniq(changes.allow);
+		}
+		if (changes.admin || changes.banned || changes.allow) {
+			this._cleanupLists();
+			await this._removeBannedCharacters(source);
 		}
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
@@ -272,7 +382,10 @@ export class Space {
 
 		await Promise.all([
 			this._assignedShard?.update('spaces'),
-			GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+				ownerInvites: Array.from(this._ownerInvites),
+			}, null),
 		]);
 
 		ConnectionManagerClient.onSpaceListChange();

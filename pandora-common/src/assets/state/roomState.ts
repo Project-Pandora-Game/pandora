@@ -4,67 +4,116 @@ import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { ZodArrayWithInvalidDrop } from '../../validation.ts';
+import { RoomIdSchema, RoomNameSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
-import { Item } from '../item/base.ts';
+import { IntegerCoordinatesSchema, type Coordinates } from '../graphics/common.ts';
+import { Item, type IItemCreationContext } from '../item/base.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema, ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, type AppearanceItems } from '../item/items.ts';
+import { RoomDeviceDeploymentSchema } from '../item/roomDevice.ts';
+import { ItemTemplateSchema } from '../item/unified.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
 
-export const RoomInventoryBundleSchema = z.object({
+export const RoomBundleSchema = z.object({
+	id: RoomIdSchema,
+	name: RoomNameSchema.catch(''),
 	items: AppearanceItemsBundleSchema,
+	position: IntegerCoordinatesSchema.catch({ x: 0, y: 0 }),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
 	clientOnly: z.boolean().optional(),
 });
 
-export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
-export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
+export type RoomBundle = z.infer<typeof RoomBundleSchema>;
+export type RoomClientBundle = RoomBundle & { clientOnly: true; };
 
-export const RoomInventoryClientDeltaBundleSchema = z.object({
+export const RoomTemplateItemTemplateSchema = ItemTemplateSchema.and(z.object({
+	roomDeviceDeployment: RoomDeviceDeploymentSchema.optional().catch(undefined),
+}));
+export type RoomTemplateItemTemplate = z.infer<typeof RoomTemplateItemTemplateSchema>;
+
+export const RoomTemplateSchema = z.object({
+	name: RoomNameSchema.catch(''),
+	items: ZodArrayWithInvalidDrop(RoomTemplateItemTemplateSchema, z.unknown()).catch(() => []),
+	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+});
+export type RoomTemplate = z.infer<typeof RoomTemplateSchema>;
+
+export const RoomClientDeltaBundleSchema = z.object({
+	id: RoomIdSchema,
+	name: RoomNameSchema.optional(),
 	items: AppearanceItemsDeltaBundleSchema.optional(),
+	position: IntegerCoordinatesSchema.optional(),
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 });
-export type RoomInventoryClientDeltaBundle = z.infer<typeof RoomInventoryClientDeltaBundleSchema>;
+export type RoomClientDeltaBundle = z.infer<typeof RoomClientDeltaBundleSchema>;
 
-export const ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomInventoryBundle>>({
+export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
+	id: 'room:default',
+	name: 'Unnamed room',
 	items: [],
+	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPublicSpace' },
 }, true);
 
-export const ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomInventoryBundle>>({
+export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>({
+	id: 'room:default',
+	name: 'My personal room',
 	items: [],
+	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPersonalSpace' },
 }, true);
 
 type AssetFrameworkRoomStateProps = {
 	readonly assetManager: AssetManager;
-	readonly spaceId: SpaceId | null;
+	readonly id: RoomId;
+	readonly name: string;
 	readonly items: AppearanceItems;
+	readonly position: Immutable<Coordinates>;
 	readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	readonly roomBackground: Immutable<RoomBackgroundData>;
 };
 
 /**
- * State of an space. Immutable.
+ * State of a room. Immutable.
  */
 export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
-	public readonly type = 'roomInventory';
-	public readonly assetManager: AssetManager;
-	public readonly spaceId: SpaceId | null;
+	public readonly id: RoomId;
 
+	public readonly assetManager: AssetManager;
+
+	public readonly name: string;
 	public readonly items: AppearanceItems;
+	public readonly position: Immutable<Coordinates>;
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	public readonly roomBackground: Immutable<RoomBackgroundData>;
+
+	public get displayName(): string {
+		return this.name || this.id;
+	}
 
 	private constructor(props: AssetFrameworkRoomStateProps);
 	private constructor(old: AssetFrameworkRoomState, override: Partial<AssetFrameworkRoomStateProps>);
 	private constructor(props: AssetFrameworkRoomStateProps, override?: Partial<AssetFrameworkRoomStateProps>) {
+		this.id = override?.id ?? props.id;
 		this.assetManager = override?.assetManager ?? props.assetManager;
-		this.spaceId = override?.spaceId ?? props.spaceId;
+		this.name = override?.name ?? props.name;
 		this.items = override?.items ?? props.items;
+		this.position = override?.position ?? props.position;
 		this.roomGeometryConfig = override?.roomGeometryConfig ?? props.roomGeometryConfig;
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
+	}
+
+	/**
+	 * Returns a distance between this and another room.
+	 * Currently the distance is a manhattan distance, but this might change in the future.
+	 * @param otherRoom The room to calculate distance to
+	 * @returns Non-negative distance between rooms
+	 */
+	public getDistanceToRoom(otherRoom: AssetFrameworkRoomState): number {
+		return Math.abs(this.position.x - otherRoom.position.x) + Math.abs(this.position.y - otherRoom.position.y);
 	}
 
 	public isValid(): boolean {
@@ -73,6 +122,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	@MemoizeNoArg
 	public validate(): AppearanceValidationResult {
+		if (!Number.isSafeInteger(this.position.x) || !Number.isSafeInteger(this.position.y))
+			return { success: false, error: { problem: 'roomError', problemDetail: 'invalidPosition' } };
+
 		{
 			const r = ValidateRoomInventoryItems(this.assetManager, this.items);
 			if (!r.success)
@@ -84,31 +136,62 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		};
 	}
 
-	public exportToBundle(): RoomInventoryBundle {
+	public exportToTemplate({ includeAllItems }: {
+		includeAllItems: boolean;
+	}): RoomTemplate {
 		return {
-			items: this.items.map((item) => item.exportToBundle({})),
+			name: this.name,
+			items: this.items
+				.filter((i) => includeAllItems || i.isType('roomDevice'))
+				.map((i) => {
+					const template: RoomTemplateItemTemplate = i.exportToTemplate();
+					if (i.isType('roomDevice')) {
+						template.roomDeviceDeployment = CloneDeepMutable(i.deployment);
+					}
+					return template;
+				}),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 		};
 	}
 
-	public exportToClientBundle(options: IExportOptions = {}): RoomInventoryClientBundle {
+	public exportToBundle(): RoomBundle {
+		return {
+			id: this.id,
+			name: this.name,
+			items: this.items.map((item) => item.exportToBundle({})),
+			position: CloneDeepMutable(this.position),
+			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
+		};
+	}
+
+	public exportToClientBundle(options: IExportOptions = {}): RoomClientBundle {
 		options.clientOnly = true;
 		return {
+			id: this.id,
+			name: this.name,
 			items: this.items.map((item) => item.exportToBundle(options)),
+			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			clientOnly: true,
 		};
 	}
 
-	public exportToClientDeltaBundle(originalState: AssetFrameworkRoomState, options: IExportOptions = {}): RoomInventoryClientDeltaBundle {
+	public exportToClientDeltaBundle(originalState: AssetFrameworkRoomState, options: IExportOptions = {}): RoomClientDeltaBundle {
 		Assert(this.assetManager === originalState.assetManager);
-		Assert(this.spaceId === originalState.spaceId);
 		options.clientOnly = true;
 
-		const result: RoomInventoryClientDeltaBundle = {};
+		const result: RoomClientDeltaBundle = {
+			id: this.id,
+		};
 
+		if (this.name !== originalState.name) {
+			result.name = this.name;
+		}
 		if (this.items !== originalState.items) {
 			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
+		}
+		if (this.position !== originalState.position) {
+			result.position = CloneDeepMutable(this.position);
 		}
 		if (this.roomGeometryConfig !== originalState.roomGeometryConfig) {
 			result.roomGeometry = CloneDeepMutable(this.roomGeometryConfig);
@@ -117,11 +200,20 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		return result;
 	}
 
-	public applyClientDeltaBundle(bundle: RoomInventoryClientDeltaBundle, logger: Logger | undefined): AssetFrameworkRoomState {
+	public applyClientDeltaBundle(bundle: RoomClientDeltaBundle, logger: Logger | undefined): AssetFrameworkRoomState {
+		Assert(this.id === bundle.id);
 		const update: Writable<Partial<AssetFrameworkRoomStateProps>> = {};
+
+		if (bundle.name !== undefined) {
+			update.name = bundle.name;
+		}
 
 		if (bundle.items !== undefined) {
 			update.items = ApplyAppearanceItemsDeltaBundle(this.assetManager, this.items, bundle.items, logger);
+		}
+
+		if (bundle.position !== undefined) {
+			update.position = freeze(bundle.position, true);
 		}
 
 		if (bundle.roomGeometry !== undefined) {
@@ -135,6 +227,14 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		Assert(resultState.isValid(), 'State is invalid after delta update');
 		return resultState;
+	}
+
+	public withName(name: string): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { name });
+	}
+
+	public withPosition(position: Immutable<Coordinates>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { position: freeze(position, true) });
 	}
 
 	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {
@@ -152,18 +252,66 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		});
 	}
 
-	public static createDefault(assetManager: AssetManager, spaceId: SpaceId | null): AssetFrameworkRoomState {
-		return AssetFrameworkRoomState.loadFromBundle(
+	public static createFromTemplate(
+		template: Immutable<RoomTemplate>,
+		id: RoomId,
+		position: Coordinates,
+		assetManager: AssetManager,
+		spaceId: SpaceId | null,
+		creator: IItemCreationContext['creator'],
+	): AssetFrameworkRoomState {
+		// Load all items
+		const loadedItems: Item[] = [];
+		for (const itemTemplate of template.items) {
+			// Load asset and skip if unknown
+			let item = assetManager.createItemFromTemplate(itemTemplate, creator);
+			if (item != null) {
+				if (item.isType('roomDevice') && itemTemplate.roomDeviceDeployment != null && itemTemplate.roomDeviceDeployment.deployed) {
+					item = item.changeDeployment({
+						deployed: true,
+						position: {
+							x: itemTemplate.roomDeviceDeployment.x,
+							y: itemTemplate.roomDeviceDeployment.y,
+							yOffset: itemTemplate.roomDeviceDeployment.yOffset,
+						},
+					});
+				}
+
+				loadedItems.push(item);
+			}
+		}
+
+		// Validate and add all items
+		const newItems = RoomInventoryLoadAndValidate(assetManager, loadedItems);
+
+		// Validate room geometry
+		let roomGeometryConfig: Immutable<RoomGeometryConfig> = CloneDeepMutable(template.roomGeometry);
+		let roomBackground = ResolveBackground(assetManager, roomGeometryConfig);
+		if (roomBackground == null) {
+			roomGeometryConfig = (spaceId != null ? ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE).roomGeometry;
+			roomBackground = ResolveBackground(assetManager, roomGeometryConfig);
+			AssertNotNullable(roomBackground);
+		}
+
+		// Create the final state
+		const resultState = freeze(new AssetFrameworkRoomState({
+			id,
 			assetManager,
-			spaceId != null ? ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
-			spaceId,
-			undefined,
-		);
+			name: template.name,
+			items: newItems,
+			position: CloneDeepMutable(position),
+			roomGeometryConfig,
+			roomBackground,
+		}), true);
+
+		Assert(resultState.isValid(), 'State is invalid after creation from template');
+
+		return resultState;
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, bundle: Immutable<RoomInventoryBundle>, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkRoomState {
+	public static loadFromBundle(assetManager: AssetManager, bundle: Immutable<RoomBundle>, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkRoomState {
 		const fixup = bundle?.clientOnly !== true;
-		const parsed: RoomInventoryBundle = RoomInventoryBundleSchema.parse(bundle);
+		const parsed: RoomBundle = RoomBundleSchema.parse(bundle);
 
 		// Load all items
 		const loadedItems: Item[] = [];
@@ -189,16 +337,18 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		if (roomBackground == null) {
 			Assert(fixup, `DESYNC: Unknown room geometry ${JSON.stringify(roomGeometryConfig)}`);
 			logger?.warning('Resetting unknown room geometry', roomGeometryConfig);
-			roomGeometryConfig = (spaceId != null ? ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE).roomGeometry;
+			roomGeometryConfig = (spaceId != null ? ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE : ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE).roomGeometry;
 			roomBackground = ResolveBackground(assetManager, roomGeometryConfig);
 			AssertNotNullable(roomBackground);
 		}
 
 		// Create the final state
 		const resultState = freeze(new AssetFrameworkRoomState({
+			id: parsed.id,
 			assetManager,
-			spaceId,
+			name: parsed.name,
 			items: newItems,
+			position: freeze(parsed.position, true),
 			roomGeometryConfig,
 			roomBackground,
 		}), true);

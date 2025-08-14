@@ -15,7 +15,15 @@ import { ShardTokenStore } from '../shard/shardTokenStore.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
 import { Sleep } from '../utility.ts';
 import type { ClientConnection } from './connection_client.ts';
-const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
+const {
+	BETA_KEY_ENABLED,
+	HCAPTCHA_SECRET_KEY,
+	HCAPTCHA_SITE_KEY,
+	PANDORA_ANNOUNCEMENT_DEFAULT,
+	PANDORA_DISABLE_REGISTRATION,
+	PANDORA_DISABLE_EMAIL_VERIFICATION,
+	PANDORA_DISABLE_PASSWORD_RESET,
+} = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -123,7 +131,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceLeave: this.handleSpaceLeave.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
-			spaceOwnershipRemove: this.handleSpaceOwnershipRemove.bind(this),
+			spaceOwnership: this.handleSpaceOwnership.bind(this),
 			spaceInvite: this.handleSpaceInvite.bind(this),
 
 			// Outfits
@@ -271,6 +279,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_REGISTRATION)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check during registration`);
 			return { result: 'invalidCaptcha' };
@@ -295,6 +306,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_EMAIL_VERIFICATION)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail`);
 			return { result: 'invalidCaptcha' };
@@ -309,6 +323,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handleResendVerificationEmailAdvanced({ username, passwordSha512, email, captchaToken, overrideEmail }: IClientDirectoryArgument['resendVerificationEmailAdvanced'], connection: ClientConnection): IClientDirectoryPromiseResult['resendVerificationEmailAdvanced'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (PANDORA_DISABLE_EMAIL_VERIFICATION)
+			return { result: 'failed' };
 
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail (advanced)`);
@@ -335,6 +352,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (PANDORA_DISABLE_PASSWORD_RESET)
+			return { result: 'failed' };
+
 		if (!await TestCaptcha(captchaToken)) {
 			logger.debug(`${connection.id} failed captcha check while requesting a password reset`);
 			return { result: 'invalidCaptcha' };
@@ -349,6 +369,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryArgument['passwordResetConfirm'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordResetConfirm'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (PANDORA_DISABLE_PASSWORD_RESET)
+			return { result: 'failed' };
 
 		const account = await accountManager.loadAccountByUsername(username);
 		if (!await account?.secure.finishPasswordReset(token, passwordSha512)) {
@@ -587,20 +610,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleSpaceOwnershipRemove({ id }: IClientDirectoryArgument['spaceOwnershipRemove'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceOwnershipRemove'] {
+	private async handleSpaceOwnership(request: IClientDirectoryArgument['spaceOwnership'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceOwnership'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const space = await SpaceManager.loadSpace(id);
+		const account = connection.account;
+		const space = await SpaceManager.loadSpace(request.space);
 
 		if (space == null) {
-			logger.verbose(`${connection.id} failed to give up space ownership: not a space owner`);
-			return { result: 'notAnOwner' };
+			logger.verbose(`${connection.id} failed manage space ownership ('${request.action}'): Space not found`);
+			return { result: 'notFound' };
 		}
 
-		const result = await space.removeOwner(connection.account.id);
+		if (request.action === 'abandon') {
+			const result = await space.removeOwner(account.id);
+			return { result };
+		} else if (request.action === 'invite') {
+			const result = await space.inviteOwner(request.target, account);
+			return { result };
+		} else if (request.action === 'inviteCancel') {
+			const result = await space.inviteOwnerCancel(request.target, account);
+			return { result };
+		} else if (request.action === 'inviteRefuse') {
+			const result = await space.inviteOwnerCancel(account.id, account);
+			return { result };
+		} else if (request.action === 'inviteAccept') {
+			const result = await space.inviteOwnerAccept(account);
+			return { result };
+		}
 
-		return { result };
+		AssertNever(request.action);
 	}
 
 	private async handleSpaceInvite(req: IClientDirectoryArgument['spaceInvite'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceInvite'] {
@@ -1058,8 +1097,19 @@ function MakeStatus(): IDirectoryStatus {
 	if (HCAPTCHA_SECRET_KEY && HCAPTCHA_SECRET_KEY) {
 		result.captchaSiteKey = HCAPTCHA_SITE_KEY;
 	}
+	if (PANDORA_DISABLE_REGISTRATION) {
+		result.disableRegistration = true;
+	}
+	if (PANDORA_DISABLE_EMAIL_VERIFICATION) {
+		result.disableEmailVerification = true;
+	}
+	if (PANDORA_DISABLE_PASSWORD_RESET) {
+		result.disablePasswordReset = true;
+	}
 	if (ConnectionManagerClient.announcement != null) {
 		result.announcement = cloneDeep(ConnectionManagerClient.announcement);
+	} else if (PANDORA_ANNOUNCEMENT_DEFAULT != null) {
+		result.announcement = cloneDeep(PANDORA_ANNOUNCEMENT_DEFAULT);
 	}
 	return result;
 }

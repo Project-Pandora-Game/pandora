@@ -1,7 +1,8 @@
 @use '../../../styles/common';
 
-.backgroundSelect {
+.BackgroundSelect {
 	width: min(50em, 90vw);
+	min-height: 20em;
 	max-height: calc(100vh - 10em);
 	display: flex;
 	flex-flow: column;
@@ -159,9 +160,5 @@
 		min-height: fit-content;
 		background: common.$theme-spaceconfig-backgroundselect-list-background;
 		color: common.$theme-spaceconfig-backgroundselect-list-text;
-	}
-
-	.footer {
-		max-width: 100%;
 	}
 }

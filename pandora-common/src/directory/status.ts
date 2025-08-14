@@ -14,6 +14,9 @@ export type IDirectoryStatus = {
 	betaKeyRequired?: true;
 	captchaSiteKey?: string;
 	announcement?: DirectoryStatusAnnouncement;
+	disableRegistration?: true;
+	disableEmailVerification?: true;
+	disablePasswordReset?: true;
 };
 
 export function CreateDefaultDirectoryStatus(): IDirectoryStatus {

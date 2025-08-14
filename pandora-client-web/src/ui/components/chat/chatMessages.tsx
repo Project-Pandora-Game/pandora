@@ -16,6 +16,7 @@ import {
 	type IChatMessageChat,
 	type IChatMessageDeleted,
 	type ItemDisplayNameType,
+	type RoomId,
 } from 'pandora-common';
 import React, {
 	Fragment,
@@ -27,16 +28,29 @@ import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDet
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { RenderedLink } from './links.tsx';
 
+export type ChatMessageProcessedRoomData = {
+	id: RoomId;
+	name: string;
+};
+
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 };
 
 export type IChatNormalMessageProcessed = IChatMessageChat & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Room the message was said in */
+	roomData: ChatMessageProcessedRoomData;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 	edited?: boolean;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
 	repetitions?: number;
@@ -48,7 +62,12 @@ export type ChatMessageProcessedDictionary<TK extends string = string> = Record<
 export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	/** The space this message was received in */
 	spaceId: SpaceId | null;
+	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
+	roomsData: ChatMessageProcessedRoomData[] | null;
+	/** Id of a room the player character was in when the message was received. */
+	receivedRoomId: RoomId;
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
 	repetitions?: number;
 	dictionary?: ChatMessageProcessedDictionary;
@@ -124,7 +143,8 @@ function ActionMessagePrepareDictionary(
 
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					`the room inventory`;
 			} else {
@@ -137,7 +157,8 @@ function ActionMessagePrepareDictionary(
 				text: ActionTextItemLinkToString(itemContainerPath[0], itemDisplayNameType),
 			};
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					ActionMessageDictionaryTemplate`${ asset } in the room inventory`;
 			} else {
@@ -154,7 +175,8 @@ function ActionMessagePrepareDictionary(
 				text: ActionTextItemLinkToString(itemContainerPath[itemContainerPath.length - 1], itemDisplayNameType),
 			};
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'room') {
+				// TODO: Should this now include name of the room?
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					ActionMessageDictionaryTemplate`the ${ assetLast } in ${ assetFirst } in the room inventory`;
 			} else {

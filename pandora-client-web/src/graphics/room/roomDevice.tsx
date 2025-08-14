@@ -14,10 +14,11 @@ import {
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
+	type AssetFrameworkRoomState,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
@@ -54,6 +55,7 @@ const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type RoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
+	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
@@ -62,6 +64,7 @@ type RoomDeviceInteractiveProps = {
 
 type RoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
+	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
@@ -75,6 +78,7 @@ type RoomDeviceProps = {
 };
 
 export function RoomDeviceMovementTool({
+	roomState,
 	item,
 	deployment,
 	projectionResolver,
@@ -92,7 +96,8 @@ export function RoomDeviceMovementTool({
 		await gameState.doImmediateAction({
 			type: 'roomDeviceDeploy',
 			target: {
-				type: 'roomInventory',
+				type: 'room',
+				roomId: roomState.id,
 			},
 			item: {
 				container: [],
@@ -244,6 +249,7 @@ export function RoomDeviceMovementTool({
 
 export function RoomDeviceInteractive({
 	globalState,
+	roomState,
 	item,
 	deployment,
 	projectionResolver,
@@ -278,7 +284,11 @@ export function RoomDeviceInteractive({
 
 	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
 		if (pointerDown.current !== null) {
-			openContextMenu(item, {
+			openContextMenu({
+				type: 'device',
+				room: roomState.id,
+				deviceItemId: item.id,
+			}, {
 				x: event.pageX,
 				y: event.pageY,
 			});
@@ -323,6 +333,7 @@ export function RoomDeviceInteractive({
 		<>
 			<RoomDevice
 				globalState={ globalState }
+				roomState={ roomState }
 				item={ item }
 				deployment={ deployment }
 				projectionResolver={ projectionResolver }
@@ -360,10 +371,6 @@ function RoomDeviceCharacterNames({
 	deployment,
 	projectionResolver,
 }: Pick<RoomDeviceProps, 'item' | 'deployment' | 'projectionResolver'>): ReactElement {
-	const {
-		openContextMenu,
-	} = useRoomScreenContext();
-
 	const {
 		interfaceChatroomCharacterNameFontSize,
 	} = useAccountSettings();
@@ -403,57 +410,90 @@ function RoomDeviceCharacterNames({
 					for (const slot of Object.keys(item.asset.definition.slots)) {
 						const characterId = item.slotOccupancy.get(slot);
 						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
-						let held = false;
 
 						if (character == null)
 							continue;
 
-						result.push(
-							<Container
-								key={ character.id }
-								position={ { x, y: y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) } }
-								scale={ { x: scale, y: scale } }
-								sortableChildren
-								cursor='pointer'
-								eventMode='static'
-								hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-								onpointerdown={ (ev) => {
-									if (ev.button !== 1) {
-										ev.stopPropagation();
-										held = true;
-									}
-								} }
-								onpointerup={ (ev) => {
-									if (held) {
-										ev.stopPropagation();
-										held = false;
-										openContextMenu(character, {
-											x: ev.pageX,
-											y: ev.pageY,
-										});
-									}
-								} }
-								onpointerupoutside={ () => {
-									held = false;
-								} }
-								zIndex={ -deploymentY - 0.5 }
-							>
-								<RoomCharacterLabel
-									character={ character }
-								/>
-							</Container>,
-						);
+						result.push(<RoomDeviceCharacterName
+							key={ character.id }
+							character={ character }
+							x={ x }
+							y={ y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) }
+							zIndex={ -deploymentY - 0.5 }
+							scale={ scale }
+							spacing={ spacing }
+						/>);
 					}
 
 					return result;
-				}, [characters, deploymentY, fontScale, item, openContextMenu, scale, x, y, yOffsetExtra])
+				}, [characters, deploymentY, fontScale, item, scale, x, y, yOffsetExtra])
 			}
 		</>
 	);
 }
 
+function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
+	character: Character;
+	x: number;
+	y: number;
+	zIndex: number;
+	scale: number;
+	spacing: number;
+}): ReactElement {
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
+	const [hover, setHover] = useState(false);
+	const [held, setHeld] = useState(false);
+
+	return (
+		<Container
+			key={ character.id }
+			position={ { x, y } }
+			scale={ { x: scale, y: scale } }
+			sortableChildren
+			cursor='pointer'
+			eventMode='static'
+			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
+			onpointerdown={ (ev) => {
+				if (ev.button !== 1) {
+					ev.stopPropagation();
+					setHeld(true);
+				}
+			} }
+			onpointerup={ (ev) => {
+				if (held) {
+					ev.stopPropagation();
+					setHeld(false);
+					openContextMenu(character, {
+						x: ev.pageX,
+						y: ev.pageY,
+					});
+				}
+			} }
+			onpointerupoutside={ () => {
+				setHeld(false);
+			} }
+			onpointerenter={ () => {
+				setHover(true);
+			} }
+			onpointerleave={ () => {
+				setHover(false);
+			} }
+			zIndex={ zIndex }
+		>
+			<RoomCharacterLabel
+				character={ character }
+				theme={ held ? 'active' : hover ? 'hover' : 'normal' }
+			/>
+		</Container>
+	);
+}
+
 export function RoomDevice({
 	globalState,
+	roomState,
 	item,
 	deployment,
 	projectionResolver,
@@ -482,7 +522,7 @@ export function RoomDevice({
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
-	const background = globalState.room.roomBackground;
+	const background = roomState.roomBackground;
 	const maskDraw = useCallback((g: PIXI.GraphicsContext) => {
 		const { minX, maxX } = GetRoomPositionBounds(background);
 		const ceiling = background.ceiling || (background.imageSize[1] + yOffsetExtra);

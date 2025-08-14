@@ -16,10 +16,13 @@ import { toast } from 'react-toastify';
 import { z } from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import pinIcon from '../../../assets/icons/pin-solid.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { OpenRoomItemDialog, RoomItemDialogs } from '../../../ui/screens/room/roomItemDialogList.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -39,15 +42,16 @@ export function WardrobeItemConfigMenu({
 }: {
 	item: ItemPath;
 }): ReactElement {
-	const { targetSelector, focuser } = useWardrobeContext();
+	const { targetSelector, currentRoomSelector, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const wornItemRef = useRef(wornItem);
+	const openItemDialogs = useObservable(RoomItemDialogs);
 
 	const containerPath = SplitContainerPath(item.container);
 	const containerItem = useWardrobeTargetItem(targetSelector, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
-	const isRoomInventory = targetSelector.type === 'roomInventory' && item.container.length === 0;
+	const isRoomInventory = targetSelector.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		focuser.reset();
@@ -86,12 +90,27 @@ export function WardrobeItemConfigMenu({
 				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{
 					!singleItemContainer ? (
-						<IconButton
-							onClick={ close }
-							theme='default'
-							src={ crossIcon }
-							alt='Close item details'
-						/>
+						<>
+							<IconButton
+								onClick={ () => {
+									if (RoomItemDialogs.value.some((d) => d.itemId === item.itemId && d.pinned)) {
+										RoomItemDialogs.produce((dialogs) => dialogs.filter((d) => d.itemId !== item.itemId));
+									} else {
+										OpenRoomItemDialog(item.itemId, true);
+									}
+								} }
+								theme={ openItemDialogs.some((d) => d.itemId === item.itemId && d.pinned) ? 'defaultActive' : 'default' }
+								src={ pinIcon }
+								alt='Open as room popup'
+								title='Open as room popup'
+							/>
+							<IconButton
+								onClick={ close }
+								theme='default'
+								src={ crossIcon }
+								alt='Close item details'
+							/>
+						</>
 					) : null
 				}
 			</div>
@@ -136,7 +155,7 @@ export function WardrobeItemConfigMenu({
 									type: 'transfer',
 									source: targetSelector,
 									item,
-									target: { type: 'roomInventory' },
+									target: currentRoomSelector,
 									container: [],
 								} }
 								onExecute={ close }
@@ -170,7 +189,7 @@ export function WardrobeItemConfigMenu({
 				}
 				{
 					wornItem.isType('roomDeviceWearablePart') ? (
-						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } />
+						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ currentRoomSelector } />
 					) : null
 				}
 				{

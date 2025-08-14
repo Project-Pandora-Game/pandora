@@ -22,7 +22,7 @@ import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 
 export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
-	const { focuser } = useWardrobeContext();
+	const { focuser, currentRoomSelector } = useWardrobeContext();
 	const onFocus = useCallback((e: React.MouseEvent) => {
 		e.stopPropagation();
 		focuser.focusItemModule(item, moduleName, target);
@@ -87,7 +87,7 @@ export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: Wa
 								],
 								itemId: m.lock.id,
 							},
-							target: { type: 'roomInventory' },
+							target: currentRoomSelector,
 							container: [],
 						} }
 					>

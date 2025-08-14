@@ -6,10 +6,12 @@ import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextPr
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { ChatMode } from './chatInput.tsx';
+import { CommandDoGameAction } from './commandHelpers/gameAction.tsx';
+import { COMMAND_CARDGAME } from './commands/cardgame.ts';
 import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';
+import { COMMAND_MOVETO } from './commands/moveto.ts';
 import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
-import { COMMAND_CARDGAME } from './commands/cardgame.ts';
 import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
@@ -325,6 +327,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	COMMAND_CARDGAME,
 	//#endregion
 	//#region Commands to move player
+	COMMAND_MOVETO,
 	COMMAND_LEAD,
 	COMMAND_FOLLOW,
 	COMMAND_STOPFOLLOW,
@@ -343,12 +346,11 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				gameState.doImmediateAction({
+				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
 					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
-				}).catch(() => { /* TODO */ });
-				return true;
+				});
 			}),
 	},
 	{
@@ -362,14 +364,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				gameState.doImmediateAction({
+				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
 					legs: {
 						pose: 'standing',
 					},
-				}).catch(() => { /* TODO */ });
-				return true;
+				});
 			}),
 	},
 	{
@@ -383,14 +384,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				gameState.doImmediateAction({
+				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
 					legs: {
 						pose: 'kneeling',
 					},
-				}).catch(() => { /* TODO */ });
-				return true;
+				});
 			}),
 	},
 	{
@@ -404,14 +404,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				gameState.doImmediateAction({
+				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
 					legs: {
 						pose: 'sitting',
 					},
-				}).catch(() => { /* TODO */ });
-				return true;
+				});
 			}),
 	},
 	//#endregion
@@ -468,7 +467,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				} else
 					return false;
 
-				gameState.doImmediateAction({
+				return CommandDoGameAction(gameState, {
 					type: 'moduleAction',
 					target: {
 						type: 'character',
@@ -483,8 +482,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						moduleType: 'typed',
 						setVariant: newBlush,
 					},
-				}).catch(() => { /* TODO */ });
-				return true;
+				});
 			}),
 	},
 	//#endregion

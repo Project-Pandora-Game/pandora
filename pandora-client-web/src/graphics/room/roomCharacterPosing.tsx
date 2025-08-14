@@ -78,6 +78,7 @@ function RoomCharacterMovementToolImpl({
 			},
 			moveTo: {
 				type: 'normal',
+				room: characterState.currentRoom,
 				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
 			},
 		});

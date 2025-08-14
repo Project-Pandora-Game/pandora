@@ -1,4 +1,5 @@
 import { CloneDeepMutable, CommandSelectorNumber, type CommandRunner, type IEmpty } from 'pandora-common';
+import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CommandSelectorCharacter, CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
 
@@ -18,11 +19,12 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 						if (follower == null || target == null)
 							return false;
 
-						gameState.doImmediateAction({
+						return CommandDoGameAction(gameState, {
 							type: 'moveCharacter',
 							target: { type: 'character', characterId: follower.id },
 							moveTo: {
 								type: 'normal',
+								room: target.currentRoom,
 								position: CloneDeepMutable(follower.position.position),
 								following: {
 									followType: 'relativeLock',
@@ -34,8 +36,7 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 									],
 								},
 							},
-						}).catch(() => { /* TODO */ });
-						return true;
+						});
 					}),
 			},
 			leash: {
@@ -48,11 +49,12 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 						if (follower == null || target == null)
 							return false;
 
-						gameState.doImmediateAction({
+						return CommandDoGameAction(gameState, {
 							type: 'moveCharacter',
 							target: { type: 'character', characterId: follower.id },
 							moveTo: {
 								type: 'normal',
+								room: target.currentRoom,
 								position: CloneDeepMutable(follower.position.position),
 								following: {
 									followType: 'leash',
@@ -64,8 +66,7 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 									)),
 								},
 							},
-						}).catch(() => { /* TODO */ });
-						return true;
+						});
 					}),
 			},
 		}));
@@ -105,15 +106,15 @@ export const COMMAND_STOPFOLLOW: IClientCommand<ICommandExecutionContextClient> 
 				return false;
 			}
 
-			gameState.doImmediateAction({
+			return CommandDoGameAction(gameState, {
 				type: 'moveCharacter',
 				target: { type: 'character', characterId: target.id },
 				moveTo: {
 					type: 'normal',
+					room: target.currentRoom,
 					position: CloneDeepMutable(target.position.position),
 					following: undefined,
 				},
-			}).catch(() => { /* TODO */ });
-			return true;
+			});
 		}),
 };

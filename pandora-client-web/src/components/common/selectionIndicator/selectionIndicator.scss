@@ -3,7 +3,7 @@
 .selectionIndicator {
 	position: relative;
 	margin: 2px;
-	border-radius: 0.5em;
+	border-radius: common.spacing('small');
 	outline: 2px solid transparent;
 	transition: outline-color 150ms linear;
 
@@ -16,7 +16,7 @@
 		position: absolute;
 		inset: 0px;
 		outline: 2px dashed transparent;
-		border-radius: 0.5em;
+		border-radius: common.spacing('small');
 		transition: outline-color 150ms linear;
 		pointer-events: none;
 	}

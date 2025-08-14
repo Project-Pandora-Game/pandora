@@ -49,7 +49,7 @@ export function Dialogs({ location }: {
 			}
 			{
 				location === 'global' ? (
-					<ConfirmDialog symbol={ DEFAULT_CONFIRM_DIALOG_SYMBOL } />
+					<ConfirmDialogProvider symbol={ DEFAULT_CONFIRM_DIALOG_SYMBOL } />
 				) : null
 			}
 		</>
@@ -144,7 +144,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	 * What overflow style should be used for the dialog content
 	 * @default 'auto'
 	 */
-	contentOverflow?: 'auto' | 'hidden';
+	contentOverflow?: 'auto' | 'hidden' | 'clip';
 	/**
 	 * Whether to allow click events to bubble through to the parent or not.
 	 * @default false
@@ -473,7 +473,7 @@ type ConfirmDialogProps = {
 	no?: ReactNode;
 };
 
-export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
+function ConfirmDialogProvider({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
 	const { open, title, content, priority, className, onConfirm, onCancel } = useConfirmDialogController(symbol);
 
 	if (!open)
@@ -497,6 +497,29 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 			</Column>
 		</ModalDialog>
 	);
+}
+
+export function OpenConfirmDialog(
+	title: string,
+	content?: ReactNode,
+	priority?: number,
+	dialogClassName?: string,
+	symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL,
+): Promise<boolean> {
+	const entry = GetConfirmDialogEntry(symbol);
+
+	return new Promise<boolean>((resolve) => {
+		entry.value = {
+			title,
+			content,
+			priority,
+			className: dialogClassName,
+			handler: (result) => {
+				entry.value = null;
+				resolve(result);
+			},
+		};
+	});
 }
 
 export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => Promise<boolean> {

@@ -34,7 +34,10 @@ export function WikiNew(): ReactElement {
 
 			<p>
 				There are several types of messages that you can use in a space's chat. Feel free to experiment with them, as your personal
-				space also has a chat tab that is only visible to you.
+				space also has a chat tab that is only visible to you.<br />
+				<strong>Note:</strong> The chat is shared space-wide and not only within the room you are currently inside.
+				That means that even if you only see one other character inside a room, after joining an online space, anything you write openly can also be seen
+				by other users in other rooms of the space. You can see everyone who is inside the space listed in the tab next to the "Chat"-tab.
 			</p>
 
 			<h4>Chat commands</h4>
@@ -87,7 +90,7 @@ export function WikiNew(): ReactElement {
 			<h4>Whispers</h4>
 
 			<p>
-				There are several ways to whisper someone in the same room, but the main ones are listed here.<br />
+				There are several ways to whisper someone in the same space, independent of the room they are inside, but the main ones are listed here.<br />
 				Any of them puts you into a whisper mode that you need to explicitly leave by using the "Cancel"-button above the chat input.
 				Whispered messages can only be seen by the target and not by anyone else. Note, that you can also send an OOC message as a
 				whisper by starting the message with "((" while whispering.
@@ -138,9 +141,10 @@ export function WikiNew(): ReactElement {
 			<h3>Decorating your room</h3>
 
 			<p>
-				You can decorate your personal space with <Link to='/wiki/items#IT_Room-level_items'>room-level items</Link>, such as
-				picture frames, chairs, or kinky furniture. To do that you can click the button "Room inventory" in your personal space,
-				which leads you to the inventory of your personal space. This basically represents the items standing around or being stored
+				A space consists of one or more rooms. Per default, your personal space contains only a single room (more can be created).
+				You can decorate any room, also the ones in your personal space, with <Link to='/wiki/items#IT_Room-level_items'>room-level items</Link>, such as
+				picture frames, chairs, or kinky furniture. To do that, you can click the button "Room inventory" in your personal space,
+				which leads you to the inventory of the room you are currently in. This basically represents the items standing around or being stored
 				inside the room.
 			</p>
 
@@ -154,7 +158,7 @@ export function WikiNew(): ReactElement {
 			</p>
 
 			<p>
-				To move the throne, you need to "Enable room construction mode" with the according button under the "personal space"-tab (or "Room" tab if you are in a public space). This turns
+				To move the throne, you need to "Enable room construction mode" with the according button under the "personal space"-tab (or "Room" tab if you are in an online space). This turns
 				the blue button under the throne into a red action button. Clicking it lets you select "Move" in the context menu.<br />
 				Now you can move the item around on the background by dragging the left icon to the desired position. Not important now,
 				but in case you were wondering, the right button is used to move the device up or down vertically, so along the z-axis.<br />
@@ -173,7 +177,7 @@ export function WikiNew(): ReactElement {
 
 			<p>
 				Again a reminder that some of the more kinky furniture can tie your character to the room device. This makes you unable to leave the
-				space and can trap the character in it, if you are in a private space with no one there to help.
+				room, as well as the space, and can trap the character in it, if you are in a private space with no one there to help.
 				Therefore it is advised to be mindful of that when giving someone the permission to make you enter a character slot of a
 				room-level item. Kinky furniture is therefore maybe not the best tool to use in a first roleplaying scene at a "first date".
 				If you find yourself stuck then entering "safemode" can still free you, so the worst-case consequences are not necessarily severe.
@@ -185,11 +189,11 @@ export function WikiNew(): ReactElement {
 				Trying out things in your personal space is nice and cozy, but eventually you may want to either join a space with other users or
 				even host your own space. You can do that by clicking the "List of spaces" button, and then pressing the last row
 				"Create a new space". This brings you to a screen where you can enter the properties of your new space, such as name, description,
-				and background image.<br />
+				and background design.<br />
 				The default setting of a new space is private, so if you want it to be public, you need to switch the space visibility to one of the two public settings.
 			</p>
 			<p>
-				Spaces in Pandora are persistent. This means that all settings, items in the room inventory, and all deployed furniture
+				Spaces in Pandora are persistent. This means that all settings, all created rooms, items in the room inventories, and all deployed furniture
 				stays like it is, even after everyone leaves the space. So the next time you log in you will still see your space in the list of spaces
 				and everything inside will be like you set it up before (unless, of course, someone else changes it).<br />
 				You can find out more about how spaces work under the <Link to='/wiki/spaces'>spaces-tab</Link> in the wiki. For now we recommend you

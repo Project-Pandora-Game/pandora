@@ -8,7 +8,7 @@ import {
 	AssetFrameworkOutfit,
 	AssetFrameworkOutfitSchema,
 	AssetFrameworkOutfitWithId,
-	AssetFrameworkRoomState,
+	AssetFrameworkSpaceState,
 	CloneDeepMutable,
 	CreateItemBundleFromTemplate,
 	GetDefaultAppearanceBundle,
@@ -19,13 +19,14 @@ import {
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
+import plusIcon from '../../../assets/icons/plus.svg';
 import { useBrowserSessionStorage } from '../../../browserStorage.ts';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
@@ -47,7 +48,8 @@ import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, Wardrob
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { OutfitEditView } from './wardrobeOutfitEditView.tsx';
 
-export function InventoryOutfitView({ targetContainer }: {
+export function InventoryOutfitView({ header, targetContainer }: {
+	header?: ReactNode;
 	targetContainer: ItemContainerPath;
 }): ReactElement | null {
 	const storedOutfits = useStoredOutfits();
@@ -109,6 +111,7 @@ export function InventoryOutfitView({ targetContainer }: {
 	if (storedOutfits == null) {
 		return (
 			<div className='inventoryView'>
+				{ header }
 				<div className='toolbar'>
 					<StorageUsageMeter title='Storage used' used={ null } limit={ ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE } />
 					<div className='flex-1' />
@@ -148,6 +151,7 @@ export function InventoryOutfitView({ targetContainer }: {
 		if (editedOutfitId === 'temporaryOutfit') {
 			return (
 				<div className='inventoryView'>
+					{ header }
 					<div className='toolbar'>
 						<span>Editing:&nbsp;<strong>Temporary collection</strong></span>
 					</div>
@@ -188,6 +192,7 @@ export function InventoryOutfitView({ targetContainer }: {
 		}
 		return (
 			<div className='inventoryView'>
+				{ header }
 				<div className='toolbar'>
 					<span className='center-flex'><strong>Temporary collection</strong></span>
 				</div>
@@ -214,6 +219,7 @@ export function InventoryOutfitView({ targetContainer }: {
 
 		return (
 			<div className='inventoryView'>
+				{ header }
 				<div className='toolbar'>
 					<span>Editing collection: { editedOutfit?.name ?? editedOutfitId }</span>
 					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
@@ -258,6 +264,7 @@ export function InventoryOutfitView({ targetContainer }: {
 
 	return (
 		<div className='inventoryView'>
+			{ header }
 			{
 				isImporting ? (
 					<ImportDialog
@@ -360,17 +367,23 @@ function OutfitPreview({ outfit }: {
 			}
 		}
 
+		const currentRoom = globalState.space.getRoom(baseCharacterState.currentRoom);
+
 		const characterBundle: AppearanceBundle = GetDefaultAppearanceBundle();
 		characterBundle.items = templateBundle;
 		characterBundle.requestedPose = CloneDeepMutable(baseCharacterState.requestedPose);
-		const previewSpaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
+		characterBundle.position = CloneDeepMutable(baseCharacterState.position);
+		let previewSpaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
+		if (currentRoom != null) {
+			previewSpaceState = previewSpaceState.withRooms([currentRoom]);
+		}
 		const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
 		return [
 			previewCharacterState,
 			AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState)
 				.withCharacter(previewCharacterState.id, previewCharacterState),
 		];
-	}, [assetManager, baseCharacterState, outfit, player]);
+	}, [assetManager, baseCharacterState, globalState.space, outfit, player]);
 
 	useEffect(() => {
 		if (!isHovering || !wardrobeHoverPreview)
@@ -632,6 +645,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 			<div className='quickActions'>
 				<WardrobeActionButton
 					Element='div'
+					className='IconButton'
 					action={ {
 						type: 'create',
 						target: targetSelector,
@@ -639,7 +653,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 						container: targetContainer,
 					} }
 				>
-					➕
+					<img src={ plusIcon } alt='Create and add' />
 				</WardrobeActionButton>
 			</div>
 		</div>
@@ -654,9 +668,7 @@ function OutfitEntryCreate({ onClick }: {
 		<div className='outfit'>
 			<button className='outfitMainButton' onClick={ onClick }>
 				<div className='outfitPreview'>
-					<div className='img'>
-						➕
-					</div>
+					<img src={ plusIcon } alt='Create image' />
 				</div>
 				<Column padding='medium' alignX='start' alignY='space-evenly'>
 					<span>Create a new collection</span>

@@ -5,15 +5,18 @@ import type { CharacterModifierConditionChain } from '../conditions/index.ts';
 import type { CharacterModifierTypeDefinitionBase } from '../helpers/modifierDefinition.ts';
 
 import { block_adding_new_modifiers } from './block_adding_new_modifiers.ts';
+import { block_changing_following_state } from './block_changing_following_state.ts';
+import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { block_creating_items } from './block_creating_items.ts';
 import { block_deleting_items } from './block_deleting_items.ts';
+import { block_entering_specific_rooms } from './block_entering_specific_rooms.ts';
 import { block_equipping_items_others } from './block_equipping_items_others.ts';
 import { block_equipping_items_self } from './block_equipping_items_self.ts';
 import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
 import { block_lock_unlock_self } from './block_lock_unlock_self.ts';
+import { block_managing_room_map } from './block_managing_room_map.ts';
 import { block_removing_items_others } from './block_removing_items_others.ts';
 import { block_removing_items_self } from './block_removing_items_self.ts';
-import { block_changing_pose_self } from './block_changing_pose_self.ts';
 import { effect_blind } from './effect_blind.ts';
 import { effect_block_hands } from './effect_block_hands.ts';
 import { effect_block_room_movement } from './effect_block_room_movement.ts';
@@ -24,6 +27,7 @@ import { effect_hearing } from './effect_hearing.ts';
 import { effect_slow_wardrobe_actions } from './effect_slow_wardrobe_actions.ts';
 import { effect_speech_garble } from './effect_speech_garble.ts';
 import { hearing_selective_deprivation } from './hearing_selective_deprivation.ts';
+import { setting_room_focus } from './setting_room_focus.ts';
 import { speech_ban_words } from './speech_ban_words.ts';
 import { speech_doll_talk } from './speech_doll_talk.ts';
 import { speech_faltering_voice } from './speech_faltering_voice.ts';
@@ -37,15 +41,18 @@ import { speech_specific_sounds_only } from './speech_specific_sounds_only.ts';
 /** Catalogue of all character modifier types */
 export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_adding_new_modifiers,
+	block_changing_following_state,
+	block_changing_pose_self,
 	block_creating_items,
 	block_deleting_items,
+	block_entering_specific_rooms,
 	block_equipping_items_others,
 	block_equipping_items_self,
 	block_lock_unlock_others,
 	block_lock_unlock_self,
+	block_managing_room_map,
 	block_removing_items_others,
 	block_removing_items_self,
-	block_changing_pose_self,
 	effect_blind,
 	effect_block_hands,
 	effect_block_room_movement,
@@ -56,6 +63,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_slow_wardrobe_actions,
 	effect_speech_garble,
 	hearing_selective_deprivation,
+	setting_room_focus,
 	speech_ban_words,
 	speech_doll_talk,
 	speech_faltering_voice,

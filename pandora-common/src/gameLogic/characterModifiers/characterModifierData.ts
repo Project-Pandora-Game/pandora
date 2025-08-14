@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { AssetIdSchema } from '../../assets/base.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits.ts';
+import type { Satisfies } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem, type LockActionUpdateFingerprintProblem } from '../locks/lockLogic.ts';
 import { PermissionConfigSchema } from '../permissions/index.ts';
-import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData.ts';
+import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema, type CharacterModifierId } from './characterModifierBaseData.ts';
 import { CharacterModifierLockSchema } from './characterModifierLocks.ts';
 import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain.ts';
-import { CharacterModifierTypeSchema } from './modifierTypes/_index.ts';
+import { CharacterModifierTypeSchema, type CharacterModifierSpecificConfig, type CharacterModifierType } from './modifierTypes/_index.ts';
 
 /** Configuration for any character modifier _type_ (not an instance of a modifier) */
 export const CharacterModifierTypeConfigSchema = z.object({
@@ -117,6 +118,12 @@ export const CharacterModifierEffectDataSchema = z.object({
 });
 /** Data of modifier instance effect - put onto a character if the modifier is active */
 export type CharacterModifierEffectData = z.infer<typeof CharacterModifierEffectDataSchema>;
+
+export type CharacterModifierEffectDataSpecific<TType extends CharacterModifierType> = Satisfies<{
+	id: CharacterModifierId;
+	type: TType;
+	config: CharacterModifierSpecificConfig<TType>;
+}, CharacterModifierEffectData>;
 
 /** Data of the whole character modifer subsystem, saved on character in database */
 export const CharacterModifierSystemDataSchema = z.object({

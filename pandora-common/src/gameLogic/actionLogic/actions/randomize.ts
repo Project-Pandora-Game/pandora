@@ -81,7 +81,9 @@ export function ActionAppearanceRandomize({
 		properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
 	});
 
-	const room = processingContext.manipulator.currentState.room;
+	const room = processingContext.manipulator.currentState.space.getRoom(character.appearance.characterState.currentRoom);
+	if (room == null)
+		return processingContext.invalid();
 
 	const randomSource = new PseudoRandom(action.seed);
 

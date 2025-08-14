@@ -237,6 +237,18 @@ export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgr
 	];
 }
 
+export function CharacterCanFollow(character: AssetFrameworkCharacterState, globalState: AssetFrameworkGlobalState): boolean {
+	// Noone must be following this character
+	if (Array.from(globalState.characters.values()).some((c) => c.position.type === 'normal' && c.position.following?.target === character.id))
+		return false;
+
+	// Characters in room devices cannot follow someone
+	if (character.items.some((i) => i.isType('roomDeviceWearablePart')))
+		return false;
+
+	return true;
+}
+
 export function CharacterCanBeFollowed(character: AssetFrameworkCharacterState): boolean {
 	const followTargetPosition = character.position;
 	// Target character must be in a normal movement mode without any follow themselves (chaining is not allowed for now)
@@ -258,7 +270,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 		if (character.position.type === 'normal' && character.position.following != null) {
 			const following = character.position.following;
 			const followTarget = globalState.getCharacterState(following.target);
-			if (followTarget == null || !CharacterCanBeFollowed(followTarget)) {
+			if (followTarget == null || !CharacterCanBeFollowed(followTarget) || !CharacterCanFollow(character, result)) {
 				character = character.produceWithSpacePosition(produce(character.position, (d) => {
 					delete d.following;
 				}));

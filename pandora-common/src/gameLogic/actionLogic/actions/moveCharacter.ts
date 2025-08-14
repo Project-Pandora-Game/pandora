@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
-import { CharacterCanBeFollowed, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
+import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -75,6 +75,10 @@ export function ActionMoveCharacter({
 			// Cannot follow oneself
 			if (action.moveTo.following.target === target.character.id)
 				return processingContext.invalid();
+			// Check this character can follow
+			if (!CharacterCanFollow(target.appearance.characterState, target.appearance.gameState)) {
+				return processingContext.invalid('characterMoveCannotFollow');
+			}
 
 			// All follow modes need move permission (even if admin)
 			player.checkInteractWithTarget(processingContext, target.appearance);

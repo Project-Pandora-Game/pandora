@@ -80,6 +80,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					return `You cannot delete a deployed room device. Use the device's menu to store it first.`;
 				case 'noDeleteOccupiedRoom':
 					return `You cannot delete a room with characters inside it.`;
+				case 'characterMoveCannotFollow':
+					return `The character cannot currently follow another character. Only characters outside of room devices that are not being followed can follow someone.`;
 				case 'characterMoveCannotFollowTarget':
 					return `The target character cannot be followed. Only characters in a room that are not following someone can be followed.`;
 			}

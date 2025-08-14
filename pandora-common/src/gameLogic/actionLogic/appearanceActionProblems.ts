@@ -7,6 +7,7 @@ export type InvalidActionReason =
 	| 'noDeleteRoomDeviceWearable'
 	| 'noDeleteDeployedRoomDevice'
 	| 'noDeleteOccupiedRoom'
+	| 'characterMoveCannotFollow'
 	| 'characterMoveCannotFollowTarget';
 
 export type AppearanceActionProblem =

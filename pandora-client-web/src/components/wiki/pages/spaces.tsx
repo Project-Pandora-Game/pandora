@@ -78,7 +78,7 @@ export function WikiSpaces(): ReactElement {
 				<li>Every owner is automatically admin in the space.</li>
 				<li>Player accounts that are not owner can still be admin of a space.</li>
 				<li>Creating a new space makes you automatically owner of it.</li>
-				<li>You currently cannot add other owners to your space. This is planned.</li>
+				<li>You can add other owners to your space in the "Rights management" configuration tab.</li>
 				<li>There is a limit to how many spaces you can own. You can see your ownership limit in the space search behind the heading "My spaces".</li>
 				<li>
 					If you want to create another space beyond your space ownership limit, you must select any of your owned spaces and either repurpose it or

@@ -225,6 +225,14 @@ export class GameState extends TypedEventEmitter<{
 		});
 	}
 
+	public getCurrentSpaceContext(): ActionSpaceContext {
+		return MakeActionSpaceContext(
+			this.currentSpace.value,
+			this._shard.serviceDeps.accountManager.currentAccount.value,
+			this.characterModifierEffects.value,
+		);
+	}
+
 	//#region Handler
 
 	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
@@ -651,7 +659,7 @@ export class GameState extends TypedEventEmitter<{
 		{
 			const restrictionManager = this.player.getRestrictionManager(
 				this.globalState.currentState,
-				MakeActionSpaceContext(this.currentSpace.value, this._shard.serviceDeps.accountManager.currentAccount.value, this.characterModifierEffects.value),
+				this.getCurrentSpaceContext(),
 			);
 			for (const checkMessage of messages) {
 				const blockCheck = restrictionManager.checkChatMessage(checkMessage);

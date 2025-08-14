@@ -234,6 +234,7 @@
 
 	span {
 		cursor: pointer;
+		text-indent: 2em hanging;
 
 		&:hover, &.selected {
 			background: common.$theme-autocomplete-hint-entry-hover-background;

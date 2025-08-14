@@ -2,6 +2,7 @@ import { Immutable } from 'immer';
 import { camelCase } from 'lodash-es';
 import { AssetsPosePresetCategory, CommandSelectorNamedValue, MergePartialAppearancePoses, type AssetsPosePreset } from 'pandora-common';
 import { FixupStoredPosePreset, StoredPosePresets } from '../../../../components/wardrobe/poseDetail/customPosePresetStorage.ts';
+import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
 
@@ -45,13 +46,12 @@ export const COMMAND_POSEPRESET: IClientCommand<ICommandExecutionContextClient> 
 		.handler(({ player, gameState }, { pose }) => {
 			const { arms, leftArm, rightArm, ...copy } = MergePartialAppearancePoses(pose, pose.optional);
 
-			gameState.doImmediateAction({
+			return CommandDoGameAction(gameState, {
 				type: 'pose',
 				target: player.id,
 				leftArm: { ...arms, ...leftArm },
 				rightArm: { ...arms, ...rightArm },
 				...copy,
-			}).catch(() => { /* TODO */ });
-			return true;
+			});
 		}),
 };

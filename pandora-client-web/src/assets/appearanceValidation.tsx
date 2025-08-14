@@ -4,6 +4,7 @@ import {
 	AssertNever,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	type AssetId,
+	type AssetManager,
 	type GameLogicActionSlowdownReason,
 	type ItemDisplayNameType,
 	type LockActionProblem,
@@ -11,7 +12,6 @@ import {
 import type { ReactNode } from 'react';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
-import { AssetManagerClient } from './assetManager.tsx';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -64,7 +64,7 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 	AssertNever(problem);
 }
 
-export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): ReactNode {
+export function RenderAppearanceActionProblem(assetManager: AssetManager, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): ReactNode {
 	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(
 		assetManager.getAssetById(asset)?.definition.name.toLocaleLowerCase() ?? `[UNKNOWN ASSET '${asset}']`,
 		itemName,
@@ -196,7 +196,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 								The { describeItem(e.asset, e.itemName) } requires "{ description }" (must be worn under the { describeItem(e.asset, e.itemName) }).<br />
 								The following assets can be used to satisfy this requirement (in at least one configuration):
 								<ul>
-									{ assetManager.assetList
+									{ assetManager.getAllAssets()
 										.filter((a) => a.isWearable())
 										.filter((a) => a.staticAttributes.has(attributeName))
 										.map((a) => <li key={ a.id }>{ a.definition.name }</li>) }

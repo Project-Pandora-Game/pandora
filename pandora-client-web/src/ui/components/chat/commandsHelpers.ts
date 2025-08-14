@@ -3,7 +3,7 @@ import type { Character } from '../../../character/character.ts';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import type { ICommandExecutionContextClient } from './commandsProcessor.ts';
 
-type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =
+export type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =
 	Pick<ICommandExecutionContextClient, (keyof ICommandExecutionContext) | RequiredKeys>;
 
 export type SelfSelect = 'none' | 'otherCharacter' | 'any';

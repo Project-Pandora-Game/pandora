@@ -20,8 +20,9 @@ import pinIcon from '../../../assets/icons/pin-solid.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
-import { CheckItemDialogOpen, OpenRoomItemDialog } from '../../../ui/screens/room/roomItemDialogList.ts';
+import { OpenRoomItemDialog, RoomItemDialogs } from '../../../ui/screens/room/roomItemDialogList.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -44,6 +45,7 @@ export function WardrobeItemConfigMenu({
 	const { targetSelector, currentRoomSelector, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const wornItemRef = useRef(wornItem);
+	const openItemDialogs = useObservable(RoomItemDialogs);
 
 	const containerPath = SplitContainerPath(item.container);
 	const containerItem = useWardrobeTargetItem(targetSelector, containerPath?.itemPath);
@@ -91,10 +93,13 @@ export function WardrobeItemConfigMenu({
 						<>
 							<IconButton
 								onClick={ () => {
-									OpenRoomItemDialog(item.itemId, true);
-									close();
+									if (RoomItemDialogs.value.some((d) => d.itemId === item.itemId && d.pinned)) {
+										RoomItemDialogs.produce((dialogs) => dialogs.filter((d) => d.itemId !== item.itemId));
+									} else {
+										OpenRoomItemDialog(item.itemId, true);
+									}
 								} }
-								theme={ CheckItemDialogOpen(item.itemId) ? 'defaultActive' : 'default' }
+								theme={ openItemDialogs.some((d) => d.itemId === item.itemId && d.pinned) ? 'defaultActive' : 'default' }
 								src={ pinIcon }
 								alt='Open as room popup'
 								title='Open as room popup'

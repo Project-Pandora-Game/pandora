@@ -199,18 +199,18 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Space_administration'>Space administration</h4>
 			<p>
-				You can find the button to administrate the current room and the space it is part of in the Room-tab.
+				To administrate the current room and the space it is part of, you can find a button "space configuration" in the Room-tab.
 			</p>
 			<ul>
-				<li>You can set the space name and a long space description that both are visible from the outside, to accounts that can see the space.</li>
 				<li>The default number of characters that can join a space is 10, but the possible upper limit is 100.</li>
 				<li>You can set the space's visibility. The default is that the space is private.</li>
-				<li>You can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
-				<li>The admin, ban, and allowed users lists are comma separated and require the player account id, as they are account-wide.<br />
+				<li>You can set the space's name and a long space description that both are visible from the outside to accounts that can see the space.</li>
+				<li>Under the "Rights management"-tab, you can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
+				<li>The admins, banned, and allowed users lists require the player account id, as they are account-wide.<br />
 					The player account id number can be looked up in the account profile of the player.<br />
 					<strong>Careful:</strong> Do not mix it up with the character id which starts with "c" followed by a number.<br />
-					Alternatively, you can look up the player account id of a character inside the space up in the "Room"-Tab. It is the last number behind the name.<br />
-					The easiest way is to simply click on the name below a character and select "Admin" in the context menu.
+					Alternatively, you can look up the player account id of a character inside the space in the "Room"-Tab. It is the last number behind the name.<br />
+					The easiest way to do admin actions is to simply click on the name below a character and select "Admin" in the context menu.
 				</li>
 				<li>You can also add more rooms to the space, give each a name and a room background/design, or move them to a different coordinate on the space grid.</li>
 				<li>
@@ -221,17 +221,17 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>
 			<p>
-				You leave a chat space with the top-right-most button that. Restraints or other effects may prevent you from being able to do that.
+				You leave a chat space with the top-right-most button on the black header bar. Restraints or other effects may prevent you from being able to do that.
 			</p>
 			<ul>
-				<li>Closing the browser, disconnecting, changing your character, or logging off, will all leave your character in the current chat space by default.</li>
-				<li>Being inside a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> slot will make you unable to leave a space</li>
+				<li>Closing the browser, disconnecting, changing your character, or logging off, will all leave your character in the current chat space (and room) by default.</li>
+				<li>Being inside a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> slot will make you unable to leave a space.</li>
 				<li>Most regular restraints will not be able to prevent you from leaving a space.</li>
 			</ul>
 
 			<h4 id='SP_Personal_space'>Personal space</h4>
 			<p>
-				Every character has their own personal space that does not count towards this limit and that cannot be entered by any
+				Every character has their own personal space that does not count towards your space ownership limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
 				You will automatically end up in the personal space when your selected character is not in any other space. Restraining
 				effects (also from <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>)

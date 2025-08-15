@@ -94,10 +94,10 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.11.0)
+        version: 6.0.3(pixi.js@8.12.0)
       pixi.js:
-        specifier: 8.11.0
-        version: 8.11.0
+        specifier: 8.12.0
+        version: 8.12.0
       react:
         specifier: 19.1.1
         version: 19.1.1
@@ -3205,8 +3205,8 @@ packages:
   duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
 
-  earcut@3.0.1:
-    resolution: {integrity: sha512-0l1/0gOjESMeQyYaK5IDiPNvFeu93Z/cO0TjZh9eZ1vyCtZnA7KMZ8rQggpsJHIbGSdrqYq9OhuveadOVHCshw==}
+  earcut@3.0.2:
+    resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -4987,8 +4987,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.11.0:
-    resolution: {integrity: sha512-dyuThzncsgEgJZnvd/A/5x6IkUERbK+phXqUQrI+0C6WE+8xqGH5VChRTLecemhgZF0kQ+gZOM3tJTX9937xpg==}
+  pixi.js@8.12.0:
+    resolution: {integrity: sha512-or7vrH7WajLevu/JnGMdD80JaSpTlXfjwCLtzhg2BL60LWPf1pF0w08Qleiqr1Saj012gevguM//+6HzzVlnfA==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -10002,7 +10002,7 @@ snapshots:
 
   duplexer@0.1.2: {}
 
-  earcut@3.0.1: {}
+  earcut@3.0.2: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -12173,18 +12173,18 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-viewport@6.0.3(pixi.js@8.11.0):
+  pixi-viewport@6.0.3(pixi.js@8.12.0):
     dependencies:
-      pixi.js: 8.11.0
+      pixi.js: 8.12.0
 
-  pixi.js@8.11.0:
+  pixi.js@8.12.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12
       '@types/earcut': 3.0.0
       '@webgpu/types': 0.1.60
       '@xmldom/xmldom': 0.8.10
-      earcut: 3.0.1
+      earcut: 3.0.2
       eventemitter3: 5.0.1
       gifuct-js: 2.1.2
       ismobilejs: 1.1.1

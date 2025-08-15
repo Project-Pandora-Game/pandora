@@ -414,8 +414,8 @@ importers:
         specifier: 7.7.0
         version: 7.7.0
       '@types/wtfnode':
-        specifier: 0.7.3
-        version: 0.7.3
+        specifier: 0.10.0
+        version: 0.10.0
       discord-api-types:
         specifier: 0.38.20
         version: 0.38.20
@@ -508,8 +508,8 @@ importers:
         specifier: 22.17.1
         version: 22.17.1
       '@types/wtfnode':
-        specifier: 0.7.3
-        version: 0.7.3
+        specifier: 0.10.0
+        version: 0.10.0
       discord-api-types:
         specifier: 0.38.20
         version: 0.38.20
@@ -2056,8 +2056,8 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@types/wtfnode@0.7.3':
-    resolution: {integrity: sha512-UMkHpx+o2xRWLJ7PmT3bBzvIA9/0oFw80oPtY/xO4jfdq+Gznn4wP7K9B/JjMxyxy+wF+5oRPIykxeBbEDjwRg==}
+  '@types/wtfnode@0.10.0':
+    resolution: {integrity: sha512-ItEhqP60vy3o3cXYapNHOPNyKE0SiDteX0hf3LdJbGbH0F7Il50G4N7Zr+VLiBWvh8hSR2e6EZ8xRHcO2zqoLQ==}
 
   '@types/yargs-parser@21.0.3':
     resolution: {integrity: sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ==}
@@ -8777,7 +8777,7 @@ snapshots:
     dependencies:
       '@types/node': 22.17.1
 
-  '@types/wtfnode@0.7.3': {}
+  '@types/wtfnode@0.10.0': {}
 
   '@types/yargs-parser@21.0.3': {}
 

@@ -23,7 +23,7 @@ export interface GraphicsSceneRendererProps extends ChildrenProps {
 	forwardContexts: readonly Context<any>[];
 }
 
-class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'>> {
+class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
 	private _needsUpdate: boolean = true;
 	private _animationFrameRequest: number | null = null;
 	private _cleanupUpdateCallback: undefined | (() => void);
@@ -210,7 +210,13 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	public renderStage = (time: DOMHighResTimeStamp) => {
 		if (this._needsUpdate && this.app != null) {
 			this._needsUpdate = false;
-			this.app.ticker.update(time);
+			try {
+				this.app.ticker.update(time);
+			} catch (error) {
+				const { errorHandler } = this.props;
+				this.logger.error('Crash during frame render:', error);
+				errorHandler(error);
+			}
 		}
 	};
 
@@ -224,10 +230,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 				</PixiTickerContext.Provider>
 			</PixiAppContext.Provider>
 		);
-	}
-
-	public override componentDidCatch(error: unknown, errorInfo: unknown) {
-		GetLogger('Stage').error(`Error occurred in \`Stage\`.\n`, error, '\n', errorInfo);
 	}
 }
 
@@ -252,6 +254,7 @@ export function GraphicsSceneRendererShared({
 				onMount={ onMount }
 				onUnmount={ onUnmount }
 				container={ container }
+				errorHandler={ errorHandler }
 			>
 				<ForwardingErrorBoundary errorHandler={ errorHandler }>
 					{ c }
@@ -273,7 +276,7 @@ const backgroundRenderingQueue = new CalculationQueue({
 	normal: 25,
 });
 
-class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>> {
+class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
 	private readonly logger = GetLogger('BackgroundRenderer');
 
 	private _needsUpdate: boolean = false;
@@ -391,15 +394,21 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 		AssertNotNullable(this._app);
 
-		this._app.ticker.addOnce((t) => this.ticker.tick(t));
-		this._app.ticker.update();
+		try {
+			this._app.ticker.addOnce((t) => this.ticker.tick(t));
+			this._app.ticker.update();
 
-		const outContext = this._canvasRef.getContext('2d');
-		if (outContext) {
-			outContext.clearRect(0, 0, renderArea.width, renderArea.height);
-			outContext.drawImage(this._app.canvas, 0, 0, renderArea.width, renderArea.height);
-		} else {
-			this.logger.warning('Failed to get output 2d context');
+			const outContext = this._canvasRef.getContext('2d');
+			if (outContext) {
+				outContext.clearRect(0, 0, renderArea.width, renderArea.height);
+				outContext.drawImage(this._app.canvas, 0, 0, renderArea.width, renderArea.height);
+			} else {
+				this.logger.warning('Failed to get output 2d context');
+			}
+		} catch (error) {
+			const { errorHandler } = this.props;
+			this.logger.error('Crash during frame render:', error);
+			errorHandler(error);
 		}
 		this._unmountApp();
 	};
@@ -464,10 +473,6 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 			</PixiTickerContext.Provider>
 		);
 	}
-
-	public override componentDidCatch(error: unknown, errorInfo: unknown) {
-		this.logger.error(`Error occurred in \`Stage\`.\n`, error, '\n', errorInfo);
-	}
 }
 
 function GraphicsSceneBackgroundRendererUnsafe({
@@ -491,6 +496,7 @@ function GraphicsSceneBackgroundRendererUnsafe({
 				backgroundAlpha={ backgroundAlpha }
 				onMount={ onMount }
 				onUnmount={ onUnmount }
+				errorHandler={ errorHandler }
 			>
 				<ForwardingErrorBoundary errorHandler={ errorHandler }>
 					{ c }

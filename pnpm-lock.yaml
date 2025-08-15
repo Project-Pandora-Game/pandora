@@ -408,8 +408,8 @@ importers:
         specifier: 22.17.1
         version: 22.17.1
       '@types/nodemailer':
-        specifier: 6.4.17
-        version: 6.4.17
+        specifier: 7.0.0
+        version: 7.0.0
       '@types/semver':
         specifier: 7.7.0
         version: 7.7.0
@@ -1986,8 +1986,8 @@ packages:
   '@types/node@22.17.1':
     resolution: {integrity: sha512-y3tBaz+rjspDTylNjAX37jEC3TETEFGNJL6uQDxwF9/8GLLIjW1rvVHlynyuUKMnMr1Roq8jOv3vkopBjC4/VA==}
 
-  '@types/nodemailer@6.4.17':
-    resolution: {integrity: sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==}
+  '@types/nodemailer@7.0.0':
+    resolution: {integrity: sha512-APKHivjoJ1OyLrlhdJ/QJpnj78OaGSHQ18J12CeOVbffvBgUjqBiIzCW2lnRuwQiLxCpahgMf+T7G2dZBvgeYw==}
 
   '@types/offscreencanvas@2019.7.3':
     resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
@@ -8699,9 +8699,12 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/nodemailer@6.4.17':
+  '@types/nodemailer@7.0.0':
     dependencies:
+      '@aws-sdk/client-sesv2': 3.864.0
       '@types/node': 22.17.1
+    transitivePeerDependencies:
+      - aws-crt
 
   '@types/offscreencanvas@2019.7.3': {}
 

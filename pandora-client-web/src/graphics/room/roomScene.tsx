@@ -233,7 +233,7 @@ export function RoomGraphicsScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<Container key={ room } zIndex={ 10 } sortableChildren>
+			<Container key={ room + '-content' } zIndex={ 10 } sortableChildren>
 				{
 					characters.map((character) => {
 						const characterState = globalState.characters.get(character.id);
@@ -318,6 +318,7 @@ export function RoomGraphicsScene({
 				)
 			}
 			<GraphicsBackground
+				key={ roomState.id + '-background' }
 				zIndex={ -1000 }
 				background={ roomBackground }
 				backgroundFilters={ usePlayerVisionFilters(false) }

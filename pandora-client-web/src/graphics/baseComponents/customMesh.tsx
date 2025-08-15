@@ -1,5 +1,5 @@
 import { Assert } from 'pandora-common';
-import { Mesh, State, type Geometry, type Shader } from 'pixi.js';
+import { Mesh, MeshGeometry, State, type Geometry, type Shader } from 'pixi.js';
 import type { ReactNode } from 'react';
 import { RegisterPixiComponent } from '../reconciler/component.ts';
 import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
@@ -42,6 +42,11 @@ export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, neve
 
 		const geometryInstance = geometry(null);
 		const shaderInstance = shader(null);
+
+		// Workaround: Pixi breaks when batchability is 'auto' and the heuristics changes. Instead force it to be consistent.
+		if (geometryInstance instanceof MeshGeometry && geometryInstance.batchMode === 'auto') {
+			geometryInstance.batchMode = 'no-batch';
+		}
 
 		const mesh = new Mesh({
 			geometry: geometryInstance,
@@ -86,6 +91,10 @@ export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, neve
 		if (geometry !== oldGeometry) {
 			const geometryInstance = mesh.geometry;
 			const newGeometryInstance = geometry(geometryInstance);
+			// Workaround: Pixi breaks when batchability is 'auto' and the heuristics changes. Instead force it to be consistent.
+			if (newGeometryInstance instanceof MeshGeometry && newGeometryInstance.batchMode === 'auto') {
+				newGeometryInstance.batchMode = 'no-batch';
+			}
 			if (newGeometryInstance !== geometryInstance) {
 				mesh.geometry = newGeometryInstance;
 				geometryInstance.destroy(true);

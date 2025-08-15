@@ -62,6 +62,7 @@ class TextureCutter extends Container {
 			uvs: uv,
 			indices: triangles,
 		});
+		geometry.batchMode = 'no-batch';
 		const mesh = new Mesh({ geometry, texture });
 		this.addChild(mesh);
 

@@ -66,12 +66,9 @@ export function ActionTransferItem({
 		action.container.length === 0 ? action.insertBefore : undefined,
 	);
 
-	// Check if item allows being transferred
-	if (!item.canBeTransferred()) {
-		// If not, then check this is actually a transfer (moving not between targets nor containers is fine, as then it is essentially a move)
-		if (!isReorder) {
-			return processingContext.invalid();
-		}
+	// Check if item allows being transferred (moving not between targets nor containers is fine, as then it is essentially a move)
+	if (!isReorder) {
+		item.checkAllowTransfer(processingContext);
 	}
 
 	let targetIndex: number | undefined;

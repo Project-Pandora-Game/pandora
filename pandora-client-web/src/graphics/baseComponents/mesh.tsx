@@ -44,6 +44,8 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			indices,
 			shrinkBuffersToFit: true,
 		});
+		// Workaround: Pixi breaks when batchability is 'auto' and the heuristics changes. Instead force it to be consistent.
+		geometry.batchMode = 'no-batch';
 		// Mark vertices as changeable
 		geometry.getBuffer('aPosition').static = false;
 

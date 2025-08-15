@@ -17,6 +17,7 @@ import { MemoizeNoArg } from '../../utility/misc.ts';
 import { ItemModuleAction, LoadItemModule } from '../modules.ts';
 import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from '../roomDeviceProperties.ts';
 
+import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
 declare module './_internal.ts' {
@@ -166,6 +167,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			};
 
 		return { success: true };
+	}
+
+	public override checkAllowTransfer(context: AppearanceActionProcessingContext): void {
+		// Only admin can move deployed room devices between inventories
+		if (this.isDeployed()) {
+			context.checkPlayerIsSpaceAdmin();
+		}
 	}
 
 	public override exportToTemplate(): ItemTemplate {

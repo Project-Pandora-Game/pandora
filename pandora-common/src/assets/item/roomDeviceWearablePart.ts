@@ -12,6 +12,7 @@ import type { ItemRoomDevice } from './roomDevice.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import { GetPropertiesForSlot, RoomDevicePropertiesResult } from '../roomDeviceProperties.ts';
 
+import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
 declare module './_internal.ts' {
@@ -101,9 +102,9 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		return { success: true };
 	}
 
-	/** Returns if this item can be transferred between inventories */
-	public override canBeTransferred(): boolean {
-		return false;
+	public override checkAllowTransfer(context: AppearanceActionProcessingContext): void {
+		// Wearable device part can never be moved
+		context.addProblem({ result: 'invalidAction' });
 	}
 
 	public override exportToTemplate(): ItemTemplate {

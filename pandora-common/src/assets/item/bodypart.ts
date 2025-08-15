@@ -36,9 +36,7 @@ export class ItemBodypart extends ItemBase<'bodypart'> implements ItemBodypartPr
 
 	public override checkAllowTransfer(context: AppearanceActionProcessingContext): void {
 		// No transferring bodyparts, thank you
-		if (this.isType('bodypart')) {
-			context.addProblem({ result: 'invalidAction' });
-		}
+		context.addProblem({ result: 'invalidAction' });
 	}
 
 	protected override withProps(overrideProps: Partial<ItemBodypartProps>): ItemBodypart {

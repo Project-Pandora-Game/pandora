@@ -15,6 +15,7 @@ import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, 
 import type { AppearanceItems } from './items.ts';
 
 import type { IChatMessageActionItem } from '../../chat/index.ts';
+import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties.ts';
 
@@ -208,13 +209,9 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return { success: true };
 	}
 
-	/** Returns if this item can be transferred between inventories */
-	public canBeTransferred(): boolean {
-		// No transferring bodyparts, thank you
-		if (this.isType('bodypart'))
-			return false;
-
-		return true;
+	/** Check if this item can be transferred between inventories */
+	public checkAllowTransfer(_context: AppearanceActionProcessingContext): void {
+		// Allowed by default
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */

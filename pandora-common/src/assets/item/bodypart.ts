@@ -13,6 +13,7 @@ import type { AppearanceItems } from './items.ts';
 import { MemoizeNoArg } from '../../utility/misc.ts';
 import { ItemModuleAction, LoadItemModule } from '../modules.ts';
 
+import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
 declare module './_internal.ts' {
@@ -31,6 +32,13 @@ export class ItemBodypart extends ItemBase<'bodypart'> implements ItemBodypartPr
 	protected constructor(props: ItemBodypartProps, overrideProps?: Partial<ItemBodypartProps>) {
 		super(props, overrideProps);
 		this.modules = overrideProps?.modules ?? props.modules;
+	}
+
+	public override checkAllowTransfer(context: AppearanceActionProcessingContext): void {
+		// No transferring bodyparts, thank you
+		if (this.isType('bodypart')) {
+			context.addProblem({ result: 'invalidAction' });
+		}
 	}
 
 	protected override withProps(overrideProps: Partial<ItemBodypartProps>): ItemBodypart {

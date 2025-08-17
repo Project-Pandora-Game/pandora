@@ -111,6 +111,10 @@ fieldset {
 	border-color: common.$theme-fieldset-border;
 }
 
+input:disabled + label, select:disabled + label, label:has(+ input:disabled), label:has(+ select:disabled) {
+	color: common.$theme-normal-text-dim;
+}
+
 meter {
 	background: common.$theme-meter-background; // Firefox
 	display: block;

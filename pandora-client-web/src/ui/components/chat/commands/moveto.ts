@@ -22,7 +22,7 @@ import { CommandSelectorCharacter, CreateClientCommand } from '../commandsHelper
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
 
 export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
-	key: ['moveto', 'pm'],
+	key: ['moveto', 'mt'],
 	usage: '<room | character | north | south | west | east> …',
 	description: `Moves your character to another room or towards another character`,
 	longDescription: '',

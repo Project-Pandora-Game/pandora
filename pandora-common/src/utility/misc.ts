@@ -163,6 +163,16 @@ export function SampleArray<T>(array: readonly T[], source: { random(): number; 
 	return array[Math.floor(source.random() * array.length)];
 }
 
+/**
+ * Shuffles an array in-place. Positive direction = move first element to be last.
+ * @param array The array to shuffle
+ * @param count How much to rotate the array
+ */
+export function RotateArray<T extends unknown[]>(array: T, count: number): T {
+	array.push(...array.splice(0, ((count % array.length) + array.length) % array.length));
+	return array;
+}
+
 export function SplitStringFirstOccurrence(input: string, separator: string): [string, string] {
 	const index = input.indexOf(separator);
 	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];

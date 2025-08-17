@@ -4,6 +4,7 @@ import { isEqual } from 'lodash-es';
 import {
 	AssertNotNullable,
 	CloneDeepMutable,
+	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
 	LIMIT_ROOM_NAME_LENGTH,
 	ResolveBackground,
@@ -366,6 +367,7 @@ function RoomCreation({ globalState, close }: {
 		roomGeometry: {
 			type: 'defaultPublicSpace',
 		},
+		roomLinkNodes: CloneDeepMutable(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
 	}));
 	const [position, setPosition] = useState((): Immutable<Coordinates> => {
 		const playerRoom = playerAppearance.getCurrentRoom();
@@ -388,6 +390,7 @@ function RoomCreation({ globalState, close }: {
 			type: 'createRoom',
 			template: CloneDeepMutable(roomTemplate),
 			position: CloneDeepMutable(position),
+			direction: 'N', // TODO
 		},
 	}), [roomTemplate, position]);
 

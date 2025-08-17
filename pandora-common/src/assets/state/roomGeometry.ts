@@ -206,16 +206,32 @@ export function GetRoomPositionBounds(roomBackground: Immutable<RoomBackgroundDa
 	return { minX, maxX, minY, maxY };
 }
 
+export function FixRoomPosition(position: CharacterRoomPosition, roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition;
+export function FixRoomPosition(position: readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): readonly [x: number, y: number];
+export function FixRoomPosition(position: CharacterRoomPosition | readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition | readonly [x: number, y: number] {
+	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
+
+	const x = clamp(Math.round(position[0]), minX, maxX);
+	const y = clamp(Math.round(position[1]), minY, maxY);
+
+	if (x === position[0] && y === position[1])
+		return position;
+
+	if (position.length === 2) {
+		return [x, y];
+	} else if (position.length === 3) {
+		return [x, y, position[2]];
+	}
+	AssertNever(position);
+}
+
 export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
 	// Random spread to use for the positioning
 	const spreadX = 1000;
 	const spreadY = 100;
 
 	// Absolute bounds of the background
-	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
-	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
-	const minY = 0;
-	const maxY = roomBackground.floorArea[1];
+	const { minY } = GetRoomPositionBounds(roomBackground);
 
 	// Idea is to position new characters to the very left of still visible background
 	// and slightly up to avoid the name being out of bounds
@@ -230,11 +246,7 @@ export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgr
 		+ 200
 		+ (Math.random() - 0.5) * spreadY;
 
-	return [
-		clamp(Math.round(startPointX), minX, maxX),
-		clamp(Math.round(startPointY), minY, maxY),
-		0,
-	];
+	return FixRoomPosition([startPointX, startPointY, 0], roomBackground);
 }
 
 export function CharacterCanFollow(character: AssetFrameworkCharacterState, globalState: AssetFrameworkGlobalState): boolean {

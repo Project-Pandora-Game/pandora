@@ -22,3 +22,8 @@ export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
 export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
 export type Rectangle = z.infer<typeof RectangleSchema>;
 export type RectangleCompressed = [...CoordinatesCompressed, ...SizeCompressed];
+
+/** A cardinal direction - North/East/South/West */
+export const CardinalDirectionSchema = z.enum(['N', 'E', 'S', 'W']);
+/** A cardinal direction - North/East/South/West */
+export type CardinalDirection = z.infer<typeof CardinalDirectionSchema>;

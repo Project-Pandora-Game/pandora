@@ -3,5 +3,6 @@ export * from './characterStatePose.ts';
 export * from './characterStateTypes.ts';
 export * from './globalState.ts';
 export * from './roomGeometry.ts';
+export * from './roomLinkNodes.ts';
 export * from './roomState.ts';
 export * from './spaceState.ts';

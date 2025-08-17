@@ -189,6 +189,7 @@ export function RoomGraphicsInteractive({
 					roomDevices.map((device) => (device.isDeployed() ? (
 						<RoomDeviceInteractive
 							key={ device.id }
+							characters={ characters }
 							globalState={ globalState }
 							roomState={ room }
 							item={ device }
@@ -228,7 +229,6 @@ export function RoomGraphicsInteractive({
 					roomDevices.map((device) => ((roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === device.id && device.isDeployed()) ? (
 						<RoomDeviceMovementTool
 							key={ device.id }
-							globalState={ globalState }
 							roomState={ room }
 							item={ device }
 							deployment={ device.deployment }

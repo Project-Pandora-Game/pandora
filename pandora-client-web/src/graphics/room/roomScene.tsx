@@ -74,6 +74,7 @@ export function RoomGraphics({
 					roomDevices.map((device) => (device.isDeployed() ? (
 						<RoomDevice
 							key={ device.id }
+							characters={ characters }
 							globalState={ globalState }
 							roomState={ room }
 							item={ device }

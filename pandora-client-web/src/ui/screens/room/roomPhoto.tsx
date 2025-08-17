@@ -32,7 +32,8 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 
 	const [quality, setQuality] = useState<'roomSize' | '4K' | '1080p' | '720p' | '360p'>('1080p');
 	const [trim, setTrim] = useState<boolean>(true);
-	const [names, setNames] = useState<boolean>(false);
+	const [showCharacters, setShowCharacters] = useState<boolean>(true);
+	const [characterNames, setCharacterNames] = useState<boolean>(false);
 	const [noGhost, setNoGhost] = useState<boolean>(true);
 
 	const resultRef = useRef<HTMLDivElement>(null);
@@ -94,10 +95,10 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 							scale={ scale }
 						>
 							<RoomGraphics
-								characters={ characters }
+								characters={ showCharacters ? characters : [] }
 								globalState={ globalState }
 								room={ roomState }
-								showCharacterNames={ names }
+								showCharacterNames={ characterNames }
 							/>
 						</Container>
 					</VisionFilterBypass>
@@ -191,14 +192,23 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 						<Checkbox id={ id + '-trim' } checked={ trim } onChange={ setTrim } />
 						<label htmlFor={ id + '-trim' }>Trim empty space from image</label>
 					</Row>
-					<Row alignY='center'>
-						<Checkbox id={ id + '-names' } checked={ names } onChange={ setNames } />
-						<label htmlFor={ id + '-names' }>Show character names</label>
-					</Row>
-					<Row alignY='center'>
-						<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } />
-						<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
-					</Row>
+					<fieldset>
+						<legend>Characters</legend>
+						<Column>
+							<Row alignY='center'>
+								<Checkbox id={ id + '-showCharacters' } checked={ showCharacters } onChange={ setShowCharacters } />
+								<label htmlFor={ id + '-showCharacters' }>Show characters</label>
+							</Row>
+							<Row alignY='center'>
+								<Checkbox id={ id + '-characterNames' } checked={ characterNames } onChange={ setCharacterNames } disabled={ !showCharacters } />
+								<label htmlFor={ id + '-characterNames' }>Show character names</label>
+							</Row>
+							<Row alignY='center'>
+								<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } disabled={ !showCharacters } />
+								<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
+							</Row>
+						</Column>
+					</fieldset>
 					{ (
 						((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
 						((quality === '1080p') && textureResolution < 0.5)

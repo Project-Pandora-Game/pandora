@@ -38,6 +38,7 @@ import { Sprite } from '../baseComponents/sprite.ts';
 import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -48,7 +49,6 @@ import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, useRoomCharacterOffsets } from './roomCharacter.tsx';
 import type { RoomProjectionResolver } from './roomProjection.tsx';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms

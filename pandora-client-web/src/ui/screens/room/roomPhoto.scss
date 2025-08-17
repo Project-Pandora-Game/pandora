@@ -1,0 +1,18 @@
+@use '../../../styles/common';
+
+.RoomPhotoDialogContents {
+	.result {
+		width: min(30em, 30vw);
+		max-height: 80vh;
+
+		&.empty {
+			display: none;
+		}
+
+		canvas {
+			max-width: 100%;
+			max-height: 100%;
+			object-fit: contain;
+		}
+	}
+}

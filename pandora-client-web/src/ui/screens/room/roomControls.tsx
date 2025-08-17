@@ -8,6 +8,7 @@ import React, {
 import { useLocation } from 'react-router';
 import crossIcon from '../../../assets/icons/cross.svg';
 import listIcon from '../../../assets/icons/list.svg';
+import photoIcon from '../../../assets/icons/photo.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
@@ -42,6 +43,7 @@ import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.t
 import { useRoomScreenContext } from './roomContext.tsx';
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
+import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
@@ -52,6 +54,8 @@ export function RoomControls(): ReactElement | null {
 	const gameState = useGameStateOptional();
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
+
+	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
 	if (globalState == null || !player || playerState == null) {
 		return null;
@@ -77,6 +81,18 @@ export function RoomControls(): ReactElement | null {
 						<img src={ settingIcon } />
 						<div>Space<br />configuration</div>
 					</Button>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowPhotoDialog(true) }
+					>
+						<img src={ photoIcon } />
+						<div>Photo<br />mode</div>
+					</Button>
+					{ showPhotoDialog ? (
+						<RoomPhotoDialog
+							close={ () => setShowPhotoDialog(false) }
+						/>
+					) : null }
 				</DivContainer>
 				<DisplayRoomsGrid
 					player={ player }
@@ -108,6 +124,7 @@ export function PersonalSpaceControls(): ReactElement {
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
 	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
@@ -166,6 +183,13 @@ export function PersonalSpaceControls(): ReactElement {
 						<img src={ settingIcon } />
 						<div>Change<br />space layout</div>
 					</Button>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowPhotoDialog(true) }
+					>
+						<img src={ photoIcon } />
+						<div>Photo<br />mode</div>
+					</Button>
 					{
 						showBackgrounds ? (
 							<ModalDialog className='max-size'>
@@ -184,6 +208,11 @@ export function PersonalSpaceControls(): ReactElement {
 							</ModalDialog>
 						) : null
 					}
+					{ showPhotoDialog ? (
+						<RoomPhotoDialog
+							close={ () => setShowPhotoDialog(false) }
+						/>
+					) : null }
 				</DivContainer>
 				<DisplayRoomsGrid
 					player={ player }

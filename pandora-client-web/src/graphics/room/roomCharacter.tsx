@@ -35,6 +35,7 @@ import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
 import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -42,7 +43,6 @@ import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
 import type { RoomProjectionResolver } from './roomProjection.tsx';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;

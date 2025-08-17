@@ -1,13 +1,9 @@
 import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { min } from 'lodash-es';
 import {
 	Assert,
-	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
-	CharacterSize,
-	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
 	Rectangle,
@@ -15,21 +11,20 @@ import {
 	SpaceClientInfo,
 	type AssetFrameworkRoomState,
 } from 'pandora-common';
-import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
-import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport.tsx';
+import { CalculateRoomDeviceGraphicsBounds } from '../../graphics/common/roomDeviceBounds.ts';
+import { usePlayerVisionFilters } from '../../graphics/common/visionFilters.tsx';
 import { GraphicsBackground } from '../../graphics/graphicsBackground.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings.tsx';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
-import { RoomDevice } from '../../graphics/room/roomDevice.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
 import { useRoomViewProjection, type RoomProjectionResolver } from '../../graphics/room/roomProjection.tsx';
-import { usePlayerVisionFilters } from '../../graphics/room/roomScene.tsx';
+import { RoomGraphics } from '../../graphics/room/roomScene.tsx';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
@@ -304,63 +299,14 @@ export function RoomPreview({
 	overlay,
 	focusDevice,
 }: RoomPreviewProps): ReactElement {
-	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
-
-	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
-		g
-			.rect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1])
-			.stroke({ width: 2, color: 0x404040, alpha: 0.4 });
-	}, [roomBackground]);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
 		if (focusDevice == null || !focusDevice.isDeployed())
 			return undefined;
 
-		const asset = focusDevice.asset.definition;
-
-		let itemLeft = asset.pivot.x - 20;
-		let itemRight = asset.pivot.x + 20;
-		let itemTop = asset.pivot.y - 20;
-		let itemBottom = asset.pivot.y + 20;
-
-		for (const layer of asset.graphicsLayers) {
-			if (layer.type === 'sprite') {
-				const offsetX = Math.min(layer.offset?.x ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.x)) ?? layer.offset?.x ?? 0);
-				const offsetY = Math.min(layer.offset?.y ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.y)) ?? layer.offset?.y ?? 0);
-
-				itemLeft = Math.min(itemLeft, offsetX);
-				itemTop = Math.min(itemTop, offsetY);
-				if (offsetX < asset.pivot.x) {
-					const width = 2 * (asset.pivot.x - offsetX);
-					itemRight = Math.max(itemRight, offsetX + width);
-				}
-			} else if (layer.type === 'slot') {
-				for (const position of [layer.characterPosition, ...(layer.characterPositionOverrides ?? []).map((o) => o.position)]) {
-					const characterScale = position.relativeScale ?? 1;
-					const x = asset.pivot.x + position.offsetX - characterScale * (CHARACTER_PIVOT_POSITION.x + (position.pivotOffset?.x ?? 0));
-					const y = asset.pivot.y + position.offsetY - characterScale * (CHARACTER_PIVOT_POSITION.y + (position.pivotOffset?.y ?? 0));
-
-					itemLeft = Math.min(itemLeft, x);
-					itemTop = Math.min(itemTop, y);
-					const width = Math.ceil(characterScale * CharacterSize.WIDTH);
-					itemRight = Math.max(itemRight, x + width);
-					const height = Math.ceil(characterScale * CharacterSize.HEIGHT);
-					itemBottom = Math.max(itemBottom, y + height);
-				}
-			} else if (layer.type === 'text') {
-				const offsetX = layer.offset?.x ?? 0;
-				const offsetY = layer.offset?.y ?? 0;
-
-				itemLeft = Math.min(itemLeft, offsetX);
-				itemTop = Math.min(itemTop, offsetY);
-				itemRight = Math.max(itemRight, offsetX + layer.size.width);
-				itemBottom = Math.max(itemBottom, offsetY + layer.size.height);
-			} else {
-				AssertNever(layer);
-			}
-		}
+		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset);
 
 		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
 			focusDevice.deployment.x,
@@ -372,10 +318,10 @@ export function RoomPreview({
 		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
 
 		return {
-			x: posX + Math.floor((itemLeft - asset.pivot.x) * scale),
-			y: posY - yOffsetExtra + Math.floor((itemTop - asset.pivot.y) * scale),
-			width: Math.ceil((itemRight - itemLeft) * scale),
-			height: Math.ceil((itemBottom - itemTop) * scale),
+			x: posX + Math.floor(scale * x),
+			y: posY - yOffsetExtra + Math.floor(scale * y),
+			width: Math.ceil(width * scale),
+			height: Math.ceil(height * scale),
 		};
 	}, [focusDevice, projectionResolver]);
 
@@ -395,51 +341,12 @@ export function RoomPreview({
 			<Container
 				x={ -(focusArea?.x ?? 0) }
 				y={ -(focusArea?.y ?? 0) }
-				sortableChildren
 			>
-				<Graphics
-					zIndex={ 2 }
-					draw={ borderDraw }
-				/>
-				<Container zIndex={ 10 } sortableChildren>
-					{
-						characters.map((character) => {
-							const characterState = globalState.characters.get(character.id);
-							if (characterState == null ||
-								characterState.position.type !== 'normal' ||
-								characterState.currentRoom !== roomState.id
-							) {
-								return null;
-							}
-
-							return (
-								<RoomCharacter
-									key={ character.data.id }
-									globalState={ globalState }
-									character={ character }
-									projectionResolver={ projectionResolver }
-									showName={ false }
-								/>
-							);
-						})
-					}
-					{
-						roomDevices.map((device) => (device.isDeployed() ? (
-							<RoomDevice
-								key={ device.id }
-								globalState={ globalState }
-								roomState={ roomState }
-								item={ device }
-								deployment={ device.deployment }
-								projectionResolver={ projectionResolver }
-							/>
-						) : null))
-					}
-				</Container>
-				<GraphicsBackground
-					zIndex={ -1000 }
-					background={ roomBackground }
-					backgroundFilters={ usePlayerVisionFilters(false) }
+				<RoomGraphics
+					room={ roomState }
+					characters={ characters }
+					globalState={ globalState }
+					showCharacterNames={ false }
 				/>
 			</Container>
 		</GraphicsScene>

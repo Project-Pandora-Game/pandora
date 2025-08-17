@@ -128,25 +128,30 @@ export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<
 	}, [manager, points, pointType, pointFilterMask]);
 }
 
+export function useGraphicsTextureResolution() {
+	const { textureResolution } = useGraphicsSettings();
+	const automaticResolution = useAutomaticResolution();
+	const finalTextureResolution = textureResolution === 'auto' ? automaticResolution : textureResolution;
+
+	return finalTextureResolution;
+}
+
 export function useImageResolutionAlternative(image: string): {
 	image: string;
 	resolution: number;
 	scale: number;
 } {
-	const { textureResolution } = useGraphicsSettings();
-	const automaticResolution = useAutomaticResolution();
-
-	const finalTextureResolution = textureResolution === 'auto' ? automaticResolution : textureResolution;
+	const textureResolution = useGraphicsTextureResolution();
 
 	const EXTENSIONS = ['.png', '.jpg'];
 
 	for (const ext of EXTENSIONS) {
 		if (image.endsWith(ext)) {
-			if (finalTextureResolution !== '1') {
+			if (textureResolution !== '1') {
 				return {
-					image: image.substring(0, image.length - ext.length) + `_r${finalTextureResolution}${ext}`,
-					resolution: 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
-					scale: GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
+					image: image.substring(0, image.length - ext.length) + `_r${textureResolution}${ext}`,
+					resolution: 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[textureResolution],
+					scale: GRAPHICS_TEXTURE_RESOLUTION_SCALE[textureResolution],
 				};
 			}
 		}

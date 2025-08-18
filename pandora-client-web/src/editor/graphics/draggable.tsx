@@ -49,7 +49,9 @@ export function Draggable({
 	});
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !ref.current) return;
+		if (!dragging.current || !ref.current?.parent)
+			return;
+
 		event.stopPropagation();
 		const dragPointerEnd = event.getLocalPosition(ref.current.parent);
 		setPos(

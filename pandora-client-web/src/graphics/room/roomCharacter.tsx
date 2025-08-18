@@ -279,12 +279,14 @@ function RoomCharacterInteractiveImpl({
 	const pointerDown = useRef<number | null>(null);
 
 	const onDragStart = useCallback((event: FederatedPointerEvent) => {
-		if (dragging.current) return;
+		if (dragging.current || !event.currentTarget.parent)
+			return;
 		dragging.current = event.getLocalPosition<Point>(event.currentTarget.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !spaceInfo) return;
+		if (!dragging.current || !spaceInfo || !event.currentTarget.parent)
+			return;
 		const dragPointerEnd = event.getLocalPosition<Point>(event.currentTarget.parent);
 
 		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), 0);

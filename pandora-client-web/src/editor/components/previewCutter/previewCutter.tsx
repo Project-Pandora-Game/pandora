@@ -85,9 +85,9 @@ function PreviewCutterRectangleInner({
 		setDragging(false);
 	}, []);
 	const onPointerMove = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
-		if (!dragging || !graphic.current) {
+		if (!dragging || !graphic.current?.parent)
 			return;
-		}
+
 		ev.stopPropagation();
 		const dragPointerEnd = ev.getLocalPosition(graphic.current.parent);
 		PREVIEW_CUTTER.value = {

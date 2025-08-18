@@ -6,7 +6,6 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { loadEnvFile } from 'node:process';
 import { join } from 'path';
-import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
 import webpack from 'webpack';
@@ -253,7 +252,6 @@ function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 			options: {
 				postcssOptions: {
 					plugins: [
-						postcssFlexbugsFixes(),
 						postcssPresetEnv({ preserve: true }),
 					],
 				},

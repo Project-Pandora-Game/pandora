@@ -105,6 +105,7 @@ export default function (env: WebpackEnv): webpack.Configuration {
 			hashDigestLength: 16,
 			publicPath: '/',
 		},
+		target: 'browserslist',
 		plugins: GeneratePlugins(env),
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js'],

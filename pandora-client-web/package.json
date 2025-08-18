@@ -5,6 +5,9 @@
 	"repository": "git@github.com:Project-Pandora-Game/pandora-client-web.git",
 	"license": "LGPL-3.0-or-later",
 	"type": "module",
+	"browserslist": [
+		"> 0.5%, last 2 versions and last 3 years, Firefox ESR, not dead"
+	],
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent type-check:webpack && pnpm run webpack:build",

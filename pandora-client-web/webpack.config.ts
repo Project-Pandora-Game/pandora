@@ -6,7 +6,6 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { loadEnvFile } from 'node:process';
 import { join } from 'path';
-import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
 import webpack from 'webpack';
@@ -100,9 +99,13 @@ export default function (env: WebpackEnv): webpack.Configuration {
 		output: {
 			path: DIST_DIR,
 			clean: true,
-			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
+			filename: `[name]${env.prod ? '.[contenthash]' : ''}.js`,
+			hashFunction: 'sha256',
+			hashDigest: 'base64url',
+			hashDigestLength: 16,
 			publicPath: '/',
 		},
+		target: 'browserslist',
 		plugins: GeneratePlugins(env),
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js'],
@@ -208,18 +211,15 @@ function GenerateRules(env: WebpackEnv): webpack.RuleSetRule[] {
 			}],
 		},
 		{
-			test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?|mp3|wav)$/i,
-			loader: 'url-loader',
-			issuer: /\.[jt]sx?$/,
-			options: {
-				limit: 8192,
-				esModule: false,
-				name: 'assets/[contenthash].[ext]',
-			},
-		},
-		{
 			test: /\.s?css$/i,
 			use: GenerateStyleLoaders(env),
+		},
+		{
+			test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?|mp3|wav)$/i,
+			type: 'asset/resource',
+			generator: {
+				filename: 'assets/[name].[contenthash][ext][query]',
+			},
 		},
 		{
 			enforce: 'pre',
@@ -253,7 +253,6 @@ function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 			options: {
 				postcssOptions: {
 					plugins: [
-						postcssFlexbugsFixes(),
 						postcssPresetEnv({ preserve: true }),
 					],
 				},

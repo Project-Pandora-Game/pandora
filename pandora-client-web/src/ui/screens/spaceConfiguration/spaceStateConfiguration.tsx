@@ -3,6 +3,8 @@ import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
 	AssertNotNullable,
+	CARDINAL_DIRECTION_NAMES,
+	CardinalDirectionSchema,
 	CloneDeepMutable,
 	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
@@ -15,6 +17,7 @@ import {
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type AssetFrameworkSpaceState,
+	type CardinalDirection,
 	type Coordinates,
 	type RoomBackgroundData,
 	type RoomTemplate,
@@ -27,6 +30,7 @@ import plusIcon from '../../../assets/icons/plus.svg';
 import { useCharacterAppearance } from '../../../character/character.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
@@ -221,6 +225,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 	const [name, setName] = useState<string | null>(null);
 	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
 	const [positionChange, setPositionChange] = useState<Immutable<Coordinates> | null>(null);
+	const [directionChange, setDirectionChange] = useState<CardinalDirection | null>(null);
 
 	return (
 		<fieldset className='roomConfiguration'>
@@ -294,43 +299,66 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						<FormError error={ nameValueError } />
 					) : null }
 				</Column>
+				<Row>
+					<Column className='flex-1'>
+						<Row alignY='center'>
+							<label>Room position</label>
+							<NumberInput
+								className='zero-width flex-1'
+								value={ (positionChange ?? roomState.position)?.x }
+								onChange={ (x) => {
+									setPositionChange({
+										...(positionChange ?? roomState.position),
+										x,
+									});
+								} }
+							/>
+							<NumberInput
+								className='zero-width flex-1'
+								value={ (positionChange ?? roomState.position)?.y }
+								onChange={ (y) => {
+									setPositionChange({
+										...(positionChange ?? roomState.position),
+										y,
+									});
+								} }
+							/>
+						</Row>
+						<Row alignY='center'>
+							<label htmlFor={ id + ':room-name' }>Far wall direction</label>
+							<Select
+								className='flex-1'
+								value={ directionChange ?? roomState.direction }
+								onChange={ (ev) => {
+									const value = ev.target.value;
+									setDirectionChange(CardinalDirectionSchema.parse(value));
+								} }
+							>
+								{
+									CardinalDirectionSchema.options.map((d) => (
+										<option key={ d } value={ d }>{ CARDINAL_DIRECTION_NAMES[d] }</option>
+									))
+								}
+							</Select>
+						</Row>
+					</Column>
+					<GameLogicActionButton
+						action={ {
+							type: 'spaceRoomLayout',
+							subaction: {
+								type: 'moveRoom',
+								id: roomState.id,
+								position: CloneDeepMutable(positionChange ?? roomState.position),
+								direction: CloneDeepMutable(directionChange ?? roomState.direction),
+							},
+						} }
+						disabled={ (positionChange == null || isEqual(positionChange, roomState.position)) &&
+							(directionChange == null || directionChange === roomState.direction) }
+					>
+						Move
+					</GameLogicActionButton>
+				</Row>
 				<Column>
-					<Row alignY='center'>
-						<label>Room position</label>
-						<NumberInput
-							className='zero-width flex-1'
-							value={ (positionChange ?? roomState.position)?.x }
-							onChange={ (x) => {
-								setPositionChange({
-									...(positionChange ?? roomState.position),
-									x,
-								});
-							} }
-						/>
-						<NumberInput
-							className='zero-width flex-1'
-							value={ (positionChange ?? roomState.position)?.y }
-							onChange={ (y) => {
-								setPositionChange({
-									...(positionChange ?? roomState.position),
-									y,
-								});
-							} }
-						/>
-						<GameLogicActionButton
-							action={ {
-								type: 'spaceRoomLayout',
-								subaction: {
-									type: 'moveRoom',
-									id: roomState.id,
-									position: CloneDeepMutable(positionChange ?? roomState.position),
-								},
-							} }
-							disabled={ positionChange == null || isEqual(positionChange, roomState.position) }
-						>
-							Move
-						</GameLogicActionButton>
-					</Row>
 				</Column>
 				<Row alignY='start'>
 					<Button

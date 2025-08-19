@@ -1,12 +1,14 @@
 import { freeze, type Immutable } from 'immer';
 import { z } from 'zod';
-import { Assert, RotateArray } from '../../utility/misc.ts';
-import type { CardinalDirection } from '../graphics/common.ts';
+import { Assert, AssertNever, RotateArray } from '../../utility/misc.ts';
+import type { CardinalDirection, Coordinates } from '../graphics/common.ts';
 import { FixRoomPosition, GetRoomPositionBounds, type RoomBackgroundData } from './roomGeometry.ts';
 
 /*
 Room link nodes describe where inside the room, the room links to another room.
 */
+
+export const ROOM_NODE_RADIUS: number = 100;
 
 /** A config for a single room link node */
 export const RoomLinkNodeConfigSchema = z.object({
@@ -81,8 +83,8 @@ export function ResolveRoomNeighborLinkData(linkConfig: Immutable<RoomNeighborLi
 			internalDirection: d,
 			disabled: config.disabled,
 			position: FixRoomPosition(config.position ?? [
-				d === 'left' ? minX : d === 'right' ? maxX : (minX + maxX) / 2,
-				d === 'near' ? minY : d === 'far' ? maxY : (minY + maxY) / 2,
+				d === 'left' ? (minX + ROOM_NODE_RADIUS) : d === 'right' ? (maxX - ROOM_NODE_RADIUS) : (minX + maxX) / 2,
+				d === 'near' ? (minY + ROOM_NODE_RADIUS) : d === 'far' ? (maxY - ROOM_NODE_RADIUS) : (minY + maxY) / 2,
 			], background),
 		};
 
@@ -99,4 +101,18 @@ export function ResolveRoomNeighborLinkData(linkConfig: Immutable<RoomNeighborLi
 		S: resultLinks[2],
 		W: resultLinks[3],
 	};
+}
+
+export function SpaceRoomLayoutNeighborRoomCoordinates(baseCoordinates: Immutable<Coordinates>, direction: CardinalDirection): Immutable<Coordinates> {
+	switch (direction) {
+		case 'N':
+			return { x: baseCoordinates.x, y: baseCoordinates.y - 1 };
+		case 'E':
+			return { x: baseCoordinates.x + 1, y: baseCoordinates.y };
+		case 'S':
+			return { x: baseCoordinates.x, y: baseCoordinates.y + 1 };
+		case 'W':
+			return { x: baseCoordinates.x - 1, y: baseCoordinates.y };
+	}
+	AssertNever(direction);
 }

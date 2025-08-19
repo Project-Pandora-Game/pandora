@@ -31,6 +31,8 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 			type: z.literal('moveRoom'),
 			id: RoomIdSchema,
 			position: IntegerCoordinatesSchema,
+			/** The direction the room should be facing */
+			direction: CardinalDirectionSchema,
 		}),
 	]),
 });
@@ -104,7 +106,7 @@ export function ActionSpaceRoomLayout({
 
 		// Intentionally no message
 	} else if (subaction.type === 'moveRoom') {
-		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position)))
+		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position).withDirection(subaction.direction)))
 			return processingContext.invalid();
 
 		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });

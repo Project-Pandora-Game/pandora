@@ -5,6 +5,7 @@ import {
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	CalculateBackgroundDataFromCalibrationData,
+	CardinalDirectionSchema,
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
@@ -39,6 +40,7 @@ import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
+import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
 
 const BONCE_OVERFLOW = 500;
@@ -162,6 +164,15 @@ export function RoomGraphicsInteractive({
 			<Graphics
 				draw={ borderDraw }
 			/>
+			{ CardinalDirectionSchema.options.map((direction) => (
+				<RoomLinkNodeGraphics
+					key={ direction }
+					cardinalDirection={ direction }
+					room={ room }
+					globalState={ globalState }
+					projectionResolver={ projectionResolver }
+				/>
+			)) }
 			<Container sortableChildren>
 				{
 					characters.map((character) => {

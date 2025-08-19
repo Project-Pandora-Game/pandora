@@ -1,6 +1,6 @@
 import { freeze } from 'immer';
 import { Assert, type Satisfies } from 'pandora-common';
-import { type Container, type EventEmitter, type PointData } from 'pixi.js';
+import { type ColorSource, type Container, type EventEmitter, type PointData } from 'pixi.js';
 import type React from 'react';
 import type { ReactNode } from 'react';
 import type { ConditionalKeys, ReadonlyKeysOf } from 'type-fest';
@@ -36,6 +36,7 @@ export const PIXI_COMPONENT_SPECIAL_PROPERTIES = [
 	'pivot',
 	'position',
 	'skew',
+	'tint',
 ] as const satisfies (readonly (keyof DisplayObjectAllProps<Container>)[]);
 
 /** Check if DisplayObject key is one of a property with special handling. */
@@ -79,6 +80,7 @@ export type DisplayObjectSpecialProps = Satisfies<{
 	pivot: PixiPointLike;
 	position: PixiPointLike;
 	skew: PixiPointLike;
+	tint: ColorSource;
 }, Record<DisplayObjectSpecialPropKeys, any>>;
 
 /** List of writeable props, excluding any black-listed ones. */

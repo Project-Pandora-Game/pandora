@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
+import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodes.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -11,6 +12,7 @@ export const AppearanceActionRoomConfigure = z.object({
 	name: RoomNameSchema.optional(),
 	/** Room geometry to set */
 	roomGeometry: RoomGeometryConfigSchema.optional(),
+	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.partial().optional(),
 });
 
 /** Moves an item within inventory, reordering the worn order. */
@@ -22,6 +24,7 @@ export function ActionRoomConfigure({
 		roomId,
 		name,
 		roomGeometry,
+		roomLinkNodes,
 	} = action;
 
 	if (name != null) {
@@ -62,6 +65,18 @@ export function ActionRoomConfigure({
 		});
 
 		processingContext.queueMessage({ id: 'roomConfigureBackground', rooms: [roomId] });
+	}
+
+	if (roomLinkNodes != null) {
+		processingContext.checkPlayerIsSpaceAdmin();
+
+		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withRoomLinkNodes({
+			far: roomLinkNodes.far ?? r.roomLinkNodes.far,
+			right: roomLinkNodes.right ?? r.roomLinkNodes.right,
+			near: roomLinkNodes.near ?? r.roomLinkNodes.near,
+			left: roomLinkNodes.left ?? r.roomLinkNodes.left,
+		})))
+			return processingContext.invalid();
 	}
 
 	return processingContext.finalize();

@@ -5,7 +5,6 @@ import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from '
 const SPRITE_AUTO_PROPS = {
 	...CONTAINER_AUTO_PROPS,
 	texture: true,
-	tint: true,
 	width: true,
 	height: true,
 } as const satisfies Readonly<Partial<Record<keyof PixiDisplayObjectWriteableProps<PixiSprite>, true>>>;

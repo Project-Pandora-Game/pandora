@@ -27,3 +27,10 @@ export type RectangleCompressed = [...CoordinatesCompressed, ...SizeCompressed];
 export const CardinalDirectionSchema = z.enum(['N', 'E', 'S', 'W']);
 /** A cardinal direction - North/East/South/West */
 export type CardinalDirection = z.infer<typeof CardinalDirectionSchema>;
+
+export const CARDINAL_DIRECTION_NAMES: Readonly<Record<CardinalDirection, string>> = {
+	N: 'North',
+	E: 'East',
+	S: 'South',
+	W: 'West',
+};

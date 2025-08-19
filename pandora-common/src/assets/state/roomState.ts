@@ -300,6 +300,14 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		});
 	}
 
+	public withDirection(direction: CardinalDirection): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { direction });
+	}
+
+	public withRoomLinkNodes(roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { roomLinkNodes: freeze(roomLinkNodes, true) });
+	}
+
 	public static createFromTemplate(
 		template: Immutable<RoomTemplate>,
 		id: RoomId,

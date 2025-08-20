@@ -8,9 +8,12 @@ import {
 	CloneDeepMutable,
 	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
+	KnownObject,
 	LIMIT_ROOM_NAME_LENGTH,
+	ParseNotNullable,
 	ResolveBackground,
 	RoomId,
+	RoomLinkNodeConfig,
 	RoomNameSchema,
 	RoomTemplateSchema,
 	type AppearanceAction,
@@ -22,12 +25,13 @@ import {
 	type RoomBackgroundData,
 	type RoomTemplate,
 } from 'pandora-common';
-import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import exportIcon from '../../../assets/icons/export.svg';
 import importIcon from '../../../assets/icons/import.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
 import { useCharacterAppearance } from '../../../character/character.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
@@ -38,7 +42,7 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ExportDialog } from '../../../components/exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
@@ -54,7 +58,8 @@ export type SpaceStateConfigurationUiProps = {
 export function SpaceStateConfigurationUi({
 	globalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
-	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(globalState.space.rooms.length === 1 ? globalState.space.rooms[0].id : null);
+	const { playerState } = usePlayerState();
+	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(playerState.currentRoom);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
 
 	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
@@ -299,6 +304,17 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						<FormError error={ nameValueError } />
 					) : null }
 				</Column>
+				<Row alignY='center' alignX='space-evenly'>
+					<Button
+						onClick={ () => setShowBackgrounds(true) }
+					>
+						Select a background
+					</Button>
+					<BackgroundPreview
+						background={ roomState.roomBackground }
+						previewSize={ 384 * (window.devicePixelRatio || 1) }
+					/>
+				</Row>
 				<Row>
 					<Column className='flex-1'>
 						<Row alignY='center'>
@@ -358,22 +374,110 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						Move
 					</GameLogicActionButton>
 				</Row>
-				<Column>
-				</Column>
-				<Row alignY='start'>
-					<Button
-						onClick={ () => setShowBackgrounds(true) }
-					>
-						Select a background
-					</Button>
-					<BackgroundPreview
-						background={ roomState.roomBackground }
-						previewSize={ 384 * (window.devicePixelRatio || 1) }
-						className='flex-1'
-					/>
-				</Row>
+				<fieldset>
+					<legend>Position of links to other rooms</legend>
+					<table>
+						<thead>
+							<tr>
+								<th>Direction</th>
+								<th>Enabled</th>
+								<th>Position</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<RoomConfigurationRoomLink direction='far' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='right' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='near' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='left' roomState={ roomState } />
+						</tbody>
+					</table>
+				</fieldset>
 			</Column>
 		</fieldset>
+	);
+}
+
+const ROOM_INTERNAL_DIRECTION_NAMES: Readonly<Record<keyof AssetFrameworkRoomState['roomLinkNodes'], string>> = {
+	far: 'Far',
+	right: 'Right',
+	near: 'Near',
+	left: 'Left',
+};
+
+function RoomConfigurationRoomLink({ direction, roomState }: {
+	direction: keyof AssetFrameworkRoomState['roomLinkNodes'];
+	roomState: AssetFrameworkRoomState;
+}): ReactNode {
+	const config = roomState.roomLinkNodes[direction];
+	const [cardinalDirection, data] = ParseNotNullable(KnownObject.entries(roomState.roomLinkData).find(([,d]) => d.internalDirection === direction));
+	const [changedConfig, setChangedConfig] = useState<Immutable<RoomLinkNodeConfig> | null>(null);
+
+	return (
+		<tr>
+			<td>{ ROOM_INTERNAL_DIRECTION_NAMES[direction] } → { CARDINAL_DIRECTION_NAMES[cardinalDirection] }:</td>
+			<td>
+				<Checkbox
+					checked={ !(changedConfig ?? config).disabled }
+					onChange={ (newValue) => {
+						setChangedConfig((v) => produce(v ?? config, (d) => {
+							d.disabled = !newValue;
+						}));
+					} }
+				/>
+			</td>
+			<td>
+				<Row alignY='center'>
+					<label>X:</label>
+					<NumberInput
+						className='flex-1'
+						value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
+						onChange={ (newValue) => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position ??= CloneDeepMutable(data.position);
+								d.position[0] = newValue;
+							}));
+						} }
+					/>
+					<label>Y:</label>
+					<NumberInput
+						className='flex-1'
+						value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
+						onChange={ (newValue) => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position ??= CloneDeepMutable(data.position);
+								d.position[1] = newValue;
+							}));
+						} }
+					/>
+					<Button
+						slim
+						onClick={ () => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position = null;
+							}));
+						} }
+						disabled={ (changedConfig ?? config).position == null }
+					>
+						↺
+					</Button>
+				</Row>
+			</td>
+			<td>
+				<GameLogicActionButton
+					action={ {
+						type: 'roomConfigure',
+						roomId: roomState.id,
+						roomLinkNodes: {
+							[direction]: changedConfig ?? undefined,
+						},
+					} }
+					disabled={ changedConfig == null || isEqual(config, changedConfig) }
+				>
+					Save
+				</GameLogicActionButton>
+			</td>
+		</tr>
 	);
 }
 

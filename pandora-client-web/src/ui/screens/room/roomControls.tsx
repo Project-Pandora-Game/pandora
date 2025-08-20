@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -389,7 +389,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 										moveTo: {
 											type: 'normal',
 											room: room.id,
-											position: GenerateInitialRoomPosition(room.roomBackground),
+											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
 										},
 									} }
 								>
@@ -478,6 +478,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 				useMemo(() => {
 					const result: ReactElement[] = [];
 					const seenCharacters = new Set<Character<ICharacterRoomData>>();
+					const playerRoom = ParseNotNullable(globalState.space.getRoom(playerState.currentRoom));
 
 					if (globalState.space.rooms.length > 1) {
 						const sortedRooms = globalState.space.rooms.toSorted((a, b) => {
@@ -502,7 +503,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 														moveTo: {
 															type: 'normal',
 															room: room.id,
-															position: GenerateInitialRoomPosition(room.roomBackground),
+															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
 														},
 													} }
 													disabled={ playerState.position.following != null }
@@ -659,7 +660,7 @@ function DisplayCharacter({ char, globalState }: {
 								moveTo: {
 									type: 'normal',
 									room: playerRoom.id,
-									position: GenerateInitialRoomPosition(playerRoom.roomBackground),
+									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
 								},
 							} }
 							disabled={ state.position.following != null }

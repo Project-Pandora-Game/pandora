@@ -391,7 +391,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			position = {
 				type: 'normal',
 				room: roomState.id,
-				position: GenerateInitialRoomPosition(roomState.roomBackground),
+				position: GenerateInitialRoomPosition(roomState),
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed
@@ -403,7 +403,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				position = {
 					type: 'normal',
 					room: roomState.id,
-					position: GenerateInitialRoomPosition(roomState.roomBackground),
+					position: GenerateInitialRoomPosition(roomState),
 				};
 			}
 		}

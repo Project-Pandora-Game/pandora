@@ -16,7 +16,8 @@ import { ItemTemplateSchema } from '../item/unified.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
-import { DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG, ResolveRoomNeighborLinkData, RoomNeighborLinkNodesConfigSchema, SpaceRoomLayoutUnitVectorToCardinalDirection, type RoomLinkNodeData, type RoomNeighborLinkNodesConfig, type RoomNeighborLinkNodesData } from './roomLinkNodes.ts';
+import { DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG, RoomNeighborLinkNodesConfigSchema, type RoomLinkNodeData, type RoomNeighborLinkNodesConfig, type RoomNeighborLinkNodesData } from './roomLinkNodeDefinitions.ts';
+import { ResolveRoomNeighborLinkData, SpaceRoomLayoutUnitVectorToCardinalDirection } from './roomLinkNodes.ts';
 
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
@@ -151,7 +152,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	 * @param otherRoom The room to get to from the current room
 	 * @param allowDisabledLinks Whether to return disabled links as well. If not set default links are treated as if they didn't exist
 	 */
-	public getLinkToRoom(otherRoom: AssetFrameworkRoomState, allowDisabledLinks: boolean = false): Immutable<RoomLinkNodeData> | null {
+	public getLinkToRoom(otherRoom: AssetFrameworkRoomState | null, allowDisabledLinks: boolean = false): Immutable<RoomLinkNodeData> | null {
+		if (otherRoom == null)
+			return null;
+
 		const dx = otherRoom.position.x - this.position.x;
 		const dy = otherRoom.position.y - this.position.y;
 		const direction = SpaceRoomLayoutUnitVectorToCardinalDirection(dx, dy);

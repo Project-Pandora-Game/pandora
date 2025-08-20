@@ -209,12 +209,12 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 					moveTo: {
 						type: 'normal',
 						room: neighborRoom.id,
-						position: GenerateInitialRoomPosition(neighborRoom.roomBackground),
+						position: GenerateInitialRoomPosition(neighborRoom, neighborRoom.getLinkToRoom(room, true)?.direction),
 					},
 				});
 			}
 		}
-	}, [execute, neighborRoom, nodeData.internalDirection, playerId, room.id, room.roomLinkNodes, roomConstructionMode]);
+	}, [execute, neighborRoom, nodeData.internalDirection, playerId, room, roomConstructionMode]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
 		setHeld(false);

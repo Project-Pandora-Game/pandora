@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
-import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodes.ts';
+import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodeDefinitions.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -45,16 +45,15 @@ export function ActionRoomConfigure({
 		const room = processingContext.manipulator.currentState.space.getRoom(roomId);
 		if (!room)
 			return processingContext.invalid();
-		const newBackground = room.roomBackground;
 
 		// Put characters into correct place if needed
 		processingContext.manipulator.produceMapCharacters((c) => {
 			if (c.position.type === 'normal') {
-				if (c.position.room === room.id && !IsValidRoomPosition(newBackground, c.position.position)) {
+				if (c.position.room === room.id && !IsValidRoomPosition(room.roomBackground, c.position.position)) {
 					return c.produceWithSpacePosition({
 						type: 'normal',
 						room: room.id,
-						position: GenerateInitialRoomPosition(newBackground),
+						position: GenerateInitialRoomPosition(room),
 					});
 				}
 			} else {

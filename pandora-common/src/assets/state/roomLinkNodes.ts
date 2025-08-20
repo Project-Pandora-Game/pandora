@@ -132,3 +132,19 @@ export function SpaceRoomLayoutNeighborRoomCoordinates(baseCoordinates: Immutabl
 	}
 	AssertNever(direction);
 }
+
+/**
+ * Returns a cardinal direction for a given vector, or `null` if no direction matches exactly or vector doesn't have length 1
+ */
+export function SpaceRoomLayoutUnitVectorToCardinalDirection(x: number, y: number): CardinalDirection | null {
+	if (x === 0 && y === -1) {
+		return 'N';
+	} else if (x === 1 && y === 0) {
+		return 'E';
+	} else if (x === 0 && y === 1) {
+		return 'S';
+	} else if (x === -1 && y === 0) {
+		return 'W';
+	}
+	return null;
+}

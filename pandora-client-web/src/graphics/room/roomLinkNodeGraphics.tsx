@@ -72,6 +72,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 	const nodeData = room.roomLinkData[cardinalDirection];
 	const [x, y] = nodeData.position;
 	const z = 0;
+	const scale = projectionResolver.scaleAt(x, y, 0);
 
 	const neighborRoom = useMemo(() => {
 		const neighborPosition = SpaceRoomLayoutNeighborRoomCoordinates(room.position, cardinalDirection);
@@ -125,10 +126,10 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 			g
 				.moveTo(...projectionResolver.transform(x1 + BORDER_WIDTH, y1 + BORDER_WIDTH, z))
 				.lineTo(...projectionResolver.transform(x2 - BORDER_WIDTH, y2 - BORDER_WIDTH, z))
-				.stroke({ color: 0x880000, width: 20 })
+				.stroke({ color: 0x880000, width: 16 * scale })
 				.moveTo(...projectionResolver.transform(x2 - BORDER_WIDTH, y1 + BORDER_WIDTH, z))
 				.lineTo(...projectionResolver.transform(x1 + BORDER_WIDTH, y2 - BORDER_WIDTH, z))
-				.stroke({ color: 0x880000, width: 20 });
+				.stroke({ color: 0x880000, width: 16 * scale });
 		}
 
 		// Border
@@ -150,7 +151,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 				...projectionResolver.transform(x1 + BORDER_WIDTH, y2 - BORDER_WIDTH, z),
 			])
 			.cut();
-	}, [nodeData.internalDirection, x1, x2, y1, y2, projectionResolver, held, roomConstructionMode, room.roomLinkNodes, hover, tint]);
+	}, [nodeData.internalDirection, x1, x2, y1, y2, scale, projectionResolver, held, roomConstructionMode, room.roomLinkNodes, hover, tint]);
 
 	const labelGeometry = useMemo(() => {
 		const textWidth = TEXT_RATIO * (x2 - x1);

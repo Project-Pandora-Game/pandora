@@ -271,22 +271,22 @@ export class CharacterRestrictionsManager {
 				});
 			}
 
-			// Check distance to target (can interact with characters in current room and neighbor rooms)
+			// Check that target can be reached from current room. Applies to both admins and non-admins.
 			const playerRoom = this.appearance.getCurrentRoom();
 			const targetRoom = target.getCurrentRoom();
 			if (playerRoom != null && targetRoom != null) {
-				if (playerRoom.getDistanceToRoom(targetRoom) > 1) {
+				if (playerRoom.id !== targetRoom.id && playerRoom.getLinkToRoom(targetRoom) == null) {
 					context.addRestriction({ type: 'tooFar', subtype: 'characterInteraction' });
 				}
 			} else {
 				context.addRestriction({ type: 'invalid' });
 			}
 		} else if (target.type === 'room') {
-			// Non-admins can only interact with current and neighbor rooms
+			// Non-admins can only interact with current room and rooms that can be reached from it.
 			const playerRoom = this.appearance.getCurrentRoom();
 			if (!this.isCurrentSpaceAdmin()) {
 				if (playerRoom != null) {
-					if (playerRoom.getDistanceToRoom(target.roomState) > 1) {
+					if (playerRoom.id !== target.roomState.id && playerRoom.getLinkToRoom(target.roomState) == null) {
 						context.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 					}
 				} else {

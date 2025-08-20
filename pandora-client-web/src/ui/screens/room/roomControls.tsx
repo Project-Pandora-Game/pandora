@@ -354,9 +354,12 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 		<div className='RoomControlsRoomGrid'>
 			{
 				[centerY - 1, centerY, centerY + 1].flatMap((y) => [centerX - 1, centerX, centerX + 1].map((x) => {
-					const room = globalState.space.rooms.find((r) => r.position.x === x && r.position.y === y);
-					if (room == null || (y !== centerY && x !== centerX)) {
-						// Filler when there is no room, or for corners
+					const room = globalState.space.getRoomByPosition({ x, y });
+					if (room == null ||
+						(playerRoom.id !== room.id && playerRoom.getLinkToRoom(room) == null) ||
+						(y !== centerY && x !== centerX)
+					) {
+						// Filler when there is no room, no link between rooms, the link is disabled, or for corners
 						return (
 							<div key={ `${y}:${x}` } />
 						);

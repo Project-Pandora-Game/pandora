@@ -378,8 +378,8 @@ export function* GenerateMultipleListsFullJoin<T>(lists: readonly (readonly T[])
 /**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
-export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This>) {
-	const cache = new WeakMap<object, Return>();
+export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This> | ClassGetterDecoratorContext<This>) {
+	const cache = new WeakMap<This, Return>();
 	return function (this: This) {
 		if (cache.has(this)) {
 			return cache.get(this)!;

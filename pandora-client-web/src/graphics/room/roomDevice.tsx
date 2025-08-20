@@ -15,6 +15,7 @@ import {
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
 	type AssetFrameworkRoomState,
+	type RoomProjectionResolver,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
@@ -48,7 +49,6 @@ import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, useRoomCharacterOffsets } from './roomCharacter.tsx';
-import type { RoomProjectionResolver } from './roomProjection.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -59,7 +59,7 @@ type RoomDeviceInteractiveProps = {
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 	gameState: GameState;
 };
 
@@ -69,7 +69,7 @@ type RoomDeviceProps = {
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;

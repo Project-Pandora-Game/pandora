@@ -103,7 +103,6 @@ export function RoomGraphicsInteractive({
 
 	const calibrationLineDraw = useCallback((g: PIXI.GraphicsContext) => {
 		const {
-			transform,
 			floorAreaWidthLeft,
 			floorAreaWidthRight,
 			floorAreaDepth,
@@ -115,34 +114,34 @@ export function RoomGraphicsInteractive({
 
 		g
 			.poly([
-				...transform(floorAreaWidthRight, 0, 0),
-				...transform(-floorAreaWidthLeft, 0, 0),
-				...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
-				...transform(floorAreaWidthRight, floorAreaDepth, 0),
+				...projectionResolver.transform(floorAreaWidthRight, 0, 0),
+				...projectionResolver.transform(-floorAreaWidthLeft, 0, 0),
+				...projectionResolver.transform(-floorAreaWidthLeft, floorAreaDepth, 0),
+				...projectionResolver.transform(floorAreaWidthRight, floorAreaDepth, 0),
 			])
 			.fill({ color: 0x550000, alpha: 0.8 })
 
 			.poly([
-				...transform(renderedAreaWidthHalf, 0, 0),
-				...transform(-renderedAreaWidthHalf, 0, 0),
-				...transform(0, Infinity, 0),
+				...projectionResolver.transform(renderedAreaWidthHalf, 0, 0),
+				...projectionResolver.transform(-renderedAreaWidthHalf, 0, 0),
+				...projectionResolver.transform(0, Infinity, 0),
 			])
 			.fill({ color: 0x990000, alpha: 0.6 });
 
 		if (ceiling > 0) {
 			g
 				.poly([
-					...transform(floorAreaWidthRight, floorAreaDepth, 0),
-					...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
-					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
-					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
+					...projectionResolver.transform(floorAreaWidthRight, floorAreaDepth, 0),
+					...projectionResolver.transform(-floorAreaWidthLeft, floorAreaDepth, 0),
+					...projectionResolver.transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
+					...projectionResolver.transform(floorAreaWidthRight, floorAreaDepth, ceiling),
 				])
 				.fill({ color: 0xffff00, alpha: 0.4 })
 				.poly([
-					...transform(floorAreaWidthRight, 0, ceiling),
-					...transform(-floorAreaWidthLeft, 0, ceiling),
-					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
-					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
+					...projectionResolver.transform(floorAreaWidthRight, 0, ceiling),
+					...projectionResolver.transform(-floorAreaWidthLeft, 0, ceiling),
+					...projectionResolver.transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
+					...projectionResolver.transform(floorAreaWidthRight, floorAreaDepth, ceiling),
 				])
 				.fill({ color: 0x000055, alpha: 0.8 });
 		}

@@ -9,6 +9,7 @@ import {
 	ICharacterRoomData,
 	LegsPose,
 	SpaceClientInfo,
+	type RoomProjectionResolver,
 } from 'pandora-common';
 import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
@@ -42,20 +43,19 @@ import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
-import type { RoomProjectionResolver } from './roomProjection.tsx';
 
 export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 };
 
 type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 	showName: boolean;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
@@ -151,7 +151,7 @@ export type RoomCharacterCalculatedPosition = {
 	rotationAngle: number;
 };
 
-export function useRoomCharacterPosition(characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): RoomCharacterCalculatedPosition {
+export function useRoomCharacterPosition(characterState: AssetFrameworkCharacterState, projectionResolver: RoomProjectionResolver): RoomCharacterCalculatedPosition {
 	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(characterState.position.position);
 
 	const {

@@ -10,6 +10,7 @@ import {
 	RoomBackgroundData,
 	SpaceClientInfo,
 	type AssetFrameworkRoomState,
+	type RoomProjectionResolver,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
@@ -23,7 +24,7 @@ import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLaye
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings.tsx';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
-import { useRoomViewProjection, type RoomProjectionResolver } from '../../graphics/room/roomProjection.tsx';
+import { useRoomViewProjection } from '../../graphics/room/roomProjection.tsx';
 import { RoomGraphics } from '../../graphics/room/roomScene.tsx';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
@@ -215,7 +216,7 @@ function WardrobeRoomBackground({
 	characterState,
 }: {
 	roomBackground: Immutable<RoomBackgroundData>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(characterState, projectionResolver);

@@ -1,6 +1,5 @@
-import type { Immutable } from 'immer';
 import { max, min } from 'lodash-es';
-import { AssertNotNullable, GenerateInitialRoomPosition, ROOM_NODE_RADIUS, SpaceRoomLayoutNeighborRoomCoordinates, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type CardinalDirection } from 'pandora-common';
+import { AssertNotNullable, GenerateInitialRoomPosition, ROOM_NODE_RADIUS, SpaceRoomLayoutNeighborRoomCoordinates, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type CardinalDirection, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
@@ -12,13 +11,12 @@ import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { GenerateRectangleMeshGeometry } from '../common/generateRectangleGeometry.ts';
-import type { RoomProjectionResolver } from './roomProjection.tsx';
 
 export interface RoomLinkNodeGraphicsProps {
 	cardinalDirection: CardinalDirection;
 	room: AssetFrameworkRoomState;
 	globalState: AssetFrameworkGlobalState;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 }
 
 const BORDER_WIDTH = 0.1 * ROOM_NODE_RADIUS;

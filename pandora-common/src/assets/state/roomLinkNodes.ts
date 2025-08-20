@@ -1,5 +1,6 @@
 import { freeze, type Immutable } from 'immer';
 import { z } from 'zod';
+import { RoomProjectionResolver } from '../../math/index.ts';
 import { Assert, AssertNever, RotateArray } from '../../utility/misc.ts';
 import type { CardinalDirection, Coordinates } from '../graphics/common.ts';
 import { FixRoomPosition, GetRoomPositionBounds, type RoomBackgroundData } from './roomGeometry.ts';
@@ -74,18 +75,33 @@ export function ResolveRoomNeighborLinkData(linkConfig: Immutable<RoomNeighborLi
 	const resultLinks: Immutable<RoomLinkNodeData>[] = [];
 
 	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(background);
+	const projectionResolver = new RoomProjectionResolver(background);
 
 	// Iterate in the clockwise direction as if going through cardinal directions, if the room was pointing north
 	for (const d of (['far', 'right', 'near', 'left'] as const satisfies readonly (keyof RoomNeighborLinkNodesConfig)[])) {
 		const config = linkConfig[d];
 
+		let position = config.position;
+		if (position == null) {
+			// Calculate default position for nodes, if not manually specified as middles of respective edges
+			position = [
+				d === 'left' ? minX : d === 'right' ? maxX : (minX + maxX) / 2,
+				d === 'near' ? minY : d === 'far' ? maxY : (minY + maxY) / 2,
+			];
+			// Force the tile into visual viewport as well (floor area can be outside of it for image backgrounds)
+			const [projectedX, projectedY] = projectionResolver.transform(position[0], position[1], 0);
+			const positionInverse = projectionResolver.inverseGivenZ(projectedX, projectedY, 0);
+			// And shift it slightly inside the room based on the location
+			position = [
+				positionInverse[0] + (d === 'left' ? ROOM_NODE_RADIUS : d === 'right' ? -ROOM_NODE_RADIUS : 0),
+				positionInverse[1] + (d === 'near' ? ROOM_NODE_RADIUS : d === 'far' ? -ROOM_NODE_RADIUS : 0),
+			];
+		}
+
 		const link: Immutable<RoomLinkNodeData> = {
 			internalDirection: d,
 			disabled: config.disabled,
-			position: FixRoomPosition(config.position ?? [
-				d === 'left' ? (minX + ROOM_NODE_RADIUS) : d === 'right' ? (maxX - ROOM_NODE_RADIUS) : (minX + maxX) / 2,
-				d === 'near' ? (minY + ROOM_NODE_RADIUS) : d === 'far' ? (maxY - ROOM_NODE_RADIUS) : (minY + maxY) / 2,
-			], background),
+			position: FixRoomPosition(position, background),
 		};
 
 		resultLinks.push(link);

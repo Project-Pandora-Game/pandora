@@ -160,75 +160,88 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 
 	return (
 		<ModalDialog>
-			<Row className='RoomPhotoDialogContents'>
-				<Column>
-					<div
-						ref={ resultRef }
-						className={ result != null ? 'result' : 'result empty' }
-					/>
-					{ result != null ? (
-						<>
+			<Column alignX='center'>
+				<Row className='RoomPhotoDialogContents'>
+					<Column>
+						{ result != null ? (
 							<Row wrap>
-								<Button onClick={ exportImage }>
-									<u>⇣</u> Download
+								<Button slim onClick={ () => {
+									setResult(null);
+								} }>
+									◄ Back
 								</Button>
 							</Row>
-							<em>Right-click or long-tap the image above to get more options</em>
-						</>
-					) : null }
-				</Column>
-				<Column>
-					<Row alignY='center'>
-						<label htmlFor={ id + '-quality' }>Quality:</label>
-						<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
-							<option value='roomSize'>Based on room's size ({ roomWidth }×{ roomHeight })</option>
-							<option value='4K'>4K (3840×2160)</option>
-							<option value='1080p'>FullHD (1920×1080)</option>
-							<option value='720p'>HD (1280×720)</option>
-							<option value='360p'>360p (640×360)</option>
-						</Select>
-					</Row>
-					<Row alignY='center'>
-						<Checkbox id={ id + '-trim' } checked={ trim } onChange={ setTrim } />
-						<label htmlFor={ id + '-trim' }>Trim empty space from image</label>
-					</Row>
-					<fieldset>
-						<legend>Characters</legend>
+						) : null }
+						<div
+							ref={ resultRef }
+							className={ result != null ? 'result' : 'result empty' }
+						/>
+						{ result != null ? (
+							<>
+								<Row wrap>
+									<Button onClick={ exportImage }>
+										<u>⇣</u> Download
+									</Button>
+								</Row>
+								<em>Right-click or long-tap the image above to get more options</em>
+							</>
+						) : null }
+					</Column>
+					{ result == null ? (
 						<Column>
 							<Row alignY='center'>
-								<Checkbox id={ id + '-showCharacters' } checked={ showCharacters } onChange={ setShowCharacters } />
-								<label htmlFor={ id + '-showCharacters' }>Show characters</label>
+								<label htmlFor={ id + '-quality' }>Quality:</label>
+								<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
+									<option value='roomSize'>Based on room's size ({ roomWidth }×{ roomHeight })</option>
+									<option value='4K'>4K (3840×2160)</option>
+									<option value='1080p'>FullHD (1920×1080)</option>
+									<option value='720p'>HD (1280×720)</option>
+									<option value='360p'>360p (640×360)</option>
+								</Select>
 							</Row>
 							<Row alignY='center'>
-								<Checkbox id={ id + '-characterNames' } checked={ characterNames } onChange={ setCharacterNames } disabled={ !showCharacters } />
-								<label htmlFor={ id + '-characterNames' }>Show character names</label>
+								<Checkbox id={ id + '-trim' } checked={ trim } onChange={ setTrim } />
+								<label htmlFor={ id + '-trim' }>Trim empty space from image</label>
 							</Row>
-							<Row alignY='center'>
-								<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } disabled={ !showCharacters } />
-								<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
+							<fieldset>
+								<legend>Characters</legend>
+								<Column>
+									<Row alignY='center'>
+										<Checkbox id={ id + '-showCharacters' } checked={ showCharacters } onChange={ setShowCharacters } />
+										<label htmlFor={ id + '-showCharacters' }>Show characters</label>
+									</Row>
+									<Row alignY='center'>
+										<Checkbox id={ id + '-characterNames' } checked={ characterNames } onChange={ setCharacterNames } disabled={ !showCharacters } />
+										<label htmlFor={ id + '-characterNames' }>Show character names</label>
+									</Row>
+									<Row alignY='center'>
+										<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } disabled={ !showCharacters } />
+										<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
+									</Row>
+								</Column>
+							</fieldset>
+							{ (
+								((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
+								((quality === '1080p') && textureResolution < 0.5)
+							) ? (
+								<div className='warning-box'>
+									You are currently using lower texture resolution than what is optimal for creating an image of selected quality.<br />
+									We recommend either lowering the selected quality, or selecting higher "Texture resolution" in Settings → Graphics → Quality.
+								</div>
+							) : null }
+							<span className='flex-1' />
+							<Row alignX='end'>
+								<Button onClick={ execute } disabled={ processing }>
+									Take photo!
+								</Button>
 							</Row>
 						</Column>
-					</fieldset>
-					{ (
-						((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
-						((quality === '1080p') && textureResolution < 0.5)
-					) ? (
-						<div className='warning-box'>
-							You are currently using lower texture resolution than what is optimal for creating an image of selected quality.<br />
-							We recommend either lowering the selected quality, or selecting higher "Texture resolution" in Settings → Graphics → Quality.
-						</div>
 					) : null }
-					<span className='flex-1' />
-					<Row alignX='space-between'>
-						<Button onClick={ close }>
-							Close
-						</Button>
-						<Button onClick={ execute } disabled={ processing }>
-							Take photo!
-						</Button>
-					</Row>
-				</Column>
-			</Row>
+				</Row>
+				<Button onClick={ close }>
+					Close
+				</Button>
+			</Column>
 		</ModalDialog>
 	);
 }

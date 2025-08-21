@@ -99,6 +99,19 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 		const halfWidth = Math.abs((x1 - x2) / 2);
 		const halfHeight = Math.abs((y1 - y2) / 2);
 
+		// Background
+		g
+			.poly([
+				...projectionResolver.transform(x1, y1, z),
+				...projectionResolver.transform(x2, y1, z),
+				...projectionResolver.transform(x2, y2, z),
+				...projectionResolver.transform(x1, y2, z),
+			])
+			.fill({
+				color: 0x000000,
+				alpha: 0.2,
+			});
+
 		// Arrow
 		g
 			.poly([

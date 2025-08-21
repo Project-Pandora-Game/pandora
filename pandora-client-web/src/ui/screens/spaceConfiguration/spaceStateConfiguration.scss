@@ -58,19 +58,68 @@
 					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
 				}
 
-				.label {
+				.overlay {
 					position: absolute;
-					margin: 0 auto;
-					bottom: 0.25em;
-					max-width: calc(100% - 0.5em);
-					max-height: 80%;
-					border-radius: 0.25em;
-					padding: 1px;
-					overflow: clip;
-					text-overflow: ellipsis;
-					overflow-wrap: break-word;
-					color: common.$theme-normal-text;
-					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+					pointer-events: none;
+					top: 0;
+					right: 0;
+					bottom: 0;
+					left: 0;
+					display: grid;
+					grid-template-rows: 1.5em 1fr 1.5em;
+					grid-template-columns: 1.5em 1fr 1.5em;
+					grid-template-areas:
+						". direction-N ."
+						"direction-W label direction-E"
+						". direction-S .";
+					place-items: center;
+
+					.label {
+						grid-area: label;
+						min-width: 0;
+						min-height: 0;
+						max-width: calc(100% - 0.5em);
+						max-height: 80%;
+						border-radius: 0.25em;
+						padding: 1px;
+						overflow: clip;
+						text-overflow: ellipsis;
+						overflow-wrap: break-word;
+						color: common.$theme-normal-text;
+						background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+					}
+
+					.directionArrow {
+						@include common.center-flex;
+						width: 1.45em;
+						height: 1.45em;
+						font-size: 0.8em;
+						border: 2px solid transparent;
+
+						&.direction-N {
+							grid-area: direction-N;
+						}
+						&.direction-E {
+							grid-area: direction-E;
+						}
+						&.direction-S {
+							grid-area: direction-S;
+						}
+						&.direction-W {
+							grid-area: direction-W;
+						}
+
+						color: common.$theme-normal-text;
+						&.state-enabled {
+							border-color: #00aa00;
+							background-color: #00aa0088;
+						}
+
+						&.state-disabled {
+							border-color: #880000;
+							background-color: #88000088;
+						}
+					}
 				}
 			}
 		}

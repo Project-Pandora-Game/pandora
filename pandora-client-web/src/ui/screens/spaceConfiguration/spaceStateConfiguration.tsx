@@ -16,6 +16,7 @@ import {
 	RoomLinkNodeConfig,
 	RoomNameSchema,
 	RoomTemplateSchema,
+	SpaceRoomLayoutNeighborRoomCoordinates,
 	type AppearanceAction,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
@@ -23,6 +24,7 @@ import {
 	type CardinalDirection,
 	type Coordinates,
 	type RoomBackgroundData,
+	type RoomLinkNodeData,
 	type RoomTemplate,
 } from 'pandora-common';
 import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
@@ -199,7 +201,13 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 							>
 								<BackgroundPreview background={ r.roomBackground } previewSize={ 256 * (window.devicePixelRatio || 1) } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
-								<span className='label'>{ r.name || r.id }</span>
+								<div className='overlay'>
+									<span className='label'>{ r.name || r.id }</span>
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.N } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.E } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.S } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.W } spaceState={ spaceState } />
+								</div>
 							</Button>
 						</SelectionIndicator>
 					);
@@ -216,6 +224,20 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 					/>
 				) : null
 			}
+		</div>
+	);
+}
+
+function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: AssetFrameworkRoomState; linkData: Immutable<RoomLinkNodeData>; spaceState: AssetFrameworkSpaceState; }): ReactNode | null {
+	const arrows: Record<CardinalDirection, string> = { N: '↑', E: '→', S: '↓', W: '←' };
+
+	const neighbor = spaceState.getRoomByPosition(SpaceRoomLayoutNeighborRoomCoordinates(roomState.position, linkData.direction));
+	if (neighbor == null)
+		return null;
+
+	return (
+		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : 'enabled'}` }>
+			{ linkData.disabled ? '×' : arrows[linkData.direction] }
 		</div>
 	);
 }

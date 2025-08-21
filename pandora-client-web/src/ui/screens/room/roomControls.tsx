@@ -44,7 +44,7 @@ import { useRoomScreenContext } from './roomContext.tsx';
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName } from './roomState.ts';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -273,6 +273,7 @@ function DeviceOverlaySelector(): ReactElement {
 	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
+	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
 
 	const onRoomConstructionModeChange = () => {
 		DeviceOverlayState.value = {
@@ -323,7 +324,6 @@ function DeviceOverlaySelector(): ReactElement {
 				</Select>
 			</div>
 			<div>
-				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>
 				<Checkbox
 					id='chatroom-character-name-display'
 					checked={ showName }
@@ -331,6 +331,17 @@ function DeviceOverlaySelector(): ReactElement {
 						SettingDisplayCharacterName.value = newValue;
 					} }
 				/>
+				<label htmlFor='chatroom-character-name-display'> Show name under characters</label>
+			</div>
+			<div>
+				<Checkbox
+					id='chatroom-roomlink-display'
+					checked={ showRoomLinks }
+					onChange={ (newValue) => {
+						SettingDisplayRoomLinks.value = newValue;
+					} }
+				/>
+				<label htmlFor='chatroom-roomlink-display'> Show directions to other rooms</label>
 			</div>
 		</>
 	);

@@ -9,8 +9,9 @@ import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvid
 import { usePlayerId } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
+import { SettingDisplayRoomLinks, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
@@ -68,6 +69,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 	const playerId = usePlayerId();
 	AssertNotNullable(playerId);
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
+	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
 
 	const nodeData = room.roomLinkData[cardinalDirection];
 	const [x, y] = nodeData.position;
@@ -244,7 +246,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 
 	// Hide if there is no neighbor room (unless in construction mode)
 	// Also hide if the space has only a single room
-	if (!roomConstructionMode && (neighborRoom == null || nodeData.disabled) ||
+	if (!roomConstructionMode && (neighborRoom == null || nodeData.disabled || !showRoomLinks) ||
 		globalState.space.rooms.length < 2
 	) {
 		return null;

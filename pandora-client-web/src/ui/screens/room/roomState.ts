@@ -5,6 +5,8 @@ import { useObservable } from '../../../observable.ts';
 
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
+export const SettingDisplayRoomLinks = BrowserStorage.createSession('graphics.display-room-links', true, z.boolean());
+
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
 export const DeviceOverlayStateSchema = z.object({
 	roomConstructionMode: z.boolean(),

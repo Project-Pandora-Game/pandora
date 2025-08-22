@@ -165,6 +165,10 @@ function ExportDialogInner<T extends ZodType<unknown>>({
 					<Button className='flex-1' onClick={ () => {
 						navigator.share(shareData)
 							.catch((err) => {
+								// Ignore user aborting
+								if (err instanceof DOMException && err.name === 'AbortError')
+									return;
+
 								GetLogger('ExportDialog').error('Error sharing:', err);
 								toast('Error while sharing', TOAST_OPTIONS_ERROR);
 							});

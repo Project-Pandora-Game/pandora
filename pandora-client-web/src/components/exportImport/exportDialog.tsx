@@ -97,7 +97,7 @@ function ExportDialogInner<T extends ZodType<unknown>>({
 		target ??= {
 			content: exportString,
 			suffix: '.txt',
-			type: 'text/plain;charset=utf-8',
+			type: 'text/plain',
 		};
 		if (typeof target.content === 'string') {
 			DownloadAsFile(target.content, downloadFileName.trim() + target.suffix, target.type);
@@ -122,7 +122,7 @@ function ExportDialogInner<T extends ZodType<unknown>>({
 		return {
 			title: `Project Pandora ${title}` + (account != null ? ` by ${ account.displayName }` : ''),
 			files: [
-				new File([exportString], `${downloadFileName.trim() || 'export'}.txt`, { type: 'text/plain;charset=utf-8' }),
+				new File([exportString], `${downloadFileName.trim() || 'export'}.txt`, { type: 'text/plain' }),
 				...extraData.map((d) => new File([d.content], (downloadFileName.trim() || 'export') + d.suffix, { type: d.type })),
 			],
 		};

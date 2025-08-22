@@ -20,7 +20,7 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 		spaceId: SpaceIdSchema.nullable(),
 	}),
 	z.object({
-		type: z.literal('inRoom'),
+		type: z.literal('inRoomWithName'),
 		/** Name of the room. */
 		room: RoomNameSchema,
 	}),
@@ -78,7 +78,7 @@ export function EvaluateCharacterModifierCondition(
 		case 'inSpaceId':
 			return condition.spaceId === spaceInfo.id;
 
-		case 'inRoom': {
+		case 'inRoomWithName': {
 			const characterState = gameState.characters.get(character.id);
 			if (characterState == null)
 				return false;

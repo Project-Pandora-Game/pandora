@@ -4,10 +4,10 @@ import { TextInput } from '../../../../../common/userInteraction/input/textInput
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { ModalDialog } from '../../../../dialog/dialog.tsx';
-import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 import { useGameState, useGlobalState } from '../../../../gameContext/gameStateContextProvider.tsx';
+import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
-export function ConditionInRoom({ condition, setCondition, invert, setInvert, processing, character }: CharacterModifierConditionListEntryProps<'inRoom'>): ReactElement {
+export function ConditionInRoomWithName({ condition, setCondition, invert, setInvert, processing, character }: CharacterModifierConditionListEntryProps<'inRoomWithName'>): ReactElement {
 	const [showDialog, setShowDialog] = useState(false);
 
 	return (
@@ -34,7 +34,7 @@ export function ConditionInRoom({ condition, setCondition, invert, setInvert, pr
 	);
 }
 
-function ConditionInRoomDialog({ condition, setCondition, close, character }: Pick<CharacterModifierConditionListEntryProps<'inRoom'>, 'condition' | 'setCondition' | 'character'> & { close: () => void; }): ReactElement {
+function ConditionInRoomDialog({ condition, setCondition, close, character }: Pick<CharacterModifierConditionListEntryProps<'inRoomWithName'>, 'condition' | 'setCondition' | 'character'> & { close: () => void; }): ReactElement {
 	const [dialogRoom, setDialogRoom] = useState<RoomName | undefined>(undefined);
 
 	const gameState = useGameState();
@@ -84,7 +84,7 @@ function ConditionInRoomDialog({ condition, setCondition, close, character }: Pi
 						onClick={ () => {
 							if (dialogRoom !== undefined) {
 								setCondition?.({
-									type: 'inRoom',
+									type: 'inRoomWithName',
 									room: dialogRoom,
 								});
 							}

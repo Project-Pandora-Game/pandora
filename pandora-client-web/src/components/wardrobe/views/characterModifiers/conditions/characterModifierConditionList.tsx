@@ -295,10 +295,10 @@ const CONDITION_PRESETS: { [t in CharacterModifierCondition['type']]: { name: st
 			spaceId: null,
 		},
 	},
-	inRoom: {
-		name: 'In specific room',
+	inRoomWithName: {
+		name: 'In room with specific name',
 		default: {
-			type: 'inRoom',
+			type: 'inRoomWithName',
 			room: '',
 		},
 	},

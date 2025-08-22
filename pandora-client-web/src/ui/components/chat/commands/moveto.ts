@@ -2,10 +2,12 @@ import { clamp } from 'lodash-es';
 import {
 	Assert,
 	AssertNever,
+	AssertNotNullable,
 	CloneDeepMutable,
 	CommandSelectorNumber,
 	GenerateInitialRoomPosition,
 	GetRoomPositionBounds,
+	ParseNotNullable,
 	type CharacterRoomPosition,
 	type CommandForkDescriptor,
 	type Coordinates,
@@ -22,13 +24,15 @@ import { CommandSelectorCharacter, CreateClientCommand } from '../commandsHelper
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
 
 export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
-	key: ['moveto', 'pm'],
+	key: ['moveto', 'mt'],
 	usage: '<room | character | north | south | west | east> …',
 	description: `Moves your character to another room or towards another character`,
 	longDescription: '',
 	handler: CreateClientCommand()
 		.fork('targetType', (forkCtx) => {
 			function moveToRoom(gameState: GameState, player: PlayerCharacter, roomId: RoomId): boolean {
+				const playerRoom = player.getAppearance(gameState.globalState.currentState).getCurrentRoom();
+				AssertNotNullable(playerRoom);
 				const room = gameState.globalState.currentState.space.getRoom(roomId);
 				if (room == null) {
 					toast('Target room not found', TOAST_OPTIONS_ERROR);
@@ -41,7 +45,7 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 					moveTo: {
 						type: 'normal',
 						room: room.id,
-						position: GenerateInitialRoomPosition(room.roomBackground),
+						position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
 					},
 				});
 			}
@@ -99,8 +103,7 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 						.argument('character', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
 						.argumentOptional('distance', CommandSelectorNumber({ min: 1 }))
 						.handler(({ gameState, globalState, player, displayError }, { character, distance }) => {
-							const playerState = globalState.getCharacterState(player.id);
-							Assert(playerState != null);
+							const playerAppearance = player.getAppearance(globalState);
 
 							const targetCharacter = globalState.getCharacterState(character.id);
 							if (targetCharacter == null) {
@@ -114,8 +117,8 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 							}
 
 							const targetPosition: Writable<CharacterRoomPosition> = CloneDeepMutable(
-								targetRoom.id === playerState.position.room ? playerState.position.position :
-									GenerateInitialRoomPosition(targetRoom.roomBackground),
+								targetRoom.id === playerAppearance.characterState.position.room ? playerAppearance.characterState.position.position :
+									GenerateInitialRoomPosition(targetRoom, targetRoom.getLinkToRoom(ParseNotNullable(playerAppearance.getCurrentRoom()), true)?.direction),
 							);
 
 							if (distance != null) {

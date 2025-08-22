@@ -1,6 +1,6 @@
 import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -27,7 +27,6 @@ import { useTickerRef } from '../reconciler/tick.ts';
 import { GetAngle } from '../utility.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
-import type { RoomProjectionResolver } from './roomProjection.tsx';
 
 export function RoomCharacterMovementTool({
 	globalState,
@@ -429,7 +428,7 @@ function RoomCharacterPosingToolImpl({
 type PosingToolIKHandleProps = {
 	ikHandle: Immutable<InversePosingHandle>;
 	characterState: AssetFrameworkCharacterState;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 	setPose: (newPose: PartialAppearancePose) => void;
 };
 

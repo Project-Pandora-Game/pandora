@@ -1,10 +1,10 @@
+import { uniq } from 'lodash-es';
 import { z } from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
 import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
-import { uniq } from 'lodash-es';
 
 export const AppearanceActionMoveCharacter = z.object({
 	type: z.literal('moveCharacter'),
@@ -55,12 +55,12 @@ export function ActionMoveCharacter({
 		const room = processingContext.manipulator.currentState.space.getRoom(action.moveTo.room);
 		if (room == null)
 			return processingContext.invalid();
-		// And be in range of both starting point and current player (ignored for admins)
+		// And be reachable from both starting point and for current player (ignored for admins)
 		if (!player.isCurrentSpaceAdmin()) {
-			if (originalRoom.getDistanceToRoom(room) > 1) {
+			if (originalRoom.id !== room.id && originalRoom.getLinkToRoom(room) == null) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
-			if (playerRoom.getDistanceToRoom(room) > 1) {
+			if (playerRoom.id !== room.id && playerRoom.getLinkToRoom(room) == null) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
 		}
@@ -93,8 +93,8 @@ export function ActionMoveCharacter({
 			if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
 				return processingContext.invalid('characterMoveCannotFollowTarget');
 			}
-			// And check the follow target is not too far from the current player (not the player following)
-			if (playerRoom.getDistanceToRoom(followTargetRoom) > 1) {
+			// And check the follow target is reachable from the current player (not the player following)
+			if (playerRoom.id !== followTargetRoom.id && playerRoom.getLinkToRoom(followTargetRoom) == null) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
 			}
 			// Messages if follow starts

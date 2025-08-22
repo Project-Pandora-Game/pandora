@@ -1,6 +1,7 @@
-import { Assert, AssertNotNullable, type Rectangle } from 'pandora-common';
+import { Assert, AssertNotNullable, CreateManuallyResolvedPromise, type Rectangle } from 'pandora-common';
 import { Application, Container } from 'pixi.js';
 import type { ReactNode } from 'react';
+import { ForwardingErrorBoundary } from '../../components/error/forwardingErrorBoundary.tsx';
 import { ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
 import { DEFAULT_BACKGROUND_COLOR } from '../graphicsScene.tsx';
 import { GraphicsSuspenseContext, GraphicsSuspenseManager } from '../graphicsSuspense/graphicsSuspense.tsx';
@@ -29,29 +30,39 @@ export async function RenderGraphicsTreeInBackground(
 	let app: Application | undefined;
 
 	try {
+		const { promise: errorPromise, reject: errorHandler } = CreateManuallyResolvedPromise<void>();
+
 		// Render tree into the stage
 		root.render((
 			<PixiTickerContext.Provider value={ ticker }>
 				<GraphicsSuspenseContext.Provider value={ suspenseManager }>
-					{ graphics }
+					<ForwardingErrorBoundary errorHandler={ errorHandler }>
+						{ graphics }
+					</ForwardingErrorBoundary>
 				</GraphicsSuspenseContext.Provider>
 			</PixiTickerContext.Provider>
 		), true);
 
 		// Flush the render
-		await root.flush();
+		await Promise.race([
+			root.flush(),
+			errorPromise,
+		]);
 
 		// Wait until suspense reports ready
-		await new Promise<void>((resolve) => {
-			suspenseManager.on('update', () => {
+		await Promise.race([
+			new Promise<void>((resolve) => {
+				suspenseManager.on('update', () => {
+					if (suspenseManager.isReady) {
+						resolve();
+					}
+				});
 				if (suspenseManager.isReady) {
 					resolve();
 				}
-			});
-			if (suspenseManager.isReady) {
-				resolve();
-			}
-		});
+			}),
+			errorPromise,
+		]);
 
 		// Get ourselves an App for rendering
 		appManager = await WaitForApplicationManager();

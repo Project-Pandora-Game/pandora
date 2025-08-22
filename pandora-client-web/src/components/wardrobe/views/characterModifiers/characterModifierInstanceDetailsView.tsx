@@ -533,6 +533,7 @@ function ModifierInstanceExportButton({ instance }: {
 	instance: GameLogicModifierInstanceClient;
 }): ReactElement {
 	const [showExportDialog, setShowExportDialog] = useState(false);
+	const exported = MakeCharacterModifierTemplateFromClientData(instance.getClientData());
 
 	return (
 		<>
@@ -547,10 +548,11 @@ function ModifierInstanceExportButton({ instance }: {
 			{
 				showExportDialog ? (
 					<ExportDialog
+						title={ 'character modifier' + (exported.name ? ` "${ exported.name }"` : '') }
 						exportType='CharacterModifier'
 						exportVersion={ 1 }
 						dataSchema={ CharacterModifierTemplateSchema }
-						data={ MakeCharacterModifierTemplateFromClientData(instance.getClientData()) }
+						data={ exported }
 						closeDialog={ () => setShowExportDialog(false) }
 					/>
 				) : null

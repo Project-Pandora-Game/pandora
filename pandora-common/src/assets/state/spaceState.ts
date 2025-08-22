@@ -67,6 +67,10 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		return this.rooms.find((i) => i.id === roomId) ?? null;
 	}
 
+	public getRoomByPosition(position: Immutable<Coordinates>): AssetFrameworkRoomState | null {
+		return this.rooms.find((r) => r.position.x === position.x && r.position.y === position.y) ?? null;
+	}
+
 	public isValid(): boolean {
 		return this.validate().success;
 	}

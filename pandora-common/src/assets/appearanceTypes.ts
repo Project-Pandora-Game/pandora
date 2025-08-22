@@ -15,6 +15,7 @@ export const RoomIdSchema = ZodTemplateString<`room:${string}`>(z.string(), /^ro
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
 export const RoomNameSchema = z.string().regex(LIMIT_ROOM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ROOM_NAME_LENGTH));
+export type RoomName = z.infer<typeof RoomNameSchema>;
 
 export const ItemContainerPathSchema = z.array(
 	z.object({

@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
-import { IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
+import { CardinalDirectionSchema, IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
 import { AssetFrameworkRoomState, RoomTemplateSchema } from '../../../assets/state/roomState.ts';
 import { AssertNever, CloneDeepMutable } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
@@ -14,6 +14,7 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 			type: z.literal('createRoom'),
 			template: RoomTemplateSchema,
 			position: IntegerCoordinatesSchema,
+			direction: CardinalDirectionSchema,
 		}),
 		z.object({
 			type: z.literal('deleteRoom'),
@@ -30,6 +31,8 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 			type: z.literal('moveRoom'),
 			id: RoomIdSchema,
 			position: IntegerCoordinatesSchema,
+			/** The direction the room should be facing */
+			direction: CardinalDirectionSchema,
 		}),
 	]),
 });
@@ -55,6 +58,7 @@ export function ActionSpaceRoomLayout({
 					subaction.template,
 					`room:${nanoid()}`,
 					CloneDeepMutable(subaction.position),
+					subaction.direction,
 					processingContext.assetManager,
 					s.spaceId,
 					processingContext.player,
@@ -102,7 +106,7 @@ export function ActionSpaceRoomLayout({
 
 		// Intentionally no message
 	} else if (subaction.type === 'moveRoom') {
-		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position)))
+		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position).withDirection(subaction.direction)))
 			return processingContext.invalid();
 
 		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });

@@ -8,7 +8,7 @@ import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { RoomIdSchema, RoomNameSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
-import { IntegerCoordinatesSchema, type Coordinates } from '../graphics/common.ts';
+import { CardinalDirectionSchema, IntegerCoordinatesSchema, type CardinalDirection, type Coordinates } from '../graphics/common.ts';
 import { Item, type IItemCreationContext } from '../item/base.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema, ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, type AppearanceItems } from '../item/items.ts';
 import { RoomDeviceDeploymentSchema } from '../item/roomDevice.ts';
@@ -16,6 +16,8 @@ import { ItemTemplateSchema } from '../item/unified.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
+import { DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG, RoomNeighborLinkNodesConfigSchema, type RoomLinkNodeData, type RoomNeighborLinkNodesConfig, type RoomNeighborLinkNodesData } from './roomLinkNodeDefinitions.ts';
+import { ResolveRoomNeighborLinkData, SpaceRoomLayoutUnitVectorToCardinalDirection } from './roomLinkNodes.ts';
 
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
@@ -23,6 +25,8 @@ export const RoomBundleSchema = z.object({
 	items: AppearanceItemsBundleSchema,
 	position: IntegerCoordinatesSchema.catch({ x: 0, y: 0 }),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.catch(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
+	direction: CardinalDirectionSchema.catch('N'),
 	clientOnly: z.boolean().optional(),
 });
 
@@ -38,6 +42,7 @@ export const RoomTemplateSchema = z.object({
 	name: RoomNameSchema.catch(''),
 	items: ZodArrayWithInvalidDrop(RoomTemplateItemTemplateSchema, z.unknown()).catch(() => []),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.catch(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
 });
 export type RoomTemplate = z.infer<typeof RoomTemplateSchema>;
 
@@ -47,6 +52,8 @@ export const RoomClientDeltaBundleSchema = z.object({
 	items: AppearanceItemsDeltaBundleSchema.optional(),
 	position: IntegerCoordinatesSchema.optional(),
 	roomGeometry: RoomGeometryConfigSchema.optional(),
+	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.optional(),
+	direction: CardinalDirectionSchema.optional(),
 });
 export type RoomClientDeltaBundle = z.infer<typeof RoomClientDeltaBundleSchema>;
 
@@ -56,6 +63,8 @@ export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
 	items: [],
 	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPublicSpace' },
+	roomLinkNodes: DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
+	direction: 'N',
 }, true);
 
 export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>({
@@ -64,6 +73,8 @@ export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>(
 	items: [],
 	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPersonalSpace' },
+	roomLinkNodes: DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
+	direction: 'N',
 }, true);
 
 type AssetFrameworkRoomStateProps = {
@@ -74,6 +85,9 @@ type AssetFrameworkRoomStateProps = {
 	readonly position: Immutable<Coordinates>;
 	readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	readonly roomBackground: Immutable<RoomBackgroundData>;
+	readonly roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>;
+	/** The direction room's +y axis is pointing relative to the space's layout */
+	readonly direction: CardinalDirection;
 };
 
 /**
@@ -89,6 +103,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public readonly position: Immutable<Coordinates>;
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
 	public readonly roomBackground: Immutable<RoomBackgroundData>;
+	public readonly roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>;
+	public readonly direction: CardinalDirection;
+
+	public readonly roomLinkData: Immutable<RoomNeighborLinkNodesData>;
 
 	public get displayName(): string {
 		return this.name || this.id;
@@ -104,6 +122,18 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		this.position = override?.position ?? props.position;
 		this.roomGeometryConfig = override?.roomGeometryConfig ?? props.roomGeometryConfig;
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
+		this.roomLinkNodes = override?.roomLinkNodes ?? props.roomLinkNodes;
+		this.direction = override?.direction ?? props.direction;
+
+		if (props instanceof AssetFrameworkRoomState &&
+			this.roomLinkNodes === props.roomLinkNodes &&
+			this.direction === props.direction &&
+			this.roomBackground === props.roomBackground
+		) {
+			this.roomLinkData = props.roomLinkData;
+		} else {
+			this.roomLinkData = ResolveRoomNeighborLinkData(this.roomLinkNodes, this.direction, this.roomBackground);
+		}
 	}
 
 	/**
@@ -114,6 +144,25 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	 */
 	public getDistanceToRoom(otherRoom: AssetFrameworkRoomState): number {
 		return Math.abs(this.position.x - otherRoom.position.x) + Math.abs(this.position.y - otherRoom.position.y);
+	}
+
+	/**
+	 * Returns a link node that can be used to get to the target room, or `null` if no such link exists.
+	 * Disabled links are ignored unless `allowDisabledLinks` is set to `true`.
+	 * @param otherRoom The room to get to from the current room
+	 * @param allowDisabledLinks Whether to return disabled links as well. If not set default links are treated as if they didn't exist
+	 */
+	public getLinkToRoom(otherRoom: AssetFrameworkRoomState | null, allowDisabledLinks: boolean = false): Immutable<RoomLinkNodeData> | null {
+		if (otherRoom == null)
+			return null;
+
+		const dx = otherRoom.position.x - this.position.x;
+		const dy = otherRoom.position.y - this.position.y;
+		const direction = SpaceRoomLayoutUnitVectorToCardinalDirection(dx, dy);
+		if (direction == null)
+			return null;
+		const link = this.roomLinkData[direction];
+		return (link.disabled && !allowDisabledLinks) ? null : link;
 	}
 
 	public isValid(): boolean {
@@ -151,6 +200,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 					return template;
 				}),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
+			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
 		};
 	}
 
@@ -161,6 +211,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			items: this.items.map((item) => item.exportToBundle({})),
 			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
+			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
+			direction: this.direction,
 		};
 	}
 
@@ -172,6 +224,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			items: this.items.map((item) => item.exportToBundle(options)),
 			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
+			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
+			direction: this.direction,
 			clientOnly: true,
 		};
 	}
@@ -195,6 +249,12 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		}
 		if (this.roomGeometryConfig !== originalState.roomGeometryConfig) {
 			result.roomGeometry = CloneDeepMutable(this.roomGeometryConfig);
+		}
+		if (this.roomLinkNodes !== originalState.roomLinkNodes) {
+			result.roomLinkNodes = CloneDeepMutable(this.roomLinkNodes);
+		}
+		if (this.direction !== originalState.direction) {
+			result.direction = this.direction;
 		}
 
 		return result;
@@ -221,6 +281,14 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			const roomBackground = ResolveBackground(this.assetManager, bundle.roomGeometry);
 			Assert(roomBackground != null, 'DESYNC: Failed to resolve room background');
 			update.roomBackground = roomBackground;
+		}
+
+		if (bundle.roomLinkNodes !== undefined) {
+			update.roomLinkNodes = freeze(bundle.roomLinkNodes, true);
+		}
+
+		if (bundle.direction !== undefined) {
+			update.direction = bundle.direction;
 		}
 
 		const resultState = freeze(new AssetFrameworkRoomState(this, update), true);
@@ -252,10 +320,19 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		});
 	}
 
+	public withDirection(direction: CardinalDirection): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { direction });
+	}
+
+	public withRoomLinkNodes(roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { roomLinkNodes: freeze(roomLinkNodes, true) });
+	}
+
 	public static createFromTemplate(
 		template: Immutable<RoomTemplate>,
 		id: RoomId,
 		position: Coordinates,
+		direction: CardinalDirection,
 		assetManager: AssetManager,
 		spaceId: SpaceId | null,
 		creator: IItemCreationContext['creator'],
@@ -302,6 +379,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			position: CloneDeepMutable(position),
 			roomGeometryConfig,
 			roomBackground,
+			roomLinkNodes: CloneDeepMutable(template.roomLinkNodes),
+			direction,
 		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after creation from template');
@@ -351,6 +430,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			position: freeze(parsed.position, true),
 			roomGeometryConfig,
 			roomBackground,
+			roomLinkNodes: freeze(parsed.roomLinkNodes, true),
+			direction: parsed.direction,
 		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after load');

@@ -13,24 +13,26 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import diskIcon from '../../../assets/icons/disk.svg';
+import exportIcon from '../../../assets/icons/export.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useServiceManager } from '../../../services/serviceProvider.tsx';
+import { CreateCharacterPhoto } from '../../../ui/screens/room/roomPhoto.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
-import { ExportDialog } from '../../exportImport/exportDialog.tsx';
+import { ExportDialog, type ExportDialogTarget } from '../../exportImport/exportDialog.tsx';
+import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName.tsx';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
-
-/* images */
-import deleteIcon from '../../../assets/icons/delete.svg';
-import diskIcon from '../../../assets/icons/disk.svg';
-import exportIcon from '../../../assets/icons/export.svg';
+import { CreateOutfitPreviewDollState } from './wardrobeOutfitView.tsx';
 
 export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary = false }: {
 	extraActions?: ReactNode;
@@ -152,12 +154,9 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 			<Column className='flex-1' padding='small'>
 				{
 					showExportDialog ? (
-						<ExportDialog
-							exportType='ItemCollection'
-							exportVersion={ 1 }
-							dataSchema={ AssetFrameworkOutfitSchema }
-							data={ outfit }
-							closeDialog={ () => setShowExportDialog(false) }
+						<OutfitExportDialog
+							outfit={ outfit }
+							close={ () => setShowExportDialog(false) }
 						/>
 					) : null
 				}
@@ -281,6 +280,66 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				</fieldset>
 			</Column>
 		</div>
+	);
+}
+
+function OutfitExportDialog({ outfit, close }: {
+	outfit: AssetFrameworkOutfit;
+	close: () => void;
+}): React.ReactNode {
+	const serviceManager = useServiceManager();
+	const { player, playerState, globalState } = usePlayerState();
+
+	const exportExtra = useMemo(async () => {
+		const [previewCharacter] = CreateOutfitPreviewDollState(outfit, playerState, globalState, player);
+
+		const previewCanvas = await CreateCharacterPhoto(
+			previewCharacter,
+			false,
+			'0.5',
+			serviceManager,
+			[],
+		);
+
+		const previewBlob = await new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/jpeg', 0.8);
+		}).catch(() => new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/png');
+		}));
+
+		const preview: ExportDialogTarget = {
+			content: previewBlob,
+			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
+			type: previewBlob.type,
+		};
+
+		return [preview];
+	}, [globalState, outfit, player, playerState, serviceManager]);
+
+	return (
+		<ExportDialog
+			title={ 'item collection' + (outfit.name ? ` "${outfit.name}"` : '') }
+			exportType='ItemCollection'
+			exportVersion={ 1 }
+			dataSchema={ AssetFrameworkOutfitSchema }
+			data={ outfit }
+			extraData={ exportExtra }
+			closeDialog={ close }
+		/>
 	);
 }
 

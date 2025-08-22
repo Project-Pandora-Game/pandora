@@ -7,9 +7,12 @@ import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
 import { RoomIdSchema } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
+import type { CardinalDirection } from '../graphics/common.ts';
 import { CharacterSize } from '../graphics/graphics.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
+import { ROOM_NODE_RADIUS } from './roomLinkNodeDefinitions.ts';
+import type { AssetFrameworkRoomState } from './roomState.ts';
 
 export const RoomBackground3dBoxSideSchema = z.object({
 	texture: z.string().catch('*'),
@@ -206,35 +209,68 @@ export function GetRoomPositionBounds(roomBackground: Immutable<RoomBackgroundDa
 	return { minX, maxX, minY, maxY };
 }
 
-export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
-	// Random spread to use for the positioning
-	const spreadX = 1000;
-	const spreadY = 100;
+export function FixRoomPosition(position: CharacterRoomPosition, roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition;
+export function FixRoomPosition(position: readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): readonly [x: number, y: number];
+export function FixRoomPosition(position: CharacterRoomPosition | readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition | readonly [x: number, y: number] {
+	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
 
+	const x = clamp(Math.round(position[0]), minX, maxX);
+	const y = clamp(Math.round(position[1]), minY, maxY);
+
+	if (x === position[0] && y === position[1])
+		return position;
+
+	if (position.length === 2) {
+		return [x, y];
+	} else if (position.length === 3) {
+		return [x, y, position[2]];
+	}
+	AssertNever(position);
+}
+
+/**
+ * Generates an initial position for when character enters a room.
+ * This is either random in the left-near quadrant, or if a direction is specified then based on room link node.
+ * @param room
+ * @param entryDirection
+ * @returns
+ */
+export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection): CharacterRoomPosition {
 	// Absolute bounds of the background
-	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
-	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
-	const minY = 0;
-	const maxY = roomBackground.floorArea[1];
+	const { minY } = GetRoomPositionBounds(room.roomBackground);
 
-	// Idea is to position new characters to the very left of still visible background
-	// and slightly up to avoid the name being out of bounds
-	// (as the position is position of feet and name is under the character)
-	const startPointX =
-		(-0.5 * (roomBackground.floorArea[0] / roomBackground.areaCoverage))
-		+ 0.5 * CharacterSize.WIDTH
-		+ (Math.random() - 0.5) * spreadX;
+	const entranceLink = entryDirection != null ? room.roomLinkData[entryDirection] : null;
 
-	const startPointY =
-		minY
-		+ 200
-		+ (Math.random() - 0.5) * spreadY;
+	if (entranceLink != null) {
+		// Random spread to use for the positioning
+		const spreadX = ROOM_NODE_RADIUS;
+		const spreadY = ROOM_NODE_RADIUS;
 
-	return [
-		clamp(Math.round(startPointX), minX, maxX),
-		clamp(Math.round(startPointY), minY, maxY),
-		0,
-	];
+		const startPointX = entranceLink.position[0] + (Math.random() - 0.5) * spreadX;
+		const startPointY = entranceLink.position[1] + (Math.random() - 0.5) * spreadY;
+
+		return FixRoomPosition([startPointX, startPointY, 0], room.roomBackground);
+	} else {
+		// Random spread to use for the positioning
+		const spreadX = 1000;
+		const spreadY = 100;
+
+		// Idea is to position new characters to the very left of still visible background
+		// and slightly up to avoid the name being out of bounds
+		// (as the position is position of feet and name is under the character)
+		const startPointX =
+			(-0.5 * (room.roomBackground.floorArea[0] / room.roomBackground.areaCoverage))
+			+ 0.5 * CharacterSize.WIDTH
+			+ (Math.random() - 0.5) * spreadX;
+
+		const startPointY =
+			minY
+			+ 200
+			+ (Math.random() - 0.5) * spreadY;
+
+		return FixRoomPosition([startPointX, startPointY, 0], room.roomBackground);
+	}
+
 }
 
 export function CharacterCanFollow(character: AssetFrameworkCharacterState, globalState: AssetFrameworkGlobalState): boolean {

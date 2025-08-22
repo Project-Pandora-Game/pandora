@@ -1,6 +1,7 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
 import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets/index.ts';
+import { RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { EffectNameSchema } from '../../../assets/effects.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits.ts';
@@ -17,6 +18,11 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 		type: z.literal('inSpaceId'),
 		/** Id of the space, `null` for personal space. */
 		spaceId: SpaceIdSchema.nullable(),
+	}),
+	z.object({
+		type: z.literal('inRoomWithName'),
+		/** Name of the room. */
+		room: RoomNameSchema,
 	}),
 	z.object({
 		type: z.literal('inSpaceWithVisibility'),
@@ -71,6 +77,17 @@ export function EvaluateCharacterModifierCondition(
 
 		case 'inSpaceId':
 			return condition.spaceId === spaceInfo.id;
+
+		case 'inRoomWithName': {
+			const characterState = gameState.characters.get(character.id);
+			if (characterState == null)
+				return false;
+
+			if (!condition.room)
+				return false;
+
+			return condition.room === gameState.space.getRoom(characterState.currentRoom)?.name || condition.room === characterState.currentRoom;
+		}
 
 		case 'inSpaceWithVisibility':
 			return condition.spaceVisibility === spaceInfo.config.public;

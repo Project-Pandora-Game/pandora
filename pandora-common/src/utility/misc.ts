@@ -163,6 +163,16 @@ export function SampleArray<T>(array: readonly T[], source: { random(): number; 
 	return array[Math.floor(source.random() * array.length)];
 }
 
+/**
+ * Shuffles an array in-place. Positive direction = move first element to be last.
+ * @param array The array to shuffle
+ * @param count How much to rotate the array
+ */
+export function RotateArray<T extends unknown[]>(array: T, count: number): T {
+	array.push(...array.splice(0, ((count % array.length) + array.length) % array.length));
+	return array;
+}
+
 export function SplitStringFirstOccurrence(input: string, separator: string): [string, string] {
 	const index = input.indexOf(separator);
 	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];
@@ -368,8 +378,8 @@ export function* GenerateMultipleListsFullJoin<T>(lists: readonly (readonly T[])
 /**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
-export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This>) {
-	const cache = new WeakMap<object, Return>();
+export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This> | ClassGetterDecoratorContext<This>) {
+	const cache = new WeakMap<This, Return>();
 	return function (this: This) {
 		if (cache.has(this)) {
 			return cache.get(this)!;

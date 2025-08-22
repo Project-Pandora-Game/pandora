@@ -1,4 +1,4 @@
-import { Mesh, MeshGeometry, State, Texture } from 'pixi.js';
+import { Mesh, MeshGeometry, State, Texture, type ColorSource } from 'pixi.js';
 import { RegisterPixiComponent } from '../reconciler/component.ts';
 import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
@@ -8,7 +8,7 @@ export interface PixiMeshProps {
 	indices: Uint32Array;
 	texture: Texture;
 	state?: State;
-	tint?: number;
+	tint?: ColorSource;
 	alpha?: number;
 }
 

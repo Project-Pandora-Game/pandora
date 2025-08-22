@@ -3,42 +3,54 @@ import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
 	AssertNotNullable,
+	CARDINAL_DIRECTION_NAMES,
+	CardinalDirectionSchema,
 	CloneDeepMutable,
+	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
+	KnownObject,
 	LIMIT_ROOM_NAME_LENGTH,
+	ParseNotNullable,
 	ResolveBackground,
 	RoomId,
+	RoomLinkNodeConfig,
 	RoomNameSchema,
 	RoomTemplateSchema,
+	SpaceRoomLayoutNeighborRoomCoordinates,
 	type AppearanceAction,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type AssetFrameworkSpaceState,
+	type CardinalDirection,
 	type Coordinates,
 	type RoomBackgroundData,
+	type RoomLinkNodeData,
 	type RoomTemplate,
 } from 'pandora-common';
-import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { ReactElement, useEffect, useId, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import exportIcon from '../../../assets/icons/export.svg';
 import importIcon from '../../../assets/icons/import.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
 import { useCharacterAppearance } from '../../../character/character.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { ExportDialog } from '../../../components/exportImport/exportDialog.tsx';
+import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
-import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
+import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
 import './spaceStateConfiguration.scss';
 
@@ -49,7 +61,8 @@ export type SpaceStateConfigurationUiProps = {
 export function SpaceStateConfigurationUi({
 	globalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
-	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(globalState.space.rooms.length === 1 ? globalState.space.rooms[0].id : null);
+	const { playerState } = usePlayerState();
+	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(playerState.currentRoom);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
 
 	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
@@ -117,6 +130,7 @@ export function SpaceStateConfigurationUi({
 							key={ selectedRoomState.id }
 							isEntryRoom={ globalState.space.rooms[0].id === selectedRoom }
 							roomState={ selectedRoomState }
+							globalState={ globalState }
 							close={ () => {
 								setSelectedRoom(null);
 							} }
@@ -189,7 +203,13 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 							>
 								<BackgroundPreview background={ r.roomBackground } previewSize={ 256 * (window.devicePixelRatio || 1) } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
-								<span className='label'>{ r.name || r.id }</span>
+								<div className='overlay'>
+									<span className='label'>{ r.name || r.id }</span>
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.N } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.E } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.S } spaceState={ spaceState } />
+									<GridDirectionArrow roomState={ r } linkData={ r.roomLinkData.W } spaceState={ spaceState } />
+								</div>
 							</Button>
 						</SelectionIndicator>
 					);
@@ -210,9 +230,24 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 	);
 }
 
-function RoomConfiguration({ isEntryRoom, roomState, close }: {
+function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: AssetFrameworkRoomState; linkData: Immutable<RoomLinkNodeData>; spaceState: AssetFrameworkSpaceState; }): ReactNode | null {
+	const arrows: Record<CardinalDirection, string> = { N: '↑', E: '→', S: '↓', W: '←' };
+
+	const neighbor = spaceState.getRoomByPosition(SpaceRoomLayoutNeighborRoomCoordinates(roomState.position, linkData.direction));
+	if (neighbor == null)
+		return null;
+
+	return (
+		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : 'enabled'}` }>
+			{ linkData.disabled ? '×' : arrows[linkData.direction] }
+		</div>
+	);
+}
+
+function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 	isEntryRoom: boolean;
 	roomState: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
 	close: () => void;
 }): ReactElement {
 	const id = useId();
@@ -220,6 +255,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 	const [name, setName] = useState<string | null>(null);
 	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
 	const [positionChange, setPositionChange] = useState<Immutable<Coordinates> | null>(null);
+	const [directionChange, setDirectionChange] = useState<CardinalDirection | null>(null);
 
 	return (
 		<fieldset className='roomConfiguration'>
@@ -263,7 +299,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 					>
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
-					<RoomExportButton roomState={ roomState } />
+					<RoomExportButton roomState={ roomState } globalState={ globalState } />
 				</Row>
 				{
 					isEntryRoom ? (
@@ -293,45 +329,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 						<FormError error={ nameValueError } />
 					) : null }
 				</Column>
-				<Column>
-					<Row alignY='center'>
-						<label>Room position</label>
-						<NumberInput
-							className='zero-width flex-1'
-							value={ (positionChange ?? roomState.position)?.x }
-							onChange={ (x) => {
-								setPositionChange({
-									...(positionChange ?? roomState.position),
-									x,
-								});
-							} }
-						/>
-						<NumberInput
-							className='zero-width flex-1'
-							value={ (positionChange ?? roomState.position)?.y }
-							onChange={ (y) => {
-								setPositionChange({
-									...(positionChange ?? roomState.position),
-									y,
-								});
-							} }
-						/>
-						<GameLogicActionButton
-							action={ {
-								type: 'spaceRoomLayout',
-								subaction: {
-									type: 'moveRoom',
-									id: roomState.id,
-									position: CloneDeepMutable(positionChange ?? roomState.position),
-								},
-							} }
-							disabled={ positionChange == null || isEqual(positionChange, roomState.position) }
-						>
-							Move
-						</GameLogicActionButton>
-					</Row>
-				</Column>
-				<Row alignY='start'>
+				<Row alignY='center' alignX='space-evenly'>
 					<Button
 						onClick={ () => setShowBackgrounds(true) }
 					>
@@ -340,11 +338,171 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 					<BackgroundPreview
 						background={ roomState.roomBackground }
 						previewSize={ 384 * (window.devicePixelRatio || 1) }
-						className='flex-1'
 					/>
 				</Row>
+				<Row>
+					<Column className='flex-1'>
+						<Row alignY='center'>
+							<label>Room position</label>
+							<NumberInput
+								className='zero-width flex-1'
+								value={ (positionChange ?? roomState.position)?.x }
+								onChange={ (x) => {
+									setPositionChange({
+										...(positionChange ?? roomState.position),
+										x,
+									});
+								} }
+							/>
+							<NumberInput
+								className='zero-width flex-1'
+								value={ (positionChange ?? roomState.position)?.y }
+								onChange={ (y) => {
+									setPositionChange({
+										...(positionChange ?? roomState.position),
+										y,
+									});
+								} }
+							/>
+						</Row>
+						<Row alignY='center'>
+							<label htmlFor={ id + ':room-name' }>Far wall direction</label>
+							<Select
+								className='flex-1'
+								value={ directionChange ?? roomState.direction }
+								onChange={ (ev) => {
+									const value = ev.target.value;
+									setDirectionChange(CardinalDirectionSchema.parse(value));
+								} }
+							>
+								{
+									CardinalDirectionSchema.options.map((d) => (
+										<option key={ d } value={ d }>{ CARDINAL_DIRECTION_NAMES[d] }</option>
+									))
+								}
+							</Select>
+						</Row>
+					</Column>
+					<GameLogicActionButton
+						action={ {
+							type: 'spaceRoomLayout',
+							subaction: {
+								type: 'moveRoom',
+								id: roomState.id,
+								position: CloneDeepMutable(positionChange ?? roomState.position),
+								direction: CloneDeepMutable(directionChange ?? roomState.direction),
+							},
+						} }
+						disabled={ (positionChange == null || isEqual(positionChange, roomState.position)) &&
+							(directionChange == null || directionChange === roomState.direction) }
+					>
+						Move
+					</GameLogicActionButton>
+				</Row>
+				<fieldset>
+					<legend>Position of links to other rooms</legend>
+					<table>
+						<thead>
+							<tr>
+								<th>Direction</th>
+								<th>Enabled</th>
+								<th>Position</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<RoomConfigurationRoomLink direction='far' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='right' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='near' roomState={ roomState } />
+							<RoomConfigurationRoomLink direction='left' roomState={ roomState } />
+						</tbody>
+					</table>
+				</fieldset>
 			</Column>
 		</fieldset>
+	);
+}
+
+const ROOM_INTERNAL_DIRECTION_NAMES: Readonly<Record<keyof AssetFrameworkRoomState['roomLinkNodes'], string>> = {
+	far: 'Far',
+	right: 'Right',
+	near: 'Near',
+	left: 'Left',
+};
+
+function RoomConfigurationRoomLink({ direction, roomState }: {
+	direction: keyof AssetFrameworkRoomState['roomLinkNodes'];
+	roomState: AssetFrameworkRoomState;
+}): ReactNode {
+	const config = roomState.roomLinkNodes[direction];
+	const [cardinalDirection, data] = ParseNotNullable(KnownObject.entries(roomState.roomLinkData).find(([,d]) => d.internalDirection === direction));
+	const [changedConfig, setChangedConfig] = useState<Immutable<RoomLinkNodeConfig> | null>(null);
+
+	return (
+		<tr>
+			<td>{ ROOM_INTERNAL_DIRECTION_NAMES[direction] } → { CARDINAL_DIRECTION_NAMES[cardinalDirection] }:</td>
+			<td>
+				<Checkbox
+					checked={ !(changedConfig ?? config).disabled }
+					onChange={ (newValue) => {
+						setChangedConfig((v) => produce(v ?? config, (d) => {
+							d.disabled = !newValue;
+						}));
+					} }
+				/>
+			</td>
+			<td>
+				<Row alignY='center'>
+					<label>X:</label>
+					<NumberInput
+						className='flex-1'
+						value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
+						onChange={ (newValue) => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position ??= CloneDeepMutable(data.position);
+								d.position[0] = newValue;
+							}));
+						} }
+					/>
+					<label>Y:</label>
+					<NumberInput
+						className='flex-1'
+						value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
+						onChange={ (newValue) => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position ??= CloneDeepMutable(data.position);
+								d.position[1] = newValue;
+							}));
+						} }
+					/>
+					<Button
+						slim
+						onClick={ () => {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.position = null;
+							}));
+						} }
+						disabled={ (changedConfig ?? config).position == null }
+					>
+						↺
+					</Button>
+				</Row>
+			</td>
+			<td>
+				<GameLogicActionButton
+					action={ {
+						type: 'roomConfigure',
+						roomId: roomState.id,
+						roomLinkNodes: {
+							[direction]: changedConfig ?? undefined,
+						},
+					} }
+					disabled={ changedConfig == null || isEqual(config, changedConfig) }
+				>
+					Save
+				</GameLogicActionButton>
+			</td>
+		</tr>
 	);
 }
 
@@ -366,6 +524,7 @@ function RoomCreation({ globalState, close }: {
 		roomGeometry: {
 			type: 'defaultPublicSpace',
 		},
+		roomLinkNodes: CloneDeepMutable(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
 	}));
 	const [position, setPosition] = useState((): Immutable<Coordinates> => {
 		const playerRoom = playerAppearance.getCurrentRoom();
@@ -388,6 +547,7 @@ function RoomCreation({ globalState, close }: {
 			type: 'createRoom',
 			template: CloneDeepMutable(roomTemplate),
 			position: CloneDeepMutable(position),
+			direction: 'N', // TODO
 		},
 	}), [roomTemplate, position]);
 
@@ -547,11 +707,54 @@ function BackgroundPreview({ background, previewSize, className }: {
 	);
 }
 
-function RoomExportButton({ roomState }: {
+function RoomExportButton({ roomState, globalState }: {
 	roomState: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
+	const serviceManager = useServiceManager();
 	const [showExportDialog, setShowExportDialog] = useState(false);
 	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
+
+	const exportExtra = useMemo(async () => {
+		const previewCanvas = await CreateRoomPhoto({
+			roomState,
+			globalState,
+			serviceManager,
+			quality: '720p',
+			trim: true,
+			noGhost: true,
+			characters: [],
+			characterNames: false,
+		});
+
+		const previewBlob = await new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/jpeg', 0.8);
+		}).catch(() => new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/png');
+		}));
+
+		const preview: ExportDialogTarget = {
+			content: previewBlob,
+			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
+			type: previewBlob.type,
+		};
+
+		return [preview];
+	}, [globalState, roomState, serviceManager]);
 
 	return (
 		<>
@@ -566,10 +769,12 @@ function RoomExportButton({ roomState }: {
 			{
 				showExportDialog ? (
 					<ExportDialog
+						title={ 'room template' + (roomTemplate.name ? ` "${ roomTemplate.name }"` : '') }
 						exportType='RoomTemplate'
 						exportVersion={ 1 }
 						dataSchema={ RoomTemplateSchema }
 						data={ roomTemplate }
+						extraData={ exportExtra }
 						closeDialog={ () => setShowExportDialog(false) }
 					/>
 				) : null

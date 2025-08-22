@@ -271,6 +271,9 @@ export class PixiInternalElementInstance<
 						case 'skew':
 							this.instance.skew.set(...ParsePixiPointLike(nextProps.skew, 0, 0));
 							break;
+						case 'tint':
+							this.instance.tint = nextProps.tint ?? 0xFFFFFF;
+							break;
 						default:
 							AssertNever(key);
 					}

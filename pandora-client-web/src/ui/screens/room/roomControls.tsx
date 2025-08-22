@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -8,6 +8,7 @@ import React, {
 import { useLocation } from 'react-router';
 import crossIcon from '../../../assets/icons/cross.svg';
 import listIcon from '../../../assets/icons/list.svg';
+import photoIcon from '../../../assets/icons/photo.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
@@ -42,7 +43,8 @@ import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.t
 import { useRoomScreenContext } from './roomContext.tsx';
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName } from './roomState.ts';
+import { RoomPhotoDialog } from './roomPhoto.tsx';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -52,6 +54,8 @@ export function RoomControls(): ReactElement | null {
 	const gameState = useGameStateOptional();
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
+
+	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
 	if (globalState == null || !player || playerState == null) {
 		return null;
@@ -77,6 +81,18 @@ export function RoomControls(): ReactElement | null {
 						<img src={ settingIcon } />
 						<div>Space<br />configuration</div>
 					</Button>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowPhotoDialog(true) }
+					>
+						<img src={ photoIcon } />
+						<div>Photo<br />mode</div>
+					</Button>
+					{ showPhotoDialog ? (
+						<RoomPhotoDialog
+							close={ () => setShowPhotoDialog(false) }
+						/>
+					) : null }
 				</DivContainer>
 				<DisplayRoomsGrid
 					player={ player }
@@ -108,6 +124,7 @@ export function PersonalSpaceControls(): ReactElement {
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
 	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
@@ -166,6 +183,13 @@ export function PersonalSpaceControls(): ReactElement {
 						<img src={ settingIcon } />
 						<div>Change<br />space layout</div>
 					</Button>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowPhotoDialog(true) }
+					>
+						<img src={ photoIcon } />
+						<div>Photo<br />mode</div>
+					</Button>
 					{
 						showBackgrounds ? (
 							<ModalDialog className='max-size'>
@@ -184,6 +208,11 @@ export function PersonalSpaceControls(): ReactElement {
 							</ModalDialog>
 						) : null
 					}
+					{ showPhotoDialog ? (
+						<RoomPhotoDialog
+							close={ () => setShowPhotoDialog(false) }
+						/>
+					) : null }
 				</DivContainer>
 				<DisplayRoomsGrid
 					player={ player }
@@ -244,6 +273,7 @@ function DeviceOverlaySelector(): ReactElement {
 	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
+	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
 
 	const onRoomConstructionModeChange = () => {
 		DeviceOverlayState.value = {
@@ -294,7 +324,6 @@ function DeviceOverlaySelector(): ReactElement {
 				</Select>
 			</div>
 			<div>
-				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>
 				<Checkbox
 					id='chatroom-character-name-display'
 					checked={ showName }
@@ -302,6 +331,17 @@ function DeviceOverlaySelector(): ReactElement {
 						SettingDisplayCharacterName.value = newValue;
 					} }
 				/>
+				<label htmlFor='chatroom-character-name-display'> Show name under characters</label>
+			</div>
+			<div>
+				<Checkbox
+					id='chatroom-roomlink-display'
+					checked={ showRoomLinks }
+					onChange={ (newValue) => {
+						SettingDisplayRoomLinks.value = newValue;
+					} }
+				/>
+				<label htmlFor='chatroom-roomlink-display'> Show directions to other rooms</label>
 			</div>
 		</>
 	);
@@ -325,9 +365,12 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 		<div className='RoomControlsRoomGrid'>
 			{
 				[centerY - 1, centerY, centerY + 1].flatMap((y) => [centerX - 1, centerX, centerX + 1].map((x) => {
-					const room = globalState.space.rooms.find((r) => r.position.x === x && r.position.y === y);
-					if (room == null || (y !== centerY && x !== centerX)) {
-						// Filler when there is no room, or for corners
+					const room = globalState.space.getRoomByPosition({ x, y });
+					if (room == null ||
+						(playerRoom.id !== room.id && playerRoom.getLinkToRoom(room) == null) ||
+						(y !== centerY && x !== centerX)
+					) {
+						// Filler when there is no room, no link between rooms, the link is disabled, or for corners
 						return (
 							<div key={ `${y}:${x}` } />
 						);
@@ -357,7 +400,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 										moveTo: {
 											type: 'normal',
 											room: room.id,
-											position: GenerateInitialRoomPosition(room.roomBackground),
+											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
 										},
 									} }
 								>
@@ -446,6 +489,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 				useMemo(() => {
 					const result: ReactElement[] = [];
 					const seenCharacters = new Set<Character<ICharacterRoomData>>();
+					const playerRoom = ParseNotNullable(globalState.space.getRoom(playerState.currentRoom));
 
 					if (globalState.space.rooms.length > 1) {
 						const sortedRooms = globalState.space.rooms.toSorted((a, b) => {
@@ -470,7 +514,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 														moveTo: {
 															type: 'normal',
 															room: room.id,
-															position: GenerateInitialRoomPosition(room.roomBackground),
+															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
 														},
 													} }
 													disabled={ playerState.position.following != null }
@@ -627,7 +671,7 @@ function DisplayCharacter({ char, globalState }: {
 								moveTo: {
 									type: 'normal',
 									room: playerRoom.id,
-									position: GenerateInitialRoomPosition(playerRoom.roomBackground),
+									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
 								},
 							} }
 							disabled={ state.position.following != null }

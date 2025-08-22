@@ -722,11 +722,12 @@ const PREVIEW_CACHE = new WeakMap<
 	>
 >();
 
-async function GeneratePosePreview(
+export async function GeneratePosePreview(
 	assetManager: AssetManager,
 	preview: Immutable<AssetsPosePresetPreview>,
 	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
 	serviceManager: ServiceManager<ClientServices>,
+	size: number,
 ): Promise<HTMLCanvasElement> {
 	// Get a cache
 	let managerCache = PREVIEW_CACHE.get(assetManager);
@@ -766,7 +767,7 @@ async function GeneratePosePreview(
 		.produceWithPose(preview.basePose ?? {}, 'pose')
 		.produceWithPose(pose, 'pose');
 
-	const previewSize = 128 * (window.devicePixelRatio || 1);
+	const previewSize = size * (window.devicePixelRatio || 1);
 	const scale = previewSize / preview.size;
 
 	result = await RenderGraphicsTreeInBackground(
@@ -805,7 +806,7 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 
 		let valid = true;
 
-		GeneratePosePreview(assetManager, preview, preset, serviceManager)
+		GeneratePosePreview(assetManager, preview, preset, serviceManager, 128)
 			.then((result) => {
 				if (!valid || canvasRef.current == null)
 					return;

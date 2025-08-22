@@ -15,6 +15,7 @@ import {
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
 	type AssetFrameworkRoomState,
+	type RoomProjectionResolver,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
@@ -38,6 +39,7 @@ import { Sprite } from '../baseComponents/sprite.ts';
 import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -47,27 +49,27 @@ import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, useRoomCharacterOffsets } from './roomCharacter.tsx';
-import type { RoomProjectionResolver } from './roomProjection.tsx';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type RoomDeviceInteractiveProps = {
+	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 	gameState: GameState;
 };
 
 type RoomDeviceProps = {
+	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	projectionResolver: Immutable<RoomProjectionResolver>;
+	projectionResolver: RoomProjectionResolver;
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;
@@ -83,7 +85,7 @@ export function RoomDeviceMovementTool({
 	deployment,
 	projectionResolver,
 	gameState,
-}: RoomDeviceInteractiveProps): ReactElement | null {
+}: Pick<RoomDeviceInteractiveProps, 'roomState' | 'item' | 'deployment' | 'projectionResolver' | 'gameState'>): ReactElement | null {
 	const asset = item.asset;
 
 	const {
@@ -248,6 +250,7 @@ export function RoomDeviceMovementTool({
 }
 
 export function RoomDeviceInteractive({
+	characters,
 	globalState,
 	roomState,
 	item,
@@ -332,6 +335,7 @@ export function RoomDeviceInteractive({
 	return (
 		<>
 			<RoomDevice
+				characters={ characters }
 				globalState={ globalState }
 				roomState={ roomState }
 				item={ item }
@@ -492,6 +496,7 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 }
 
 export function RoomDevice({
+	characters,
 	globalState,
 	roomState,
 	item,
@@ -545,6 +550,7 @@ export function RoomDevice({
 	return (
 		<>
 			<RoomDeviceGraphics
+				characters={ characters }
 				globalState={ globalState }
 				item={ item }
 				position={ { x, y: y - yOffsetExtra } }
@@ -603,6 +609,7 @@ function RoomDeviceDebugGraphics({ pivot }: {
 export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	item: ItemRoomDevice;
 	globalState: AssetFrameworkGlobalState;
+	characters: readonly Character<ICharacterRoomData>[];
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
@@ -621,6 +628,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 function RoomDeviceGraphicsWithManagerImpl({
 	item,
 	globalState,
+	characters,
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -667,7 +675,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 						if (layer.type === 'sprite') {
 							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else if (layer.type === 'slot') {
-							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
+							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
 						} else if (layer.type === 'text') {
 							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
 						} else {
@@ -740,19 +748,19 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture, roomMask }: {
 	);
 }
 
-function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
+function RoomDeviceGraphicsLayerSlot({ item, layer, globalState, characters }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
 	globalState: AssetFrameworkGlobalState;
+	characters: readonly Character<ICharacterRoomData>[];
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
-	const characters = useSpaceCharacters();
 	const characterState = useMemo(() => (characterId != null ? globalState.characters.get(characterId) : undefined), [globalState, characterId]);
 
 	if (!characterId)
 		return null;
 
-	const character = characters?.find((c) => c.id === characterId);
+	const character = characters.find((c) => c.id === characterId);
 
 	if (!character || !characterState)
 		return null;

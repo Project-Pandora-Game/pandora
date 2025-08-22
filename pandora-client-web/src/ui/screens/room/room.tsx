@@ -9,7 +9,7 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
 import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
-import { RoomScene } from '../../../graphics/room/roomScene.tsx';
+import { RoomSceneInteractive } from '../../../graphics/room/roomSceneInteractive.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useIsLowScreen, useIsNarrowScreen, useIsPortrait } from '../../../styles/mediaQueries.ts';
 import { Chat } from '../../components/chat/chat.tsx';
@@ -36,7 +36,7 @@ export function RoomScreen(): ReactElement | null {
 				gap='none'
 				direction={ isPortrait ? 'column' : 'row' }
 			>
-				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
+				<RoomSceneInteractive className={ `room-scene flex-${chatroomGraphicsRatio}` } />
 				<InteractionBox isPortrait={ isPortrait } className={ `interactionArea flex-${chatroomChatRatio}` } />
 			</DivContainer>
 		</RoomScreenContextProvider>

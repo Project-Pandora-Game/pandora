@@ -1,12 +1,11 @@
 import { CloneDeepMutable, EMPTY_ARRAY, GetLogger } from 'pandora-common';
 import { ReactElement, Suspense, use, useCallback, useMemo, useRef, useState } from 'react';
-import { toast } from 'react-toastify';
 import { ZodType, z } from 'zod';
 import { CopyToClipboard } from '../../common/clipboard.ts';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { ShareButton } from '../../ui/components/common/shareButton.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
@@ -161,21 +160,7 @@ function ExportDialogInner<T extends ZodType<unknown>>({
 				<Button className='flex-1' onClick={ copyToClipboard }>
 					{ showCopySuccess ? 'Copied!' : 'Copy to clipboard' }
 				</Button>
-				{ typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare(shareData) ? (
-					<Button className='flex-1' onClick={ () => {
-						navigator.share(shareData)
-							.catch((err) => {
-								// Ignore user aborting
-								if (err instanceof DOMException && err.name === 'AbortError')
-									return;
-
-								GetLogger('ExportDialog').error('Error sharing:', err);
-								toast('Error while sharing', TOAST_OPTIONS_ERROR);
-							});
-					} }>
-						Share
-					</Button>
-				) : null }
+				<ShareButton className='flex-1' shareData={ shareData } />
 			</Row>
 			<textarea
 				ref={ textAreaRef }

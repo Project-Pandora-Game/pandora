@@ -1,6 +1,6 @@
 import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type ICharacterRoomData, type ServiceManager } from 'pandora-common';
-import type { Filter } from 'pixi.js';
-import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { Filter } from 'pixi.js';
+import { Suspense, use, useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import { useGraphicsTextureResolution } from '../../../assets/assetGraphicsCalculations.ts';
 import type { Character } from '../../../character/character.ts';
@@ -24,6 +24,7 @@ import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/render
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { ShareButton } from '../../components/common/shareButton.tsx';
 import { SortSpaceCharacters } from './roomControls.tsx';
 import './roomPhoto.scss';
 
@@ -192,6 +193,22 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 			});
 	}, [result]);
 
+	const resultBlob = useMemo(() => {
+		if (!result)
+			return null;
+
+		return new Promise<Blob>((resolve, reject) => {
+			result.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/png');
+		});
+	}, [result]);
+
 	return (
 		<ModalDialog>
 			<Column alignX='center'>
@@ -216,6 +233,11 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 									<Button onClick={ exportImage }>
 										<u>⇣</u> Download
 									</Button>
+									<Suspense fallback={ null }>
+										{ resultBlob != null ? (
+											<PhotoShareButton image={ resultBlob } />
+										) : null }
+									</Suspense>
 								</Row>
 								<em>Right-click or long-tap the image above to get more options</em>
 							</>
@@ -249,6 +271,29 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 				</Button>
 			</Column>
 		</ModalDialog>
+	);
+}
+
+function PhotoShareButton({ image }: { image: Promise<Blob>; }): ReactElement {
+	const resolvedImage = use(image);
+
+	const shareData = useMemo((): ShareData => {
+		const time = new Date();
+		const timestring = time.getFullYear().toString() +
+				'-' + (time.getMonth() + 1).toString().padStart(2, '0') +
+				'-' + time.getDate().toString().padStart(2, '0') +
+				' ' + time.getHours().toString().padStart(2, '0') +
+				'.' + time.getMinutes().toString().padStart(2, '0');
+
+		return {
+			files: [
+				new File([resolvedImage], `Pandora photo ${timestring}.png`, { type: resolvedImage.type }),
+			],
+		};
+	}, [resolvedImage]);
+
+	return (
+		<ShareButton shareData={ shareData } />
 	);
 }
 

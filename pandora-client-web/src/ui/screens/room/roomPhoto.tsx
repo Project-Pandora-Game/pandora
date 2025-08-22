@@ -1,4 +1,5 @@
-import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger } from 'pandora-common';
+import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type ICharacterRoomData, type ServiceManager } from 'pandora-common';
+import type { Filter } from 'pixi.js';
 import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import { useGraphicsTextureResolution } from '../../../assets/assetGraphicsCalculations.ts';
@@ -16,14 +17,125 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { usePlayerVisionFilters, VisionFilterBypass } from '../../../graphics/common/visionFilters.tsx';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
-import { GRAPHICS_TEXTURE_RESOLUTION_SCALE } from '../../../graphics/graphicsSettings.tsx';
+import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, type GraphicsSettings } from '../../../graphics/graphicsSettings.tsx';
 import { MASK_SIZE } from '../../../graphics/layers/graphicsLayerAlphaImageMesh.tsx';
 import { RoomGraphics } from '../../../graphics/room/roomScene.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import type { ClientServices } from '../../../services/clientServices.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { SortSpaceCharacters } from './roomControls.tsx';
 import './roomPhoto.scss';
+
+export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, characters, globalState, roomState, characterNames }: {
+	roomState: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
+	quality: 'roomSize' | '4K' | '1080p' | '720p' | '360p';
+	trim: boolean;
+	serviceManager: ServiceManager<ClientServices>;
+	noGhost: boolean;
+	characters: readonly Character<ICharacterRoomData>[];
+	characterNames: boolean;
+}): Promise<HTMLCanvasElement> {
+	const [roomWidth, roomHeight] = roomState.roomBackground.imageSize;
+
+	let width: number;
+	let height: number;
+	switch (quality) {
+		case 'roomSize':
+			width = roomWidth;
+			height = roomHeight;
+			break;
+		case '4K':
+			width = 3840;
+			height = 2160;
+			break;
+		case '1080p':
+			width = 1920;
+			height = 1080;
+			break;
+		case '720p':
+			width = 1280;
+			height = 720;
+			break;
+		case '360p':
+			width = 640;
+			height = 360;
+			break;
+		default:
+			AssertNever(quality);
+	}
+
+	const scale = Math.min(width / roomWidth, height / roomHeight);
+	if (trim) {
+		width = scale * roomWidth;
+		height = scale * roomHeight;
+	}
+
+	const offsetX = (width - scale * roomWidth) / 2;
+	const offsetY = (height - scale * roomHeight) / 2;
+
+	return await RenderGraphicsTreeInBackground(
+		(
+			<serviceManagerContext.Provider value={ serviceManager }>
+				<VisionFilterBypass setting={ noGhost ? 'no-ghost' : null }>
+					<Container
+						x={ offsetX }
+						y={ offsetY }
+						scale={ scale }
+					>
+						<RoomGraphics
+							characters={ characters }
+							globalState={ globalState }
+							room={ roomState }
+							showCharacterNames={ characterNames } />
+					</Container>
+				</VisionFilterBypass>
+			</serviceManagerContext.Provider>
+		),
+		{ x: 0, y: 0, width, height },
+		0x000000,
+		1,
+	);
+}
+
+export async function CreateCharacterPhoto(
+	characterState: AssetFrameworkCharacterState,
+	extraArea: boolean,
+	quality: Exclude<GraphicsSettings['textureResolution'], 'auto'>,
+	serviceManager: ServiceManager<ClientServices>,
+	filters: readonly Filter[],
+): Promise<HTMLCanvasElement> {
+	let width: number = extraArea ? MASK_SIZE.width : CharacterSize.WIDTH;
+	let height: number = extraArea ? MASK_SIZE.height : CharacterSize.HEIGHT;
+
+	width /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
+	height /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
+
+	const offsetX = extraArea ? MASK_SIZE.x : 0;
+	const offsetY = extraArea ? MASK_SIZE.y : 0;
+
+	return await RenderGraphicsTreeInBackground(
+		(
+			<serviceManagerContext.Provider value={ serviceManager }>
+				<VisionFilterBypass setting='no-ghost'>
+					<Container
+						x={ offsetX / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+						y={ offsetY / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+						scale={ 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+					>
+						<GraphicsCharacter
+							characterState={ characterState }
+							filters={ filters.slice() } />
+					</Container>
+				</VisionFilterBypass>
+			</serviceManagerContext.Provider>
+		),
+		{ x: 0, y: 0, width, height },
+		0x000000,
+		0,
+	);
+}
 
 export interface RoomPhotoDialogProps {
 	close: () => void;
@@ -164,66 +276,16 @@ function RoomPhotoDialogRoomControls({ show, setPhoto }: {
 	const [roomWidth, roomHeight] = roomState.roomBackground.imageSize;
 
 	const [execute, processing] = useAsyncEvent(async (): Promise<HTMLCanvasElement> => {
-
-		let width: number;
-		let height: number;
-		switch (quality) {
-			case 'roomSize':
-				width = roomWidth;
-				height = roomHeight;
-				break;
-			case '4K':
-				width = 3840;
-				height = 2160;
-				break;
-			case '1080p':
-				width = 1920;
-				height = 1080;
-				break;
-			case '720p':
-				width = 1280;
-				height = 720;
-				break;
-			case '360p':
-				width = 640;
-				height = 360;
-				break;
-			default:
-				AssertNever(quality);
-		}
-
-		const scale = Math.min(width / roomWidth, height / roomHeight);
-		if (trim) {
-			width = scale * roomWidth;
-			height = scale * roomHeight;
-		}
-
-		const offsetX = (width - scale * roomWidth) / 2;
-		const offsetY = (height - scale * roomHeight) / 2;
-
-		return await RenderGraphicsTreeInBackground(
-			(
-				<serviceManagerContext.Provider value={ serviceManager }>
-					<VisionFilterBypass setting={ noGhost ? 'no-ghost' : null }>
-						<Container
-							x={ offsetX }
-							y={ offsetY }
-							scale={ scale }
-						>
-							<RoomGraphics
-								characters={ showCharacters ? characters : [] }
-								globalState={ globalState }
-								room={ roomState }
-								showCharacterNames={ characterNames }
-							/>
-						</Container>
-					</VisionFilterBypass>
-				</serviceManagerContext.Provider>
-			),
-			{ x: 0, y: 0, width, height },
-			0x000000,
-			1,
-		);
+		return await CreateRoomPhoto({
+			roomState,
+			globalState,
+			quality,
+			trim,
+			serviceManager,
+			noGhost,
+			characters: showCharacters ? characters : [],
+			characterNames,
+		});
 	}, (resultCanvas) => {
 		setPhoto(resultCanvas);
 	}, {
@@ -311,36 +373,7 @@ function RoomPhotoDialogCharacterControls({ character, setPhoto }: {
 			return null;
 		}
 
-		let width: number = extraArea ? MASK_SIZE.width : CharacterSize.WIDTH;
-		let height: number = extraArea ? MASK_SIZE.height : CharacterSize.HEIGHT;
-
-		width /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
-		height /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
-
-		const offsetX = extraArea ? MASK_SIZE.x : 0;
-		const offsetY = extraArea ? MASK_SIZE.y : 0;
-
-		return await RenderGraphicsTreeInBackground(
-			(
-				<serviceManagerContext.Provider value={ serviceManager }>
-					<VisionFilterBypass setting='no-ghost'>
-						<Container
-							x={ offsetX / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
-							y={ offsetY / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
-							scale={ 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
-						>
-							<GraphicsCharacter
-								characterState={ characterState }
-								filters={ filters }
-							/>
-						</Container>
-					</VisionFilterBypass>
-				</serviceManagerContext.Provider>
-			),
-			{ x: 0, y: 0, width, height },
-			0x000000,
-			0,
-		);
+		return CreateCharacterPhoto(characterState, extraArea, quality, serviceManager, filters);
 	}, (resultCanvas) => {
 		if (resultCanvas != null) {
 			setPhoto(resultCanvas);

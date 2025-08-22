@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import {
 	CharacterSize,
 	GetLogger,
+	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
 	type AssetManager,
 	type AssetsPosePreset,
@@ -12,7 +13,7 @@ import { Observable, type ReadonlyObservable } from '../../../observable.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
-export function FixupStoredPosePreset(preset: Immutable<AssetFrameworkPosePresetWithId>, assetManager: AssetManager): AssetsPosePreset {
+export function FixupStoredPosePreset(preset: Immutable<AssetFrameworkPosePreset>, assetManager: AssetManager): AssetsPosePreset {
 	const pose: AssetsPosePreset = {
 		...preset.pose,
 		name: preset.name,

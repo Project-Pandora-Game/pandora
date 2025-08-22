@@ -42,14 +42,15 @@ import { Column, DivContainer, Row } from '../../../components/common/container/
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { ExportDialog } from '../../../components/exportImport/exportDialog.tsx';
+import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
-import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
+import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
 import './spaceStateConfiguration.scss';
 
@@ -129,6 +130,7 @@ export function SpaceStateConfigurationUi({
 							key={ selectedRoomState.id }
 							isEntryRoom={ globalState.space.rooms[0].id === selectedRoom }
 							roomState={ selectedRoomState }
+							globalState={ globalState }
 							close={ () => {
 								setSelectedRoom(null);
 							} }
@@ -242,9 +244,10 @@ function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: As
 	);
 }
 
-function RoomConfiguration({ isEntryRoom, roomState, close }: {
+function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 	isEntryRoom: boolean;
 	roomState: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
 	close: () => void;
 }): ReactElement {
 	const id = useId();
@@ -296,7 +299,7 @@ function RoomConfiguration({ isEntryRoom, roomState, close }: {
 					>
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
-					<RoomExportButton roomState={ roomState } />
+					<RoomExportButton roomState={ roomState } globalState={ globalState } />
 				</Row>
 				{
 					isEntryRoom ? (
@@ -704,11 +707,54 @@ function BackgroundPreview({ background, previewSize, className }: {
 	);
 }
 
-function RoomExportButton({ roomState }: {
+function RoomExportButton({ roomState, globalState }: {
 	roomState: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
+	const serviceManager = useServiceManager();
 	const [showExportDialog, setShowExportDialog] = useState(false);
 	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
+
+	const exportExtra = useMemo(async () => {
+		const previewCanvas = await CreateRoomPhoto({
+			roomState,
+			globalState,
+			serviceManager,
+			quality: '720p',
+			trim: true,
+			noGhost: true,
+			characters: [],
+			characterNames: false,
+		});
+
+		const previewBlob = await new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/jpeg', 0.8);
+		}).catch(() => new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/png');
+		}));
+
+		const preview: ExportDialogTarget = {
+			content: previewBlob,
+			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
+			type: previewBlob.type,
+		};
+
+		return [preview];
+	}, [globalState, roomState, serviceManager]);
 
 	return (
 		<>
@@ -723,10 +769,12 @@ function RoomExportButton({ roomState }: {
 			{
 				showExportDialog ? (
 					<ExportDialog
+						title={ 'room template' + (roomTemplate.name ? ` "${ roomTemplate.name }"` : '') }
 						exportType='RoomTemplate'
 						exportVersion={ 1 }
 						dataSchema={ RoomTemplateSchema }
 						data={ roomTemplate }
+						extraData={ exportExtra }
 						closeDialog={ () => setShowExportDialog(false) }
 					/>
 				) : null

@@ -16,18 +16,20 @@ import {
 } from 'pandora-common';
 import React, { useMemo, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useServiceManager } from '../../../services/serviceProvider.tsx';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
-import { ExportDialog } from '../../exportImport/exportDialog.tsx';
+import { ExportDialog, type ExportDialogTarget } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
-import { PoseButton } from '../views/wardrobePoseView.tsx';
+import { GeneratePosePreview, PoseButton } from '../views/wardrobePoseView.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
 
@@ -403,18 +405,67 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					<Button onClick={ onSave }>Save</Button>
 				</Row>
 			</Column>
-			{
-				exported == null ? null : (
-					<ExportDialog
-						exportType='PosePreset'
-						exportVersion={ 1 }
-						dataSchema={ AssetFrameworkPosePresetSchema }
-						data={ exported }
-						closeDialog={ closeExport }
-					/>
-				)
-			}
+			{ exported == null ? null : (
+				<PosePresetExport exported={ exported } close={ closeExport } />
+			) }
 		</DraggableDialog>
+	);
+}
+
+function PosePresetExport({ exported, close }: {
+	exported: AssetFrameworkPosePreset;
+	close: () => void;
+}): ReactNode {
+	const assetManager = useAssetManager();
+	const serviceManager = useServiceManager();
+
+	const loadedPreset = useMemo(() => FixupStoredPosePreset(exported, assetManager), [assetManager, exported]);
+
+	const exportExtra = useMemo(async () => {
+		if (!loadedPreset.preview)
+			return [];
+
+		const previewCanvas = await GeneratePosePreview(assetManager, loadedPreset.preview, loadedPreset, serviceManager, 256);
+
+		const previewBlob = await new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/jpeg', 0.8);
+		}).catch(() => new Promise<Blob>((resolve, reject) => {
+			previewCanvas.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				resolve(blob);
+			}, 'image/png');
+		}));
+
+		const preview: ExportDialogTarget = {
+			content: previewBlob,
+			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
+			type: previewBlob.type,
+		};
+
+		return [preview];
+	}, [assetManager, loadedPreset, serviceManager]);
+
+	return (
+		<ExportDialog
+			title={ 'pose preset' + (exported.name ? ` "${exported.name}"` : '') }
+			exportType='PosePreset'
+			exportVersion={ 1 }
+			dataSchema={ AssetFrameworkPosePresetSchema }
+			extraData={ exportExtra }
+			data={ exported }
+			closeDialog={ close }
+		/>
 	);
 }
 
@@ -633,17 +684,9 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 					</Button>
 				</Row>
 			</td>
-			{
-				exported == null ? null : (
-					<ExportDialog
-						exportType='PosePreset'
-						exportVersion={ 1 }
-						dataSchema={ AssetFrameworkPosePresetSchema }
-						data={ exported }
-						closeDialog={ closeExport }
-					/>
-				)
-			}
+			{ exported == null ? null : (
+				<PosePresetExport exported={ exported } close={ closeExport } />
+			) }
 		</tr>
 	);
 }

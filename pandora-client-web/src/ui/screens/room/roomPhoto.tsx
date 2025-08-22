@@ -1,23 +1,28 @@
-import { Assert, AssertNever, GetLogger } from 'pandora-common';
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactElement } from 'react';
+import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger } from 'pandora-common';
+import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import { useGraphicsTextureResolution } from '../../../assets/assetGraphicsCalculations.ts';
+import type { Character } from '../../../character/character.ts';
 import { DownloadAsFile } from '../../../common/downloadHelper.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
-import { VisionFilterBypass } from '../../../graphics/common/visionFilters.tsx';
+import { usePlayerVisionFilters, VisionFilterBypass } from '../../../graphics/common/visionFilters.tsx';
+import { GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE } from '../../../graphics/graphicsSettings.tsx';
+import { MASK_SIZE } from '../../../graphics/layers/graphicsLayerAlphaImageMesh.tsx';
 import { RoomGraphics } from '../../../graphics/room/roomScene.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { SortSpaceCharacters } from './roomControls.tsx';
 import './roomPhoto.scss';
 
 export interface RoomPhotoDialogProps {
@@ -25,6 +30,120 @@ export interface RoomPhotoDialogProps {
 }
 
 export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
+	const id = useId();
+	const characters = useSpaceCharacters();
+	const friends = useFriendStatus();
+	const sortedCharacters = useMemo(() => SortSpaceCharacters(characters, friends), [characters, friends]);
+
+	const [result, setResult] = useState<HTMLCanvasElement | null>(null);
+	const resultRef = useRef<HTMLDivElement>(null);
+
+	const [target, setTarget] = useState<'room' | CharacterId>('room');
+	const targetCharacter = target !== 'room' ? characters.find((c) => c.id === target) : undefined;
+
+	useLayoutEffect(() => {
+		const resultDiv = resultRef.current;
+
+		if (resultDiv == null || result == null)
+			return;
+
+		resultDiv.appendChild(result);
+		return () => {
+			resultDiv.removeChild(result);
+		};
+	}, [result]);
+
+	const exportImage = useCallback(() => {
+		if (!result)
+			return;
+
+		new Promise<void>((resolve, reject) => {
+			result.toBlob((blob) => {
+				if (!blob) {
+					reject(new Error('Canvas.toBlob failed!'));
+					return;
+				}
+
+				const time = new Date();
+				const timestring = time.getFullYear().toString() +
+				'-' + (time.getMonth() + 1).toString().padStart(2, '0') +
+				'-' + time.getDate().toString().padStart(2, '0') +
+				' ' + time.getHours().toString().padStart(2, '0') +
+				'.' + time.getMinutes().toString().padStart(2, '0');
+				DownloadAsFile(blob, `Pandora photo ${timestring}.png`);
+				resolve();
+			}, 'image/png');
+		})
+			.catch((error) => {
+				GetLogger('RoomPhotoDialog').error('Error downloading photo:', error);
+				toast('Error downloading photo', TOAST_OPTIONS_ERROR);
+			});
+	}, [result]);
+
+	return (
+		<ModalDialog>
+			<Column alignX='center'>
+				<Row className='RoomPhotoDialogContents'>
+					<Column>
+						{ result != null ? (
+							<Row wrap>
+								<Button slim onClick={ () => {
+									setResult(null);
+								} }>
+									◄ Back
+								</Button>
+							</Row>
+						) : null }
+						<div
+							ref={ resultRef }
+							className={ result != null ? 'result' : 'result empty' }
+						/>
+						{ result != null ? (
+							<>
+								<Row wrap>
+									<Button onClick={ exportImage }>
+										<u>⇣</u> Download
+									</Button>
+								</Row>
+								<em>Right-click or long-tap the image above to get more options</em>
+							</>
+						) : null }
+					</Column>
+					{ /* Keep the controls below in tree even if not shown, to let them keep their selected settings */ }
+					<Column>
+						{ result == null ? (
+							<Row alignY='center'>
+								<label htmlFor={ id + '-target' }>Photo of:</label>
+								<Select id={ id + '-target' } className='flex-1' value={ target } onChange={ (e) => setTarget(e.target.value as typeof target) }>
+									<option value='room'>Current room</option>
+									{ sortedCharacters.map((c) => (
+										<option key={ c.id } value={ c.id }>{ c.name } ({ c.id })</option>
+									)) }
+								</Select>
+							</Row>
+						) : null }
+						<RoomPhotoDialogRoomControls
+							show={ result == null && target === 'room' }
+							setPhoto={ setResult }
+						/>
+						<RoomPhotoDialogCharacterControls
+							character={ (result == null && targetCharacter != null) ? targetCharacter : null }
+							setPhoto={ setResult }
+						/>
+					</Column>
+				</Row>
+				<Button onClick={ close }>
+					Close
+				</Button>
+			</Column>
+		</ModalDialog>
+	);
+}
+
+function RoomPhotoDialogRoomControls({ show, setPhoto }: {
+	show: boolean;
+	setPhoto: (photo: HTMLCanvasElement) => void;
+}): ReactElement | null {
 	const id = useId();
 	const serviceManager = useServiceManager();
 	const { globalState, playerState } = usePlayerState();
@@ -35,9 +154,6 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 	const [showCharacters, setShowCharacters] = useState<boolean>(true);
 	const [characterNames, setCharacterNames] = useState<boolean>(false);
 	const [noGhost, setNoGhost] = useState<boolean>(true);
-
-	const resultRef = useRef<HTMLDivElement>(null);
-	const [result, setResult] = useState<HTMLCanvasElement | null>(null);
 
 	const roomState = useMemo(() => {
 		const roomStateInner = globalState.space.getRoom(playerState.currentRoom);
@@ -109,7 +225,7 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 			1,
 		);
 	}, (resultCanvas) => {
-		setResult(resultCanvas);
+		setPhoto(resultCanvas);
 	}, {
 		errorHandler(error) {
 			GetLogger('RoomPhotoDialog').error('Error creating photo:', error);
@@ -117,131 +233,154 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 		},
 	});
 
-	useEffect(() => {
-		const resultDiv = resultRef.current;
-
-		if (resultDiv == null || result == null)
-			return;
-
-		resultDiv.appendChild(result);
-		return () => {
-			resultDiv.removeChild(result);
-		};
-	}, [result]);
-
-	const exportImage = useCallback(() => {
-		if (!result)
-			return;
-
-		new Promise<void>((resolve, reject) => {
-			result.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				const time = new Date();
-				const timestring = time.getFullYear().toString() +
-				'-' + (time.getMonth() + 1).toString().padStart(2, '0') +
-				'-' + time.getDate().toString().padStart(2, '0') +
-				' ' + time.getHours().toString().padStart(2, '0') +
-				'.' + time.getMinutes().toString().padStart(2, '0');
-				DownloadAsFile(blob, `Pandora photo ${timestring}.png`);
-				resolve();
-			}, 'image/png');
-		})
-			.catch((error) => {
-				GetLogger('RoomPhotoDialog').error('Error downloading photo:', error);
-				toast('Error downloading photo', TOAST_OPTIONS_ERROR);
-			});
-	}, [result]);
-
 	const textureResolution = 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[useGraphicsTextureResolution()];
 
+	if (!show)
+		return null;
+
 	return (
-		<ModalDialog>
-			<Column alignX='center'>
-				<Row className='RoomPhotoDialogContents'>
-					<Column>
-						{ result != null ? (
-							<Row wrap>
-								<Button slim onClick={ () => {
-									setResult(null);
-								} }>
-									◄ Back
-								</Button>
-							</Row>
-						) : null }
-						<div
-							ref={ resultRef }
-							className={ result != null ? 'result' : 'result empty' }
-						/>
-						{ result != null ? (
-							<>
-								<Row wrap>
-									<Button onClick={ exportImage }>
-										<u>⇣</u> Download
-									</Button>
-								</Row>
-								<em>Right-click or long-tap the image above to get more options</em>
-							</>
-						) : null }
-					</Column>
-					{ result == null ? (
-						<Column>
-							<Row alignY='center'>
-								<label htmlFor={ id + '-quality' }>Quality:</label>
-								<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
-									<option value='roomSize'>Based on room's size ({ roomWidth }×{ roomHeight })</option>
-									<option value='4K'>4K (3840×2160)</option>
-									<option value='1080p'>FullHD (1920×1080)</option>
-									<option value='720p'>HD (1280×720)</option>
-									<option value='360p'>360p (640×360)</option>
-								</Select>
-							</Row>
-							<Row alignY='center'>
-								<Checkbox id={ id + '-trim' } checked={ trim } onChange={ setTrim } />
-								<label htmlFor={ id + '-trim' }>Trim empty space from image</label>
-							</Row>
-							<fieldset>
-								<legend>Characters</legend>
-								<Column>
-									<Row alignY='center'>
-										<Checkbox id={ id + '-showCharacters' } checked={ showCharacters } onChange={ setShowCharacters } />
-										<label htmlFor={ id + '-showCharacters' }>Show characters</label>
-									</Row>
-									<Row alignY='center'>
-										<Checkbox id={ id + '-characterNames' } checked={ characterNames } onChange={ setCharacterNames } disabled={ !showCharacters } />
-										<label htmlFor={ id + '-characterNames' }>Show character names</label>
-									</Row>
-									<Row alignY='center'>
-										<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } disabled={ !showCharacters } />
-										<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
-									</Row>
-								</Column>
-							</fieldset>
-							{ (
-								((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
-								((quality === '1080p') && textureResolution < 0.5)
-							) ? (
-								<div className='warning-box'>
-									You are currently using lower texture resolution than what is optimal for creating an image of selected quality.<br />
-									We recommend either lowering the selected quality, or selecting higher "Texture resolution" in Settings → Graphics → Quality.
-								</div>
-							) : null }
-							<span className='flex-1' />
-							<Row alignX='end'>
-								<Button onClick={ execute } disabled={ processing }>
-									Take photo!
-								</Button>
-							</Row>
-						</Column>
-					) : null }
-				</Row>
-				<Button onClick={ close }>
-					Close
+		<Column>
+			<Row alignY='center'>
+				<label htmlFor={ id + '-quality' }>Quality:</label>
+				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
+					<option value='roomSize'>Based on room's size ({ roomWidth }×{ roomHeight })</option>
+					<option value='4K'>4K (3840×2160)</option>
+					<option value='1080p'>FullHD (1920×1080)</option>
+					<option value='720p'>HD (1280×720)</option>
+					<option value='360p'>360p (640×360)</option>
+				</Select>
+			</Row>
+			<Row alignY='center'>
+				<Checkbox id={ id + '-trim' } checked={ trim } onChange={ setTrim } />
+				<label htmlFor={ id + '-trim' }>Trim empty space from image</label>
+			</Row>
+			<fieldset>
+				<legend>Characters</legend>
+				<Column>
+					<Row alignY='center'>
+						<Checkbox id={ id + '-showCharacters' } checked={ showCharacters } onChange={ setShowCharacters } />
+						<label htmlFor={ id + '-showCharacters' }>Show characters</label>
+					</Row>
+					<Row alignY='center'>
+						<Checkbox id={ id + '-characterNames' } checked={ characterNames } onChange={ setCharacterNames } disabled={ !showCharacters } />
+						<label htmlFor={ id + '-characterNames' }>Show character names</label>
+					</Row>
+					<Row alignY='center'>
+						<Checkbox id={ id + '-noGhost' } checked={ noGhost } onChange={ setNoGhost } disabled={ !showCharacters } />
+						<label htmlFor={ id + '-noGhost' }>Display offline characters normally</label>
+					</Row>
+				</Column>
+			</fieldset>
+			{ (
+				((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
+				((quality === '1080p') && textureResolution < 0.5)
+			) ? (
+				<div className='warning-box'>
+					You are currently using lower texture resolution than what is optimal for creating an image of selected quality.<br />
+					We recommend either lowering the selected quality, or selecting higher "Texture resolution" in Settings → Graphics → Quality.
+				</div>
+			) : null }
+			<span className='flex-1' />
+			<Row alignX='end'>
+				<Button onClick={ execute } disabled={ processing }>
+					Take photo!
 				</Button>
-			</Column>
-		</ModalDialog>
+			</Row>
+		</Column>
+	);
+}
+
+function RoomPhotoDialogCharacterControls({ character, setPhoto }: {
+	character: Character | null;
+	setPhoto: (photo: HTMLCanvasElement) => void;
+}): ReactElement | null {
+	const id = useId();
+	const serviceManager = useServiceManager();
+	const { globalState } = usePlayerState();
+	const textureResolution = useGraphicsTextureResolution();
+
+	const [quality, setQuality] = useState<'1' | '0.5' | '0.25'>(textureResolution);
+	const [extraArea, setExtraArea] = useState<boolean>(false);
+
+	const characterState = character != null ? globalState.getCharacterState(character.id) : null;
+	const filters = usePlayerVisionFilters(character != null && character.isPlayer());
+
+	const [execute, processing] = useAsyncEvent(async (): Promise<HTMLCanvasElement | null> => {
+		if (characterState == null) {
+			toast('Character not found', TOAST_OPTIONS_ERROR);
+			return null;
+		}
+
+		let width: number = extraArea ? MASK_SIZE.width : CharacterSize.WIDTH;
+		let height: number = extraArea ? MASK_SIZE.height : CharacterSize.HEIGHT;
+
+		width /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
+		height /= GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality];
+
+		const offsetX = extraArea ? MASK_SIZE.x : 0;
+		const offsetY = extraArea ? MASK_SIZE.y : 0;
+
+		return await RenderGraphicsTreeInBackground(
+			(
+				<serviceManagerContext.Provider value={ serviceManager }>
+					<VisionFilterBypass setting='no-ghost'>
+						<Container
+							x={ offsetX / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+							y={ offsetY / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+							scale={ 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] }
+						>
+							<GraphicsCharacter
+								characterState={ characterState }
+								filters={ filters }
+							/>
+						</Container>
+					</VisionFilterBypass>
+				</serviceManagerContext.Provider>
+			),
+			{ x: 0, y: 0, width, height },
+			0x000000,
+			0,
+		);
+	}, (resultCanvas) => {
+		if (resultCanvas != null) {
+			setPhoto(resultCanvas);
+		}
+	}, {
+		errorHandler(error) {
+			GetLogger('RoomPhotoDialog').error('Error creating photo:', error);
+			toast('Error creating photo', TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	if (character == null)
+		return null;
+
+	return (
+		<Column>
+			<Row alignY='center'>
+				<label htmlFor={ id + '-quality' }>Quality:</label>
+				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
+					<option value='1'>Full</option>
+					<option value='0.5'>50%</option>
+					<option value='0.25'>25%</option>
+				</Select>
+			</Row>
+			<Row alignY='center'>
+				<Checkbox id={ id + '-extra-area' } checked={ extraArea } onChange={ setExtraArea } />
+				<label htmlFor={ id + '-extra-area' }>Capture wide photo (useful if character's pose reaches past normal photo size)</label>
+			</Row>
+			{ (GRAPHICS_TEXTURE_RESOLUTION_SCALE[quality] < GRAPHICS_TEXTURE_RESOLUTION_SCALE[textureResolution]) ? (
+				<div className='warning-box'>
+					You are currently using lower texture resolution than what is optimal for creating an image of selected quality.<br />
+					We recommend either lowering the selected quality, or selecting higher "Texture resolution" in Settings → Graphics → Quality.
+				</div>
+			) : null }
+			<span className='flex-1' />
+			<Row alignX='end'>
+				<Button onClick={ execute } disabled={ processing }>
+					Take photo!
+				</Button>
+			</Row>
+		</Column>
 	);
 }

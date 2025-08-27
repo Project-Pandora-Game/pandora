@@ -20,7 +20,6 @@ export class SesEmail extends BaseEmailSender<SentMessageInfo> {
 		});
 		return createTransport({
 			SES: { sesClient, SendEmailCommand },
-			sendingRate: 1,
 		});
 	}
 

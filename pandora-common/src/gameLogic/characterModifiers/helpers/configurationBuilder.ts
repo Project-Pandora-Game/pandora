@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../../inputLimits.ts';
 import { Assert, AssertNever, KnownObject } from '../../../utility/index.ts';
@@ -11,7 +11,7 @@ type ModifierConfigurationDataTypeSchemaMap = {
 	characterList: z.ZodCatch<z.ZodArray<typeof CharacterIdSchema>>;
 	number: z.ZodCatch<z.ZodNumber>;
 	string: z.ZodCatch<z.ZodString>;
-	stringList: z.ZodCatch<z.ZodEffects<z.ZodArray<z.ZodString>, z.output<z.ZodString>[]>>;
+	stringList: z.ZodCatch<z.ZodPipe<z.ZodArray<z.ZodString>, z.ZodTransform<string[], string[]>>>;
 	toggle: z.ZodCatch<z.ZodBoolean>;
 };
 
@@ -72,7 +72,7 @@ export function CharacterModifierBuildConfigurationSchema<const TConfig extends 
 	const result: Partial<CharacterModifierBuildConfigurationSchemaShape<TConfig>> = {};
 	for (const [k, v] of KnownObject.entries(config)) {
 		const schema = CharacterModifierBuildConfigurationSchemaSingle(v);
-		Assert(isEqual(schema.removeCatch().parse(v.default), v.default), "Option's default does not parse");
+		Assert(isEqual(schema.unwrap().parse(v.default), v.default), "Option's default does not parse");
 		result[k] = schema;
 	}
 

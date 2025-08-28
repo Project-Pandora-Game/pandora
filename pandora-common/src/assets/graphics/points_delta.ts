@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CloneDeepMutable } from '../../utility/misc.ts';
 import { CoordinatesCompressedSchema } from './common.ts';
 import { PointDefinitionSchema, type PointTemplate } from './points.ts';

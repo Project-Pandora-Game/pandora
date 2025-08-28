@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { z } from 'zod';
+import * as z from 'zod';
 import { Satisfies } from '../../src/index.ts';
 import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceRequest } from '../../src/networking/helpers.ts';
 import { MessageHandler } from '../../src/networking/message_handler.ts';

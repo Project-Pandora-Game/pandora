@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ZodOverridable } from '../../validation.ts';
 
 export const BoneNameSchema = ZodOverridable(z.string());

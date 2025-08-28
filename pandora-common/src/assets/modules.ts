@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { ZodDiscriminatedUnionOption, z } from 'zod';
+import * as z from 'zod';
 import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem, LockActionUpdateFingerprintProblem } from '../gameLogic/locks/lockLogic.ts';
 import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc.ts';
 import { RecordUnpackSubobjectProperties } from '../validation.ts';
@@ -104,9 +104,9 @@ export type IAssetModuleTypes<out TProperties, out TStaticData> = {
 };
 
 type IModuleTypeBaseSchema = {
-	readonly data: ZodDiscriminatedUnionOption<'type'>;
-	readonly template: ZodDiscriminatedUnionOption<'type'>;
-	readonly actions: ZodDiscriminatedUnionOption<'moduleType'>;
+	readonly data: z.ZodType;
+	readonly template: z.ZodType;
+	readonly actions: z.ZodType;
 };
 
 export const ItemModuleDataSchema = z.discriminatedUnion('type', ParseArrayNotEmpty(

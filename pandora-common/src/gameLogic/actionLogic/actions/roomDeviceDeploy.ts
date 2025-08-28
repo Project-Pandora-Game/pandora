@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import { RoomDeviceDeploymentChangeSchema, type ItemRoomDevice } from '../../../assets/item/roomDevice.ts';
 import type { CharacterId } from '../../../character/characterTypes.ts';

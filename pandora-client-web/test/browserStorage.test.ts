@@ -1,6 +1,6 @@
 import { renderHook, RenderHookResult } from '@testing-library/react';
 import { act } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage, useBrowserStorage } from '../src/browserStorage.ts';
 
 const MockDataSchema = z.object({

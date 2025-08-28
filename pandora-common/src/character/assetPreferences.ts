@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Asset } from '../assets/asset.ts';
 import type { AssetManager } from '../assets/assetManager.ts';
 import { AssetId, AssetIdSchema } from '../assets/base.ts';
@@ -32,7 +32,7 @@ export const AssetPreferencesPublicSchema = z.object({
 export type AssetPreferencesPublic = z.infer<typeof AssetPreferencesPublicSchema>;
 
 export const AssetPreferencesServerSchema = AssetPreferencesPublicSchema.extend({
-	permissions: z.record(AssetPreferenceTypeSchema, PermissionConfigSchema.nullable().catch(null)).default(() => ({})),
+	permissions: z.partialRecord(AssetPreferenceTypeSchema, PermissionConfigSchema.nullable().catch(null)).default(() => ({})),
 });
 export type AssetPreferencesServer = z.infer<typeof AssetPreferencesServerSchema>;
 

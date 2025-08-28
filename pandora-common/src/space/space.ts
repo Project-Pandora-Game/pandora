@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account.ts';
 import type { AssetFrameworkGlobalState } from '../assets/state/globalState.ts';
 import { SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE, SpaceStateBundleSchema } from '../assets/state/spaceState.ts';
@@ -204,7 +204,7 @@ export const SpaceDataSchema = z.object({
 	ownerInvites: AccountIdSchema.array().default([]),
 	config: SpaceDirectoryConfigSchema,
 	spaceState: SpaceStateBundleSchema.default(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
-	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
+	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.string(), z.unknown())).default([]),
 });
 /** Space data stored in database */
 export type SpaceData = z.infer<typeof SpaceDataSchema>;

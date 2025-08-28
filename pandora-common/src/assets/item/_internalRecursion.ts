@@ -1,11 +1,11 @@
 // This file is meant to be internal to pandora-common
 // It is only a helper to achieve recursion of items inside modules without introducing cyclic dependencies
 
-import { z, type ZodTypeDef } from 'zod';
-import type { ItemBundle, ItemTemplate } from './base.ts';
+import * as z from 'zod';
 import { Assert } from '../../utility/misc.ts';
+import type { ItemBundle, ItemTemplate } from './base.ts';
 
-let ItemBundleSchemaReference: z.ZodType<ItemBundle, ZodTypeDef, unknown> | undefined;
+let ItemBundleSchemaReference: z.ZodType<ItemBundle> | undefined;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const __internal_ItemBundleSchemaRecursive = z.lazy(() => {
 	if (ItemBundleSchemaReference == null) {
@@ -14,7 +14,7 @@ export const __internal_ItemBundleSchemaRecursive = z.lazy(() => {
 	return ItemBundleSchemaReference;
 });
 
-let ItemTemplateSchemaReference: z.ZodType<ItemTemplate, ZodTypeDef, unknown> | undefined;
+let ItemTemplateSchemaReference: z.ZodType<ItemTemplate> | undefined;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const __internal_ItemTemplateSchemaRecursive = z.lazy(() => {
 	if (ItemTemplateSchemaReference == null) {
@@ -25,8 +25,8 @@ export const __internal_ItemTemplateSchemaRecursive = z.lazy(() => {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function __internal_InitRecursiveItemSchemas(
-	itemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown>,
-	itemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown>,
+	itemBundleSchema: z.ZodType<ItemBundle>,
+	itemTemplateSchema: z.ZodType<ItemTemplate>,
 ): void {
 	Assert(ItemBundleSchemaReference === undefined);
 	Assert(ItemTemplateSchemaReference === undefined);

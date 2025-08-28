@@ -16,7 +16,7 @@ import { Muffler } from '../chat/muffling.ts';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers/index.ts';
-import type { CharacterModifierEffectData, CharacterModifierEffectDataSpecific, CharacterModifierPropertiesApplier, CharacterModifierSpecificConfig, CharacterModifierType } from '../gameLogic/index.ts';
+import type { CharacterModifierEffectData, CharacterModifierEffectDataSpecific, CharacterModifierPropertiesApplier, CharacterModifierSpecificConfig, CharacterModifierType, CharacterModifierTypeDefinition } from '../gameLogic/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
 import { Assert, AssertNever, IsNotNullable, MemoizeNoArg } from '../utility/misc.ts';
 import { ItemInteractionType } from './restrictionTypes.ts';
@@ -56,10 +56,14 @@ export class CharacterRestrictionsManager {
 				if (e.type !== type)
 					return undefined;
 
+				const def: CharacterModifierTypeDefinition<TType> = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
+				type AnyConfig = { [k in CharacterModifierType]: CharacterModifierSpecificConfig<k> }[CharacterModifierType];
+				const config: AnyConfig = def.parseConfig(e);
+
 				return {
 					id: e.id,
 					type: castImmutable(type),
-					config: castImmutable<CharacterModifierSpecificConfig<TType>>(CHARACTER_MODIFIER_TYPE_DEFINITION[e.type].parseConfig(e)),
+					config: castImmutable<CharacterModifierSpecificConfig<TType>>(config as CharacterModifierSpecificConfig<TType>),
 				};
 			})
 			.filter(IsNotNullable);

@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { HexRGBAColorString } from '../../validation.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';

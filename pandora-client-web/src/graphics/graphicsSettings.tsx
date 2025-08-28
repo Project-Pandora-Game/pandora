@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { AssertNever, CloneDeepMutable } from 'pandora-common';
 import { useMemo } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { BrowserStorage } from '../browserStorage.ts';
 import { useMediaQuery } from '../common/useMediaQuery.ts';

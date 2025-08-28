@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { AssetId } from '../assets/base.ts';
 import type { ItemId, RoomId } from '../assets/index.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
@@ -50,7 +50,7 @@ export function CalculateChatMessagesLength(message: IClientMessage[], maxLength
 export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine((val, ctx) => {
 	if (CalculateChatMessagesLength(val, LIMIT_CHAT_MESSAGE_LENGTH) > LIMIT_CHAT_MESSAGE_LENGTH) {
 		ctx.addIssue({
-			code: z.ZodIssueCode.custom,
+			code: 'custom',
 			message: `Message is too long, maximum length is ${LIMIT_CHAT_MESSAGE_LENGTH}`,
 		});
 	}

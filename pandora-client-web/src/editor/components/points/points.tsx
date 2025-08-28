@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash-es';
 import { Assert, GetLogger, PointTemplateSourceSchema } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage.ts';

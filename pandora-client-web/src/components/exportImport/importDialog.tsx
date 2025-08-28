@@ -2,7 +2,7 @@ import { isEqual } from 'lodash-es';
 import { Assert, GetLogger } from 'pandora-common';
 import { ReactElement, useEffect, useId, useState } from 'react';
 import { toast } from 'react-toastify';
-import { ZodType, z } from 'zod';
+import * as z from 'zod';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { Button } from '../common/button/button.tsx';
@@ -11,7 +11,7 @@ import { ModalDialog } from '../dialog/dialog.tsx';
 import { ParseImportData } from './exportImportUtils.ts';
 import './importDialog.scss';
 
-interface ImportDialogProps<T extends ZodType<unknown>> extends ChildrenProps {
+interface ImportDialogProps<T extends z.ZodType> extends ChildrenProps {
 	expectedType: string;
 	expectedVersion: number;
 	dataSchema: T;
@@ -22,7 +22,7 @@ interface ImportDialogProps<T extends ZodType<unknown>> extends ChildrenProps {
 
 const logger = GetLogger('ExportImport');
 
-export function ImportDialog<T extends ZodType<unknown>>({
+export function ImportDialog<T extends z.ZodType>({
 	expectedType,
 	expectedVersion,
 	dataSchema,
@@ -89,7 +89,7 @@ export function ImportDialog<T extends ZodType<unknown>>({
 
 		const parsedData = dataSchema.safeParse(data);
 		if (!parsedData.success) {
-			setImportProblem(`Loading data failed:\n${JSON.stringify(parsedData.error.issues, undefined, 4)}`);
+			setImportProblem(`Loading data failed:\n${z.prettifyError(parsedData.error)}`);
 			return;
 		}
 

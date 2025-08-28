@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash-es';
 import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
@@ -1114,9 +1114,9 @@ function MakeStatus(): IDirectoryStatus {
 	return result;
 }
 
-const VerifyResponseSchema = z.object({
+const VerifyResponseSchema = z.looseObject({
 	success: z.boolean(),
-}).passthrough();
+});
 
 async function TestCaptcha(token?: string): Promise<boolean> {
 	if (!HCAPTCHA_SECRET_KEY || !HCAPTCHA_SITE_KEY)

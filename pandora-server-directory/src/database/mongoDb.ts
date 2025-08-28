@@ -38,7 +38,7 @@ import {
 	type RoomGeometryConfig,
 	type SpaceStateBundle,
 } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import { ENV } from '../config.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
 import {

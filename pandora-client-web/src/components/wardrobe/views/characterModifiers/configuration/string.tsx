@@ -21,7 +21,7 @@ export function WardrobeCharacterModifierConfigString({ definition, value, onCha
 
 	const parsedValue = useMemo(() => schema.parse(value), [schema, value]);
 	const [changedValue, setChangedValue] = useState<string | null>(null);
-	const valueError = changedValue != null ? FormCreateStringValidator(schema.removeCatch(), 'value')(changedValue) : undefined;
+	const valueError = changedValue != null ? FormCreateStringValidator(schema.unwrap(), 'value')(changedValue) : undefined;
 
 	const [execute, processing] = useAsyncEvent(async () => {
 		if (onChange == null)

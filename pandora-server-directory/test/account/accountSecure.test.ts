@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Account, CreateAccountData } from '../../src/account/account.ts';
-import AccountSecure, { AccountToken, AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
-import { DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
+import AccountSecure, { AccountToken, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { AccountTokenReason, DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
 import { MockDatabase } from '../../src/database/mockDb.ts';
 import GetEmailSender from '../../src/services/email/index.ts';
 import { TestMockDb } from '../utils.ts';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const DirectoryStatusAnnouncementSchema = z.object({
 	type: z.enum(['info', 'warning']),

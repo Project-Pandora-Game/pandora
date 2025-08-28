@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { KeysMatching } from '../utility/misc.ts';
 
 export type IAccountRoleConfig = {
@@ -59,7 +59,7 @@ export type IRoleManageInfo = IRoleSelfInfo & {
 
 type IAccountRoleInfoT<T> = Partial<Record<AccountRole, T>>;
 
-export const AccountRoleInfoSchema = z.record(AccountRoleSchema, RoleSelfInfoSchema);
+export const AccountRoleInfoSchema = z.partialRecord(AccountRoleSchema, RoleSelfInfoSchema);
 export type IAccountRoleInfo = z.infer<typeof AccountRoleInfoSchema>;
 export type IAccountRoleManageInfo = IAccountRoleInfoT<IRoleManageInfo>;
 

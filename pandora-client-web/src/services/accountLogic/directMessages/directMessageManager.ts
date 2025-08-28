@@ -14,7 +14,7 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { KeyExchange } from '../../../crypto/keyExchange.ts';
 import type { SymmetricEncryption } from '../../../crypto/symmetric.ts';

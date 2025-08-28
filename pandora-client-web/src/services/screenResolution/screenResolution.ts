@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { CharacterSize, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { useCallback, useSyncExternalStore } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import type { GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 

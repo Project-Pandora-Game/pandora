@@ -1,5 +1,5 @@
 import { CreateEnvParser, DirectoryStatusAnnouncementSchema, EnvTimeInterval } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const EnvParser = CreateEnvParser({
 
@@ -23,7 +23,7 @@ export const EnvParser = CreateEnvParser({
 	PANDORA_ANNOUNCEMENT_DEFAULT: z.preprocess((arg) => {
 		if (typeof arg !== 'string' || !arg)
 			return undefined;
-		return JSON.parse(arg);
+		return JSON.parse(arg) as unknown;
 	}, DirectoryStatusAnnouncementSchema.optional()),
 
 	//#endregion
@@ -41,13 +41,13 @@ export const EnvParser = CreateEnvParser({
 	//#region Expiration settings
 
 	/** Time (in ms) for how long is an account login token valid */
-	LOGIN_TOKEN_EXPIRATION: EnvTimeInterval().default('1w'),
+	LOGIN_TOKEN_EXPIRATION: EnvTimeInterval().prefault('1w'),
 	/** Time (in ms) for how long is an account activation token valid */
-	ACTIVATION_TOKEN_EXPIRATION: EnvTimeInterval().default('1w'),
+	ACTIVATION_TOKEN_EXPIRATION: EnvTimeInterval().prefault('1w'),
 	/** Time (in ms) for how long is a password reset token valid */
-	PASSWORD_RESET_TOKEN_EXPIRATION: EnvTimeInterval().default('1d'),
+	PASSWORD_RESET_TOKEN_EXPIRATION: EnvTimeInterval().prefault('1d'),
 	/** Time (in ms) for rate limiting email change for not activated accounts */
-	RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED: EnvTimeInterval().default('10m'),
+	RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED: EnvTimeInterval().prefault('10m'),
 
 	//#endregion
 
@@ -118,7 +118,7 @@ export const EnvParser = CreateEnvParser({
 	//#region Account Security
 
 	/** Time window for login attempts */
-	LOGIN_ATTEMPT_WINDOW: EnvTimeInterval().default('15m'),
+	LOGIN_ATTEMPT_WINDOW: EnvTimeInterval().prefault('15m'),
 	/** Max failed login attempts before requiring a captcha */
 	LOGIN_ATTEMPT_LIMIT: z.number().int().positive().default(30),
 	/** Killswitch for registration */

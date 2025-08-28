@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { Assert, AssertNever } from '../../../utility/index.ts';
 import type { PermissionConfigDefault, PermissionType } from '../../permissions/index.ts';
 import type { CharacterModifierStrictnessCategory } from '../characterModifierBaseData.ts';

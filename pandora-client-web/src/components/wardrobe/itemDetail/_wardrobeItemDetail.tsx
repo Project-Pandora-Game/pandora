@@ -13,7 +13,7 @@ import {
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import pinIcon from '../../../assets/icons/pin-solid.svg';

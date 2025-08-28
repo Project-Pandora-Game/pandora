@@ -1,6 +1,6 @@
 import { freeze, produce, type Immutable } from 'immer';
 import { isEmpty } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { IItemLoadContext } from '../../assets/item/base.ts';
 import { CharacterIdSchema, CompareCharacterIds } from '../../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../../character/restrictionsManager.ts';

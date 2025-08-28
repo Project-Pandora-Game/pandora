@@ -1,11 +1,4 @@
-import {
-	z,
-	ZodEffects,
-	ZodFirstPartyTypeKind,
-	ZodIssueCode,
-	ZodNumber,
-	type ZodTypeAny,
-} from 'zod';
+import * as z from 'zod';
 import { GetLogger } from './logging/logging.ts';
 import { IsObject, ZodTemplateString } from './validation.ts';
 
@@ -13,8 +6,8 @@ declare const process: Record<string, Record<string, unknown>>;
 
 const logger = GetLogger('ENV');
 
-export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = NonNullable<unknown>>(envSchema: TEnvSchema) {
-	const transformed: Record<string, ZodTypeAny> = {};
+export function CreateEnvParser<TEnvSchema extends Record<string, z.ZodType> = NonNullable<unknown>>(envSchema: TEnvSchema) {
+	const transformed: Record<string, z.ZodType> = {};
 	for (const [key, schema] of Object.entries(envSchema)) {
 		if (!EnvironmentKeySchema.safeParse(key).success) {
 			logger.fatal(`invalid environment key: ${key}`);
@@ -33,7 +26,7 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 							return false;
 						default:
 							ctx.addIssue({
-								code: ZodIssueCode.custom,
+								code: 'custom',
 								message: 'must be a "true" or "false"',
 							});
 							return z.NEVER;
@@ -63,35 +56,28 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 		}
 		const parsed = z.object(transformed).safeParse(obj);
 		if (!parsed.success) {
-			logger.fatal(parsed.error.toString());
-			throw new Error('failed to create env:\n' + parsed.error.toString());
+			const errString = z.prettifyError(parsed.error);
+			logger.fatal('Failed to create env:\n', errString);
+			throw new Error('Failed to create env:\n' + errString);
 		}
 		return parsed.data as unknown as EnvOutput<TEnvSchema>;
 	};
 }
 
-function GetZodDefType(schema: ZodTypeAny): 'number' | 'boolean' | 'unfiltered' {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-	switch (schema._def.typeName) {
-		case ZodFirstPartyTypeKind.ZodNumber:
+function GetZodDefType(schema: z.ZodType): 'number' | 'boolean' | 'unfiltered' {
+
+	switch (schema.def.type) {
+		case 'number':
 			return 'number';
-		case ZodFirstPartyTypeKind.ZodBoolean:
+		case 'boolean':
 			return 'boolean';
-		case ZodFirstPartyTypeKind.ZodCatch:
-		case ZodFirstPartyTypeKind.ZodDefault:
-		case ZodFirstPartyTypeKind.ZodLazy:
-		case ZodFirstPartyTypeKind.ZodNullable:
-		case ZodFirstPartyTypeKind.ZodOptional:
-		case ZodFirstPartyTypeKind.ZodReadonly:
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-			return GetZodDefType(schema._def.innerType);
-		case ZodFirstPartyTypeKind.ZodEffects:
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if (schema._def.effect?.type === 'refinement' || schema._def.effect?.type === 'transform') {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-				return GetZodDefType(schema._def.schema);
-			}
-			return 'unfiltered';
+		case 'catch':
+		case 'default':
+		case 'lazy':
+		case 'nullable':
+		case 'optional':
+		case 'readonly':
+			return GetZodDefType((schema as z.ZodCatch<z.ZodType> | z.ZodDefault<z.ZodType> | z.ZodLazy<z.ZodType> | z.ZodNullable<z.ZodType> | z.ZodOptional<z.ZodType> | z.ZodReadonly<z.ZodType>).unwrap());
 		default:
 			return 'unfiltered';
 	}
@@ -99,11 +85,11 @@ function GetZodDefType(schema: ZodTypeAny): 'number' | 'boolean' | 'unfiltered' 
 
 const EnvironmentKeySchema = ZodTemplateString(z.string(), /^[A-Z0-9_]+$/);
 
-export type EnvOutput<TEnvSchema extends Record<string, ZodTypeAny>> = {
+export type EnvOutput<TEnvSchema extends Record<string, z.ZodType>> = {
 	readonly [K in keyof TEnvSchema]: z.output<TEnvSchema[K]>;
 };
 
-export type EnvInputJson<TEnvSchema extends Record<string, ZodTypeAny>> = {
+export type EnvInputJson<TEnvSchema extends Record<string, z.ZodType>> = {
 	readonly [K in keyof TEnvSchema]: string | number | boolean;
 };
 
@@ -142,7 +128,7 @@ function Stringify(value: unknown, allowArray = true): string | undefined {
  *
  * Output is always in milliseconds.
  */
-export function EnvTimeInterval() {
+export function EnvTimeInterval(): z.ZodType<number, number | `${number}${'s' | 'm' | 'h' | 'd' | 'w' | ''}`> {
 	return z.preprocess((arg, ctx) => {
 		if (typeof arg !== 'string') {
 			return arg;
@@ -150,7 +136,7 @@ export function EnvTimeInterval() {
 		const match = /^(\d+)([smhdw])?$/.exec(arg);
 		if (!match) {
 			ctx.addIssue({
-				code: ZodIssueCode.custom,
+				code: 'custom',
 				message: 'invalid time interval',
 			});
 			return z.NEVER;
@@ -170,5 +156,5 @@ export function EnvTimeInterval() {
 			default:
 				return value;
 		}
-	}, z.number().int().nonnegative()) as ZodEffects<ZodNumber, number, number | `${number}${'s' | 'm' | 'h' | 'd' | 'w' | ''}`>;
+	}, z.number().int().nonnegative());
 }

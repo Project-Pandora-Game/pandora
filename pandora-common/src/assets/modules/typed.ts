@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';

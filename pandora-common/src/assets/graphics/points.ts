@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { GraphicsSourceAutoMeshTemplateSchema } from '../graphicsSource/layers/autoMesh.ts';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
 import { BoneNameSchema, ConditionSchema } from './conditions.ts';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager.ts';
 import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoom } from '../chat/index.ts';

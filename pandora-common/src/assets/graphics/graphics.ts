@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssetIdSchema } from '../base.ts';
 import type { BoneType } from './conditions.ts';
 import { InversePosingHandleSchema } from './inversePosing.ts';
@@ -32,9 +32,9 @@ export const GraphicsImageFormatSchema = z.enum(['avif', 'webp']);
 export type GraphicsImageFormat = z.infer<typeof GraphicsImageFormatSchema>;
 
 export const GraphicsDefinitionFileSchema = z.object({
-	assets: z.record(AssetIdSchema, AssetGraphicsDefinitionSchema),
+	assets: z.partialRecord(AssetIdSchema, AssetGraphicsDefinitionSchema),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
-	imageFormats: z.record(GraphicsImageFormatSchema, z.string()),
+	imageFormats: z.partialRecord(GraphicsImageFormatSchema, z.string()),
 	/** UI handles used for inverse kinematic posing of the character. */
 	inversePosingHandles: InversePosingHandleSchema.array(),
 });

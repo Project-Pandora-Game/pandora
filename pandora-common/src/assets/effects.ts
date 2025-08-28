@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { HearingImpairmentSettings, MuffleSettings } from '../chat/index.ts';
 import { KnownObject, ParseArrayNotEmpty, type Satisfies } from '../utility/misc.ts';
 
@@ -95,7 +95,7 @@ export const EFFECT_NAMES: Record<EffectName, string> = {
 
 //#endregion
 
-export const EffectNameSchema = z.enum<EffectName, [EffectName, ...EffectName[]]>(ParseArrayNotEmpty(KnownObject.keys(EFFECT_NAMES)));
+export const EffectNameSchema = z.enum<EffectName[]>(ParseArrayNotEmpty(KnownObject.keys(EFFECT_NAMES)));
 export type EffectName = keyof EffectsDefinition;
 
 type __satisfies__EffectsDefinition = Satisfies<EffectsDefinition, Record<EffectName, number | boolean>>;

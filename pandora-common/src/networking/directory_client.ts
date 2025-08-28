@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
 import type { IDirectoryStatus } from '../directory/status.ts';

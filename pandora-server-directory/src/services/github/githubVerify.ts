@@ -7,7 +7,7 @@ import { Octokit } from '@octokit/rest';
 import { Request, Response, Router } from 'express';
 import { nanoid } from 'nanoid';
 import { URL } from 'url';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const API_PATH = 'https://github.com/login/oauth/';
 

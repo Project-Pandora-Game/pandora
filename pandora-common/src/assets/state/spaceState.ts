@@ -1,7 +1,7 @@
 import { freeze, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/space.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
@@ -15,7 +15,7 @@ import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDL
 import { LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 
 export const SpaceStateBundleSchema = z.object({
-	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.unknown())),
+	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.string(), z.unknown())),
 	clientOnly: z.boolean().optional(),
 });
 

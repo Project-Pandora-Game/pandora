@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { ArrayCompressType } from '../../utility/misc.ts';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
@@ -19,7 +19,7 @@ export const SizeSchema = z.object({
 export type Size = z.infer<typeof SizeSchema>;
 export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
 
-export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
+export const RectangleSchema = CoordinatesSchema.extend(SizeSchema.shape);
 export type Rectangle = z.infer<typeof RectangleSchema>;
 export type RectangleCompressed = [...CoordinatesCompressed, ...SizeCompressed];
 

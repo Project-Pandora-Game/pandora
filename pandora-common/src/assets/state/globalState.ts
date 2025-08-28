@@ -1,6 +1,6 @@
 import { freeze } from 'immer';
 import { nanoid } from 'nanoid';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';

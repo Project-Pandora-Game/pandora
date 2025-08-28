@@ -2,7 +2,7 @@ import { diffString } from 'json-diff';
 import { isEqual, omit } from 'lodash-es';
 import { CollationOptions, Collection, Db, Document, IndexDescription, MongoClient, ObjectId } from 'mongodb';
 import { ArrayToRecordKeys, Assert, IsObject, KnownObject, Logger } from 'pandora-common';
-import type { ZodType, ZodTypeDef } from 'zod';
+import * as z from 'zod';
 
 export interface DbAutomaticMigration {
 	readonly dryRun: boolean;
@@ -23,7 +23,7 @@ export interface DbManualMigrationProcess<TNew extends Document, TOld extends Do
 }
 
 export interface DbManualMigration<TNew extends Document, TOld extends Document> {
-	readonly oldSchema: ZodType<TOld, ZodTypeDef, unknown>;
+	readonly oldSchema: z.ZodType<TOld>;
 	readonly oldCollectionName?: string;
 	readonly migrate: (process: DbManualMigrationProcess<TNew, TOld>) => Promise<void>;
 }
@@ -34,7 +34,7 @@ export type ValidatedCollectionType<T extends ValidatedCollection<any>> = T exte
 export class ValidatedCollection<T extends Document> {
 	public readonly logger: Logger;
 	public readonly name: string;
-	public readonly schema: ZodType<T, ZodTypeDef, unknown>;
+	public readonly schema: z.ZodType<T>;
 	public readonly indexes: (IndexDescription & { name: string; })[];
 	private uninitializedCollection?: Collection<T>;
 
@@ -48,7 +48,7 @@ export class ValidatedCollection<T extends Document> {
 	constructor(
 		logger: Logger,
 		name: string,
-		schema: ZodType<T, ZodTypeDef, unknown>,
+		schema: z.ZodType<T>,
 		indexes: (IndexDescription & { name: string; })[],
 	) {
 		this.logger = logger;
@@ -182,7 +182,7 @@ export class ValidatedCollection<T extends Document> {
 			const parsedData = this.schema.safeParse(originalData);
 			if (!parsedData.success) {
 				migration.success = false;
-				log.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, parsedData.error);
+				log.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, z.prettifyError(parsedData.error));
 				continue;
 			}
 
@@ -245,7 +245,7 @@ export class ValidatedCollection<T extends Document> {
 async function* ValidatingAsyncIter<T extends Document>(
 	logger: Logger,
 	document: Collection<T>,
-	schema: ZodType<T, ZodTypeDef, unknown>,
+	schema: z.ZodType<T>,
 	onError: () => void,
 ): AsyncGenerator<T | null, void, unknown> {
 	for await (const originalData of document.find().stream()) {
@@ -254,7 +254,7 @@ async function* ValidatingAsyncIter<T extends Document>(
 
 		const parsedData = schema.safeParse(originalData);
 		if (!parsedData.success) {
-			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, parsedData.error);
+			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, z.prettifyError(parsedData.error));
 			onError();
 			yield null;
 		} else {

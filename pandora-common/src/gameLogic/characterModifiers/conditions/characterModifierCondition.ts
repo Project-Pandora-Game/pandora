@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets/index.ts';
 import { RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { EffectNameSchema } from '../../../assets/effects.ts';

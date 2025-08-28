@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { z } from 'zod';
+import * as z from 'zod';
 import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
 import { CardinalDirectionSchema, IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
 import { AssetFrameworkRoomState, RoomTemplateSchema } from '../../../assets/state/roomState.ts';

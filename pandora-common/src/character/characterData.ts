@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountIdSchema } from '../account/index.ts';
 import { SpaceStateBundleSchema } from '../assets/index.ts';
 import { AppearanceBundleSchema } from '../assets/state/characterStateTypes.ts';

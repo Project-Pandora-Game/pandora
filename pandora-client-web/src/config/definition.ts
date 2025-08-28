@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const WEBPACK_BASE_CONFIG = {
 	DIRECTORY_ADDRESS: z.string().default('http://127.0.0.1:25560'),

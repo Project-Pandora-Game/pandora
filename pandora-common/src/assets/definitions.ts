@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { AssetPreferenceType } from '../character/index.ts';
 import type { CharacterModifierSpecificTemplate, CharacterModifierType } from '../gameLogic/index.ts';
 import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';

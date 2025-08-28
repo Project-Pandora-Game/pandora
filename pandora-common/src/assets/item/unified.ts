@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z, ZodTypeDef } from 'zod';
+import * as z from 'zod';
 
 import type { Asset } from '../asset.ts';
 import type { AssetType } from '../definitions.ts';
@@ -35,21 +35,21 @@ export const ItemBundleSchema = z.object({
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
-	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
+	moduleData: z.record(z.string(), z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 	/** Lock specific data */
 	lockData: LockDataBundleSchema.optional(),
-}) satisfies z.ZodType<ItemBundle, ZodTypeDef, unknown>;
+}) satisfies z.ZodType<ItemBundle>;
 
 /**
  * Data describing an item configuration as a template.
  * Used for creating a new item from the template with matching configuration.
  * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
  */
-export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = z.object({
+export const ItemTemplateSchema: z.ZodType<ItemTemplate> = z.object({
 	asset: AssetIdSchema,
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
@@ -57,12 +57,12 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
-	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
+	modules: z.record(z.string(), z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
 
 export const AssetFrameworkOutfitSchema = z.object({
 	name: z.string().max(LIMIT_OUTFIT_NAME_LENGTH),
-	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
+	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.string(), z.unknown())),
 });
 export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
 

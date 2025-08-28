@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { LIMIT_CHARACTER_MODIFIER_NAME_LENGTH } from '../../inputLimits.ts';
 import { ZodTemplateString, ZodTrimedRegex } from '../../validation.ts';
 
@@ -17,7 +17,7 @@ export const CharacterModifierNameSchema = z.string()
 	.max(LIMIT_CHARACTER_MODIFIER_NAME_LENGTH)
 	.regex(ZodTrimedRegex);
 
-export const CharacterModifierConfigurationSchema = z.record(z.unknown());
+export const CharacterModifierConfigurationSchema = z.record(z.string(), z.unknown());
 export type CharacterModifierConfiguration = z.infer<typeof CharacterModifierConfigurationSchema>;
 
 /**

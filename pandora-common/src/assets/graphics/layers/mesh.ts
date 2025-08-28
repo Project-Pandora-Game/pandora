@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ZodBase64Regex } from '../../../validation.ts';
 import { RectangleSchema } from '../common.ts';
 import { BoneNameSchema } from '../conditions.ts';

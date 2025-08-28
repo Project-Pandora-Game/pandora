@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences.ts';
 import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../character/characterSettings.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';

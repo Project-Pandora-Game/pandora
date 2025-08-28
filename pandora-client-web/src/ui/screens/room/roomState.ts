@@ -1,5 +1,5 @@
 import { SpaceIdSchema } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { useObservable } from '../../../observable.ts';
 

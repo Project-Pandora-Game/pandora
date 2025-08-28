@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';

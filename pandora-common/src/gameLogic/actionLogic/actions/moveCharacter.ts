@@ -1,5 +1,5 @@
 import { uniq } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
 import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
 import { AssertNever } from '../../../utility/misc.ts';

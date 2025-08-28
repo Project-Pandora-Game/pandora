@@ -2,7 +2,7 @@ import type { Immutable } from 'immer';
 import { noop } from 'lodash-es';
 import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkSpaceState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type GraphicsSourceLayer, type LayerStateOverrides } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { GetCurrentAssetManager } from '../assets/assetManager.tsx';
 import { useBrowserStorage } from '../browserStorage.ts';
 import { useEvent } from '../common/useEvent.ts';

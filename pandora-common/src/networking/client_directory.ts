@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
@@ -72,7 +72,7 @@ export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 export const SecondFactorTypeSchema = z.enum(['captcha']);
 export type SecondFactorType = z.infer<typeof SecondFactorTypeSchema>;
 
-export const SecondFactorDataSchema = z.record(SecondFactorTypeSchema, z.string());
+export const SecondFactorDataSchema = z.partialRecord(SecondFactorTypeSchema, z.string());
 export type SecondFactorData = z.infer<typeof SecondFactorDataSchema>;
 
 export type SecondFactorResponse = {

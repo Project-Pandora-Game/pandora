@@ -4,7 +4,7 @@ import { noop } from 'lodash-es';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useBrowserStorage } from '../../browserStorage.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';

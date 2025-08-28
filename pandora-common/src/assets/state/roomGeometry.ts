@@ -1,7 +1,7 @@
 import { freeze, produce, type Draft, type Immutable } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
@@ -165,7 +165,7 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 	};
 }
 
-export const CharacterRoomPositionSchema: z.ZodType<CharacterRoomPosition, z.ZodTypeDef, unknown> = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+export const CharacterRoomPositionSchema: z.ZodType<CharacterRoomPosition> = z.tuple([z.number().int(), z.number().int(), z.number().int()])
 	.catch([0, 0, 0])
 	.readonly();
 export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];

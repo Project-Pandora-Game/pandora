@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import { Assert } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
@@ -11,7 +11,7 @@ import { ItemBundleSchema } from './unified.ts';
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];
 
-export const AppearanceItemsBundleSchema: z.ZodType<ItemBundle[], z.ZodTypeDef, unknown> = ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown()));
+export const AppearanceItemsBundleSchema: z.ZodType<ItemBundle[]> = ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.string(), z.unknown()));
 export type AppearanceItemsBundle = ItemBundle[];
 
 export const AppearanceItemsDeltaBundleSchema = z.object({

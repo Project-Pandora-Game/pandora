@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
-import { ZodEnum } from 'zod';
+import * as z from 'zod';
 import { Assert, CloneDeepMutable, IntervalSetIntersection, IsNotNullable, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
 import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionLegsPosePoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from './graphics/index.ts';
@@ -365,14 +365,14 @@ function FromLegsLimit(data: TreeLimitMutableDimensionData, { upper, pose }: Imm
 	FromLimitEnumValue(data, 'legs.pose', LegsPoseSchema, pose);
 }
 
-function FromPoseEnumValue<E extends [string, ...string[]]>(data: Map<TreeLimitDimension, number>, property: TreeLimitDimension, schema: ZodEnum<E>, value: E[number] | undefined): void {
+function FromPoseEnumValue<E extends z.util.EnumLike>(data: Map<TreeLimitDimension, number>, property: TreeLimitDimension, schema: z.ZodEnum<E>, value: E[keyof E] | undefined): void {
 	if (value != null) {
 		const index = EnumToIndex(schema, value);
 		data.set(property, index);
 	}
 }
 
-function FromLimitEnumValue<E extends [string, ...string[]]>(data: TreeLimitMutableDimensionData, property: TreeLimitDimension, schema: ZodEnum<E>, value: E[number] | readonly (E[number])[] | undefined): void {
+function FromLimitEnumValue<E extends z.util.EnumLike>(data: TreeLimitMutableDimensionData, property: TreeLimitDimension, schema: z.ZodEnum<E>, value: E[keyof E] | readonly (E[keyof E])[] | undefined): void {
 	if (value != null) {
 		if (IsReadonlyArray(value)) {
 			const result: [number, number][] = value
@@ -435,14 +435,14 @@ function PoseChangeWeight(key: TreeLimitDimension): number {
 	return 90;
 }
 
-function EnumToIndex<E extends [string, ...string[]]>(schema: ZodEnum<E>, value: E[number]): number {
+function EnumToIndex<E extends z.util.EnumLike>(schema: z.ZodEnum<E>, value: E[keyof E]): number {
 	const index = schema.options.indexOf(value);
 	Assert(index >= 0, `Got invalid enum value: '${value}'`);
 
 	return index;
 }
 
-function IndexToEnum<E extends [string, ...string[]]>(schema: ZodEnum<E>, index: number | undefined, set: (value: E[number]) => void): void {
+function IndexToEnum<E extends z.util.EnumLike>(schema: z.ZodEnum<E>, index: number | undefined, set: (value: E[keyof E]) => void): void {
 	if (index == null)
 		return;
 

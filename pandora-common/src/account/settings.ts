@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ClientNotificationGlobalSettingsSchema } from '../client/notificationDefinition.ts';
 import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
@@ -177,5 +177,5 @@ export type AccountSettingsKeys = z.infer<typeof AccountSettingsKeysSchema>;
 export const AccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
 export type AccountSettingsLimitedKeys = z.infer<typeof AccountSettingsLimitedKeysSchema>;
 
-export const AccountSettingsCooldownsSchema = z.record(AccountSettingsLimitedKeysSchema, z.number().optional());
+export const AccountSettingsCooldownsSchema = z.partialRecord(AccountSettingsLimitedKeysSchema, z.number());
 export type AccountSettingsCooldowns = z.infer<typeof AccountSettingsCooldownsSchema>;

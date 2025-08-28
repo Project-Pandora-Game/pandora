@@ -30,6 +30,7 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
+import * as z from 'zod';
 import { CopyToClipboard } from '../../../common/clipboard.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -1039,8 +1040,14 @@ function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 	return useCallback(async (config) => {
 		const validatedConfig = SpaceDirectoryConfigSchema.safeParse(config);
 		if (!validatedConfig.success) {
-			const issue = validatedConfig.error.issues.length > 0 ? validatedConfig.error.issues[0] : undefined;
-			SpaceConfigurationProgress.show('error', `Error during space creation:\nInvalid data${issue ? (`:\n\t"${issue.path.join('/')}" ${issue.message}`) : ''}`);
+			const issue = z.prettifyError(validatedConfig.error);
+			SpaceConfigurationProgress.show('error', (
+				<>
+					Error during space creation:<br />
+					Invalid data:<br />
+					{ issue }
+				</>
+			));
 			return;
 		}
 		try {

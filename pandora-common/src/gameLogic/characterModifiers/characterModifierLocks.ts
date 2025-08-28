@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssetIdSchema } from '../../assets/base.ts';
 import { LockDataBundleSchema, type LockSetup } from '../locks/index.ts';
 

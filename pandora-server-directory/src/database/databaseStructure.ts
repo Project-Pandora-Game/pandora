@@ -19,9 +19,17 @@ import {
 	ZodTemplateString,
 	ZodTruncate,
 } from 'pandora-common';
-import { z } from 'zod';
-import { AccountTokenReason } from '../account/accountSecure.ts';
+import * as z from 'zod';
 import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
+
+export enum AccountTokenReason {
+	/** Account activation token */
+	ACTIVATION = 1,
+	/** Account password reset token */
+	PASSWORD_RESET = 2,
+	/** Account login token */
+	LOGIN = 3,
+}
 
 export const DatabaseAccountTokenSchema = z.object({
 	/** The token secret */
@@ -29,7 +37,7 @@ export const DatabaseAccountTokenSchema = z.object({
 	/** Time when will this token expire (timestamp from `Date.now()`) */
 	expires: z.number(),
 	/** The reason for this token */
-	reason: z.nativeEnum(AccountTokenReason),
+	reason: z.enum(AccountTokenReason),
 });
 export type DatabaseAccountToken = z.infer<typeof DatabaseAccountTokenSchema>;
 
@@ -108,7 +116,7 @@ export const DatabaseAccountSchema = z.object({
 	settingsCooldowns: AccountSettingsCooldownsSchema.default(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
-	storedPosePresets: ZodArrayWithInvalidDrop(AssetFrameworkPosePresetWithIdSchema, z.record(z.unknown())).catch(() => []),
+	storedPosePresets: ZodArrayWithInvalidDrop(AssetFrameworkPosePresetWithIdSchema, z.record(z.string(), z.unknown())).catch(() => []),
 });
 /** Representation of account stored in database */
 export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;

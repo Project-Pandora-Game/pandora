@@ -1,5 +1,5 @@
 import { freeze } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountIdSchema } from '../account/account.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { type ChatActionId } from '../chat/chatActions.ts';
@@ -179,6 +179,6 @@ export type ClientNotificationGroup = z.infer<typeof ClientNotificationGroupSche
 export const ClientNotificationTypeSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(CLIENT_NOTIFICATION_TYPES)));
 export type ClientNotificationType = z.infer<typeof ClientNotificationTypeSchema>;
 
-export const NotificationTypesSettingsSchema = z.record(ClientNotificationTypeSchema, ClientNotificationTypeSettingSchema.optional());
+export const NotificationTypesSettingsSchema = z.partialRecord(ClientNotificationTypeSchema, ClientNotificationTypeSettingSchema);
 
 //#endregion

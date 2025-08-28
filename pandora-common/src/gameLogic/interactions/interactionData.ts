@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { PermissionConfigSchema } from '../permissions/index.ts';
 
 export const InteractionGenericIdSchema = z.string();

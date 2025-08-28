@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssertNever } from '../../../utility/index.ts';
 import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';

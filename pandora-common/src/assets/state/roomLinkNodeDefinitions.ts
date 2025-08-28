@@ -1,5 +1,5 @@
 import { freeze, type Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { CardinalDirection } from '../graphics/common.ts';
 
 /*

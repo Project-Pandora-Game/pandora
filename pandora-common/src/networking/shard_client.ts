@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { AccountOnlineStatus } from '../account/contacts.ts';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
 import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';

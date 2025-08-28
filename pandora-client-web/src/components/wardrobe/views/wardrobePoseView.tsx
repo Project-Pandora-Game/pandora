@@ -30,7 +30,7 @@ import {
 	type ServiceManager,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
 import starIcon from '../../../assets/icons/star.svg';

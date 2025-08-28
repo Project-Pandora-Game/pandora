@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { CharacterId } from '../character/characterTypes.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ShuffleArray, Assert } from './misc.ts';

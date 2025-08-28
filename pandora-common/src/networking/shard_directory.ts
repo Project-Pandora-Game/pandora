@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ShardFeatureSchema, SpaceData, SpaceDataShardUpdateSchema, SpaceIdSchema } from '../space/space.ts';

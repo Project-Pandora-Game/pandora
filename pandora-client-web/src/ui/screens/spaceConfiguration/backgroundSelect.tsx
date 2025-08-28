@@ -697,7 +697,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 							rangeSlider
 							aria-label='Camera height'
 							min={ 1 }
-							max={ RoomBackground3dBoxSideSchema.shape.tileScale._def.innerType.maxValue ?? 10 }
+							max={ RoomBackground3dBoxSideSchema.shape.tileScale.def.innerType.maxValue ?? 10 }
 							step={ 1 }
 							value={ value.tileScale }
 							onChange={ (newValue) => onChange(produce(value, (d) => {
@@ -708,7 +708,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 							className='flex-grow-1 value'
 							aria-label='Camera height'
 							min={ 1 }
-							max={ RoomBackground3dBoxSideSchema.shape.tileScale._def.innerType.maxValue ?? 10 }
+							max={ RoomBackground3dBoxSideSchema.shape.tileScale.def.innerType.maxValue ?? 10 }
 							step={ 1 }
 							value={ value.tileScale }
 							onChange={ (newValue) => onChange(produce(value, (d) => {

@@ -5,7 +5,7 @@ import { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from '
 import { FieldError } from 'react-hook-form';
 import { Link, type LinkProps } from 'react-router';
 import type { Promisable } from 'type-fest';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CommonProps } from '../../../common/reactTypes.ts';
 import './form.scss';
 

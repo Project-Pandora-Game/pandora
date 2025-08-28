@@ -1,6 +1,5 @@
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
-import type { Writeable } from 'zod';
 
 import type { CharacterId, ItemInteractionType } from '../../character/index.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
@@ -16,7 +15,7 @@ import type { AppearanceItems } from './items.ts';
 
 import type { IChatMessageActionItem } from '../../chat/index.ts';
 import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
-import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, MemoizeNoArg, type Writeable } from '../../utility/misc.ts';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

@@ -2,7 +2,7 @@ import { range } from 'lodash-es';
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';

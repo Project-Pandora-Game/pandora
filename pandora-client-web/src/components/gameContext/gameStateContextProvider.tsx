@@ -53,7 +53,7 @@ import {
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterDataOptional } from '../../character/character.ts';

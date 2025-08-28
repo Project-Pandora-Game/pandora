@@ -17,7 +17,7 @@ import {
 } from 'pandora-common';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import type { z } from 'zod';
+import type * as z from 'zod';
 import audioAlert from '../audio/alert.mp3';
 import audioBell from '../audio/bell.mp3';
 import audioBing from '../audio/bing.mp3';

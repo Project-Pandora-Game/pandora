@@ -2,13 +2,13 @@ import {
 	AssertNever,
 	type ActionTargetSelector,
 } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import './wardrobe.scss';
 import { WardrobeFocusSchema } from './wardrobeTypes.ts';
 
-export const WardrobeLocationStateSchema = z.object({
+export const WardrobeLocationStateSchema = z.looseObject({
 	initialFocus: WardrobeFocusSchema.optional(),
-}).passthrough();
+});
 export type WardrobeLocationState = z.infer<typeof WardrobeLocationStateSchema>;
 
 export function ActionTargetToWardrobeUrl(target: ActionTargetSelector): string {

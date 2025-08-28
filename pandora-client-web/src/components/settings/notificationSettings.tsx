@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
 import { AssertNotNullable, CLIENT_NOTIFICATION_GROUPS, CLIENT_NOTIFICATION_TYPES, ClientNotificationSoundSchema, ClientNotificationSoundVolumeSchema, ClientNotificationSuppressionSettingSchema, KnownObject, type AccountSettings, type ClientNotificationSound, type ClientNotificationSoundVolume, type ClientNotificationType } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import popupIcon from '../../assets/icons/bubble.svg';
 import notificationIcon from '../../assets/icons/notification.svg';
 import soundOffIcon from '../../assets/icons/sound-0.svg';

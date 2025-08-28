@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssetIdSchema } from '../base.ts';
 import { PointTemplateSourceSchema } from '../graphics/points.ts';
 import { GraphicsSourceLayerSchema } from './layer.ts';

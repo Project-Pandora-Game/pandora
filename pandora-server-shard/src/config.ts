@@ -1,5 +1,5 @@
 import { CreateEnvParser, IsObject } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import PACKAGE_JSON from '../package.json' with { type: 'json' };
 
 if (!IsObject(PACKAGE_JSON) || typeof PACKAGE_JSON.version !== 'string') {

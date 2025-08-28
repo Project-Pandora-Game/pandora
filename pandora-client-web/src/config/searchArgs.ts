@@ -1,5 +1,5 @@
 import { GetLogger, LogLevel } from 'pandora-common';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { Observable } from '../observable.ts';
 import { USER_DEBUG } from './Environment.ts';
@@ -8,7 +8,7 @@ import { USER_DEBUG } from './Environment.ts';
 export const ConfigLogLevel: Observable<LogLevel> = BrowserStorage.createSession(
 	'config-loglevel',
 	USER_DEBUG ? LogLevel.VERBOSE : LogLevel.WARNING,
-	z.nativeEnum(LogLevel),
+	z.enum(LogLevel),
 );
 
 /** Server index to use, set by URL arguments */

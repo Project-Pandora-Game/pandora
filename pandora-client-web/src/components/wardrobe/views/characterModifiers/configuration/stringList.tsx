@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
-import { z } from 'zod';
+import * as z from 'zod';
 import crossIcon from '../../../../../assets/icons/cross.svg';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';

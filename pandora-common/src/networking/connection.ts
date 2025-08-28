@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import * as z from 'zod';
 import type { Logger } from '../logging/logger.ts';
 import { GetLogger } from '../logging/logging.ts';
 import { AssertNotNullable } from '../utility/misc.ts';
@@ -78,10 +79,11 @@ export abstract class ConnectionBase<
 				return;
 			}
 
-			const result = this.schema.outbound[messageType].request.safeParse(message);
+			const schema: OutboundT[K]['request'] = this.schema.outbound[messageType].request;
+			const result = schema.safeParse(message);
 
 			if (!result.success) {
-				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
 				return;
 			}
 			// Replace message with parsed result, as it might have stripped some data
@@ -105,10 +107,11 @@ export abstract class ConnectionBase<
 				return Promise.reject(new Error('Invalid message'));
 			}
 
-			const result = this.schema.outbound[messageType].request.safeParse(message);
+			const schema: OutboundT[K]['request'] = this.schema.outbound[messageType].request;
+			const result = schema.safeParse(message);
 
 			if (!result.success) {
-				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
 				return Promise.reject(new Error('Invalid message'));
 			}
 			// Replace message with parsed result, as it might have stripped some data
@@ -146,7 +149,7 @@ export abstract class ConnectionBase<
 					const result = responseSchema.safeParse(response);
 
 					if (!result.success) {
-						this.logger.warning(`Bad response content for '${messageType}'.\n`, result.error.toString(), '\n', response);
+						this.logger.warning(`Bad response content for '${messageType}'.\n`, z.prettifyError(result.error), '\n', response);
 						return reject(new Error('Invalid response'));
 					}
 					// Replace message with parsed result, as it might have stripped some data
@@ -205,7 +208,7 @@ export abstract class ConnectionBase<
 			const result = messageSchema.request.safeParse(message);
 
 			if (!result.success) {
-				this.logger.warning(`Bad message content for '${messageType}'.\n`, result.error.toString(), '\n', message);
+				this.logger.warning(`Bad message content for '${messageType}'.\n`, z.prettifyError(result.error), '\n', message);
 				callback?.('Bad message content');
 				return;
 			}
@@ -245,7 +248,7 @@ export abstract class ConnectionBase<
 				const result = responseSchema.safeParse(cbResult);
 
 				if (!result.success) {
-					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
 					return outerCallback('Bad response');
 				}
 				// Replace message with parsed result, as it might have stripped some data

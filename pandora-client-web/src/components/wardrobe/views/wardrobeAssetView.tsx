@@ -13,7 +13,7 @@ import {
 	type ICharacterRoomData,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import filterIcon from '../../../assets/icons/filter.svg';

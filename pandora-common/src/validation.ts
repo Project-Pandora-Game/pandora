@@ -1,13 +1,13 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash-es';
-import { RefinementCtx, z, ZodEffects, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, type ZodStringDef } from 'zod';
+import * as z from 'zod';
 import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits.ts';
 import { Assert } from './utility/misc.ts';
 
 enableMapSet();
 
-export function ZodTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T, ZodStringDef, T> & ZodString {
-	return validator.regex(regex) as unknown as ZodType<T, ZodStringDef, T> & ZodString;
+export function ZodTemplateString<T extends string>(validator: z.ZodString, regex: RegExp): z.ZodType<T> & z.ZodString {
+	return validator.regex(regex) as unknown as z.ZodType<T> & z.ZodString;
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */
@@ -15,8 +15,8 @@ export const ZodTrimedRegex = /^(([^\s].*[^\s])|[^\s]*)$/s;
 
 export const ZodBase64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
-export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: true): (val: unknown) => val is z.infer<T> {
-	if (!passthrough && validator instanceof ZodObject) {
+export function ZodMatcher<T extends z.ZodType>(validator: T, passthrough?: true): (val: unknown) => val is z.infer<T> {
+	if (!passthrough && validator instanceof z.ZodObject) {
 		validator = validator.strict() as unknown as T;
 	}
 	return (val: unknown): val is z.infer<T> => {
@@ -25,13 +25,12 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	};
 }
 
-export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck extends ZodTypeAny>(shape: ZodShape, preCheck: ZodPreCheck, maxLength?: number) {
+export function ZodArrayWithInvalidDrop<ZodShape extends z.ZodType, ZodPreCheck extends z.ZodType>(shape: ZodShape, preCheck: ZodPreCheck, maxLength?: number) {
 	return z.array(preCheck).transform((values) => {
 		const res: z.output<ZodShape>[] = [];
 		for (const value of values) {
 			const parsed = shape.safeParse(value);
 			if (parsed.success) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				res.push(parsed.data);
 			}
 		}
@@ -62,20 +61,20 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
  * // For an array schema
  * z.array(z.unknown()).transform(ZodTruncate(69));
  */
-export function ZodTruncate<Output extends string | unknown[]>(maxLength: number): (value: Output, _ctx: RefinementCtx) => Output {
+export function ZodTruncate<Output extends string | unknown[]>(maxLength: number): (value: Output, _ctx: z.RefinementCtx) => Output {
 	Assert(maxLength > 0, 'maxLength must be a positive number');
 	return (value) => value.slice(0, maxLength) as Output;
 }
 
 export const SCHEME_OVERRIDE = Symbol('SCHEME_OVERRIDE');
 
-export interface ZodOverridableType<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output> extends ZodEffects<ZodType<Output, Def, Input>, Output, Input> {
-	[SCHEME_OVERRIDE]: ((attachedValidation: ((arg: Output, ctx: RefinementCtx) => void)) => void);
+export interface ZodOverridableType<Output, Input = Output> extends z.ZodType<Output, Input> {
+	[SCHEME_OVERRIDE]: ((attachedValidation: ((arg: Output, ctx: z.RefinementCtx) => void)) => void);
 }
 
-export function ZodOverridable<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output>(schema: ZodType<Output, Def, Input>): ZodOverridableType<Output, Def, Input> {
-	let attachedValidation: ((arg: Output, ctx: RefinementCtx) => void) | undefined;
-	const refined = schema.superRefine((arg, ctx) => attachedValidation?.(arg, ctx)) as ZodOverridableType<Output, Def, Input>;
+export function ZodOverridable<Output, Input = Output>(schema: z.ZodType<Output, Input>): ZodOverridableType<Output, Input> {
+	let attachedValidation: ((arg: Output, ctx: z.RefinementCtx) => void) | undefined;
+	const refined = schema.superRefine((arg, ctx) => attachedValidation?.(arg, ctx)) as ZodOverridableType<Output, Input>;
 	refined[SCHEME_OVERRIDE] = (fn) => attachedValidation = fn;
 	return refined;
 }
@@ -127,7 +126,7 @@ export function RecordUnpackSubobjectProperties<const T extends string, const V 
 }
 
 /** A dirty thing that shouldn't really be used, but sometimes you are lazy */
-export function ZodCast<T>(): ZodType<T> {
+export function ZodCast<T>(): z.ZodType<T> {
 	return z.any();
 }
 

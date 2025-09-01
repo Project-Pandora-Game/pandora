@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { Assert, KnownObject, ParseArrayNotEmpty, type Satisfies } from '../../../utility/index.ts';
 import type { CharacterModifierTemplate } from '../characterModifierData.ts';
 import type { CharacterModifierConditionChain } from '../conditions/index.ts';

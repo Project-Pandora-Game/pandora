@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { BoneNameSchema, ConditionSchema } from '../conditions.ts';
 
 export const LayerImageOverrideSchema = z.object({
@@ -91,7 +91,7 @@ export enum LayerMirror {
 	/** Only imageOverrides are mirrored, points are selected */
 	SELECT,
 }
-export const LayerMirrorSchema = z.nativeEnum(LayerMirror);
+export const LayerMirrorSchema = z.enum(LayerMirror);
 
 export enum LayerSide {
 	LEFT,

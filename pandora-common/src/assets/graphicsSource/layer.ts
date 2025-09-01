@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { GraphicsSourceAlphaImageMeshLayerSchema } from './layers/alphaImageMesh.ts';
 import { GraphicsSourceAutoMeshLayerSchema } from './layers/autoMesh.ts';
 import { GraphicsSourceMeshLayerSchema } from './layers/mesh.ts';

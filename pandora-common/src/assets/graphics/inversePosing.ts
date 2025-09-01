@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { BoneNameSchema } from './conditions.ts';
 import { TransformDefinitionSchema } from './points.ts';
 

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { ChatActionDictionaryMetaEntry } from '../chat/index.ts';
 import type { Satisfies } from '../utility/misc.ts';
 

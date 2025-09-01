@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountIdSchema, AccountManagementDisableInfoSchema } from '../../account/account.ts';
 import type { IAccountRoleManageInfo } from '../../account/accountRoles.ts';
 import { AccountOnlineStatusSchema } from '../../account/contacts.ts';

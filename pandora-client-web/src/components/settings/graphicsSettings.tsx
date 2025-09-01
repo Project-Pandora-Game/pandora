@@ -1,6 +1,6 @@
 import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
 import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';

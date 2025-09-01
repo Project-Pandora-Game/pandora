@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ArrayToRecordKeys, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { HexColorStringSchema } from '../validation.ts';
 import { PronounKeySchema } from './pronouns.ts';

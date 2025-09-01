@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import type { ZodType, ZodTypeDef } from 'zod';
+import type { ZodType } from 'zod';
 import { Observable, useObservable } from './observable.ts';
 
 const BROWSER_STORAGES_LOCAL = new Map<string, BrowserStorage<unknown>>();
@@ -9,7 +9,7 @@ const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();
 export class BrowserStorage<T> extends Observable<T> {
 	/** Key used to store the value */
 	public readonly _key;
-	public readonly validate: ZodType<T, ZodTypeDef, unknown>;
+	public readonly validate: ZodType<T>;
 	/** Inhibitor of saving to prevent infinite loop */
 	private _saveInhibit: boolean = false;
 
@@ -19,7 +19,7 @@ export class BrowserStorage<T> extends Observable<T> {
 	 * @param validate - Optional callback to validate currently saved value -
 	 * if it returns `false`, then `defaultValue` is used instead of the saved one
 	 */
-	private constructor(storage: Storage, name: string, defaultValue: NoInfer<T>, validate: ZodType<T, ZodTypeDef, unknown>) {
+	private constructor(storage: Storage, name: string, defaultValue: NoInfer<T>, validate: ZodType<T>) {
 		super(defaultValue);
 		this._key = name;
 		this.validate = validate;
@@ -50,7 +50,7 @@ export class BrowserStorage<T> extends Observable<T> {
 		}
 	}
 
-	public static create<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T, ZodTypeDef, unknown>): BrowserStorage<T> {
+	public static create<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T>): BrowserStorage<T> {
 		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_LOCAL.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
@@ -61,7 +61,7 @@ export class BrowserStorage<T> extends Observable<T> {
 		return storage;
 	}
 
-	public static createSession<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T, ZodTypeDef, unknown>): BrowserStorage<T> {
+	public static createSession<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T>): BrowserStorage<T> {
 		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_SESSION.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
@@ -82,7 +82,7 @@ window.addEventListener('storage', (ev) => {
 	}
 });
 
-export function useBrowserStorage<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T, ZodTypeDef, unknown>): [T, (value: T) => void] {
+export function useBrowserStorage<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T>): [T, (value: T) => void] {
 	const storage = useMemo(() => BrowserStorage.create<T>(name, defaultValue, validate), [name, defaultValue, validate]);
 	const value = useObservable(storage);
 	const setValue = useCallback((newValue: T): void => {
@@ -91,7 +91,7 @@ export function useBrowserStorage<T>(name: string, defaultValue: NoInfer<T>, val
 	return [value, setValue];
 }
 
-export function useBrowserSessionStorage<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T, ZodTypeDef, unknown>): [T, (value: T) => void] {
+export function useBrowserSessionStorage<T>(name: string, defaultValue: NoInfer<T>, validate: ZodType<T>): [T, (value: T) => void] {
 	const storage = useMemo(() => BrowserStorage.createSession<T>(name, defaultValue, validate), [name, defaultValue, validate]);
 	const value = useObservable(storage);
 	const setValue = useCallback((newValue: T): void => {

@@ -23,7 +23,7 @@ import {
 	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';

@@ -1,7 +1,7 @@
 import { Draft } from 'immer';
 import { Assert, AssertNotNullable, CloneDeepMutable, ICharacterRoomData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import { ReactElement } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character, useCharacterData } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 
 export const PERMISSION_MAX_CHARACTER_OVERRIDES = 100;

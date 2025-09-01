@@ -1,6 +1,6 @@
 import { Immutable, freeze, produce } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CalculateObjectKeysDelta } from '../../utility/deltas.ts';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -29,10 +29,10 @@ export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
 export const AppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).default({}),
-	leftArm: AppearanceArmPoseSchema.default({}),
-	rightArm: AppearanceArmPoseSchema.default({}),
-	armsOrder: AppearanceArmsOrderSchema.default({}),
+	bones: z.partialRecord(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX)).default({}),
+	leftArm: AppearanceArmPoseSchema.default({ position: 'front', rotation: 'forward', fingers: 'spread' }),
+	rightArm: AppearanceArmPoseSchema.default({ position: 'front', rotation: 'forward', fingers: 'spread' }),
+	armsOrder: AppearanceArmsOrderSchema.default({ upper: 'left' }),
 	legs: z.preprocess((value) => {
 		return typeof value === 'string' ? { pose: value } : value;
 	}, AppearanceLegsPoseSchema).catch({
@@ -77,7 +77,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 };
 
 export const PartialAppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).optional().catch(undefined),
+	bones: z.partialRecord(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX)).optional().catch(undefined),
 	arms: AppearanceArmPoseSchema.partial().optional().catch(undefined),
 	leftArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),
 	rightArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),

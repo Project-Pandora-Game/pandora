@@ -19,7 +19,7 @@ import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
-import { z as zod } from 'zod';
+import * as zod from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';

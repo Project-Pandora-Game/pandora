@@ -1,7 +1,7 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { OptionalKeysOf } from 'type-fest';
-import type { ZodSchema, ZodTypeDef } from 'zod';
+import type { ZodType } from 'zod';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -205,7 +205,7 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 	label: ReactNode;
 	stringify: NoInfer<Readonly<Record<TValue, string | (() => string)>>>;
 	optionOrder?: NoInfer<readonly TValue[]>;
-	schema: NoInfer<ZodSchema<TValue, ZodTypeDef, unknown>>;
+	schema: NoInfer<ZodType<TValue>>;
 	disabled?: boolean;
 	noWrapper?: boolean;
 	noReset?: boolean;

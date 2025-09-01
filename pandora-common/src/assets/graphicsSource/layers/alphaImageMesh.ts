@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { BoneNameSchema } from '../../graphics/conditions.ts';
 import { RectangleSchema } from '../../graphics/common.ts';
 import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema } from '../../graphics/layers/common.ts';

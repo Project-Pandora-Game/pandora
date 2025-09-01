@@ -1,4 +1,4 @@
-import { z, type ZodType } from 'zod';
+import * as z from 'zod';
 import type { ClientNotificationGroup } from './notifications.ts';
 
 export type ClientNotificationGroupDefinitionBase = {
@@ -14,7 +14,7 @@ export type ClientNotificationTypeDefinitionBase<TGroup extends ClientNotificati
 	title?: string;
 	/** Metadata included with the notification (not necessarily whole content). Usable to decide if notification should be suppressed */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	metadata: ZodType<any, any, any>;
+	metadata: z.ZodType<any>;
 	/**
 	 * Allows selecting `not-suppressed` suppression option. The content is used in the following context:
 	 * ```

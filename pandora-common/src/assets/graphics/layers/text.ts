@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { RectangleSchema } from '../common.ts';
 import { LayerPrioritySchema } from './common.ts';
 

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** List of all tutorial IDs used by the client. */
 export const TutorialIdSchema = z.enum([

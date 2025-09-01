@@ -1,5 +1,5 @@
 import { ReactElement, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import pandoraLogo from '../../assets/icons/pandora.svg';
 import { useBrowserStorage } from '../../browserStorage.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';

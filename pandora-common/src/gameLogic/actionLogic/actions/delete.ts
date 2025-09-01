@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';

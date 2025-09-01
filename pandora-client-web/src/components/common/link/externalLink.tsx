@@ -1,5 +1,5 @@
 import React, { ReactElement, ReactNode } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { ModalDialog } from '../../dialog/dialog.tsx';

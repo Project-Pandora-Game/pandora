@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';

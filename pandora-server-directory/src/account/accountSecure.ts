@@ -1,7 +1,7 @@
 import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
-import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
+import { AccountTokenReason, DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
 import GetEmailSender from '../services/email/index.ts';
 import type { Account } from './account.ts';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION, RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED } = ENV;
@@ -12,15 +12,6 @@ import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
 import { AUDIT_LOG } from '../logging.ts';
-
-export enum AccountTokenReason {
-	/** Account activation token */
-	ACTIVATION = 1,
-	/** Account password reset token */
-	PASSWORD_RESET = 2,
-	/** Account login token */
-	LOGIN = 3,
-}
 
 /**
  * Handles account security data

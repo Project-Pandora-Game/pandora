@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { first } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { HexRGBAColorString } from '../../validation.ts';

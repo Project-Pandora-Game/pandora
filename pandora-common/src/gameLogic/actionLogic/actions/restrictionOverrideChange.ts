@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { RestrictionOverride } from '../../../assets/index.ts';
 import { Assert } from '../../../utility/index.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';

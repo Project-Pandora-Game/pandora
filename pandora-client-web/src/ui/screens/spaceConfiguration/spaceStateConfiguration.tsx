@@ -253,7 +253,7 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 	const id = useId();
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [name, setName] = useState<string | null>(null);
-	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
+	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema.def.in.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
 	const [positionChange, setPositionChange] = useState<Immutable<Coordinates> | null>(null);
 	const [directionChange, setDirectionChange] = useState<CardinalDirection | null>(null);
 
@@ -538,7 +538,7 @@ function RoomCreation({ globalState, close }: {
 		return { x: 0, y: 0 };
 	});
 
-	const nameValueError = FormCreateStringValidator(RoomNameSchema._def.schema.max(LIMIT_ROOM_NAME_LENGTH), 'value')(roomTemplate.name);
+	const nameValueError = FormCreateStringValidator(RoomNameSchema.def.in.max(LIMIT_ROOM_NAME_LENGTH), 'value')(roomTemplate.name);
 	const roomBackground = useMemo(() => ResolveBackground(globalState.assetManager, roomTemplate.roomGeometry), [globalState.assetManager, roomTemplate.roomGeometry]);
 
 	const newRoomAction = useMemo((): AppearanceAction => ({

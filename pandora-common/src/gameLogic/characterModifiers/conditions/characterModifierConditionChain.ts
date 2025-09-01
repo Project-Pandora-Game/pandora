@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import type { AssetDefinitionExtraArgs, AssetFrameworkGlobalState } from '../../../assets/index.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT } from '../../../inputLimits.ts';
 import type { CurrentSpaceInfo } from '../../../space/index.ts';

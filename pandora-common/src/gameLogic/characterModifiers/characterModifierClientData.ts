@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { CharacterModifierEffectDataSchema } from './characterModifierData.ts';
 import { KnownObject } from '../../utility/misc.ts';

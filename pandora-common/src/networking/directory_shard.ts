@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
 import { CharacterIdSchema } from '../character/index.ts';
 import type { IChatMessageDirectoryAction } from '../chat/index.ts';

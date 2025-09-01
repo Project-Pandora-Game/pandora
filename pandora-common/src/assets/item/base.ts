@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { CharacterId } from '../../character/index.ts';
 import type { LockDataBundle } from '../../gameLogic/locks/lockData.ts';

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes.ts';
 import type { AppearanceItems } from '../../../assets/index.ts';
 import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';

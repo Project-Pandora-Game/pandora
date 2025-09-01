@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
 import { SpaceIdSchema } from '../../space/index.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema } from '../item/items.ts';

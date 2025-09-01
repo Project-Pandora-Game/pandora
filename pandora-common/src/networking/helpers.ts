@@ -1,23 +1,21 @@
-import { z, ZodType, ZodTypeDef } from 'zod';
-import type { KeysMatching, Awaitable } from '../utility/misc.ts';
+import * as z from 'zod';
+import type { Awaitable, KeysMatching } from '../utility/misc.ts';
 
 /** The base type for how (one-way) socket interface definition should look like */
 export type SocketInterfaceDefinition = {
 	[messageType: string]: {
 		/** The body of request of this message, must be an object */
-		request: ZodType<Record<never, unknown>>;
+		request: z.ZodType<Record<never, unknown>>;
 		/** The body of response for this message, must be an object or `null` if this is one-shot message */
-		response: ZodType<Record<never, unknown>> | null;
+		response: z.ZodType<Record<never, unknown>> | null;
 	};
 };
 
 /** The base type for how socket interface definition looks like, also verifying all requests and responses are objects */
 export type SocketInterfaceDefinitionVerified<T extends SocketInterfaceDefinition> = {
 	[messageType in keyof T]: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		request: ZodType<RecordOnlyElement<z.infer<T[messageType]['request']>>, ZodTypeDef, any>;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		response: T[messageType]['response'] extends ZodType<Record<never, unknown>, ZodTypeDef, any> ? ZodType<RecordOnlyElement<z.infer<T[messageType]['response']>>, ZodTypeDef, any> : null;
+		request: z.ZodType<RecordOnlyElement<z.infer<T[messageType]['request']>>>;
+		response: T[messageType]['response'] extends z.ZodType<Record<never, unknown>> ? z.ZodType<RecordOnlyElement<z.infer<T[messageType]['response']>>> : null;
 	};
 };
 
@@ -28,7 +26,7 @@ export type SocketInterfaceRequest<T extends SocketInterfaceDefinition> = {
 
 /** Defines the SocketInterface response (raw/awaited) */
 export type SocketInterfaceResponse<T extends SocketInterfaceDefinition> = {
-	[K in keyof T]: T[K]['response'] extends ZodType<Record<never, unknown>> ? z.infer<T[K]['response']> : void;
+	[K in keyof T]: T[K]['response'] extends z.ZodType<Record<never, unknown>> ? z.infer<T[K]['response']> : void;
 };
 
 /** Defines the SocketInterface response (possibly wrapped in promise) */

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { CharacterId } from '../character/characterTypes.ts';
 import type { SpaceId } from '../space/index.ts';
 import { ZodCast, type HexColorString } from '../validation.ts';

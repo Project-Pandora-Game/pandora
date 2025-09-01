@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { z } from 'zod';
+import * as z from 'zod';
 import { AssetIdSchema } from '../../assets/base.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits.ts';
@@ -127,8 +127,8 @@ export type CharacterModifierEffectDataSpecific<TType extends CharacterModifierT
 
 /** Data of the whole character modifer subsystem, saved on character in database */
 export const CharacterModifierSystemDataSchema = z.object({
-	modifiers: ZodArrayWithInvalidDrop(CharacterModifierInstanceDataSchema, z.record(z.unknown())),
-	typeConfig: z.record(CharacterModifierTypeGenericIdSchema, CharacterModifierTypeConfigSchema.optional()),
+	modifiers: ZodArrayWithInvalidDrop(CharacterModifierInstanceDataSchema, z.record(z.string(), z.unknown())),
+	typeConfig: z.partialRecord(CharacterModifierTypeGenericIdSchema, CharacterModifierTypeConfigSchema),
 });
 /** Data of the whole character modifer subsystem, saved on character in database */
 export type CharacterModifierSystemData = z.infer<typeof CharacterModifierSystemDataSchema>;

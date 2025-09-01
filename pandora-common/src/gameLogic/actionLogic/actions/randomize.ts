@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { z } from 'zod';
+import * as z from 'zod';
 import { CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../../assets/appearanceValidation.ts';
 import type { Asset } from '../../../assets/asset.ts';
 import type { WearableAssetType } from '../../../assets/definitions.ts';

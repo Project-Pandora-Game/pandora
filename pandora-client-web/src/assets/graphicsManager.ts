@@ -10,7 +10,7 @@ import {
 } from 'pandora-common';
 import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
+import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { Observable, useObservable } from '../observable.ts';
 

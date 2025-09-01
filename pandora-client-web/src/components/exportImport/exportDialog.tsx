@@ -1,6 +1,6 @@
 import { CloneDeepMutable, EMPTY_ARRAY, GetLogger } from 'pandora-common';
 import { ReactElement, Suspense, use, useCallback, useMemo, useRef, useState } from 'react';
-import { ZodType, z } from 'zod';
+import * as z from 'zod';
 import { CopyToClipboard } from '../../common/clipboard.ts';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
@@ -18,7 +18,7 @@ export type ExportDialogTarget = {
 	type: string;
 };
 
-interface ExportDialogProps<T extends ZodType<unknown>> {
+interface ExportDialogProps<T extends z.ZodType> {
 	title: string;
 	exportType: string;
 	exportVersion: number;
@@ -32,7 +32,7 @@ const logger = GetLogger('ExportImport');
 
 const COPY_SUCCESS_COOLDOWN = 3_000;
 
-export function ExportDialog<T extends ZodType<unknown>>({
+export function ExportDialog<T extends z.ZodType>({
 	closeDialog,
 	...props
 }: ExportDialogProps<T>): ReactElement {
@@ -53,7 +53,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 	);
 }
 
-function ExportDialogInner<T extends ZodType<unknown>>({
+function ExportDialogInner<T extends z.ZodType>({
 	title,
 	exportType,
 	exportVersion,
@@ -71,7 +71,7 @@ function ExportDialogInner<T extends ZodType<unknown>>({
 	const validatedExportData = useMemo(() => {
 		const parseResult = dataSchema.safeParse(CloneDeepMutable(data));
 		if (!parseResult.success) {
-			logger.error('Attempt to export invalid data', exportType, parseResult.error, data);
+			logger.error('Attempt to export invalid data', exportType, z.prettifyError(parseResult.error), data);
 			throw new Error('Attempt to export invalid data');
 		}
 		return parseResult.data;

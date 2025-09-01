@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
+import * as z from 'zod';
 import { KnownObject, ParseArrayNotEmpty } from './misc.ts';
 
 const PANDORA_FONTS_SETUP = {

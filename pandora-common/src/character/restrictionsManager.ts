@@ -394,8 +394,6 @@ export class CharacterRestrictionsManager {
 		// Must be able to use item's asset
 		this.checkUseAsset(context, permissionTarget, item.asset);
 
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = permissionTarget.type === 'character' && permissionTarget.character.id === this.character.id;
 		const forceAllowItemActions = this.forceAllowItemActions();
 		/** Whether the item is physically equipped (on a character, or on some item; in contrast to simply being stored e.g. in a bag) */
 		let isPhysicallyEquipped = target.type === 'character';
@@ -566,9 +564,6 @@ export class CharacterRestrictionsManager {
 
 		const permissionTarget = context.resolvePermissionTarget(target, [...container, { item: item.id, module: moduleName }]);
 		Assert(target.type !== 'character' || target === permissionTarget);
-
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = permissionTarget.type === 'character' && permissionTarget.character.id === this.character.id;
 
 		// The module can specify what kind of interaction it provides, unless asking for specific one
 		interaction ??= module.interactionType;

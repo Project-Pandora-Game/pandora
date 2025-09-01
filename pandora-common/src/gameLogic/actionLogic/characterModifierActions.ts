@@ -153,13 +153,12 @@ export function CharacterModifierActionCheckLockModify(
 		// Must have permissions for the lock
 		player.checkUseAsset(ctx, checkTarget.appearance, modifier.lock.asset);
 
-		// The lock needs to be unlocked (unless in safemode and targetting self)
+		// The lock needs to be unlocked (unless in safemode and targeting self)
 		if (modifier.lock.logic.isLocked() && !(player.forceAllowItemActions() && checkTarget.appearance.id === player.appearance.id)) {
 			ctx.addRestriction({
 				type: 'blockedAddRemove',
 				asset: modifier.lock.asset.id,
 				itemName: '',
-				self: false,
 			});
 		}
 	} else if (action.action === 'lockAction') {

@@ -87,22 +87,10 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	blockAddRemove?: boolean;
 
 	/**
-	 * Prevents this item from being added or removed by a character on herself
-	 * @default false
-	 */
-	blockSelfAddRemove?: boolean;
-
-	/**
 	 * Prevents listed modules from being modified by anyone, including on oneself
 	 * @default []
 	 */
 	blockModules?: string[];
-
-	/**
-	 * Prevents listed modules from being modified by anyone wearing this item
-	 * @default []
-	 */
-	blockSelfModules?: string[];
 
 	/**
 	 * A unique list of color keys that disable user colorization.
@@ -163,9 +151,7 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	stateFlags: Set<string>;
 	stateFlagsRequirements: Map<string, string>;
 	blockAddRemove: boolean;
-	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
-	blockSelfModules: Set<string>;
 	overrideColorKey: Set<string>;
 	excludeFromColorInheritance: Set<string>;
 }
@@ -177,9 +163,7 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 		stateFlags: new Set(),
 		stateFlagsRequirements: new Map(),
 		blockAddRemove: false,
-		blockSelfAddRemove: false,
 		blockModules: new Set(),
-		blockSelfModules: new Set(),
 		overrideColorKey: new Set(),
 		excludeFromColorInheritance: new Set(),
 	};
@@ -197,9 +181,7 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualRe
 	}
 
 	base.blockAddRemove ||= properties.blockAddRemove ?? false;
-	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
-	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
 	properties.overrideColorKey?.forEach((a) => base.overrideColorKey.add(a));
 	properties.excludeFromColorInheritance?.forEach((a) => base.excludeFromColorInheritance.add(a));
 

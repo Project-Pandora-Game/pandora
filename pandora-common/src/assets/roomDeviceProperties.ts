@@ -42,22 +42,10 @@ export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = Asset
 	blockModules?: string[];
 
 	/**
-	 * Prevents listed modules from being modified by anyone wearing this item
-	 * @default []
-	 */
-	blockSelfModules?: string[];
-
-	/**
 	 * Prevents this slot from being entered or exited by anyone, including on oneself
 	 * @default false
 	 */
 	blockSlotsEnterLeave?: string[];
-
-	/**
-	 * Prevents this slot from being entered or exited by the character herself
-	 * @default false
-	 */
-	blockSlotsSelfEnterLeave?: string[];
 }
 
 export interface RoomDevicePropertiesResult {
@@ -65,9 +53,7 @@ export interface RoomDevicePropertiesResult {
 	stateFlags: Set<string>;
 	stateFlagsRequirements: Map<string, string>;
 	blockModules: Set<string>;
-	blockSelfModules: Set<string>;
 	blockSlotsEnterLeave: Set<string>;
-	blockSlotsSelfEnterLeave: Set<string>;
 }
 
 export function CreateRoomDevicePropertiesResult(): RoomDevicePropertiesResult {
@@ -76,9 +62,7 @@ export function CreateRoomDevicePropertiesResult(): RoomDevicePropertiesResult {
 		stateFlags: new Set(),
 		stateFlagsRequirements: new Map(),
 		blockModules: new Set(),
-		blockSelfModules: new Set(),
 		blockSlotsEnterLeave: new Set(),
-		blockSlotsSelfEnterLeave: new Set(),
 	};
 }
 
@@ -98,9 +82,7 @@ export function MergeRoomDeviceProperties<T extends RoomDevicePropertiesResult>(
 	}
 
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
-	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
 	properties.blockSlotsEnterLeave?.forEach((a) => base.blockSlotsEnterLeave.add(a));
-	properties.blockSlotsSelfEnterLeave?.forEach((a) => base.blockSlotsSelfEnterLeave.add(a));
 
 	return base;
 }
@@ -115,7 +97,6 @@ export function GetPropertiesForSlot(deviceProperties: RoomDevicePropertiesResul
 
 	result.push({
 		blockAddRemove: deviceProperties.blockSlotsEnterLeave.has(slot),
-		blockSelfAddRemove: deviceProperties.blockSlotsSelfEnterLeave.has(slot),
 	});
 
 	return result;

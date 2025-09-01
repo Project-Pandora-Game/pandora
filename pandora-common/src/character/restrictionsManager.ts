@@ -496,17 +496,6 @@ export class CharacterRestrictionsManager {
 					type: 'blockedAddRemove',
 					asset: item.asset.id,
 					itemName: item.name ?? '',
-					self: false,
-				});
-			}
-
-			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !forceAllowItemActions) {
-				context.addRestriction({
-					type: 'blockedAddRemove',
-					asset: item.asset.id,
-					itemName: item.name ?? '',
-					self: true,
 				});
 			}
 		}
@@ -618,18 +607,6 @@ export class CharacterRestrictionsManager {
 				asset: item.asset.id,
 				itemName: item.name ?? '',
 				module: moduleName,
-				self: false,
-			});
-		}
-
-		// If accessing on self, the item must not block it
-		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.forceAllowItemActions()) {
-			context.addRestriction({
-				type: 'blockedModule',
-				asset: item.asset.id,
-				itemName: item.name ?? '',
-				module: moduleName,
-				self: true,
 			});
 		}
 	}

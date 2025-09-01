@@ -398,8 +398,6 @@ export class CharacterRestrictionsManager {
 		// Must be able to use item's asset
 		this.checkUseAsset(context, permissionTarget, item.asset);
 
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = permissionTarget.type === 'character' && permissionTarget.character.id === this.character.id;
 		const forceAllowItemActions = this.forceAllowItemActions();
 		/** Whether the item is physically equipped (on a character, or on some item; in contrast to simply being stored e.g. in a bag) */
 		let isPhysicallyEquipped = target.type === 'character';
@@ -500,17 +498,6 @@ export class CharacterRestrictionsManager {
 					type: 'blockedAddRemove',
 					asset: item.asset.id,
 					itemName: item.name ?? '',
-					self: false,
-				});
-			}
-
-			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !forceAllowItemActions) {
-				context.addRestriction({
-					type: 'blockedAddRemove',
-					asset: item.asset.id,
-					itemName: item.name ?? '',
-					self: true,
 				});
 			}
 		}
@@ -582,9 +569,6 @@ export class CharacterRestrictionsManager {
 		const permissionTarget = context.resolvePermissionTarget(target, [...container, { item: item.id, module: moduleName }]);
 		Assert(target.type !== 'character' || target === permissionTarget);
 
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = permissionTarget.type === 'character' && permissionTarget.character.id === this.character.id;
-
 		// The module can specify what kind of interaction it provides, unless asking for specific one
 		interaction ??= module.interactionType;
 
@@ -622,18 +606,6 @@ export class CharacterRestrictionsManager {
 				asset: item.asset.id,
 				itemName: item.name ?? '',
 				module: moduleName,
-				self: false,
-			});
-		}
-
-		// If accessing on self, the item must not block it
-		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.forceAllowItemActions()) {
-			context.addRestriction({
-				type: 'blockedModule',
-				asset: item.asset.id,
-				itemName: item.name ?? '',
-				module: moduleName,
-				self: true,
 			});
 		}
 	}

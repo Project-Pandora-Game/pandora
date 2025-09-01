@@ -121,7 +121,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 				AssertNever(e.resolution);
 				break;
 			case 'blockedAddRemove':
-				return `The ${describeItem(e.asset, e.itemName)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
+				return `The ${describeItem(e.asset, e.itemName)} cannot be added or removed.`;
 			case 'blockedModule': {
 				const asset = assetManager.getAssetById(e.asset);
 				const visibleModuleName: string =
@@ -129,7 +129,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 					(asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('roomDevice') && asset.definition.modules?.[e.module]?.name) ||
 					`[UNKNOWN MODULE '${e.module}']`;
-				return `The ${describeItem(e.asset, e.itemName)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
+				return `The ${describeItem(e.asset, e.itemName)}'s ${visibleModuleName} cannot be modified.`;
 			}
 			case 'covered':
 				return `The ${describeItem(e.asset, e.itemName)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;

@@ -184,7 +184,7 @@ function RoomItemDialogContentInfo({ item, path, target }: RoomItemDialogContent
 			<Row alignX='space-between'>
 				<span>Asset:<br />{ item.asset.definition.name }</span>
 				<IconButton
-					alt='Open this item in wardrobe'
+					alt='Open this item in the wardrobe'
 					src={ shirtIcon }
 					className='wardrobeLinkButton'
 					onClick={ () => {
@@ -195,7 +195,7 @@ function RoomItemDialogContentInfo({ item, path, target }: RoomItemDialogContent
 					} }
 				/>
 			</Row>
-			<span>Description:<br />{ item.description || (<em>None</em>) }</span>
+			<span className='display-linebreak'>Description:<br />{ item.description || (<em>None</em>) }</span>
 		</>
 	);
 }

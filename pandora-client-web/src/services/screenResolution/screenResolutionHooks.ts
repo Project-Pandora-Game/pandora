@@ -9,3 +9,11 @@ export function useAutomaticResolution(): Exclude<GraphicsSettings['textureResol
 		useCallback(() => service.automaticTextureResolution, [service]),
 	);
 }
+
+export function useDevicePixelRatio(): number {
+	const service = useService('screenResolution');
+	return useSyncExternalStore(
+		useCallback((change) => service.on('devicePixelRatioChanged', change), [service]),
+		useCallback(() => service.devicePixelRatio, [service]),
+	);
+}

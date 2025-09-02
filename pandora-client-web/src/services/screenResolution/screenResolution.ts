@@ -30,13 +30,14 @@ type ScreenResolutionServiceConfig = Satisfies<{
 	events: {
 		resolutionChanged: readonly [number, number];
 		automaticResolutionChanged: GraphicsSettings['textureResolution'];
+		devicePixelRatioChanged: number;
 	};
 }, ServiceConfigBase>;
 
 export class ScreenResolutionService extends Service<ScreenResolutionServiceConfig> {
 	private readonly logger = GetLogger('ScreenResolutionService');
 
-	private readonly _screenSizeObserver: ResizeObserver = new ResizeObserver(() => this._onUpdate());
+	private readonly _screenSizeObserver: ResizeObserver = new ResizeObserver(() => this._onResolutionUpdate());
 
 	public get automaticTextureResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
 		if (this.forceFullResolution)
@@ -55,21 +56,31 @@ export class ScreenResolutionService extends Service<ScreenResolutionServiceConf
 		z.number().int().min(0).max(AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1),
 	);
 
+	public get devicePixelRatio(): number {
+		this._checkDPR();
+		return this._lastDPR;
+	}
+
+	private _lastDPR = 1;
+	private _dprListenerCleanup?: (() => void);
+
 	protected override serviceInit(): void {
 		this._screenSizeObserver.observe(window.document.body);
 	}
 
 	protected override serviceLoad(): void | Promise<void> {
-		this._onUpdate();
+		this._onResolutionUpdate();
 		this.logger.verbose('Loaded; selected automatic texture resolution:', this.automaticTextureResolution);
 
 		this._automaticResolutionIndex.subscribe(() => {
 			this.logger.verbose('Automatic texture resolution changed:', this.automaticTextureResolution);
 			this.emit('automaticResolutionChanged', this.automaticTextureResolution);
 		});
+
+		this._checkDPR();
 	}
 
-	private _onUpdate(): void {
+	private _onResolutionUpdate(): void {
 		this._screenWidth = Math.ceil(window.innerWidth * window.devicePixelRatio);
 		this._screenHeight = Math.ceil(window.innerHeight * window.devicePixelRatio);
 
@@ -81,6 +92,29 @@ export class ScreenResolutionService extends Service<ScreenResolutionServiceConf
 			this._automaticResolutionIndex.value = resolutionIndex;
 		}
 	}
+
+	private readonly _checkDPR = (): void => {
+		const globalDpr = globalThis.devicePixelRatio;
+		const dpr = (typeof globalDpr === 'number' && Number.isFinite(globalDpr) && globalDpr > 0) ? globalDpr : 1;
+
+		if (dpr !== this._lastDPR || this._dprListenerCleanup == null) {
+			this.logger.verbose('DPR changed:', dpr);
+
+			this._lastDPR = dpr;
+			this._dprListenerCleanup?.();
+
+			const mqString = `(resolution: ${window.devicePixelRatio}dppx)`;
+			const media = matchMedia(mqString);
+			media.addEventListener('change', this._checkDPR);
+			this._dprListenerCleanup = () => {
+				media.removeEventListener('change', this._checkDPR);
+			};
+
+			queueMicrotask(() => {
+				this.emit('devicePixelRatioChanged', this._lastDPR);
+			});
+		}
+	};
 }
 
 export const ScreenResolutionServiceProvider: ServiceProviderDefinition<ClientServices, 'screenResolution', ScreenResolutionServiceConfig> = {

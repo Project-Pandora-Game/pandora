@@ -103,7 +103,7 @@ export class ScreenResolutionService extends Service<ScreenResolutionServiceConf
 			this._lastDPR = dpr;
 			this._dprListenerCleanup?.();
 
-			const mqString = `(resolution: ${window.devicePixelRatio}dppx)`;
+			const mqString = `(resolution: ${dpr}dppx)`;
 			const media = matchMedia(mqString);
 			media.addEventListener('change', this._checkDPR);
 			this._dprListenerCleanup = () => {

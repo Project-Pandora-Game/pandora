@@ -74,14 +74,16 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			this.app.canvas.remove();
 			container.appendChild(this.app.canvas);
 			this.app.resizeTo = container;
-			this.app.resize();
 			needsUpdate = true;
 		}
 
 		if (resolution !== oldProps.resolution && this.app != null) {
 			this.app.renderer.resolution = resolution;
-			this.app.resize();
 			needsUpdate = true;
+		}
+
+		if (container !== oldProps.container || resolution !== oldProps.resolution) {
+			this.app?.resize();
 		}
 
 		if (backgroundColor !== oldProps.backgroundColor && this.app != null) {
@@ -439,8 +441,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		this._app = app;
 		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
 
-		app.renderer.resolution = resolution;
-		app.renderer.resize(renderArea.width, renderArea.height);
+		app.renderer.resize(renderArea.width, renderArea.height, resolution);
 		app.renderer.background.color = backgroundColor;
 		app.renderer.background.alpha = backgroundAlpha;
 		app.stage.addChild(this._stage);

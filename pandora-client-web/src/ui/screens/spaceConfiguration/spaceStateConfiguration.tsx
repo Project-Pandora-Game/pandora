@@ -49,6 +49,7 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
@@ -201,7 +202,7 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>
-								<BackgroundPreview background={ r.roomBackground } previewSize={ 256 * (window.devicePixelRatio || 1) } />
+								<BackgroundPreview background={ r.roomBackground } previewSize={ 256 } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
 								<div className='overlay'>
 									<span className='label'>{ r.name || r.id }</span>
@@ -337,7 +338,7 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 					</Button>
 					<BackgroundPreview
 						background={ roomState.roomBackground }
-						previewSize={ 384 * (window.devicePixelRatio || 1) }
+						previewSize={ 384 }
 					/>
 				</Row>
 				<Row>
@@ -648,7 +649,7 @@ function RoomCreation({ globalState, close }: {
 					</Button>
 					<BackgroundPreview
 						background={ roomBackground }
-						previewSize={ 384 * (window.devicePixelRatio || 1) }
+						previewSize={ 384 }
 						className='flex-1'
 					/>
 				</Row>
@@ -676,6 +677,8 @@ function BackgroundPreview({ background, previewSize, className }: {
 	previewSize: number;
 	className?: string;
 }): ReactElement | null {
+	const dpr = useDevicePixelRatio();
+
 	if (background == null) {
 		return null;
 	}
@@ -688,7 +691,7 @@ function BackgroundPreview({ background, previewSize, className }: {
 		<DivContainer className={ classNames('RoomConfigurationBackgroundPreview', className) }>
 			<GraphicsSceneBackgroundRenderer
 				renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
-				resolution={ 1 }
+				resolution={ dpr }
 				backgroundColor={ 0x000000 }
 				backgroundAlpha={ 0 }
 				forwardContexts={ [serviceManagerContext] }

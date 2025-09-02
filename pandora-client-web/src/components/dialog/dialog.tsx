@@ -358,12 +358,12 @@ export function DraggableDialog({
 						// If it isn't set we roughly center the dialog while shifting every subsequent one by a little bit to the bottom right
 						x: (initialPosition?.x ?? (
 							Math.max(Math.floor(0.5 * (window.innerWidth ?? 0)) - 20 + (
-								(initialPositionIndexRef.current * window.devicePixelRatio * INITIAL_POSITION_OFFSET.x)
+								(initialPositionIndexRef.current * INITIAL_POSITION_OFFSET.x)
 							), 0)) / 2
 						),
 						y: (initialPosition?.y ?? (
 							Math.max(Math.floor(0.3 * (window.innerHeight ?? 0)) / 2 - 10 + (
-								(initialPositionIndexRef.current * window.devicePixelRatio * INITIAL_POSITION_OFFSET.y)
+								(initialPositionIndexRef.current * INITIAL_POSITION_OFFSET.y)
 							), 0)) / 2
 						),
 						width: initialWidth,

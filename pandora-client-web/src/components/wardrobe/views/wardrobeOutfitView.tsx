@@ -367,6 +367,8 @@ function OutfitPreview({ outfit }: {
 			} }
 		>
 			<GraphicsSceneBackgroundRenderer
+				// TODO: This could likely use having fewer unexplained, hardcoded numbers
+				// It might also be better to not render such high quality for a potentially tiny preview
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
 				backgroundColor={ Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16) }

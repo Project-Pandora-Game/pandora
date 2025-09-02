@@ -193,60 +193,62 @@ export function PointsHelperMathUi(): ReactElement | null {
 			<Column alignX='start'>
 				<h5>Target</h5>
 				<table className='points-helper-input-table'>
-					<tr>
-						<td>X:</td>
-						<td>{ targetCoords[0] } =</td>
-						<td>
-							<Row alignY='center' className='fill'>
-								<NumberInput
-									value={ targetBase[0] }
-									size={ 5 }
-									onChange={ (newValue) => {
-										setTargetBase([newValue, targetCoords[1]]);
-									} }
-								/>
-							</Row>
-						</td>
-						<td>
-							<Row alignY='center' className='fill'>
-								<span>+</span>
-								<NumberInput
-									value={ targetOffset[0] }
-									size={ 5 }
-									onChange={ (newValue) => {
-										setTargetOffset([newValue, targetOffset[1]]);
-									} }
-								/>
-							</Row>
-						</td>
-					</tr>
-					<tr>
-						<td>Y:</td>
-						<td>{ targetCoords[1] } =</td>
-						<td>
-							<Row alignY='center' className='fill'>
-								<NumberInput
-									value={ targetBase[1] }
-									size={ 5 }
-									onChange={ (newValue) => {
-										setTargetBase([targetCoords[0], newValue]);
-									} }
-								/>
-							</Row>
-						</td>
-						<td>
-							<Row alignY='center' className='fill'>
-								<span>+</span>
-								<NumberInput
-									value={ targetOffset[1] }
-									size={ 5 }
-									onChange={ (newValue) => {
-										setTargetOffset([targetOffset[0], newValue]);
-									} }
-								/>
-							</Row>
-						</td>
-					</tr>
+					<tbody>
+						<tr>
+							<td>X:</td>
+							<td>{ targetCoords[0] } =</td>
+							<td>
+								<Row alignY='center' className='fill'>
+									<NumberInput
+										value={ targetBase[0] }
+										size={ 5 }
+										onChange={ (newValue) => {
+											setTargetBase([newValue, targetCoords[1]]);
+										} }
+									/>
+								</Row>
+							</td>
+							<td>
+								<Row alignY='center' className='fill'>
+									<span>+</span>
+									<NumberInput
+										value={ targetOffset[0] }
+										size={ 5 }
+										onChange={ (newValue) => {
+											setTargetOffset([newValue, targetOffset[1]]);
+										} }
+									/>
+								</Row>
+							</td>
+						</tr>
+						<tr>
+							<td>Y:</td>
+							<td>{ targetCoords[1] } =</td>
+							<td>
+								<Row alignY='center' className='fill'>
+									<NumberInput
+										value={ targetBase[1] }
+										size={ 5 }
+										onChange={ (newValue) => {
+											setTargetBase([targetCoords[0], newValue]);
+										} }
+									/>
+								</Row>
+							</td>
+							<td>
+								<Row alignY='center' className='fill'>
+									<span>+</span>
+									<NumberInput
+										value={ targetOffset[1] }
+										size={ 5 }
+										onChange={ (newValue) => {
+											setTargetOffset([targetOffset[0], newValue]);
+										} }
+									/>
+								</Row>
+							</td>
+						</tr>
+					</tbody>
 				</table>
 				<Row alignY='center'>
 					<label>Adjustment</label>

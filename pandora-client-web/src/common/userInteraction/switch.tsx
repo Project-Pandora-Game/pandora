@@ -30,8 +30,6 @@ export function Switch(props: SwitchProps): ReactElement {
 		return color.toHex();
 	}, [interfaceAccentColor]);
 
-	const ratio = Number.isFinite(window.devicePixelRatio) ? window.devicePixelRatio : 1;
-
 	return (
 		<ReactSwitch
 			{ ...forwardedProps }
@@ -46,8 +44,8 @@ export function Switch(props: SwitchProps): ReactElement {
 			onColor={ onColor }
 			offHandleColor='#889'
 			onHandleColor='#ccc'
-			width={ 56 * ratio }
-			height={ 28 * ratio }
+			width={ 56 }
+			height={ 28 }
 		/>
 	);
 }

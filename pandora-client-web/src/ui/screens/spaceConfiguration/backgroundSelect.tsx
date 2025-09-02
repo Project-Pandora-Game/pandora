@@ -34,6 +34,7 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GRAPHICS_BACKGROUND_TILE_SIZE, GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import './backgroundSelect.scss';
 
@@ -305,7 +306,8 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const resolvedBackground = ResolveBackground(assetManager, selectedBackground);
-	const previewSize = 256 * (window.devicePixelRatio || 1);
+	const dpr = useDevicePixelRatio();
+	const previewSize = 256;
 	const previewScale = resolvedBackground != null ? Math.min(previewSize / resolvedBackground.imageSize[0], previewSize / resolvedBackground.imageSize[1]) : 1;
 
 	return (
@@ -447,7 +449,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 					resolvedBackground != null ? (
 						<GraphicsSceneBackgroundRenderer
 							renderArea={ { x: 0, y: 0, width: previewSize, height: previewSize } }
-							resolution={ 1 }
+							resolution={ dpr }
 							backgroundColor={ 0x000000 }
 							forwardContexts={ [serviceManagerContext] }
 						>

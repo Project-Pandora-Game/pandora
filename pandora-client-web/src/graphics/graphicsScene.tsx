@@ -4,6 +4,7 @@ import { type Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
+import { useDevicePixelRatio } from '../services/screenResolution/screenResolutionHooks.ts';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from './baseComponents/pixiViewport.tsx';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
@@ -127,6 +128,7 @@ export function GraphicsScene({
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
 	const { renderResolution } = useGraphicsSettings();
+	const dpr = useDevicePixelRatio();
 
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
 
@@ -135,7 +137,7 @@ export function GraphicsScene({
 			<div className={ classNames({ disabled: renderResolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
 				{
 					div && renderResolution > 0 ? (
-						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ renderResolution / 100 }>
+						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ (renderResolution / 100) * dpr }>
 							{ children }
 						</GraphicsSceneCore>
 					) : null

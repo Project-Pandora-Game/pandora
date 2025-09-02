@@ -20,7 +20,7 @@ import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEva
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings.tsx';
 import { EvaluateCondition } from '../graphics/utility.ts';
 import { useObservable } from '../observable.ts';
-import { useAutomaticResolution } from '../services/screenResolution/screenResolution.ts';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolutionHooks.ts';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
 
 /** Constant for the most common case, so caches can just use reference to this object. */

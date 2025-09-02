@@ -11,14 +11,12 @@ import {
 	type PointDefinitionCalculated,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { FederatedPointerEvent, Texture } from 'pixi.js';
+import { FederatedPointerEvent } from 'pixi.js';
 import { ReactElement, useMemo, useRef } from 'react';
-import dotTexture from '../../assets/editor/dotTexture.png';
 import { useEvent } from '../../common/useEvent.ts';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
-import { Sprite } from '../../graphics/baseComponents/sprite.ts';
-import { useTexture } from '../../graphics/useTexture.ts';
 import { GetAngle, RotateVector } from '../../graphics/utility.ts';
+import { DotGraphics } from '../../graphics/utility/dotGraphics.tsx';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable.ts';
 import { EditorCharacter } from './character/appearanceEditor.ts';
 import type { PointTemplateEditor } from './pointTemplateEditor.tsx';
@@ -27,22 +25,20 @@ type DraggableProps = {
 	x: number;
 	y: number;
 	tint?: number;
-	createTexture?: () => Texture;
 	setPos: (x: number, y: number) => void;
 	dragStart?: (event: FederatedPointerEvent) => boolean;
 };
 export function Draggable({
-	createTexture,
 	setPos,
 	dragStart,
-	...spriteProps
+	...props
 }: DraggableProps): ReactElement {
 	const dragging = useRef<boolean>(false);
-	const sprite = useRef<PIXI.Sprite>(null);
+	const ref = useRef<PIXI.Graphics>(null);
 
 	const onDragStart = useEvent((event: FederatedPointerEvent) => {
 		event.stopPropagation();
-		if (dragging.current || !sprite.current) return;
+		if (dragging.current || !ref.current) return;
 		if (dragStart?.(event) !== false) {
 			dragging.current = true;
 		}
@@ -53,24 +49,20 @@ export function Draggable({
 	});
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !sprite.current) return;
+		if (!dragging.current || !ref.current) return;
 		event.stopPropagation();
-		const dragPointerEnd = event.getLocalPosition(sprite.current.parent);
+		const dragPointerEnd = event.getLocalPosition(ref.current.parent);
 		setPos(
 			clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
 			clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
 		);
 	});
 
-	const texture = useMemo(() => (createTexture?.() ?? Texture.WHITE), [createTexture]);
-
 	return (
-		<Sprite
-			{ ...spriteProps }
-			ref={ sprite }
-			texture={ texture }
-			anchor={ [0.5, 0.5] }
-			scale={ [0.5, 0.5] }
+		<DotGraphics
+			{ ...props }
+			ref={ ref }
+			size={ 7 }
 			alpha={ 0.8 }
 			eventMode='static'
 			onpointerdown={ onDragStart }
@@ -90,7 +82,6 @@ export function DraggablePointDisplay({
 }): ReactElement {
 	const selectedPoint = useObservable(templateEditor.targetPoint);
 	const { pos, isMirror } = useDraggablePointDefinition(draggablePoint);
-	const pointTexture = useTexture(dotTexture);
 	const isSelected = draggablePoint === selectedPoint;
 
 	return (
@@ -108,7 +99,6 @@ export function DraggablePointDisplay({
 				templateEditor.targetPoint.value = draggablePoint;
 				return false;
 			} }
-			createTexture={ () => pointTexture }
 			setPos={ (x, y) => draggablePoint.setPos(x, y) }
 		/>
 	);
@@ -205,7 +195,6 @@ export function DraggableBone({
 	type: 'setup' | 'result';
 }): ReactElement {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
-	const pointTexture = useTexture(dotTexture);
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {
@@ -254,7 +243,6 @@ export function DraggableBone({
 			x={ posX }
 			y={ posY }
 			tint={ 0xff00ff }
-			createTexture={ () => pointTexture }
 			setPos={ setPos }
 		/>
 	);

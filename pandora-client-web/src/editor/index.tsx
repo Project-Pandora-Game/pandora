@@ -12,7 +12,6 @@ import { LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
 import '../index.scss';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
-import { ScreenResolutionSerice } from '../services/screenResolution/screenResolution.ts';
 import '../styles/fonts.scss';
 import '../styles/globalUtils.scss';
 import { LoadAssetsFromAssetDevServer, LoadAssetsFromOfficialLink } from './assetLoader.ts';
@@ -40,14 +39,15 @@ async function Start(): Promise<void> {
 	LoadSearchArgs();
 	SetupLogging();
 	ConfigurePixiSettings();
-	// Force full resolution for all textures
-	ScreenResolutionSerice.forceFullResolution = true;
 	logger.info('Starting editor...');
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 
 	// Load services
 	const serviceManager = GenerateClientEditorServices();
 	await serviceManager.load();
+
+	// Force full resolution for all textures
+	serviceManager.services.screenResolution!.forceFullResolution = true;
 
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>

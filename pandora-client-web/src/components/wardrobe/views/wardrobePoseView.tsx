@@ -48,6 +48,7 @@ import { GraphicsCharacter, type GraphicsCharacterLayerFilter, type LayerStateOv
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
+import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
@@ -709,7 +710,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 
 const PREVIEW_COLOR = 0xcccccc;
 const PREVIEW_COLOR_DIM = 0x666666;
-const PREVIEW_SIZE = 128 * (window.devicePixelRatio || 1);
+const PREVIEW_SIZE = 128;
 
 const PREVIEW_CACHE = new WeakMap<
 	AssetManager,
@@ -727,7 +728,7 @@ export async function GeneratePosePreview(
 	preview: Immutable<AssetsPosePresetPreview>,
 	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
 	serviceManager: ServiceManager<ClientServices>,
-	size: number,
+	previewSize: number,
 ): Promise<HTMLCanvasElement> {
 	// Get a cache
 	let managerCache = PREVIEW_CACHE.get(assetManager);
@@ -741,7 +742,7 @@ export async function GeneratePosePreview(
 	}
 
 	let result = previewCache.get(preset);
-	if (result != null) {
+	if (result != null && result.width === previewSize && result.height === previewSize) {
 		return result;
 	}
 
@@ -767,7 +768,6 @@ export async function GeneratePosePreview(
 		.produceWithPose(preview.basePose ?? {}, 'pose')
 		.produceWithPose(pose, 'pose');
 
-	const previewSize = size * (window.devicePixelRatio || 1);
 	const scale = previewSize / preview.size;
 
 	result = await RenderGraphicsTreeInBackground(
@@ -800,13 +800,15 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const { wardrobePosePreview } = useAccountSettings();
 
+	const dpr = useDevicePixelRatio();
+
 	useEffect(() => {
 		if (!wardrobePosePreview)
 			return;
 
 		let valid = true;
 
-		GeneratePosePreview(assetManager, preview, preset, serviceManager, 128)
+		GeneratePosePreview(assetManager, preview, preset, serviceManager, PREVIEW_SIZE * dpr)
 			.then((result) => {
 				if (!valid || canvasRef.current == null)
 					return;
@@ -825,7 +827,7 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 		return () => {
 			valid = false;
 		};
-	}, [assetManager, preset, preview, serviceManager, wardrobePosePreview]);
+	}, [assetManager, preset, preview, serviceManager, wardrobePosePreview, dpr]);
 
 	if (!wardrobePosePreview)
 		return null;
@@ -833,8 +835,8 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 	return (
 		<canvas
 			ref={ canvasRef }
-			width={ PREVIEW_SIZE }
-			height={ PREVIEW_SIZE }
+			width={ PREVIEW_SIZE * dpr }
+			height={ PREVIEW_SIZE * dpr }
 		/>
 	);
 }

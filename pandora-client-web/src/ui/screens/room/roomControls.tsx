@@ -35,6 +35,7 @@ import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
@@ -354,12 +355,13 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const playerRoom = globalState.space.getRoom(playerState.currentRoom);
+	const dpr = useDevicePixelRatio();
 
 	if (globalState.space.rooms.length <= 1 || playerRoom == null)
 		return null;
 
 	const { x: centerX, y: centerY } = playerRoom.position;
-	const previewSize = 256 * (window.devicePixelRatio || 1);
+	const previewSize = 256;
 
 	return (
 		<div className='RoomControlsRoomGrid'>
@@ -406,7 +408,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 								>
 									<GraphicsSceneBackgroundRenderer
 										renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
-										resolution={ 1 }
+										resolution={ dpr }
 										backgroundColor={ 0x000000 }
 										backgroundAlpha={ 0 }
 										forwardContexts={ [serviceManagerContext] }

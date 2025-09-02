@@ -88,8 +88,8 @@ function RoomItemDialog({ itemId, pinned, show }: RoomItemDialogDefinition & { s
 			close={ close }
 			title={ (findResult?.item.name || findResult?.item.asset.definition.name) ?? '[ERROR: Unknown item]' }
 			className={ classNames('roomItemDialog', show ? null : 'hidden') }
-			initialHeight={ Math.min(400 * window.devicePixelRatio, Math.floor(80 * window.innerHeight)) }
-			initialWidth={ Math.min(300 * window.devicePixelRatio, Math.floor(80 * window.innerWidth)) }
+			initialHeight={ Math.min(400, Math.floor(0.8 * window.innerHeight)) }
+			initialWidth={ Math.min(300, Math.floor(0.8 * window.innerWidth)) }
 			rawContent
 			allowShade
 			headerExtraBeforeTitle={ (

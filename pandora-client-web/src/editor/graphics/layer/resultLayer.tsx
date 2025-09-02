@@ -3,14 +3,12 @@ import { Assert, AssertNever } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
-import dotTexture from '../../../assets/editor/dotTexture.png';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
-import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
 import { useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
-import { useTexture } from '../../../graphics/useTexture.ts';
 import { MeshFaceIsCW } from '../../../graphics/utility.ts';
+import { DotGraphics } from '../../../graphics/utility/dotGraphics.tsx';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
@@ -77,7 +75,6 @@ export function ResultMeshLayer({
 
 	const editedTemplate = useObservable(editor.targetTemplate);
 	const pointEditSelectedPoint = useNullableObservable(editedTemplate?.targetPoint);
-	const pointTexture = useTexture(dotTexture);
 	const displayPoints = useMemo<readonly [number, number][]>(() => {
 		const res: [number, number][] = [];
 		for (let i = 0; i < vertices.length; i += 2) {
@@ -108,16 +105,14 @@ export function ResultMeshLayer({
 						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 					>
 						{ displayPoints.map((p, i) => (
-							<Sprite key={ i }
-								texture={ pointTexture }
+							<DotGraphics key={ i }
 								tint={
 									(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
 									0xffff00 : 0xffffff
 								}
-								anchor={ [0.5, 0.5] }
-								scale={ [0.5, 0.5] }
-								alpha={ 0.5 }
+								size={ 7 }
 								position={ p }
+								alpha={ 0.5 }
 							/>
 						)) }
 					</Container>

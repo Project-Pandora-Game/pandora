@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
 import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';
-import { useAutomaticResolution } from '../../services/screenResolution/screenResolution.ts';
+import { useAutomaticResolution } from '../../services/screenResolution/screenResolutionHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { ContextHelpButton } from '../help/contextHelpButton.tsx';

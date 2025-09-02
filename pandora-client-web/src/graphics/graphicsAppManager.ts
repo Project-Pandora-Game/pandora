@@ -9,7 +9,8 @@ const SHARED_APP_MAX_COUNT = 2;
 
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: 0x1099bb,
-	resolution: window.devicePixelRatio || 1,
+	resolution: 1,
+	autoDensity: true,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
 	backgroundAlpha: 0,
 	// Antialias is controlled by settings. See the settings for more details
@@ -20,7 +21,6 @@ export async function CreatePixiApplication(multiView: boolean = false): Promise
 	const app = new Application();
 	await app.init({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
-		autoDensity: true,
 		autoStart: false,
 		multiView,
 	});

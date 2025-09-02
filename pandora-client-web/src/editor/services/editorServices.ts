@@ -1,5 +1,6 @@
 import { ServiceManager } from 'pandora-common';
 import type { ClientServices } from '../../services/clientServices.ts';
+import { ScreenResolutionServiceProvider } from '../../services/screenResolution/screenResolution.ts';
 import { EditorShardConnectionManagerServiceProvider } from './editorShardConnectionManager.ts';
 
 /**
@@ -7,5 +8,6 @@ import { EditorShardConnectionManagerServiceProvider } from './editorShardConnec
  */
 export function GenerateClientEditorServices(): ServiceManager<ClientServices> {
 	return new ServiceManager<ClientServices>()
+		.registerService(ScreenResolutionServiceProvider)
 		.registerService(EditorShardConnectionManagerServiceProvider);
 }

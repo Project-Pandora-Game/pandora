@@ -82,8 +82,7 @@ export async function RenderGraphicsTreeInBackground(
 		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.canvas to be an HTMLCanvasElement');
 
 		// Setup the app's stage
-		app.renderer.resolution = 1;
-		app.renderer.resize(frame.width, frame.height);
+		app.renderer.resize(frame.width, frame.height, 1);
 		app.renderer.background.color = backgroundColor;
 		app.renderer.background.alpha = backgroundAlpha;
 		app.stage.addChild(stage);

@@ -1,9 +1,9 @@
 import type { Immutable } from 'immer';
-import { CharacterSize, GetLogger, TypedEventEmitter } from 'pandora-common';
-import { useCallback, useSyncExternalStore } from 'react';
+import { CharacterSize, GetLogger, Service, type Satisfies, type ServiceConfigBase, type ServiceProviderDefinition } from 'pandora-common';
 import * as z from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import type { GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import type { ClientServices } from '../clientServices.ts';
 
 /**
  * List of resolutions to try in format [width, height, textureResolution].
@@ -25,15 +25,18 @@ const AUTOMATIC_TEXTURE_RESOLUTIONS: Immutable<[number, number, Exclude<Graphics
 	[0, 0, '0.25'],
 ] as const;
 
-export type ScreenResolutionSericeEvents = {
-	resolutionChanged: readonly [number, number];
-	automaticResolutionChanged: GraphicsSettings['textureResolution'];
-};
+type ScreenResolutionServiceConfig = Satisfies<{
+	dependencies: Pick<ClientServices, never>;
+	events: {
+		resolutionChanged: readonly [number, number];
+		automaticResolutionChanged: GraphicsSettings['textureResolution'];
+	};
+}, ServiceConfigBase>;
 
-const logger = GetLogger('ScreenResolutionSerice');
+export class ScreenResolutionService extends Service<ScreenResolutionServiceConfig> {
+	private readonly logger = GetLogger('ScreenResolutionService');
 
-export const ScreenResolutionSerice = new class ScreenResolutionSerice extends TypedEventEmitter<ScreenResolutionSericeEvents> {
-	private readonly _screenSizeObserver: ResizeObserver;
+	private readonly _screenSizeObserver: ResizeObserver = new ResizeObserver(() => this._onUpdate());
 
 	public get automaticTextureResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
 		if (this.forceFullResolution)
@@ -52,15 +55,16 @@ export const ScreenResolutionSerice = new class ScreenResolutionSerice extends T
 		z.number().int().min(0).max(AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1),
 	);
 
-	constructor() {
-		super();
-		this._screenSizeObserver = new ResizeObserver(() => this._onUpdate());
+	protected override serviceInit(): void {
 		this._screenSizeObserver.observe(window.document.body);
+	}
+
+	protected override serviceLoad(): void | Promise<void> {
 		this._onUpdate();
-		logger.verbose('Loaded; selected automatic texture resolution:', this.automaticTextureResolution);
+		this.logger.verbose('Loaded; selected automatic texture resolution:', this.automaticTextureResolution);
 
 		this._automaticResolutionIndex.subscribe(() => {
-			logger.verbose('Automatic texture resolution changed:', this.automaticTextureResolution);
+			this.logger.verbose('Automatic texture resolution changed:', this.automaticTextureResolution);
 			this.emit('automaticResolutionChanged', this.automaticTextureResolution);
 		});
 	}
@@ -77,11 +81,11 @@ export const ScreenResolutionSerice = new class ScreenResolutionSerice extends T
 			this._automaticResolutionIndex.value = resolutionIndex;
 		}
 	}
+}
+
+export const ScreenResolutionServiceProvider: ServiceProviderDefinition<ClientServices, 'screenResolution', ScreenResolutionServiceConfig> = {
+	name: 'screenResolution',
+	ctor: ScreenResolutionService,
+	dependencies: {},
 };
 
-export function useAutomaticResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
-	return useSyncExternalStore(
-		useCallback((change) => ScreenResolutionSerice.on('automaticResolutionChanged', change), []),
-		useCallback(() => ScreenResolutionSerice.automaticTextureResolution, []),
-	);
-}

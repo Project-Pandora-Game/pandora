@@ -237,7 +237,7 @@ export function PreviewCutter() {
 				</p>
 				<p>
 					What does this toggle do? It hides most of the base body layers and for the remaining ones it sets their color to "#535759".<br />
-					Note, that bodyparts such as eyes or mouth are not automatically hidden, because it can make sense for them to be used in previews in rare cases.<br />
+					Note, that body parts such as eyes or mouth are not automatically hidden, because it can make sense for them to be used in previews in rare cases.<br />
 					If your preview covers the character head, please consider whether you want those to be included. Otherwise, please hide them manually.
 				</p>
 				<p>

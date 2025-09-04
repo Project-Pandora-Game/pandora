@@ -527,7 +527,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					),
 					conditions: [{
 						type: 'elementQuery',
-						query: '.inventoryView.wardrobeAssetList .listContainer .div-container .list .inventoryViewItem',
+						query: '.inventoryView.wardrobeAssetList .listContainer .inventoryViewItem',
 						filter: (e) => e.innerText.includes('Front hair 1'),
 					}],
 					highlight: [{

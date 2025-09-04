@@ -197,7 +197,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 							While Pandora enforces a specific order most of the time,
 							identical body part types (e.g. multiple "hair" body parts) can be reordered freely.<br />
 							<br />
-							The right pane shows several ways how you can add or swap different body parts for other available body parts.<br />
+							The right pane shows several ways how you can find specific body parts from all the available ones in Pandora to add or swap for.<br />
 							<br />
 							Note:&#32;
 							<i>
@@ -297,7 +297,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 								Most sliders allow you to freely choose any value between { BONE_MIN } and { BONE_MAX } with the default being 0.
 								Some body parts might, however, limit available values. Example of this are breasts, which only have several valid positions you can choose from.
 								While you can freely move the slider, Pandora will actually choose the closest valid value at all times.
-								You can see what value is in effect by watching the small "nub" under the slider.
+								You can see what value is in effect by watching the thin line under the slider.
 							</i>
 						</p>
 					),
@@ -466,6 +466,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						},
 						{
 							query: '.inventoryView.itemEdit .toolbar .Button',
+							filter: (e) => e.title.includes('Close'),
 						},
 					],
 				},
@@ -489,16 +490,34 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							On the right side, all existing body parts in Pandora are listed per default.
-							You can filter the selection with the item row at the top. Feel free to hover over
-							any of the icons (or hold down on it, if using a touchscreen) to see what type of
-							body part the filter will show.
+							On the right side, you can search for specific body parts to add or swap for.
+							You can filter for any body part either with the text field at the top or any of the buttons below. Feel free to hover over
+							the buttons (or hold down on it, if using a touchscreen) to see more info.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
-					highlight: [{
-						query: '.toolbar.attributeFilter',
-					}],
+					highlight: [
+						{
+							query: '.inventoryView.wardrobeAssetList .toolbar .filter',
+						},
+						{
+							query: '.initialAttributeList',
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							While you have any active filtering applied, you can reset that with the filter button.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.inventoryView.wardrobeAssetList .toolbar .Button',
+							filter: (e) => e.title.includes('Reset'),
+						},
+					],
 				},
 				{
 					text: (
@@ -508,10 +527,11 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					),
 					conditions: [{
 						type: 'elementQuery',
-						query: '.toolbar.attributeFilter button[data-attribute="Hair_front"].defaultActive',
+						query: '.inventoryView.wardrobeAssetList .listContainer .div-container .list .inventoryViewItem',
+						filter: (e) => e.innerText.includes('Front hair 1'),
 					}],
 					highlight: [{
-						query: '.toolbar.attributeFilter button[data-attribute="Hair_front"]',
+						query: '.inventoryView.wardrobeAssetList button[data-attribute="Hair_front"]',
 					}],
 				},
 				{
@@ -519,7 +539,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						<p>
 							Now you can see that only front hairs are listed.<br />
 							By clicking any entry, you can add the body part to your body. Only hovering over it, will preview the change.
-							Note that hair is a body part type where multiples can be added at the same time. That said, for some other body part types
+							Note that hair is a body part type where multiples can be added at the same time. That said, for some other body part types,
 							this action would swap the existing body part of that type for the new one.
 						</p>
 					),

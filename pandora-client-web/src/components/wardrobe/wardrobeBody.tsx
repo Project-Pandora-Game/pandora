@@ -54,7 +54,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 					<InventoryAssetView
 						header={ (
 							<div className='toolbar'>
-								<span>Add a new bodypart</span>
+								<span>Add a new body part</span>
 							</div>
 						) }
 						assets={ assetList.filter(filter) }

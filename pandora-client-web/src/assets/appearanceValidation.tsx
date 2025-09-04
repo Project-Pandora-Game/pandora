@@ -176,11 +176,11 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 			case 'bodypartError':
 				switch (e.problemDetail) {
 					case 'incorrectOrder':
-						return `Bodyparts must be in a specific order.`;
+						return `Body parts must be in a specific order.`;
 					case 'multipleNotAllowed':
-						return `Some bodyparts can only be equipped once.`;
+						return `Some body parts can only be equipped once.`;
 					case 'missingRequired':
-						return `Some bodyparts can only be replaced, not removed.`;
+						return `Some body parts can only be replaced, not removed.`;
 				}
 				break;
 			case 'unsatisfiedRequirement': {

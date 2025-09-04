@@ -172,26 +172,26 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				},
 				{
 					text: (
-						<p>
-							In the right pane, the left tab "Room inventory" (which is typically active when you open the wardrobe) lists all items that are
-							currently inside the room your character is in. The room inventory will be the topic of another tutorial.<br />
-							The right tab "Saved items" will allow you to add items from item collection templates. These are part of a feature to save whole
-							outfits, including restraints. This will also be the subject of another tutorial.<br />
-							<br />
-							For the current tutorial, we are interested in creating a completely new item. Let's proceed to the next step.
-						</p>
+						<>
+							<p>
+								Here is an explanation of the buttons in the right pane:
+							</p>
+							<ol>
+								<li>"Current room's inventory" lists all items that are currently inside the room your character is in. The room inventory will be the topic of another tutorial.</li>
+								<li>"Create new item" lets you create a new item 'out of thin air', if you currently can.</li>
+								<li>"Saved items" will allow you to add items from item collection templates. These are part of a feature to save whole outfits, including restraints, or even room items. This will also be the subject of another tutorial.</li>
+								<li>"A character" lets you open the wardrobe of another character inside the same space in the right pane so you can swap items between your character and the other one, if it is possible/allowed.</li>
+								<li>In spaces with multiple rooms, an additional button "Another room's inventory" is shown. It will allow you to access items in different rooms without switching rooms. Typically, this works only for neighboring rooms, unless you are an admin of the space.</li>
+							</ol>
+						</>
 					),
 					conditions: [{
 						type: 'next',
 					}],
 					highlight: [
 						{
-							query: '.wardrobe .tab',
-							filter: (e) => e.innerText.includes('Room inventory'),
-						},
-						{
-							query: '.wardrobe .tab',
-							filter: (e) => e.innerText.includes('Saved items'),
+							query: '.wardrobe-pane > .wardrobe-ui > .div-container .div-container .div-container',
+							filter: (e) => e.innerText.includes('Create new'),
 						},
 					],
 				},
@@ -223,36 +223,20 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please switch to the "Create new item" tab in the middle.
+							To proceed, select "Create new item".
 						</p>
 					),
 					conditions: [{
 						type: 'elementQuery',
-						query: '.wardrobe .tab.active',
-						filter: (e) => e.innerText.includes('Create new item'),
-					}],
-					highlight: [{
-						query: '.wardrobe .tab',
-						filter: (e) => e.innerText.includes('Create new item'),
-					}],
-				},
-				{
-					text: (
-						<p>
-							In this tab, all existing wearable items in Pandora can be found. You can filter the shown items with the section at the top.<br />
-							<br />
-							The top row contains a text field for searching items
-							by name and two buttons to switch between the current list-based view and a grid view with larger previews of the items.
-							The section below that contains several buttons to filter based on item's type.<br />
-							Feel free to hover over any of these icons (or hold down on it, if using a touchscreen) to see the description of that type.<br />
-							<br />
-							Afterwards, please proceed to the next step.
-						</p>
-					),
-					conditions: [{ type: 'next' }],
-					highlight: [{
 						query: '.wardrobeAssetList .toolbar',
+						filter: (e) => e.innerText.includes('Create and use a new item'),
 					}],
+					highlight: [
+						{
+							query: '.wardrobe-pane > .wardrobe-ui > .div-container .div-container .div-container .Button',
+							filter: (e) => e.innerText.includes('Create new'),
+						},
+					],
 				},
 			],
 		},
@@ -282,25 +266,35 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please switch to the "Create new item" tab in the middle.
+							For the current tutorial, we are interested in creating a completely new item.<br />
+							<br />
+							Please switch to the "Create and use a new item" view.
 						</p>
 					),
-					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
-						query: '.wardrobe .tab.active',
-						filter: (e) => e.innerText.includes('Create new item'),
+						query: '.wardrobeAssetList .toolbar',
+						filter: (e) => e.innerText.includes('Create and use a new item'),
 					}],
 					highlight: [{
-						query: '.wardrobe .tab',
-						filter: (e) => e.innerText.includes('Create new item'),
+						query: '.wardrobe-pane > .wardrobe-ui > .div-container .div-container .div-container',
+						filter: (e) => e.innerText.includes('Create new'),
 					}],
 				},
 				{
 					text: (
 						<p>
-							For the sake of this tutorial, please filter for a "Top Hat" by either filtering for head items with the according button
-							or by searching for the item directly by typing in a part of the item's name.<br />
+							In this view on the right, you can search for specific items to add or swap for.
+							You can filter for any items either with the text field at the top or any of the buttons below. Feel free to hover over
+							the buttons (or hold down on it, if using a touchscreen) to see more info.<br />
+							<br />
+							For the sake of this tutorial, please search for a "Top Hat" by either filtering for headgear items with the according button
+							or by searching for the item directly by typing in a part of the item's name into the text field at the top.<br />
+							<br />
+							Note:&#32;
+							<i>
+								You can switch the presentation of the search results between the default list-based view and a grid view with larger previews of the items with the two buttons top right.
+							</i><br />
 							<br />
 							To proceed to the next step, select the Top Hat by clicking on its name in the list.
 						</p>
@@ -312,7 +306,10 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					}],
 					highlight: [
 						{
-							query: '.toolbar.attributeFilter button[data-attribute="Headgear"]',
+							query: '.inventoryView.wardrobeAssetList .toolbar .filter',
+						},
+						{
+							query: '.inventoryView.wardrobeAssetList button[data-attribute="Headgear"]',
 						},
 						{
 							query: '.wardrobeAssetList .inventoryViewItem',
@@ -348,18 +345,17 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please switch to the "Create new item" tab in the middle.
+							Please find and select a new "Top Hat" item to create.
 						</p>
 					),
-					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
-						query: '.wardrobe .tab.active',
-						filter: (e) => e.innerText.includes('Create new item'),
+						query: '.inventoryView',
+						filter: (e) => e.innerText.includes('Creating item: Top Hat'),
 					}],
 					highlight: [{
-						query: '.wardrobe .tab',
-						filter: (e) => e.innerText.includes('Create new item'),
+						query: '.wardrobeAssetList .inventoryViewItem',
+						filter: (e) => e.innerText.includes('Top Hat'),
 					}],
 				},
 				{
@@ -402,6 +398,13 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					],
 				},
 			],
+			advanceConditions: [
+				{
+					type: 'elementQuery',
+					query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
+					filter: (e) => e.innerText.includes('Top Hat'),
+				},
+			],
 		},
 		{
 			steps: [
@@ -424,23 +427,6 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					highlight: [{
 						query: '.wardrobe .tab',
 						filter: (e) => e.innerText.includes('Items'),
-					}],
-				},
-				{
-					text: (
-						<p>
-							Please switch to the "Create new item" tab in the middle.
-						</p>
-					),
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'elementQuery',
-						query: '.wardrobe .tab.active',
-						filter: (e) => e.innerText.includes('Create new item'),
-					}],
-					highlight: [{
-						query: '.wardrobe .tab',
-						filter: (e) => e.innerText.includes('Create new item'),
 					}],
 				},
 				{
@@ -542,23 +528,6 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					highlight: [{
 						query: '.wardrobe .tab',
 						filter: (e) => e.innerText.includes('Items'),
-					}],
-				},
-				{
-					text: (
-						<p>
-							Please switch to the "Create new item" tab in the middle.
-						</p>
-					),
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'elementQuery',
-						query: '.wardrobe .tab.active',
-						filter: (e) => e.innerText.includes('Create new item'),
-					}],
-					highlight: [{
-						query: '.wardrobe .tab',
-						filter: (e) => e.innerText.includes('Create new item'),
 					}],
 				},
 				{

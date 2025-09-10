@@ -170,20 +170,22 @@ export function WikiItems(): ReactElement {
 				<li>The attribute tab is used to set states for every item who has this attribute itself or potentially through some of its possible module states.</li>
 				<li>Using attributes to limit groups of items has the benefit of automatically applying to all items with those attributes added in the future of Pandora.</li>
 				<li>Setting a limit to an individual item overrides the global state based on attribute-based settings, but this can be reverted in the item-specific dropdown menu.</li>
+				<li>Item preferences and limits are not account-wide, so you have to set them for each of your characters individually.</li>
 			</ul>
 
 			<h4 id='IT_Saving_collections'>Saving collections</h4>
 			<p>
 				The "Items" and "Body"-tabs in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> as
-				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen have an "Saved items"-tab that lets you access and manage all
+				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen can open the "Saved items" view on the right pane that lets you access and manage all
 				your custom item collections stored on the Pandora server. A collection template can contain normal
-				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body modifications, and even storage items.
+				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body parts, and even storage items.
 			</p>
 			<ul>
 				<li>
 					Creating a collection: After you clicked the button to create a new collection, you need to start moving the items that you want to be part of the collection one-by-one
 					from the left side (your worn items or the room's inventory) to the right side (the temporary collection you just created).<br />
-					<Link to='#IT_Item_layering_order'>Item order</Link> is important and the following article gives tips on that aspect.
+					<Link to='#IT_Item_layering_order'>Item order</Link> is important here. You want to add them to a collection top-down, starting with the bottommost item.
+					The following article explains this aspect in more detail.
 				</li>
 				<li>
 					Storing a collection: After you have completed your temporary collection and given it a name, you can either save it on Pandora's server, if you have storage space left
@@ -193,6 +195,9 @@ export function WikiItems(): ReactElement {
 				<li>
 					Collections stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
 					or even switch them off altogether, if your computer / mobile device and connection cannot handle loading many previews at once.
+				</li>
+				<li>
+					Note on locks in use: Items with attached locks can be stored in a collection and reapplied with these locks, but the lock state and the lock configuration are intentionally not saved.
 				</li>
 			</ul>
 
@@ -205,13 +210,13 @@ export function WikiItems(): ReactElement {
 				Note on correct item layering order:<br />
 				The layering order of items is that the higher an item is in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> list,
 				the further outwards on the body it is worn.
-				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.
+				So the topmost item is usually something like a jacket or dress, whereas underwear is further down in the list.
 			</p>
 			<p>
 				You add and remove items worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
 				towards the inner pieces, like how you would undress in reality, too.<br />
-				In case you dropped items in that manner to the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link>, you can again add them to the body from the top to bottom,
-				so from the item worn the closest to the body, like you would start dressing in reality, too.
+				In case you dropped items in that manner to the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> or a storage module, you can again add them to the body
+				from the top to bottom, so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
 				Now when you make a saved item collection from something you wear, you need to start from the bottom, not from the top,
@@ -222,12 +227,11 @@ export function WikiItems(): ReactElement {
 			</p>
 			<p>
 				In summary, the general dressing and undressing direction is top-down, but saved item collection related directions are the opposite:<br />
-				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
-				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
-				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
-				💾 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
-				<i>Side note</i>: It also works if you always do it top-down, if that is easier to remember, but then the mannequin template doll shows a preview image with
-				reversed item order, which looks weirdly funny.
+				🧑 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
+				🏠 → 🧑&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
+				🧑 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
+				💾 → 🧑&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
+				<i>Side note</i>: It also works if you always do it bottom-up, if that is easier to remember, as the order to remove items does not matter, as long as you add these items back in the same order as well.
 			</p>
 
 			<h4 id='IT_Layer_transparency'>Layer transparency</h4>

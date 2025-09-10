@@ -26,7 +26,7 @@ export function WikiNew(): ReactElement {
 				to your character, a permission popup will open asking you if you consent to their action.
 			</p>
 			<p>
-				It is advised to first talk to other users a bit, get to know them, and look if they have a profile that tells you
+				It may be advisable to first talk to other users a bit, get to know them, and look if they have a profile that tells you
 				something about them before you give any permissions to them.
 			</p>
 
@@ -109,17 +109,49 @@ export function WikiNew(): ReactElement {
 				or <Link to='/wiki/chat#CHA_Editing_text'>"text editing"</Link>.
 			</p>
 
+			<h3>Getting out of restraints</h3>
+
+			<p>
+				As a new user, the topic of how to get out of restraints is an important one.<br />
+				Typically, the one tying up your character should be seen as responsible for removing restrictions again and respecting your wishes
+				(for instance stated in your character or account profile/bio) in that regard.
+				That said, other people can also help you, unless you allowed more restrictive locks (such as timer locks) to be used on you.
+			</p>
+			<p>
+				For the sake of experimenting with restraints on your own or to engage in "self-bondage" without getting stuck, there are two possibilities:
+			</p>
+			<p>
+				You can use the <Link to='/wiki/items#IT_Bound_usage'>"bound usage" system</Link>, available on any wearable item.
+				It basically allows you to rig items before adding them,
+				so you can self remove them again. Perfect for self-bondage and for roleplaying struggling out of restraints over time. Careful though,
+				different restraints have different defaults for the bound usage setting, which can be found near the top of an item's detailed view,
+				after pressing on it in the wardrobe.
+			</p>
+			<p>
+				Another alternative is to create a second character on the same account in another browser tab/window and then creating a space (more on that later)
+				that you join with both characters to safely experiment with items or <Link to='/wiki/characters#CH_Character_modifiers'>character modifiers</Link>.
+			</p>
+			<p>
+				Aside from those, there is also the always available "safemode" feature that can get your character out of anything in Pandora, which is meant
+				as an emergency last resort. More on Pandora's user safety features in the following paragraph.
+			</p>
+
 			<h3>User safety</h3>
 
 			<p>
-				While Pandora is a completely safe space as long as you do not give any permissions to other users, the consequences of trusting
-				someone with certain permissions is not particularly problematic as the restraints and locks that are allowed to be used by other
-				users by default can all be removed by other users, too, when you ask for help.
+				While Pandora is a completely safe space as long as you do not give any <Link to='/wiki/characters#CH_Character_permissions'>permissions</Link> to
+				other users, the consequences of trusting someone with the general interaction permission to "Interact and to use other allowed permissions" is
+				not particularly problematic as the restraints and locks that are allowed to be used by other users by default can all be removed by
+				other users, too, when you ask for help.<br />
+				An exception are timer locks, that cannot be unlocked by other users before the time runs out, though there is an option that the one adding the
+				lock can. These locks are hidden behind another permission prompt to allow 'Interaction with worn items that are marked as "Maybe"'. "Maybe" is
+				one of the configurable <Link to='/wiki/items#IT_Item_preferences_and_limits'>item preferences and limits</Link> categories and is per default used
+				for some of the stricter items that could get you stuck.
 			</p>
 			<p>
-				However, there are a few items that cannot be removed by other users. These items are disabled on a new account to protect
-				new users. Be wary if someone instructs you to enable some "fun locks they want to use for a play" in your account, as they can get
-				you truly stuck. If you ever find yourself stuck, you can still use the last resort, which is "safemode" (more on that later).
+				Aside from timer locks, there are more items that cannot be removed by other users. These items are disabled on a new account to protect
+				new users. Be careful if someone instructs you to enable some "fun locks they want to use for a play" in your account, as they can get
+				you truly stuck. If you ever find yourself stuck with no help in sight, you can still use the last resort, which is "safemode" (more on that later).
 			</p>
 			<p>
 				Another way that can get you stuck is if you permit someone to put you into a room furniture/device that restraints you. Then you may no
@@ -130,12 +162,12 @@ export function WikiNew(): ReactElement {
 			<p>
 				You can enter "safemode" via the button under your character in the "Room"-tab, in the same row where the wardrobe and profile buttons are.
 				It should be seen as a last resort tool and you should try to resolve a situation if possible by communicating OOC first before using it,
-				as it can potentially hurt the other user if you use "safemode" for seemingly no reason.
+				as it can potentially hurt the other user if you use "safemode" for seemingly no apparent reason.
 			</p>
 
 			<p>
 				This was just a brief overview of this topic. There is a whole <Link to='/wiki/safety'>wiki-tab dedicated to safety</Link> that
-				we recommend to read at your own leisure.
+				we recommend to read at your own leisure. There also is an interactive tutorial on safemode and timeout mode.
 			</p>
 
 			<h3>Decorating your room</h3>

@@ -2,7 +2,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 	id: 'wardrobeItems',
-	name: `Basics on Worn Items`,
+	name: `Basics on Wearable Items`,
 	description: (
 		<p>
 			This tutorial will teach you the basics of how items work in Pandora.

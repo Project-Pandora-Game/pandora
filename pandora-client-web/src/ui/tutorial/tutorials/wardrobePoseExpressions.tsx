@@ -2,7 +2,7 @@ import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSyste
 
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	id: 'wardrobePoseExpressions',
-	name: `Character interactions: Pose and Expressions`,
+	name: `Character Poses and Expressions`,
 	description: (
 		<p>
 			This tutorial will teach you about posing your character and changing its expression.

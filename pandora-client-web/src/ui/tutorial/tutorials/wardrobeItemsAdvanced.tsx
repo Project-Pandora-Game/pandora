@@ -2,7 +2,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 	id: 'wardrobeItemsAdvanced',
-	name: `Character interactions: Items (Advanced)`,
+	name: `Advanced Item Topics`,
 	description: (
 		<p>
 			This tutorial will teach you about further item-related topics, such as the room inventory, storage items,

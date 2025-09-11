@@ -40,7 +40,7 @@ export const INTERACTION_CONFIG = {
 		visibleName: 'Interact with items stored inside worn items',
 		icon: 'storage',
 		defaultPermissions: {
-			allowOthers: 'no',
+			allowOthers: 'prompt',
 		},
 	},
 	useLockSlotModule: {
@@ -89,7 +89,7 @@ export const INTERACTION_CONFIG = {
 		visibleName: 'Add, remove, or configure this character\'s modifiers',
 		icon: 'modification-edit',
 		defaultPermissions: {
-			allowOthers: 'no',
+			allowOthers: 'prompt',
 		},
 	},
 	lockCharacterModifiers: {

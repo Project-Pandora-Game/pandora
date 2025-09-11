@@ -154,11 +154,10 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
-				<li>The "Body"-tab allows you to change your character's body, but only if the space you are in allows that.</li>
+				<li>The "Body"-tab allows you to change your character's body and body proportions, but only if the space you are in allows that.</li>
 				<li>
-					The "Items"-tab shows has the section with the item on your body on the left and shows
-					what is inside the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> on the right.
-					You can create and wear a new item under the "create new item"-tab there.
+					The "Items"-tab lists all items held or worn on your character's body on the left and shows
+					various options how to add or move items on the right.
 				</li>
 				<li>
 					There is a maximum amount of items your character can wear or hold. This number is the sum

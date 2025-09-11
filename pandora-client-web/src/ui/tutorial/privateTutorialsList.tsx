@@ -26,12 +26,12 @@ export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_WARDROBE_ITEMS,
 	TUTORIAL_WARDROBE_ITEMS_ADVANCED,
 	TUTORIAL_WARDROBE_ITEM_COLLECTIONS,
+	// TODO: Consider advanced permissions tutorial + character mods
 	TUTORIAL_SPACE_MANAGEMENT,
 	TUTORIAL_ROOM_DEVICES,
 	TUTORIAL_SETTINGS_PROFILE,
 	// TODO: Low priority as it is hard to show without someone else present
 	// TUTORIAL_CONTACTS_DMS,
-	// TODO: Consider advanced permissions tutorial
 ];
 Assert(new Set(PRIVATE_TUTORIALS.map((t) => t.id)).size === PRIVATE_TUTORIALS.length, 'Private tutorials need to have a unique id');
 

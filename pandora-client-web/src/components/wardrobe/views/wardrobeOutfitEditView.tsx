@@ -112,6 +112,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 
 					insertItemTemplate(null, actualItem.exportToTemplate());
 				} }
+				title='Add to collection'
 			>
 				<img src={ diskIcon } alt='Quick-storage action' />
 			</button>

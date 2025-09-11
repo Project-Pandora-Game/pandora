@@ -2,11 +2,11 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 	id: 'wardrobeItemCollections',
-	name: `Character interactions: Item collections`,
+	name: `Item collections`,
 	disabled: 'workInProgress',
 	description: (
 		<p>
-			This tutorial will teach you how you can save any kind of items together in an item collection to save inside Pandora or for exporting as a template.
+			This tutorial explains how you can save any kind of items together in an item collection to save inside Pandora or for exporting as a template.
 		</p>
 	),
 	stages: [

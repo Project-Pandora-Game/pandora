@@ -80,6 +80,11 @@ export interface AssetColorization<A extends AssetDefinitionExtraArgs = AssetDef
 	 * @default 255
 	 */
 	minAlpha?: number;
+	/**
+	 * List of keys to try if this color doesn't exist on an already existing item, in order of priority (first existing is used).
+	 * Useful to migrate colors of existing items if colorization changes.
+	 */
+	migrateFrom?: string[];
 }
 
 export type AssetType =

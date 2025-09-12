@@ -285,7 +285,7 @@ export type IRoomDeviceGraphicsCharacterPosition = {
 	 */
 	relativeScale?: number;
 	/**
-	 * Prevents pose from changing character's offset while inside this room device slot
+	 * Prevents pose from changing character's offset or scale while inside this room device slot
 	 * (for slots that allow different poses, but require precision)
 	 * @default false
 	 */

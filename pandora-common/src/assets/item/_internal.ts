@@ -319,6 +319,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	private static _loadColorBundle(asset: Asset, color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
 		const colorization = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
+			// Migrate old color storage format (2024/01)
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};
 			color.forEach((value, index) => {
@@ -332,7 +333,10 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			if (value.name == null)
 				continue;
 
-			result[key] = LimitColorAlpha(color[key] ?? value.default, value.minAlpha);
+			const v = color[key] ??
+				value.migrateFrom?.map((migrationKey) => color[migrationKey]).find((mv) => mv != null) ??
+				value.default;
+			result[key] = LimitColorAlpha(v, value.minAlpha);
 		}
 		return result;
 	}

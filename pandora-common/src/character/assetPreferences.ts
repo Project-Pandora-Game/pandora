@@ -61,19 +61,14 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferencesPu
 			preference: assetPreference.base,
 		};
 	}
-	if (asset.definition.assetPreferenceDefault != null) {
-		return {
-			type: 'asset',
-			asset: asset.id,
-			preference: asset.definition.assetPreferenceDefault,
-		};
-	}
 
+	// Take stricter of all attributes and default permission
 	let result: AssetPreferenceResolution = {
 		type: 'asset',
 		asset: asset.id,
-		preference: 'normal',
+		preference: asset.definition.assetPreferenceDefault ?? 'normal',
 	};
+
 	for (const attribute of asset.staticAttributes) {
 		const attributePreference = preferences.attributes[attribute];
 		if (attributePreference != null) {

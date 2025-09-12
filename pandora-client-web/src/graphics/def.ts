@@ -42,6 +42,7 @@ export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm, 
 
 		'BELOW_BACK_HAIR',
 		'BACK_HAIR',
+		'ABOVE_BACK_HAIR',
 
 		...(ReverseIf(armsOrder.upper === 'left',
 			leftArm.position === 'back' ? [

@@ -72,7 +72,7 @@ export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 export const SecondFactorTypeSchema = z.enum(['captcha']);
 export type SecondFactorType = z.infer<typeof SecondFactorTypeSchema>;
 
-export const SecondFactorDataSchema = z.partialRecord(SecondFactorTypeSchema, z.string());
+export const SecondFactorDataSchema = z.partialRecord(SecondFactorTypeSchema, z.string().optional());
 export type SecondFactorData = z.infer<typeof SecondFactorDataSchema>;
 
 export type SecondFactorResponse = {

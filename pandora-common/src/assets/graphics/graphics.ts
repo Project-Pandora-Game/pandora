@@ -32,9 +32,9 @@ export const GraphicsImageFormatSchema = z.enum(['avif', 'webp']);
 export type GraphicsImageFormat = z.infer<typeof GraphicsImageFormatSchema>;
 
 export const GraphicsDefinitionFileSchema = z.object({
-	assets: z.partialRecord(AssetIdSchema, AssetGraphicsDefinitionSchema),
+	assets: z.partialRecord(AssetIdSchema, AssetGraphicsDefinitionSchema.optional()),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
-	imageFormats: z.partialRecord(GraphicsImageFormatSchema, z.string()),
+	imageFormats: z.partialRecord(GraphicsImageFormatSchema, z.string().optional()),
 	/** UI handles used for inverse kinematic posing of the character. */
 	inversePosingHandles: InversePosingHandleSchema.array(),
 });

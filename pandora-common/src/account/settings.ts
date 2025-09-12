@@ -177,5 +177,5 @@ export type AccountSettingsKeys = z.infer<typeof AccountSettingsKeysSchema>;
 export const AccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
 export type AccountSettingsLimitedKeys = z.infer<typeof AccountSettingsLimitedKeysSchema>;
 
-export const AccountSettingsCooldownsSchema = z.partialRecord(AccountSettingsLimitedKeysSchema, z.number());
+export const AccountSettingsCooldownsSchema = z.partialRecord(AccountSettingsLimitedKeysSchema, z.number().optional());
 export type AccountSettingsCooldowns = z.infer<typeof AccountSettingsCooldownsSchema>;

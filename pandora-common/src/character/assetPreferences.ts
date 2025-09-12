@@ -32,7 +32,7 @@ export const AssetPreferencesPublicSchema = z.object({
 export type AssetPreferencesPublic = z.infer<typeof AssetPreferencesPublicSchema>;
 
 export const AssetPreferencesServerSchema = AssetPreferencesPublicSchema.extend({
-	permissions: z.partialRecord(AssetPreferenceTypeSchema, PermissionConfigSchema.nullable().catch(null)).default(() => ({})),
+	permissions: z.partialRecord(AssetPreferenceTypeSchema, PermissionConfigSchema.optional().catch(undefined)).default(() => ({})),
 });
 export type AssetPreferencesServer = z.infer<typeof AssetPreferencesServerSchema>;
 

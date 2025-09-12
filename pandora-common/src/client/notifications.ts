@@ -179,6 +179,6 @@ export type ClientNotificationGroup = z.infer<typeof ClientNotificationGroupSche
 export const ClientNotificationTypeSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(CLIENT_NOTIFICATION_TYPES)));
 export type ClientNotificationType = z.infer<typeof ClientNotificationTypeSchema>;
 
-export const NotificationTypesSettingsSchema = z.partialRecord(ClientNotificationTypeSchema, ClientNotificationTypeSettingSchema);
+export const NotificationTypesSettingsSchema = z.partialRecord(ClientNotificationTypeSchema, ClientNotificationTypeSettingSchema.optional());
 
 //#endregion

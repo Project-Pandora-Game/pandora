@@ -65,7 +65,7 @@ export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem i
 		};
 
 		for (const [id, permission] of this._permissions.entries()) {
-			data.permissions[id] = permission.getConfig();
+			data.permissions[id] = permission.getConfig() ?? undefined;
 		}
 
 		return data;

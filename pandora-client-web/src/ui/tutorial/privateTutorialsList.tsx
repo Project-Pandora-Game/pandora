@@ -3,6 +3,7 @@ import React, { type ReactElement } from 'react';
 import { Column, Row } from '../../components/common/container/container.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { TUTORIAL_PERMISSIONS } from './tutorials/permissions.tsx';
 import { TUTORIAL_ROOM } from './tutorials/room.tsx';
 import { TUTORIAL_ROOM_DEVICES } from './tutorials/roomDevices.tsx';
 import { TUTORIAL_SAFEMODE } from './tutorials/safemode.tsx';
@@ -17,6 +18,7 @@ import { TUTORIAL_WARDROBE_ITEM_COLLECTIONS } from './tutorials/wardrobeItemColl
 import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig.ts';
 import { ActiveTutorial } from './tutorialSystem/tutorialService.tsx';
 
+
 export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_TUTORIALS,
 	TUTORIAL_ROOM,
@@ -25,8 +27,9 @@ export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_SAFEMODE,
 	TUTORIAL_WARDROBE_ITEMS,
 	TUTORIAL_WARDROBE_ITEMS_ADVANCED,
+	TUTORIAL_PERMISSIONS,
 	TUTORIAL_WARDROBE_ITEM_COLLECTIONS,
-	// TODO: Consider advanced permissions tutorial + character mods
+	// TODO: character modifier tutorial
 	TUTORIAL_SPACE_MANAGEMENT,
 	TUTORIAL_ROOM_DEVICES,
 	TUTORIAL_SETTINGS_PROFILE,

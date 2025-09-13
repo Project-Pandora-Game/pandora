@@ -1,5 +1,6 @@
 import AsyncLock from 'async-lock';
-import { cloneDeep } from 'lodash-es';
+import { diffString } from 'json-diff';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { Binary, CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
@@ -368,12 +369,20 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
-		data = DatabaseAccountSchema
+		const parsedData = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()
 			.strict()
 			.parse(cloneDeep(data));
 
+		if (!isEqual(parsedData, data)) {
+			const diff = diffString(data, parsedData, { color: false });
+			logger.error(`Account ${id} update has invalid data, rejecting:\n`, diff);
+			throw new Error('Invalid data');
+		}
+		data = parsedData;
+
+		// This causes issue
 		await this._accounts.updateOne({ id }, { $set: data });
 	}
 

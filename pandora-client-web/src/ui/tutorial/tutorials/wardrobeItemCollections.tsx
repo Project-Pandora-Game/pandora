@@ -329,7 +329,6 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 							</p>
 						</>
 					),
-					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe .tab.active',

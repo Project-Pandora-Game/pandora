@@ -147,12 +147,12 @@ export function RoomDeviceMovementTool({
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !roomDeviceContainer.current) return;
+		if (dragging.current || !roomDeviceContainer.current?.parent) return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !roomDeviceContainer.current) return;
+		if (!dragging.current || !roomDeviceContainer.current?.parent) return;
 
 		if (pointerDownTarget.current === 'pos') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);

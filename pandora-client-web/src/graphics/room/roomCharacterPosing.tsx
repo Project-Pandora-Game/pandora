@@ -107,12 +107,14 @@ function RoomCharacterMovementToolImpl({
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current) return;
+		if (dragging.current || !event.currentTarget.parent?.parent)
+			return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current) return;
+		if (!dragging.current || !event.currentTarget.parent?.parent)
+			return;
 
 		if (pointerDownTarget.current === 'pos') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
@@ -501,12 +503,12 @@ function PosingToolIKHandle({
 	});
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !graphicsRef.current) return;
+		if (dragging.current || !graphicsRef.current?.parent) return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(graphicsRef.current.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !graphicsRef.current) return;
+		if (!dragging.current || !graphicsRef.current?.parent) return;
 
 		const dragPointerEnd = event.getLocalPosition(graphicsRef.current.parent);
 		onMove(
@@ -725,12 +727,12 @@ function PosingToolBone({
 	const pointerDown = useRef<number | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !graphicsRef.current) return;
+		if (dragging.current || !graphicsRef.current?.parent) return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(graphicsRef.current.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !graphicsRef.current) return;
+		if (!dragging.current || !graphicsRef.current?.parent) return;
 
 		const dragPointerEnd = event.getLocalPosition(graphicsRef.current.parent);
 		onMove(

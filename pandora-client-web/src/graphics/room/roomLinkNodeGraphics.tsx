@@ -330,7 +330,7 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
-		if (dragging.current || !movementContainer.current) return;
+		if (dragging.current || !movementContainer.current?.parent) return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(movementContainer.current.parent);
 	}, []);
 
@@ -339,7 +339,7 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 	});
 
 	const onPointerMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !movementContainer.current) return;
+		if (!dragging.current || !movementContainer.current?.parent) return;
 		event.stopPropagation();
 
 		const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementContainer.current.parent);

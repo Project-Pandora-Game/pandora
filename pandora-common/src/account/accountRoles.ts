@@ -59,7 +59,7 @@ export type IRoleManageInfo = IRoleSelfInfo & {
 
 type IAccountRoleInfoT<T> = Partial<Record<AccountRole, T>>;
 
-export const AccountRoleInfoSchema = z.partialRecord(AccountRoleSchema, RoleSelfInfoSchema);
+export const AccountRoleInfoSchema = z.partialRecord(AccountRoleSchema, RoleSelfInfoSchema.optional());
 export type IAccountRoleInfo = z.infer<typeof AccountRoleInfoSchema>;
 export type IAccountRoleManageInfo = IAccountRoleInfoT<IRoleManageInfo>;
 

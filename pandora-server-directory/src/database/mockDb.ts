@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
-import { assign, cloneDeep, pick, remove } from 'lodash-es';
+import { diffString } from 'json-diff';
+import { assign, cloneDeep, isEqual, pick, remove } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AccountId,
@@ -154,11 +155,18 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
-		data = DatabaseAccountSchema
+		const parsedData = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()
 			.strict()
 			.parse(cloneDeep(data));
+
+		if (!isEqual(parsedData, data)) {
+			const diff = diffString(data, parsedData, { color: false });
+			logger.error(`Account ${id} update has invalid data, rejecting:\n`, diff);
+			throw new Error('Invalid data');
+		}
+		data = parsedData;
 
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)

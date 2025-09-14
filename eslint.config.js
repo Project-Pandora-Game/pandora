@@ -377,7 +377,6 @@ export default tsEslint.config(
 			'@stylistic/jsx-curly-spacing': ['warn', { 'when': 'always', 'children': true }],
 			'@stylistic/jsx-equals-spacing': ['warn', 'never'],
 			'@stylistic/jsx-pascal-case': 'warn',
-			'@stylistic/jsx-props-no-multi-spaces': 'warn',
 			'@stylistic/jsx-tag-spacing': 'warn',
 			'@stylistic/jsx-wrap-multilines': [
 				'warn',

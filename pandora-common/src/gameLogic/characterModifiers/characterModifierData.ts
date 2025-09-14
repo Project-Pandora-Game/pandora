@@ -128,7 +128,7 @@ export type CharacterModifierEffectDataSpecific<TType extends CharacterModifierT
 /** Data of the whole character modifer subsystem, saved on character in database */
 export const CharacterModifierSystemDataSchema = z.object({
 	modifiers: ZodArrayWithInvalidDrop(CharacterModifierInstanceDataSchema, z.record(z.string(), z.unknown())),
-	typeConfig: z.partialRecord(CharacterModifierTypeGenericIdSchema, CharacterModifierTypeConfigSchema),
+	typeConfig: z.partialRecord(CharacterModifierTypeGenericIdSchema, CharacterModifierTypeConfigSchema.optional()),
 });
 /** Data of the whole character modifer subsystem, saved on character in database */
 export type CharacterModifierSystemData = z.infer<typeof CharacterModifierSystemDataSchema>;

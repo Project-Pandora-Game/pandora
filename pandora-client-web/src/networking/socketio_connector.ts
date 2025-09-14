@@ -1,3 +1,4 @@
+import { clone } from 'lodash-es';
 import {
 	ConnectionBase,
 	type IConnectionBase,
@@ -91,9 +92,14 @@ export class SocketIOConnector<OutboundT extends SocketInterfaceDefinition, Inco
 	}
 
 	public setExtraHeaders(headers: Record<string, string | undefined>): void {
-		this.socket.io.opts.extraHeaders = Object.assign(
-			this.socket.io.opts.extraHeaders ?? {},
-			headers,
-		);
+		const newHeaders = clone(this.socket.io.opts.extraHeaders) ?? {};
+		for (const [k, v] of Object.entries(headers)) {
+			if (v == null) {
+				delete newHeaders[k];
+			} else {
+				newHeaders[k] = v;
+			}
+		}
+		this.socket.io.opts.extraHeaders = newHeaders;
 	}
 }

@@ -802,7 +802,7 @@ export function CalculateCharacterDeviceSlotPosition({ item, layer, characterSta
 	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
 	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
 
-	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
+	const scale = (effectiveCharacterPosition.disablePoseOffset ? 1 : baseScale) * (effectiveCharacterPosition.relativeScale ?? 1);
 
 	const backView = characterState.actualPose.view === 'back';
 

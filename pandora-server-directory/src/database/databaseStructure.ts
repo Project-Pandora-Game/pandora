@@ -98,7 +98,7 @@ export const DatabaseAccountSchema = z.object({
 	id: AccountIdSchema,
 	created: z.number(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
-	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
+	profileDescription: z.string().transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)).catch(''),
 	/**
 	 * Settings of the account.
 	 *
@@ -113,7 +113,7 @@ export const DatabaseAccountSchema = z.object({
 	 *
 	 * These represent time at which said setting can be changed again.
 	 */
-	settingsCooldowns: AccountSettingsCooldownsSchema.default(() => ({})),
+	settingsCooldowns: AccountSettingsCooldownsSchema.catch(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 	storedPosePresets: ZodArrayWithInvalidDrop(AssetFrameworkPosePresetWithIdSchema, z.record(z.string(), z.unknown())).catch(() => []),

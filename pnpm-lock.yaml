@@ -553,8 +553,8 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
       superstatic:
-        specifier: 9.2.0
-        version: 9.2.0
+        specifier: 10.0.0
+        version: 10.0.0
       tslib:
         specifier: 2.8.1
         version: 2.8.1
@@ -6206,9 +6206,9 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
 
-  superstatic@9.2.0:
-    resolution: {integrity: sha512-QrJAJIpAij0jJT1nEwYTB0SzDi4k0wYygu6GxK0ko8twiQgfgaOAZ7Hu99p02MTAsGho753zhzSvsw8We4PBEQ==}
-    engines: {node: 18 || 20 || 22}
+  superstatic@10.0.0:
+    resolution: {integrity: sha512-4xIenBdrIIYuqXrIVx/lejyCh4EJwEMPCwfk9VGFfRlhZcdvzTd3oVOUILrAGfC4pFUWixzPgaOVzAEZgeYI3w==}
+    engines: {node: 20 || 22 || 24}
     hasBin: true
 
   supports-color@5.5.0:
@@ -13655,7 +13655,7 @@ snapshots:
       postcss: 8.5.6
       postcss-selector-parser: 6.1.2
 
-  superstatic@9.2.0:
+  superstatic@10.0.0:
     dependencies:
       basic-auth-connect: 1.1.0
       commander: 10.0.1

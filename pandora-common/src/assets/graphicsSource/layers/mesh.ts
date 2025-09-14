@@ -5,7 +5,7 @@ import { LayerImageSettingSchema, LayerMirrorSchema, LayerNormalDataSchema, Laye
 
 export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
-	name: z.string().default(''),
+	name: z.string(),
 	priority: LayerPrioritySchema,
 	points: z.string(),
 	pointType: z.string().array().optional(),

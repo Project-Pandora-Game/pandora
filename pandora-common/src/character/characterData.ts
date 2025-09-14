@@ -17,7 +17,7 @@ export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
 	accountId: AccountIdSchema,
 	name: CharacterNameSchema,
-	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
+	profileDescription: z.string().transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)).catch(''),
 });
 /** Data about character, that is visible to everyone in the same space */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
@@ -53,12 +53,12 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	 */
 	preview: z.unknown().optional(),
 	/** The space the character is currently in. `null` means personal space. */
-	currentSpace: SpaceIdSchema.nullable().default(null),
+	currentSpace: SpaceIdSchema.nullable().catch(null),
 	personalSpace: z.object({
 		spaceState: SpaceStateBundleSchema,
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
-	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
+	assetPreferences: AssetPreferencesServerSchema.catch(ASSET_PREFERENCES_DEFAULT),
 	characterModifiers: CharacterModifierSystemDataSchema.optional(),
 });
 /** Data about character, as seen by server */

@@ -133,7 +133,7 @@ export const ClientShardSchema = {
 				type: z.literal('diceRoll'),
 				sides: z.number().int().min(2).max(100),
 				dice: z.number().int().min(1).max(10),
-				hidden: z.boolean().default(false).optional(),
+				hidden: z.boolean().optional(),
 			}),
 			z.object({
 				type: z.literal('rps'), // Rock Paper Scissors

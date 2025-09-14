@@ -4,7 +4,7 @@ import { LayerPrioritySchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceTextLayerSchema = RectangleSchema.extend({
 	type: z.literal('text'),
-	name: z.string().default(''),
+	name: z.string(),
 	priority: LayerPrioritySchema,
 	angle: z.number(),
 	dataModule: z.string(),

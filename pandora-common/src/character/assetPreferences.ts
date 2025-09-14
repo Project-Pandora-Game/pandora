@@ -16,23 +16,23 @@ export const AttributePreferenceTypeSchema = AssetPreferenceTypeSchema.and(z.enu
 export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
 
 export const AttributePreferenceSchema = z.object({
-	base: AttributePreferenceTypeSchema.default('normal'),
+	base: AttributePreferenceTypeSchema.catch('normal'),
 });
 export type AttributePreference = z.infer<typeof AttributePreferenceSchema>;
 
 export const AssetPreferenceSchema = z.object({
-	base: AssetPreferenceTypeSchema.default('normal'),
+	base: AssetPreferenceTypeSchema.catch('normal'),
 });
 export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
 
 export const AssetPreferencesPublicSchema = z.object({
-	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
-	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
+	attributes: z.record(z.string(), AttributePreferenceSchema).catch({}),
+	assets: z.record(AssetIdSchema, AssetPreferenceSchema).catch({}),
 });
 export type AssetPreferencesPublic = z.infer<typeof AssetPreferencesPublicSchema>;
 
 export const AssetPreferencesServerSchema = AssetPreferencesPublicSchema.extend({
-	permissions: z.partialRecord(AssetPreferenceTypeSchema, PermissionConfigSchema.optional().catch(undefined)).default(() => ({})),
+	permissions: z.partialRecord(AssetPreferenceTypeSchema, PermissionConfigSchema.optional().catch(undefined)).catch(() => ({})),
 });
 export type AssetPreferencesServer = z.infer<typeof AssetPreferencesServerSchema>;
 

@@ -34,7 +34,7 @@ export const RoomDeviceDeploymentPositionSchema = z.object({
 export type RoomDeviceDeploymentPosition = z.infer<typeof RoomDeviceDeploymentPositionSchema>;
 
 export const RoomDeviceDeploymentSchema = RoomDeviceDeploymentPositionSchema.extend({
-	deployed: z.boolean().default(true),
+	deployed: z.boolean(),
 }).catch({
 	deployed: false,
 	x: 0,

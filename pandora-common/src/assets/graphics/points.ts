@@ -55,7 +55,7 @@ export const ALWAYS_ALLOWED_LAYER_PRIORITIES: readonly LayerPriority[] = [
 ];
 
 export const PointTemplateSourceSchema = z.object({
-	pointTypes: z.record(z.string(), PointTemplateSourcePointTypeDataSchema).default({}),
+	pointTypes: z.record(z.string(), PointTemplateSourcePointTypeDataSchema),
 	automeshTemplates: z.record(z.string(), GraphicsSourceAutoMeshTemplateSchema).optional(),
 	points: PointTemplateSchema,
 });

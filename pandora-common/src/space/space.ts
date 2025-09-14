@@ -123,7 +123,7 @@ export const SpaceGhostManagementConfigSchema = z.object({
 	/**
 	 * Whether the mechanism should affect characters that are in room devices or not.
 	 */
-	affectCharactersInRoomDevice: z.boolean().default(false),
+	affectCharactersInRoomDevice: z.boolean().catch(false),
 });
 
 export type SpaceGhostManagementConfig = z.infer<typeof SpaceGhostManagementConfigSchema>;
@@ -140,9 +140,9 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The admin account ids */
 	admin: AccountIdSchema.array(),
 	/** Account ids that always allow to enter */
-	allow: AccountIdSchema.array().default([]),
+	allow: AccountIdSchema.array().catch(() => []),
 	/** Automatic space ghost management settings. `null` if disabled completely. */
-	ghostManagement: SpaceGhostManagementConfigSchema.nullable().default(null),
+	ghostManagement: SpaceGhostManagementConfigSchema.nullable().catch(null),
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 
@@ -201,10 +201,10 @@ export const SpaceDataSchema = z.object({
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
 	/** Account IDs of accounts invited to own this space */
-	ownerInvites: AccountIdSchema.array().default([]),
+	ownerInvites: AccountIdSchema.array().catch(() => []),
 	config: SpaceDirectoryConfigSchema,
-	spaceState: SpaceStateBundleSchema.default(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
-	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.string(), z.unknown())).default([]),
+	spaceState: SpaceStateBundleSchema.catch(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
+	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.string(), z.unknown())).catch(() => []),
 });
 /** Space data stored in database */
 export type SpaceData = z.infer<typeof SpaceDataSchema>;

@@ -18,7 +18,7 @@ import { GlobalStateAutoProcessCharacterPositions } from './roomGeometry.ts';
 import { AssetFrameworkSpaceState, SpaceStateBundleSchema, SpaceStateClientDeltaBundleSchema, type SpaceStateClientBundle } from './spaceState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
-	stateId: z.string().default(''),
+	stateId: z.string(),
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	space: SpaceStateBundleSchema,
 	clientOnly: z.boolean().optional(),

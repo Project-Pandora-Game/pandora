@@ -126,7 +126,20 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 					text: (
 						<p>
 							This view shows you all item collections stored on your Pandora account. There also is a button at the top to import
-							a previously exported item collection template.<br />
+							a previously exported item collection template. Let's proceed without doing this now, though.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.inventoryView .Button',
+							filter: (e) => e.innerText.includes('Import'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
 							The following steps assume you are wearing some items on your character. Press "Create a new collection".
 						</p>
 					),
@@ -193,11 +206,12 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 						<>
 							<p>
 								On the right side, you can now see a temporary item collection in edit-mode.
-								Now you can copy items from your character to the temporary collection by using the new button that appeared on each item.
+								Like this, you can copy items from your character to the temporary collection by using the new button that appeared on each item.
 							</p>
 							<p>
-								Note that preserving the order is important here. You want to add items bottom-up, so starting with the lower layers first, such as
-								when you would dress a mannequin, starting with the innermost clothes, like the underwear.
+								Note that preserving the order is important here if you want to preserve a layered outfit.
+								In that case, you want to add items bottom-up, so starting with the lower
+								layers first, such as when you would dress a mannequin, starting with the innermost clothes, like the underwear.
 							</p>
 						</>
 					),
@@ -248,8 +262,13 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 								on Pandora's Discord with other users.
 							</p>
 							<p>
-								If you do not want to save anything right now, simply go back with the "Back"-Button to the right of the "Save collection"-button
-								and the press the "Discard collection" button to go back to the main item collection list afterwards.
+								<strong>Hint</strong>: A temporary collection is also very useful if you quickly want to duplicate items in a room inventory, such
+								as furniture. Just add any item to it and then leave edit mode. Afterwards, simply add the item as many times as you want back
+								to the room inventory and discard the collection again - no need to save anything.
+							</p>
+							<p>
+								Moving on, if you do not want to save anything right now, simply go back with the "Back"-Button to the right of the
+								"Save collection"-button and the press the "Discard collection" button to go back to the main item collection list afterwards.
 							</p>
 							<p>
 								That said, I recommend that you add a few items right now as a test and then save the collection inside Pandora. Press "Next" when you are done.

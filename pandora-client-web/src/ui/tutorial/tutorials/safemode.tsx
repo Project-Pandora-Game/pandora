@@ -203,13 +203,13 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Now press the "Cancel" button to close the dialog.
+							Now press the "Close" button to close the dialog.
 						</p>
 					),
 					highlight: [
 						{
 							query: '.dialog-content.overflow-auto .Button',
-							filter: (e) => e.innerText.includes('Cancel'),
+							filter: (e) => e.innerText.includes('Close'),
 						},
 					],
 					conditions: [{
@@ -224,8 +224,8 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 						<p>
 							You can now see a notice that timeout mode is active next to your character's name in the space's character list.
 							The same banner is also shown in the wardrobe.
-							These notifications are visible to other users as well. It is a clear indication that something is not okay and it gives users time to
-							start communicating that while being able to feel safe.
+							These notifications are visible to other users as well. It is a clear indication that something is not okay and it
+							gives users time to start communicating this while being able to feel safe.
 						</p>
 					),
 					highlight: [

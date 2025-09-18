@@ -8,6 +8,7 @@ import {
 	type AccountSettings,
 	type AssetFrameworkGlobalState,
 	type CharacterSettings,
+	type ChatCharacterFullStatus,
 	type CommandAutocompleteOption,
 } from 'pandora-common';
 import type { PlayerCharacter } from '../../../character/player.ts';
@@ -40,8 +41,6 @@ export type IClientCommand<TCommandExecutionContext extends ICommandExecutionCon
 	longDescription: string;
 	usage: string;
 	handler: CommandRunner<TCommandExecutionContext, IEmpty>;
-	// TODO
-	// status?: { status: IChatCharacterStatus; } | ((args: string[]) => { status: IChatCharacterStatus; } | { status: IChatCharacterStatus, target: CharacterId; });
 };
 
 export function GetCommand<TCommandExecutionContext extends ICommandExecutionContext>(input: string, commands: readonly IClientCommand<TCommandExecutionContext>[]): {
@@ -130,6 +129,21 @@ export function CommandAutocomplete<TCommandExecutionContext extends ICommandExe
 	}
 
 	return null;
+}
+
+export function CommandGetChatStatus<TCommandExecutionContext extends ICommandExecutionContext>(
+	originalInput: string,
+	ctx: ICommandInvokeContext<TCommandExecutionContext>,
+	commands: readonly IClientCommand<TCommandExecutionContext>[],
+): ChatCharacterFullStatus {
+	const { commandName, command, args } = GetCommand(originalInput, commands);
+
+	if (!command) {
+		return { status: 'none' };
+	}
+
+	const context = CreateContext(ctx, 'chatstatus', commandName);
+	return command.handler.getChatStatus(context, {}, args) ?? { status: 'none' };
 }
 
 export interface AutocompleteDisplayData {

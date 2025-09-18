@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -26,7 +26,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
+import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 
 type Editing = {
 	target: number;
@@ -463,10 +463,16 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		const value = textarea.value;
 		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
 
-		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
+		let nextStatus: ChatCharacterFullStatus;
 		const trimmed = value.trim();
-		// Only start showing typing indicator once user wrote at least three characters and do not show it for commands
-		if (trimmed.length >= 3 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
+		// Only start showing typing indicator once user wrote at least three characters. Commands handle it themselves
+		if (
+			value.startsWith(COMMAND_KEY) &&
+			!value.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+			allowCommands
+		) {
+			nextStatus = CommandGetChatStatus(value.slice(1), commandInvokeContext, COMMANDS);
+		} else if (trimmed.length >= 3) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };

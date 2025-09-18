@@ -115,7 +115,7 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 									<strong>Current modifiers</strong>: This is the list of all added modifiers on the character, independent
 									on whether they are disabled, enabled, or enabled plus currently active based on the set activation conditions.
 									Other users can only see this list when their characters have the according permission that is set to "prompt"
-									by default for privacy reasons.
+									by default for privacy reasons, as all entries there can be opened to see all settings in detail.
 								</li>
 								<li>
 									<strong>Possible modifiers</strong>: This tab is like a "create new modifier" screen and lists all character
@@ -281,7 +281,7 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 							<p>
 								Lastly, some character modifier types come with one or more preconfigured templates that already add some
 								activation conditions when you add the modifier via the template button. In the case of this modifier type, the template
-								would add an activation condition that the character cannot stop following while a leash-type item is equipped on them.<br />
+								would add an activation condition that the character only cannot stop following while a leash-type item is equipped on them.<br />
 								More on activation conditions later.
 							</p>
 						</>
@@ -297,11 +297,11 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 						<>
 							<p>
 								Note that the same modifier type can be added multiple times to a single character.
-								Conflicts between character modifiers are resolved by the order of the added modifier list
+								Conflicts between character modifiers are resolved by the order of the added modifiers in the list
 								(e.g. the first entry has the highest priority and applies its effect first).
 							</p>
 							<p>
-								For the sake of this tutorial, add this modifier without using a preconfigured template.
+								For the sake of this tutorial, please add this modifier without using a preconfigured template.
 							</p>
 						</>
 					),
@@ -411,8 +411,8 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 								(the first entry has the highest priority and applies first), to remove it, or to export it as a template.
 							</p>
 							<p>
-								Such a character modifier template can either be imported completely with the button in the left pane, or you can
-								also just reuse a template's included activation conditions in a new modifier, potentially even of a different type,
+								An exported character modifier template can either be imported completely with the button in the left pane, or you can
+								also just reuse a template's included activation conditions in a new modifier, even of a different type,
 								with the button in the according section on the right. More on activation conditions later.
 							</p>
 						</>
@@ -604,7 +604,7 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 							</p>
 							<p>
 								An activation condition type can be added multiple times at once and comes with various buttons you can press to configure
-								the condition sentence. For example, if you add the condition type "Has item of specific type", the sentence has a
+								the condition sentence. For example, if you add the condition type "Has item of specific type": Its condition sentence has a
 								button "Is", that can be toggled to "Is not". It also has a button "not set" that can be pressed to select a specific item,
 								for instance a "Pet Leash", to make the character modifier only active when the character has at least one pet leash item
 								equipped.

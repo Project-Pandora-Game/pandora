@@ -107,9 +107,11 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The wardrobe typically opens on the "Items" tab, which is used to manage all items equipped on a character.
+							The wardrobe typically opens on the "Items" tab, which is used to manage all items equipped on a character,
+							except body parts.
 							A character can only "wear" a limited amount of items. This limit is indicated by the bar in the middle.
-							Locks, body parts, and items inside equipped storage items also count towards this limit.
+							Locks, body parts, and items inside equipped storage items also count towards this limit - it is the same number
+							on both the "Items" as well as the "Body" tab.
 						</p>
 					),
 					conditions: [{
@@ -368,10 +370,10 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 								the default state of various modules the item may or may not have.
 							</p>
 							<p>
-								An important module that every item has is the "Bound usage" section. It allows you or other permitted characters to toggle between allowing
-								or blocking interaction with the state of this item (e.g. changing the color, module states, or adding/removing it) while hand usage is restricted.
+								An important module that most items have is the "Bound usage" section. It allows you or other permitted characters to toggle between allowing
+								or blocking interaction with the state of this item (e.g. changing module states, or adding/removing the item) while hand usage is restricted.
 								Most items allow a bound usage by default, but some stricter items, such as armbinders, don't. However, you can change this at the time
-								of creation or even later. More on bound usage in a moment. Let's proceed for now.
+								of creation or even later, while not bound. More on bound usage in a moment. Let's proceed for now.
 							</p>
 							<p>
 								After you are happy with your choices, click on the position where you want to create the item in the list of worn items (left pane)
@@ -446,21 +448,69 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 								Let's delve into the topic of bound usage a bit more. You can easily spot when an interaction would be a bound usage attempt,
 								as the button is then colored differently than normally.<br />
 								Doing a bound usage action attempt triggers a notification in the chat and other users can decide to interrupt your attempt.
-								There is currently no consequence to being interrupted, such as a cooldown period.
+								There is currently no consequence for being interrupted, such as a cooldown period.
 							</p>
 							<p>
 								This system was added for self-bondage and for roleplaying tightening restraints or struggling out of items. It comes with a delay of five
-								seconds before you can choose to complete the attempt to actually do the bound action. This does not mean that it takes five seconds to
-								struggle out successfully, though. It is impossible to estimate well enough how long it should take, as many unknown factors affect
-								this process. Therefore, this system lets you flexibly decide yourself how long it should realistically take before you can succeed.<br />
+								seconds before you can choose to complete the attempt to actually do the bound action. However, this arbitrary delay does not mean that
+								Pandora defines that it always takes five seconds to struggle out successfully, for instance. It is impossible to estimate well enough
+								how long it should take, as many factors that are impossible to know affect this process.
+								Therefore, this system lets you flexibly decide yourself how long it should realistically take before you can succeed.<br />
 								That said, there is a character modifier "Delayed bound usage attempts" that allows you or others to configure this time, for instance for
-								individual items or item groups.
+								individual items or item groups. Character modifiers are topic of another tutorial.
 							</p>
 							<p>
-								Let's continue with the tutorial. Your character is now wearing the hat you just created. To proceed, please click on the item.
+								Let's continue with this tutorial. Your character is now wearing the hat you just created. To proceed, please select this item.
 							</p>
 						</>
 					),
+					conditions: [{ type: 'never' }],
+					highlight: [
+						{
+							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
+							filter: (e) => e.innerText.includes('Top Hat'),
+						},
+					],
+				},
+			],
+			advanceConditions: [
+				{
+					type: 'elementQuery',
+					query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
+					filter: (e) => e.innerText.includes('Top Hat'),
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the wardrobe screen for your character.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: /^\/wardrobe($|\/character\/c)/,
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Items" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Items'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Items'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							Please select the "Top Hat" item in your wardrobe.
+						</p>
+					),
+					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
@@ -478,7 +528,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						<p>
 							The menu that appeared on the right shows all the configuration options of this item.
 							Possibly even more options than before, such as being able to give the item a custom name and description
-							to make it more unique by giving it some background story or describing additional noticeable details or features.
+							to make it more unique by adding some background story or describing additional noticeable details or features.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -584,6 +634,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						<p>
 							This concludes the topic of wearable items.<br />
 							We covered spawning an item from all the items available in Pandora, configuring it, reordering it, and removing it again.
+							The topic of "bound usage" was also explained.
 							Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen to complete this tutorial.
 						</p>
 					),

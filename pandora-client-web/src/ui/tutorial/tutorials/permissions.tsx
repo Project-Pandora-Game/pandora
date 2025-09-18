@@ -19,7 +19,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							</p>
 							<p>
 								Permissions in Pandora follow a safe default approach, but can be individually customized in great detail.
-								Set for each character individually, they determine how other characters can interact with yours.
+								Set for each character separately, they determine how other characters can interact with yours.
 							</p>
 						</>
 					),
@@ -59,7 +59,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							</p>
 							<p>
 								Note: Please be reminded that you can freely drag the tutorial popup around and
-								can even temporarily minimize it with the button at the top if it is in the way of seeing parts of the screen.
+								can even temporarily minimize it with the button at the top, if it is in the way of seeing parts of the screen.
 							</p>
 						</>
 					),
@@ -88,8 +88,9 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							</p>
 							<p>
 								Every permission has a global setting. The global setting of a permission can possibly be set to
-								"yes", "no", and "prompt". "Prompt" will show you a popup when someone tries to interact with you,
-								but is missing one or more permissions that are set to "prompt".
+								"yes", "no", and "prompt". It applies to all characters, unless the permission has exceptions defined.
+								"Prompt" will show you a popup when someone tries to interact with you
+								but their character is not (yet) defined as an exception for this permission.
 							</p>
 							<p>
 								The master-permission is set to "prompt" by default, which is indicated by the icon of the figure with the
@@ -185,16 +186,20 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							</p>
 							<p>
 								The bottom sections are for character-individual exceptions. They override the global setting,
-								making it more or less permissive for that character.
-								When you allow or deny a prompt, an entry is automatically added in the according section of that
-								permission in the background and you can manually adjust that here at any time.
+								giving or denying the permission to the added character, or requiring them to ask for it next time.<br />
+								When you allow or deny a permission prompt, an entry is automatically added in the according section of
+								that permission in the background. You can manually adjust those exception entries here at any time.
 							</p>
 							<p>
-								Please close the button again.
+								Please feel free to make changes as desired and then close the dialog to proceed.
 							</p>
 						</>
 					),
 					conditions: [{ type: 'never' }],
+					highlight: [{
+						query: '.dialog-content .Button',
+						filter: (e) => e.innerText.includes('Close'),
+					}],
 				},
 			],
 			advanceConditions: [
@@ -241,12 +246,12 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							A final note on permissions prompts:<br />
+							A final note on permission prompts:<br />
 							When someone tries an action that leads to a prompt, indicated by a different button color (yellow),
 							they are not directly informed about your decision.
 							After you have granted the permission, the action is not automatically executed, as the server does not queue this.
 							Therefore, the interaction that was leading to the prompt has to be repeated again by the requesting character, after
-							they see the button color either changing from "yellow" to the normal color, or to "red", if the permissions was denied.
+							they see the button color changing from "yellow" to the normal color. It could also turn "red", if the permissions was denied.
 						</p>
 					),
 					conditions: [{ type: 'next' }],

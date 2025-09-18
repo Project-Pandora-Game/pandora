@@ -218,6 +218,11 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 					},
 				});
 			} else if (neighborRoom != null) {
+				// No action if the character is following another
+				const character = globalState.getCharacterState(playerId);
+				if (character == null || character.position.following != null)
+					return;
+
 				execute({
 					type: 'moveCharacter',
 					target: { type: 'character', characterId: playerId },
@@ -229,7 +234,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 				});
 			}
 		}
-	}, [execute, neighborRoom, nodeData.internalDirection, playerId, room, roomConstructionMode]);
+	}, [execute, globalState, neighborRoom, nodeData.internalDirection, playerId, room, roomConstructionMode]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
 		setHeld(false);

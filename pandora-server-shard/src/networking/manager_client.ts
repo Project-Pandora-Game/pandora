@@ -196,8 +196,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			const target = result.prompt ? space.getCharacterById(result.prompt) : null;
 			// The action failed and not because of promptable permission
 			if (target == null) {
-				// If finishing an action attempt was what failed, then cancel it
-				if (request.operation === 'complete') {
+				// If finishing an action attempt was what failed for any other reason than "tooSoon", then cancel it
+				if (request.operation === 'complete' && result.problems.some((p) => p.result !== 'tooSoon')) {
 					const cancelResult = AbortActionAttempt(character.getAppearanceActionContext(), originalState);
 					if (cancelResult.valid) {
 						space.applyAction(cancelResult);

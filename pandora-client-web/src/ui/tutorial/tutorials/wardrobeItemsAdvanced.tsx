@@ -45,7 +45,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 								storage possibilities the room offers, such as furniture that can store items (more on items with storage modules later).
 							</p>
 							<p>
-								Items in Room inventories can be accessed from every room in a space by admins of the space, but normal users can only
+								Items in room inventories can be accessed from every room in a space by admins of the space. Normal users can only
 								access the inventory of the room current inside and of any directly neighboring room with a path to it.
 							</p>
 						</>
@@ -307,19 +307,19 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								There is a second, more convenient option to access the contents of a storage item, besides the button on the module itself in the item's details when clicking on it.
+								There is a second, more convenient option to access the contents of a storage item, besides the button on the module itself in the item's detailed view.
 								It is the highlighted storage button in the left pane. Please click it to expand the item's storage directly in the list.
 							</p>
 							<p>
 								Opened like this, you can now create other items directly in the expanded section of the shoulder bag, which stores them inside.
-								You can also move other items from the left or right pane like this into the storage section of the bag with the 4 directional movement button to the right of any item.
-								Of course back out again the same way.
+								LIke this, you can also move other items from the left or right pane into the storage section of the bag with the 4 directional movement button
+								to the right of any item. Of course back out again in the same way.<br />
 								Note that the item must be smaller in size to fit into a storage item. So if you cannot move an item inside, it is likely too large to fit, or
 								the storage item might be too full, as there only is a limited amount of space.
 							</p>
 							<p>
 								Room level-items can also have storage modules, for instance chests, or even cages, where the storage module represents the floor inside the cage.
-								Naturally, you can also storage smaller storage items in larger ones.
+								Naturally, you can also store smaller storage items in larger ones.
 							</p>
 						</>
 					),
@@ -375,7 +375,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The menu that appeared on the right shows all the configuration options of this item.
+							The view that appeared on the right shows all the configuration options of this item.
 							Many items have one or more modules with a lock slot. This shoulder bag also has such a lock module to secure its contents.
 							Press on the lock slot button inside the highlighted module to proceed.
 						</p>
@@ -414,12 +414,12 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The right side now shows all lock types in Pandora. You likely see small colored icons on the right of a lock entry.
+								The right side now shows all lock types in Pandora. You likely see small colored icons to the right of a lock entry.
 								These indicate your set item preferences and limits to other users.
 							</p>
 							<p>
 								A yellow star would mean it is a favorite item of yours, no icon means the item preference is "Normal", and the
-								orange question mark that you can likely see as as a default for some of the locks represents the item preference "Maybe".
+								orange question mark, that you likely can see as a default for some of the locks, represents the item preference "Maybe".
 								It tells other users that you are not sure about this item and that they should be careful or ask.
 							</p>
 							<p>
@@ -428,7 +428,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 							</p>
 							<p>
 								The red cross icon represents the item limit "Prevent". It means that no one other than you can add this item on your character.
-								Some locks have this by default as they have a big impact as other characters cannot typically help removing them.
+								Some locks have this by default as they are extremely secure and other characters cannot typically help removing them.
 							</p>
 						</>
 					),
@@ -457,7 +457,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 									The <strong>dummy lock</strong> is a lock that can be opened by anyone with free hands or through a bound usage attempt, if possible and permitted.
 								</li>
 								<li>
-									The <strong>exclusive lock</strong> can be removed by all permitted characters, except the character it is used on.
+									The <strong>exclusive lock</strong> can be removed by all characters with the right permission(s), except the character it is used on.
 								</li>
 								<li>
 									<strong>Timer locks</strong> come with different maximum settable times and they can only be unlocked earlier by the character locking it.
@@ -584,7 +584,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 						<>
 							<p>
 								For the sake of this tutorial, please search for a "Hearing restraint" attribute by either searching for the entry in the left list
-								or by typing the in a part of this attribute into the text field at the top.
+								or by typing in a part of the attribute name into the text field at the top.
 							</p>
 							<p>
 								To proceed to the next step, select the "Hearing restraint" attribute.

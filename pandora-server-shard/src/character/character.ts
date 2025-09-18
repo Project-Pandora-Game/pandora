@@ -335,6 +335,8 @@ export class Character {
 			this.logger.debug(`Disconnected (${oldConnection.id})`);
 			oldConnection.character = null;
 			oldConnection.abortConnection();
+			// Clear connection-specific data
+			this._loadedSpace?.updateStatus(this, 'none');
 		}
 		if (connection) {
 			this.logger.debug(`Connected (${connection.id})`);

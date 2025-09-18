@@ -215,12 +215,21 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
-	public getLoadData(): SpaceLoadData {
+	public getLoadData(forCharacter: CharacterId): SpaceLoadData {
+		const chatStatus: Record<CharacterId, ChatCharacterStatus> = {};
+		for (const [c, status] of this.status) {
+			if (this.getCharacterById(c) == null || status.status === 'none' || (status.target != null && status.target !== forCharacter))
+				continue;
+
+			chatStatus[c] = status.status;
+		}
+
 		return {
 			id: this.id,
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => c.getRoomData()),
 			characterModifierEffects: this.getCharacterModifierEffects(),
+			chatStatus,
 		};
 	}
 
@@ -346,7 +355,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			character.setSpace(this, newAppearanceBundle);
 			character.connection?.sendMessage('gameStateLoad', {
 				globalState: newState.exportToClientBundle(),
-				space: this.getLoadData(),
+				space: this.getLoadData(character.id),
 			});
 		});
 

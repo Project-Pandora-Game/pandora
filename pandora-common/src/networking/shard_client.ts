@@ -26,6 +26,7 @@ export const SpaceLoadDataSchema = z.object({
 	info: SpaceClientInfoSchema,
 	characters: ZodCast<ICharacterRoomData>().array(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataSchema,
+	chatStatus: z.partialRecord(CharacterIdSchema, ChatCharacterStatusSchema.optional()),
 });
 export type SpaceLoadData = z.infer<typeof SpaceLoadDataSchema>;
 

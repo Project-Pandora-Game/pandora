@@ -65,10 +65,11 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 
 	public sendLoadMessage(): void {
 		AssertNotNullable(this.character);
+		const space = this.character.getOrLoadSpace();
 		this.sendMessage('load', {
 			character: this.character.getPrivateData(),
-			globalState: this.character.getOrLoadSpace().currentState.exportToClientBundle(),
-			space: this.character.getOrLoadSpace().getLoadData(),
+			globalState: space.currentState.exportToClientBundle(),
+			space: space.getLoadData(this.character.id),
 			assetsDefinition: assetManager.rawData,
 			assetsDefinitionHash: assetManager.definitionsHash,
 			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS.split(';').map((addr) => addr.trim() + '/assets/').join(';')),

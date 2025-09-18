@@ -350,35 +350,39 @@ function MoveCharacterMenuItem(): ReactElement | null {
 		spaceCharacters.find((c) => c.id === characterState.position.following?.target) ?? null
 	) : null);
 
-	if (characterState?.position.type === 'normal' && characterState.position.following != null) {
-		return (
-			<span className='dim'>
-				Following { followTargetData?.name ?? '[unknown]' } ({ characterState.position.following.target })
-			</span>
-		);
-	}
+	if (characterState == null)
+		return null;
 
 	return (
-		<button
-			className={ classNames(
-				'withIcon',
-				(canMoveCharacter === 'forbidden') ? 'text-strikethrough' : null,
-			) }
-			onClick={ () => {
-				if (canMoveCharacter === 'forbidden') {
-					toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
-					return;
-				}
-				if (canMoveCharacter === 'prompt') {
-					toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
-				}
-				setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
-				close();
-			} }
-		>
-			<img src={ arrowAllIcon } />
-			<span>Move</span>
-		</button>
+		<>
+			{ characterState.position.following == null || characterState.position.following.followType === 'leash' ? (
+				<button
+					className={ classNames(
+						'withIcon',
+						(canMoveCharacter === 'forbidden') ? 'text-strikethrough' : null,
+					) }
+					onClick={ () => {
+						if (canMoveCharacter === 'forbidden') {
+							toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
+							return;
+						}
+						if (canMoveCharacter === 'prompt') {
+							toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
+						}
+						setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
+						close();
+					} }
+				>
+					<img src={ arrowAllIcon } />
+					<span>Move</span>
+				</button>
+			) : null }
+			{ characterState?.position.type === 'normal' && characterState.position.following != null ? (
+				<span className='dim'>
+					Following { followTargetData?.name ?? '[unknown]' } ({ characterState.position.following.target })
+				</span>
+			) : null }
+		</>
 	);
 }
 

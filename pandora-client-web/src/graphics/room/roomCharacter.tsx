@@ -245,7 +245,7 @@ function RoomCharacterInteractiveImpl({
 		scale,
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const disableManualMove = characterState.position.following != null;
+	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
 
 	const setPositionRaw = useEvent((newX: number, newY: number) => {
 		if (disableManualMove) {
@@ -263,6 +263,7 @@ function RoomCharacterInteractiveImpl({
 				type: 'normal',
 				room: characterState.currentRoom,
 				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
+				following: characterState.position.following,
 			},
 		});
 	});
@@ -295,8 +296,10 @@ function RoomCharacterInteractiveImpl({
 	});
 
 	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
-		event.stopPropagation();
-		pointerDown.current = Date.now();
+		if (event.button !== 1) {
+			event.stopPropagation();
+			pointerDown.current = Date.now();
+		}
 	}, []);
 
 	const onPointerUp = useEvent((event: FederatedPointerEvent) => {

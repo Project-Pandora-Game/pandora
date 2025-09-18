@@ -148,7 +148,7 @@ export function RoomScreenSceneModeCheckProvider(): null {
 			if (canMoveTarget === 'forbidden') {
 				toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
 				setRoomSceneMode({ mode: 'normal' });
-			} else if (moveTargetState?.position.following != null) {
+			} else if (moveTargetState?.position.following != null && moveTargetState.position.following.followType !== 'leash') {
 				toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
 				setRoomSceneMode({ mode: 'normal' });
 			}

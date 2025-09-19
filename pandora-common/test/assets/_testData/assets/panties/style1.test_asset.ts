@@ -86,4 +86,5 @@ export default {
 			],
 		},
 	},
+	credits: { credits: ['Pandora'], sourcePath: '_destData/assets' },
 } satisfies PersonalAssetDefinition<AssetTestExtraArgs>;

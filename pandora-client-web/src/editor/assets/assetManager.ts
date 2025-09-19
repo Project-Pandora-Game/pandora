@@ -49,6 +49,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 					},
 				},
 				hasGraphics: false,
+				credits: { credits: [], sourcePath: `${category}/${idPart}` },
 			};
 		} else {
 			definition = {
@@ -63,6 +64,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 					},
 				},
 				hasGraphics: false,
+				credits: { credits: [], sourcePath: `${category}/${idPart}` },
 			};
 		}
 

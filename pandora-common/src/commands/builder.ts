@@ -2,7 +2,7 @@ import { IEmpty } from '../networking/index.ts';
 import { Assert, KnownObject } from '../utility/misc.ts';
 import { CommandSelectorDynamic } from './commandHelpers/dynamicSelector.ts';
 import { CommandSelectorEnum } from './commandHelpers/enumSelector.ts';
-import { CommandExecutorOptions, CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandRunnerFork, CommandStepProcessor, ICommandExecutionContext } from './executor.ts';
+import { CommandExecutorOptions, CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandRunnerFork, CommandStepProcessor, ICommandExecutionContext, type CommandExecutorHandler } from './executor.ts';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,
@@ -126,9 +126,9 @@ export class CommandBuilder<
 		return this.argumentOptional(name, CommandSelectorDynamic(options, generate));
 	}
 
-	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
-	public handler(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
-	public handler(options: CommandExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
+	public handler(handler: CommandExecutorHandler<Context, EntryArguments>): CommandRunner<Context, StartArguments>;
+	public handler(options: CommandExecutorOptions<Context, EntryArguments>, handler: CommandExecutorHandler<Context, EntryArguments>): CommandRunner<Context, StartArguments>;
+	public handler(options: CommandExecutorOptions<Context, EntryArguments> | CommandExecutorHandler<Context, EntryArguments>, handler?: CommandExecutorHandler<Context, EntryArguments>): CommandRunner<Context, StartArguments> {
 		if (typeof options === 'function') {
 			handler = options;
 			options = {};

@@ -1,7 +1,8 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
+import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
@@ -22,32 +23,41 @@ function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, typ
 		description: `Sends ${'aeiou'.includes(description[0]) ? 'an' : 'a'} ${description}`,
 		longDescription,
 		usage: '[message]',
-		// TODO
-		// status: { status: 'typing' },
 		handler: CreateClientCommand()
-			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, _args, message) => {
-				message = message.trim();
+			.handler(
+				{
+					restArgName: 'message',
+					getChatStatus(_context, _args, message): ChatCharacterFullStatus {
+						if (message.trim().length >= 3) {
+							return { status: 'typing' };
+						}
+						return { status: 'none' };
+					},
+				},
+				({ messageSender, inputHandlerContext }, _args, message) => {
+					message = message.trim();
 
-				if (!message) {
-					if (!allowModeSet)
-						return false;
+					if (!message) {
+						if (!allowModeSet)
+							return false;
 
-					if (inputHandlerContext.mode?.type === type && inputHandlerContext.mode?.raw === raw) {
-						inputHandlerContext.setMode(null);
+						if (inputHandlerContext.mode?.type === type && inputHandlerContext.mode?.raw === raw) {
+							inputHandlerContext.setMode(null);
+							return true;
+						}
+
+						inputHandlerContext.setMode({ type, raw });
 						return true;
 					}
 
-					inputHandlerContext.setMode({ type, raw });
+					messageSender.sendMessage(message, {
+						type,
+						raw: raw ? true : undefined,
+					});
+
 					return true;
-				}
-
-				messageSender.sendMessage(message, {
-					type,
-					raw: raw ? true : undefined,
-				});
-
-				return true;
-			}),
+				},
+			),
 	});
 }
 
@@ -169,13 +179,16 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: 'Sends the user a request to add the user account to your contacts list.',
 		handler: CreateClientCommand()
 			.argument('target', ACCOUNT_ID_PARSER)
-			.handler(({ directoryConnector }, { target }) => {
-				directoryConnector.awaitResponse('friendRequest', {
+			.handler(async ({ directoryConnector }, { target }) => {
+				const result = await directoryConnector.awaitResponse('friendRequest', {
 					id: target,
 					action: 'initiate',
-				}).catch(() => {
-					// TODO add async commands
 				});
+				if (result.result === 'ok')
+					return true;
+
+				AccountContactChangeHandleResult(result);
+				return false;
 			}),
 	},
 	{
@@ -186,29 +199,35 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		usage: '[target] [message]',
 		handler: CreateClientCommand()
 			.argumentOptional('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
-			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {
-				if (!target) {
-					inputHandlerContext.setTarget(null);
+			.handler(
+				{
+					restArgName: 'message',
+					getChatStatus(_context, { target }, message): ChatCharacterFullStatus {
+						if (target && message.trim().length >= 3) {
+							return { status: 'whispering', target: target.id };
+						}
+						return { status: 'none' };
+					},
+				},
+				({ messageSender, inputHandlerContext }, { target }, message) => {
+					if (!target) {
+						inputHandlerContext.setTarget(null);
+						return true;
+					}
+
+					message = message.trim();
+					if (!message) {
+						inputHandlerContext.setTarget(target.data.id);
+						return true;
+					}
+
+					messageSender.sendMessage(message, {
+						target: target.data.id,
+					});
+
 					return true;
-				}
-
-				message = message.trim();
-				if (!message) {
-					inputHandlerContext.setTarget(target.data.id);
-					return true;
-				}
-
-				messageSender.sendMessage(message, {
-					target: target.data.id,
-				});
-
-				return true;
-			}),
-		// TODO
-		// status: () => {
-		// const target = undefined; // GetWhisperTarget(args);
-		// return target ? { status: 'whisper', target } : { status: 'none' };
-		// },
+				},
+			),
 	},
 	{
 		key: ['dm'],
@@ -486,5 +505,4 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			}),
 	},
 	//#endregion
-
 ];

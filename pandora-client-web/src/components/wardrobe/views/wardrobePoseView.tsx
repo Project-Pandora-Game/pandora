@@ -895,7 +895,7 @@ function RoomManualYOffsetControl({ characterState }: {
 
 	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(characterState.position.position[2], [characterState.id]);
 
-	const disableManualMove = characterState.position.following != null;
+	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
 
 	const setYOffset = useEvent((newYOffset: number) => {
 		if (disableManualMove)
@@ -913,6 +913,7 @@ function RoomManualYOffsetControl({ characterState }: {
 				type: 'normal',
 				room: characterState.currentRoom,
 				position: [position[0], position[1], newYOffset],
+				following: characterState.position.following,
 			},
 		});
 	});

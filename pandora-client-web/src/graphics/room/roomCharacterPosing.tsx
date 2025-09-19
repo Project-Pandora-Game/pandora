@@ -61,7 +61,7 @@ function RoomCharacterMovementToolImpl({
 		setRoomSceneMode,
 	} = useRoomScreenContext();
 
-	const disableManualMove = characterState.position.following != null;
+	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
 
 	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
 		if (disableManualMove) {
@@ -79,6 +79,7 @@ function RoomCharacterMovementToolImpl({
 				type: 'normal',
 				room: characterState.currentRoom,
 				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
+				following: characterState.position.following,
 			},
 		});
 	});

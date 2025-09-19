@@ -386,6 +386,16 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	.assetName {
+		.credits {
+			margin-left: common.spacing(medium);
+			font-size: 0.7em;
+			font-style: normal;
+			font-weight: normal;
+			color: common.$theme-normal-text-dim;
+		}
+	}
+
 	&.listMode {
 		min-height: 3em;
 		align-items: center;
@@ -407,7 +417,7 @@ $drop-overlay-gap: 0.3em;
 			}
 		}
 
-		.itemName {
+		.itemName, .assetName {
 			margin: 3px;
 			flex: 1;
 		}
@@ -450,6 +460,20 @@ $drop-overlay-gap: 0.3em;
 			width: 100%;
 		}
 
+		.assetName {
+			@include common.flex(column);
+			text-align: center;
+			min-height: 2em;
+			width: 100%;
+			flex-grow: 1;
+			justify-content: space-between;
+
+			.credits {
+				margin-top: common.spacing(medium);
+				margin-left: 0;
+			}
+		}
+
 		.quickActions {
 			flex-flow: wrap;
 			margin: auto;
@@ -475,7 +499,7 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.pref-favorite {
-		.itemName {
+		.itemName, .assetName {
 			font-weight: bold;
 		}
 
@@ -486,7 +510,7 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.pref-maybe {
-		.itemName {
+		.itemName, .assetName {
 			font-style: italic;
 		}
 
@@ -501,7 +525,7 @@ $drop-overlay-gap: 0.3em;
 			filter: grayscale(100%);
 		}
 
-		.itemName {
+		.itemName, .assetName {
 			text-decoration: line-through;
 			font-style: italic;
 		}
@@ -517,7 +541,7 @@ $drop-overlay-gap: 0.3em;
 			filter: brightness(0%) blur(9px);
 		}
 
-		.itemName {
+		.itemName, .assetName {
 			text-decoration: line-through;
 			font-style: italic;
 		}
@@ -888,16 +912,22 @@ $drop-overlay-gap: 0.3em;
 }
 
 .wardrobeItemCustomizationView {
+	.customizationQuickAction {
+		width: 2.5em;
+		height: 2.5em;
+	}
+
 	.name {
 		display: inline-block;
 		font-size: 1em;
-		padding: 0.5em;
 		flex-grow: 1;
 
-		&:not(:is(input)) {
-			border: 1px solid common.$theme-wardrobe-itemname-border;
-			background: common.$theme-wardrobe-itemname-background;
-			color: common.$theme-wardrobe-itemname-text;
+		&input {
+			padding: 0.5em;
+		}
+
+		&.custom {
+			font-weight: 600;
 		}
 	}
 
@@ -906,9 +936,13 @@ $drop-overlay-gap: 0.3em;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
-		min-height: 12em;
+
+		&textarea {
+			min-height: 12em;
+		}
 
 		&:not(:is(textarea)) {
+			padding: 0.25em;
 			border: 1px solid common.$theme-wardrobe-itemdescription-border;
 			background: common.$theme-wardrobe-itemdescription-background;
 			color: common.$theme-wardrobe-itemdescription-text;

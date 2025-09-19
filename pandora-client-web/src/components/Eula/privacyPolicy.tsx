@@ -160,7 +160,7 @@ export function PrivacyPolicyContent(): ReactElement {
 				You can contact us by any of the following methods:
 			</p>
 			<ul>
-				<li>Using our Discord server: <ExternalLink href='https://discord.gg/EnaPvuQf8d'>https://discord.gg/EnaPvuQf8d</ExternalLink></li>
+				<li>Using our Discord server: <ExternalLink href='https://discord.gg/EnaPvuQf8d' sendReferrer>https://discord.gg/EnaPvuQf8d</ExternalLink></li>
 				<li>Using the email address: <a href='mailto:support@project-pandora.com'>support@project-pandora.com</a></li>
 			</ul>
 		</>

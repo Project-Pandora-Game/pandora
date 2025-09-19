@@ -24,7 +24,6 @@ import {
 	GetLogger,
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
-	ICharacterPublicData,
 	ICharacterRoomData,
 	IChatMessage,
 	IShardAccountDefinition,
@@ -63,13 +62,9 @@ export const CHARACTER_TICK_INTERVAL = 60_000;
 
 const logger = GetLogger('Character');
 
-type ICharacterPublicDataChange = Omit<
-	Pick<ICharacterDataShardUpdate, (keyof ICharacterDataShardUpdate) & (keyof ICharacterPublicData)>,
-	'id' | ManuallyGeneratedKeys
->;
-type ICharacterPrivateDataChange = Omit<ICharacterDataShardUpdate, keyof ICharacterPublicData | ManuallyGeneratedKeys>;
-/** Keys that are not stored in raw for while loaded, but instead need to be generated while saving */
+/** Keys that are not stored in raw form while loaded, but instead need to be generated while saving */
 type ManuallyGeneratedKeys = 'appearance' | 'personalRoom';
+type ImmutableKeys = 'id' | 'accountId';
 
 export class Character {
 	private readonly data: Omit<ICharacterDataShard, ManuallyGeneratedKeys>;
@@ -199,16 +194,16 @@ export class Character {
 		// Link events from game logic parts
 		this.gameLogicCharacter.on('dataChanged', (type) => {
 			if (type === 'interactions') {
-				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData());
 				this._emitSomethingChanged('permissions');
 			} else if (type === 'assetPreferences') {
-				this.setValue('assetPreferences', this.gameLogicCharacter.assetPreferences.getData(), false);
+				this.setValue('assetPreferences', this.gameLogicCharacter.assetPreferences.getData());
 				this._sendDataUpdate({
 					assetPreferences: this.assetPreferences,
 				});
 				this._emitSomethingChanged('permissions');
 			} else if (type === 'characterModifiers') {
-				this.setValue('characterModifiers', this.gameLogicCharacter.characterModifiers.getData(), false);
+				this.setValue('characterModifiers', this.gameLogicCharacter.characterModifiers.getData());
 				this._emitSomethingChanged('permissions');
 			} else {
 				AssertNever(type);
@@ -222,17 +217,17 @@ export class Character {
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
 		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {
 			this.logger.debug('Migrated interaction config');
-			this.setValue('interactionConfig', currentInteractionConfig, false);
+			this.setValue('interactionConfig', currentInteractionConfig);
 		}
 		const currentAssetPreferencesConfig = this.gameLogicCharacter.assetPreferences.getData();
 		if (!isEqual(originalAssetPreferencesConfig, currentAssetPreferencesConfig)) {
 			this.logger.debug('Migrated asset preferences');
-			this.setValue('assetPreferences', currentAssetPreferencesConfig, false);
+			this.setValue('assetPreferences', currentAssetPreferencesConfig);
 		}
 		const currentCharacterModifiersData = this.gameLogicCharacter.characterModifiers.getData();
 		if (!isEqual(originalCharacterModifiersData, currentCharacterModifiersData)) {
 			this.logger.debug('Migrated character modifiers');
-			this.setValue('characterModifiers', currentCharacterModifiersData, false);
+			this.setValue('characterModifiers', currentCharacterModifiersData);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
@@ -340,6 +335,8 @@ export class Character {
 			this.logger.debug(`Disconnected (${oldConnection.id})`);
 			oldConnection.character = null;
 			oldConnection.abortConnection();
+			// Clear connection-specific data
+			this._loadedSpace?.updateStatus(this, 'none');
 		}
 		if (connection) {
 			this.logger.debug(`Connected (${connection.id})`);
@@ -364,7 +361,8 @@ export class Character {
 		if (!this.data.inCreation)
 			return false;
 
-		this.setValue('name', name, true);
+		this.setValue('name', name);
+		this._sendDataUpdate({ name });
 		await this.save();
 
 		if (!this.modified.has('name')) {
@@ -573,22 +571,12 @@ export class Character {
 		}
 	}
 
-	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: true): void;
-	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: false): void;
-	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterDataShard[Key], intoSpace: boolean): void {
+	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterDataShard[Key]): void {
 		if (this.data[key] === value)
 			return;
 
 		this.data[key] = value;
 		this.modified.add(key);
-
-		if (intoSpace) {
-			this._sendDataUpdate({
-				[key]: value,
-			});
-		} else {
-			this.connection?.sendMessage('updateCharacter', { [key]: value });
-		}
 	}
 
 	private _sendDataUpdate(updatedData: Partial<ICharacterRoomData>): void {
@@ -601,6 +589,10 @@ export class Character {
 		} else {
 			this.connection?.sendMessage('updateCharacter', updatedData);
 		}
+	}
+
+	private _sendPrivateDataUpdate(updatedData: Partial<Omit<ICharacterPrivateData, keyof ICharacterRoomData | ManuallyGeneratedKeys | ImmutableKeys>>): void {
+		this.connection?.sendMessage('updateCharacter', updatedData);
 	}
 
 	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
@@ -633,7 +625,8 @@ export class Character {
 		this.setValue('settings', {
 			...this.data.settings,
 			...settings,
-		}, false);
+		});
+		this._sendPrivateDataUpdate({ settings: this.data.settings });
 
 		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => Object.hasOwn(settings, setting))) {
 			this._onPublicSettingsChanged();
@@ -646,7 +639,8 @@ export class Character {
 			delete newSettings[setting];
 		}
 
-		this.setValue('settings', newSettings, false);
+		this.setValue('settings', newSettings);
+		this._sendPrivateDataUpdate({ settings: this.data.settings });
 
 		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => settings.includes(setting))) {
 			this._onPublicSettingsChanged();
@@ -708,7 +702,8 @@ export class Character {
 	}
 
 	public updateCharacterDescription(newDescription: string): void {
-		this.setValue('profileDescription', newDescription, true);
+		this.setValue('profileDescription', newDescription);
+		this._sendDataUpdate({ profileDescription: this.data.profileDescription });
 	}
 
 	private tick(): void {

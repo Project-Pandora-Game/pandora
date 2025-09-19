@@ -1,10 +1,12 @@
+import type { Promisable } from 'type-fest';
+import type { ChatCharacterFullStatus } from '../chat/chat.ts';
 import type { IEmpty } from '../networking/index.ts';
 import { Assert } from '../utility/misc.ts';
 import type { CommandForkDescriptor } from './builder.ts';
 import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers.ts';
 
 export interface ICommandExecutionContext {
-	executionType: 'help' | 'run' | 'autocomplete';
+	executionType: 'help' | 'run' | 'autocomplete' | 'chatstatus';
 	displayError?: (error: string) => void;
 	commandName: string;
 }
@@ -40,31 +42,45 @@ export interface CommandRunner<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
 > {
-	run(context: Context, args: EntryArguments, rest: string): boolean;
+	run(context: Context, args: EntryArguments, rest: string): Promisable<boolean>;
 
 	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteResult;
 	predictHeader(): string;
+
+	getChatStatus(context: Context, args: EntryArguments, rest: string): ChatCharacterFullStatus | null;
 }
 
-export interface CommandExecutorOptions {
+export interface CommandExecutorOptions<
+	Context extends ICommandExecutionContext,
+	EntryArguments extends Record<string, never>,
+> {
 	restArgName?: string;
+	getChatStatus?: (context: Context, args: EntryArguments, rest: string) => ChatCharacterFullStatus | null;
 }
+export type CommandExecutorHandler<
+	Context extends ICommandExecutionContext,
+	EntryArguments extends Record<string, never>,
+> = (context: Context, args: EntryArguments, rest: string) => Promisable<boolean | undefined | void>;
 
 export class CommandRunnerExecutor<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
 > implements CommandRunner<Context, EntryArguments> {
 
-	private readonly options: CommandExecutorOptions;
-	private readonly handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void;
+	private readonly options: CommandExecutorOptions<Context, EntryArguments>;
+	private readonly handler: CommandExecutorHandler<Context, EntryArguments>;
 
-	constructor(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
+	constructor(options: CommandExecutorOptions<Context, EntryArguments>, handler: CommandExecutorHandler<Context, EntryArguments>) {
 		this.options = options;
 		this.handler = handler;
 	}
 
-	public run(context: Context, args: EntryArguments, rest: string): boolean {
-		return this.handler(context, args, rest) ?? true;
+	public run(context: Context, args: EntryArguments, rest: string): Promisable<boolean> {
+		const result = this.handler(context, args, rest);
+		if (result == null || typeof result === 'boolean')
+			return result ?? true;
+
+		return result.then((r) => r ?? true);
 	}
 
 	public autocomplete(): CommandAutocompleteResult {
@@ -76,6 +92,10 @@ export class CommandRunnerExecutor<
 
 	public predictHeader(): string {
 		return this.options.restArgName ? `<${this.options.restArgName}>` : '';
+	}
+
+	public getChatStatus(context: Context, args: EntryArguments, rest: string): ChatCharacterFullStatus | null {
+		return this.options.getChatStatus?.(context, args, rest) ?? null;
 	}
 }
 
@@ -111,7 +131,7 @@ export class CommandRunnerArgParser<
 		}
 	}
 
-	public run(context: Context, args: EntryArguments, input: string): boolean {
+	public run(context: Context, args: EntryArguments, input: string): Promisable<boolean> {
 		const { value, rest } = this.preprocessor(input);
 
 		const parsed = this.processor.parse(value, context, args);
@@ -168,7 +188,19 @@ export class CommandRunnerArgParser<
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
 			})),
 		} : null;
+	}
 
+	public getChatStatus(context: Context, args: EntryArguments, input: string): ChatCharacterFullStatus | null {
+		const { value, rest } = this.preprocessor(input);
+
+		const parsed = this.processor.parse(value, context, args);
+		if (!parsed.success)
+			return null;
+
+		return this.next.getChatStatus(context, {
+			...args,
+			[this.name]: parsed.value,
+		}, rest);
 	}
 
 	public predictHeader(): string {
@@ -194,7 +226,7 @@ export class CommandRunnerFork<
 		this.descriptor = descriptor;
 	}
 
-	public run(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): boolean {
+	public run(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): Promisable<boolean> {
 		const optionName: ForkOptions = args[this.argument];
 		Assert(Object.hasOwn(this.descriptor, optionName));
 		const option = this.descriptor[optionName];
@@ -212,5 +244,13 @@ export class CommandRunnerFork<
 
 	public predictHeader(): string {
 		return '\u2026';
+	}
+
+	public getChatStatus(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): ChatCharacterFullStatus | null {
+		const optionName: ForkOptions = args[this.argument];
+		Assert(Object.hasOwn(this.descriptor, optionName));
+		const option = this.descriptor[optionName];
+
+		return option.handler.getChatStatus(context, args, input);
 	}
 }

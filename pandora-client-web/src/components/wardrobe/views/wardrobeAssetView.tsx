@@ -9,6 +9,7 @@ import {
 	AssetPreferenceTypeSchema,
 	AssetPreferencesPublic,
 	ItemContainerPath,
+	NaturalListJoin,
 	ResolveAssetPreference,
 	type ICharacterRoomData,
 } from 'pandora-common';
@@ -131,7 +132,8 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 				);
 			})
 			.filter((asset) => flt.every((f) => (
-				asset.definition.name.toLowerCase().includes(f)
+				asset.definition.name.toLowerCase().includes(f) ||
+				asset.definition.credits.credits.some((c) => c.toLowerCase().includes(f))
 			)))
 	), [assetManager, assets, flt, finalAttributeFilterOptions, attribute]);
 
@@ -331,7 +333,10 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 				});
 			} }>
 			<InventoryAssetPreview asset={ asset } small={ listMode } />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='assetName'>
+				<span>{ asset.definition.name }</span>
+				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
+			</span>
 		</div>
 	);
 }
@@ -399,7 +404,10 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ listMode } />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='assetName'>
+				<span>{ asset.definition.name }</span>
+				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
+			</span>
 		</div>
 	);
 }

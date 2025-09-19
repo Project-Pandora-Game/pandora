@@ -9,7 +9,7 @@ export function useTextFormattingOnKeyboardEvent(originalRef: React.ForwardedRef
 			return;
 
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (!e.ctrlKey || ref.current == null || document.activeElement !== ref.current)
+			if (!e.ctrlKey || ref.current == null || document.activeElement !== ref.current || ref.current.disabled || ref.current.readOnly)
 				return;
 
 			switch (e.key) {

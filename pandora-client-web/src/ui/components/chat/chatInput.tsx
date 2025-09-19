@@ -1,8 +1,9 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
+import type { Promisable } from 'type-fest';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
 import settingsIcon from '../../../assets/icons/setting.svg';
@@ -26,7 +27,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
+import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 
 type Editing = {
 	target: number;
@@ -283,7 +284,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		}
 	});
 
-	const handleSend = useCallback((input: string, forceOOC: boolean): boolean => {
+	const handleSend = useCallback((input: string, forceOOC: boolean): Promisable<boolean> => {
 		setAutocompleteHint(null);
 		if (
 			input.startsWith(COMMAND_KEY) &&
@@ -321,11 +322,14 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.currentTarget;
 		const input = textarea.value;
+		if (textarea.disabled || textarea.readOnly)
+			return;
+
 		if (ev.key === 'Enter' && !ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				if (handleSend(input, ev.altKey)) {
+				function cleanup() {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);
@@ -338,6 +342,25 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 							}
 						});
 					}
+				}
+
+				const result = handleSend(input, ev.altKey);
+				if (typeof result === 'boolean') {
+					if (result) {
+						cleanup();
+					}
+				} else {
+					textarea.disabled = true;
+					result.then((r) => {
+						textarea.disabled = false;
+						if (r) {
+							cleanup();
+						}
+					}, (error) => {
+						textarea.disabled = false;
+						toast('Error processing command', TOAST_OPTIONS_ERROR);
+						GetLogger('ChatInput').error('Error async processing input:', error);
+					});
 				}
 			} catch (error) {
 				if (error instanceof ChatSendError) {
@@ -463,10 +486,16 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		const value = textarea.value;
 		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
 
-		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
+		let nextStatus: ChatCharacterFullStatus;
 		const trimmed = value.trim();
-		// Only start showing typing indicator once user wrote at least three characters and do not show it for commands
-		if (trimmed.length >= 3 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
+		// Only start showing typing indicator once user wrote at least three characters. Commands handle it themselves
+		if (
+			value.startsWith(COMMAND_KEY) &&
+			!value.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+			allowCommands
+		) {
+			nextStatus = CommandGetChatStatus(value.slice(1), commandInvokeContext, COMMANDS);
+		} else if (trimmed.length >= 3) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -488,6 +517,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.target;
+		if (textarea.disabled || textarea.readOnly)
+			return;
 		updateCommandHelp(textarea);
 		updateTypingStatus(textarea);
 	});
@@ -727,7 +758,7 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 										ref={ index === autocompleteHint.index ? selectedElementRef : undefined }
 										onClick={ (ev) => {
 											const textarea = ref.current;
-											if (!textarea)
+											if (!textarea || textarea.disabled || textarea.readOnly)
 												return;
 
 											ev.preventDefault();

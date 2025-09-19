@@ -144,6 +144,13 @@ export type IChatMessageDirectoryAction = Omit<IChatMessageAction, 'data' | 'roo
 
 export const ChatCharacterStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
 export type ChatCharacterStatus = z.infer<typeof ChatCharacterStatusSchema>;
+/** Status as it is sent to the server */
+export type ChatCharacterFullStatus = {
+	/** The actual status */
+	status: ChatCharacterStatus;
+	/** Target who can see the status. Others receive 'none'. */
+	target?: CharacterId;
+};
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';
 export const LONGDESC_THIRD_PERSON = ' It describes events in third-person instead of representing spoken words.';

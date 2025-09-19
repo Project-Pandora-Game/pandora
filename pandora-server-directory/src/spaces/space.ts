@@ -706,6 +706,10 @@ export class Space {
 			case 'joinMe': {
 				if (data.accountId == null)
 					return 'invalidData';
+				// If the room is not marked as public, then only admins can invite inside
+				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
+				if (!isPublic && !this.isAdmin(account))
+					return 'requireAdmin';
 
 				let dropCount = this._invites.filter((i) => i.type === 'joinMe' && i.createdBy.accountId === account.id).length - LIMIT_JOIN_ME_INVITES + 1;
 				if (dropCount > 0)

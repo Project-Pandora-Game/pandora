@@ -59,7 +59,7 @@ import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterDataOptional } from '../../character/character.ts';
 import { PlayerCharacter } from '../../character/player.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
-import { Observable, useNullableObservable, useObservable } from '../../observable.ts';
+import { Observable, useNullableObservable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
@@ -124,7 +124,6 @@ export class GameState extends TypedEventEmitter<{
 	public readonly currentSpace: Observable<CurrentSpaceInfo>;
 	public readonly characters: Observable<readonly Character<ICharacterRoomData>[]>;
 	public readonly characterModifierEffects: Observable<Immutable<SpaceCharacterModifierEffectData>>;
-	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public readonly player: PlayerCharacter;
 
 	public get playerId() {
@@ -237,7 +236,7 @@ export class GameState extends TypedEventEmitter<{
 
 	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
 		const oldSpace = this.currentSpace.value;
-		const { id, info, characters, characterModifierEffects } = data.space;
+		const { id, info, characters, characterModifierEffects, chatStatus } = data.space;
 		this.currentSpace.value = {
 			id,
 			config: info,
@@ -256,6 +255,28 @@ export class GameState extends TypedEventEmitter<{
 			}
 		}
 		this._updateCharacters(characters);
+		// Update chat typing status
+		{
+			const playerStatus = this._status.value.get(this.playerId);
+			const newStatus = new Map<CharacterId, ChatCharacterStatus>();
+			for (const c of characters) {
+				const status = chatStatus[c.id];
+				if (status != null && status !== 'none' && c.id !== this.playerId) {
+					newStatus.set(c.id, status);
+				}
+			}
+			if (playerStatus != null) {
+				newStatus.set(this.playerId, playerStatus);
+			}
+			this._status.value = newStatus;
+			// Always send our current typing status right after reconnect,
+			// as server can clear it itself
+			if (this._indicatorStatus !== 'none') {
+				queueMicrotask(() => {
+					this._shard.sendMessage('chatStatus', { status: this._indicatorStatus, target: this._indicatorTarget });
+				});
+			}
+		}
 		logger.debug('Loaded data', data);
 		this._updateGlobalState(id, data.globalState);
 		this.characterModifierEffects.value = freeze(characterModifierEffects, true);
@@ -292,7 +313,9 @@ export class GameState extends TypedEventEmitter<{
 		}
 		if (leave) {
 			this.characters.value = this.characters.value.filter((oc) => oc.data.id !== leave);
-			this._status.delete(leave);
+			this._status.produceImmer((s) => {
+				s.delete(leave);
+			});
 		}
 		if (characters) {
 			for (const [id, characterData] of Object.entries(characters)) {
@@ -328,6 +351,7 @@ export class GameState extends TypedEventEmitter<{
 	private _onSpaceChange() {
 		this.messages.value = [];
 		this.characters.value = [this.player];
+		this._status.value = new Map();
 		this._sent.clear();
 		this._setRestore();
 	}
@@ -343,6 +367,13 @@ export class GameState extends TypedEventEmitter<{
 				char = new Character<ICharacterRoomData>(c);
 			}
 			return char;
+		});
+		this._status.produceImmer((s) => {
+			for (const k of Array.from(s.keys())) {
+				if (k !== playerId && !characters.some((c) => c.id === k)) {
+					s.delete(k);
+				}
+			}
 		});
 	}
 
@@ -549,20 +580,19 @@ export class GameState extends TypedEventEmitter<{
 		return this._lastMessageTime;
 	}
 
-	private readonly _status = new Map<CharacterId, ChatCharacterStatus>();
+	private readonly _status = new Observable<ReadonlyMap<CharacterId, ChatCharacterStatus>>(new Map());
+	public get status(): ReadonlyObservable<ReadonlyMap<CharacterId, ChatCharacterStatus>> {
+		return this._status;
+	}
+
 	public onStatus({ id, status }: IShardClientArgument['chatCharacterStatus']): void {
 		if (id === this.playerId)
 			return;
 
-		if (this._status.get(id) !== status) {
-			this._status.set(id, status);
-			const chars = new Set([...this.status.value]);
-			if (status === 'none') {
-				chars.delete(id);
-			} else {
-				chars.add(id);
-			}
-			this.status.value = chars;
+		if (this._status.value.get(id) !== status) {
+			this._status.produceImmer((s) => {
+				s.set(id, status);
+			});
 		}
 	}
 
@@ -599,25 +629,16 @@ export class GameState extends TypedEventEmitter<{
 
 	public setPlayerStatus(status: ChatCharacterStatus, target?: CharacterId): void {
 		const id = this.playerId;
-		if (id && this._status.get(id) !== status) {
-			this._status.set(id, status);
-			const chars = new Set([...this.status.value]);
-			if (status === 'none') {
-				chars.delete(id);
-			} else {
-				chars.add(id);
-			}
-			this.status.value = chars;
+		if (id && this._status.value.get(id) !== status) {
+			this._status.produceImmer((s) => {
+				s.set(id, status);
+			});
 		}
 		if (this._indicatorStatus !== status || this._indicatorTarget !== target) {
 			this._indicatorStatus = status;
 			this._indicatorTarget = target;
 			this._shard.sendMessage('chatStatus', { status, target });
 		}
-	}
-
-	public getStatus(id: CharacterId): ChatCharacterStatus {
-		return this._status.get(id) ?? 'none';
 	}
 
 	//#endregion
@@ -872,12 +893,13 @@ export function useChatCharacterStatus(): { data: ICharacterRoomData; status: Ch
 	return useMemo(() => {
 		const result: { data: ICharacterRoomData; status: ChatCharacterStatus; }[] = [];
 		for (const c of characters) {
-			if (status.has(c.data.id)) {
-				result.push({ data: c.data, status: gameState.getStatus(c.data.id) });
+			const s = status.get(c.id);
+			if (s != null && s !== 'none') {
+				result.push({ data: c.data, status: s });
 			}
 		}
 		return result;
-	}, [characters, status, gameState]);
+	}, [characters, status]);
 }
 
 export function useGlobalState(context: GameState): AssetFrameworkGlobalState;

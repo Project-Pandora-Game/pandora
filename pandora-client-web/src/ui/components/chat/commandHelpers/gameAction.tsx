@@ -1,5 +1,6 @@
 import { AppearanceActionProcessingContext, ApplyAction, AssertNever, GetLogger, type AppearanceAction } from 'pandora-common';
 import { toast } from 'react-toastify';
+import type { Promisable } from 'type-fest';
 import { RenderAppearanceActionProblem } from '../../../../assets/appearanceValidation.tsx';
 import { Column } from '../../../../components/common/container/container.tsx';
 import { OpenConfirmDialog } from '../../../../components/dialog/dialog.tsx';
@@ -8,7 +9,7 @@ import { ActionWarningContent } from '../../../../components/wardrobe/wardrobeCo
 import { WardrobeCheckResultForConfirmationWarnings } from '../../../../components/wardrobe/wardrobeUtils.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../persistentToast.ts';
 
-export function CommandDoGameAction(gameState: GameState, action: AppearanceAction): boolean {
+export function CommandDoGameAction(gameState: GameState, action: AppearanceAction): Promisable<boolean> {
 	const { currentState } = gameState.globalState;
 
 	const spaceContext = gameState.getCurrentSpaceContext();
@@ -38,7 +39,7 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 	const warnings = WardrobeCheckResultForConfirmationWarnings(gameState.player, spaceContext, action, checkResult);
 	const needsAttempt = checkResult.getActionSlowdownTime() > 0;
 
-	Promise.resolve()
+	return Promise.resolve()
 		.then(() => {
 			if (warnings.length > 0) {
 				return OpenConfirmDialog(
@@ -64,16 +65,16 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 		})
 		.then((result) => {
 			switch (result?.result) {
-				case 'success':
 				case undefined:
-					// Nothing to do
-					break;
+					return false;
+				case 'success':
+					return true;
 				case 'promptSent':
 					toast('You do not have the necessary permissions to perform this action.\nA permission prompt has been sent to the character.', TOAST_OPTIONS_WARNING);
-					break;
+					return false;
 				case 'promptFailedCharacterOffline':
 					toast('You do not have the necessary permissions to perform this action.\nThe character is offline, try again later.', TOAST_OPTIONS_ERROR);
-					break;
+					return false;
 				case 'failure':
 					GetLogger('CommandDoGameAction').info('Failure executing action:', result.problems);
 					toast(
@@ -95,7 +96,7 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 						</Column>,
 						TOAST_OPTIONS_ERROR,
 					);
-					break;
+					return false;
 				default:
 					AssertNever(result);
 			}
@@ -103,7 +104,6 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 		.catch((err) => {
 			GetLogger('CommandDoGameAction').error('Error executing action:', err);
 			toast(`Error performing action`, TOAST_OPTIONS_ERROR);
+			return false;
 		});
-
-	return true;
 }

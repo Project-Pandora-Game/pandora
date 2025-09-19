@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
+import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, NaturalListJoin, ResolveAssetPreference } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -115,7 +115,10 @@ function WardrobePreferencesItemPickerItem({ asset, listMode }: {
 				}
 			} }>
 			<InventoryAssetPreview asset={ asset } small={ listMode } />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='assetName'>
+				<span>{ asset.definition.name }</span>
+				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
+			</span>
 		</div>
 	);
 }
@@ -508,7 +511,10 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 											} }
 										>
 											<InventoryAssetPreview asset={ a } small />
-											<span className='itemName'>{ a.definition.name }</span>
+											<span className='assetName'>
+												<span>{ a.definition.name }</span>
+												<span className='credits'>by { NaturalListJoin(a.definition.credits.credits) }</span>
+											</span>
 										</div>
 									);
 								})

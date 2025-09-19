@@ -19,6 +19,7 @@ import { GetVisibleBoneName } from '../../../../components/wardrobe/wardrobeUtil
 import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
+import type { Promisable } from 'type-fest';
 
 export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> = {
 	key: ['posemanual', 'pm'],
@@ -27,7 +28,7 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 	longDescription: `(alternative command: '/pm')`,
 	handler: CreateClientCommand()
 		.fork('type', (forkCtx) => {
-			function doPose(gameState: GameState, player: PlayerCharacter, { arms, leftArm, rightArm, ...copy }: PartialAppearancePose): boolean {
+			function doPose(gameState: GameState, player: PlayerCharacter, { arms, leftArm, rightArm, ...copy }: PartialAppearancePose): Promisable<boolean> {
 				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.id,

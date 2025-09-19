@@ -85,7 +85,7 @@ export const LIMIT_OUTFIT_NAME_LENGTH = 48;
 /** The maximum length of a pose preset name */
 export const LIMIT_POSE_PRESET_NAME_LENGTH = LIMIT_OUTFIT_NAME_LENGTH;
 /** The maximum number of pose presets an account can have */
-export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 20;
+export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 50;
 
 /** The maximum amount of invites a space can have */
 export const LIMIT_SPACE_BOUND_INVITES = 20;

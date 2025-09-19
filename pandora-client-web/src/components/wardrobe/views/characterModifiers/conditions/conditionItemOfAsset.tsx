@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { AssetIdSchema, type Asset } from 'pandora-common';
+import { AssetIdSchema, NaturalListJoin, type Asset } from 'pandora-common';
 import { useMemo, useRef, useState, type ReactElement } from 'react';
 import { useAssetManager } from '../../../../../assets/assetManager';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
@@ -57,7 +57,8 @@ function ConditionItemOfAssetDialog({ condition, setCondition, close }: Pick<Cha
 			// Some assets cannot be manually spawned, so ignore those
 			.filter((asset) => asset.canBeSpawned())
 			.filter((asset) => flt.every((f) => {
-				return asset.definition.name.toLowerCase().includes(f);
+				return asset.definition.name.toLowerCase().includes(f) ||
+					asset.definition.credits.credits.some((c) => c.toLowerCase().includes(f));
 			}))
 	), [assetManager, flt]);
 
@@ -150,7 +151,10 @@ function AssetPickerItem({ asset, selected, onSelect }: {
 				onSelect();
 			} }>
 			<InventoryAssetPreview asset={ asset } small />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='assetName'>
+				<span>{ asset.definition.name }</span>
+				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
+			</span>
 		</button>
 	);
 }

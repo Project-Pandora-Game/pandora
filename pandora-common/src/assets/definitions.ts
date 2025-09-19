@@ -101,6 +101,16 @@ export type AssetType =
 
 export const WEARABLE_ASSET_TYPES = ['bodypart', 'personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
 
+/**
+ * Describes info related to crediting assets to their creators.
+ */
+export interface AssetCreditsInfo {
+	/** List of creator names to display for the asset. */
+	credits: string[];
+	/** Path relative to asset repository to this asset's definition. Used for "Go to source". */
+	sourcePath: string;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/** Unique id of this asset */
@@ -144,6 +154,11 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	 * If this item has a significant storage, this can be set to the id of the storage module, allowing easier access to it from the wardrobe.
 	 */
 	storageModule?: string;
+
+	/**
+	 * Info related to crediting assets to their creators.
+	 */
+	credits: AssetCreditsInfo;
 }
 
 export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'bodypart', A> {

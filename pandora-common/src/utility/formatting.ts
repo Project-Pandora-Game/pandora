@@ -1,9 +1,9 @@
 import { AssertNever } from './misc.ts';
 
-export function NaturalListJoin(list: string[]): string {
-	let res = list.pop() ?? '';
-	if (list.length > 0) {
-		res = `${list.join(', ')} and ${res}`;
+export function NaturalListJoin(list: readonly string[]): string {
+	let res = list[0] ?? '';
+	if (list.length > 1) {
+		res = `${list.slice(1).join(', ')} and ${res}`;
 	}
 	return res;
 }

@@ -239,7 +239,7 @@ function RegistrationFormInner(): ReactElement {
 			) : null }
 			<span className='FormText'>
 				{ betaKeyRequired ? 'You can get a beta key on our ' : 'We also recommend to join our ' }
-				<ExternalLink className='inline' href='https://discord.gg/EnaPvuQf8d'>Discord</ExternalLink>.
+				<ExternalLink className='inline' href='https://discord.gg/EnaPvuQf8d' sendReferrer>Discord</ExternalLink>.
 			</span>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			<Button type='submit' disabled={ isSubmitting }>Register</Button>

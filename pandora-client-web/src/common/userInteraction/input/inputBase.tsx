@@ -10,6 +10,8 @@ export interface InputBaseProps<TValue> {
 
 export interface IInputBase {
 	focus(): void;
+	readonly disabled: boolean;
+	readonly readOnly: boolean;
 }
 
 export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, TElement extends HTMLElement> extends React.Component<TProps> implements IInputBase {
@@ -76,6 +78,11 @@ export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, T
 	protected abstract setValue(value: TValue): void;
 	protected abstract getValue(): TValue;
 	protected abstract isReadonly(): boolean;
+
+	public readonly disabled = false;
+	public get readOnly(): boolean {
+		return this.isReadonly();
+	}
 
 	private _cooldownState: boolean = false;
 	private _cooldownLeaveTimer: number | null = null;

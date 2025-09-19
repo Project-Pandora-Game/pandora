@@ -10,6 +10,8 @@ export function useInputAutofocus(ref: React.RefObject<HTMLTextAreaElement | HTM
 		const keyPressHandler = (ev: KeyboardEvent) => {
 			if (
 				ref.current &&
+				!ref.current.disabled &&
+				!ref.current.readOnly &&
 				// Only if no other input is selected
 				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement)) &&
 				// Only if this isn't a special key or key combo

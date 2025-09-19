@@ -14,7 +14,7 @@ import {
 	type RoomId,
 } from 'pandora-common';
 import { toast } from 'react-toastify';
-import type { Writable } from 'type-fest';
+import type { Promisable, Writable } from 'type-fest';
 import type { PlayerCharacter } from '../../../../character/player.ts';
 import type { GameState } from '../../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
@@ -30,7 +30,7 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 	longDescription: '',
 	handler: CreateClientCommand()
 		.fork('targetType', (forkCtx) => {
-			function moveToRoom(gameState: GameState, player: PlayerCharacter, roomId: RoomId): boolean {
+			function moveToRoom(gameState: GameState, player: PlayerCharacter, roomId: RoomId): Promisable<boolean> {
 				const playerRoom = player.getAppearance(gameState.globalState.currentState).getCurrentRoom();
 				AssertNotNullable(playerRoom);
 				const room = gameState.globalState.currentState.space.getRoom(roomId);

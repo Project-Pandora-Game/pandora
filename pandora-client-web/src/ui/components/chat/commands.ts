@@ -2,6 +2,7 @@ import { capitalize } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
+import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
@@ -178,13 +179,16 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: 'Sends the user a request to add the user account to your contacts list.',
 		handler: CreateClientCommand()
 			.argument('target', ACCOUNT_ID_PARSER)
-			.handler(({ directoryConnector }, { target }) => {
-				directoryConnector.awaitResponse('friendRequest', {
+			.handler(async ({ directoryConnector }, { target }) => {
+				const result = await directoryConnector.awaitResponse('friendRequest', {
 					id: target,
 					action: 'initiate',
-				}).catch(() => {
-					// TODO add async commands
 				});
+				if (result.result === 'ok')
+					return true;
+
+				AccountContactChangeHandleResult(result);
+				return false;
 			}),
 	},
 	{
@@ -501,5 +505,4 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			}),
 	},
 	//#endregion
-
 ];

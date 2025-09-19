@@ -11,6 +11,7 @@ import {
 	type ChatCharacterFullStatus,
 	type CommandAutocompleteOption,
 } from 'pandora-common';
+import type { Promisable } from 'type-fest';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
@@ -84,7 +85,11 @@ function CreateContext<TCommandExecutionContext extends ICommandExecutionContext
 	};
 }
 
-export function RunCommand<TCommandExecutionContext extends ICommandExecutionContext>(originalInput: string, ctx: ICommandInvokeContext<TCommandExecutionContext>, commands: readonly IClientCommand<TCommandExecutionContext>[]): boolean {
+export function RunCommand<TCommandExecutionContext extends ICommandExecutionContext>(
+	originalInput: string,
+	ctx: ICommandInvokeContext<TCommandExecutionContext>,
+	commands: readonly IClientCommand<TCommandExecutionContext>[],
+): Promisable<boolean> {
 	const { commandName, command, args } = GetCommand(originalInput, commands);
 
 	if (!command) {

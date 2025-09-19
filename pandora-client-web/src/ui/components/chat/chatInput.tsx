@@ -3,6 +3,7 @@ import { clamp } from 'lodash-es';
 import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
+import type { Promisable } from 'type-fest';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
 import settingsIcon from '../../../assets/icons/setting.svg';
@@ -283,7 +284,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		}
 	});
 
-	const handleSend = useCallback((input: string, forceOOC: boolean): boolean => {
+	const handleSend = useCallback((input: string, forceOOC: boolean): Promisable<boolean> => {
 		setAutocompleteHint(null);
 		if (
 			input.startsWith(COMMAND_KEY) &&
@@ -321,11 +322,14 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.currentTarget;
 		const input = textarea.value;
+		if (textarea.disabled || textarea.readOnly)
+			return;
+
 		if (ev.key === 'Enter' && !ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				if (handleSend(input, ev.altKey)) {
+				function cleanup() {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);
@@ -338,6 +342,25 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 							}
 						});
 					}
+				}
+
+				const result = handleSend(input, ev.altKey);
+				if (typeof result === 'boolean') {
+					if (result) {
+						cleanup();
+					}
+				} else {
+					textarea.disabled = true;
+					result.then((r) => {
+						textarea.disabled = false;
+						if (r) {
+							cleanup();
+						}
+					}, (error) => {
+						textarea.disabled = false;
+						toast('Error processing command', TOAST_OPTIONS_ERROR);
+						GetLogger('ChatInput').error('Error async processing input:', error);
+					});
 				}
 			} catch (error) {
 				if (error instanceof ChatSendError) {
@@ -494,6 +517,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.target;
+		if (textarea.disabled || textarea.readOnly)
+			return;
 		updateCommandHelp(textarea);
 		updateTypingStatus(textarea);
 	});
@@ -733,7 +758,7 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 										ref={ index === autocompleteHint.index ? selectedElementRef : undefined }
 										onClick={ (ev) => {
 											const textarea = ref.current;
-											if (!textarea)
+											if (!textarea || textarea.disabled || textarea.readOnly)
 												return;
 
 											ev.preventDefault();

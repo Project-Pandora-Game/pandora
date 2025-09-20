@@ -105,8 +105,8 @@ importers:
         specifier: 19.1.1
         version: 19.1.1(react@19.1.1)
       react-hook-form:
-        specifier: 7.62.0
-        version: 7.62.0(react@19.1.1)
+        specifier: 7.63.0
+        version: 7.63.0(react@19.1.1)
       react-reconciler:
         specifier: 0.32.0
         version: 0.32.0(react@19.1.1)
@@ -5511,8 +5511,8 @@ packages:
       react: '>= 16.3.0'
       react-dom: '>= 16.3.0'
 
-  react-hook-form@7.62.0:
-    resolution: {integrity: sha512-7KWFejc98xqG/F4bAxpL41NB3o1nnvQO1RWZT3TqRZYL8RryQETGfEdVnJN2fy1crCiBLLjkRBVK05j24FxJGA==}
+  react-hook-form@7.63.0:
+    resolution: {integrity: sha512-ZwueDMvUeucovM2VjkCf7zIHcs1aAlDimZu2Hvel5C5907gUzMpm4xCrQXtRzCvsBqFjonB4m3x4LzCFI1ZKWA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -12820,7 +12820,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  react-hook-form@7.62.0(react@19.1.1):
+  react-hook-form@7.63.0(react@19.1.1):
     dependencies:
       react: 19.1.1
 

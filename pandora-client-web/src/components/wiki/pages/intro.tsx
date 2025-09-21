@@ -27,7 +27,7 @@ export function WikiIntroduction(): ReactElement {
 			<ol type='1'>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
-				<li>Persistent chatroom spaces and a character-specific personal space</li>
+				<li>Persistent chatroom spaces where you can design an area with many rooms on a map</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -60,10 +60,12 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
-				In Pandora, a user created space can consist of one or more connected rooms and everything is persistent
+				In Pandora, a user created space can consist of one or many connected rooms and everything is persistent
 				(settings, <Link to='/wiki/spaces#SP_Room_inventory'>inventory</Link>,
-				and kinky or decorative <Link to='/wiki/items#IT_Room-level_items'>room items</Link> remain even after everyone has left).<br />
-				You can export templates of your room designs and share them with other users or archive them to create a certain room on demand.
+				and kinky or decorative <Link to='/wiki/items#IT_Room-level_items'>room items</Link> remain even after everyone has left).
+				This enables you to design the mansion, dungeon, or roleplaying scenario map of your dreams!<br />
+				You can export templates of your room designs and share them with other users (e.g. on Pandora's Discord) or archive
+				them locally. That way, you can start a collection that enables you to quickly create a certain room on demand.
 			</p>
 			<p>
 				Every account can own several spaces.
@@ -93,8 +95,9 @@ export function WikiIntroduction(): ReactElement {
 			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the name below the character.
+				Room to room movement is also possible with the cardinal direction squares on the floor, via the map in the "Room" tab, or with commands.
 				While permitted, you can also move other characters individually or together with your
-				character. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
+				character, such as leashing them. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
@@ -165,7 +168,7 @@ export function WikiIntroduction(): ReactElement {
 				the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen have an "Saved items"-tab
 				that lets you access and manage all your custom item collections stored on the Pandora server.<br />
 				It also allows you to export and import collections to save them locally if you run out of storage space or
-				to share them with others. A collection can contain any type of item,
+				to share them with others, e.g. on Pandora's Discord. A collection can contain any type of item,
 				even <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>.<br />
 				<Link to='/wiki/items#IT_Saving_collections'>More information here</Link>.
 			</p>

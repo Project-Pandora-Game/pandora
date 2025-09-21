@@ -68,7 +68,7 @@ export function WikiItems(): ReactElement {
 			<p>
 				To move a deployed item on the room background, you need to enable the room construction mode with the according button in the "Room"-tab.
 				While you are in this mode, every room-level item has a red icon below it. Clicking it and selecting "move" will turn the item into a move mode.
-				While in move mode, there are here are two icons under the item. You can drag the left one to move the item in all directions over the floor.
+				While in move mode, there are two icons under the item. You can drag the left one to move the item in all directions over the floor.
 				The right blue icon is used to lift the item up or down (alongside the z-axis) by dragging up or down. The set value can be reset by
 				shortly pressing on the icon again. You can leave the move mode by pressing the red/green button shortly.
 			</p>
@@ -79,7 +79,7 @@ export function WikiItems(): ReactElement {
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
-				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
+				<li>You are unable to leave the room and the space while your character occupies a character slot of a room device.</li>
 				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
 				<li>While a character is inside a slot of a room device, you can see all the item's relevant config options also on the worn part of the device in their wardrobe - so no need to go to the room inventory for that.</li>
 				<li>

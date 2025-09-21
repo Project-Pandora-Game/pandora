@@ -22,8 +22,8 @@ export function WikiNew(): ReactElement {
 			</p>
 			<p>
 				From your personal room you can also switch to a list of online spaces where you can meet other users of the platform.
-				Pandora is a safe space by default - no one can do anything to you. When someone else wants to do anything
-				to your character, a permission popup will open asking you if you consent to their action.
+				Pandora is a safe space by default - no one can do anything to you. When someone else wants to start doing anything
+				to your character, a permission popup will open asking you if you consent to them performing certain actions from now on.
 			</p>
 			<p>
 				It may be advisable to first talk to other users a bit, get to know them, and look if they have a profile that tells you
@@ -115,7 +115,7 @@ export function WikiNew(): ReactElement {
 				As a new user, the topic of how to get out of restraints is an important one.<br />
 				Typically, the one tying up your character should be seen as responsible for removing restrictions again and respecting your wishes
 				(for instance stated in your character or account profile/bio) in that regard.
-				That said, other people can also help you, unless you allowed more restrictive locks (such as timer locks) to be used on you.
+				That said, other people can also help you out, unless you allowed more restrictive locks (such as timer locks) to be used on you.
 			</p>
 			<p>
 				For the sake of experimenting with restraints on your own or to engage in "self-bondage" without getting stuck, there are two possibilities:
@@ -123,13 +123,15 @@ export function WikiNew(): ReactElement {
 			<p>
 				You can use the <Link to='/wiki/items#IT_Bound_usage'>"bound usage" system</Link>, available on any wearable item.
 				It basically allows you to rig items before adding them,
-				so you can self remove them again. Perfect for self-bondage and for roleplaying struggling out of restraints over time. Careful though,
+				so you can remove them again yourself. Perfect for self-bondage and for roleplaying struggling out of restraints over time. Careful though,
 				different restraints have different defaults for the bound usage setting, which can be found near the top of an item's detailed view,
 				after pressing on it in the wardrobe.
 			</p>
 			<p>
-				Another alternative is to create a second character on the same account in another browser tab/window and then creating a space (more on that later)
-				that you join with both characters to safely experiment with items or <Link to='/wiki/characters#CH_Character_modifiers'>character modifiers</Link>.
+				Another alternative is to create a second character on the same account and connecting with them in another browser tab/window.
+				Then you create a space with a room of your own (more on that later) that you join with both characters at the same time
+				to safely experiment with using items or <Link to='/wiki/characters#CH_Character_modifiers'>character modifiers</Link> on
+				one of the characters with the other one.
 			</p>
 			<p>
 				Aside from those, there is also the always available "safemode" feature that can get your character out of anything in Pandora, which is meant
@@ -227,10 +229,12 @@ export function WikiNew(): ReactElement {
 			<p>
 				Spaces in Pandora are persistent. This means that all settings, all created rooms, items in the room inventories, and all deployed furniture
 				stays like it is, even after everyone leaves the space. So the next time you log in you will still see your space in the list of spaces
-				and everything inside will be like you set it up before (unless, of course, someone else changes it).<br />
+				and everything inside will be like you set it up before (unless, of course, some one else changes it - typically only users you gave
+				admin privileges can).<br />
 				You can find out more about how spaces work under the <Link to='/wiki/spaces'>spaces-tab</Link> in the wiki. For now we recommend you
-				to continue reading about the <Link to='/wiki/introduction'>core features of Pandora</Link> to get an impression of what you can expect,
-				in case reading about this interests you.
+				to do all interactive tutorials at your own pace and continue
+				reading about the <Link to='/wiki/introduction'>core features of Pandora</Link> to get an impression of what you can expect,
+				in case reading about that interests you.
 			</p>
 		</>
 	);

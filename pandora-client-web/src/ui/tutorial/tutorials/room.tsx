@@ -87,11 +87,24 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					highlight: [{ query: '.Header .rightHeader > div > button[title="Availability status"]', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
 				{
 					text: (
 						<p>
-							The "Leave" button allows you to leave the current space (more on that in later tutorials),<br />
-							change to another character, or completely log out of your account.
+							The "Leave" button allows you to leave the current space, change to another character, or completely log out of your account.<br />
+							Note that if you want to avoid having to log in again the next time, you should not use the "Logout" button, but rather use
+							"Change character" to disconnect from your current space instantly, without leaving it, and then simply close the browser tab/window.
 						</p>
 					),
 					highlight: [{ query: '.Header .rightHeader > button[title="Leave"]', inset: true }],
@@ -111,8 +124,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						// TODO: Update text once tutorial for contacts/DMs is ready
 						<p>
 							The "Contacts" button opens your contact list, where you can see people you added (or blocked), as well as new contact requests.<br />
-							It also allows you to send direct messages to others - even while they are offline.<br />
-							<i>Tutorial for this is not yet ready.</i>
+							It also allows you to send direct messages to others - even while they are offline.
 						</p>
 					),
 					highlight: [{ query: '.Header .rightHeader > button[title="Contacts"]', inset: true }],
@@ -196,8 +208,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								<i>
-									Note: The room background, which is either a static image or consists of walls & ceiling & floor, cannot be interacted with.<br />
-									Later, you will learn about items placeable into the room that can be interacted with.
+									Note: The room background, which is either a static image or consists of walls & ceiling & floor, cannot be interacted with.
+									Later, you will learn about items placeable into the room that can be interacted with. Those can be identified by a blue icon below them.
 								</i>
 							</p>
 						</>
@@ -209,7 +221,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								You can use your mouse and drag any empty space to move the camera around (or drag with your finger on a touchscreen).<br />
+								You can use your mouse and drag any empty space to move the camera around (or drag with your finger on a touchscreen).
 								Mouse wheel (desktop) or pinching gesture (mobile) can be used to zoom in or out.<br />
 								Finally, a double-click/double-tap on any empty space will reset the camera to fit the room to the screen.
 							</p>
@@ -414,10 +426,19 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				},
 				{
 					text: (
-						<p>
-							You can also quickly move the character without having to switch to move mode every time.<br />
-							To quickly move your character simply drag its name instead of clicking it.
-						</p>
+						<>
+							<p>
+								You can also quickly move the character without having to switch to move mode every time.<br />
+								To quickly move your character simply drag its name instead of clicking it.
+							</p>
+							<p>
+								Note: Spaces can consist of more than one room. Users can move between neighboring rooms with
+								an active path in three primary ways: By using the path squares on the ground, by clicking on the room in
+								the map under the "Room" tab, or by using the '/moveto' command. Your personal space is most
+								likely only having a single room right now. There is a later tutorial that will explain the topic
+								of multiple rooms in detail.
+							</p>
+						</>
 					),
 					conditions: [{ type: 'next' }],
 				},
@@ -462,7 +483,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								As you can see, you are currently in your own "personal space".
 							</p>
 							<p>
-								Every character has their own personal space, which functions as a singleplayer lobby - no other characters can enter it.<br />
+								Every character has their own personal space, which functions as a "singleplayer lobby" - no other characters can enter it.<br />
 								It cannot be deleted or given up. You will automatically end up in this space when your
 								selected character is not in any other space.<br />
 								You can find more about personal spaces in the context help or in the wiki.

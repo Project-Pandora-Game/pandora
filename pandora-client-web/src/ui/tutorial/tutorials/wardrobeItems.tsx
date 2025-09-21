@@ -45,6 +45,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				},
 				{
 					text: <p>Open the "Personal Space" tab.</p>,
+					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
 						query: '.roomScreen .tab.active',

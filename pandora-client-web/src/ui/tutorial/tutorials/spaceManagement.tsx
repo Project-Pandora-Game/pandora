@@ -1,8 +1,6 @@
 import { Link } from 'react-router';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
-// TODO: Space management
-// (create, delete, leave, enter, manage; while inside also note the difference between "Personal Space" tab and "Room" tab)
 export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 	id: 'spaceManagement',
 	name: `Management of Spaces and Rooms`,
@@ -988,6 +986,17 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 		},
 		{
 			steps: [
+				{
+					text: (
+						<p>
+							Note that if you make another user's account admin in your space, they can also manage
+							the space in all the ways described in this tutorial, including adding more admins or
+							deleting them. But they cannot remove you or any other owners, as space owners always
+							have admin rights implicitly.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+				},
 				{
 					text: (
 						<p>

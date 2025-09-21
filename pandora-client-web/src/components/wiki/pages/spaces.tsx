@@ -80,8 +80,8 @@ export function WikiSpaces(): ReactElement {
 				Spaces in Pandora are owned by one or more persons.
 			</p>
 			<ul>
-				<li>Every owner is automatically admin in the space.</li>
-				<li>Player accounts that are not owner can still be admin of a space.</li>
+				<li>Every owner is automatically admin in the space and other admins cannot demote them.</li>
+				<li>Player accounts that are not owner can be made admin of a space by owners or other admins.</li>
 				<li>Creating a new space makes you automatically owner of it.</li>
 				<li>You can add other owners to your space in the "Rights management" configuration tab.</li>
 				<li>There is a limit to how many spaces you can own. You can see your ownership limit in the space search behind the heading "My spaces".</li>
@@ -222,6 +222,7 @@ export function WikiSpaces(): ReactElement {
 					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
 					This currently cannot be changed later on.
 				</li>
+				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add owners or demote them.</li>
 			</ul>
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>

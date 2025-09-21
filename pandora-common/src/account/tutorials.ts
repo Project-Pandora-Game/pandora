@@ -12,7 +12,6 @@ export const TutorialIdSchema = z.enum([
 	'permissions',
 	'characterModifiers',
 	'wardrobeItemCollections',
-	'roomDevices',
 	'settingsProfile',
 	'spaceManagement',
 	'contactsDMs',

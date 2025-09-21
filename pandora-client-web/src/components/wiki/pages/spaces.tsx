@@ -47,6 +47,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>You can zoom the room canvas with the mouse wheel or a pinch-to-zoom gesture.</li>
+				<li>A double-click/double-tap on any empty space will zoom-to-fit or reset the camera to fit the room to the screen</li>
 				<li>You can drag the canvas freely to see a different part of it while zoomed in.</li>
 				<li>If you experience performance issues, you can lower/disable graphics related features in Pandora's settings.</li>
 			</ul>
@@ -68,6 +69,10 @@ export function WikiSpaces(): ReactElement {
 				<li>The ordered list of rooms next to the room grid in the space configuration's "Room management"-tab is there to define the order of the listed rooms under the "Room"-tab</li>
 				<li>In that ordered room list in the "Room management"-tab, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
 				<li>Room designs can also be exported and imported as a template when creating a new room</li>
+				<li>
+					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
+					"Room" tab, or by using the '/moveto' command.
+				</li>
 			</ul>
 
 			<h4 id='SP_Space_ownership'>Space ownership</h4>

@@ -79,7 +79,7 @@ export function WikiItems(): ReactElement {
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
-				<li>You are unable to leave the room and the space while your character occupies a character slot of a room device.</li>
+				<li>You are unable to leave the room or the space while your character occupies a character slot of a room device.</li>
 				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
 				<li>While a character is inside a slot of a room device, you can see all the item's relevant config options also on the worn part of the device in their wardrobe - so no need to go to the room inventory for that.</li>
 				<li>
@@ -176,15 +176,17 @@ export function WikiItems(): ReactElement {
 			<h4 id='IT_Saving_collections'>Saving collections</h4>
 			<p>
 				The "Items" and "Body"-tabs in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> as
-				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen can open the "Saved items" view on the right pane that lets you access and manage all
+				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen can open the "Saved items" view on the right pane which lets you access and manage all
 				your custom item collections stored on the Pandora server. A collection template can contain normal
-				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body parts, and even storage items.
+				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body parts, and even storage items with items stored inside.
 			</p>
 			<ul>
 				<li>
 					Creating a collection: After you clicked the button to create a new collection, you need to start moving the items that you want to be part of the collection one-by-one
 					from the left side (your worn items or the room's inventory) to the right side (the temporary collection you just created).<br />
-					<Link to='#IT_Item_layering_order'>Item order</Link> is important here. You want to add them to a collection top-down, starting with the bottommost item.
+					<Link to='#IT_Item_layering_order'>Item order</Link> is important here. You want to add them to a collection in the same order you would want to put
+					them on when dressing - as if you are dressing a mannequin.
+					You want to add them to a collection top-down, starting with the bottommost item.
 					The following article explains this aspect in more detail.
 				</li>
 				<li>

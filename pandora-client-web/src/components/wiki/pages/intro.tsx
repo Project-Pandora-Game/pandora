@@ -60,12 +60,12 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
-				In Pandora, a user created space can consist of one or many connected rooms and everything is persistent
+				In Pandora, a user created space can consist of several connected rooms and everything is persistent
 				(settings, <Link to='/wiki/spaces#SP_Room_inventory'>inventory</Link>,
 				and kinky or decorative <Link to='/wiki/items#IT_Room-level_items'>room items</Link> remain even after everyone has left).
 				This enables you to design the mansion, dungeon, or roleplaying scenario map of your dreams!<br />
 				You can export templates of your room designs and share them with other users (e.g. on Pandora's Discord) or archive
-				them locally. That way, you can start a collection that enables you to quickly create a certain room on demand.
+				them locally. That way, you can start a collection that enables you to quickly create rooms on demand.
 			</p>
 			<p>
 				Every account can own several spaces.
@@ -95,9 +95,9 @@ export function WikiIntroduction(): ReactElement {
 			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the name below the character.
-				Room to room movement is also possible with the cardinal direction squares on the floor, via the map in the "Room" tab, or with commands.
+				Room to room movement is also possible with the cardinal direction squares on the floor, with the map in the "Room" tab, or with commands.
 				While permitted, you can also move other characters individually or together with your
-				character, such as leashing them. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
+				character, such as by leashing them. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>

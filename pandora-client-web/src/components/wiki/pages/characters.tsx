@@ -154,10 +154,10 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
-				<li>The "Body"-tab allows you to change your character's body and body proportions, but only if the space you are in allows that.</li>
+				<li>The "Body"-tab allows you to change your character's body parts and body shape, but only if the space you are in allows that.</li>
 				<li>
-					The "Items"-tab lists all items held or worn on your character's body on the left and shows
-					various options how to add or move items on the right.
+					The "Items"-tab lists all items held or worn by your character on the left side and shows
+					various options how to add or move items on the right side.
 				</li>
 				<li>
 					There is a maximum amount of items your character can wear or hold. This number is the sum

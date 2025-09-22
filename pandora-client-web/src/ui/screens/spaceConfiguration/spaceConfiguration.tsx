@@ -581,7 +581,6 @@ function SpaceConfigurationRights({
 							<li>They can always see this space in their list of spaces, even while it is empty.</li>
 							<li>They can always join the space while it is public or private and not locked.</li>
 							<li>They can see who is currently inside without joining, unless the space is locked.</li>
-							<li>They cannot join the space while it is locked.</li>
 						</ul>
 					</ContextHelpButton>
 				</legend>
@@ -787,7 +786,6 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					allowed: 'Owner, Admin, or on the Allowlist',
 				} }
 			/>
-
 		</>
 	);
 }

@@ -125,17 +125,17 @@ export function WikiNew(): ReactElement {
 				It basically allows you to rig items before adding them,
 				so you can remove them again yourself. Perfect for self-bondage and for roleplaying struggling out of restraints over time. Careful though,
 				different restraints have different defaults for the bound usage setting, which can be found near the top of an item's detailed view,
-				after pressing on it in the wardrobe.
+				after selecting it in the wardrobe.
 			</p>
 			<p>
-				Another alternative is to create a second character on the same account and connecting with them in another browser tab/window.
-				Then you create a space with a room of your own (more on that later) that you join with both characters at the same time
+				Another alternative is to create a second character on the same account and connect with them in another browser tab/window.
+				Then create a space of your own (more on that later) and join it with both characters at the same time
 				to safely experiment with using items or <Link to='/wiki/characters#CH_Character_modifiers'>character modifiers</Link> on
 				one of the characters with the other one.
 			</p>
 			<p>
 				Aside from those, there is also the always available "safemode" feature that can get your character out of anything in Pandora, which is meant
-				as an emergency last resort. More on Pandora's user safety features in the following paragraph.
+				as an emergency last resort (see next paragraph).
 			</p>
 
 			<h3>User safety</h3>
@@ -229,10 +229,10 @@ export function WikiNew(): ReactElement {
 			<p>
 				Spaces in Pandora are persistent. This means that all settings, all created rooms, items in the room inventories, and all deployed furniture
 				stays like it is, even after everyone leaves the space. So the next time you log in you will still see your space in the list of spaces
-				and everything inside will be like you set it up before (unless, of course, some one else changes it - typically only users you gave
-				admin privileges can).<br />
+				and everything inside will be like you set it up before (unless, of course, someone else changes it - typically only users you gave
+				admin privileges to can).<br />
 				You can find out more about how spaces work under the <Link to='/wiki/spaces'>spaces-tab</Link> in the wiki. For now we recommend you
-				to do all interactive tutorials at your own pace and continue
+				to go through all interactive tutorials at your own pace and continue
 				reading about the <Link to='/wiki/introduction'>core features of Pandora</Link> to get an impression of what you can expect,
 				in case reading about that interests you.
 			</p>

@@ -17,7 +17,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 						<p>
 							Welcome to the tutorial on advanced topics related to items!<br />
 							In this tutorial you will learn what storage items are and how to move other items inside.
-							You will learn about items that can be locked, the locks themselves, and where to configure your item preferences and limits.
+							You will also learn about items that can be locked, the locks themselves, and where to configure your item preferences and limits.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -38,14 +38,13 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Items can exist in two places in Pandora. As part of what a character carries around / wears or as part of a
+								Items can exist in two places in Pandora. As part of what a character carries around / wears or inside a
 								room's inventory.<br />
 								Every room in a space has its own separate room inventory with its own limit of how many items it can contain.
-								The room inventory can be considered the floor of the room, including any furniture of the room itself and all
-								storage possibilities the room offers, such as furniture that can store items (more on items with storage modules later).
+								The room inventory can be considered the floor of the room. It also contains all the furniture of the room itself, some of which can also store items inside (more on items with storage modules later).
 							</p>
 							<p>
-								Items in room inventories can be accessed from every room in a space by admins of the space. Normal users can only
+								In spaces with multiple rooms, items in room inventories can be accessed from every room in a space by admins of the space. Normal users can only
 								access the inventory of the room current inside and of any directly neighboring room with a path to it.
 							</p>
 						</>
@@ -187,9 +186,10 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								In this view on the right, you can search for specific items to add or swap for.
+								In this view on the right, you can search for specific items to add.
 								You can filter for any items either with the text field at the top or any of the buttons below. Feel free to hover over
 								the buttons (or hold down on it, if using a touchscreen) to see more info.
+								Note, however, that not all items fall into the available categories. In that case you can use the "View all assets" button to view all items Pandora has to offer.
 							</p>
 							<p>
 								For the sake of this tutorial, please search for a "Shoulder Bag" by either using the "View all assets" button
@@ -313,14 +313,14 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 							</p>
 							<p>
 								Opened like this, you can now create other items directly in the expanded section of the shoulder bag, which stores them inside.
-								LIke this, you can also move other items from the left or right pane into the storage section of the bag with the 4 directional movement button
-								to the right of any item. Of course back out again in the same way.<br />
+								Like this, you can also move other items from the left or right pane into the storage section of the bag with the 4 directional movement button
+								to the right of any item and back out again in the same way.<br />
 								Note that the item must be smaller in size to fit into a storage item. So if you cannot move an item inside, it is likely too large to fit, or
 								the storage item might be too full, as there only is a limited amount of space.
 							</p>
 							<p>
-								Room level-items can also have storage modules, for instance chests, or even cages, where the storage module represents the floor inside the cage.
-								Naturally, you can also store smaller storage items in larger ones.
+								Room level-items can also have storage modules, for instance chests or even cages, where the storage module represents the floor inside the cage.
+								You can also store smaller storage items in larger ones.
 							</p>
 						</>
 					),
@@ -377,8 +377,8 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					text: (
 						<p>
 							The view that appeared on the right shows all the configuration options of this item.
-							Many items have one or more modules with a lock slot. This shoulder bag also has such a lock module to secure its contents.
-							Press on the lock slot button inside the highlighted module to proceed.
+							Many items have one or more modules with a lock slot. The shoulder bag also has such a lock slot module to secure its contents.
+							Press on the lock button inside the highlighted module to proceed.
 						</p>
 					),
 					conditions: [
@@ -425,11 +425,11 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 							</p>
 							<p>
 								All three item preferences have an individually configurable permission setting and the one for the item preference "Maybe" is
-								by default set to prompt a permission request dialog when the item/lock is attempted to be used.
+								by default set to prompt using a permission request dialog when someone tries to use the item/lock on your character.
 							</p>
 							<p>
-								The red cross icon represents the item limit "Prevent". It means that no one other than you can add this item on your character.
-								Some locks have this by default as they are extremely secure and other characters cannot typically help removing them.
+								The red cross icon represents the item limit "Prevent". It means that no one other than you can add or change this item on your character.
+								Some locks have this by default as they can get you stuck without other characters being able to help remove them.
 							</p>
 						</>
 					),
@@ -459,16 +459,17 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 								</li>
 								<li>
 									The <strong>exclusive lock</strong> can be removed by all characters with the right permission(s), except the character it is used on.
+									This is the lock you are most likely to see being used between characters that just met each other.
 								</li>
 								<li>
-									<strong>Timer locks</strong> come with different maximum settable times and they can only be unlocked earlier by the character locking it.
-									There is an option, though, that no one can unlock the lock before the timer runs down, which makes the lock type quite strict.
+									<strong>Timer locks</strong> come with different maximum settable times and they can only be unlocked after the set time passes. Only the character that locked it can unlock it earlier.
+									There is an option, though, that not even the character that locked it can unlock the lock before the timer runs down, which makes the lock type quite strict.
 									Therefore, lower maximum timer locks have the default item preference "Maybe" to ensure there is an extra prompt for consent,
-									while the long timers are not enabled by default.
+									while the locks with long timers are set to "Prevent" by default.
 								</li>
 								<li>
-									<strong>Combination locks</strong> and <strong>password locks</strong> are very similar. Combination locks only allow entering numbers, the normal one four digits and
-									the easy one three. Password locks allow setting a password with up to 8 letters or numbers.<br />
+									<strong>Combination locks</strong> and <strong>password locks</strong> are very similar. Combination locks only allow entering numbers — the normal one four digits and
+									the easy one three. Password locks allow setting a case-insensitive password with up to 8 letters or numbers.<br />
 									You do not need to remember what you entered, as the character locking the lock with a new code/password can view it again at any time.
 									There is also an option to blindly reuse the last set code/password without being able to see what it was. But then you cannot
 									use the "Show" button to see the code/password as you did not enter it yourself, before locking.

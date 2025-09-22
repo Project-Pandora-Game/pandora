@@ -143,7 +143,7 @@ export function WikiNew(): ReactElement {
 			<p>
 				While Pandora is a completely safe space as long as you do not give any <Link to='/wiki/characters#CH_Character_permissions'>permissions</Link> to
 				other users, the consequences of trusting someone with the general interaction permission to "Interact and to use other allowed permissions" is
-				not particularly problematic as the restraints and locks that are allowed to be used by other users by default can all be removed by
+				not particularly problematic. The restraints and locks that are allowed to be used by other users by default can all be removed by
 				other users, too, when you ask for help.<br />
 				An exception are timer locks, that cannot be unlocked by other users before the time runs out, though there is an option that the one adding the
 				lock can. These locks are hidden behind another permission prompt to allow 'Interaction with worn items that are marked as "Maybe"'. "Maybe" is

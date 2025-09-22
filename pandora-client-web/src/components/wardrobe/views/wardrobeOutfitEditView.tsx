@@ -114,7 +114,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				} }
 				title='Add to collection'
 			>
-				<img src={ diskIcon } alt='Quick-storage action' />
+				<img src={ diskIcon } alt='Add to collection' />
 			</button>
 		);
 	}, [globalState, insertItemTemplate, targetSelector, editedItemIndex]);

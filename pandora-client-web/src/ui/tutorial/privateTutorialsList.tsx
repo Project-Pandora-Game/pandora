@@ -3,7 +3,7 @@ import React, { type ReactElement } from 'react';
 import { Column, Row } from '../../components/common/container/container.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { TUTORIAL_CHARACTER_MODIFIERS } from './tutorials/character_modifiers.tsx';
+import { TUTORIAL_CHARACTER_MODIFIERS } from './tutorials/characterModifiers.tsx';
 import { TUTORIAL_PERMISSIONS } from './tutorials/permissions.tsx';
 import { TUTORIAL_ROOM } from './tutorials/room.tsx';
 import { TUTORIAL_SAFEMODE } from './tutorials/safemode.tsx';

@@ -52,14 +52,16 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							<p>
 								You are now on the "Permissions"-tab of Pandora's settings. With only few exceptions (e.g. individual character
 								modifier permissions), all of Pandora's permissions can be found here. Pandora comes with default settings out
-								of the box that were seen as reasonable and safe.
+								of the box that we believe to be reasonable and safe.
 							</p>
 							<p>
 								Let's take a closer look.
 							</p>
 							<p>
-								Note: Please be reminded that you can freely drag the tutorial popup around and
-								can even temporarily minimize it with the button at the top, if it is in the way of seeing parts of the screen.
+								<i>
+									Note: Please be reminded that you can freely drag the tutorial popup around and
+									can even temporarily minimize it with the button at the top, if it is in the way of seeing parts of the screen.
+								</i>
 							</p>
 						</>
 					),
@@ -180,12 +182,12 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								At the top of this dialog, you could change the global setting of this permission from "no"
-								to "prompt" or even grant it to everyone by changing it to "yes", in case you desire that
-								anyone with the master-permission can modify your character's body and body parts however they desire.
+								At the top of this dialog, you can change the global setting of this permission from "no"
+								to "prompt" or even grant it to everyone by changing it to "yes" in case you want that
+								anyone with the master-permission is able to modify your character's body and body parts however they desire.
 							</p>
 							<p>
-								The bottom sections are for character-individual exceptions. They override the global setting,
+								The bottom sections are exceptions for specific characters. They override the global setting,
 								giving or denying the permission to the added character, or requiring them to ask for it next time.<br />
 								When you allow or deny a permission prompt, an entry is automatically added in the according section of
 								that permission in the background. You can manually adjust those exception entries here at any time.

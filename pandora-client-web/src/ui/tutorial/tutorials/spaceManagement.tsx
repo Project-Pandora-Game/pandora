@@ -529,9 +529,6 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								However, sometimes you may want your room to be facing differently, to
 								better explain the room dimension, the paths between rooms on the background, or the door placement.
 							</p>
-							<p>
-								Room position and rotation changes need to be saved with the "Move" button.
-							</p>
 						</>
 					),
 					conditions: [{ type: 'next' }],
@@ -539,6 +536,21 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						{
 							query: '.roomConfiguration .div-container.direction-column.gap-medium.flex-1',
 						},
+					],
+				},
+				{
+					text: (
+						<>
+							<p>
+								<strong>Important</strong>: Room position and rotation changes need to be saved with the "Move" button.
+							</p>
+							<p>
+								For now, let's proceed.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
 						{
 							query: '.roomConfiguration .wardrobeActionButton',
 							filter: (e) => e.innerText.includes('Move'),

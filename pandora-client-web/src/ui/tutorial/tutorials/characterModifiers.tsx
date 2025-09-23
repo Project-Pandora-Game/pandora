@@ -97,12 +97,23 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 				},
 				{
 					text: (
+						<p>
+							The character modifiers view of the wardrobe consists of a character preview and two panes.
+							All currently active effects from worn items as well as character modifiers are overlaid
+							over the character preview and can always be seen by you and other users. It should be seen as OOC knowledge.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.characterPreview',
+							inset: true,
+						},
+					],
+				},
+				{
+					text: (
 						<>
-							<p>
-								The character modifiers view of the wardrobe consists of a character preview and two panes.
-								All currently active effects from worn items as well as character modifiers are overlaid
-								over the character preview and can always be seen by you and other users. It should be seen as OOC knowledge.
-							</p>
 							<p>
 								The left pane has three tabs:
 							</p>
@@ -126,10 +137,6 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [
-						{
-							query: '.characterPreview',
-							inset: true,
-						},
 						{
 							query: '.tab-container .tab',
 							filter: (e) => e.innerText.includes('modifiers'),
@@ -595,20 +602,38 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 				},
 				{
 					text: (
+						<p>
+							Something every character modifier has is the "Activation conditions" fieldset.<br />
+							By default, an enabled modifier is always active and affecting the character based on its type and configuration.
+							If you, however, want the modifier to be active only in certain situations (such as when the character is in a
+							specific space), you can add one or more "activation conditions" from the types in the drop-down menu.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.fieldset-toggle',
+						filter: (e) => e.innerText.includes('Activation conditions'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							An activation condition type can be added multiple times at once and comes with various buttons you can press to configure
+							the condition sentence. For example, if you add the condition type "Has item of specific type": Its condition sentence has a
+							button "Is", that can be toggled to "Is not". It also has a button "not set" that can be pressed to select a specific item,
+							for instance a "Pet Leash", to make the character modifier only active when the character has at least one pet leash item
+							equipped.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.fieldset-toggle',
+						filter: (e) => e.innerText.includes('Activation conditions'),
+					}],
+				},
+				{
+					text: (
 						<>
-							<p>
-								Something every character modifier has is the "Activation conditions" fieldset.<br />
-								By default, an enabled modifier is always active and affecting the character based on its type and configuration.
-								If you, however, want the modifier to be active only in certain situations (such as when the character is in a
-								specific space), you can add one or more "activation conditions" from the types in the drop-down menu.
-							</p>
-							<p>
-								An activation condition type can be added multiple times at once and comes with various buttons you can press to configure
-								the condition sentence. For example, if you add the condition type "Has item of specific type": Its condition sentence has a
-								button "Is", that can be toggled to "Is not". It also has a button "not set" that can be pressed to select a specific item,
-								for instance a "Pet Leash", to make the character modifier only active when the character has at least one pet leash item
-								equipped.
-							</p>
 							<p>
 								Multiple activation conditions can be added at the same time. If more than one condition is added, the connection between
 								them is determined using the logical operators "AND" or "OR". You can toggle between the two by pressing on the

@@ -261,6 +261,13 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 								of your character wearing the items in the collection. Feel free to share your exported outfits in the #pandora-templates channel
 								on Pandora's Discord with other users.
 							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: (
+						<>
 							<p>
 								<strong>Hint</strong>: A temporary collection is also very useful if you quickly want to duplicate items in a room inventory, such
 								as furniture. Just add any item to it and then leave edit mode. Afterwards, simply add the item as many times as you want back

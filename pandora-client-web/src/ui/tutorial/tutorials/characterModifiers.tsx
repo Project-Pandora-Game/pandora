@@ -120,17 +120,17 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 							<ul>
 								<li>
 									<strong>Active modifiers</strong>: This shows to everyone which modifier types are enabled
-									and at the same time in effect right now on this character.
+									and in effect right now on this character.
 								</li>
 								<li>
 									<strong>Current modifiers</strong>: This is the list of all added modifiers on the character, independent
-									on whether they are disabled, enabled, or enabled plus currently active based on the set activation conditions.
-									Other users can only see this list when their characters have the according permission that is set to "prompt"
+									on whether they are disabled, enabled and active, or enabled but currently inactive based on the set activation conditions.
+									Other users can only see this list when their characters have the according permission, which is set to "prompt"
 									by default for privacy reasons, as all entries there can be opened to see all settings in detail.
 								</li>
 								<li>
 									<strong>Possible modifiers</strong>: This tab is like a "create new modifier" screen and lists all character
-									modifiers that are existing in Pandora. More on this tab in the following.
+									modifiers that exist in Pandora. More on this tab in the following part.
 								</li>
 							</ul>
 						</>
@@ -193,19 +193,19 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								You can now see a list of all character modifiers in Pandora.
+								You can now see a list of all character modifier types in Pandora.
 								While the ability for others to add a new modifier on a character is gated by another general permission
 								set to "prompt" by default, each modifier type here comes with its own individual permission on top.
 							</p>
 							<p>
-								You can see the defaults of these permissions for each modifier type by the icon next to each list entry.
+								The defaults of these permissions for each modifier type are shown by the icon next to each list entry.
 								Some of them are disabled (set to "no") by default, as they are considered modifiers with a harsh impact.
 								The permission is needed to add, remove, configure or otherwise alter modifiers of the according type.
 							</p>
 							<p>
-								There are broadly three groups of character modifier types available presently:<br />
+								There are broadly three groups of character modifier types available presently (but more are planned in the future):<br />
 								Modifiers that restrict certain features of Pandora, modifiers that add effects to the character,
-								and speech altering/controlling ones.
+								and speech or hearing altering/controlling ones.
 							</p>
 						</>
 					),
@@ -407,7 +407,7 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [{
-						query: '.inventoryView .react-switch-handle',
+						query: '.inventoryView .activationSwitch',
 					}],
 				},
 				{
@@ -512,15 +512,14 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 							</p>
 							<p>
 								The separate global permission for others to lock any of your character's permissions is set to "deny" by
-								default, as the impact of character modifiers can possibly be quite harsh, although safemode
-								still lets you remove them as a last resort.
+								default, as the impact of character modifiers can possibly be quite harsh, although safemode disables all modifiers while active
+								and lets you remove them as a last resort.
 							</p>
 						</>
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [{
-						query: '.fieldset-toggle',
-						filter: (e) => e.innerText.includes('Lock'),
+						query: '.fieldset-toggle.characterModifierLock',
 					}],
 				},
 				{
@@ -536,6 +535,10 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 						</>
 					),
 					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.fieldset-toggle',
+						filter: (e) => e.innerText.includes('Custom name'),
+					}],
 				},
 			],
 		},
@@ -622,7 +625,7 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 							the condition sentence. For example, if you add the condition type "Has item of specific type": Its condition sentence has a
 							button "Is", that can be toggled to "Is not". It also has a button "not set" that can be pressed to select a specific item,
 							for instance a "Pet Leash", to make the character modifier only active when the character has at least one pet leash item
-							equipped.
+							equipped. Feel free to try this now.
 						</p>
 					),
 					conditions: [{ type: 'next' }],

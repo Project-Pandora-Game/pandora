@@ -3,6 +3,7 @@ import type { Immutable } from 'immer';
 import { AssertNever, GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import type { Promisable } from 'type-fest';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent.ts';
@@ -268,7 +269,7 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 	const { editing, setEditing, setAutocompleteHint, allowCommands } = useChatInput();
 	const { chatCommandHintBehavior } = useAccountSettings();
 
-	const handleSend = (input: string) => {
+	const handleSend = (input: string): Promisable<boolean> => {
 		setAutocompleteHint(null);
 		if (
 			input.startsWith(COMMAND_KEY) &&
@@ -303,9 +304,28 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				if (handleSend(input)) {
+				function cleanup() {
 					textarea.value = '';
 					setEditing(null);
+				}
+
+				const result = handleSend(input);
+				if (typeof result === 'boolean') {
+					if (result) {
+						cleanup();
+					}
+				} else {
+					textarea.disabled = true;
+					result.then((r) => {
+						textarea.disabled = false;
+						if (r) {
+							cleanup();
+						}
+					}, (error) => {
+						textarea.disabled = false;
+						toast('Error processing command', TOAST_OPTIONS_ERROR);
+						GetLogger('DirectChannelInput').error('Error async processing input:', error);
+					});
 				}
 			} catch (error) {
 				if (error instanceof Error) {

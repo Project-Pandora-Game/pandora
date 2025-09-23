@@ -317,6 +317,7 @@ function ActiveTutorialHighlight({ highlight }: {
 	highlight: TutorialHighlightSelector;
 }): ReactElement {
 	const [elements, setElements] = useState<readonly HTMLElement[]>(EMPTY_ARRAY);
+	const startTime = useRef<CSSNumberish>(null);
 
 	const update = useCallback(() => {
 		const newElements = Array.from(document.querySelectorAll(highlight.query))
@@ -348,6 +349,7 @@ function ActiveTutorialHighlight({ highlight }: {
 						target={ el }
 						inset={ highlight.inset === true }
 						zIndex={ highlight.zIndex }
+						startTime={ startTime }
 					/>
 				))
 			}
@@ -355,10 +357,11 @@ function ActiveTutorialHighlight({ highlight }: {
 	);
 }
 
-function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal' }: {
+function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal', startTime }: {
 	target: HTMLElement;
 	inset: boolean;
 	zIndex: TutorialHighlightSelector['zIndex'];
+	startTime: React.RefObject<CSSNumberish | null>;
 }): ReactElement | null {
 	const [area, setArea] = useState<[number, number, number, number]>([0, 0, 0, 0]);
 
@@ -387,6 +390,18 @@ function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal' }: {
 		};
 	}, [target, update]);
 
+	const onAnimationStart = useCallback((ev: React.AnimationEvent<HTMLDivElement>) => {
+		const animation = ev.currentTarget.getAnimations().filter((a) => a instanceof CSSAnimation).find((a) => a.animationName === ev.animationName);
+		if ((ev.animationName === 'tutorial-highlight-overlay-blink' || ev.animationName === 'tutorial-highlight-overlay-blink-transparent') &&
+		animation != null) {
+			if (startTime.current == null) {
+				startTime.current = animation.startTime;
+			} else {
+				animation.startTime = startTime.current;
+			}
+		}
+	}, [startTime]);
+
 	if (area[2] === 0 || area[3] === 0)
 		return null;
 
@@ -403,6 +418,7 @@ function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal' }: {
 					width: inset ? (area[2] - 2 * HIGHLIGHT_INSET) : (area[2] + 2 * HIGHLIGHT_PADDING),
 					height: inset ? (area[3] - 2 * HIGHLIGHT_INSET) : (area[3] + 2 * HIGHLIGHT_PADDING),
 				} }
+				onAnimationStart={ onAnimationStart }
 			/>
 			<div
 				className='tutorial-highlight-overlay top'
@@ -412,6 +428,7 @@ function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal' }: {
 					width: inset ? (area[2] - 2 * HIGHLIGHT_INSET) : (area[2] + 2 * HIGHLIGHT_PADDING),
 					height: inset ? (area[3] - 2 * HIGHLIGHT_INSET) : (area[3] + 2 * HIGHLIGHT_PADDING),
 				} }
+				onAnimationStart={ onAnimationStart }
 			/>
 		</DialogInPortal>
 	);

@@ -179,7 +179,7 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 						<ModifierInstanceExportButton instance={ instance } />
 					</Row>
 				</Row>
-				<FieldsetToggle legend='Lock' open={ instance.lock != null }>
+				<FieldsetToggle legend='Lock' className='characterModifierLock' open={ instance.lock != null }>
 					<WardrobeCharacterModifierLock
 						character={ character }
 						instance={ instance }

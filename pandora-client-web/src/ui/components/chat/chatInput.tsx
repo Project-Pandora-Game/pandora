@@ -356,8 +356,10 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 						if (r) {
 							cleanup();
 						}
+						updateTypingStatus(textarea);
 					}, (error) => {
 						textarea.disabled = false;
+						updateTypingStatus(textarea);
 						toast('Error processing command', TOAST_OPTIONS_ERROR);
 						GetLogger('ChatInput').error('Error async processing input:', error);
 					});

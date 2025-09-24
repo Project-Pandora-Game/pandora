@@ -98,6 +98,8 @@ export interface PosingStateHelperGraphicsProps<TValue extends string | number> 
 	ref?: ForwardedRef<PIXI.Graphics>;
 	values: readonly NoInfer<TValue>[];
 	value: TValue;
+	/** While "value" is user-selected, some things might be forced to different value to produce overall valid result */
+	actualValue?: TValue;
 	onChange: (newValue: TValue) => void;
 	centerValue?: number;
 }
@@ -105,6 +107,7 @@ export interface PosingStateHelperGraphicsProps<TValue extends string | number> 
 export function PosingStateHelperGraphics<const TValue extends string | number>({
 	values,
 	value,
+	actualValue,
 	onChange,
 	centerValue = 0,
 	...props
@@ -139,14 +142,24 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 			.fill({ color: 0x000000, alpha: 0.5 })
 			.stroke({ color: 0xcccccc, width: 2 });
 
-		// Draw current value
+		// Draw actual value
+		if (actualValue != null && actualValue !== value) {
+			const actualValueIndex = values.indexOf(actualValue);
+			if (actualValueIndex >= 0) {
+				const currentXOffset = (actualValueIndex - centerValue) * offset;
+				g.circle(currentXOffset, 0, radius - 5)
+					.stroke({ color: 0xcccccc, alpha: 0.5, width: 4 });
+			}
+		}
+
+		// Draw selected value
 		const currentValueIndex = values.indexOf(value);
 		if (currentValueIndex >= 0) {
 			const currentXOffset = (currentValueIndex - centerValue) * offset;
 			g.circle(currentXOffset, 0, radius - 3)
 				.fill({ color: 0xcccccc });
 		}
-	}, [centerValue, count, values, offset, value]);
+	}, [centerValue, count, values, offset, value, actualValue]);
 
 	const onMove = useCallback((x: number, y: number): void => {
 		const targetOffset = Math.round(x / (2 * radius + gap)) + centerValue;

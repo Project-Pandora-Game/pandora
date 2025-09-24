@@ -629,6 +629,7 @@ function PosingToolIKHandle({
 										values={ ArmRotationSchema.options }
 										centerValue={ ArmRotationSchema.options.indexOf('forward') }
 										value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
+										actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
 										onChange={ (newValue) => {
 											setPose({
 												[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
@@ -643,6 +644,7 @@ function PosingToolIKHandle({
 									<PosingStateHelperGraphics
 										values={ ArmFingersSchema.options }
 										value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
+										actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
 										centerValue={ 1 }
 										onChange={ (newValue) => {
 											setPose({

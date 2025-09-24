@@ -431,6 +431,11 @@ function PoseChangeWeight(key: TreeLimitDimension): number {
 		return 1;
 	}
 
+	// Rotations are cheap
+	if (key.endsWith('.rotation')) {
+		return 15;
+	}
+
 	// Everything else is considered the same as moving right angle
 	return 90;
 }

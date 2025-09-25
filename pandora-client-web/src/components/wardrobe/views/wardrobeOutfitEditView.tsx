@@ -164,7 +164,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				{
 					isTemporary ? (
 						<Row alignX='center' padding='medium'>
-							<strong>This collection is temporary and will be lost when the game is closed</strong>
+							<div className='warning-box'>This collection is temporary and will be lost when the game is closed</div>
 						</Row>
 					) : null
 				}

@@ -35,7 +35,7 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Items collections are an ordered selection of items, preserving most of the item's configurations, such as colors or custom names and item descriptions.
+							Items collections are an ordered selection of item templates, preserving most of the item's configuration, such as colors or custom names and item descriptions.
 							Items inside storage modules, and even added locks (in their default configuration) will be included, too. You can add a mix of wearable items, body parts,
 							and even room-level items to an item collection from a character's wardrobe or a room inventory.
 						</p>
@@ -213,6 +213,9 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 								In that case, you want to add items bottom-up, so starting with the lower
 								layers first, such as when you would dress a mannequin, starting with the innermost clothes, like the underwear.
 							</p>
+							<p>
+								Feel free to try doing so now.
+							</p>
 						</>
 					),
 					conditions: [{ type: 'next' }],
@@ -254,11 +257,11 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 								After you are done adding items to create an outfit or general collection, you can give the collection a more descriptive name in the
 								according text field. Note that you must save the temporary collection or it will be lost when you close Pandora.
 								You can either save a limited number of collections directly in your Pandora account to make them available
-								to all your characters, or you can export the collection as a template with the according button while it is in edit-mode, like right now.
+								to all your characters, or you can export the collection as a template with the according button while it is in edit-mode, like it is right now.
 							</p>
 							<p>
 								Exporting lets you either copy the collection to your clipboard as a code string, or you can save it as a text file alongside a preview image
-								of your character wearing the items in the collection. Feel free to share your exported outfits in the #pandora-templates channel
+								of your character wearing the items in the collection. Feel free to share your exported outfits in the #pandora&#8209;templates channel
 								on Pandora's Discord with other users.
 							</p>
 						</>
@@ -314,17 +317,20 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 						<>
 							<p>
 								In general, to add items from a saved or imported item collection on any character's body or to a room's inventory, open
-								the character or inventory on the left pane, and go to the "Saved items" view on the right side, as shown before.
+								the character or inventory on the left pane and go to the "Saved items" view on the right side, as shown before.
 							</p>
 							<p>
-								Then press the desired item collection to expand it (such as then one you created in the preview step),
+								Then press the desired item collection to expand it (such as then one you created in the previous step),
 								so that it shows the ordered list of items in it.
 								The order of applying items is important here as well. You want to add the items in the same direction that they
 								were copied to the collection, so typically bottom-up.
 							</p>
 							<p>
-								Note: If the item collection previews are too small for you or they lag badly, you can make them bigger or switch
-								them off completely in the interface settings.
+								<i>
+									Note: If the item collection previews are too small for you or cause lag, you can make them bigger or switch
+									them off completely in the interface settings.
+									You can also hover the preview image with your mouse to display it in the preview pane of the wardrobe.
+								</i>
 							</p>
 						</>
 					),
@@ -394,7 +400,7 @@ export const TUTORIAL_WARDROBE_ITEM_COLLECTIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							This concludes the tutorial on saved or exported items in the form of item collections.<br />
+							This concludes the tutorial on saved and exported item templates in the form of item collections.<br />
 							To complete this tutorial, exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.
 						</p>
 					),

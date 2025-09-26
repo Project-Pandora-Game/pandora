@@ -186,6 +186,20 @@ export class Shard {
 		};
 	}
 
+	public async handleCharacterClientDisconnect(id: CharacterId): Promise<void> {
+		const character = this.getConnectedCharacter(id);
+		if (!character) {
+			this.logger.warning(`Received request to disconnect client ${id} that is not assigned to this shard`);
+			this.update('characters')
+				.catch((e) => {
+					this.logger.warning(`Error sending update:`, e);
+				});
+			return;
+		}
+
+		await character.disconnect();
+	}
+
 	public setConnection(connection: IConnectionShard | null): void {
 		this.reconnecting = false;
 		if (this.timeout !== null) {

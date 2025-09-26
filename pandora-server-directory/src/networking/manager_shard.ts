@@ -71,11 +71,8 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
-		const character = shard.getConnectedCharacter(id);
-		if (!character)
-			throw new BadMessageError();
 
-		await character.disconnect();
+		await shard.handleCharacterClientDisconnect(id);
 	}
 
 	private async handleCharacterAutomod({ id, action, reason }: IShardDirectoryArgument['characterAutomod'], connection: IConnectionShard): Promise<void> {

@@ -190,7 +190,7 @@ export function CommandSelectorItem<const TTargetKey extends string>(targetKey: 
 		preparse: 'quotedArgTrimmed',
 		parse(selector, { globalState }, args) {
 			const targetSelector = args[targetKey];
-			const items = globalState.getItems(targetSelector);
+			const items = globalState.getItems(targetSelector)?.toReversed();
 
 			if (items == null) {
 				return {
@@ -251,7 +251,7 @@ export function CommandSelectorItem<const TTargetKey extends string>(targetKey: 
 		},
 		autocomplete(selector, { globalState, accountSettings }, args) {
 			const targetSelector = args[targetKey];
-			const items = globalState.getItems(targetSelector);
+			const items = globalState.getItems(targetSelector)?.toReversed();
 
 			if (items == null)
 				return [];

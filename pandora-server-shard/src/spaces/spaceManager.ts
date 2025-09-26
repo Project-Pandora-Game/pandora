@@ -17,6 +17,10 @@ export const SpaceManager = new class SpaceManager {
 		return this._spaces.get(id);
 	}
 
+	public getAllSpaces(): PublicSpace[] {
+		return Array.from(this._spaces.values());
+	}
+
 	public listSpaces(): Pick<IShardSpaceDefinition, 'id' | 'accessId'>[] {
 		return [...this._spaces.values()]
 			.map((space) => ({

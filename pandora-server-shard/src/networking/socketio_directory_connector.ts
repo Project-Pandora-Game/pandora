@@ -1,4 +1,5 @@
 import {
+	AsyncSynchronized,
 	ConnectionBase,
 	DirectoryShardSchema,
 	GetLogger,
@@ -189,6 +190,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
+	@AsyncSynchronized()
 	private async updateFromDirectory({ spaces, characters, messages }: Partial<IDirectoryShardUpdate>): Promise<void> {
 		// Invalidate old characters
 		if (characters) {
@@ -253,6 +255,18 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 						}),
 				),
 			);
+		}
+
+		// Run a tick in all spaces so automatic cleanup can happen
+		for (const space of SpaceManager.getAllSpaces()) {
+			space.runAutomaticActions();
+		}
+		for (const character of CharacterManager.getValidCharacters()) {
+			// Tick only personal spaces on characters (public ones were ticked above)
+			const space = character.loadedSpace;
+			if (space != null && space.id == null) {
+				space.runAutomaticActions();
+			}
 		}
 
 		if (messages) {

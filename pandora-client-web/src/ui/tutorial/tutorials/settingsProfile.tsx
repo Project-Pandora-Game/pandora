@@ -110,15 +110,15 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 						<>
 							<p>
 								This is your character's profile/bio. Each character has its own profile. You typically
-								want to tell others a bit about your character, what they are looking for, including likes/dislikes and limits.
+								want to tell others a bit about your character, including likes/dislikes and limits.
 							</p>
 							<p>
 								You can type in your profile after pressing the edit button. Be sure to save your profile with
 								the according button before leaving the screen.
 							</p>
 							<p>
-								There are links to set your character's pronouns and chat color here, too, but I will
-								show where those can be changed in the second part of the tutorial as well.
+								You can also click your character's pronouns and chat color to navigate to the settings, but the second part of the tutorial
+								will show those in more detail.
 							</p>
 						</>
 					),
@@ -273,8 +273,6 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 								The account tab lets you set the color that your account's name will use,
 								e.g. in DM chats.<br />
 								You can also set or change your account's display name here.
-								Per default, your display name is set to your account's login username.
-
 							</p>
 							<p>
 								Let's proceed to the next tab: "Notifications".
@@ -314,9 +312,9 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 						<>
 							<p>
 								The notification tab lets you customize in great detail if and how you want to be
-								notified about certain events in Pandora happening.<br />
-								The most basic way is a red dot next to the bell icon in the top bar, which opens
-								the notification center for more details. Other options include a popup/toast within
+								notified about certain events in Pandora.<br />
+								The most basic way is a red dot next to the bell icon in the top bar, which can be used to open
+								the notification center. Other options include a popup/toast within
 								Pandora, or even a system popup of your operating system (if permitted by you).
 								Lastly, playing a configurable sound is also an option you can set.
 							</p>
@@ -357,13 +355,20 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								In the "Security" tab, you can manage your login tokens, especially when you use Pandora
-								on different devices. Login tokens are automatically set in your browser cache when you log in.
-								They are cleared when you explicitly log out with the "Logout" button here or at the top right
-								or when they expire after 7 days.
-								While you have a valid login token on the device, you can conveniently skip the need
-								to log in when you open Pandora.<br />
-								You can also change your account password here.
+								In the "Security" tab, you can manage your login sessions, especially when you use Pandora
+								on different devices. A login session is created each time you log in.
+								They are deleted when you explicitly log out with the "Logout" button here or in the "Leave" menu found using the button in the top right.<br />
+								Due to Pandora's sensitive nature, sessions also expire regularly, usually after 7 days,
+								but you can use the "Extend" button on this screen to prolong them without interruption.
+							</p>
+							<p>
+								You can also change your account password on this screen.
+							</p>
+							<p>
+								<i>
+									Note: In the future more options will be available (e.g. option to change your account's email, setup two-factor authentication, or delete your account altogether),
+									but those aren't fully developed yet. If you need help with managing your account, feel free to contact us.
+								</i>
 							</p>
 							<p>
 								Let's proceed to the next tab: "Interface".
@@ -403,11 +408,11 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 						<>
 							<p>
 								In this tab you can customize an accent color that is reused all over Pandora's UI to make it more personal.<br />
-								Aside from that, you can configure many things here about the UI of the room view, including the chat, the room
-								graphics, where the characters are drawn on, and the wardrobe UI.
+								Aside from that, you can configure various things here regarding the UI of the room view, the chat, the room
+								graphics where the characters are drawn on, and the wardrobe UI.
 							</p>
 							<p>
-								It is very recommend that you experiment with the first 4 settings of the "Chatroom UI", as especially the
+								It is strongly recommended that you experiment with the first 4 settings of the "Chatroom UI", as especially the
 								chat ratio may need to be adjusted depending on your device's screen ratio to find a good balance between the space
 								that chat and room canvas take up.
 								At the very end, there is an option to reset the completion status of all tutorials, if you would want to
@@ -450,16 +455,21 @@ export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The "Graphics" tab lets you adjust the quality of Pandora to what your device is capable of.<br />
-								If you experience performance issues or crashes, the first setting to reduce should typically be the
-								"Texture resolution", especially on devices with lower (graphics) RAM, as Pandora uses mostly very high
+								The "Graphics" tab lets you adjust the quality of Pandora to what your device is capable of.
+								While Pandora tries to do a "best guess" for what settings to use for your device, the information we have about it (as a browser application) is severely limited.<br />
+								If you experience performance or graphical issues, the first setting to reduce should typically be the
+								"Texture resolution", especially on devices with lower RAM/VRAM capacity, as Pandora can use very high
 								resolution textures.
 							</p>
 							<p>
-								It is also recommended to keep alpha masks switched off.<br />
-								Other settings that can boost performance are to disable antialiasing, eye blinking, and smooth movement.
+								It is also recommended to keep alpha masks switched off, as they are an experimental feature with heavy performance impact.
+								Another setting that can boost performance is to disable antialiasing.<br />
 								Decreasing the render resolution may also have a small effect, but will have a noticeably negative effect
 								on visual quality.
+							</p>
+							<p>
+								If you need to conserve your device's battery or simply prefer it, you can also disable various effects, like character blinking and smooth motion.
+								Disabling these helps, as Pandora only updates the canvas when there is any change to display.
 							</p>
 						</>
 					),

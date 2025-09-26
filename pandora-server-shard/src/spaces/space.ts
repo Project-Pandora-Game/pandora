@@ -148,6 +148,21 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		}
 	}
 
+	public runAutomaticActions(): void {
+		const resultState = this._gameState.currentState.runAutomaticActions();
+		if (resultState === this._gameState.currentState)
+			return;
+
+		const validationResult = resultState.validate();
+
+		if (!validationResult.success) {
+			this.logger.warning('Running automatic actions resulted in invalid state:', validationResult.error);
+			return;
+		}
+
+		this._gameState.setState(resultState);
+	}
+
 	public onRemove(): void {
 		clearInterval(this.tickInterval);
 		this.logger.verbose('Unloaded');

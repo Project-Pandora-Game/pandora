@@ -112,8 +112,9 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 
 					insertItemTemplate(null, actualItem.exportToTemplate());
 				} }
+				title='Add to collection'
 			>
-				<img src={ diskIcon } alt='Quick-storage action' />
+				<img src={ diskIcon } alt='Add to collection' />
 			</button>
 		);
 	}, [globalState, insertItemTemplate, targetSelector, editedItemIndex]);
@@ -163,7 +164,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				{
 					isTemporary ? (
 						<Row alignX='center' padding='medium'>
-							<strong>This collection is temporary and will be lost when the game is closed</strong>
+							<div className='warning-box'>This collection is temporary and will be lost when the game is closed</div>
 						</Row>
 					) : null
 				}

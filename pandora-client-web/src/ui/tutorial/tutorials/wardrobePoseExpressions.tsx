@@ -2,7 +2,7 @@ import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSyste
 
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	id: 'wardrobePoseExpressions',
-	name: `Character interactions: Pose and Expressions`,
+	name: `Character Pose and Expressions`,
 	description: (
 		<p>
 			This tutorial will teach you about posing your character and changing its expression.
@@ -14,7 +14,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Hello and welcome to the tutorial on character poses and expressions!<br />
+							Hello and welcome to the tutorial on the character pose and expressions!<br />
 							In this tutorial you will learn how to move the body of a character<br />
 							and how to change its various aspects, such as facial expressions.
 						</p>
@@ -525,9 +525,9 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							This concludes this tutorial on character poses and expressions.<br />
+							This concludes this tutorial on the character pose and expressions.<br />
 							Have fun with the powerful posing possibilities in Pandora, but please do not feel pressured into believing that you have to use it extensively
-							or stressed in case you feel that you are not good or quick enough at it. It is not necessary to constantly switch poses alongside an ongoing role play in real-time.
+							or stressed in case you feel that you are not good or quick enough at it. It is not necessary to constantly switch your pose alongside an ongoing role play in real-time.
 						</p>
 					),
 					conditions: [{ type: 'next' }],

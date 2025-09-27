@@ -7,6 +7,7 @@ import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
+import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
@@ -136,6 +137,9 @@ export function GraphicsLayerRoomDeviceText({
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
+	const filters = usePlayerVisionFilters(false);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+
 	useLayoutEffect(() => {
 		const sprite = ref.current;
 		if (app == null || textModule == null || sprite == null)
@@ -177,6 +181,7 @@ export function GraphicsLayerRoomDeviceText({
 			<Sprite
 				ref={ ref }
 				alpha={ alpha }
+				filters={ actualFilters }
 			/>
 		</Container>
 	);

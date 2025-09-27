@@ -96,7 +96,7 @@ export class Character {
 		appearanceBundle: AppearanceBundle;
 	};
 
-	private get _loadedSpace(): Space | undefined {
+	public get loadedSpace(): Space | undefined {
 		return this._context.state === 'space' ? this._context.space : undefined;
 	}
 
@@ -211,7 +211,7 @@ export class Character {
 		});
 		this.gameLogicCharacter.characterModifiers.on('modifiersChanged', () => {
 			this._emitSomethingChanged('characterModifiers');
-			this._loadedSpace?.onCharacterModifiersChanged();
+			this.loadedSpace?.onCharacterModifiersChanged();
 		});
 
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
@@ -336,7 +336,7 @@ export class Character {
 			oldConnection.character = null;
 			oldConnection.abortConnection();
 			// Clear connection-specific data
-			this._loadedSpace?.updateStatus(this, 'none');
+			this.loadedSpace?.updateStatus(this, 'none');
 		}
 		if (connection) {
 			this.logger.debug(`Connected (${connection.id})`);
@@ -405,7 +405,7 @@ export class Character {
 		}
 
 		// Leave space after disconnecting client (so change propagates to other people in the space)
-		this._loadedSpace?.characterRemove(this);
+		this.loadedSpace?.characterRemove(this);
 
 		// Finally unload personal space
 		this._personalSpace.onRemove();
@@ -490,7 +490,7 @@ export class Character {
 	}
 
 	public getCurrentPublicSpaceId(): SpaceId | null {
-		return this._loadedSpace?.id ?? null;
+		return this.loadedSpace?.id ?? null;
 	}
 
 	public getCharacterState(): AssetFrameworkCharacterState {
@@ -580,8 +580,8 @@ export class Character {
 	}
 
 	private _sendDataUpdate(updatedData: Partial<ICharacterRoomData>): void {
-		if (this._loadedSpace != null) {
-			this._loadedSpace.sendUpdateToAllCharacters({
+		if (this.loadedSpace != null) {
+			this.loadedSpace.sendUpdateToAllCharacters({
 				characters: {
 					[this.id]: updatedData,
 				},
@@ -596,8 +596,8 @@ export class Character {
 	}
 
 	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
-		if (this._loadedSpace != null) {
-			this._loadedSpace.sendMessage('somethingChanged', {
+		if (this.loadedSpace != null) {
+			this.loadedSpace.sendMessage('somethingChanged', {
 				changes,
 			});
 		} else {

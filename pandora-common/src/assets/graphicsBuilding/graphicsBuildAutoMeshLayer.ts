@@ -6,6 +6,7 @@ import { ArmFingersSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchem
 import type { GraphicsLayer } from '../graphics/layer.ts';
 import { LayerMirror, type LayerImageOverride } from '../graphics/layers/common.ts';
 import type { GraphicsSourceAutoMeshLayer, GraphicsSourceAutoMeshLayerVariable, GraphicsSourceMeshLayer } from '../graphicsSource/index.ts';
+import { BONE_MAX, BONE_MIN } from '../state/characterStatePose.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
 import { LoadAssetImageLayer } from './graphicsBuildImageLayer.ts';
 
@@ -16,7 +17,25 @@ export type AutoMeshLayerGenerateVariableValue = {
 };
 
 export function AutoMeshLayerGenerateVariableData(config: Immutable<GraphicsSourceAutoMeshLayerVariable>, context: GraphicsBuildContext, logger?: Logger): AutoMeshLayerGenerateVariableValue[] {
-	if (config.type === 'typedModule') {
+	if (config.type === 'bone') {
+		let currentOpen = BONE_MIN;
+		return [...config.stops, BONE_MAX + 1]
+			.toSorted((a, b) => a - b)
+			.map((stop): AutoMeshLayerGenerateVariableValue => {
+				const start = currentOpen;
+				const end = stop - 1;
+				currentOpen = stop;
+				return {
+					id: start.toString(10),
+					name: (start === end) ? `${start}` : `<${start},${end}>`,
+					condition: (start === end) ? [{ bone: config.bone, operator: '=', value: start }] :
+						[
+							{ bone: config.bone, operator: '>=', value: start },
+							{ bone: config.bone, operator: '<', value: stop },
+						],
+				};
+			});
+	} else if (config.type === 'typedModule') {
 		const module = context.builtAssetData.modules?.[config.module];
 		if (module == null) {
 			logger?.warning(`Unknown module ${config.module}`);

@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
-import { AttributeNameSchema } from '../../graphics/conditions.ts';
+import { AttributeNameSchema, BoneNameSchema } from '../../graphics/conditions.ts';
 import { LayerImageOverrideSchema, LayerMirrorSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
@@ -24,6 +24,11 @@ export const GraphicsSourceAutoMeshGraphicalLayerSchema = z.object({
 export type GraphicsSourceAutoMeshGraphicalLayer = z.infer<typeof GraphicsSourceAutoMeshGraphicalLayerSchema>;
 
 export const GraphicsSourceAutoMeshLayerVariableSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('bone'),
+		bone: BoneNameSchema,
+		stops: z.number().int().array(),
+	}),
 	z.object({
 		type: z.literal('typedModule'),
 		module: z.string(),

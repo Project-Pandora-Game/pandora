@@ -18,13 +18,13 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						<>
 							<p>
 								Hi and welcome to the tutorial on managing spaces and the rooms in it! <br />
-								In this tutorial you will primarily learn how to add and remove rooms to your spaces,
+								In this tutorial you will primarily learn how to add and remove rooms to your spaces and
 								how to set them up, including the usage of room templates.
 							</p>
 							<p>
-								If you want to know more details about spaces themselves, such as space ownership and
-								space deletion, the <Link to='/wiki/spaces'>"Spaces" tab</Link> in Pandora's wiki has
-								short articles on those topics.
+								If you want to know more details about spaces themselves, such as how space ownership and
+								space deletion work, the <Link to='/wiki/spaces'>"Spaces" page</Link> of Pandora's wiki has
+								short sections on those topics.
 							</p>
 						</>
 					),
@@ -59,14 +59,13 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Your personal space works very similar to the online spaces for multiple characters that you can create.
+								Your personal space works almost identically to the online spaces for multiple characters that you can create.
 								That means that you can decorate it with persistent room-level items and add more rooms to it, as
 								every space comes with a single room from the start.
 							</p>
 							<p>
 								You may already be familiar with how to create new spaces and how to manage and use room devices from
-								the <Link title='New user guide in the wiki' to='/wiki/new'>new user guide</Link> in
-								Pandora's wiki. If not, it is recommended to read it.
+								the <Link to='/wiki/new'>new user guide</Link> in Pandora's wiki.
 							</p>
 							<p>
 								To quickly recap: Only in a room's inventory, you can create room-level items. To make them show in the room,
@@ -108,15 +107,15 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Next, I am going to show you how to create and manage multiple rooms in a space.
+								Next will be shown how to create and manage multiple rooms in a space.
 							</p>
 							<p>
 								In a space for multiple characters, the button to do this is called "Space configuration".
 								Aside from being able to manage the space's room layout, the space configuration screen also
 								has tabs to change the general settings of such a space
-								(like name, size, space description, and entry message) and to manage the
-								space's rights (like who is admin, who are allowed users with special access rights,
-								and if and when offline users are removed).
+								(such as name, size, space description, and entry message) and to manage the
+								space's rights (such as who is admin, who are allowed users with special access rights,
+								and if and when offline characters are removed).
 							</p>
 							<p>
 								In your personal space, though, you only have a button to change the space layout.<br />
@@ -202,7 +201,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							</p>
 							<p>
 								The bottom section lets you configure the selected room. We will go over these
-								settings in the following.
+								settings next.
 							</p>
 						</>
 					),
@@ -268,22 +267,20 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The buttons of the top allow you to reorder the rooms inside the top right list.
+								The buttons at the top allow you to reorder the rooms inside the top right list.
 								This order is also used for the list of rooms in the "Room" tab. As said, if you
 								want to set a room to be the one characters appear in first when joining the space,
 								you need to move it to the top of the list.
 							</p>
 							<p>
-								Next to those buttons, there is one to delete a room from the space if there
-								is no character inside.<br />
+								Next to those buttons, there is one to delete a room from the space. This can only be done if no character is inside it.<br />
 								The last button allows you to export the room with its settings and the complete room
 								inventory as a template.
 							</p>
 							<p>
 								Exporting lets you either copy the room template to your clipboard as a code string,
-								or you can save it as a text file alongside a preview image of the room while hiding
-								any characters inside.
-								Feel free to share your exported room templates in the #pandora-templates channel
+								or you can save it as a text file alongside a preview image of the room.
+								Feel free to share your exported room templates in the #pandora&#8209;templates channel
 								on Pandora's Discord with other users.
 							</p>
 							<p>
@@ -356,6 +353,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<p>
 							The next section allows you to give the room a name, which is highly recommended for every room.
+							We also recommend using unique names, as then you can use those in various places (such as some chat commands).
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -447,7 +445,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					highlight: [
 						{
 							query: '.Button',
-							filter: (e) => e.innerText.includes('Select a background'),
+							filter: (e) => e.innerText.includes('Select a background') && (document.querySelector('.dialog .BackgroundSelect') == null),
 						},
 					],
 				},
@@ -512,19 +510,19 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						<>
 							<p>
 								The next section lets you move the room on the space's grid. You can consider the
-								space's grid a map with cardinal directions. So north is in the upward facing direction.
+								space's grid a map with cardinal directions. The upward facing direction is north.
 							</p>
 							<p>
-								The position of a room is determined by coordinates on the grid. The default room
-								is typically in the middle of the space's grid in the 0/0 position. For moving the
+								The position of a room is determined by its coordinates on the grid. The default room
+								is typically in the middle of the space's grid in the <code>0,0</code> position. For moving the
 								room to the east, you need to increase the first number by the amount of fields on
 								the grid you want to move it. For moving it to the south, you increase the second
-								coordinate. Use negative numbers for the other cardinal directions.
+								coordinate. Use negative numbers for the opposite cardinal directions.
 							</p>
 							<p>
 								As an advanced topic, you can also rotate your room with the "Far wall direction"
 								drop-down menu.
-								Typically, you would consider the far wall, so the wall at the back of the room to
+								Typically, you would consider the far wall, so the wall at the back of the room, to
 								be facing north. That way, the room aligns with how it is shown on the grid map.<br />
 								However, sometimes you may want your room to be facing differently, to
 								better explain the room dimension, the paths between rooms on the background, or the door placement.
@@ -634,8 +632,8 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							</p>
 							<p>
 								Note: Sometimes, in very large rooms, the path squares can be hard to identify.
-								As a reminder, users can also move by clicking on rooms directly in the map of
-								the "Room" tab or by using the '/mt' command.
+								As a reminder, users can also move by clicking on rooms directly in the minimap of
+								the "Room" tab or by using the <code>/moveto</code> (<code>/mt</code> for short) command.
 							</p>
 						</>
 					),
@@ -776,12 +774,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							</p>
 							<p>
 								At the top of the dialog, you can find the "Import" button, if you rather want to import a room
-								from a room template by you, or shared with you, for instance on Pandora Discord's template sharing channel.
+								from a room template by you, or shared with you, for instance from Pandora Discord's template sharing channel.
 							</p>
 							<p>
 								Please create a new room now to proceed with the tutorial, as your space needs to have more than
 								one room to show something in the following steps.<br />
-								You can simply delete it again after finishing the tutorial, if you want.
+								You can delete it again after finishing the tutorial, if you want.
 							</p>
 						</>
 					),
@@ -900,8 +898,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						<>
 							<p>
 								The tab now changed a bit compared to when there was only a single room. On the top right, you can
-								now see a part of the space's map centered around your current room and the the ordered list of rooms
-								below that now shows more rooms.
+								now see a minimap showing part of the space's map centered around your current room and below that an ordered list of rooms alongside the characters inside.
 							</p>
 							<p>
 								To proceed to the final part of this tutorial, press the "Enable room construction mode" button.<br />
@@ -971,10 +968,9 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							<p>
 								While you are in room construction mode, you can see the four path squares highlighted
 								in green (when enabled) or red (when disabled). Zoom in as needed.<br />
-								Like this, you can drag them around
-								with the directional icon as desired. The position of the square is the spot where
-								characters appear when entering this room from that direction. The positions are also
-								stored in exported room templates.
+								In this mode, you can drag them around with the directional icon as desired.
+								The position of the square is the spot where characters appear when entering this room from that direction.
+								The positions are also stored in exported room templates.
 							</p>
 							<p>
 								Pressing on the square itself switches it between enabled and disabled.
@@ -983,12 +979,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								hatch to be locked or to simulate a wall with no path between two bordering rooms.
 							</p>
 							<p>
-								Note that if you do not disable the path square in the neighboring as well, you
+								Note that if you do not disable the path square in the neighboring room as well, you
 								create a one way path that cannot be used to go back to the previous room.
 								You can also create trap rooms like this, but a character can leave a space from
 								any room without having to go back to the starting room, unless there is an effect
 								applied that prevents leaving the space generally or while in specific rooms, like
-								through character modifiers.
+								through character modifiers, or while inside room devices.
 							</p>
 						</>
 					),
@@ -1003,7 +999,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						<p>
 							Note that if you make another user's account admin in your space, they can also manage
 							the space in all the ways described in this tutorial, including adding more admins or
-							deleting them. But they cannot remove you or any other owners, as space owners always
+							deleting them. But they cannot remove you or any other owners. Space owners always
 							have admin rights implicitly.
 						</p>
 					),

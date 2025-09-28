@@ -426,8 +426,8 @@ importers:
         specifier: 2.6.1
         version: 2.6.1
       tsc-watch:
-        specifier: 7.1.1
-        version: 7.1.1(typescript@5.9.2)
+        specifier: 7.2.0
+        version: 7.2.0(typescript@5.9.2)
       tslib:
         specifier: 2.8.1
         version: 2.8.1
@@ -520,8 +520,8 @@ importers:
         specifier: 2.6.1
         version: 2.6.1
       tsc-watch:
-        specifier: 7.1.1
-        version: 7.1.1(typescript@5.9.2)
+        specifier: 7.2.0
+        version: 7.2.0(typescript@5.9.2)
       tslib:
         specifier: 2.8.1
         version: 2.8.1
@@ -6390,8 +6390,8 @@ packages:
   ts-mockito@2.6.1:
     resolution: {integrity: sha512-qU9m/oEBQrKq5hwfbJ7MgmVN5Gu6lFnIGWvpxSjrqq6YYEVv+RwVFWySbZMBgazsWqv6ctAyVBpo9TmAxnOEKw==}
 
-  tsc-watch@7.1.1:
-    resolution: {integrity: sha512-r6t37Dkk4vK44HwxOe+OzjpE/gDamZAwqXhtcAJD/hPVblcjJK45NxbK0HcDASXG0U4pEnCh640JZbeDVSC6yA==}
+  tsc-watch@7.2.0:
+    resolution: {integrity: sha512-4gRFawQD1cVSaILvG7wl2x6NtteKbS2dGBMbL7Q6n1ldLIOKXCJUoEwUXdGuee4dp+zcnA6tukBBLz1lZrNI9w==}
     engines: {node: '>=12.12.0'}
     hasBin: true
     peerDependencies:
@@ -13841,7 +13841,7 @@ snapshots:
     dependencies:
       lodash: 4.17.21
 
-  tsc-watch@7.1.1(typescript@5.9.2):
+  tsc-watch@7.2.0(typescript@5.9.2):
     dependencies:
       cross-spawn: 7.0.6
       node-cleanup: 2.1.2

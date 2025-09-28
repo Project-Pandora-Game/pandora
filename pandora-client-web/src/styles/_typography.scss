@@ -60,6 +60,15 @@ p {
 	margin: 0 0 1em;
 }
 
+code {
+	background: common.$theme-code-background;
+	font-family: common.$theme-font-family-monospace;
+	padding: common.spacing(small);
+	border: 1px solid common.$theme-code-border;
+	border-radius: common.spacing(small);
+	user-select: text;
+}
+
 ul {
 	margin: 0;
 }

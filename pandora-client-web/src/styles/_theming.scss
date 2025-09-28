@@ -25,6 +25,8 @@ $theme-normal-text: #eee;
 $theme-normal-text-dim: #888;
 $theme-separator: #43454a; // E.g. borders
 $theme-separator-highlight: color-mix(in srgb, $theme-separator, $theme-accent-color 60%);
+$theme-code-background: #00000044;
+$theme-code-border: #43454a44;
 
 // Alternative background
 $theme-inset-background: #141a1d;

@@ -1,4 +1,3 @@
-import { capitalize } from 'lodash-es';
 import { AccountId, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router';
@@ -11,8 +10,10 @@ import statusIconLookingSub from '../../assets/icons/state-sub.svg';
 import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { useObservable, useObservableMultiple } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { NotificationSuppressionHook, useNotificationSuppress } from '../../services/notificationHandler.tsx';
+import { useService } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
 import { DivContainer, Row } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
@@ -25,44 +26,42 @@ import './accountContacts.scss';
 
 export function AccountContacts() {
 	const navigate = useNavigatePandora();
+	const directMessageManager = useService('directMessageManager');
 
 	useKeyDownEvent(React.useCallback(() => {
 		navigate('/');
 		return true;
 	}, [navigate]), 'Escape');
 
+	const unreadDirectMessageCount = useObservableMultiple(
+		useObservable(directMessageManager.chats)
+			.map((c) => c.displayInfo),
+	).filter((c) => c.hasUnread).length;
+	const pending = useAccountContacts('pending').length;
+	const incoming = useAccountContacts('incoming').length;
+
 	return (
 		<div className='accountContacts'>
 			<UrlTabContainer allowWrap>
-				<UrlTab name={ <AccountContactHeader type='friend' /> } urlChunk=''>
+				<UrlTab name='Contacts' urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
-				<UrlTab name='Direct messages' urlChunk='dm'>
+				<UrlTab name='Direct messages' urlChunk='dm' badge={ unreadDirectMessageCount > 0 ? `${unreadDirectMessageCount}` : null }>
 					<DirectMessages />
 				</UrlTab>
 				<UrlTab name='Blocked' urlChunk='blocked'>
 					<ShowAccountContacts type='blocked' />
 				</UrlTab>
-				<UrlTab name={ <AccountContactHeader type='pending' /> } urlChunk='pending'>
+				<UrlTab name='Pending' urlChunk='pending' badge={ pending > 0 ? `${pending}` : null } badgeType='passive'>
 					<ShowAccountContacts type='pending' />
 				</UrlTab>
-				<UrlTab name={ <AccountContactHeader type='incoming' /> } urlChunk='incoming'>
+				<UrlTab name='Incoming' urlChunk='incoming' badge={ incoming > 0 ? `${incoming}` : null }>
 					<ShowAccountContacts type='incoming' />
 					<ClearIncoming />
 				</UrlTab>
 				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 			</UrlTabContainer>
 		</div>
-	);
-}
-
-function AccountContactHeader({ type }: { type: IAccountContact['type']; }) {
-	const count = useAccountContacts(type).length;
-
-	return (
-		<>
-			{ type === 'friend' ? 'Contacts' : capitalize(type) } ({ count })
-		</>
 	);
 }
 

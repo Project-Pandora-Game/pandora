@@ -14,6 +14,7 @@ $header-height: 2em;
 
 		.tab {
 			@include common.center-flex;
+			position: relative;
 			padding: 0.25em 0.75em 0.5em 0.75em;
 			border: solid transparent;
 			border-width: 0.25em 0.25em 0 0.25em;
@@ -59,6 +60,31 @@ $header-height: 2em;
 				flex: 0;
 				white-space: nowrap;
 				padding: 0.25em 0.5em 0.5em 0.5em;
+			}
+
+			.badge {
+				display: inline-block;
+				position: absolute;
+				top: -0.15em;
+				right: 0.25em;
+
+				aspect-ratio: 1;
+				min-height: unset;
+				min-width: unset;
+				width: 1.4em;
+				height: 1.4em;
+				font-size: 0.8em;
+				line-height: 1.5;
+				background: common.$theme-notification-badge-background;
+				color: common.$theme-notification-badge-text;
+				border-radius: 100%;
+				padding: 0 0.3em;
+				align-self: flex-end;
+
+				&.badge-type-passive {
+					background: common.$theme-notification-badge-passive-background;
+					color: common.$theme-notification-badge-passive-text;
+				}
 			}
 		}
 

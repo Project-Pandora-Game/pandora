@@ -8,6 +8,17 @@ import { DEG_TO_RAD, Matrix, Point } from 'pixi.js';
 const TARGET_WEIGHT = 100;
 
 /**
+ * Ratio of how much harder it is to move parent bone compared to child bone (parent bone moves more of the body).
+ */
+const INERTIA_FACTOR = 16;
+
+/**
+ * Large movements are penalized by powering their size to this constant - prefering smaller movements.
+ * This helps the movement be less volatile at the cost of slightly less precise targetting.
+ */
+const LARGE_MOVEMENT_POWER = 1.5;
+
+/**
  * Find optimal values the bones and rest of the input.
  * Specifically it tries to find such values for given bones, that the point originally at `startPoint` and transformed by the bones in their given order
  * is as close as possible to the given `target`, while heuristically balancing that with the movement needed from `initialPosition` to reach the target,
@@ -72,9 +83,10 @@ export function FindInverseKinematicOptimum(
 
 		// If we are still in the bone chain guess the movement (trying smallest first) and recurse into the next chain link
 		const p = initialPosition[index];
+		const movementFactor = Math.pow(INERTIA_FACTOR, bones.length - index - 1);
 		for (let shift = 1; ; shift++) {
 			let valid = false;
-			const cost = currentCost + (shift * shift);
+			const cost = currentCost + Math.pow(shift, LARGE_MOVEMENT_POWER) * movementFactor;
 			if (cost >= best) // Bail out if we couldn't find better result than the current one anyway (this is surprisingly common)
 				break;
 

@@ -1,9 +1,11 @@
-import { produce, type Draft, type Immutable } from 'immer';
+import { castDraft, produce, type Draft, type Immutable } from 'immer';
 import { capitalize, snakeCase } from 'lodash-es';
 import {
 	Assert,
 	AssertNever,
 	AutoMeshLayerGenerateVariableData,
+	BONE_MAX,
+	BONE_MIN,
 	GenerateMultipleListsFullJoin,
 	GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT,
 	KnownObject,
@@ -568,6 +570,21 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 		});
 	}, [asset, assetManager, layer, variables]);
 
+	const updateVariable = useCallback((index: number, newValue: Immutable<GraphicsSourceAutoMeshLayerVariable>) => {
+		if (asset == null ||
+			index < 0 ||
+			index >= variables.length
+		) {
+			return;
+		}
+
+		layer.modifyDefinition((d) => {
+			d.variables[index] = castDraft(newValue);
+
+			// TODO: Figure out how to update all images
+		});
+	}, [asset, layer, variables]);
+
 	if (asset == null)
 		return null;
 
@@ -579,6 +596,9 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 						<LayerAutomeshVariableItem key={ index }
 							index={ index }
 							variable={ v }
+							update={ (newValue) => {
+								updateVariable(index, newValue);
+							} }
 							remove={ () => {
 								reorderVariable(index, null);
 							} }
@@ -606,15 +626,35 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 	);
 }
 
-function LayerAutomeshVariableItem({ variable, index, remove, reorder }: {
+function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }: {
 	variable: Immutable<GraphicsSourceAutoMeshLayerVariable>;
 	index: number;
+	update: (newValue: Immutable<GraphicsSourceAutoMeshLayerVariable>) => void;
 	remove: () => void;
 	reorder: (shift: number) => void;
 }): ReactElement {
 	return (
 		<Row alignY='center' className='editor-highlightedArea' padding='small'>
 			{
+				variable.type === 'bone' ? (
+					<Column className='flex-1'>
+						<span>Based on bone rotation</span>
+						<TextInput
+							value={ variable.stops.map((s) => s.toString(10)).join(', ') }
+							onChange={ (newValue) => {
+								const newStops = newValue
+									.split(',')
+									.map((s) => s.trim())
+									.filter(Boolean)
+									.map((s) => Number.parseInt(s, 10))
+									.filter((s) => Number.isSafeInteger(s) && s > BONE_MIN && s <= BONE_MAX);
+								update(produce(variable, (d) => {
+									d.stops = newStops;
+								}));
+							} }
+						/>
+					</Column>
+				) :
 				variable.type === 'typedModule' ? (
 					<span className='flex-1'>Based on typed module '{ variable.module }'</span>
 				) :
@@ -723,6 +763,14 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 							} }
 						>
 							Based on eye blinking
+						</Button>
+						<Button
+							theme={ selectedType === 'bone' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('bone');
+							} }
+						>
+							Based on bone rotation
 						</Button>
 					</Column>
 					{
@@ -850,6 +898,28 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 								>
 									Blinking
 								</Button>
+							</Column>
+						) :
+						selectedType === 'bone' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								{
+									assetManager.getAllBones()
+										.map(({ name }) => (
+											<Button
+												key={ name }
+												onClick={ () => {
+													addVariable({
+														type: 'bone',
+														bone: name,
+														stops: [],
+													});
+													close();
+												} }
+											>
+												{ name }
+											</Button>
+										))
+								}
 							</Column>
 						) :
 						selectedType === null ? (

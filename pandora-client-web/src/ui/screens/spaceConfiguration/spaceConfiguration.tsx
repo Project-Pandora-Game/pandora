@@ -579,9 +579,8 @@ function SpaceConfigurationRights({
 						</p>
 						<ul>
 							<li>They can always see this space in their list of spaces, even while it is empty.</li>
-							<li>They can always join the space while it is public or private.</li>
+							<li>They can join the space while it is public or private, but not while it is locked..</li>
 							<li>They can see who is currently inside without joining, unless the space is locked.</li>
-							<li>They also cannot join the space while it is locked.</li>
 						</ul>
 					</ContextHelpButton>
 				</legend>
@@ -753,6 +752,20 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					readOnly={ !canEdit }
 				/>
 			</Column>
+			<Row>
+				<Checkbox
+					id={ `${idPrefix}-ghostmanagement-room-devices` }
+					checked={ config.affectCharactersInRoomDevice }
+					onChange={ (newValue) => {
+						setConfig({
+							...config,
+							affectCharactersInRoomDevice: newValue,
+						});
+					} }
+					readOnly={ !canEdit }
+				/>
+				<label htmlFor={ `${idPrefix}-ghostmanagement-room-devices` }>Also affect characters in the slots of room-level items</label>
+			</Row>
 			<SelectSettingInput<SpaceGhostManagementConfig['ignore']>
 				driver={ {
 					currentValue: config.ignore,
@@ -773,20 +786,6 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					allowed: 'Owner, Admin, or on the Allowlist',
 				} }
 			/>
-			<Row>
-				<Checkbox
-					id={ `${idPrefix}-ghostmanagement-room-devices` }
-					checked={ config.affectCharactersInRoomDevice }
-					onChange={ (newValue) => {
-						setConfig({
-							...config,
-							affectCharactersInRoomDevice: newValue,
-						});
-					} }
-					readOnly={ !canEdit }
-				/>
-				<label htmlFor={ `${idPrefix}-ghostmanagement-room-devices` }>Also affect characters in the slots of room-level items</label>
-			</Row>
 		</>
 	);
 }

@@ -154,11 +154,10 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
-				<li>The "Body"-tab allows you to change your character's body, but only if the space you are in allows that.</li>
+				<li>The "Body"-tab allows you to change your character's body parts and body shape, but only if the space you are in allows that.</li>
 				<li>
-					The "Items"-tab shows has the section with the item on your body on the left and shows
-					what is inside the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> on the right.
-					You can create and wear a new item under the "create new item"-tab there.
+					The "Items"-tab lists all items held or worn by your character on the left side and shows
+					various options how to add or move items on the right side.
 				</li>
 				<li>
 					There is a maximum amount of items your character can wear or hold. This number is the sum
@@ -174,16 +173,19 @@ export function WikiCharacters(): ReactElement {
 				"Permissions"-tab of the Pandora settings. Permissions are character-specific and not
 				account-wide. Each permission has a different default setting,
 				so it is recommended to familiarize yourself with those and to adjust those settings to how you want them.<br />
-				The general settings a permission can possibly be set to are "yes", "no", and "prompt".
+				The global setting of a permission can possibly be set to "yes", "no", and "prompt".
 				"Prompt" will show you a confirmation popup when someone tries to interact with you, but is missing one or more
-				permissions that are set to "prompt". You can then decide to ...
+				permissions that are set to "prompt". You can then decide to use ...
 			</p>
 			<ul>
 				<li>
-					... "deny" the requesting character asking for a specific permission from now on (unless you change the permission's settings manually).
+					... "deny always" to block the requesting character from asking for this specific permission from now on
+					(unless you manually remove the character from this permission's settings again).
 				</li>
-				<li>... "allow all", which adds an exception for the requesting character to be able to use all mentioned permissions.</li>
-				<li>... "dismiss" the popup, which ignores the request, only saving any permission-specific blocks you selected.</li>
+				<li>... "allow always", which adds an exception for the requesting character to be able to use this specific permission from now on.</li>
+				<li>... "Close with no further decisions" to dismiss the popup, which ignores the remainder of the request, only saving any individual
+					permission-specific "allow" or "deny" actions already taken by you in this prompt, but still allowing future requests for the involved permissions.
+				</li>
 			</ul>
 			<p>
 				Note that the interaction that was leading to the prompt has to be repeated again after permission was granted. The server
@@ -197,7 +199,9 @@ export function WikiCharacters(): ReactElement {
 				can do nothing, even if they have another permission for the specific interaction they want to do.<br />
 				Please be aware that this central permission to interact with your character at all has a default value of "prompt",
 				making new, unknown characters unable to add/remove restraints or do other things to the own character without asking
-				once during the first interaction. It is not possible to change it universally to "yes" for various reasons.
+				once during the first interaction. Pandora does not allow to change it universally to "yes".
+				This is intentional to make Pandora a safer and healthier platform, as it limits the potential for trolling severely
+				for the prize of a quick button press, as you typically decide this only once per new character you interact with.
 			</p>
 			<p>
 				The "item limits" group of permissions relate to items you flagged with a star or question mark under
@@ -210,8 +214,9 @@ export function WikiCharacters(): ReactElement {
 			<p>
 				Character modifiers alter how Pandora's features work for the character to which modifiers have been added and while those are in effect.
 				This feature can be found in each character's wardrobe under the "Effects & Modifiers" tab.<br />
-				As character modifiers can have quite intense and strict results, the general permissions for others to add modifiers or even lock them
-				are set to "deny" by default. If you want others to use this feature on your character, you need to change the permission defaults or add those characters manually.
+				As character modifiers can have quite intense and strict results, the global permission for others to lock them
+				is set to "deny" by default. If you want others to use this feature securely on your character, you need to change the permission default or add those
+				characters manually.
 				Besides these general modifier related permissions, each character modifier type comes with its own individual permission so that you can configure
 				which modifiers you want others to be able to use on your character.
 			</p>
@@ -219,7 +224,7 @@ export function WikiCharacters(): ReactElement {
 				Character modifiers and their settings can be secured with locks - similar to items. While these lock mechanisms are not physical lock items, they still
 				behave the same and also use the same item limits/preferences as their counterparts. For example, if you have the password lock item set to "prevent", it is
 				also blocked for locking character modifiers.<br />
-				In addition, you can list several characters who can still edit the modifier even if it is locked.
+				In addition, you can define several characters who can still edit the modifier, even while it is locked.
 			</p>
 			<ul>
 				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left. Disabled modifiers have no effect and their activation conditions are ignored.</li>

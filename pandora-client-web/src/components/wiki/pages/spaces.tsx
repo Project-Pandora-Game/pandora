@@ -47,6 +47,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>You can zoom the room canvas with the mouse wheel or a pinch-to-zoom gesture.</li>
+				<li>A double-click/double-tap on any empty space will zoom-to-fit or reset the camera to fit the room to the screen</li>
 				<li>You can drag the canvas freely to see a different part of it while zoomed in.</li>
 				<li>If you experience performance issues, you can lower/disable graphics related features in Pandora's settings.</li>
 			</ul>
@@ -68,6 +69,10 @@ export function WikiSpaces(): ReactElement {
 				<li>The ordered list of rooms next to the room grid in the space configuration's "Room management"-tab is there to define the order of the listed rooms under the "Room"-tab</li>
 				<li>In that ordered room list in the "Room management"-tab, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
 				<li>Room designs can also be exported and imported as a template when creating a new room</li>
+				<li>
+					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
+					"Room" tab, or by using the '/moveto' command.
+				</li>
 			</ul>
 
 			<h4 id='SP_Space_ownership'>Space ownership</h4>
@@ -75,8 +80,8 @@ export function WikiSpaces(): ReactElement {
 				Spaces in Pandora are owned by one or more persons.
 			</p>
 			<ul>
-				<li>Every owner is automatically admin in the space.</li>
-				<li>Player accounts that are not owner can still be admin of a space.</li>
+				<li>Every owner is automatically admin in the space and cannot be demoted by other admins.</li>
+				<li>Player accounts that are not owner can be made an admin of a space by its owners or other admins.</li>
 				<li>Creating a new space makes you automatically owner of it.</li>
 				<li>You can add other owners to your space in the "Rights management" configuration tab.</li>
 				<li>There is a limit to how many spaces you can own. You can see your ownership limit in the space search behind the heading "My spaces".</li>
@@ -89,7 +94,8 @@ export function WikiSpaces(): ReactElement {
 			<h4 id='SP_Space_deletion'>Space deletion</h4>
 			<p>
 				To permanently delete a space, you have to give up ownership over it. The space is automatically deleted if it has no other owners.
-				Removal of ownership can be done in the space search screen, when clicking on the space, or in the administration screen when inside the space.
+				Removal of ownership can be done in the space search screen, when clicking on the space, or in the administration screen when inside the space.<br />
+				Note that no one can demote other owners - only the owner can to give up their ownership of a space.
 			</p>
 
 			<h4 id='SP_Space_persistence'>Space persistence</h4>
@@ -217,6 +223,7 @@ export function WikiSpaces(): ReactElement {
 					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
 					This currently cannot be changed later on.
 				</li>
+				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add owners.</li>
 			</ul>
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>

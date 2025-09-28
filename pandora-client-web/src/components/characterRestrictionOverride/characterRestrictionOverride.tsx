@@ -101,7 +101,7 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 							(Timeout mode can be toggled on/off at any time and as often as needed.)
 						</p>
 						<Row padding='medium' alignX='space-between'>
-							<Button onClick={ hide }>Cancel</Button>
+							<Button onClick={ hide }>Close</Button>
 							<Button onClick={ doTimeoutModeEnter } disabled={ processing }>
 								Enter timeout mode!
 							</Button>
@@ -143,7 +143,7 @@ function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, pro
 				}
 			</p>
 			<Row padding='medium' alignX='space-between'>
-				<Button onClick={ hide }>Cancel</Button>
+				<Button onClick={ hide }>Close</Button>
 				<Button
 					disabled={ !canLeave || processing }
 					onClick={ doModeExit }
@@ -176,8 +176,7 @@ export function CharacterRestrictionOverrideWarningContent({ mode }: { mode?: Re
 			<ContextHelpButton>
 				<HelpText />
 				<p>
-					As general hint: You can find safemode and timeout mode for your character in the top left menu, by clicking on<br />
-					your character's name.
+					Hint: You can find safemode and timeout mode behind a button under your character's name in the "Room" tab.
 				</p>
 			</ContextHelpButton>
 		</span>

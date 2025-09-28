@@ -11,6 +11,13 @@ import './tabs.scss';
 
 export interface TabProps extends ChildrenProps {
 	name: ReactNode;
+	/** A "new item" or "active item" notification-like badge to show on the tab */
+	badge?: ReactNode;
+	/**
+	 * Whether the badge is active (trying to get attention), or highlights passive effect
+	 * @default 'active'
+	 */
+	badgeType?: 'active' | 'passive';
 	default?: boolean;
 	onClick?: React.MouseEventHandler;
 	tabClassName?: string;
@@ -18,6 +25,13 @@ export interface TabProps extends ChildrenProps {
 
 export interface TabConfig {
 	name: ReactNode;
+	/** A "new item" or "active item" notification-like badge to show on the tab */
+	badge?: ReactNode;
+	/**
+	 * Whether the badge is active (trying to get attention), or highlights passive effect
+	 * @default 'active'
+	 */
+	badgeType?: 'active' | 'passive';
 	active: boolean;
 	onClick: React.MouseEventHandler;
 	tabClassName?: string;
@@ -53,6 +67,11 @@ export function Tabulation({ children, className, collapsable, tabsPosition = 't
 							aria-selected={ tab.active }
 						>
 							{ tab.name }
+							{ tab.badge ? (
+								<div className={ `badge badge-type-${tab.badgeType ?? 'active'}` }>
+									{ tab.badge }
+								</div>
+							) : null }
 						</button>
 					))
 				}
@@ -112,6 +131,8 @@ export const TabContainer = forwardRef(function TabContainer({
 
 	const tabs = useMemo((): (TabConfig | undefined)[] => children.map((c, index): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,
+		badge: c.props.badge,
+		badgeType: c.props.badgeType === 'passive' ? 'passive' : 'active',
 		active: index === currentTab,
 		onClick: c.props.onClick ?? (() => setTab(index)),
 		tabClassName: c.props.tabClassName,
@@ -201,6 +222,8 @@ export function UrlTabContainer({
 
 		return {
 			name: c.props.name,
+			badge: c.props.badge,
+			badgeType: c.props.badgeType === 'passive' ? 'passive' : 'active',
 			active: (path != null) ? matchPath({ path: path + (c.props.urlChunk ? '/*' : '') }, pathname) != null : false,
 			onClick: c.props.onClick ?? (() => (path != null) ? navigate(path) : undefined),
 			tabClassName: c.props.tabClassName,

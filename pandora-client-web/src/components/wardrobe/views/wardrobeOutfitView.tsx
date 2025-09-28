@@ -200,7 +200,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 				<div className='Scrollbar'>
 					<Column className='flex-1' padding='small'>
 						<Row alignX='center' padding='medium'>
-							<strong>This collection is temporary and will be lost when the game is closed</strong>
+							<div className='warning-box'>This collection is temporary and will be lost when the game is closed</div>
 						</Row>
 						<TemporaryOutfitEntry
 							outfit={ temporaryOutfit }

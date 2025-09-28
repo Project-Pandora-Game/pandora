@@ -591,15 +591,25 @@ function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 					</Column>
 				) : null
 			}
-			<Column padding='large'>
+			<Row padding='large' alignX='center'>
+				<p className='text-dim'>
+					<span>ⓘ </span>
+					<i>
+						All following permissions are required to do the actions above. The requester is missing one ore more of<br />
+						them - those where both buttons are active and lit up. Please review each and either permanently grant it, or<br />
+						block the character from asking again by always denying it. If taking no decision, they can ask again any time.
+					</i>
+				</p>
+			</Row>
+			<Column>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
 						permissions == null ? null : <PermissionPromptGroup key={ group } sourceId={ source.id } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
 					))
 				}
 			</Column>
-			<Row padding='medium' alignX='space-between' alignY='center'>
-				<Button onClick={ dismiss }>Deny unchosen once</Button>
+			<Row padding='large' alignX='space-between' alignY='center'>
+				<Button onClick={ dismiss }>Close with no further decisions</Button>
 				<Button onClick={ acceptAll } disabled={ !allowAccept || !isSafe }>Allow all above always</Button>
 			</Row>
 		</DraggableDialog>

@@ -72,6 +72,13 @@ function QualitySettings(): ReactElement {
 		<fieldset>
 			<legend>Quality</legend>
 			<Column gap='large'>
+				<SelectSettingInput<GraphicsSettings['textureResolution']>
+					driver={ useGraphicsSettingDriver('textureResolution') }
+					label='Texture resolution'
+					stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
+					optionOrder={ ['auto', '1', '0.5', '0.25'] }
+					schema={ GraphicsSettingsSchema.shape.textureResolution }
+				/>
 				<SelectSettingInput<string>
 					driver={ {
 						currentValue: renderResolutionDriver.currentValue?.toString(),
@@ -91,13 +98,6 @@ function QualitySettings(): ReactElement {
 					}
 					optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
 					schema={ z.string() }
-				/>
-				<SelectSettingInput<GraphicsSettings['textureResolution']>
-					driver={ useGraphicsSettingDriver('textureResolution') }
-					label='Texture resolution'
-					stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
-					optionOrder={ ['auto', '1', '0.5', '0.25'] }
-					schema={ GraphicsSettingsSchema.shape.textureResolution }
 				/>
 				<Column gap='none'>
 					<ToggleSettingInput

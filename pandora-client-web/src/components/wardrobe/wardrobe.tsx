@@ -10,7 +10,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
-import { Character, IChatroomCharacter } from '../../character/character.ts';
+import { Character, IChatroomCharacter, useCharacterRestrictionManager } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
@@ -188,13 +188,16 @@ function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigatePandora();
-	const { globalState } = useWardrobeActionContext();
+	const { globalState, actions: { spaceContext } } = useWardrobeActionContext();
 	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
 	const globalPreviewState = useObservable(actionPreviewState);
 	const characterPreviewState = globalPreviewState?.characters.get(character.id);
 	const currentSpaceInfo = useSpaceInfo();
 	const inPersonalSpace = currentSpaceInfo.id == null;
+
+	const characterRestrictionManager = useCharacterRestrictionManager(character, globalState, spaceContext);
+	const characterModifierEffects = useMemo(() => characterRestrictionManager.getModifierEffects(), [characterRestrictionManager]);
 
 	const [allowHideItems, setAllowHideItems] = useState(false);
 	const [showCharacterEffects, setShowCharacterEffects] = useState(false);
@@ -238,7 +241,11 @@ function WardrobeCharacter({ character }: {
 							</div>
 						</div>
 					</Tab>
-					<Tab name='Effects & Modifiers'>
+					<Tab
+						name='Effects & Modifiers'
+						badge={ characterModifierEffects.length > 0 ? `${characterModifierEffects.length}` : null }
+						badgeType='passive'
+					>
 						<div className='wardrobe-pane'>
 							<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
 						</div>

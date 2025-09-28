@@ -1,8 +1,16 @@
-import type { Asset } from 'pandora-common';
+import type { Asset, AssetSize } from 'pandora-common';
 import { useMemo, type ReactElement } from 'react';
 import sourceCodeIcon from '../../../assets/icons/source-code.svg';
 import { Column, Row } from '../../common/container/container.tsx';
 import { ExternalLink } from '../../common/link/externalLink.tsx';
+
+const SIZE_TEXT: Record<AssetSize, string> = {
+	bodypart: 'Body part',
+	small: 'Small',
+	medium: 'Medium',
+	large: 'Large',
+	huge: 'Huge',
+};
 
 export function WardrobeAssetDetailContent({ asset }: {
 	asset: Asset;
@@ -16,6 +24,10 @@ export function WardrobeAssetDetailContent({ asset }: {
 			<Row>
 				<span>Asset:</span>
 				<span>{ asset.definition.name }</span>
+			</Row>
+			<Row>
+				<span>Size:</span>
+				<span>{ SIZE_TEXT[asset.definition.size] }</span>
 			</Row>
 			<Column gap='none'>
 				<span>Created by:</span>

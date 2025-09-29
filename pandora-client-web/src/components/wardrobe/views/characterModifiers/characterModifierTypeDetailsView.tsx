@@ -49,7 +49,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 			<div className='toolbar'>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</div>
-			<Column padding='large' gap='large'>
+			<Column padding='large' gap='large' overflowY='auto'>
 				<WardrobeCharacterModifierTypeDescription type={ type } />
 				<WardrobeCharacterModifierAddButton
 					character={ character }

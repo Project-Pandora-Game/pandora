@@ -1,12 +1,13 @@
+import type { Immutable } from 'immer';
 import { min } from 'lodash-es';
-import { AssertNever, CharacterSize, type Asset, type Rectangle } from 'pandora-common';
+import { AssertNever, CharacterSize, type Asset, type AssetGraphicsRoomDeviceDefinition, type Rectangle } from 'pandora-common';
 import { CHARACTER_PIVOT_POSITION } from '../graphicsCharacter.tsx';
 
 /**
  * Calculates approximate bounds for room device graphics, relative to its pivot
  * @param asset
  */
-export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>): Rectangle {
+export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, graphics: Immutable<AssetGraphicsRoomDeviceDefinition>): Rectangle {
 	const definition = asset.definition;
 
 	let itemLeft = definition.pivot.x - 20;
@@ -14,7 +15,7 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>): R
 	let itemTop = definition.pivot.y - 20;
 	let itemBottom = definition.pivot.y + 20;
 
-	for (const layer of definition.graphicsLayers) {
+	for (const layer of graphics.layers) {
 		if (layer.type === 'sprite') {
 			const offsetX = Math.min(layer.offset?.x ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.x)) ?? layer.offset?.x ?? 0);
 			const offsetY = Math.min(layer.offset?.y ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.y)) ?? layer.offset?.y ?? 0);

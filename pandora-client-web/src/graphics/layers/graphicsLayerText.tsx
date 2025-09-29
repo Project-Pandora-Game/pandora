@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { EMPTY_ARRAY, PANDORA_FONTS, type IRoomDeviceGraphicsLayerText, type ItemRoomDevice } from 'pandora-common';
+import { EMPTY_ARRAY, PANDORA_FONTS, type RoomDeviceGraphicsLayerText, type ItemRoomDevice } from 'pandora-common';
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
@@ -111,7 +111,7 @@ export function GraphicsLayerRoomDeviceText({
 	item,
 }: {
 	item: ItemRoomDevice;
-	layer: Immutable<IRoomDeviceGraphicsLayerText>;
+	layer: Immutable<RoomDeviceGraphicsLayerText>;
 }): ReactElement {
 	const app = usePixiAppOptional();
 

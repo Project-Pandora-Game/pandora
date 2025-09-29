@@ -14,6 +14,7 @@ import {
 import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import statusIconAway from '../../assets/icons/state-away.svg';
 import { Character, useCharacterData } from '../../character/character.ts';
@@ -162,14 +163,25 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 		evaluator,
 	} = useRoomCharacterOffsets(characterState);
 
+	const graphicsManager = useObservable(GraphicsManagerInstance);
+
 	return useMemo((): RoomCharacterCalculatedPosition => {
 		// If we are in a room device, calculate transformation based on it instead
 		const roomDeviceWearablePart = characterState.getRoomDeviceWearablePart();
 		if (roomDeviceWearablePart != null) {
-			const roomDevice = roomDeviceWearablePart.roomDevice;
-			const deviceAsset = roomDevice?.asset.definition;
-			const displayLayer = deviceAsset?.graphicsLayers.findLast((layer) => layer.type === 'slot' && layer.slot === roomDeviceWearablePart.roomDeviceLink?.slot);
-			if (displayLayer?.type === 'slot' && roomDevice?.deployment != null && deviceAsset != null) {
+			do {
+				const roomDevice = roomDeviceWearablePart.roomDevice;
+				if (roomDevice == null)
+					break;
+
+				const deviceGraphics = graphicsManager?.assetGraphics[roomDevice.asset.id];
+				if (deviceGraphics?.type !== 'roomDevice')
+					break;
+
+				const displayLayer = deviceGraphics.layers.findLast((layer) => layer.type === 'slot' && layer.slot === roomDeviceWearablePart.roomDeviceLink?.slot);
+				if (displayLayer?.type !== 'slot' || roomDevice?.deployment == null)
+					break;
+
 				const [deploymentX, deploymentY, deploymentYOffsetExtra] = projectionResolver.fixupPosition([
 					roomDevice.deployment.x,
 					roomDevice.deployment.y,
@@ -178,7 +190,7 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 				const [deviceX, deviceBaseY] = projectionResolver.transform(deploymentX, deploymentY, 0);
 				const deviceScale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 				const deviceY = deviceBaseY - deploymentYOffsetExtra;
-				const devicePivot = deviceAsset.pivot;
+				const devicePivot = roomDevice.asset.definition.pivot;
 
 				const {
 					position: slotPosition,
@@ -205,7 +217,8 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 					pivot: slotPivot,
 					rotationAngle,
 				};
-			}
+			// eslint-disable-next-line no-constant-condition
+			} while (false);
 		}
 
 		// Normal character room position
@@ -221,7 +234,7 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 				rotationAngle,
 			};
 		}
-	}, [baseScale, characterState, evaluator, pivot, posX, posY, projectionResolver, rotationAngle, yOffset, yOffsetExtra]);
+	}, [baseScale, characterState, evaluator, pivot, posX, posY, projectionResolver, rotationAngle, yOffset, yOffsetExtra, graphicsManager]);
 }
 
 function RoomCharacterInteractiveImpl({

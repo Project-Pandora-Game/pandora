@@ -23,7 +23,7 @@ import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsM
 import { Observable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
 import { EditorAssetGraphics, type EditorAssetGraphicsBuildLogResult } from './editorAssetGraphics.ts';
-import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
+import { EditorBuildWornAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 
 /** Class that handles "source" asset graphics inside editor. */
 export class EditorAssetGraphicsManagerClass {
@@ -80,12 +80,14 @@ export class EditorAssetGraphicsManagerClass {
 		// If the asst had no graphics before, create empty one
 		if (sourceInfo == null) {
 			sourceInfo = {
+				type: 'worn',
 				definition: {
 					layers: [],
 				},
 				originalImagesMap: {},
 			};
 		}
+		Assert(sourceInfo.type === 'worn');
 		const graphics = new EditorAssetGraphics(asset, sourceInfo.definition, () => {
 			this._onAssetDefinitionChanged(graphics)
 				.catch((err) => {
@@ -183,7 +185,7 @@ export class EditorAssetGraphicsManagerClass {
 				throw new Error('Asset not found');
 			}
 
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, assetManager, logger, buildTextures);
+			const graphicsDefinition = await EditorBuildWornAssetGraphics(asset, logicAsset, assetManager, logger, buildTextures);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
 			asset.buildTextures.value = buildTextures;
 		} catch (error) {

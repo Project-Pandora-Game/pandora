@@ -1,6 +1,9 @@
 import * as z from 'zod';
 import { GraphicsAlphaImageMeshLayerSchema } from './layers/alphaImageMesh.ts';
 import { GraphicsMeshLayerSchema } from './layers/mesh.ts';
+import { RoomDeviceGraphicsLayerSlotSchema } from './layers/roomDeviceSlot.ts';
+import { RoomDeviceGraphicsLayerSpriteSchema } from './layers/roomDeviceSprite.ts';
+import { RoomDeviceGraphicsLayerTextSchema } from './layers/roomDeviceText.ts';
 import { GraphicsTextLayerSchema } from './layers/text.ts';
 
 export const GraphicsLayerSchema = z.discriminatedUnion('type', [
@@ -10,3 +13,11 @@ export const GraphicsLayerSchema = z.discriminatedUnion('type', [
 ]);
 export type GraphicsLayer = z.infer<typeof GraphicsLayerSchema>;
 export type GraphicsLayerType = GraphicsLayer['type'];
+
+export const RoomDeviceGraphicsLayerSchema = z.discriminatedUnion('type', [
+	RoomDeviceGraphicsLayerSpriteSchema,
+	RoomDeviceGraphicsLayerSlotSchema,
+	RoomDeviceGraphicsLayerTextSchema,
+]);
+export type RoomDeviceGraphicsLayer = z.infer<typeof RoomDeviceGraphicsLayerSchema>;
+export type RoomDeviceGraphicsLayerType = RoomDeviceGraphicsLayer['type'];

@@ -89,10 +89,16 @@ export function AppearanceItemsFixBodypartOrder(assetManager: AssetManager, item
 		);
 }
 
+const ITEM_PROPERTIES_CACHE = new WeakMap<AppearanceItems, AssetPropertiesResult>;
 export function AppearanceItemProperties(items: AppearanceItems): AssetPropertiesResult {
-	return items
-		.flatMap((item) => item.getPropertiesParts())
-		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+	let result = ITEM_PROPERTIES_CACHE.get(items);
+	if (result === undefined) {
+		result = items
+			.flatMap((item) => item.getPropertiesParts())
+			.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+		ITEM_PROPERTIES_CACHE.set(items, result);
+	}
+	return result;
 }
 
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, item: Item): AppearanceValidationResult {

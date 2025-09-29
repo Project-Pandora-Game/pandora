@@ -249,7 +249,14 @@ class TreeNode {
 	}
 }
 
-export class AppearanceLimitTree {
+export interface ReadonlyAppearanceLimitTree {
+	readonly valid: boolean;
+	hasNoLimits(): boolean;
+	validate(pose: Immutable<PartialAppearancePose>): boolean;
+	force(pose: Immutable<AppearancePose>): { pose: AppearancePose; changed: boolean; };
+}
+
+export class AppearanceLimitTree implements ReadonlyAppearanceLimitTree {
 	private root: TreeNode | null = new TreeNode();
 
 	public get valid(): boolean {

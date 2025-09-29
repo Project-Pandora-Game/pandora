@@ -14,7 +14,7 @@ const calculationQueue = new CalculationQueue({
 	immediate: 0,
 	normal: 0,
 	low: 50,
-});
+}, 5);
 
 export function useStaggeredAppearanceActionResult(action: AppearanceAction | null, { lowPriority = false, immediate = false }: { lowPriority?: boolean; immediate?: boolean; } = {}): AppearanceActionProcessingResult | null {
 	const { actions, globalState } = useWardrobeActionContext();

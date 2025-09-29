@@ -8,11 +8,16 @@ type PriorityEntry = {
 
 export class CalculationQueue<const TPriorities extends Readonly<Record<string, number>>> {
 	private readonly _priorities: ReadonlyMap<string, PriorityEntry>;
+	private readonly batchMinMs: number | undefined;
 
 	private _nextTick: number | null = null;
 	private _nextTickTimer: number | null = null;
 
-	constructor(priorities: TPriorities) {
+	/**
+	 * @param priorities - Delays for various priorities used for calculation
+	 * @param batchMinMs - If specified, each step can run multiple calculations until the total time spend in a single batch is not at least `batchMinMs`
+	 */
+	constructor(priorities: TPriorities, batchMinMs?: number) {
 		const parsedPriorities = new Map<string, PriorityEntry>();
 
 		let lastPriority = 0;
@@ -27,6 +32,7 @@ export class CalculationQueue<const TPriorities extends Readonly<Record<string, 
 		}
 
 		this._priorities = parsedPriorities;
+		this.batchMinMs = batchMinMs;
 	}
 
 	public calculate(priority: (keyof TPriorities) & string, fn: () => void): () => void {
@@ -55,16 +61,23 @@ export class CalculationQueue<const TPriorities extends Readonly<Record<string, 
 	}
 
 	private _doTick(): void {
-		for (const priorityData of this._priorities.values()) {
-			const fn = priorityData.queue.shift();
-			if (fn != null) {
-				try {
-					fn();
-				} finally {
-					this._updateTimer();
+		try {
+			const batchEnd = this.batchMinMs !== undefined ? (performance.now() + this.batchMinMs) : undefined;
+			for (const priorityData of this._priorities.values()) {
+				while (true) {
+					const fn = priorityData.queue.shift();
+					if (fn !== undefined) {
+						fn();
+						if (batchEnd === undefined || performance.now() >= batchEnd) {
+							return;
+						}
+					} else {
+						break;
+					}
 				}
-				return;
 			}
+		} finally {
+			this._updateTimer();
 		}
 	}
 

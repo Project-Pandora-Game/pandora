@@ -91,12 +91,18 @@ export class Logger {
 	 * @param message - The message to log
 	 */
 	public logMessage(level: LogLevel, message: unknown[]): void {
-		const plainPrefix = this.logHeader(level, false);
-		const colorPrefix = this.logHeader(level, true);
+		let plainPrefix: string | undefined;
+		let colorPrefix: string | undefined;
 		for (const output of this._loggerConfig.logOutputs) {
 			const outputLevel = output.logLevelOverrides[this.category] ?? output.logLevel;
 			if (outputLevel !== false && outputLevel >= level) {
-				output.onMessage(output.supportsColor ? colorPrefix : plainPrefix, message, level);
+				if (output.supportsColor) {
+					colorPrefix ??= this.logHeader(level, true);
+					output.onMessage(colorPrefix, message, level);
+				} else {
+					plainPrefix ??= this.logHeader(level, false);
+					output.onMessage(plainPrefix, message, level);
+				}
 			}
 		}
 		// Fatal messages trigger event

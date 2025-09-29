@@ -256,6 +256,9 @@ export function GraphicsCharacterWithManager({
 					logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
 				}
 				continue;
+			} else if (graphics.type !== 'worn') {
+				logger.warning(`Asset ${item.asset.id} is worn, but graphics has type ${graphics.type}`);
+				continue;
 			}
 			result.push(
 				...graphics.layers.map((layer, layerIndex): LayerState => ({

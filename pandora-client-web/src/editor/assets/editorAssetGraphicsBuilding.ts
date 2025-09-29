@@ -1,5 +1,5 @@
 import { type Immutable } from 'immer';
-import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
+import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsWornDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
 import { Application, Rectangle, Texture } from 'pixi.js';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
@@ -114,13 +114,13 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 	};
 }
 
-export async function EditorBuildAssetGraphics(
+export async function EditorBuildWornAssetGraphics(
 	asset: EditorAssetGraphics,
 	logicAsset: Asset,
 	assetManager: AssetManager,
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
-): Promise<Immutable<AssetGraphicsDefinition>> {
+): Promise<Immutable<AssetGraphicsWornDefinition>> {
 	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(asset, logicAsset, assetManager, buildTextures);
 
 	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
@@ -135,6 +135,7 @@ export async function EditorBuildAssetGraphics(
 	))).flat();
 
 	return {
+		type: 'worn',
 		layers,
 	};
 }

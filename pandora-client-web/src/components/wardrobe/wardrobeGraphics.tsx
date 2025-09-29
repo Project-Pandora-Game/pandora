@@ -13,6 +13,7 @@ import {
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
@@ -302,12 +303,17 @@ export function RoomPreview({
 }: RoomPreviewProps): ReactElement {
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
 		if (focusDevice == null || !focusDevice.isDeployed())
 			return undefined;
 
-		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset);
+		const graphics = graphicsManager?.assetGraphics[focusDevice.asset.id];
+		if (graphics?.type !== 'roomDevice')
+			return undefined;
+
+		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset, graphics);
 
 		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
 			focusDevice.deployment.x,
@@ -324,7 +330,7 @@ export function RoomPreview({
 			width: Math.ceil(width * scale),
 			height: Math.ceil(height * scale),
 		};
-	}, [focusDevice, projectionResolver]);
+	}, [focusDevice, graphicsManager, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		forwardContexts: [serviceManagerContext],

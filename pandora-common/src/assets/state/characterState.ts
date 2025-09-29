@@ -5,7 +5,7 @@ import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
-import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg, MemoizeSingleObjectArg } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
@@ -74,6 +74,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return this.validate(spaceState).success;
 	}
 
+	@MemoizeSingleObjectArg
 	public validate(spaceState: AssetFrameworkSpaceState): AppearanceValidationResult {
 		// We expect that character is always in a specific state and updated to match it
 		if (spaceState.spaceId !== this.space) {

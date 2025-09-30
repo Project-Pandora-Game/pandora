@@ -1,22 +1,22 @@
 import { produce, type Immutable } from 'immer';
-import type { Logger } from '../../logging/logger.ts';
-import { BitField } from '../../utility/bitfield.ts';
-import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../utility/misc.ts';
-import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';
-import { LayerMirror, MirrorPriority } from '../graphics/layers/common.ts';
-import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
-import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
-import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../graphics/points.ts';
-import type { GraphicsSourceAlphaImageMeshLayer } from '../graphicsSource/layers/alphaImageMesh.ts';
-import type { GraphicsSourceMeshLayer } from '../graphicsSource/layers/mesh.ts';
-import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
-import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrimArea } from './graphicsBuildImageResource.ts';
-import { TriangleRectangleOverlap } from './math/intersections.ts';
-import { CalculatePointsTriangles } from './math/triangulation.ts';
+import type { Logger } from '../../../logging/logger.ts';
+import { BitField } from '../../../utility/bitfield.ts';
+import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../../utility/misc.ts';
+import type { GraphicsAlphaImageMeshLayer } from '../../graphics/layers/alphaImageMesh.ts';
+import { LayerMirror, MirrorPriority } from '../../graphics/layers/common.ts';
+import type { GraphicsMeshLayer } from '../../graphics/layers/mesh.ts';
+import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../../graphics/mirroring.ts';
+import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../../graphics/points.ts';
+import type { GraphicsSourceAlphaImageMeshLayer } from '../../graphicsSource/layers/alphaImageMesh.ts';
+import type { GraphicsSourceMeshLayer } from '../../graphicsSource/layers/mesh.ts';
+import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
+import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrimArea } from '../graphicsBuildImageResource.ts';
+import { TriangleRectangleOverlap } from '../math/intersections.ts';
+import { CalculatePointsTriangles } from '../math/triangulation.ts';
 
 async function LoadAssetImageLayerSingle(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
-	context: GraphicsBuildContext,
+	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
 ): Promise<Immutable<GraphicsMeshLayer | GraphicsAlphaImageMeshLayer>> {
 	const pointTemplate = context.getPointTemplate(layer.points);
@@ -276,7 +276,7 @@ async function LoadAssetImageLayerSingle(
 
 export async function LoadAssetImageLayer(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
-	context: GraphicsBuildContext,
+	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
 ): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
 	const resultLayer = await LoadAssetImageLayerSingle(

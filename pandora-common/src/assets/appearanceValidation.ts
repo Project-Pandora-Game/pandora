@@ -89,10 +89,16 @@ export function AppearanceItemsFixBodypartOrder(assetManager: AssetManager, item
 		);
 }
 
+const ITEM_PROPERTIES_CACHE = new WeakMap<AppearanceItems, AssetPropertiesResult>;
 export function AppearanceItemProperties(items: AppearanceItems): AssetPropertiesResult {
-	return items
-		.flatMap((item) => item.getPropertiesParts())
-		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+	let result = ITEM_PROPERTIES_CACHE.get(items);
+	if (result === undefined) {
+		result = items
+			.flatMap((item) => item.getPropertiesParts())
+			.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+		ITEM_PROPERTIES_CACHE.set(items, result);
+	}
+	return result;
 }
 
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, item: Item): AppearanceValidationResult {
@@ -114,7 +120,10 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
-/** Validates items prefix, ignoring required items */
+/**
+ * Validates items prefix, ignoring required items.
+ * **If this check returns that `items` are valid, then any _prefix_ of `items` is also valid.**
+ */
 export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState): AppearanceValidationResult {
 	// Bodypart validation
 
@@ -151,6 +160,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	let hasDevicePart = false;
 	const assetCounts = new Map<AssetId, number>();
 	let globalProperties = CreateAssetPropertiesResult();
+	Assert(globalProperties.limits.valid);
 	for (const item of items) {
 		// All personal items have no limit. If we want to change this later, here is the place
 		const maxItemLimit = (item.isType('bodypart') || item.isType('personal')) ? Infinity : 1;
@@ -190,16 +200,16 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
 
 		assetCounts.set(item.asset.id, currentCount + 1);
-	}
 
-	// Check the pose is possible
-	if (!globalProperties.limits.valid)
-		return {
-			success: false,
-			error: {
-				problem: 'poseConflict',
-			},
-		};
+		// Check the pose is possible
+		if (!globalProperties.limits.valid)
+			return {
+				success: false,
+				error: {
+					problem: 'poseConflict',
+				},
+			};
+	}
 
 	return { success: true };
 }
@@ -207,8 +217,8 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 /** Validates the appearance items, including all prefixes and required items */
 export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState): AppearanceValidationResult {
 	// Validate prefixes
-	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i), roomState);
+	{
+		const r = ValidateAppearanceItemsPrefix(assetManager, items, roomState);
 		if (!r.success)
 			return r;
 	}

@@ -21,12 +21,12 @@ import {
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 	ProduceAppearancePose,
-	type AppearanceLimitTree,
 	type ArmPose,
 	type AssetManager,
 	type AssetsPosePresetCategory,
 	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
+	type ReadonlyAppearanceLimitTree,
 	type ServiceManager,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -72,12 +72,12 @@ type CheckedPosePreset = {
 
 const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
 
-const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, AppearanceLimitTree>();
+const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, ReadonlyAppearanceLimitTree>();
 function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
 	const assetManager = characterState.assetManager;
 	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 	// Cache the limits calculation as we have many buttons that can reuse this
-	let limits: AppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
+	let limits: ReadonlyAppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
 	if (limits === undefined) {
 		limits = AppearanceItemProperties(characterState.items).limits;
 		CHARACTER_STATE_LIMITS_CACHE.set(characterState, limits);

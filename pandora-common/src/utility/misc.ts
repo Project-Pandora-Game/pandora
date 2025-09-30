@@ -390,6 +390,26 @@ export function MemoizeNoArg<Return, This extends object>(method: () => Return, 
 	};
 }
 
+/**
+ * Decorates a member function so it memoizes the result of the first call, the function must take a single argument, which must be an object
+ */
+export function MemoizeSingleObjectArg<Return, This extends object, Arg extends object>(method: (arg: Arg) => Return, _context: ClassMethodDecoratorContext<This> | ClassGetterDecoratorContext<This>) {
+	const cache = new WeakMap<This, WeakMap<Arg, Return>>();
+	return function (this: This, arg: Arg) {
+		let innerCache = cache.get(this);
+		if (innerCache === undefined) {
+			innerCache = new WeakMap();
+			cache.set(this, innerCache);
+		}
+		if (innerCache.has(arg)) {
+			return innerCache.get(arg)!;
+		}
+		const result = method.call(this, arg);
+		innerCache.set(arg, result);
+		return result;
+	};
+}
+
 export function ZodTransformReadonly<T>(value: T): Readonly<T> {
 	return Object.freeze(value);
 }

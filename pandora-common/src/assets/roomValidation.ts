@@ -4,18 +4,20 @@ import type { AssetManager } from './assetManager.ts';
 import type { AppearanceItems } from './item/items.ts';
 import { ValidateItemsPrefix } from './validation.ts';
 
-/** Validates items prefix, ignoring required items */
+/**
+ * Validates items prefix, ignoring required items
+ * **If this check returns that `items` are valid, then any _prefix_ of `items` is also valid.**
+ */
 export function ValidateRoomInventoryItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Cannot access room state while validating the room itself
-	const roomState = null;
-	return ValidateItemsPrefix(assetManager, items, roomState, 'room');
+	return ValidateItemsPrefix(assetManager, items, null, 'room');
 }
 
 /** Validates the room inventory items, including all prefixes */
 export function ValidateRoomInventoryItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
-	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateRoomInventoryItemsPrefix(assetManager, items.slice(0, i));
+	{
+		const r = ValidateRoomInventoryItemsPrefix(assetManager, items);
 		if (!r.success)
 			return r;
 	}

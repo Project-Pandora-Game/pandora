@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { IsReadonlyArray } from '../utility/index.ts';
-import { AppearanceLimitTree } from './appearanceLimit.ts';
+import { AppearanceLimitTree, type ReadonlyAppearanceLimitTree } from './appearanceLimit.ts';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions.ts';
 import { EFFECTS_DEFAULT, EffectsDefinition, MergeEffects } from './effects.ts';
 
@@ -113,6 +113,14 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 }
 
 export interface AssetPropertiesResult {
+	readonly limits: ReadonlyAppearanceLimitTree;
+	readonly effects: Immutable<EffectsDefinition>;
+	readonly attributes: ReadonlySet<string>;
+	readonly attributesHides: ReadonlySet<string>;
+	readonly attributesCovers: ReadonlySet<string>;
+}
+
+export interface AssetPropertiesIntermediateResult extends AssetPropertiesResult {
 	limits: AppearanceLimitTree;
 	effects: EffectsDefinition;
 	attributes: Set<string>;
@@ -120,7 +128,7 @@ export interface AssetPropertiesResult {
 	attributesCovers: Set<string>;
 }
 
-export function CreateAssetPropertiesResult(): AssetPropertiesResult {
+export function CreateAssetPropertiesResult(): AssetPropertiesIntermediateResult {
 	return {
 		limits: new AppearanceLimitTree(),
 		effects: EFFECTS_DEFAULT,
@@ -130,7 +138,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	};
 }
 
-export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Immutable<AssetProperties>): T {
+export function MergeAssetProperties<T extends AssetPropertiesIntermediateResult>(base: T, properties: Immutable<AssetProperties>): T {
 	if (IsReadonlyArray(properties.poseLimits)) {
 		for (const limit of properties.poseLimits) {
 			base.limits.merge(limit);
@@ -147,6 +155,16 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 }
 
 export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
+	readonly attributeRequirements: ReadonlySet<string | `!${string}`>;
+	readonly stateFlags: ReadonlySet<string>;
+	readonly stateFlagsRequirements: ReadonlyMap<string, string>;
+	readonly blockAddRemove: boolean;
+	readonly blockModules: ReadonlySet<string>;
+	readonly overrideColorKey: ReadonlySet<string>;
+	readonly excludeFromColorInheritance: ReadonlySet<string>;
+}
+
+export type AssetPropertiesIndividualIntermediateResult = AssetPropertiesIndividualResult & AssetPropertiesIntermediateResult & {
 	attributeRequirements: Set<string | `!${string}`>;
 	stateFlags: Set<string>;
 	stateFlagsRequirements: Map<string, string>;
@@ -154,9 +172,9 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	blockModules: Set<string>;
 	overrideColorKey: Set<string>;
 	excludeFromColorInheritance: Set<string>;
-}
+};
 
-export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
+export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualIntermediateResult {
 	return {
 		...CreateAssetPropertiesResult(),
 		attributeRequirements: new Set(),
@@ -169,7 +187,7 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 	};
 }
 
-export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: Immutable<AssetProperties>): AssetPropertiesIndividualResult {
+export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualIntermediateResult, properties: Immutable<AssetProperties>): AssetPropertiesIndividualIntermediateResult {
 	base = MergeAssetProperties(base, properties);
 	properties.attributes?.requires?.forEach((a) => base.attributeRequirements.add(a));
 

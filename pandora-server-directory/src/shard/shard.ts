@@ -1,5 +1,5 @@
 import { isEqual, last, uniq } from 'lodash-es';
-import { Assert, AsyncSynchronized, CharacterId, CreateManuallyResolvedPromise, GetLogger, IChatMessageDirectoryAction, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, Logger, ManuallyResolvedPromise, SpaceId } from 'pandora-common';
+import { Assert, AsyncSynchronized, CharacterId, CreateManuallyResolvedPromise, GetLogger, IChatMessageDirectoryAction, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId } from 'pandora-common';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Character } from '../account/character.ts';
@@ -70,7 +70,9 @@ export class Shard {
 
 		// Remove characters that should be connected but are not anymore
 		await Promise.all(
-			data.disconnectCharacters.map((id) => this.getConnectedCharacter(id)?.disconnect()),
+			data.disconnectCharacters
+				.map((id) => this.getConnectedCharacter(id)?.disconnect())
+				.filter(IsNotNullable),
 		);
 
 		this.setConnection(connection);

@@ -1,13 +1,13 @@
 import { freeze, type Immutable } from 'immer';
 import { capitalize } from 'lodash-es';
-import type { Logger } from '../../logging/logger.ts';
-import { Assert, AssertNever, CloneDeepMutable, GenerateMultipleListsFullJoin } from '../../utility/misc.ts';
-import { ArmFingersSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema, type AtomicCondition } from '../graphics/conditions.ts';
-import type { GraphicsLayer } from '../graphics/layer.ts';
-import { LayerMirror, type LayerImageOverride } from '../graphics/layers/common.ts';
-import type { GraphicsSourceAutoMeshLayer, GraphicsSourceAutoMeshLayerVariable, GraphicsSourceMeshLayer } from '../graphicsSource/index.ts';
-import { BONE_MAX, BONE_MIN } from '../state/characterStatePose.ts';
-import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
+import type { Logger } from '../../../logging/logger.ts';
+import { Assert, AssertNever, CloneDeepMutable, GenerateMultipleListsFullJoin } from '../../../utility/misc.ts';
+import { ArmFingersSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema, type AtomicCondition } from '../../graphics/conditions.ts';
+import type { GraphicsLayer } from '../../graphics/layer.ts';
+import { LayerMirror, type LayerImageOverride } from '../../graphics/layers/common.ts';
+import type { GraphicsSourceAutoMeshLayer, GraphicsSourceAutoMeshLayerVariable, GraphicsSourceMeshLayer } from '../../graphicsSource/index.ts';
+import { BONE_MAX, BONE_MIN } from '../../state/characterStatePose.ts';
+import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
 import { LoadAssetImageLayer } from './graphicsBuildImageLayer.ts';
 
 export type AutoMeshLayerGenerateVariableValue = {
@@ -16,7 +16,11 @@ export type AutoMeshLayerGenerateVariableValue = {
 	condition: AtomicCondition[];
 };
 
-export function AutoMeshLayerGenerateVariableData(config: Immutable<GraphicsSourceAutoMeshLayerVariable>, context: GraphicsBuildContext, logger?: Logger): AutoMeshLayerGenerateVariableValue[] {
+export function AutoMeshLayerGenerateVariableData(
+	config: Immutable<GraphicsSourceAutoMeshLayerVariable>,
+	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
+	logger?: Logger,
+): AutoMeshLayerGenerateVariableValue[] {
 	if (config.type === 'bone') {
 		let currentOpen = BONE_MIN;
 		return [...config.stops, BONE_MAX + 1]
@@ -120,7 +124,7 @@ export const GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT = freeze<AutoMeshLayerGener
 
 export async function LoadAssetAutoMeshLayer(
 	layer: Immutable<GraphicsSourceAutoMeshLayer>,
-	context: GraphicsBuildContext,
+	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
 ): Promise<Immutable<GraphicsLayer[]>> {
 	logger = logger.prefixMessages(`[Layer ${layer.name || '[unnamed]'}]`);

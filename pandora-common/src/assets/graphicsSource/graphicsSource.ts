@@ -1,13 +1,18 @@
 import * as z from 'zod';
 import { AssetIdSchema } from '../base.ts';
-import { AssetGraphicsRoomDeviceDefinitionSchema } from '../graphics/graphics.ts';
 import { PointTemplateSourceSchema } from '../graphics/points.ts';
-import { GraphicsSourceLayerSchema } from './layer.ts';
+import { GraphicsSourceLayerSchema, GraphicsSourceRoomDeviceLayerSchema } from './layer.ts';
 
 export const AssetSourceGraphicsDefinitionSchema = z.object({
 	layers: GraphicsSourceLayerSchema.array(),
 }).strict();
 export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDefinitionSchema>;
+
+export const AssetSourceGraphicsRoomDeviceDefinitionSchema = z.object({
+	/** The graphical display of the device */
+	layers: GraphicsSourceRoomDeviceLayerSchema.array(),
+}).strict();
+export type AssetSourceGraphicsRoomDeviceDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceDefinitionSchema>;
 
 export const AssetSourceGraphicsInfoSchema = z.discriminatedUnion('type', [
 	z.object({
@@ -18,7 +23,7 @@ export const AssetSourceGraphicsInfoSchema = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('roomDevice'),
-		definition: AssetGraphicsRoomDeviceDefinitionSchema,
+		definition: AssetSourceGraphicsRoomDeviceDefinitionSchema,
 		/** Map containing mappings between original image and image resource final name. */
 		originalImagesMap: z.record(z.string(), z.string()),
 	}),

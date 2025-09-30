@@ -11,7 +11,16 @@ export interface GraphicsBuildContextAssetData {
 	colorizationKeys: ReadonlySet<string>;
 }
 
-export interface GraphicsBuildContext {
+export interface GraphicsBuildContextRoomDeviceData {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	modules: Record<string, AssetModuleDefinition<unknown, any>> | undefined;
+	/** List of all slots the room device has. */
+	slotIds: ReadonlySet<string>;
+	/** List of all valid colorization keys for this asset. */
+	colorizationKeys: ReadonlySet<string>;
+}
+
+export interface GraphicsBuildContext<out TAssetData> {
 	readonly runImageBasedChecks: boolean;
 	readonly generateOptimizedTextures: boolean;
 	readonly generateResolutions: readonly number[];
@@ -21,5 +30,5 @@ export interface GraphicsBuildContext {
 	loadImage(image: string): GraphicsBuildImageResource;
 	bufferToBase64: (buffer: Uint8Array) => string;
 
-	readonly builtAssetData: Immutable<GraphicsBuildContextAssetData>;
+	readonly builtAssetData: TAssetData;
 }

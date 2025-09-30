@@ -74,7 +74,12 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	}
 }
 
-export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logicAsset: Asset, assetManager: AssetManager, buildTextures?: Map<string, Texture>): GraphicsBuildContext {
+export function EditorBuildAssetGraphicsContext(
+	asset: EditorAssetGraphics,
+	logicAsset: Asset,
+	assetManager: AssetManager,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> {
 	const graphicsManager = GraphicsManagerInstance.value;
 	AssertNotNullable(graphicsManager);
 
@@ -121,7 +126,7 @@ export async function EditorBuildWornAssetGraphics(
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
 ): Promise<Immutable<AssetGraphicsWornDefinition>> {
-	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(asset, logicAsset, assetManager, buildTextures);
+	const assetLoadContext: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> = EditorBuildAssetGraphicsContext(asset, logicAsset, assetManager, buildTextures);
 
 	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
 		LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)

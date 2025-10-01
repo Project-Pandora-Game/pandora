@@ -10,7 +10,7 @@ export const RoomDeviceGraphicsLayerSpriteSchema = z.object({
 	/** Name of colorization key used to color this sprite layer */
 	colorizationKey: z.string().optional(),
 	/**
-	 * Offset of this sprite relative to cage's origin point
+	 * Offset of this sprite relative to device's origin point
 	 * @default { x: 0, y: 0 }
 	 */
 	offset: CoordinatesSchema.optional(),

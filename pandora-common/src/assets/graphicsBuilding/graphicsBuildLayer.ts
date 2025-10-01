@@ -6,6 +6,7 @@ import type { GraphicsSourceLayer, GraphicsSourceRoomDeviceLayer } from '../grap
 import type { GraphicsBuildContext, GraphicsBuildContextAssetData, GraphicsBuildContextRoomDeviceData } from './graphicsBuildContext.ts';
 import { LoadAssetAutoMeshLayer } from './layers/graphicsBuildAutoMeshLayer.ts';
 import { LoadAssetImageLayer } from './layers/graphicsBuildImageLayer.ts';
+import { LoadAssetRoomDeviceMeshLayer } from './layers/graphicsBuildRoomDeviceMeshLayer.ts';
 import { LoadAssetRoomDeviceSlotLayer } from './layers/graphicsBuildRoomDeviceSlotLayer.ts';
 import { LoadAssetRoomDeviceSpriteLayer } from './layers/graphicsBuildRoomDeviceSpriteLayer.ts';
 import { LoadAssetRoomDeviceTextLayer } from './layers/graphicsBuildRoomDeviceTextLayer.ts';
@@ -40,6 +41,8 @@ export async function LoadAssetRoomDeviceLayer(
 			return await LoadAssetRoomDeviceSlotLayer(layer, context, logger);
 		case 'text':
 			return await LoadAssetRoomDeviceTextLayer(layer, context, logger);
+		case 'mesh':
+			return await LoadAssetRoomDeviceMeshLayer(layer, context, logger);
 	}
 	AssertNever(layer);
 }

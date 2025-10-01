@@ -280,7 +280,7 @@ export class PixiInternalElementInstance<
 				}
 			} else if (Object.prototype.hasOwnProperty.call(this.config.autoProps, key)) {
 				// Apply writable props
-				const typedKey = key as AutoPropKeys;
+				const typedKey = key as (AutoPropKeys & keyof typeof nextProps);
 				if (nextProps[typedKey] !== undefined) {
 					if (!this._originalValues.has(typedKey)) {
 						this._originalValues.set(typedKey, this.instance[typedKey]);

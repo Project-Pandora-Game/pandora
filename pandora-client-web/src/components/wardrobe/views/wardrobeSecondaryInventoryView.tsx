@@ -176,6 +176,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 			<div
 				tabIndex={ 0 }
 				className={ classNames('inventoryViewItem', 'listMode', 'allowed') }
+				data-asset-id={ asset.id }
 				onClick={ () => {
 					setHeldItem(heldItemSelector);
 				} }

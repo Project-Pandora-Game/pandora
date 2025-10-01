@@ -340,15 +340,21 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 
 	return (
 		<Column gap='none'>
-			<div ref={ ref } tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
-				if (singleItemContainer)
-					return;
+			<div
+				ref={ ref }
+				tabIndex={ 0 }
+				className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') }
+				data-asset-id={ wornItem.asset.id }
+				onClick={ () => {
+					if (singleItemContainer)
+						return;
 
-				focuser.focus({
-					container: item.container,
-					itemId: selected ? null : item.itemId,
-				}, targetSelector);
-			} }>
+					focuser.focus({
+						container: item.container,
+						itemId: selected ? null : item.itemId,
+					}, targetSelector);
+				} }
+			>
 				{
 					ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 				}

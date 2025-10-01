@@ -143,6 +143,7 @@ function AttributePickerItem({ attribute, definition, selected, onSelect }: {
 				selected ? 'selected' : null,
 				'allowed',
 			) }
+			data-attribute-id={ attribute }
 			onClick={ () => {
 				onSelect();
 			} }>

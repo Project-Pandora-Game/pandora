@@ -1,5 +1,7 @@
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
+const EXAMPLE_TOP_HAT_ID = 'a/headwear/top_hat';
+
 export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 	id: 'wardrobeItems',
 	name: `Basics on Wearable Items`,
@@ -316,7 +318,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						},
 						{
 							query: '.wardrobeAssetList .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Top Hat'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 						},
 					],
 				},
@@ -359,7 +361,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.wardrobeAssetList .inventoryViewItem',
-						filter: (e) => e.innerText.includes('Top Hat'),
+						filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 					}],
 				},
 				{
@@ -418,7 +420,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						{
 							type: 'elementQuery',
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Top Hat'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 						},
 						{
 							type: 'elementQuery',
@@ -439,7 +441,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					type: 'elementQuery',
 					query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-					filter: (e) => e.innerText.includes('Top Hat'),
+					filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 				},
 			],
 		},
@@ -501,7 +503,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					highlight: [
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Top Hat'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 						},
 					],
 				},
@@ -510,7 +512,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					type: 'elementQuery',
 					query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
-					filter: (e) => e.innerText.includes('Top Hat'),
+					filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 				},
 			],
 		},
@@ -547,12 +549,12 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
-						filter: (e) => e.innerText.includes('Top Hat'),
+						filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 					}],
 					highlight: [
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Top Hat'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_TOP_HAT_ID,
 						},
 					],
 				},

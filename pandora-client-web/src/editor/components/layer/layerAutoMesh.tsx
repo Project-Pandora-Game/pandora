@@ -804,6 +804,7 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 											<button
 												key={ a }
 												className='inventoryViewItem listMode small allowed'
+												data-attribute-id={ a }
 												onClick={ () => {
 													addVariable({
 														type: 'attribute',

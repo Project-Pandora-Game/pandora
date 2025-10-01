@@ -475,6 +475,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		<div
 			tabIndex={ 0 }
 			className='inventoryViewItem listMode allowed'
+			data-asset-id={ asset.id }
 			onClick={ () => {
 				startEdit();
 			} }

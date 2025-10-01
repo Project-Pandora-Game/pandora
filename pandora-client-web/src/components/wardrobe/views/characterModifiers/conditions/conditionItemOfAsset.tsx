@@ -147,6 +147,7 @@ function AssetPickerItem({ asset, selected, onSelect }: {
 				selected ? 'selected' : null,
 				'allowed',
 			) }
+			data-asset-id={ asset.id }
 			onClick={ () => {
 				onSelect();
 			} }>

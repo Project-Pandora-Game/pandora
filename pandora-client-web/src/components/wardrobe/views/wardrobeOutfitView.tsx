@@ -641,6 +641,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		<div
 			tabIndex={ 0 }
 			className='inventoryViewItem listMode allowed'
+			data-asset-id={ asset.id }
 			onClick={ () => {
 				setHeldItem({
 					type: 'template',

@@ -101,6 +101,7 @@ function WardrobePreferencesItemPickerItem({ asset, listMode }: {
 				'allowed',
 				`pref-${preference}`,
 			) }
+			data-asset-id={ asset.id }
 			tabIndex={ 0 }
 			onClick={ () => {
 				if (isFocused) {
@@ -191,6 +192,7 @@ function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
 				'allowed',
 				`pref-${preference}`,
 			) }
+			data-attribute-id={ attribute }
 			tabIndex={ 0 }
 			onClick={ () => {
 				if (isFocused) {
@@ -386,6 +388,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 												'small',
 												`pref-${attributePreference}`,
 											) }
+											data-attribute-id={ attribute }
 											title={ definition.description }
 											onClick={ () => {
 												setFocus({ type: 'attribute', attribute });
@@ -506,6 +509,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 												'small',
 												`pref-${assetPreference}`,
 											) }
+											data-asset-id={ a.id }
 											onClick={ () => {
 												setFocus({ type: 'asset', asset: a.id });
 											} }

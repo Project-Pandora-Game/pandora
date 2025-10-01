@@ -2,6 +2,9 @@ import { BONE_MAX, BONE_MIN } from 'pandora-common';
 import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
+const BODY_ASSET_IDS: readonly (string | undefined)[] = ['a/body/base'];
+const EXAMPLE_HAIR_ID = 'a/body/front_hair1';
+
 export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 	id: 'wardrobeBody',
 	name: `Character Body`,
@@ -337,19 +340,19 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Next we will look at modifying a specific body part.<br />
-							Find the "Base body" body part at the very bottom of the items list, then click on its name to select it.
+							Find the "Base Body" body part at the very bottom of the items list, then click on its name to select it.
 							This will open up its details, where you will be able to see all the options this body part offers.
 						</p>
 					),
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
-						filter: (e) => e.innerText.includes('Base body'),
+						filter: (e) => BODY_ASSET_IDS.includes(e.dataset.assetId),
 					}],
 					highlight: [
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Base body'),
+							filter: (e) => BODY_ASSET_IDS.includes(e.dataset.assetId),
 						},
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView',
@@ -528,7 +531,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.inventoryView.wardrobeAssetList .listContainer .inventoryViewItem',
-						filter: (e) => e.innerText.includes('Front hair 1'),
+						filter: (e) => e.dataset.assetId === EXAMPLE_HAIR_ID,
 					}],
 					highlight: [{
 						query: '.inventoryView.wardrobeAssetList button[data-attribute="Hair_front"]',

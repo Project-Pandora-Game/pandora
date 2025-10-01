@@ -317,6 +317,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 				'allowed',
 				`pref-${preference}`,
 			) }
+			data-asset-id={ asset.id }
 			tabIndex={ 0 }
 			onClick={ () => {
 				setHeldItem({
@@ -388,6 +389,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				`pref-${preference}`,
 				CheckResultToClassName(check, currentAttempt != null),
 			) }
+			data-asset-id={ asset.id }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ execute }

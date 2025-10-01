@@ -1,5 +1,8 @@
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
+const EXAMPLE_SHOULDER_BAG_ID = 'a/accessories/shoulder_bag';
+const HEARING_RESTRAINT_ATTRIBUTE = 'Restraint_ears';
+
 export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 	id: 'wardrobeItemsAdvanced',
 	name: `Advanced Item Topics`,
@@ -215,7 +218,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 						},
 						{
 							query: '.wardrobeAssetList .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Shoulder Bag'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 						},
 					],
 				},
@@ -244,7 +247,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.wardrobeAssetList .inventoryViewItem',
-						filter: (e) => e.innerText.includes('Shoulder Bag'),
+						filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 					}],
 				},
 				{
@@ -265,7 +268,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 						{
 							type: 'elementQuery',
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Shoulder Bag'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 						},
 						{
 							type: 'elementQuery',
@@ -290,7 +293,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 				{
 					type: 'elementQuery',
 					query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-					filter: (e) => e.innerText.includes('Shoulder Bag'),
+					filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 				},
 			],
 		},
@@ -352,12 +355,12 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
-						filter: (e) => e.innerText.includes('Shoulder Bag'),
+						filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 					}],
 					highlight: [
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Shoulder Bag'),
+							filter: (e) => e.dataset.assetId === EXAMPLE_SHOULDER_BAG_ID,
 						},
 					],
 				},
@@ -604,7 +607,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 						},
 						{
 							query: '.tab-container .inventoryViewItem',
-							filter: (e) => e.innerText.includes('Hearing restraint'),
+							filter: (e) => e.dataset.attributeId === HEARING_RESTRAINT_ATTRIBUTE,
 						},
 					],
 				},
@@ -646,7 +649,7 @@ export const TUTORIAL_WARDROBE_ITEMS_ADVANCED: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.wardrobeAssetList .inventoryViewItem',
-						filter: (e) => e.innerText.includes('Hearing restraint'),
+						filter: (e) => e.dataset.attributeId === HEARING_RESTRAINT_ATTRIBUTE,
 					}],
 				},
 				{

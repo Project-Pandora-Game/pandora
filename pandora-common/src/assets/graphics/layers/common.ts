@@ -112,6 +112,20 @@ export const LayerImageSettingSchema = z.object({
 }).strict();
 export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
 
+export const RoomDeviceLayerImageOverrideSchema = z.object({
+	image: z.string(),
+	normalMapImage: z.string().optional(),
+	condition: ConditionSchema,
+});
+export type RoomDeviceLayerImageOverride = z.infer<typeof RoomDeviceLayerImageOverrideSchema>;
+
+export const RoomDeviceLayerImageSettingSchema = z.object({
+	image: z.string(),
+	normalMapImage: z.string().optional(),
+	overrides: z.array(RoomDeviceLayerImageOverrideSchema).optional(),
+}).strict();
+export type RoomDeviceLayerImageSetting = z.infer<typeof RoomDeviceLayerImageSettingSchema>;
+
 export const LayerStateOverridesSchema = z.object({
 	color: z.number().optional(),
 	alpha: z.number().optional(),

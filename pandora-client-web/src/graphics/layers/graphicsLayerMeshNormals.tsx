@@ -1,12 +1,13 @@
 import type { Immutable } from 'immer';
 import type { LayerNormalData } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo, type RefAttributes } from 'react';
 import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
-import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
+import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshProps, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
 import { DEFAULT_NORMAL_TEXTURE, NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM, NORMAL_MESH_GL_PROGRAM } from './graphicsLayerMeshNormalsShader.ts';
 
-export interface GraphicsLayerMeshNormalsProps {
+export interface GraphicsLayerMeshNormalsProps extends RefAttributes<PIXI.Mesh<PIXI.Geometry, PIXI.Shader>>,
+	Omit<PixiCustomMeshProps<PIXI.Geometry, PIXI.Shader>, 'geometry' | 'shader' | 'state'> {
 	vertices: Float32Array;
 	vertexRotations: Float32Array;
 	uvs: Float32Array;
@@ -16,11 +17,11 @@ export interface GraphicsLayerMeshNormalsProps {
 	normalMapData: LayerNormalData;
 	state: PIXI.State;
 	color: number;
-	alpha: number;
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
 
 export function GraphicsLayerMeshNormals({
+	ref,
 	vertices,
 	vertexRotations,
 	uvs,
@@ -30,8 +31,8 @@ export function GraphicsLayerMeshNormals({
 	normalMapData,
 	state,
 	color,
-	alpha,
 	debugConfig,
+	...props
 }: GraphicsLayerMeshNormalsProps): ReactElement {
 
 	const geometry = useCallback<PixiCustomMeshGeometryCreator<PIXI.Geometry>>((existingGeometry) => {
@@ -172,10 +173,11 @@ export function GraphicsLayerMeshNormals({
 
 	return (
 		<PixiCustomMesh
+			{ ...props }
+			ref={ ref }
 			geometry={ geometry }
 			shader={ shader }
 			state={ state }
-			alpha={ alpha }
 		/>
 	);
 }

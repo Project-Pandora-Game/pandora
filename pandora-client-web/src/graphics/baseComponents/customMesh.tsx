@@ -1,20 +1,27 @@
 import { Assert } from 'pandora-common';
 import { Mesh, MeshGeometry, State, type Geometry, type Shader } from 'pixi.js';
-import type { ReactNode } from 'react';
-import { RegisterPixiComponent } from '../reconciler/component.ts';
-import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
+import type { ReactNode, RefAttributes } from 'react';
+import { RegisterPixiComponent, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component.ts';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
 export type PixiCustomMeshGeometryCreator<TGeometry extends Geometry> = (existingGeometry: TGeometry | null) => TGeometry;
 export type PixiCustomMeshShaderCreator<TShader extends Shader> = (existingShader: TShader | null) => TShader;
 
-export interface PixiCustomMeshProps<TGeometry extends Geometry, TShader extends Shader> {
+const PIXI_CUSTOM_MESH_AUTO_PROPS = {
+	...CONTAINER_AUTO_PROPS,
+} as const satisfies Readonly<Partial<Record<keyof PixiDisplayObjectWriteableProps<Mesh>, true>>>;
+export type PixiCustomMeshAutoProps = keyof typeof PIXI_CUSTOM_MESH_AUTO_PROPS;
+
+export interface PixiCustomMeshCustomProps<TGeometry extends Geometry, TShader extends Shader> {
 	geometry: PixiCustomMeshGeometryCreator<TGeometry>;
 	shader: PixiCustomMeshShaderCreator<TShader>;
 
 	state?: State;
 	tint?: number;
-	alpha?: number;
 }
+
+export type PixiCustomMeshProps<TGeometry extends Geometry, TShader extends Shader> =
+	PixiComponentProps<Mesh<TGeometry, TShader>, PixiCustomMeshAutoProps, ContainerEventMap, PixiCustomMeshCustomProps<TGeometry, TShader>>;
 
 /**
  * Mesh class that allows for custom geometry and shader.
@@ -30,14 +37,13 @@ export interface PixiCustomMeshProps<TGeometry extends Geometry, TShader extends
  *
  * Through a combination of the above elements you can render anything you want, 2D or 3D!
  */
-export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, never, ContainerEventMap, PixiCustomMeshProps<Geometry, Shader>>('PixiCustomMesh', {
+export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, never, ContainerEventMap, PixiCustomMeshCustomProps<Geometry, Shader>>('PixiCustomMesh', {
 	create(props) {
 		const {
 			geometry,
 			shader,
 			state,
 			tint,
-			alpha,
 		} = props;
 
 		const geometryInstance = geometry(null);
@@ -54,7 +60,6 @@ export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, neve
 			state,
 		});
 		mesh.tint = tint ?? 0xffffff;
-		mesh.alpha = alpha ?? 1;
 
 		return mesh;
 	},
@@ -76,14 +81,12 @@ export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, neve
 			shader: oldShader,
 			state: oldState,
 			tint: oldTint,
-			alpha: oldAlpha,
 		} = oldProps as Partial<typeof newProps>;
 		const {
 			geometry,
 			shader,
 			state,
 			tint,
-			alpha,
 		} = newProps;
 
 		let updated = false;
@@ -123,13 +126,8 @@ export const PixiCustomMesh = RegisterPixiComponent<Mesh<Geometry, Shader>, neve
 			updated = true;
 		}
 
-		if (alpha !== oldAlpha) {
-			mesh.alpha = alpha ?? 1;
-			updated = true;
-		}
-
 		return updated;
 	},
-	autoProps: {},
+	autoProps: PIXI_CUSTOM_MESH_AUTO_PROPS,
 	events: CONTAINER_EVENTS,
-}) as (<TGeometry extends Geometry, TShader extends Shader>(props: PixiCustomMeshProps<TGeometry, TShader>) => ReactNode);
+}) as (<TGeometry extends Geometry, TShader extends Shader>(props: PixiCustomMeshProps<TGeometry, TShader> & RefAttributes<Mesh<TGeometry, TShader>>) => ReactNode);

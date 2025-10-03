@@ -283,8 +283,7 @@ export function DraggableDialog({
 		};
 	}, []);
 
-	const onMount = useCallback(() => {
-		// After portal is mounted, immediately manually recalculate bounds and reposition the element within them
+	const recalculateBounds = useCallback(() => {
 		if (rndRef.current == null)
 			return;
 
@@ -315,7 +314,9 @@ export function DraggableDialog({
 			) {
 				const newX = clamp(draggable.state.x, bounds.left, bounds.right);
 				const newY = clamp(draggable.state.y, bounds.top, bounds.bottom);
-				draggable.setState({ x: newX, y: newY });
+				if (newX !== draggable.state.x || newY !== draggable.state.y) {
+					draggable.setState({ x: newX, y: newY });
+				}
 			} else {
 				GetLogger('DraggableDialog').warning('Inner state of draggable component did not match expectations.');
 			}
@@ -323,6 +324,27 @@ export function DraggableDialog({
 			GetLogger('DraggableDialog').error('Hack to recenter draggable dialog failed:', error);
 		}
 	}, []);
+
+	const onMount = useCallback(() => {
+		// After portal is mounted, immediately manually recalculate bounds and reposition the element within them
+		recalculateBounds();
+	}, [recalculateBounds]);
+
+	useLayoutEffect(() => {
+		const resizableElement = rndRef.current?.resizableElement.current;
+		if (resizableElement == null)
+			return;
+
+		// Monitor the dialog for size changes to recalculate bounds as needed
+		const resizeObserver = new ResizeObserver(() => {
+			recalculateBounds();
+		});
+		resizeObserver.observe(resizableElement);
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, [recalculateBounds]);
 
 	const priority = useContext(DraggableDialogPriorityContext);
 

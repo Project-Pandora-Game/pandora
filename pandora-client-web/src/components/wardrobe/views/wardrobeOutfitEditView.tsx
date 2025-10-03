@@ -138,7 +138,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 			return null;
 
 		return (
-			<Column className='flex-1'>
+			<Column className='flex-1' overflowY='auto'>
 				<WardrobeTemplateEditMenu
 					title='Editing saved item'
 					template={ editedItem }

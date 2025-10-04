@@ -8,7 +8,6 @@ export default {
 	size: 'bodypart',
 	id: 'a/body/back_hair_normal',
 	allowRandomizerUsage: true,
-	hasGraphics: false,
 	colorization: {
 		hair: {
 			name: 'Hair',

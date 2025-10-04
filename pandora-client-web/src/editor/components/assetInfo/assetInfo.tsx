@@ -55,10 +55,6 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 					</Row>
 				) : null
 			}
-			<Row alignY='center'>
-				<label htmlFor='graphics'>Has graphics: </label>
-				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
-			</Row>
 			<Colorization colorization={ definition.colorization } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />

@@ -11,6 +11,9 @@ export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDe
 export const AssetSourceGraphicsRoomDeviceDefinitionSchema = z.object({
 	/** The graphical display of the device */
 	layers: GraphicsSourceRoomDeviceLayerSchema.array(),
+	slots: z.record(z.string(), z.object({
+		layers: GraphicsSourceLayerSchema.array(),
+	})),
 }).strict();
 export type AssetSourceGraphicsRoomDeviceDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceDefinitionSchema>;
 

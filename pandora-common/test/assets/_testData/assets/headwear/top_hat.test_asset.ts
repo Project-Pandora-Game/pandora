@@ -7,7 +7,6 @@ export default {
 	type: 'personal',
 	id: 'a/headwear/top_hat',
 	allowRandomizerUsage: false,
-	hasGraphics: false,
 	colorization: {
 		hat: {
 			name: 'Hat',

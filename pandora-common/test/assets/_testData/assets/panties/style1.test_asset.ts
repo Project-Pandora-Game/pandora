@@ -7,7 +7,6 @@ export default {
 	type: 'personal',
 	id: 'a/panties/style1',
 	allowRandomizerUsage: true,
-	hasGraphics: false,
 	colorization: {
 		panties: {
 			name: 'Panties',

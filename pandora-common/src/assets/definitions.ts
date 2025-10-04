@@ -194,9 +194,6 @@ export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
-
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
@@ -253,9 +250,6 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
-
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -319,8 +313,6 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 }
 
 export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 	/** Extra pose presets available when wearing this asset, extends device's pose presets */
 	posePresets?: AssetsPosePreset<A['bones']>[];
 	/**
@@ -361,8 +353,6 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	 * @default 'Locked by CHARACTER at TIME'
 	 */
 	lockedText?: string;
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =

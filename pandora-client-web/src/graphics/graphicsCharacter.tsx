@@ -251,10 +251,7 @@ export function GraphicsCharacterWithManager({
 		const result: LayerState[] = [];
 		for (const item of visibleItems) {
 			const graphics = graphicsGetter(item.asset.id);
-			if (!graphics) {
-				if (item.asset.definition.hasGraphics) {
-					logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
-				}
+			if (graphics == null) {
 				continue;
 			} else if (graphics.type !== 'worn') {
 				logger.warning(`Asset ${item.asset.id} is worn, but graphics has type ${graphics.type}`);

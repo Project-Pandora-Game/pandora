@@ -48,7 +48,6 @@ export class AssetManagerEditor extends AssetManagerClient {
 						default: '#FFFFFF',
 					},
 				},
-				hasGraphics: false,
 				credits: { credits: [], sourcePath: `${category}/${idPart}` },
 			};
 		} else {
@@ -63,7 +62,6 @@ export class AssetManagerEditor extends AssetManagerClient {
 						default: '#FFFFFF',
 					},
 				},
-				hasGraphics: false,
 				credits: { credits: [], sourcePath: `${category}/${idPart}` },
 			};
 		}

@@ -8,7 +8,6 @@ export default {
 	size: 'bodypart',
 	id: 'a/body/eyes',
 	allowRandomizerUsage: true,
-	hasGraphics: false,
 	colorization: {
 		eyeColor: {
 			name: 'Eye color',

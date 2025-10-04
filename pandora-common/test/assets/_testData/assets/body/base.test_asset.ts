@@ -8,7 +8,6 @@ export default {
 	size: 'bodypart',
 	id: 'a/body/base',
 	allowRandomizerUsage: true,
-	hasGraphics: false,
 	colorization: {
 		skin: {
 			name: 'Skin',

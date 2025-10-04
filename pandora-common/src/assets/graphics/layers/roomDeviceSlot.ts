@@ -6,18 +6,18 @@ export const RoomDeviceGraphicsCharacterPositionSchema = z.object({
 	offsetX: z.number(),
 	offsetY: z.number(),
 	/**
+	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
+	 * compared to this room device scaled inside the room
+	 * @default 1
+	 */
+	relativeScale: z.number().optional(),
+	/**
 	 * Offset to apply to the character's pivot. (point around which character rotates and turns around)
 	 * @see {CHARACTER_PIVOT_POSITION}
 	 * @default
 	 * { x: 0, y: 0 }
 	 */
 	pivotOffset: CoordinatesSchema.optional(),
-	/**
-	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
-	 * compared to this room device scaled inside the room
-	 * @default 1
-	 */
-	relativeScale: z.number().optional(),
 	/**
 	 * Prevents pose from changing character's offset or scale while inside this room device slot
 	 * (for slots that allow different poses, but require precision)

@@ -5,10 +5,6 @@ import { LayerImageOverrideSchema } from './common.ts';
 
 export const RoomDeviceGraphicsLayerSpriteSchema = z.object({
 	type: z.literal('sprite'),
-	image: z.string(),
-	imageOverrides: LayerImageOverrideSchema.array().optional(),
-	/** Name of colorization key used to color this sprite layer */
-	colorizationKey: z.string().optional(),
 	/**
 	 * Offset of this sprite relative to device's origin point
 	 * @default { x: 0, y: 0 }
@@ -24,5 +20,9 @@ export const RoomDeviceGraphicsLayerSpriteSchema = z.object({
 	 * @default false
 	 */
 	clipToRoom: z.boolean().optional(),
+	/** Name of colorization key used to color this sprite layer */
+	colorizationKey: z.string().optional(),
+	image: z.string(),
+	imageOverrides: LayerImageOverrideSchema.array().optional(),
 }).strict();
 export type RoomDeviceGraphicsLayerSprite = z.infer<typeof RoomDeviceGraphicsLayerSpriteSchema>;

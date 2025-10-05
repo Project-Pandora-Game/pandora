@@ -17,6 +17,10 @@ import { useEditor } from '../../editorContextProvider.tsx';
 import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
 import { LayerMeshUI } from './layerMesh.tsx';
+import { LayerRoomDeviceMeshUI } from './layerRoomDeviceMesh.tsx';
+import { LayerRoomDeviceSlotUI } from './layerRoomDeviceSlot.tsx';
+import { LayerRoomDeviceSpriteUI } from './layerRoomDeviceSprite.tsx';
+import { LayerRoomDeviceTextUI } from './layerRoomDeviceText.tsx';
 import { LayerTextUI } from './layerText.tsx';
 
 export function LayerUI(): ReactElement {
@@ -57,7 +61,19 @@ export function LayerUI(): ReactElement {
 				) :
 				AssertNever(selectedLayer)
 			) : (selectedLayer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) ? (
-				null // TODO: Support editing room device graphics layers
+				(selectedLayer.type === 'slot') ? (
+					<LayerRoomDeviceSlotUI layer={ selectedLayer } />
+				) :
+				(selectedLayer.type === 'sprite') ? (
+					<LayerRoomDeviceSpriteUI layer={ selectedLayer } />
+				) :
+				(selectedLayer.type === 'mesh') ? (
+					<LayerRoomDeviceMeshUI layer={ selectedLayer } />
+				) :
+				(selectedLayer.type === 'text') ? (
+					<LayerRoomDeviceTextUI layer={ selectedLayer } />
+				) :
+				AssertNever(selectedLayer)
 			) : (
 				AssertNever(selectedLayer)
 			) }
@@ -80,13 +96,49 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAsse
 				</ContextHelpButton>
 			</h3>
 			<Row alignY='center'>
+				<span>
+					Layer type:
+				</span>
+				{ (layer instanceof EditorAssetGraphicsWornLayerContainer) ? (
+					(layer.type === 'mesh') ? (
+						<span>Image</span>
+					) :
+					(layer.type === 'alphaImageMesh') ? (
+						<span>Alpha image</span>
+					) :
+					(layer.type === 'autoMesh') ? (
+						<span>Automatic image</span>
+					) :
+					(layer.type === 'text') ? (
+						<span>Text</span>
+					) :
+					AssertNever(layer)
+				) : (layer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) ? (
+					(layer.type === 'slot') ? (
+						<span>Character slot</span>
+					) :
+					(layer.type === 'sprite') ? (
+						<span>Simple image</span>
+					) :
+					(layer.type === 'mesh') ? (
+						<span>Custom mesh</span>
+					) :
+					(layer.type === 'text') ? (
+						<span>Text</span>
+					) :
+					AssertNever(layer)
+				) : (
+					AssertNever(layer)
+				) }
+			</Row>
+			<Row alignY='center'>
 				<label htmlFor='layer-name'>
 					Layer name:
-					<ContextHelpButton>
-						This field sets the layer's name, as shown in the "Asset"-tab.<br />
-						It affects nothing else and is purely for identifying layers later on.
-					</ContextHelpButton>
 				</label>
+				<ContextHelpButton>
+					This field sets the layer's name, as shown in the "Asset"-tab.<br />
+					It affects nothing else and is purely for identifying layers later on.
+				</ContextHelpButton>
 				<TextInput
 					id='layer-name'
 					className='flex'

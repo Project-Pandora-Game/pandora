@@ -137,7 +137,7 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	};
 }
 
-function SerializeCondition(condition: Immutable<Condition>): string {
+export function SerializeCondition(condition: Immutable<Condition>): string {
 	return condition
 		.map((clause) =>
 			clause

@@ -14,6 +14,7 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { useObservable } from '../../../observable.ts';
 import { useLayerImageSettingsForScalingStop, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditorLayerTint } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
@@ -111,7 +112,9 @@ function LayerImageSelect({ layer, stop }: { layer: EditorAssetGraphicsWornLayer
 	);
 }
 
-export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'>; }): ReactElement | null {
+export function LayerColorizationSetting({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'> | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'text'>;
+}): ReactElement | null {
 	const value = useObservable(layer.definition).colorizationKey ?? '';
 	const onChange = useEvent((newValue: string) => {
 		layer.modifyDefinition((d) => {
@@ -192,7 +195,9 @@ export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphics
 	);
 }
 
-export function EditorLayerColorPicker({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'>; }): ReactElement | null {
+export function EditorLayerColorPicker({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'> | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'text'>;
+}): ReactElement | null {
 	const editor = useEditor();
 
 	const visibleName = useLayerName(layer);

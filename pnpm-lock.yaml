@@ -374,8 +374,8 @@ importers:
         specifier: 4.8.1
         version: 4.8.1
       wtfnode:
-        specifier: 0.10.0
-        version: 0.10.0
+        specifier: 0.10.1
+        version: 0.10.1
       zod:
         specifier: 4.1.11
         version: 4.1.11
@@ -474,8 +474,8 @@ importers:
         specifier: 4.8.1
         version: 4.8.1
       wtfnode:
-        specifier: 0.10.0
-        version: 0.10.0
+        specifier: 0.10.1
+        version: 0.10.1
       zod:
         specifier: 4.1.11
         version: 4.1.11
@@ -6744,8 +6744,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  wtfnode@0.10.0:
-    resolution: {integrity: sha512-/GxfQORu0SZZC8AQA4Eq1wH08Akz6W42OiqNGBzTHXCJWZFhKFBJNaUfEomWnLA2MXfpy6KbFerG8iNtFcPRdg==}
+  wtfnode@0.10.1:
+    resolution: {integrity: sha512-4mcHdlvcdSytsbFueN6QYZxmh5K7REawBk//ZOrJrtVOe548Qsq4GNEm/OUfZATqDnsX4g8uBbzmN7NdEZx09Q==}
     engines: {node: '>=0.10.0'}
     hasBin: true
 
@@ -14307,7 +14307,7 @@ snapshots:
 
   ws@8.18.1: {}
 
-  wtfnode@0.10.0: {}
+  wtfnode@0.10.1: {}
 
   xdg-basedir@4.0.0: {}
 

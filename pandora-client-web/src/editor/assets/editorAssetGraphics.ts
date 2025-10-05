@@ -5,7 +5,6 @@ import {
 	AssetSourceGraphicsDefinitionSchema,
 	CharacterSize,
 	CloneDeepMutable,
-	EMPTY_ARRAY,
 	LayerMirror,
 	type AssetId,
 	type AssetSourceGraphicsDefinition,
@@ -190,11 +189,6 @@ export class EditorAssetGraphics {
 		return this._textures;
 	}
 
-	private _loadedTextures = new Observable<readonly string[]>(EMPTY_ARRAY);
-	public get loadedTextures(): ReadonlyObservable<readonly string[]> {
-		return this._loadedTextures;
-	}
-
 	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {
 		const texture = new Texture({
 			source: await LoadArrayBufferImageResource(buffer),
@@ -204,9 +198,6 @@ export class EditorAssetGraphics {
 		this._textures.produceImmer((d) => {
 			d.set(name, texture);
 		});
-		if (!this._loadedTextures.value.includes(name)) {
-			this._loadedTextures.produce((v) => [...v, name]);
-		}
 		this.onChange();
 	}
 
@@ -223,7 +214,6 @@ export class EditorAssetGraphics {
 		this._textures.produceImmer((d) => {
 			d.delete(name);
 		});
-		this._loadedTextures.produce((v) => v.filter((t) => t !== name));
 		this.onChange();
 	}
 

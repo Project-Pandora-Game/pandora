@@ -10,6 +10,7 @@ import {
 	GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT,
 	KnownObject,
 	LegsPoseSchema,
+	SortPathStrings,
 	type Asset,
 	type AutoMeshLayerGenerateVariableValue,
 	type GraphicsSourceAutoMeshGraphicalLayer,
@@ -944,20 +945,25 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 	const asset = assetManager.getAssetById(layer.asset.id);
 	const id = useId();
 	const { variables, graphicalLayers, imageMap } = useObservable(layer.definition);
-	const imageList = useObservable(layer.asset.loadedTextures);
+	const assetTextures = useObservable(layer.asset.textures);
 
 	const [autofillDialogTarget, setAutofillDialogTarget] = useState<null | true | string>(null);
 	const [autofillPrefixes, setAutofillPrefixes] = useState<readonly string[]>([]);
 
+	const imageSelectElements = useMemo((): readonly ReactElement[] => [
+		<option value='' key=''>[ None ]</option>,
+		...(
+			Array.from(assetTextures.keys())
+				.filter(Boolean)
+				.toSorted(SortPathStrings)
+				.map((image) => (
+					<option value={ image } key={ image }>{ image }</option>
+				))
+		),
+	], [assetTextures]);
+
 	if (asset == null)
 		return null;
-
-	const imageSelectElements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
-	for (const image of imageList.toSorted((a, b) => a.localeCompare(b))) {
-		imageSelectElements.push(
-			<option value={ image } key={ image }>{ image }</option>,
-		);
-	}
 
 	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
@@ -1140,7 +1146,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 
 	const assetManager = useAssetManager();
 	const { variables, graphicalLayers } = useObservable(layer.definition);
-	const imageList = useObservable(layer.asset.loadedTextures);
+	const assetTextures = useObservable(layer.asset.textures);
 
 	useEffect(() => {
 		if (graphicalLayers.length !== prefixes.length) {
@@ -1181,7 +1187,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 
 				for (let gli = 0; gli < graphicalLayers.length; gli++) {
 					const image = [prefixes[gli], ...combination.map((s) => s.id)].join('_') + '.png';
-					if (!imageLayers[gli] && imageList.includes(image)) {
+					if (!imageLayers[gli] && assetTextures.has(image)) {
 						imageLayers[gli] = image;
 					}
 				}
@@ -1199,7 +1205,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 		});
 
 		close();
-	}, [combinations, graphicalLayers, imageList, layer, prefixes, overwriteAll, limitToCombination, close]);
+	}, [combinations, graphicalLayers, assetTextures, layer, prefixes, overwriteAll, limitToCombination, close]);
 
 	return (
 		<ModalDialog>
@@ -1248,7 +1254,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 												if (!prefix || limitToCombination != null && limitToCombination !== c.map((s) => s.id).join(':'))
 													return count;
 												const image = [prefix, ...c.map((s) => s.id)].join('_') + '.png';
-												return count + (imageList.includes(image) ? 1 : 0);
+												return count + (assetTextures.has(image) ? 1 : 0);
 											}, 0)
 										}
 									</td>

@@ -1,5 +1,5 @@
 import { capitalize, cloneDeep, remove, uniq } from 'lodash-es';
-import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority } from 'pandora-common';
+import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority, SortPathStrings } from 'pandora-common';
 import React, { ReactElement, useId, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
@@ -54,16 +54,21 @@ export function LayerMeshUI({ asset, layer }: {
 }
 
 function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
-	const imageList = useObservable(asset.loadedTextures);
+	const assetTextures = useObservable(asset.textures);
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const layerImage = stopSettings.image;
 
-	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
-	for (const image of imageList) {
-		elements.push(
-			<option value={ image } key={ image }>{ image }</option>,
-		);
-	}
+	const elements = useMemo((): readonly ReactElement[] => [
+		<option value='' key=''>[ None ]</option>,
+		...(
+			Array.from(assetTextures.keys())
+				.filter(Boolean)
+				.toSorted(SortPathStrings)
+				.map((image) => (
+					<option value={ image } key={ image }>{ image }</option>
+				))
+		),
+	], [assetTextures]);
 
 	return (
 		<Row alignY='center'>

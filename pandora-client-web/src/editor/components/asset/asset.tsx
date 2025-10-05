@@ -1,6 +1,6 @@
 import classNames from 'classnames';
-import { AssetSourceGraphicsDefinitionSchema, GetLogger } from 'pandora-common';
-import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
+import { AssetSourceGraphicsDefinitionSchema, GetLogger, SortPathStrings } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -365,13 +365,17 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 }
 
 function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
-	const imageList = useObservable(asset.loadedTextures);
+	const assetTextures = useObservable(asset.textures);
 
-	const elements: ReactElement[] = [];
+	const elements = useMemo((): readonly ReactElement[] => (
+		Array.from(assetTextures.keys())
+			.filter(Boolean)
+			.toSorted(SortPathStrings)
+			.map((image) => (
+				<AssetImageLi key={ image } image={ image } asset={ asset } />
+			))
+	), [assetTextures, asset]);
 
-	for (const image of imageList) {
-		elements.push(<AssetImageLi key={ image } image={ image } asset={ asset } />);
-	}
 	return (
 		<div className='assetImageList'>
 			<ul>

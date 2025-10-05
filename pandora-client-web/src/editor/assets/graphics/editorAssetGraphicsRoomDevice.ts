@@ -39,6 +39,7 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 				this.onChange();
 			}));
 		}
+		this._slotGraphics.value = slots;
 		this.onChange();
 	}
 

@@ -10,7 +10,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
-import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
+import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 
 export function AssetInfoUI(): ReactElement {

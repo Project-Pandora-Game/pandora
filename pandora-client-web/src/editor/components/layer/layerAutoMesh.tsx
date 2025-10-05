@@ -31,21 +31,19 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { InventoryAttributePreview } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
-import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
-import { EditorBuildAssetGraphicsContext } from '../../assets/editorAssetGraphicsBuilding.ts';
-import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EditorBuildAssetGraphicsWornContext } from '../../assets/editorAssetGraphicsBuilding.ts';
 import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 
-export function LayerAutoMeshUI({ asset, layer }: {
-	asset: EditorAssetGraphics;
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
+export function LayerAutoMeshUI({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
 }): ReactElement {
 	return (
 		<>
 			<hr />
-			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
-			<LayerOffsetSetting layer={ layer } asset={ asset } />
+			<LayerHeightAndWidthSetting layer={ layer } />
+			<LayerOffsetSetting layer={ layer } />
 			<hr />
 			<LayerNormalMapSettings layer={ layer } />
 			<hr />
@@ -73,7 +71,7 @@ export function LayerAutoMeshUI({ asset, layer }: {
 	);
 }
 
-function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
 	const { normalMap } = useObservable(layer.definition);
 
 	return (
@@ -159,7 +157,7 @@ function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsLayer<'au
 	);
 }
 
-function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement | null {
+function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement | null {
 	const { points } = useObservable(layer.definition);
 	const pointTemplates = useEditorPointTemplates();
 
@@ -221,7 +219,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 	);
 }
 
-function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
 	const id = useId();
 	const { points, automeshTemplate } = useObservable(layer.definition);
 	const pointTemplate = useEditorPointTemplates().get(points);
@@ -276,7 +274,7 @@ function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLaye
 	);
 }
 
-function LayerAutomeshPartsDiable({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+function LayerAutomeshPartsDiable({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
 	const { points, automeshTemplate, disabledTemplateParts } = useObservable(layer.definition);
 	const pointTemplate = useEditorPointTemplates().get(points);
 
@@ -327,7 +325,7 @@ function LayerAutomeshPartsDiable({ layer }: { layer: EditorAssetGraphicsLayer<'
 	);
 }
 
-function LayerAutomeshGraphicalLayers({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+function LayerAutomeshGraphicalLayers({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
 	const { graphicalLayers } = useObservable(layer.definition);
 
 	const addGraphicalLayer = useCallback(() => {
@@ -386,7 +384,7 @@ function LayerAutomeshGraphicalLayers({ layer }: { layer: EditorAssetGraphicsLay
 
 function LayerAutomeshGraphicalLayerItem({ graphicalLayer, layer, index, update, remove }: {
 	graphicalLayer: Immutable<GraphicsSourceAutoMeshGraphicalLayer>;
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
 	index: number;
 	update: (producer: (d: Draft<GraphicsSourceAutoMeshGraphicalLayer>) => void) => void;
 	remove: () => void;
@@ -428,13 +426,13 @@ function LayerAutomeshGraphicalLayerItem({ graphicalLayer, layer, index, update,
 function LayerAutomeshGraphicalLayerItemColorization({ value, onChange, layer }: {
 	value: string;
 	onChange: (newValue: string) => void;
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(layer.asset.id);
+	const asset = assetManager.getAssetById(layer.assetGraphics.id);
 	const id = useId();
 
-	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart')))
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 		return null;
 
 	const colorization = asset.definition.colorization;
@@ -442,7 +440,7 @@ function LayerAutomeshGraphicalLayerItemColorization({ value, onChange, layer }:
 	const elements: ReactElement[] = [];
 	for (const [colorId, color] of Object.entries(colorization ?? {})) {
 		elements.push(
-			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ color.group ? ` (group: '${color.group}')` : '' }</option>,
+			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ ('group' in color && typeof color.group === 'string') ? ` (group: '${color.group}')` : '' }</option>,
 		);
 	}
 	if (value && colorization?.[value] == null) {
@@ -476,19 +474,19 @@ function LayerAutomeshGraphicalLayerItemColorization({ value, onChange, layer }:
 	);
 }
 
-function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement | null {
+function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(layer.asset.id);
+	const asset = assetManager.getAssetById(layer.assetGraphics.id);
 
 	const [showAddVariableDialog, setShowAddVariableDialog] = useState(false);
 
 	const { variables } = useObservable(layer.definition);
 
 	const addVariable = useCallback((newVariable: GraphicsSourceAutoMeshLayerVariable) => {
-		if (asset == null)
+		if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 			return;
 
-		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -522,6 +520,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 
 	const reorderVariable = useCallback((startIndex: number, shift: number | null) => {
 		if (asset == null ||
+			!(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')) ||
 			startIndex < 0 ||
 			startIndex >= variables.length ||
 			shift != null && (startIndex + shift) < 0 ||
@@ -530,7 +529,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 			return;
 		}
 
-		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -586,7 +585,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 		});
 	}, [asset, layer, variables]);
 
-	if (asset == null)
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 		return null;
 
 	return (
@@ -695,14 +694,14 @@ function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }:
 
 function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	close: () => void;
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
-	asset: Asset;
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
+	asset: Asset<'personal'> | Asset<'bodypart'> | Asset<'roomDevice'>;
 	addVariable: (newVariable: GraphicsSourceAutoMeshLayerVariable) => void;
 }): ReactElement {
 	const assetManager = useAssetManagerEditor();
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
 
-	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
 
 	return (
 		<ModalDialog>
@@ -940,12 +939,12 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	);
 }
 
-function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement | null {
+function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(layer.asset.id);
+	const asset = assetManager.getAssetById(layer.assetGraphics.id);
 	const id = useId();
 	const { variables, graphicalLayers, imageMap } = useObservable(layer.definition);
-	const assetTextures = useObservable(layer.asset.textures);
+	const assetTextures = useObservable(layer.assetGraphics.textures);
 
 	const [autofillDialogTarget, setAutofillDialogTarget] = useState<null | true | string>(null);
 	const [autofillPrefixes, setAutofillPrefixes] = useState<readonly string[]>([]);
@@ -962,10 +961,10 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 		),
 	], [assetTextures]);
 
-	if (asset == null)
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 		return null;
 
-	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 	for (const variable of variables) {
@@ -1133,20 +1132,20 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 }
 
 function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefixes, limitToCombination }: {
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
-	asset: Asset;
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
+	asset: Asset<'personal'> | Asset<'bodypart'> | Asset<'roomDevice'>;
 	close: () => void;
 	prefixes: readonly string[];
 	setPrefixes: React.Dispatch<React.SetStateAction<readonly string[]>>;
 	limitToCombination?: string;
 }): ReactElement {
-	Assert(layer.asset.id === asset.id);
+	Assert(layer.assetGraphics.id === asset.id);
 
 	const [overwriteAll, setOverwriteAll] = useState(false);
 
 	const assetManager = useAssetManager();
 	const { variables, graphicalLayers } = useObservable(layer.definition);
-	const assetTextures = useObservable(layer.asset.textures);
+	const assetTextures = useObservable(layer.assetGraphics.textures);
 
 	useEffect(() => {
 		if (graphicalLayers.length !== prefixes.length) {
@@ -1155,7 +1154,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 	}, [graphicalLayers, prefixes, setPrefixes]);
 
 	const combinations = useMemo(() => {
-		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
 		const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {

@@ -13,17 +13,15 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useLayerImageSettingsForScalingStop, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
-import { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
-import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
+import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditorLayerTint } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 
-export function LayerMeshUI({ asset, layer }: {
-	asset: EditorAssetGraphics;
-	layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>;
+export function LayerMeshUI({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>;
 }): ReactElement {
 	return (
 		<>
@@ -32,29 +30,29 @@ export function LayerMeshUI({ asset, layer }: {
 					<>
 						<hr />
 						<LayerColorizationSetting layer={ layer } />
-						<EditorLayerColorPicker layer={ layer } asset={ asset } />
+						<EditorLayerColorPicker layer={ layer } />
 					</>
 				) : null
 			}
 			<hr />
-			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
-			<LayerOffsetSetting layer={ layer } asset={ asset } />
+			<LayerHeightAndWidthSetting layer={ layer } />
+			<LayerOffsetSetting layer={ layer } />
 			<hr />
-			<EditorLayerPrioritySelect layer={ layer } asset={ asset } />
+			<EditorLayerPrioritySelect layer={ layer } />
 			<LayerTemplateSelect layer={ layer } />
 			<LayerPointsFilterEdit layer={ layer } />
-			<LayerMirrorSelect layer={ layer } asset={ asset } />
+			<LayerMirrorSelect layer={ layer } />
 			<hr />
-			<LayerImageSelect layer={ layer } asset={ asset } />
+			<LayerImageSelect layer={ layer } />
 			<LayerImageOverridesTextarea layer={ layer } />
 			<hr />
-			<LayerScalingConfig layer={ layer } asset={ asset } />
+			<LayerScalingConfig layer={ layer } />
 		</>
 	);
 }
 
-function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
-	const assetTextures = useObservable(asset.textures);
+function LayerImageSelect({ layer, stop }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; stop?: number; }): ReactElement | null {
+	const assetTextures = useObservable(layer.assetGraphics.textures);
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const layerImage = stopSettings.image;
 
@@ -113,7 +111,7 @@ function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLa
 	);
 }
 
-export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'text'>; }): ReactElement | null {
+export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'>; }): ReactElement | null {
 	const value = useObservable(layer.definition).colorizationKey ?? '';
 	const onChange = useEvent((newValue: string) => {
 		layer.modifyDefinition((d) => {
@@ -122,10 +120,10 @@ export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphics
 	});
 
 	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(layer.asset.id);
+	const asset = assetManager.getAssetById(layer.assetGraphics.id);
 	const id = useId();
 
-	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart')))
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 		return null;
 
 	const colorization = asset.definition.colorization;
@@ -133,7 +131,7 @@ export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphics
 	const elements: ReactElement[] = [];
 	for (const [colorId, color] of Object.entries(colorization ?? {})) {
 		elements.push(
-			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ color.group ? ` (group: '${color.group}')` : '' }</option>,
+			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ ('group' in color && typeof color.group === 'string') ? ` (group: '${color.group}')` : '' }</option>,
 		);
 	}
 	if (value && colorization?.[value] == null) {
@@ -194,7 +192,7 @@ export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphics
 	);
 }
 
-export function EditorLayerColorPicker({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'text'>; asset: EditorAssetGraphics; }): ReactElement | null {
+export function EditorLayerColorPicker({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'text'>; }): ReactElement | null {
 	const editor = useEditor();
 
 	const visibleName = useLayerName(layer);
@@ -229,7 +227,7 @@ export function EditorLayerColorPicker({ layer }: { layer: EditorAssetGraphicsLa
 	);
 }
 
-export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh' | 'text'>; asset: EditorAssetGraphics; }): ReactElement | null {
+export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh' | 'text'>; }): ReactElement | null {
 	const {
 		priority: layerPriority,
 	} = useObservable(layer.definition);
@@ -279,7 +277,7 @@ export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphic
 	);
 }
 
-function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
+function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
 	const { points } = useObservable(layer.definition);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
 
@@ -343,7 +341,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'
 	);
 }
 
-function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
+function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
 	const { points, pointType } = useObservable(layer.definition);
 	const template = useObservable(EditorAssetGraphicsManager.editedPointTemplates).get(points) ??
 		EditorAssetGraphicsManager.originalPointTemplates[points];
@@ -451,7 +449,7 @@ const LAYER_MIRROR_OPTIONS: Record<LayerMirror, string> = {
 	[LayerMirror.NONE]: 'None',
 	[LayerMirror.SELECT]: 'Duplicate and mirror',
 };
-function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; }): ReactElement | null {
+function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
 	const {
 		mirror: layerMirror,
 	} = useObservable(layer.definition);
@@ -485,7 +483,7 @@ function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' |
 	);
 }
 
-function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; stop?: number; }): ReactElement {
+function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; stop?: number; }): ReactElement {
 	const assetManager = useAssetManager();
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const [value, setValue] = useUpdatedUserInput(
@@ -583,7 +581,7 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphi
 	);
 }
 
-function LayerScalingConfig({ layer, asset }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; }): ReactElement {
+function LayerScalingConfig({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement {
 	const assetManager = useAssetManager();
 	const {
 		scaling: layerScaling,
@@ -655,13 +653,13 @@ function LayerScalingConfig({ layer, asset }: { layer: EditorAssetGraphicsLayer<
 				</Select>
 			</Column>
 			{
-				layerScaling && <LayerScalingList layer={ layer } asset={ asset } />
+				layerScaling && <LayerScalingList layer={ layer } />
 			}
 		</>
 	);
 }
 
-function LayerScalingList({ layer, asset }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; }): ReactElement | null {
+function LayerScalingList({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
 	// TODO: Base on actual stops; right now temporary for breasts
 	const possibleStops: [string, number][] = useMemo(() => [
 		['flat', -180],
@@ -740,7 +738,7 @@ function LayerScalingList({ layer, asset }: { layer: EditorAssetGraphicsLayer<'m
 							Remove
 						</Button>
 					</Row>
-					<LayerImageSelect layer={ layer } asset={ asset } stop={ stop[0] } />
+					<LayerImageSelect layer={ layer } stop={ stop[0] } />
 					<LayerImageOverridesTextarea layer={ layer } stop={ stop[0] } />
 				</React.Fragment>
 			)) }

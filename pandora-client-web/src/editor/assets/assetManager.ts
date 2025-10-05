@@ -24,7 +24,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 		this.assetTreeView.update(this.assetList);
 	}
 
-	public static async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
+	public static async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<AssetId> {
 		const currentManager = GetCurrentAssetManager();
 		Assert(currentManager instanceof AssetManagerEditor);
 		const id: AssetId = `a/${category}/${idPart}`;
@@ -149,6 +149,8 @@ DefineAsset({
 		const blob = await downloadZip(files).blob();
 
 		DownloadAsFile(blob, `${id.replace(/^a\//, '').replaceAll('/', '_')}_template.zip`);
+
+		return id;
 	}
 }
 

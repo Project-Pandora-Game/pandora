@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type LayerImageSetting, type Rectangle } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type Item, type LayerImageSetting, type Rectangle, type WearableAssetType } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
@@ -13,9 +13,9 @@ import { usePixiApp } from '../../../graphics/reconciler/appContext.ts';
 import { useTexture } from '../../../graphics/useTexture.ts';
 import { GetTextureBoundingBox } from '../../../graphics/utility/textureBoundingBox.ts';
 import { useObservable } from '../../../observable.ts';
-import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
-import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
+import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
@@ -32,36 +32,43 @@ export function SetupLayer({
 
 export function SetupLayerSelected({
 	layer,
+	characterState,
 	...props
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: EditorAssetGraphicsLayer;
+	layer: EditorAssetGraphicsWornLayer;
 }): ReactElement | null {
+	const item = characterState.items.find((i) => (
+		i.asset.id === layer.assetGraphics.id ||
+		i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === layer.assetGraphics.id
+	)) ?? null;
+
 	switch (layer.type) {
 		case 'mesh':
-			return <SetupMeshLayerSelected { ...props } layer={ layer } />;
+			return <SetupMeshLayerSelected { ...props } layer={ layer } characterState={ characterState } item={ item } />;
 		case 'alphaImageMesh':
-			return <SetupAlphaImageMeshLayerSelected { ...props } layer={ layer } />;
+			return <SetupAlphaImageMeshLayerSelected { ...props } layer={ layer } characterState={ characterState } item={ item } />;
 		case 'autoMesh':
-			return <SetupAutomeshLayerSelected { ...props } layer={ layer } />;
+			return <SetupAutomeshLayerSelected { ...props } layer={ layer } characterState={ characterState } item={ item } />;
 		case 'text':
-			return <SetupTextLayerSelected { ...props } layer={ layer } />;
+			return <SetupTextLayerSelected { ...props } layer={ layer } characterState={ characterState } />;
 	}
 	AssertNever(layer);
 }
 
 export function SetupMeshLayerSelected({
 	characterState,
+	item,
 	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
+	item: Item<WearableAssetType> | null;
 	zIndex: number;
-	layer: EditorAssetGraphicsLayer<'mesh'>;
+	layer: EditorAssetGraphicsWornLayer<'mesh'>;
 }): ReactElement {
 	const state = useEditorLayerStateOverride(layer);
-	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
 	const definition = useObservable(layer.definition);
 	const {
@@ -83,7 +90,7 @@ export function SetupMeshLayerSelected({
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
 	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
 
-	const asset = layer.asset;
+	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
 
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
@@ -163,15 +170,15 @@ export function SetupMeshLayerSelected({
 
 export function SetupAlphaImageMeshLayerSelected({
 	characterState,
+	item,
 	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
+	item: Item<WearableAssetType> | null;
 	zIndex: number;
-	layer: EditorAssetGraphicsLayer<'alphaImageMesh'>;
+	layer: EditorAssetGraphicsWornLayer<'alphaImageMesh'>;
 }): ReactElement {
-	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
-
 	const definition = useObservable(layer.definition);
 	const {
 		height,
@@ -231,7 +238,7 @@ export function SetupAlphaImageMeshLayerSelected({
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 
-	const asset = layer.asset;
+	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
 
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
@@ -267,15 +274,15 @@ export function SetupAlphaImageMeshLayerSelected({
 
 export function SetupAutomeshLayerSelected({
 	characterState,
+	item,
 	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
+	item: Item<WearableAssetType> | null;
 	zIndex: number;
-	layer: EditorAssetGraphicsLayer<'autoMesh'>;
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
 }): ReactElement {
-	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
-
 	const definition = useObservable(layer.definition);
 	const {
 		height,
@@ -354,7 +361,7 @@ export function SetupAutomeshLayerSelected({
 			<ImageArea
 				images={ images }
 				area={ definition }
-				asset={ layer.asset }
+				asset={ layer.assetGraphics }
 			/>
 		</Container>
 	);
@@ -366,7 +373,7 @@ export function SetupTextLayerSelected({
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: EditorAssetGraphicsLayer<'text'>;
+	layer: EditorAssetGraphicsWornLayer<'text'>;
 }): ReactElement {
 
 	const definition = useObservable(layer.definition);

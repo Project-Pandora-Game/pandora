@@ -13,7 +13,7 @@ export function EditorLayer({
 	...props
 }: GraphicsLayerProps): ReactElement {
 	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
-	const asset = editorLayer?.asset;
+	const asset = editorLayer?.assetGraphics;
 	const editorAssetTextures = useNullableObservable(asset?.textures);
 	const editorAssetBuildTextures = useNullableObservable(asset?.buildTextures);
 

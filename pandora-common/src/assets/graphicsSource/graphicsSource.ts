@@ -8,12 +8,15 @@ export const AssetSourceGraphicsDefinitionSchema = z.object({
 }).strict();
 export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDefinitionSchema>;
 
+export const AssetSourceGraphicsRoomDeviceSlotDefinitionSchema = z.object({
+	layers: GraphicsSourceLayerSchema.array(),
+});
+export type AssetSourceGraphicsRoomDeviceSlotDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceSlotDefinitionSchema>;
+
 export const AssetSourceGraphicsRoomDeviceDefinitionSchema = z.object({
 	/** The graphical display of the device */
 	layers: GraphicsSourceRoomDeviceLayerSchema.array(),
-	slots: z.record(z.string(), z.object({
-		layers: GraphicsSourceLayerSchema.array(),
-	})),
+	slots: z.record(z.string(), AssetSourceGraphicsRoomDeviceSlotDefinitionSchema),
 }).strict();
 export type AssetSourceGraphicsRoomDeviceDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceDefinitionSchema>;
 

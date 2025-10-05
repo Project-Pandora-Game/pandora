@@ -1,6 +1,6 @@
 import { produce, type Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { Assert, AssertNever, type GraphicsSourceLayer } from 'pandora-common';
+import { Assert, AssertNever, type GraphicsSourceLayer, type GraphicsSourceRoomDeviceLayer } from 'pandora-common';
 import { ReactElement, useCallback } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
@@ -11,7 +11,8 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
 import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
-import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsRoomDeviceLayerContainer, type EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
+import { EditorAssetGraphicsWornLayerContainer, type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
@@ -22,7 +23,7 @@ export function LayerUI(): ReactElement {
 	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
 	const selectedLayer = useObservable(editor.targetLayer);
-	const asset = selectedLayer?.asset ?? selectedAsset;
+	const asset = selectedLayer?.assetGraphics ?? selectedAsset;
 
 	if (!asset) {
 		return (
@@ -38,36 +39,40 @@ export function LayerUI(): ReactElement {
 			</div>
 		);
 	}
-	Assert(asset === selectedLayer.asset);
+	Assert(asset === selectedLayer.assetGraphics);
 
 	return (
 		<div className='editor-setupui' key={ `${asset.id}/${selectedLayer.index}` }>
 			<LayerName layer={ selectedLayer } />
 			<LayerQuickActions layer={ selectedLayer } />
-			{
+			{ (selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
 				(selectedLayer.type === 'mesh' || selectedLayer.type === 'alphaImageMesh') ? (
-					<LayerMeshUI asset={ asset } layer={ selectedLayer } />
+					<LayerMeshUI layer={ selectedLayer } />
 				) :
 				(selectedLayer.type === 'autoMesh') ? (
-					<LayerAutoMeshUI asset={ asset } layer={ selectedLayer } />
+					<LayerAutoMeshUI layer={ selectedLayer } />
 				) :
 				(selectedLayer.type === 'text') ? (
 					<LayerTextUI layer={ selectedLayer } />
 				) :
 				AssertNever(selectedLayer)
-			}
+			) : (selectedLayer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) ? (
+				null // TODO: Support editing room device graphics layers
+			) : (
+				AssertNever(selectedLayer)
+			) }
 		</div>
 	);
 }
 
-function LayerName({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElement | null {
+function LayerName({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer; }): ReactElement | null {
 	const visibleName = useLayerName(layer);
-	const { name } = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+	const { name } = useObservable<Immutable<GraphicsSourceLayer> | Immutable<GraphicsSourceRoomDeviceLayer>>(layer.definition);
 
 	return (
 		<>
 			<h3>
-				Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; { visibleName }
+				Editing: { StripAssetIdPrefix(layer.assetGraphics.id) } &gt; { visibleName }
 				<ContextHelpButton>
 					The "Layer"-tab lets you edit a layer of an asset by configuring various properties of the layer.<br />
 					The first line shows you the name of the asset and asset layer you are currently editing.<br />
@@ -96,7 +101,7 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElemen
 }
 
 function LayerQuickActions({ layer }: {
-	layer: EditorAssetGraphicsLayer;
+	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer;
 }): ReactElement | null {
 	const editor = useEditor();
 	const confirm = useConfirmDialog();
@@ -111,7 +116,13 @@ function LayerQuickActions({ layer }: {
 				if (editor.targetLayer.value === layer) {
 					editor.targetLayer.value = null;
 				}
-				layer.asset.deleteLayer(layer);
+				if (layer instanceof EditorAssetGraphicsWornLayerContainer) {
+					layer.container.deleteLayer(layer);
+				} else if (layer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) {
+					layer.assetGraphics.deleteLayer(layer);
+				} else {
+					AssertNever(layer);
+				}
 			})
 			.catch(noop);
 	}, [editor, confirm, layer, name]);
@@ -124,10 +135,19 @@ function LayerQuickActions({ layer }: {
 		} else {
 			newName = name + ' (2)';
 		}
-		const copy = produce(layer.definition.value, (d) => {
-			d.name = newName;
-		});
-		editor.targetLayer.value = layer.asset.addLayer(copy, layer.index + 1);
+		if (layer instanceof EditorAssetGraphicsWornLayerContainer) {
+			const copy = produce(layer.definition.value, (d) => {
+				d.name = newName;
+			});
+			editor.targetLayer.value = layer.container.addLayer(copy, layer.index + 1);
+		} else if (layer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) {
+			const copy = produce(layer.definition.value, (d) => {
+				d.name = newName;
+			});
+			editor.targetLayer.value = layer.assetGraphics.addLayer(copy, layer.index + 1);
+		} else {
+			AssertNever(layer);
+		}
 	}, [editor, layer, name]);
 
 	return (

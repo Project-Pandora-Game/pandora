@@ -6,10 +6,9 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
-import { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
-import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 
-export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
 	const id = useId();
 	const { width, height } = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
 
@@ -57,7 +56,7 @@ export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphi
 
 }
 
-export function LayerOffsetSetting({ layer }: { layer: EditorAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+export function LayerOffsetSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
 	const id = useId();
 	const {
 		x: layerXOffset,

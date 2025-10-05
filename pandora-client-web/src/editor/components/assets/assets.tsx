@@ -16,8 +16,9 @@ import { IObservableClass, ObservableClass, ObservableProperty, useNullableObser
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { ASSET_ID_PART_REGEX, AssetManagerEditor, AssetTreeViewCategory, useAssetManagerEditor } from '../../assets/assetManager.ts';
 import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
-import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
+import { EditorAssetGraphicsWorn } from '../../assets/graphics/editorAssetGraphicsWorn.ts';
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -139,14 +140,14 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 			<span>{ StripAssetIdAndCategory(asset.id, category) }</span>
 			<div className='controls'>
 				<Button onClick={ () => {
-					editor.startEditAsset(asset.id);
+					editor.startEditAsset(asset);
 					if (!tabContext.activeTabs.includes('Asset')) {
 						tabContext.setTab('Asset');
 					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
-				<Button onClick={ add } title='Equip'>
+				<Button onClick={ add } disabled={ !asset.isWearable() || !asset.canBeSpawned() } title='Equip'>
 					+
 				</Button>
 			</div>
@@ -190,14 +191,14 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 					↺
 				</Button>
 				<Button onClick={ () => {
-					editor.startEditAsset(assetId);
+					editor.startEditAsset(asset);
 					if (!tabContext.activeTabs.includes('Asset')) {
 						tabContext.setTab('Asset');
 					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
-				<Button onClick={ add } title='Equip'>
+				<Button onClick={ add } disabled={ !asset.isWearable() || !asset.canBeSpawned() } title='Equip'>
 					+
 				</Button>
 			</div>
@@ -219,13 +220,14 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 
 	const asset = item.asset;
 	const editorAssetGraphics = useObservable(EditorAssetGraphicsManager.editedAssetGraphics).get(asset.id);
-	const layers = useNullableObservable(editorAssetGraphics?.layers) ?? [];
+	const editorAssetGraphicsWorn = (editorAssetGraphics != null && editorAssetGraphics instanceof EditorAssetGraphicsWorn) ? editorAssetGraphics : null;
+	const layers = useNullableObservable(editorAssetGraphicsWorn?.layers) ?? [];
 
 	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...layers));
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		if (editorAssetGraphics) {
+		if (editorAssetGraphicsWorn) {
 			editor.setLayerAlphaOverride(layers, alphaIndex + 1);
 		}
 	};
@@ -241,9 +243,9 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 					🠉
 				</Button> }
 				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity" disabled={ editorAssetGraphics == null }>{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity" disabled={ editorAssetGraphicsWorn == null }>{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
 				<Button onClick={ () => {
-					editor.startEditAsset(asset.id);
+					editor.startEditAsset(asset);
 					if (!tabContext.activeTabs.includes('Asset')) {
 						tabContext.setTab('Asset');
 					}
@@ -263,7 +265,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	);
 }
 
-function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElement {
+function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement {
 	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
@@ -397,7 +399,9 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 		Assert(!assetManager.getAssetById(resultId));
 
 		await AssetManagerEditor.createNewAsset(category, id, name, bodypart);
-		editor.startEditAsset(resultId);
+		const resultAsset = assetManager.getAssetById(resultId);
+		AssertNotNullable(resultAsset);
+		editor.startEditAsset(resultAsset);
 
 		closeDialog();
 		if (!tabContext.activeTabs.includes('Asset')) {

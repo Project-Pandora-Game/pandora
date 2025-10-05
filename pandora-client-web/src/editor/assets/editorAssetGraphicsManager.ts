@@ -238,10 +238,18 @@ export class EditorAssetGraphicsManagerClass {
 				);
 				this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition.graphics, true));
 
+				const usedSlots = new Set<string>();
 				for (const [k, v] of Object.entries(logicAsset.definition.slots)) {
 					if (Object.hasOwn(graphicsDefinition.slotGraphics, k)) {
 						Assert(graphicsDefinition.slotGraphics[k] != null);
+						usedSlots.add(k);
 						this._editedGraphicsBuildCache.set(v.wearableAsset, freeze(graphicsDefinition.slotGraphics[k], true));
+					}
+				}
+
+				for (const k of Object.keys(graphicsDefinition.slotGraphics)) {
+					if (!usedSlots.has(k)) {
+						logger.warning(`Graphics contains entry for unknown slot '${k}'`);
 					}
 				}
 			} else {

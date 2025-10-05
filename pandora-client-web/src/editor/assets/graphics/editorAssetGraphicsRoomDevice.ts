@@ -56,6 +56,36 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 		};
 	}
 
+	public getOrCreateGraphicsForSlot(slot: string): EditorAssetGraphicsRoomDeviceSlot {
+		const current = this._slotGraphics.value.get(slot);
+		if (current != null)
+			return current;
+
+		const graphics = new EditorAssetGraphicsRoomDeviceSlot(
+			this,
+			{
+				layers: [],
+			},
+			() => {
+				this.onChange();
+			},
+		);
+		const newSlots = new Map(this._slotGraphics.value);
+		newSlots.set(slot, graphics);
+		this._slotGraphics.value = newSlots;
+
+		this.onChange();
+		return graphics;
+	}
+
+	public deleteGraphicsForSlot(slot: string): void {
+		const newSlots = new Map(this._slotGraphics.value);
+		newSlots.delete(slot);
+		this._slotGraphics.value = newSlots;
+
+		this.onChange();
+	}
+
 	public addLayer(layer: GraphicsSourceRoomDeviceLayerType | Immutable<GraphicsSourceRoomDeviceLayer>, insertIndex?: number): EditorAssetGraphicsRoomDeviceLayer {
 		const newLayer = EditorAssetGraphicsRoomDeviceLayerContainer.createNew(layer, this);
 		newLayer.definition.subscribe(() => {
@@ -66,7 +96,8 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 		return newLayer;
 	}
 
-	public deleteLayer(layer: EditorAssetGraphicsRoomDeviceLayer): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public deleteLayer(layer: EditorAssetGraphicsRoomDeviceLayerContainer<any>): void {
 		const index = this._layers.value.indexOf(layer);
 		if (index < 0)
 			return;
@@ -76,7 +107,8 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 		this.onChange();
 	}
 
-	public moveLayerRelative(layer: EditorAssetGraphicsRoomDeviceLayer, shift: number): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public moveLayerRelative(layer: EditorAssetGraphicsRoomDeviceLayerContainer<any>, shift: number): void {
 		const currentPos = this._layers.value.indexOf(layer);
 		if (currentPos < 0)
 			return;

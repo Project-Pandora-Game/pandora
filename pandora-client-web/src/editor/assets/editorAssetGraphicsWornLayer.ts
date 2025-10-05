@@ -78,6 +78,14 @@ export class EditorAssetGraphicsWornLayerContainer<TLayer extends GraphicsSource
 		});
 	}
 
+	public deleteFromAsset(): void {
+		this.container.deleteLayer(this);
+	}
+
+	public reorderOnAsset(shift: number): void {
+		this.container.moveLayerRelative(this, shift);
+	}
+
 	public static create(definition: Immutable<GraphicsSourceLayer>, container: EditorWornLayersContainer): EditorAssetGraphicsWornLayer {
 		switch (definition.type) {
 			case 'mesh':

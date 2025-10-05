@@ -43,6 +43,14 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 		});
 	}
 
+	public deleteFromAsset(): void {
+		this.assetGraphics.deleteLayer(this);
+	}
+
+	public reorderOnAsset(shift: number): void {
+		this.assetGraphics.moveLayerRelative(this, shift);
+	}
+
 	public static create(definition: Immutable<GraphicsSourceRoomDeviceLayer>, asset: EditorAssetGraphicsRoomDevice): EditorAssetGraphicsRoomDeviceLayer {
 		switch (definition.type) {
 			case 'slot':

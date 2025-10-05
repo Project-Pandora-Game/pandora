@@ -18,8 +18,10 @@ export interface EditorWornLayersContainer {
 	readonly layers: ReadonlyObservable<readonly EditorAssetGraphicsWornLayer[]>;
 
 	addLayer(layer: GraphicsSourceLayerType | Immutable<GraphicsSourceLayer>, insertIndex?: number): EditorAssetGraphicsWornLayer;
-	deleteLayer(layer: EditorAssetGraphicsWornLayer): void;
-	moveLayerRelative(layer: EditorAssetGraphicsWornLayer, shift: number): void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	deleteLayer(layer: EditorAssetGraphicsWornLayerContainer<any>): void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	moveLayerRelative(layer: EditorAssetGraphicsWornLayerContainer<any>, shift: number): void;
 }
 
 export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements EditorWornLayersContainer {
@@ -65,7 +67,8 @@ export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements 
 		return newLayer;
 	}
 
-	public deleteLayer(layer: EditorAssetGraphicsWornLayer): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public deleteLayer(layer: EditorAssetGraphicsWornLayerContainer<any>): void {
 		const index = this._layers.value.indexOf(layer);
 		if (index < 0)
 			return;
@@ -75,7 +78,8 @@ export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements 
 		this.onChange();
 	}
 
-	public moveLayerRelative(layer: EditorAssetGraphicsWornLayer, shift: number): void {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public moveLayerRelative(layer: EditorAssetGraphicsWornLayerContainer<any>, shift: number): void {
 		const currentPos = this._layers.value.indexOf(layer);
 		if (currentPos < 0)
 			return;

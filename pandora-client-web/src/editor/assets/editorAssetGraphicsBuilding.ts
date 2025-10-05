@@ -217,6 +217,11 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 
 	const slotGraphics: Record<string, Immutable<AssetGraphicsWornDefinition>> = {};
 	for (const [slot, slotGraphicsSource] of asset.slotGraphics.value) {
+		const slotLogger = logger.prefixMessages(`Slot '${slot}':\n\t\t`);
+		if (slotGraphicsSource.layers.value.length === 0) {
+			slotLogger.warning('Slot has no layers. Either add layers or remove slot graphics altogether.');
+		}
+
 		const slotResult = await EditorBuildWornAssetGraphics(
 			slotGraphicsSource,
 			{
@@ -224,7 +229,7 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 				colorizationKeys: builtAssetData.colorizationKeys,
 			},
 			assetManager,
-			logger.prefixMessages(`Slot '${slot}':\n\t\t`),
+			slotLogger,
 			buildTextures,
 		);
 

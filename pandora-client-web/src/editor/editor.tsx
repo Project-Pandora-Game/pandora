@@ -11,8 +11,8 @@ import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { Observable, useObservable } from '../observable.ts';
 import { AssetManagerEditor, EditorAssetManager, useAssetManagerEditor } from './assets/assetManager.ts';
 import { EditorAssetGraphicsManager } from './assets/editorAssetGraphicsManager.ts';
-import type { EditorAssetGraphicsRoomDeviceLayer } from './assets/editorAssetGraphicsRoomDeviceLayer.ts';
-import type { EditorAssetGraphicsWornLayer } from './assets/editorAssetGraphicsWornLayer.ts';
+import { type EditorAssetGraphicsRoomDeviceLayer } from './assets/editorAssetGraphicsRoomDeviceLayer.ts';
+import { type EditorAssetGraphicsWornLayer } from './assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphics } from './assets/graphics/editorAssetGraphics.ts';
 import { AssetUI } from './components/asset/asset.tsx';
 import { AssetInfoUI } from './components/assetInfo/assetInfo.tsx';
@@ -33,7 +33,7 @@ export const EDITOR_ALPHAS = [1, 0.6, 0];
 export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
 
 export class Editor extends TypedEventEmitter<{
-	layerOverrideChange: EditorAssetGraphicsWornLayer;
+	layerOverrideChange: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer;
 	globalStateChange: true;
 }> {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
@@ -102,13 +102,13 @@ export class Editor extends TypedEventEmitter<{
 		}, { capture: true });
 	}
 
-	private readonly layerStateOverrides = new WeakMap<EditorAssetGraphicsWornLayer, LayerStateOverrides>();
+	private readonly layerStateOverrides = new WeakMap<EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer, LayerStateOverrides>();
 
-	public getLayerStateOverride(layer: EditorAssetGraphicsWornLayer): LayerStateOverrides | undefined {
+	public getLayerStateOverride(layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer): LayerStateOverrides | undefined {
 		return this.layerStateOverrides.get(layer);
 	}
 
-	public setLayerStateOverride(layer: EditorAssetGraphicsWornLayer, override: LayerStateOverrides | undefined): void {
+	public setLayerStateOverride(layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer, override: LayerStateOverrides | undefined): void {
 		if (override) {
 			this.layerStateOverrides.set(layer, override);
 		} else {
@@ -117,7 +117,7 @@ export class Editor extends TypedEventEmitter<{
 		this.emit('layerOverrideChange', layer);
 	}
 
-	public getLayersAlphaOverrideIndex(...layers: EditorAssetGraphicsWornLayer[]): number {
+	public getLayersAlphaOverrideIndex(...layers: (EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer)[]): number {
 		return layers.reduce<number | undefined>((prev, layer) => {
 			const alpha = this.getLayerStateOverride(layer)?.alpha ?? 1;
 			const index = EDITOR_ALPHAS.indexOf(alpha);
@@ -127,7 +127,7 @@ export class Editor extends TypedEventEmitter<{
 		}, undefined) ?? 0;
 	}
 
-	public setLayerAlphaOverride(layers: readonly EditorAssetGraphicsWornLayer[], index: number): void {
+	public setLayerAlphaOverride(layers: readonly (EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer)[], index: number): void {
 		const newAlpha = EDITOR_ALPHAS[index % EDITOR_ALPHAS.length];
 		for (const layer of layers) {
 			this.setLayerStateOverride(layer, {
@@ -137,7 +137,7 @@ export class Editor extends TypedEventEmitter<{
 		}
 	}
 
-	public setLayerTint(layer: EditorAssetGraphicsWornLayer, tint: number | undefined): void {
+	public setLayerTint(layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
 			color: tint,

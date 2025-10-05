@@ -102,7 +102,7 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 		const now = new Date();
 
 		const files: InputWithSizeMeta[] = [
-			{ name: 'graphics.json', lastModified: now, input: graphicsDefinitionContent },
+			{ name: 'roomDeviceGraphics.json', lastModified: now, input: graphicsDefinitionContent },
 		];
 
 		for (const [name, image] of this.fileContents.entries()) {

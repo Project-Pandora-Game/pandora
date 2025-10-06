@@ -27,7 +27,7 @@ import {
 	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
 	type ReadonlyAppearanceLimitTree,
-	type ServiceManager,
+	type ServiceProvider,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import * as z from 'zod';
@@ -727,7 +727,7 @@ export async function GeneratePosePreview(
 	assetManager: AssetManager,
 	preview: Immutable<AssetsPosePresetPreview>,
 	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
-	serviceManager: ServiceManager<ClientServices>,
+	serviceManager: ServiceProvider<ClientServices>,
 	previewSize: number,
 ): Promise<HTMLCanvasElement> {
 	// Get a cache

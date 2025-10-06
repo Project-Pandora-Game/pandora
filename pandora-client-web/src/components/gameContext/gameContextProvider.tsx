@@ -1,4 +1,4 @@
-import type { ServiceManager } from 'pandora-common';
+import type { ServiceProvider } from 'pandora-common';
 import { ReactElement } from 'react';
 import { AnchorAutoscroll } from '../../common/anchorAutoscroll.tsx';
 import { ChildrenProps } from '../../common/reactTypes.ts';
@@ -20,7 +20,7 @@ import { SecondFactorProvider } from './secondFactorProvider.tsx';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider.tsx';
 
 export interface GameContextProviderProps extends ChildrenProps {
-	serviceManager: ServiceManager<ClientServices>;
+	serviceManager: ServiceProvider<ClientServices>;
 }
 
 export function GameContextProvider({ children, serviceManager }: GameContextProviderProps): ReactElement {

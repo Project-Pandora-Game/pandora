@@ -1,13 +1,13 @@
-import type { ServiceManager } from 'pandora-common';
+import type { ServiceProvider } from 'pandora-common';
 import { createContext, useContext, type ReactElement } from 'react';
 import type { ChildrenProps } from '../common/reactTypes.ts';
 import { useDebugExpose } from '../common/useDebugExpose.ts';
 import type { ClientServices } from './clientServices.ts';
 
-export const serviceManagerContext = createContext<ServiceManager<ClientServices> | undefined>(undefined);
+export const serviceManagerContext = createContext<ServiceProvider<ClientServices> | undefined>(undefined);
 
 export interface ServiceManagerContextProviderProps extends ChildrenProps {
-	serviceManager: ServiceManager<ClientServices>;
+	serviceManager: ServiceProvider<ClientServices>;
 }
 
 export function ServiceManagerContextProvider({ children, serviceManager }: ServiceManagerContextProviderProps): ReactElement | null {
@@ -24,7 +24,7 @@ export function ServiceManagerContextProvider({ children, serviceManager }: Serv
  * Get access to the client service manager.
  * @note If possible you should prefer using `useService` or `useServiceOptional`.
  */
-export function useServiceManager(): ServiceManager<ClientServices> {
+export function useServiceManager(): ServiceProvider<ClientServices> {
 	const serviceManager = useContext(serviceManagerContext);
 	if (serviceManager == null) {
 		throw new Error('Attempt to access ServiceManager outside of context');

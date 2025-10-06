@@ -11,6 +11,7 @@ import { NODE_ENV, USER_DEBUG } from '../config/Environment.ts';
 import { LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
 import '../index.scss';
+import { useObservable } from '../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
 import '../styles/fonts.scss';
 import '../styles/globalUtils.scss';
@@ -18,7 +19,8 @@ import { LoadAssetsFromAssetDevServer, LoadAssetsFromOfficialLink } from './asse
 import { AssetManagerEditor } from './assets/assetManager.ts';
 import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe.tsx';
 import { Editor, EditorView } from './editor.tsx';
-import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorContextProvider.tsx';
+import { EditorContextProvider } from './editorContextProvider.tsx';
+import { useEditorService } from './services/editorServiceProvider.tsx';
 import { GenerateClientEditorServices } from './services/editorServices.ts';
 
 const logger = GetLogger('init');
@@ -79,8 +81,8 @@ function SetupLogging(): void {
 }
 
 function AssetLoaderElement() {
-	const editor = useMaybeEditor();
-	const setEditor = useSetEditor();
+	const editorService = useEditorService('editor');
+	const editor = useObservable(editorService.editor);
 	const [pending, setPending] = useState(false);
 
 	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<AssetManagerEditor>) => {
@@ -92,7 +94,7 @@ function AssetLoaderElement() {
 
 		try {
 			const assetManager = await loadManager();
-			setEditor(new Editor(assetManager));
+			editorService.editor.value = new Editor(assetManager);
 		} catch (e) {
 			if (e instanceof Error) {
 				toast.error(`Failed to load:\n${e.message}`, TOAST_OPTIONS_ERROR);

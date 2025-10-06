@@ -1,4 +1,4 @@
-import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type ICharacterRoomData, type ServiceManager } from 'pandora-common';
+import { Assert, AssertNever, CharacterId, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type ICharacterRoomData, type ServiceProvider } from 'pandora-common';
 import { Filter } from 'pixi.js';
 import { Suspense, use, useCallback, useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
@@ -33,7 +33,7 @@ export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, 
 	globalState: AssetFrameworkGlobalState;
 	quality: 'roomSize' | '4K' | '1080p' | '720p' | '360p';
 	trim: boolean;
-	serviceManager: ServiceManager<ClientServices>;
+	serviceManager: ServiceProvider<ClientServices>;
 	noGhost: boolean;
 	characters: readonly Character<ICharacterRoomData>[];
 	characterNames: boolean;
@@ -104,7 +104,7 @@ export async function CreateCharacterPhoto(
 	characterState: AssetFrameworkCharacterState,
 	extraArea: boolean,
 	quality: Exclude<GraphicsSettings['textureResolution'], 'auto'>,
-	serviceManager: ServiceManager<ClientServices>,
+	serviceManager: ServiceProvider<ClientServices>,
 	filters: readonly Filter[],
 ): Promise<HTMLCanvasElement> {
 	let width: number = extraArea ? MASK_SIZE.width : CharacterSize.WIDTH;

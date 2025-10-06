@@ -43,12 +43,17 @@ export enum ServiceManagerInitState {
 	DESTROY,
 }
 
+export interface ServiceProvider<out TServices extends BaseServicesDefinition> {
+	/** The currently registered services */
+	readonly services: Readonly<Partial<TServices>>;
+}
+
 /**
  * Service manager contains, manages and provices all services the platform uses.
  * If there is a code that is independent from UI and doesn't have multiple instances,
  * it most likely runs as a service.
  */
-export class ServiceManager<TServices extends BaseServicesDefinition> {
+export class ServiceManager<TServices extends BaseServicesDefinition> implements ServiceProvider<TServices> {
 	/** Services registered to the manager */
 	private readonly _services: Partial<TServices> = {};
 	/** Handles to individual services, in the order of their registration */
@@ -61,7 +66,6 @@ export class ServiceManager<TServices extends BaseServicesDefinition> {
 		return this._state;
 	}
 
-	/** The currently registered services */
 	public get services(): Readonly<Partial<TServices>> {
 		return this._services;
 	}

@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { CHARACTER_SETTINGS_DEFAULT, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type CharacterSettings, type Rectangle, type ServiceManager } from 'pandora-common';
+import { CHARACTER_SETTINGS_DEFAULT, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type CharacterSettings, type Rectangle, type ServiceProvider } from 'pandora-common';
 import type { GraphicsContext } from 'pixi.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
@@ -57,7 +57,7 @@ export function CharacterPreviewGenerationButton(): ReactElement {
 async function CreateAndSaveCharacterPreview(
 	characterState: AssetFrameworkCharacterState,
 	settings: Immutable<CharacterSettings['previewGeneration']>,
-	serviceManager: ServiceManager<ClientServices>,
+	serviceManager: ServiceProvider<ClientServices>,
 	authToken: string,
 ): Promise<void> {
 	const { areaSize, areaYOffset } = settings;

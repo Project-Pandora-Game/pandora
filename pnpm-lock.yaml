@@ -217,8 +217,8 @@ importers:
         specifier: 0.17.0
         version: 0.17.0
       react-refresh-typescript:
-        specifier: 2.0.10
-        version: 2.0.10(react-refresh@0.17.0)(typescript@5.9.3)
+        specifier: 2.0.11
+        version: 2.0.11(react-refresh@0.17.0)(typescript@5.9.3)
       rimraf:
         specifier: 6.0.1
         version: 6.0.1
@@ -5574,10 +5574,10 @@ packages:
     peerDependencies:
       react: ^19.1.0
 
-  react-refresh-typescript@2.0.10:
-    resolution: {integrity: sha512-Cj8ZKTPEEdSoxiopFq0tB0rq/Wl90yWzAX1LEp9CGvzvauDUmC4BHIQXzcuT8/61naq/KmkR3A9VzqdZ9c6j1g==}
+  react-refresh-typescript@2.0.11:
+    resolution: {integrity: sha512-u6afET6t6NDNcxD67wSVlgazX/CiRuC7qSqALZueMckjmPQnOBajmwibJr2TTU6MtttDNPjBhD8K3AB8i0opJg==}
     peerDependencies:
-      react-refresh: 0.10.x || 0.11.x || 0.12.x || 0.13.x || 0.14.x || 0.15.x || 0.16.x || 0.17.x
+      react-refresh: 0.10.x || 0.11.x || 0.12.x || 0.13.x || 0.14.x || 0.15.x || 0.16.x || 0.17.x || 0.18.x || 0.19.x
       typescript: ^4.8 || ^5.0
 
   react-refresh@0.17.0:
@@ -12940,7 +12940,7 @@ snapshots:
       react: 19.1.1
       scheduler: 0.26.0
 
-  react-refresh-typescript@2.0.10(react-refresh@0.17.0)(typescript@5.9.3):
+  react-refresh-typescript@2.0.11(react-refresh@0.17.0)(typescript@5.9.3):
     dependencies:
       react-refresh: 0.17.0
       typescript: 5.9.3

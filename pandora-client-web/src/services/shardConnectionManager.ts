@@ -12,7 +12,7 @@ import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
 import type { ClientServices } from './clientServices.ts';
 
-export type ShardConnectorDependencies = Pick<ClientServices, 'directoryConnector' | 'accountManager' | 'notificationHandler'>;
+export type ShardConnectorDependencies = Pick<ClientServices, 'accountManager' | 'notificationHandler'>;
 
 type ShardConnectionManagerServiceConfig = Satisfies<{
 	dependencies: ShardConnectorDependencies;
@@ -76,7 +76,6 @@ export const ShardConnectionManagerServiceProvider: ServiceProviderDefinition<Cl
 	name: 'shardConnectionManager',
 	ctor: ShardConnectionManager,
 	dependencies: {
-		directoryConnector: true,
 		accountManager: true,
 		notificationHandler: true,
 	},

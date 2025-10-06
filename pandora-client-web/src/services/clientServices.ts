@@ -1,6 +1,6 @@
 import { BaseServicesDefinition, Satisfies, ServiceManager } from 'pandora-common';
 import { DirectoryConnectorServiceProvider, type DirectoryConnector } from '../networking/directoryConnector.ts';
-import { AccountManagerServiceProvider, type AccountManager } from './accountLogic/accountManager.ts';
+import { AccountManagerServiceProvider, type IAccountManager } from './accountLogic/accountManager.ts';
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
 import { AudioServiceProvider, type AudioService } from './audio.ts';
 import { BrowserPermissionManagerServiceProvider, type BrowserPermissionManager } from './browserPermissionManager.ts';
@@ -17,7 +17,7 @@ export type ClientServices = Satisfies<
 		userActivation: UserActivationService;
 		audio: AudioService;
 		directoryConnector: DirectoryConnector;
-		accountManager: AccountManager;
+		accountManager: IAccountManager;
 		notificationHandler: NotificationHandler;
 		directMessageManager: DirectMessageManager;
 		shardConnectionManager: IShardConnectionManager;

@@ -10,6 +10,7 @@ import {
 	Service,
 	type CharacterId,
 	type IClientDirectoryArgument,
+	type IService,
 	type Satisfies,
 	type SecondFactorData,
 	type SecondFactorResponse,
@@ -37,24 +38,43 @@ type AccountManagerServiceConfig = Satisfies<{
 /**
  * Service containing the currently logged in account and selected character data.
  */
-export class AccountManager extends Service<AccountManagerServiceConfig> {
+export interface IAccountManager extends IService<AccountManagerServiceConfig> {
+	/** Currently logged in account data or null if not logged in */
+	readonly currentAccount: ReadonlyObservable<IDirectoryAccountInfo | null>;
+	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
+	readonly lastSelectedCharacter: ReadonlyObservable<CharacterId | undefined>;
+	/** Handler for second factor authentication */
+	secondFactorHandler: ((response: SecondFactorResponse) => Promise<SecondFactorData | null>) | null;
+
+	/**
+	 * Attempt to login to Directory and handle response
+	 * @param username - The username to use for login
+	 * @param password - The plaintext password to use for login
+	 * @param verificationToken - Verification token to verify email
+	 * @returns Promise of response from Directory
+	 */
+	login(username: string, password: string, verificationToken?: string): Promise<LoginResponse>;
+	logout(): void;
+
+	connectToCharacter(id: CharacterId): Promise<boolean>;
+	disconnectFromCharacter(): void;
+}
+
+class AccountManager extends Service<AccountManagerServiceConfig> implements IAccountManager {
 	private readonly logger = GetLogger('AccountManager');
 
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
-	/** Currently logged in account data or null if not logged in */
 	public get currentAccount(): ReadonlyObservable<IDirectoryAccountInfo | null> {
 		return this._currentAccount;
 	}
 
-	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
 	public get lastSelectedCharacter(): ReadonlyObservable<CharacterId | undefined> {
 		return this._lastSelectedCharacter;
 	}
 
-	/** Handler for second factor authentication */
 	public secondFactorHandler: ((response: SecondFactorResponse) => Promise<SecondFactorData | null>) | null = null;
 
 	protected override serviceInit(): void {
@@ -65,13 +85,6 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 		};
 	}
 
-	/**
-	 * Attempt to login to Directory and handle response
-	 * @param username - The username to use for login
-	 * @param password - The plaintext password to use for login
-	 * @param verificationToken - Verification token to verify email
-	 * @returns Promise of response from Directory
-	 */
 	public async login(username: string, password: string, verificationToken?: string): Promise<LoginResponse> {
 		// Init DM crypto password before attempting login, so it can load directly at login
 		await InitDirectMessageCryptoPassword(username, password);

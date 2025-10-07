@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import {
 	Assert,
 	ClientShardSchema,
@@ -9,8 +10,13 @@ import {
 	IShardClientArgument,
 	IShardClientChangeEvents,
 	MessageHandler,
+	Service,
 	ShardClientSchema,
 	TypedEventEmitter,
+	type Satisfies,
+	type ServiceConfigBase,
+	type ServiceInitArgs,
+	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
 import { Socket } from 'socket.io-client';
@@ -19,7 +25,7 @@ import { GameState } from '../components/gameContext/gameStateContextProvider.ts
 import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { PersistentToast } from '../persistentToast.ts';
-import type { ShardConnectorDependencies } from '../services/shardConnectionManager.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies, ClientServices } from '../services/clientServices.ts';
 import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
 /** State of connection to Shard */
@@ -48,16 +54,18 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 
 const ShardConnectionProgress = new PersistentToast();
 
-/** Class housing connection from Shard to Shard */
-export class ShardConnector implements IConnectionBase<IClientShard> {
+type ShardConnectorServiceConfig = Satisfies<{
+	dependencies: Pick<ClientServices, 'accountManager' | 'notificationHandler'> & Pick<ClientGameLogicServicesDependencies, 'connectionInfo'>;
+	events: false;
+}, ServiceConfigBase>;
 
-	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
-	private readonly _gameState: Observable<GameState | null>;
-	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
+/** Class housing connection from Shard to Shard */
+export class ShardConnector extends Service<ShardConnectorServiceConfig> implements IConnectionBase<IClientShard> {
+
+	private readonly _state = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
+	private readonly _gameState = new Observable<GameState | null>(null);
 	private readonly _changeEventEmitter = new ShardChangeEventEmitter();
 	private readonly _messageHandler: MessageHandler<IShardClient>;
-
-	public readonly serviceDeps: ShardConnectorDependencies;
 
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<ShardConnectionState> {
@@ -68,8 +76,8 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 		return this._gameState;
 	}
 
-	public get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
-		return this._connectionInfo;
+	public get connectionInfo(): Immutable<IDirectoryCharacterConnectionInfo> {
+		return this.serviceDeps.connectionInfo;
 	}
 
 	/** Event emitter for shard change events */
@@ -80,12 +88,9 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 	private _connector: Connector<IClientShard> | null = null;
 
 	constructor(
-		info: IDirectoryCharacterConnectionInfo,
-		serviceDeps: ShardConnectorDependencies,
+		serviceInitArgs: ServiceInitArgs<ShardConnectorServiceConfig>,
 	) {
-		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
-		this._gameState = new Observable<GameState | null>(null);
-		this.serviceDeps = serviceDeps;
+		super(serviceInitArgs);
 
 		// Setup message handler
 		this._messageHandler = new MessageHandler<IShardClient>({
@@ -149,8 +154,8 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
-	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {
-		const { id, publicURL, version, characterId, secret } = this._connectionInfo.value;
+	public connectionInfoMatches(info: Immutable<IDirectoryCharacterConnectionInfo>): boolean {
+		const { id, publicURL, version, characterId, secret } = this.connectionInfo;
 		return id === info.id &&
 			publicURL === info.publicURL &&
 			// features === info.features &&
@@ -170,7 +175,7 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 		}
 
 		// Find which public URL we should actually use
-		const { publicURL, secret, characterId } = this._connectionInfo.value;
+		const { publicURL, secret, characterId } = this.connectionInfo;
 		const publicURLOptions = publicURL.split(';').map((a) => a.trim());
 		const finalUrl = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
 
@@ -268,7 +273,7 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 			currentGameState.player.update(character);
 			currentGameState.onLoad({ globalState, space });
 		} else {
-			this._gameState.value = new GameState(this, character, { globalState, space });
+			this._gameState.value = new GameState(this, this.serviceDeps, character, { globalState, space });
 		}
 
 		if (currentState === ShardConnectionState.CONNECTED) {
@@ -287,3 +292,13 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 		gameState.player.update(data);
 	}
 }
+
+export const ShardConnectorServiceProvider: ServiceProviderDefinition<ClientGameLogicServices, 'shardConnector', ShardConnectorServiceConfig, ClientGameLogicServicesDependencies> = {
+	name: 'shardConnector',
+	ctor: ShardConnector,
+	dependencies: {
+		connectionInfo: true,
+		accountManager: true,
+		notificationHandler: true,
+	},
+};

@@ -53,7 +53,8 @@ export interface ServiceProvider<out TServices extends BaseServicesDefinition> {
  * If there is a code that is independent from UI and doesn't have multiple instances,
  * it most likely runs as a service.
  */
-export class ServiceManager<TServices extends BaseServicesDefinition> implements ServiceProvider<TServices> {
+export class ServiceManager<TServices extends BaseServicesDefinition, TExternalDependencies extends BaseServicesDefinition = Record<never, never>> implements ServiceProvider<TServices> {
+	private readonly _externalDependencies: Partial<TExternalDependencies>;
 	/** Services registered to the manager */
 	private readonly _services: Partial<TServices> = {};
 	/** Handles to individual services, in the order of their registration */
@@ -70,13 +71,19 @@ export class ServiceManager<TServices extends BaseServicesDefinition> implements
 		return this._services;
 	}
 
+	constructor(externalDependencies: Partial<TExternalDependencies>) {
+		this._externalDependencies = externalDependencies;
+	}
+
 	/**
 	 * Register service to the manager.
 	 * Dependencies of this service need to have been registered before it.
 	 * @param provider - A provider containing metadata about the service and allowing its construction
 	 * @returns `this` for chaining
 	 */
-	public registerService<TName extends (keyof TServices & string), TConfig extends ServiceConfigBase>(provider: ServiceProviderDefinition<TServices, TName, TConfig>): this {
+	public registerService<TName extends (keyof TServices & string), TConfig extends ServiceConfigBase>(
+		provider: ServiceProviderDefinition<TServices, TName, TConfig, TExternalDependencies>,
+	): this {
 		Assert(this._state === ServiceManagerInitState.CONSTRUCT, 'Service cannot be registered after some were loaded');
 
 		const name = provider.name;
@@ -85,14 +92,18 @@ export class ServiceManager<TServices extends BaseServicesDefinition> implements
 		}
 
 		// Collect all dependencies. They need to have been registered before this service.
-		const dependencies: Partial<ServiceConfigFixupDependencies<TServices, TConfig>['dependencies']> = pick(this._services, KnownObject.keys(provider.dependencies));
-		if (!CheckPropertiesNotNullable<ServiceConfigFixupDependencies<TServices, TConfig>['dependencies'], keyof ServiceConfigFixupDependencies<TServices, TConfig>['dependencies']>(dependencies, provider.dependencies)) {
+		type ServiceConfigFixup = ServiceConfigFixupDependencies<Omit<TServices & TExternalDependencies, TName>, TConfig>;
+		const allDeps: Partial<TServices & TExternalDependencies> = {};
+		Object.assign(allDeps, this._externalDependencies);
+		Object.assign(allDeps, this._services);
+		const dependencies: Partial<ServiceConfigFixup['dependencies']> = pick(allDeps, KnownObject.keys(provider.dependencies));
+		if (!CheckPropertiesNotNullable<ServiceConfigFixup['dependencies'], keyof ServiceConfigFixupDependencies<TServices, TConfig>['dependencies']>(dependencies, provider.dependencies)) {
 			const missingDependency = KnownObject.keys(provider.dependencies).find((k) => this._services[k] == null);
 			throw new Error(`Dependencies are not satisfied. Missing dependency: ${missingDependency}`);
 		}
 
 		// Put together init args for the service
-		const serviceInit: ServiceInitArgs<ServiceConfigFixupDependencies<TServices, TConfig>> = {
+		const serviceInit: ServiceInitArgs<ServiceConfigFixup> = {
 			serviceName: name,
 			serviceDeps: dependencies,
 			serviceHandleRef: { current: null },

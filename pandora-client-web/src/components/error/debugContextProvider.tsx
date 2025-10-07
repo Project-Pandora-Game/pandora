@@ -1,4 +1,4 @@
-import { produce } from 'immer';
+import { produce, type Immutable } from 'immer';
 import { pick } from 'lodash-es';
 import { IDirectoryShardInfo, IDirectoryStatus, IsObject } from 'pandora-common';
 import { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';
@@ -11,7 +11,7 @@ export interface DebugData {
 	directoryState?: DirectoryConnectionState;
 	directoryStatus?: IDirectoryStatus;
 	shardState?: ShardConnectionState;
-	shardConnectionInfo?: IDirectoryShardInfo;
+	shardConnectionInfo?: Immutable<IDirectoryShardInfo>;
 }
 
 export interface DebugContext {

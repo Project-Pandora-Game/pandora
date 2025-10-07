@@ -62,6 +62,7 @@ import { ShardConnector } from '../../networking/shardConnector.ts';
 import { Observable, useNullableObservable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import type { ClientServices } from '../../services/clientServices.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
 import { IChatMessageProcessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
@@ -112,6 +113,7 @@ export class ChatSendError extends Error {
 	}
 }
 
+type GameStateDependencies = Readonly<Pick<ClientServices, 'accountManager' | 'notificationHandler'>>;
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	permissionPrompt: PermissionPromptData;
@@ -160,10 +162,18 @@ export class GameState extends TypedEventEmitter<{
 		return id;
 	}
 
-	constructor(shard: ShardConnector, characterData: ICharacterPrivateData & ICharacterRoomData, { globalState, space }: IShardClientArgument['gameStateLoad']) {
+	private _dependencies: GameStateDependencies;
+
+	constructor(
+		shard: ShardConnector,
+		dependencies: GameStateDependencies,
+		characterData: ICharacterPrivateData & ICharacterRoomData,
+		{ globalState, space }: IShardClientArgument['gameStateLoad'],
+	) {
 		super();
 		this.logger = GetLogger('GameState');
 		this._shard = shard;
+		this._dependencies = dependencies;
 		this.player = new PlayerCharacter(characterData);
 		this.characters = new Observable<readonly Character<ICharacterRoomData>[]>([this.player]);
 
@@ -227,7 +237,7 @@ export class GameState extends TypedEventEmitter<{
 	public getCurrentSpaceContext(): ActionSpaceContext {
 		return MakeActionSpaceContext(
 			this.currentSpace.value,
-			this._shard.serviceDeps.accountManager.currentAccount.value,
+			this._dependencies.accountManager.currentAccount.value,
 			this.characterModifierEffects.value,
 		);
 	}
@@ -454,7 +464,7 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
-				const { accountManager, notificationHandler } = this._shard.serviceDeps;
+				const { accountManager, notificationHandler } = this._dependencies;
 				//#region Notifications
 				try {
 					const messageContent = RenderChatMessageToString(message, GetAccountSettings(accountManager));

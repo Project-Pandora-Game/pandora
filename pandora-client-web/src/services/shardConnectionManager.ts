@@ -1,73 +1,98 @@
+import { freeze } from 'immer';
+import { cloneDeep } from 'lodash-es';
 import {
+	Assert,
+	AsyncSynchronized,
 	GetLogger,
 	Service,
+	ServiceManager,
 	type IDirectoryCharacterConnectionInfo,
 	type IService,
 	type Satisfies,
 	type ServiceConfigBase,
+	type ServiceProvider,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { ShardConnector } from '../networking/shardConnector.ts';
+import { ShardConnectorServiceProvider } from '../networking/shardConnector.ts';
 import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
-import type { ClientServices } from './clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies, ClientServices } from './clientServices.ts';
 
 export type ShardConnectorDependencies = Pick<ClientServices, 'accountManager' | 'notificationHandler'>;
 
 type ShardConnectionManagerServiceConfig = Satisfies<{
-	dependencies: ShardConnectorDependencies;
+	dependencies: Omit<ClientServices, 'shardConnectionManager'>;
 	events: false;
 }, ServiceConfigBase>;
 
 export interface IShardConnectionManager extends IService<ShardConnectionManagerServiceConfig> {
-	readonly shardConnector: ReadonlyObservable<ShardConnector | null>;
+	readonly gameLogicServices: ReadonlyObservable<ServiceProvider<ClientGameLogicServices> | null>;
 }
 
 /**
  * Service containing the current shard connector.
  */
-export class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig> implements IShardConnectionManager {
+class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig> implements IShardConnectionManager {
 	private readonly logger = GetLogger('ShardConnectionManager');
 
-	private readonly _shardConnector = new Observable<ShardConnector | null>(null);
+	private readonly _gameLogicServices = new Observable<ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies> | null>(null);
 
-	public get shardConnector(): ReadonlyObservable<ShardConnector | null> {
-		return this._shardConnector;
+	public get gameLogicServices(): ReadonlyObservable<ServiceProvider<ClientGameLogicServices> | null> {
+		return this._gameLogicServices;
 	}
 
 	protected override serviceInit(): void {
 		const { accountManager } = this.serviceDeps;
 
 		accountManager.on('accountChanged', ({ character }) => {
-			this._handleActiveCharacterChanged(character);
+			this._handleActiveCharacterChanged(character)
+				.catch((err) => {
+					this.logger.error('Error processing account changed request:', err);
+				});
 		});
 	}
 
-	private _handleActiveCharacterChanged(character: IDirectoryCharacterConnectionInfo | null): void {
+	@AsyncSynchronized('object')
+	private async _handleActiveCharacterChanged(character: IDirectoryCharacterConnectionInfo | null): Promise<void> {
 		if (character) {
-			this._connectToShard(character);
+			await this._connectToShard(character);
 		} else {
 			this._disconnectFromShard();
 		}
 	}
 
-	private _connectToShard(info: IDirectoryCharacterConnectionInfo): void {
-		if (this._shardConnector.value?.connectionInfoMatches(info)) {
+	private async _connectToShard(info: IDirectoryCharacterConnectionInfo): Promise<void> {
+		const currentShardConnector = this._gameLogicServices.value?.services.shardConnector;
+		if (currentShardConnector != null && currentShardConnector.connectionInfoMatches(info)) {
 			return;
 		}
 		this._disconnectFromShard();
 		this.logger.debug('Requesting connect to shard: ', info);
 
-		const shardConnector = new ShardConnector(info, this.serviceDeps);
-		this._shardConnector.value = shardConnector;
+		const gameLogicServices = new ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies>({
+			...this.serviceDeps,
+			shardConnectionManager: this,
+			connectionInfo: freeze(cloneDeep(info), true),
+		})
+			.registerService(ShardConnectorServiceProvider);
+
+		await gameLogicServices.load();
+
+		const shardConnector = gameLogicServices.services.shardConnector;
+		Assert(shardConnector != null);
+
+		Assert(this._gameLogicServices.value == null);
+		this._gameLogicServices.value = gameLogicServices;
+
 		shardConnector.connect(SocketIOConnector);
 	}
 
 	private _disconnectFromShard(): void {
-		if (this._shardConnector.value) {
+		const gameLogicServices = this._gameLogicServices.value;
+		if (gameLogicServices != null) {
 			this.logger.debug('Disconnecting from shard');
-			this._shardConnector.value.disconnect();
-			this._shardConnector.value = null;
+			gameLogicServices.services.shardConnector?.disconnect();
+			this._gameLogicServices.value = null;
 		}
 	}
 }
@@ -76,7 +101,13 @@ export const ShardConnectionManagerServiceProvider: ServiceProviderDefinition<Cl
 	name: 'shardConnectionManager',
 	ctor: ShardConnectionManager,
 	dependencies: {
+		screenResolution: true,
+		browserPermissionManager: true,
+		userActivation: true,
+		audio: true,
+		directoryConnector: true,
 		accountManager: true,
 		notificationHandler: true,
+		directMessageManager: true,
 	},
 };

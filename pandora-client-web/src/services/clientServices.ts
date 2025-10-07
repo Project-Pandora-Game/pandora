@@ -1,5 +1,7 @@
-import { BaseServicesDefinition, Satisfies, ServiceManager } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { BaseServicesDefinition, Satisfies, ServiceManager, type IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import { DirectoryConnectorServiceProvider, type DirectoryConnector } from '../networking/directoryConnector.ts';
+import type { ShardConnector } from '../networking/shardConnector.ts';
 import { AccountManagerServiceProvider, type IAccountManager } from './accountLogic/accountManager.ts';
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
 import { AudioServiceProvider, type AudioService } from './audio.ts';
@@ -26,10 +28,25 @@ export type ClientServices = Satisfies<
 >;
 
 /**
+ * Services available on Padora's client, when running in normal user mode and connected to a shard.
+ * Instance can be queried from `shardConnectionManager` service.
+ */
+export type ClientGameLogicServices = Satisfies<
+	{
+		shardConnector: ShardConnector;
+	},
+	BaseServicesDefinition
+>;
+
+export type ClientGameLogicServicesDependencies = ClientServices & {
+	connectionInfo: Immutable<IDirectoryCharacterConnectionInfo>;
+};
+
+/**
  * Generates an un-initialized service manager containing all usermode services.
  */
 export function GenerateClientUsermodeServices(): ServiceManager<ClientServices> {
-	return new ServiceManager<ClientServices>()
+	return new ServiceManager<ClientServices>({})
 		.registerService(ScreenResolutionServiceProvider)
 		.registerService(BrowserPermissionManagerServiceProvider)
 		.registerService(UserActivationServiceProvider)

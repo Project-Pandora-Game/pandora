@@ -128,7 +128,7 @@ export function Providers({
 		if (serviceManager != null)
 			return serviceManager;
 
-		return new ServiceManager<ClientServices>()
+		return new ServiceManager<ClientServices>({})
 			.registerService(DirectoryConnectorServiceProvider);
 	}, [serviceManager]);
 	const directoryConnector = finalServiceManager.services.directoryConnector;

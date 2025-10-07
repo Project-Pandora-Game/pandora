@@ -2,7 +2,8 @@ import type { ServiceProvider } from 'pandora-common';
 import { createContext, useContext, type ReactElement } from 'react';
 import type { ChildrenProps } from '../common/reactTypes.ts';
 import { useDebugExpose } from '../common/useDebugExpose.ts';
-import type { ClientServices } from './clientServices.ts';
+import { useNullableObservable } from '../observable.ts';
+import type { ClientGameLogicServices, ClientServices } from './clientServices.ts';
 
 export const serviceManagerContext = createContext<ServiceProvider<ClientServices> | undefined>(undefined);
 
@@ -52,4 +53,23 @@ export function useService<const TService extends (keyof ClientServices & string
 		throw new Error(`Attempt to access non-registered service '${serviceName}'`);
 	}
 	return service;
+}
+
+/**
+ * Get access to the client game logic service manager, providing to shard-specific services.
+ * @note If possible you should prefer using `useGameLogicServiceOptional`.
+ */
+export function useGameLogicServiceManager(): ServiceProvider<ClientGameLogicServices> | null {
+	const shardConnectionManager = useServiceOptional('shardConnectionManager');
+	return useNullableObservable(shardConnectionManager?.gameLogicServices);
+}
+
+/**
+ * Get a specific service from the service manager. The service might or might not be registered.
+ * @param serviceName - The service to get
+ */
+export function useGameLogicServiceOptional<const TService extends (keyof ClientGameLogicServices & string)>(serviceName: TService): ClientGameLogicServices[TService] | null {
+	const serviceManager = useGameLogicServiceManager();
+	const service = serviceManager?.services[serviceName];
+	return service ?? null;
 }

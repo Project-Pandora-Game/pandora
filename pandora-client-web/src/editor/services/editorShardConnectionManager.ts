@@ -2,11 +2,12 @@ import {
 	Service,
 	type Satisfies,
 	type ServiceConfigBase,
+	type ServiceManager,
+	type ServiceProvider,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import type { ShardConnector } from '../../networking/shardConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
-import type { ClientServices } from '../../services/clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies, ClientServices } from '../../services/clientServices.ts';
 import type { IShardConnectionManager } from '../../services/shardConnectionManager.ts';
 
 type EditorShardConnectionManagerServiceConfig = Satisfies<{
@@ -18,10 +19,10 @@ type EditorShardConnectionManagerServiceConfig = Satisfies<{
  * Service containing fake data for editor "shard" connection.
  */
 export class EditorShardConnectionManager extends Service<EditorShardConnectionManagerServiceConfig> implements IShardConnectionManager {
-	private readonly _shardConnector = new Observable<ShardConnector | null>(null);
+	private readonly _gameLogicServices = new Observable<ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies> | null>(null);
 
-	public get shardConnector(): ReadonlyObservable<ShardConnector | null> {
-		return this._shardConnector;
+	public get gameLogicServices(): ReadonlyObservable<ServiceProvider<ClientGameLogicServices> | null> {
+		return this._gameLogicServices;
 	}
 }
 

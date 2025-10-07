@@ -17,7 +17,7 @@ export type EditorServices = Satisfies<
  * Generates an un-initialized service manager containing all editor services.
  */
 export function GenerateClientEditorServices(): ServiceManager<EditorServices> {
-	return new ServiceManager<EditorServices>()
+	return new ServiceManager<EditorServices>({})
 		.registerService(ScreenResolutionServiceProvider)
 		.registerService(EditorServiceProvider)
 		.registerService(EditorShardConnectionManagerServiceProvider);

@@ -1,21 +1,25 @@
-import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector.ts';
-import type { ClientServices } from '../../src/services/clientServices.ts';
+import { AssertNotNullable, ServiceManager } from 'pandora-common';
+import { ShardConnectionState, ShardConnectorServiceProvider } from '../../src/networking/shardConnector.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../src/services/clientServices.ts';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector.ts';
 import { MockServiceManager } from '../testUtils.tsx';
 
 describe('ShardConnector', () => {
 	const serviceManager = MockServiceManager();
-	const mockShardConnector = new ShardConnector(
-		MockConnectionInfo(),
-		serviceManager.services as Readonly<ClientServices>,
-	);
+	const gameLogicServiceManager = new ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies>({
+		...serviceManager.services,
+		connectionInfo: MockConnectionInfo(),
+	})
+		.registerService(ShardConnectorServiceProvider);
+	const mockShardConnector = gameLogicServiceManager.services.shardConnector;
+	AssertNotNullable(mockShardConnector);
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);
 	});
 
 	it('should have constructor passed connection info', () => {
-		expect(mockShardConnector.connectionInfo.value).toStrictEqual(MockConnectionInfo());
+		expect(mockShardConnector.connectionInfo).toStrictEqual(MockConnectionInfo());
 	});
 
 	describe('connectionInfoMatches()', () => {

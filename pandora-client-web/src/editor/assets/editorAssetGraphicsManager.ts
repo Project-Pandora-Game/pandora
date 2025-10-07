@@ -182,11 +182,19 @@ export class EditorAssetGraphicsManagerClass {
 			return result;
 		});
 
-		this._editedGraphicsBuildCache.delete(asset);
+		// Regenerate all edited assets to make sure multi-graphics assets (room device slots) were purged
+		this._editedGraphicsBuildCache.clear();
 		this._reloadRuntimeGraphicsManager();
+
+		for (const editedAsset of Array.from(this._editedAssetGraphics.value.values())) {
+			this._onAssetDefinitionChanged(editedAsset)
+				.catch((err) => {
+					this.logger.error('Crash in asset definition change handler:', err);
+				});
+		}
 	}
 
-	@AsyncSynchronized()
+	@AsyncSynchronized(undefined, { maxPending: Number.MAX_SAFE_INTEGER })
 	private async _onAssetDefinitionChanged(asset: EditorAssetGraphics): Promise<void> {
 		// Ignore if the asset is no longer being edited
 		if (this._editedAssetGraphics.value.get(asset.id) !== asset)

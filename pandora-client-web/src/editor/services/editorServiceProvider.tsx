@@ -1,5 +1,6 @@
 import { AssertNotNullable, type ServiceProvider } from 'pandora-common';
 import { createContext, useContext, type ReactElement } from 'react';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
@@ -23,6 +24,8 @@ export function EditorServiceManagerContextProvider({ children, serviceManager }
 	useDebugExpose('editor', editor);
 
 	const textureGetterOverride = useObservable(EditorAssetGraphicsManager.builtTexturesGetter);
+	useDebugExpose('EditorAssetGraphicsManager', EditorAssetGraphicsManager);
+	useDebugExpose('GraphicsManagerInstance', GraphicsManagerInstance);
 
 	return (
 		<EditorServiceManagerContext.Provider value={ serviceManager }>

@@ -8,7 +8,6 @@ import {
 	IConnectionBase,
 	IDirectoryCharacterConnectionInfo,
 	IShardClient,
-	IShardClientArgument,
 	IShardClientChangeEvents,
 	KnownObject,
 	MessageHandler,
@@ -22,12 +21,10 @@ import {
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
 import { Socket } from 'socket.io-client';
-import { LoadAssetDefinitions } from '../assets/assetManager.tsx';
-import { GameState, GameStateImpl } from '../components/gameContext/gameStateContextProvider.tsx';
 import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { PersistentToast } from '../persistentToast.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies, ClientServices } from '../services/clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../services/clientServices.ts';
 import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
 /** State of connection to Shard */
@@ -55,7 +52,7 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 const ShardConnectionProgress = new PersistentToast();
 
 type ShardConnectorServiceConfig = Satisfies<{
-	dependencies: Pick<ClientServices, 'accountManager' | 'notificationHandler'> & Pick<ClientGameLogicServicesDependencies, 'connectionInfo'>;
+	dependencies: Pick<ClientGameLogicServices, never> & Pick<ClientGameLogicServicesDependencies, 'connectionInfo'>;
 	events: false;
 }, ServiceConfigBase>;
 
@@ -64,42 +61,11 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 	private readonly logger = GetLogger('ShardConnector');
 
 	private readonly _state = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
-	private readonly _gameState = new Observable<GameStateImpl | null>(null);
 	private readonly _changeEventEmitter = new ShardChangeEventEmitter();
 
 	/** Handlers for server messages. Dependent services are expected to fill those in. */
 	public readonly messageHandlers: Partial<MessageHandlers<IShardClient>> = {
-		load: this.onLoad.bind(this),
-		updateCharacter: this.onUpdateCharacter.bind(this),
-		gameStateLoad: (data: IShardClientArgument['gameStateLoad']) => {
-			const gameState = this._gameState.value;
-			Assert(gameState != null, 'Received update data without game state');
-			gameState.onLoad(data);
-		},
-		gameStateUpdate: (data: IShardClientArgument['gameStateUpdate']) => {
-			const gameState = this._gameState.value;
-			Assert(gameState != null, 'Received update data without game state');
-			gameState.onUpdate(data);
-		},
-		chatMessage: (message: IShardClientArgument['chatMessage']) => {
-			const gameState = this._gameState.value;
-			Assert(gameState != null, 'Received chat message without game state');
-			const lastTime = gameState.onMessage(message.messages);
-			if (lastTime > 0) {
-				this.sendMessage('chatMessageAck', { lastTime });
-			}
-		},
-		chatCharacterStatus: (status: IShardClientArgument['chatCharacterStatus']) => {
-			const gameState = this._gameState.value;
-			Assert(gameState != null, 'Received chat character status data without game state');
-			gameState.onStatus(status);
-		},
 		somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-		permissionPrompt: (data: IShardClientArgument['permissionPrompt']) => {
-			const gameState = this._gameState.value;
-			Assert(gameState != null, 'Received permission prompt without game state');
-			gameState.onPermissionPrompt(data);
-		},
 	};
 
 	private _messageHandler: MessageHandler<IShardClient> | null = null;
@@ -107,10 +73,6 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<ShardConnectionState> {
 		return this._state;
-	}
-
-	public get gameState(): ReadonlyObservable<GameState | null> {
-		return this._gameState;
 	}
 
 	public get connectionInfo(): Immutable<IDirectoryCharacterConnectionInfo> {
@@ -282,17 +244,8 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 		this.logger.warning('Connection to Shard failed:', err.message);
 	}
 
-	private onLoad({ character, space, globalState, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
+	public markInitialDataReceived(): void {
 		const currentState = this._state.value;
-
-		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition, assetsSource);
-		const currentGameState = this._gameState.value;
-		if (currentGameState?.player.data.id === character.id) {
-			currentGameState.player.update(character);
-			currentGameState.onLoad({ globalState, space });
-		} else {
-			this._gameState.value = new GameStateImpl(this, this.serviceDeps, character, { globalState, space });
-		}
 
 		if (currentState === ShardConnectionState.CONNECTED) {
 			// Ignore reloads from shard
@@ -303,12 +256,6 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 			this.logger.fatal('Assertion failed: received \'load\' event when in state:', ShardConnectionState[currentState]);
 		}
 	}
-
-	private onUpdateCharacter(data: IShardClientArgument['updateCharacter']): void {
-		const gameState = this._gameState.value;
-		Assert(gameState != null, 'Received update data without game state');
-		gameState.player.update(data);
-	}
 }
 
 export const ShardConnectorServiceProvider: ServiceProviderDefinition<ClientGameLogicServices, 'shardConnector', ShardConnectorServiceConfig, ClientGameLogicServicesDependencies> = {
@@ -316,7 +263,5 @@ export const ShardConnectorServiceProvider: ServiceProviderDefinition<ClientGame
 	ctor: ShardConnector,
 	dependencies: {
 		connectionInfo: true,
-		accountManager: true,
-		notificationHandler: true,
 	},
 };

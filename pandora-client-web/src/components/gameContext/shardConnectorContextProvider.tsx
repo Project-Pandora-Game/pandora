@@ -29,7 +29,7 @@ export function ShardConnectorContextProvider(): null {
 
 	const { setDebugData } = useDebugContext();
 
-	const gameState = useNullableObservable(shardConnector?.gameState);
+	const gameState = useGameStateOptional();
 
 	useEffect(() => {
 		return gameState?.on('uiNavigate', (target) => {

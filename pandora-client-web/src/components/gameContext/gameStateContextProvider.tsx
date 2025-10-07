@@ -64,11 +64,11 @@ import { Observable, useNullableObservable, useObservable, type ReadonlyObservab
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
+import { useGameLogicServiceOptional } from '../../services/serviceProvider.tsx';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
 import { IChatMessageProcessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
-import { useShardConnector } from './shardConnectorContextProvider.tsx';
 
 const logger = GetLogger('GameState');
 
@@ -179,6 +179,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 
 	private _lastMessageTime: number = 0;
 	private readonly _shard: ShardConnector;
+	private readonly _dependencies: GameStateDependencies;
 
 	private _lastMessageId = 0;
 	private _getNextMessageId(): number {
@@ -189,8 +190,6 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		this._lastMessageId = id;
 		return id;
 	}
-
-	private _dependencies: GameStateDependencies;
 
 	constructor(
 		shard: ShardConnector,
@@ -810,7 +809,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 }
 
 export function useGameStateOptional(): GameState | null {
-	return useNullableObservable(useShardConnector()?.gameState);
+	return useNullableObservable(useGameLogicServiceOptional('gameState')?.gameState);
 }
 
 export function useGameState(): GameState {

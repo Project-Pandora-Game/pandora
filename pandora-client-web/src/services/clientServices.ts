@@ -6,6 +6,7 @@ import { AccountManagerServiceProvider, type IAccountManager } from './accountLo
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
 import { AudioServiceProvider, type AudioService } from './audio.ts';
 import { BrowserPermissionManagerServiceProvider, type BrowserPermissionManager } from './browserPermissionManager.ts';
+import { GameStateManagerServiceProvider, type IGameStateManager } from './gameLogic/gameStateManager.ts';
 import { NotificationHandlerServiceProvider, type NotificationHandler } from './notificationHandler.tsx';
 import { ScreenResolutionServiceProvider, type ScreenResolutionService } from './screenResolution/screenResolution.ts';
 import { ShardConnectionManagerServiceProvider, type IShardConnectionManager } from './shardConnectionManager.ts';
@@ -34,6 +35,7 @@ export type ClientServices = Satisfies<
 export type ClientGameLogicServices = Satisfies<
 	{
 		shardConnector: ShardConnector;
+		gameState: IGameStateManager;
 	},
 	BaseServicesDefinition
 >;
@@ -63,5 +65,6 @@ export function GenerateClientUsermodeServices(): ServiceManager<ClientServices>
  */
 export function GenerateClientGameLogicServices(dependencies: ClientGameLogicServicesDependencies): ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies> {
 	return new ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies>(dependencies)
-		.registerService(ShardConnectorServiceProvider);
+		.registerService(ShardConnectorServiceProvider)
+		.registerService(GameStateManagerServiceProvider);
 }

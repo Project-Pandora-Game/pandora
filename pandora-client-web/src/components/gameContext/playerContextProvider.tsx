@@ -13,12 +13,10 @@ import {
 import { useMemo } from 'react';
 import { useCharacterDataOptional } from '../../character/character.ts';
 import { PlayerCharacter } from '../../character/player.ts';
-import { useNullableObservable } from '../../observable.ts';
-import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState } from './gameStateContextProvider.tsx';
-import { useShardConnector } from './shardConnectorContextProvider.tsx';
+import { useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState } from './gameStateContextProvider.tsx';
 
 export function usePlayer(): PlayerCharacter | null {
-	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;
+	return useGameStateOptional()?.player ?? null;
 }
 
 export function usePlayerState(): {

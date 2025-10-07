@@ -17,8 +17,6 @@ import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
 import { GenerateClientGameLogicServices, type ClientGameLogicServices, type ClientGameLogicServicesDependencies, type ClientServices } from './clientServices.ts';
 
-export type ShardConnectorDependencies = Pick<ClientServices, 'accountManager' | 'notificationHandler'>;
-
 type ShardConnectionManagerServiceConfig = Satisfies<{
 	dependencies: Omit<ClientServices, 'shardConnectionManager'>;
 	events: false;

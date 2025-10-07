@@ -327,11 +327,16 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 			delete updated[asset.id];
 		}
 
-		shardConnector?.awaitResponse('updateAssetPreferences', {
+		if (shardConnector == null) {
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		shardConnector.awaitResponse('updateAssetPreferences', {
 			assets: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
-				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+				toast('Asset cannot be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
 		}).catch((err) => {
 			if (err instanceof Error)
 				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
@@ -456,14 +461,19 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			delete updated[attribute];
 		}
 
-		shardConnector?.awaitResponse('updateAssetPreferences', {
+		if (shardConnector == null) {
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		shardConnector.awaitResponse('updateAssetPreferences', {
 			attributes: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
-				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+				toast('No asset with this attribute can be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
 		}).catch((err) => {
 			if (err instanceof Error)
-				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
+				toast(`Failed to update attribute preference: ${err.message}`, TOAST_OPTIONS_ERROR);
 		});
 	}, [shardConnector, isConfigurable, attribute, currentPreferences, currentAttributePreference]);
 

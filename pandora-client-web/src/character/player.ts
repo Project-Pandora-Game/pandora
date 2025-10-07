@@ -1,14 +1,14 @@
 import { GetLogger, ICharacterPrivateData, ICharacterRoomData, IClientShardArgument } from 'pandora-common';
 import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
-import { CharacterImpl } from './character.ts';
+import { CharacterImpl, type Character } from './character.ts';
 
 export type CharacterCreationCallback = (
 	character: PlayerCharacter,
 	creationData: IClientShardArgument['finishCharacterCreation'],
 ) => Promise<'ok' | 'failed'>;
 
-export interface PlayerCharacter extends CharacterImpl<ICharacterPrivateData & ICharacterRoomData> {
+export interface PlayerCharacter extends Character<ICharacterPrivateData & ICharacterRoomData> {
 	setCreationComplete(): void;
 }
 

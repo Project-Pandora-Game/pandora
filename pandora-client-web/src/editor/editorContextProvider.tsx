@@ -5,6 +5,7 @@ import type { ChildrenProps } from '../common/reactTypes.ts';
 import { Dialogs } from '../components/dialog/dialog.tsx';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider.tsx';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary.tsx';
+import { InterfaceSettingsProvider } from '../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider.tsx';
 import { useNullableObservable } from '../observable.ts';
 import { Editor } from './editor.tsx';
@@ -23,6 +24,7 @@ export function EditorContextProvider({ children, serviceManager }: EditorContex
 					<Dialogs location='global' />
 					<Dialogs location='mainOverlay' />
 					<AnchorAutoscroll />
+					<InterfaceSettingsProvider />
 					<PermissionCheckServiceProvider>
 						{ children }
 					</PermissionCheckServiceProvider>

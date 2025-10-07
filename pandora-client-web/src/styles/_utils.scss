@@ -22,11 +22,6 @@
 	@include center-common;
 }
 
-@mixin center-fixed {
-	position: fixed;
-	@include center-common;
-}
-
 @mixin center-flex($direction: row, $wrap: wrap) {
 	@include flex($direction, $wrap);
 	justify-content: center;

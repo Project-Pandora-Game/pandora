@@ -23,7 +23,7 @@ const DEFAULT_CONFIRM_DIALOG_PRIORITY = 10;
 
 export type DialogLocation = 'global' | 'mainOverlay';
 
-type PortalEntry = {
+export type PortalEntry = {
 	priority: number;
 	location: DialogLocation;
 	node: HtmlPortalNodeAny;
@@ -31,14 +31,15 @@ type PortalEntry = {
 	onMount?: PortalMountHook;
 };
 
-const PORTALS = new Observable<readonly PortalEntry[]>([]);
+export const PortalsContext = createContext(new Observable<readonly PortalEntry[]>([]));
 
 export const DraggableDialogPriorityContext = createContext(-1);
 
 export function Dialogs({ location }: {
 	location: DialogLocation;
 }): ReactElement {
-	const portals = useObservable(PORTALS);
+	const portalsContext = useContext(PortalsContext);
+	const portals = useObservable(portalsContext);
 
 	return (
 		<>
@@ -82,6 +83,7 @@ export function DialogInPortal({ children, priority, location = 'global', onMoun
 	ref?: Ref<DialogPortalRef>;
 }): ReactElement {
 	const id = useId();
+	const portalsContext = useContext(PortalsContext);
 	const portal = useMemo(() => createHtmlPortalNode({
 		attributes: {
 			class: 'dialog-portal',
@@ -97,7 +99,7 @@ export function DialogInPortal({ children, priority, location = 'global', onMoun
 	}), [portal, priority, location, id, onMount]);
 
 	useLayoutEffect(() => {
-		PORTALS.produce((existingPortals) => {
+		portalsContext.produce((existingPortals) => {
 			return sortBy([
 				...existingPortals,
 				selfPortalEntry,
@@ -105,21 +107,21 @@ export function DialogInPortal({ children, priority, location = 'global', onMoun
 		});
 
 		return () => {
-			PORTALS.value = PORTALS.value.filter((p) => p !== selfPortalEntry);
+			portalsContext.value = portalsContext.value.filter((p) => p !== selfPortalEntry);
 		};
-	}, [selfPortalEntry]);
+	}, [selfPortalEntry, portalsContext]);
 
 	const bringToForeground = useCallback(() => {
-		const index = PORTALS.value.indexOf(selfPortalEntry);
+		const index = portalsContext.value.indexOf(selfPortalEntry);
 		if (index >= 0) {
-			PORTALS.produce((existingPortals) => {
+			portalsContext.produce((existingPortals) => {
 				return sortBy([
 					...existingPortals.filter((p) => p !== selfPortalEntry),
 					selfPortalEntry,
 				], (v) => v.priority);
 			});
 		}
-	}, [selfPortalEntry]);
+	}, [selfPortalEntry, portalsContext]);
 
 	useImperativeHandle(ref, () => ({
 		bringToForeground,

@@ -1,5 +1,6 @@
+import type { Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { Assert, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkSpaceState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type Asset, type LayerStateOverrides } from 'pandora-common';
+import { AbortActionAttempt, AppearanceActionProcessingContext, ApplyAction, Assert, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkSpaceState, AssetId, CharacterSize, EMPTY_ARRAY, FinishActionAttempt, GetLogger, HexColorString, ParseArrayNotEmpty, StartActionAttempt, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type Asset, type IClientShardNormalResult, type LayerStateOverrides } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import * as z from 'zod';
 import { useBrowserStorage } from '../browserStorage.ts';
@@ -25,6 +26,7 @@ import { useEditor } from './editorContextProvider.tsx';
 import { EDITOR_CHARACTER_ID, EditorCharacter } from './graphics/character/appearanceEditor.ts';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene.tsx';
 import type { PointTemplateEditor } from './graphics/pointTemplateEditor.tsx';
+import { PandoraInnerInstanceDriver } from './innerInstance/pandoraEditorInstance.tsx';
 
 const logger = GetLogger('Editor');
 
@@ -35,6 +37,8 @@ export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer;
 	globalStateChange: true;
 }> {
+	public readonly created = Date.now();
+
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 	public readonly character: EditorCharacter;
 
@@ -171,6 +175,118 @@ export class Editor extends TypedEventEmitter<{
 		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', color);
 	}
+
+	public doImmediateAction(action: Immutable<AppearanceAction>): IClientShardNormalResult['gameLogicAction'] {
+		// We do direct apply to skip need for attempt in some edge cases.
+		const processingContext = new AppearanceActionProcessingContext(this.getAppearanceActionContext('act'), this.globalState.currentState);
+		const result = ApplyAction(processingContext, action);
+
+		// Check if result is valid
+		if (!result.valid) {
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
+		}
+
+		// Apply the action
+		this.globalState.setState(result.resultState);
+
+		return {
+			result: 'success',
+			data: result.actionData,
+		};
+	}
+
+	public startActionAttempt(action: Immutable<AppearanceAction>): IClientShardNormalResult['gameLogicAction'] {
+		const result = StartActionAttempt(action, this.getAppearanceActionContext('act'), this.globalState.currentState, Date.now());
+
+		// Check if result is valid
+		if (!result.valid) {
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
+		}
+
+		// Apply the action
+		this.globalState.setState(result.resultState);
+
+		return {
+			result: 'success',
+			data: result.actionData,
+		};
+	}
+
+	public completeCurrentActionAttempt(): IClientShardNormalResult['gameLogicAction'] {
+		const result = FinishActionAttempt(this.getAppearanceActionContext('act'), this.globalState.currentState, Date.now());
+
+		// Check if result is valid
+		if (!result.valid) {
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
+		}
+
+		// Apply the action
+		this.globalState.setState(result.resultState);
+
+		return {
+			result: 'success',
+			data: result.actionData,
+		};
+	}
+
+	public abortCurrentActionAttempt(): IClientShardNormalResult['gameLogicAction'] {
+		const result = AbortActionAttempt(this.getAppearanceActionContext('act'), this.globalState.currentState);
+
+		// Check if result is valid
+		if (!result.valid) {
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
+		}
+
+		// Apply the action
+		this.globalState.setState(result.resultState);
+
+		return {
+			result: 'success',
+			data: result.actionData,
+		};
+	}
+
+	public getCurrentSpaceContext(): ActionSpaceContext {
+		return {
+			features: [
+				'development',
+				'allowBodyChanges',
+			],
+			isAdmin: () => true,
+			development: {
+				autoAdmin: true,
+				disableSafemodeCooldown: true,
+			},
+			// Editor has no character modifiers
+			getCharacterModifierEffects: () => EMPTY_ARRAY,
+		};
+	}
+
+	public getAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext {
+		return {
+			executionContext,
+			player: this.character.gameLogicCharacter,
+			spaceContext: this.getCurrentSpaceContext(),
+			getCharacter: (id) => {
+				if (id === this.character.id) {
+					return this.character.gameLogicCharacter;
+				}
+				return null;
+			},
+		};
+	}
 }
 
 export function useEditorLayerStateOverride(layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer): LayerStateOverrides | undefined {
@@ -213,6 +329,7 @@ const TABS = [
 	['Asset Info', 'editor-ui', AssetInfoUI],
 	['Setup', 'editor-scene', EditorSetupScene],
 	['Preview', 'editor-scene', EditorResultScene],
+	['Pandora', 'editor-ui', PandoraInnerInstanceDriver],
 ] as const;
 
 type TabsName = (typeof TABS)[number][0];

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
 import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import React, { createContext, ForwardedRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import * as z from 'zod';
@@ -211,10 +211,11 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 	);
 }
 
-function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
+function TextArea({ messagesDiv, scrollMessagesView, ref }: {
 	messagesDiv: RefObject<HTMLDivElement | null>;
 	scrollMessagesView: (forceScroll: boolean) => void;
-}, ref: ForwardedRef<HTMLTextAreaElement>) {
+	ref: ForwardedRef<HTMLTextAreaElement>;
+}) {
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatSetPlayerStatus();
 	const sender = useChatMessageSender();
@@ -539,8 +540,6 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		/>
 	);
 }
-
-const TextArea = forwardRef(TextAreaImpl);
 
 export function useChatInput(): IChatInputHandler {
 	const context = useContext(chatInputContext);

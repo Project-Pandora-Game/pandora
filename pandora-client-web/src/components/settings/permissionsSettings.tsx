@@ -221,8 +221,10 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void {
 	const shardConnector = useShardConnector();
 	return useCallback((permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => {
-		if (shardConnector == null)
+		if (shardConnector == null) {
+			toast(`Error updating permission:\nNot connected`, TOAST_OPTIONS_ERROR);
 			return;
+		}
 
 		shardConnector.awaitResponse('permissionSet', {
 			permissionGroup,
@@ -304,7 +306,14 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 	const setDefault = useFunctionBind(setConfig, permissionGroup, permissionId, 'default');
 	const setAny = useFunctionBind(setConfig, permissionGroup, permissionId);
 
-	if (shardConnector == null || permissionData == null) {
+	if (shardConnector == null) {
+		return (
+			<Row className='flex-1' alignX='center' alignY='center'>
+				Error: Not connected
+			</Row>
+		);
+	}
+	if (permissionData == null) {
 		return (
 			<Row className='flex-1' alignX='center' alignY='center'>
 				Loading...

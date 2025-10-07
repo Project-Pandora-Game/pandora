@@ -189,6 +189,7 @@ export function useWardrobePermissionRequestCallback() {
 					toast('Failed to request the permissions', TOAST_OPTIONS_ERROR);
 					break;
 				case undefined:
+					toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 					break;
 				default:
 					AssertNever(result);

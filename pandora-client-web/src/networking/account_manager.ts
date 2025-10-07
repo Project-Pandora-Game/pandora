@@ -94,7 +94,13 @@ export function useLogin(): LoginCallback {
 export function useLogout(): () => void {
 	const accountManager = useService('accountManager');
 	return useCallback(() => {
-		accountManager.logout();
+		try {
+			accountManager.logout();
+		} catch (error) {
+			GetLogger('useLogout').error('Failed to log out:', error);
+			toast(`Failed to log out`, TOAST_OPTIONS_ERROR);
+			return;
+		}
 		window.location.reload();
 	}, [accountManager]);
 }

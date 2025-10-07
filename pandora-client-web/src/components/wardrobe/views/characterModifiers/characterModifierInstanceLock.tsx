@@ -195,7 +195,7 @@ function WardrobeCharacterModifierLockAddButton({ character, instance, lockAsset
 		});
 	}, (result: IClientShardNormalResult['characterModifierLock'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			close();
 			return;
@@ -272,7 +272,7 @@ function WardrobeCharacterModifierLockRemoveButton({ character, instance }: Ward
 		});
 	}, (result: IClientShardNormalResult['characterModifierLock'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			return;
 		} else if (result.result === 'characterNotFound') {
@@ -371,7 +371,7 @@ function WardrobeCharacterModifierLockActionButton({
 		});
 	}, (result: IClientShardNormalResult['characterModifierLock'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			const resultData: AppearanceActionData[] = [];
 			// Attach password data if result contains it

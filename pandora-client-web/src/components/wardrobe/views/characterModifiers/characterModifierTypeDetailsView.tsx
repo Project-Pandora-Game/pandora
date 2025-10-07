@@ -107,7 +107,7 @@ export function WardrobeCharacterModifierAddButton({ character, modifier, onSucc
 		});
 	}, (result: IClientShardNormalResult['characterModifierAdd'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			onSuccess?.(result.instanceId);
 		} else if (result.result === 'characterNotFound') {

@@ -98,7 +98,7 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 
 	const updateConfig = useCallback(async (config: CharacterModifierConfigurationChange): Promise<void> => {
 		if (shard == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 
@@ -404,7 +404,7 @@ function ModifierInstanceReorderButton({ character, instance, allModifiers, shif
 		});
 	}, (result: IClientShardNormalResult['characterModifierReorder'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			// Nothing to do here
 			return;
@@ -480,7 +480,7 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 		});
 	}, (result: IClientShardNormalResult['characterModifierDelete'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			unfocus();
 			return;

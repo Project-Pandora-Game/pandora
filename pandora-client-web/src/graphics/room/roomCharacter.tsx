@@ -318,7 +318,10 @@ function RoomCharacterInteractiveImpl({
 	const onPointerUp = useEvent((event: FederatedPointerEvent) => {
 		dragging.current = null;
 		if (pointerDown.current !== null && Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
-			openContextMenu(character, {
+			openContextMenu({
+				type: 'character',
+				character,
+			}, {
 				x: event.pageX,
 				y: event.pageY,
 			});

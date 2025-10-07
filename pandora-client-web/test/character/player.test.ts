@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash-es';
 import { ASSET_PREFERENCES_DEFAULT, ICharacterRoomData, type ICharacterPrivateData } from 'pandora-common';
-import { PlayerCharacter } from '../../src/character/player.ts';
+import { PlayerCharacter, PlayerCharacterImpl } from '../../src/character/player.ts';
 const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('PlayerCharacter', () => {
@@ -33,7 +33,7 @@ describe('PlayerCharacter', () => {
 	});
 
 	function createPlayer(overrides?: Partial<ICharacterPrivateData>): void {
-		player = new PlayerCharacter(MockPlayerData(overrides));
+		player = new PlayerCharacterImpl(MockPlayerData(overrides));
 		onUpdateUnsubscribe = player.on('update', updateListener);
 	}
 });

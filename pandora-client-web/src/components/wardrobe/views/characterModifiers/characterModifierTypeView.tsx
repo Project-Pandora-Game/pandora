@@ -10,7 +10,7 @@ import {
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import wikiIcon from '../../../../assets/icons/wiki.svg';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus.ts';
 import { Row } from '../../../common/container/container.tsx';
@@ -21,7 +21,7 @@ import { CheckResultToClassName } from '../../wardrobeComponents.tsx';
 
 export function WardrobeCharacterModifierTypeView({ title, character, currentlyFocusedModifier, focusModifier, children }: {
 	title: string;
-	character: ICharacter;
+	character: Character;
 	currentlyFocusedModifier: CharacterModifierType | null;
 	focusModifier: (type: CharacterModifierType | null) => void;
 	children?: ReactNode;
@@ -84,7 +84,7 @@ export function WardrobeCharacterModifierTypeView({ title, character, currentlyF
 function ModifierTypesListItem({ modifier, selected, character, onClick }: {
 	modifier: CharacterModifierTypeDefinition;
 	selected: boolean;
-	character: ICharacter;
+	character: Character;
 	onClick: () => void;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();

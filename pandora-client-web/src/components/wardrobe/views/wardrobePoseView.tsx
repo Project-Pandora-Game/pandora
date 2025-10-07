@@ -35,7 +35,7 @@ import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
 import starIcon from '../../../assets/icons/star.svg';
 import { useBrowserStorage } from '../../../browserStorage.ts';
-import { IChatroomCharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useDebouncedValue } from '../../../common/useDebounceValue.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -453,7 +453,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 }
 
 export function WardrobePoseGui({ character, characterState }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });

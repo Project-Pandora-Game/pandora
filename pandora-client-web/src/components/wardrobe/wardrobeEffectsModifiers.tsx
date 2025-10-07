@@ -16,7 +16,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
-import { ICharacter, useCharacterRestrictionManager } from '../../character/character.ts';
+import { Character, useCharacterRestrictionManager } from '../../character/character.ts';
 import { Column } from '../common/container/container.tsx';
 import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs.tsx';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -41,7 +41,7 @@ export type ModifierFocus = {
 
 export function WardrobeEffectsModifiers({ className, character, globalState }: {
 	className?: string;
-	character: ICharacter;
+	character: Character;
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const [currentFocus, setCurrentFocus] = useState<ModifierFocus | null>(null);
@@ -147,7 +147,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 
 function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
 	data: ModifierInstanceListGetResult | undefined;
-	character: ICharacter;
+	character: Character;
 	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
 	focusModifierInstance: (id: CharacterModifierId | null) => void;

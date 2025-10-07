@@ -598,7 +598,10 @@ function DisplayCharacter({ char, globalState }: {
 	}, [isAdmin]);
 
 	const openMenu = useCallback((event: React.MouseEvent) => {
-		openContextMenu(char, {
+		openContextMenu({
+			type: 'character',
+			character: char,
+		}, {
 			x: event.pageX,
 			y: event.pageY,
 		});

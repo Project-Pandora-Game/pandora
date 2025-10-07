@@ -7,7 +7,7 @@ import {
 } from 'pandora-common';
 import { act } from 'react';
 import {
-	Character,
+	CharacterImpl,
 	useCharacterData,
 } from '../../src/character/character.ts';
 
@@ -21,10 +21,10 @@ const mockData: ICharacterRoomData = {
 	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 	onlineStatus: 'online',
 };
-describe('Character', () => {
-	let mock: Character;
+describe('CharacterImpl', () => {
+	let mock: CharacterImpl;
 	beforeEach(() => {
-		mock = new Character(mockData);
+		mock = new CharacterImpl(mockData);
 	});
 	describe('constructor', () => {
 		it('should save character data', () => {
@@ -44,9 +44,9 @@ describe('Character', () => {
 });
 
 describe('useCharacterData()', () => {
-	let mock: Character;
+	let mock: CharacterImpl;
 	beforeEach(() => {
-		mock = new Character(mockData);
+		mock = new CharacterImpl(mockData);
 	});
 	it('should return character data', () => {
 		const { result } = renderHook(() => useCharacterData(mock));

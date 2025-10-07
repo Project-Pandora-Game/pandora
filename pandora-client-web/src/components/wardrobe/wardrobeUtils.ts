@@ -16,7 +16,7 @@ import {
 	type ItemContainerPath,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { ICharacter } from '../../character/character.ts';
+import { Character } from '../../character/character.ts';
 import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
 import { WardrobeFocus } from './wardrobeTypes.ts';
@@ -79,7 +79,7 @@ export function useWardrobeContainerAccessCheck(target: ActionTargetSelector, co
 }
 
 export function WardrobeCheckResultForConfirmationWarnings(
-	player: ICharacter,
+	player: Character,
 	spaceContext: ActionSpaceContext | null,
 	action: Immutable<AppearanceAction>,
 	result: AppearanceActionProcessingResult,

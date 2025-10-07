@@ -48,6 +48,7 @@ import {
 	type IClientShardPromiseResult,
 	type ItemContainerPath,
 	type ItemId,
+	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
@@ -56,8 +57,8 @@ import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { BrowserStorage } from '../../browserStorage.ts';
-import { Character, useCharacterDataOptional } from '../../character/character.ts';
-import { PlayerCharacter } from '../../character/player.ts';
+import { CharacterImpl, useCharacterDataOptional, type Character } from '../../character/character.ts';
+import { PlayerCharacter, PlayerCharacterImpl } from '../../character/player.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { Observable, useNullableObservable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
@@ -91,11 +92,43 @@ const SavedMessageSchema = z.object({
 export type ISavedMessage = z.infer<typeof SavedMessageSchema>;
 
 export interface IChatMessageSender {
+	readonly status: ReadonlyObservable<ReadonlyMap<CharacterId, ChatCharacterStatus>>;
+
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
 	getMessageEditTimeout(id: number): number | undefined;
 	getMessageEdit(id: number): ISavedMessage | undefined;
 	getLastMessageEdit(): number | undefined;
+
+	setPlayerStatus(status: ChatCharacterStatus, target?: CharacterId): void;
+}
+
+export interface IChatService extends IChatMessageSender {
+	readonly messages: ReadonlyObservable<readonly IChatMessageProcessed[]>;
+}
+
+export type GameStateEvents = {
+	globalStateChange: true;
+	permissionPrompt: PermissionPromptData;
+	/** Request for navigating to some URL. Used by notification click mechanism to show chat. */
+	uiNavigate: string;
+};
+
+export interface GameState extends IChatService, ITypedEventEmitter<GameStateEvents> {
+	readonly globalState: AssetFrameworkGlobalStateContainer;
+
+	readonly player: PlayerCharacter;
+	readonly characters: ReadonlyObservable<readonly Character<ICharacterRoomData>[]>;
+
+	readonly currentSpace: ReadonlyObservable<CurrentSpaceInfo>;
+	readonly characterModifierEffects: ReadonlyObservable<Immutable<SpaceCharacterModifierEffectData>>;
+
+	doImmediateAction(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'];
+	startActionAttempt(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'];
+	completeCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'];
+	abortCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'];
+
+	getCurrentSpaceContext(): ActionSpaceContext;
 }
 
 export type PermissionPromptData = {
@@ -114,19 +147,14 @@ export class ChatSendError extends Error {
 }
 
 type GameStateDependencies = Readonly<Pick<ClientServices, 'accountManager' | 'notificationHandler'>>;
-export class GameState extends TypedEventEmitter<{
-	globalStateChange: true;
-	permissionPrompt: PermissionPromptData;
-	/** Request for navigating to some URL. Used by notification click mechanism to show chat. */
-	uiNavigate: string;
-}> implements IChatMessageSender {
+export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements GameState {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
 	public readonly messages = new Observable<readonly IChatMessageProcessed[]>([]);
 	public readonly currentSpace: Observable<CurrentSpaceInfo>;
-	public readonly characters: Observable<readonly Character<ICharacterRoomData>[]>;
+	public readonly characters: Observable<readonly CharacterImpl<ICharacterRoomData>[]>;
 	public readonly characterModifierEffects: Observable<Immutable<SpaceCharacterModifierEffectData>>;
-	public readonly player: PlayerCharacter;
+	public readonly player: PlayerCharacterImpl;
 
 	public get playerId() {
 		return this.player?.data.id;
@@ -174,8 +202,8 @@ export class GameState extends TypedEventEmitter<{
 		this.logger = GetLogger('GameState');
 		this._shard = shard;
 		this._dependencies = dependencies;
-		this.player = new PlayerCharacter(characterData);
-		this.characters = new Observable<readonly Character<ICharacterRoomData>[]>([this.player]);
+		this.player = new PlayerCharacterImpl(characterData);
+		this.characters = new Observable<readonly CharacterImpl<ICharacterRoomData>[]>([this.player]);
 
 		const { id, info, characters, characterModifierEffects } = space;
 		this.currentSpace = new Observable<CurrentSpaceInfo>({
@@ -315,7 +343,7 @@ export class GameState extends TypedEventEmitter<{
 		if (join) {
 			let char = this.characters.value.find((oc) => oc.data.id === join.id);
 			if (!char) {
-				this.characters.value = [...this.characters.value, char = new Character(join)];
+				this.characters.value = [...this.characters.value, char = new CharacterImpl(join)];
 			} else {
 				char.update(join);
 				this.characters.value = [...this.characters.value];
@@ -374,7 +402,7 @@ export class GameState extends TypedEventEmitter<{
 			if (char) {
 				char.update(c);
 			} else {
-				char = new Character<ICharacterRoomData>(c);
+				char = new CharacterImpl<ICharacterRoomData>(c);
 			}
 			return char;
 		});

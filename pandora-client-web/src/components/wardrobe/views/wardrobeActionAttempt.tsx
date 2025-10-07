@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { AppearanceActionProcessingContext, FinishActionAttempt, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterActionAttempt } from 'pandora-common';
 import { ReactElement, useCallback, useMemo } from 'react';
-import type { IChatroomCharacter } from '../../../character/character.ts';
+import type { Character } from '../../../character/character.ts';
 import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
@@ -9,7 +9,7 @@ import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecut
 import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents.tsx';
 
 export function WardrobeActionAttemptOverlay({ character }: {
-	character: IChatroomCharacter;
+	character: Character;
 }): ReactElement | null {
 	const { player, globalState } = useWardrobeActionContext();
 	const characterState = globalState.characters.get(character.id);

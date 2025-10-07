@@ -19,7 +19,7 @@ import deleteIcon from '../../../../assets/icons/delete.svg';
 import closedLock from '../../../../assets/icons/lock_closed.svg';
 import emptyLock from '../../../../assets/icons/lock_empty.svg';
 import openLock from '../../../../assets/icons/lock_open.svg';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import { useAsyncEvent } from '../../../../common/useEvent.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
 import { Button } from '../../../common/button/button.tsx';
@@ -32,7 +32,7 @@ import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
 
 export interface WardrobeCharacterModifierLockProps {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 }
 
@@ -321,7 +321,7 @@ function WardrobeCharacterModifierLockRemoveButton({ character, instance }: Ward
 }
 
 interface WardrobeCharacterModifierLockActionButtonContext {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 }
 

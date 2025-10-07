@@ -8,7 +8,7 @@ import {
 	type ModifierConfigurationEntryDefinition,
 } from 'pandora-common';
 import { ReactElement, useState } from 'react';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import { Button } from '../../../common/button/button.tsx';
 import { Column, Row } from '../../../common/container/container.tsx';
 import { FieldsetToggle } from '../../../common/fieldsetToggle/index.tsx';
@@ -21,7 +21,7 @@ import { CharacterModifierConditionList } from './conditions/characterModifierCo
 import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
 export function CharacterModifierImportDialog({ character, close, focusModifierInstance }: {
-	character: ICharacter;
+	character: Character;
 	close: () => void;
 	focusModifierInstance: (id: CharacterModifierId) => void;
 }): ReactElement {
@@ -55,7 +55,7 @@ export function CharacterModifierImportDialog({ character, close, focusModifierI
 }
 
 export function CharacterModifierImportTemplateDialog({ character, template, updateTemplate, close, focusModifierInstance }: {
-	character: ICharacter;
+	character: Character;
 	template: CharacterModifierTemplate;
 	updateTemplate: (newTemplate: CharacterModifierTemplate) => void;
 	close: () => void;

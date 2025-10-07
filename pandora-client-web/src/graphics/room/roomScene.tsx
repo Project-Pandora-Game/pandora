@@ -7,7 +7,7 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { Character } from '../../character/character.ts';
+import type { Character } from '../../character/character.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { usePlayerVisionFilters } from '../common/visionFilters.tsx';

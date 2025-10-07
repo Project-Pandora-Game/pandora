@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossImage from '../../../../../assets/icons/cross.svg';
 import importIcon from '../../../../../assets/icons/import.svg';
-import type { ICharacter } from '../../../../../character/character';
+import type { Character } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../../persistentToast';
@@ -20,7 +20,7 @@ import { CharacterModifierConditionListEntry } from './characterModifierConditio
 import './style.scss';
 
 export function CharacterModifierConditionList({ character, conditions, onChange }: {
-	character: ICharacter;
+	character: Character;
 	conditions: Immutable<CharacterModifierConditionChain>;
 	onChange?: (newValue: CharacterModifierConditionChain) => Promisable<void>;
 }): ReactElement {
@@ -194,7 +194,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 	active: boolean;
 	/** For first element of "AND" group - details about this group. */
 	group: { size: number; active: boolean; } | null;
-	character: ICharacter;
+	character: Character;
 }): ReactElement {
 	return (
 		<>

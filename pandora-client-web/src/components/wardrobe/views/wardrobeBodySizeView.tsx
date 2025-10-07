@@ -6,7 +6,7 @@ import {
 	BoneName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
-import { ICharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
 import { Column } from '../../common/container/container.tsx';
@@ -17,7 +17,7 @@ import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { BoneRowElement } from './wardrobePoseView.tsx';
 
 export function WardrobeBodySizeEditor({ character, characterState }: {
-	character: ICharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });

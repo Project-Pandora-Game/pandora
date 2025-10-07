@@ -7,7 +7,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
-import { ICharacter } from '../../character/character.ts';
+import { Character } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
 import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail.tsx';
@@ -20,7 +20,7 @@ import { WardrobeFocusesItem } from './wardrobeUtils.ts';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
-	character: ICharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { focuser } = useWardrobeContext();

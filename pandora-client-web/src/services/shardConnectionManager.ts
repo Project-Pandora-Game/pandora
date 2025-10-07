@@ -13,10 +13,9 @@ import {
 	type ServiceProvider,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { ShardConnectorServiceProvider } from '../networking/shardConnector.ts';
 import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies, ClientServices } from './clientServices.ts';
+import { GenerateClientGameLogicServices, type ClientGameLogicServices, type ClientGameLogicServicesDependencies, type ClientServices } from './clientServices.ts';
 
 export type ShardConnectorDependencies = Pick<ClientServices, 'accountManager' | 'notificationHandler'>;
 
@@ -69,12 +68,11 @@ class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig
 		this._disconnectFromShard();
 		this.logger.debug('Requesting connect to shard: ', info);
 
-		const gameLogicServices = new ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies>({
+		const gameLogicServices = GenerateClientGameLogicServices({
 			...this.serviceDeps,
 			shardConnectionManager: this,
 			connectionInfo: freeze(cloneDeep(info), true),
-		})
-			.registerService(ShardConnectorServiceProvider);
+		});
 
 		await gameLogicServices.load();
 

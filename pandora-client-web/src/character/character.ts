@@ -11,7 +11,6 @@ import {
 	GameLogicCharacter,
 	GameLogicCharacterClient,
 	GetLogger,
-	ICharacterPublicData,
 	ICharacterRoomData,
 	Item,
 	ItemPath,
@@ -24,20 +23,20 @@ import {
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player.ts';
 
-export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicData> extends ITypedEventEmitter<CharacterEvents<T>> {
+export interface Character<T extends ICharacterRoomData = ICharacterRoomData> extends ITypedEventEmitter<CharacterEvents<T>> {
 	readonly type: 'character';
 	readonly id: CharacterId;
 	readonly name: string;
 	readonly data: Readonly<T>;
+	readonly actionSelector: ActionTargetSelector;
 	readonly gameLogicCharacter: GameLogicCharacter;
-	isPlayer(): boolean;
+
+	isPlayer(): this is PlayerCharacter;
 	getAppearance(globalState: AssetFrameworkGlobalState): CharacterAppearance;
 	getRestrictionManager(globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext | null): CharacterRestrictionsManager;
 }
 
-export type IChatroomCharacter = ICharacter<ICharacterRoomData>;
-
-export class Character<T extends ICharacterRoomData = ICharacterRoomData> extends TypedEventEmitter<CharacterEvents<T>> implements ICharacter<T> {
+export class CharacterImpl<T extends ICharacterRoomData = ICharacterRoomData> extends TypedEventEmitter<CharacterEvents<T>> implements Character<T> {
 	public readonly type = 'character';
 
 	public get id(): CharacterId {
@@ -89,22 +88,22 @@ export class Character<T extends ICharacterRoomData = ICharacterRoomData> extend
 	}
 }
 
-export type CharacterEvents<T extends ICharacterPublicData> = {
+export type CharacterEvents<T extends ICharacterRoomData> = {
 	'update': Partial<T>;
 };
 
-export function useCharacterData<T extends ICharacterPublicData>(character: ICharacter<T>): Readonly<T> {
+export function useCharacterData<T extends ICharacterRoomData>(character: Character<T>): Readonly<T> {
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
 }
 
-export function useCharacterDataOptional<T extends ICharacterPublicData>(character: ICharacter<T> | null): Readonly<T> | null {
+export function useCharacterDataOptional<T extends ICharacterRoomData>(character: Character<T> | null): Readonly<T> | null {
 	const subscriber = useMemo(() => (character?.getSubscriber('update') ?? (() => noop)), [character]);
 
 	return useSyncExternalStore(subscriber, () => (character?.data ?? null));
 }
 
-const MULTIPLE_DATA_CACHE = new WeakMap<readonly ICharacter<ICharacterPublicData>[], readonly Readonly<ICharacterPublicData>[]>();
-export function useCharacterDataMultiple<T extends ICharacterPublicData>(characters: readonly ICharacter<T>[]): readonly Readonly<T>[] {
+const MULTIPLE_DATA_CACHE = new WeakMap<readonly Character[], readonly Readonly<ICharacterRoomData>[]>();
+export function useCharacterDataMultiple<T extends ICharacterRoomData>(characters: readonly Character<T>[]): readonly Readonly<T>[] {
 	freeze(characters, false);
 
 	const subscribe = useCallback((cb: () => void): (() => void) => {
@@ -141,6 +140,6 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
 }
 
-export function useCharacterRestrictionManager(character: ICharacter, globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+export function useCharacterRestrictionManager(character: Character, globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
 	return useMemo(() => character.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
 }

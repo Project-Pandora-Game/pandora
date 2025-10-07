@@ -59,8 +59,6 @@ export interface AuthToken {
 	username: string;
 }
 
-const logger = GetLogger('DirectoryConnector');
-
 const AuthTokenSchema = z.object({
 	value: z.string(),
 	username: z.string(),
@@ -79,6 +77,8 @@ type DirectoryConnectorServiceConfig = Satisfies<{
 
 /** Class housing connection from Shard to Directory */
 export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig> implements IConnectionBase<IClientDirectory> {
+	private readonly logger = GetLogger('DirectoryConnector');
+
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryConnectionProgress = new PersistentToast();
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
@@ -149,7 +149,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 
 	public sendMessage<K extends SocketInterfaceOneshotMessages<IClientDirectory>>(messageType: K, message: SocketInterfaceRequest<IClientDirectory>[K]): void {
 		if (this._connector == null) {
-			logger.warning(`Dropping outbound message '${messageType}': Not connected`);
+			this.logger.warning(`Dropping outbound message '${messageType}': Not connected`);
 			return;
 		}
 		this._connector.sendMessage(messageType, message);
@@ -176,7 +176,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			throw new Error('connect can only be called once');
 		}
 
-		Assert(this._messageHandler != null); // Should be filled ruing `load` - way before connect attempt.
+		Assert(this._messageHandler != null); // Should be filled during `load` - way before connect attempt.
 
 		this.setState(DirectoryConnectionState.INITIAL_CONNECTION_PENDING);
 		this._connector = new connectorFactory({
@@ -187,7 +187,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			onConnect: this.onConnect.bind(this),
 			onDisconnect: this.onDisconnect.bind(this),
 			onConnectError: this.onConnectError.bind(this),
-			logger,
+			logger: this.logger,
 		});
 
 		this._connector.connect();
@@ -204,7 +204,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			return;
 		this._connector.disconnect();
 		this.setState(DirectoryConnectionState.DISCONNECTED);
-		logger.info('Disconnected from Directory');
+		this.logger.info('Disconnected from Directory');
 	}
 
 	/**
@@ -234,12 +234,12 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 		const currentState = this._state.value;
 		if (currentState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
 			this.setState(DirectoryConnectionState.CONNECTED);
-			logger.info('Connected to Directory');
+			this.logger.info('Connected to Directory');
 		} else if (currentState === DirectoryConnectionState.CONNECTION_LOST) {
 			this.setState(DirectoryConnectionState.CONNECTED);
-			logger.alert('Re-Connected to Directory');
+			this.logger.alert('Re-Connected to Directory');
 		} else {
-			logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[currentState]);
+			this.logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[currentState]);
 		}
 	}
 
@@ -251,15 +251,15 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			return;
 		if (currentState === DirectoryConnectionState.CONNECTED) {
 			this.setState(DirectoryConnectionState.CONNECTION_LOST);
-			logger.alert('Lost connection to Directory:', reason);
+			this.logger.alert('Lost connection to Directory:', reason);
 		} else {
-			logger.fatal('Assertion failed: received \'disconnect\' event when in state:', DirectoryConnectionState[currentState]);
+			this.logger.fatal('Assertion failed: received \'disconnect\' event when in state:', DirectoryConnectionState[currentState]);
 		}
 	}
 
 	/** Handle failed connection attempt */
 	private onConnectError(err: Error) {
-		logger.warning('Connection to Directory failed:', err.message);
+		this.logger.warning('Connection to Directory failed:', err.message);
 	}
 
 	public setActiveCharacterInfo(character: IDirectoryCharacterConnectionInfo | null): void {

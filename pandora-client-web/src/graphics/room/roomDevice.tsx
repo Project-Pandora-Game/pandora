@@ -474,7 +474,10 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 				if (held) {
 					ev.stopPropagation();
 					setHeld(false);
-					openContextMenu(character, {
+					openContextMenu({
+						type: 'character',
+						character,
+					}, {
 						x: ev.pageX,
 						y: ev.pageY,
 					});

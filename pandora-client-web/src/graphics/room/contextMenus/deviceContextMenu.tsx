@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type AssetFrameworkRoomState, type ICharacterRoomData, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { ICharacter, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
+import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
@@ -153,7 +153,7 @@ function OccupyDeviceSlotMenu({ roomState, device, slot, character, close }: {
 	roomState: AssetFrameworkRoomState;
 	device: ItemRoomDevice;
 	slot: string;
-	character: ICharacter<ICharacterRoomData>;
+	character: Character<ICharacterRoomData>;
 	close: () => void;
 }) {
 	const characterData = useCharacterData(character);
@@ -214,7 +214,10 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 		if (!character) {
 			return;
 		}
-		openContextMenu(character, position);
+		openContextMenu({
+			type: 'character',
+			character,
+		}, position);
 	}, [character, position, openContextMenu]);
 
 	if (occupancy) {

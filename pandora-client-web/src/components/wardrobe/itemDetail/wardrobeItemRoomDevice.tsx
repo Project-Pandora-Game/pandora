@@ -12,7 +12,7 @@ import {
 	type AppearanceAction,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
-import { ICharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
@@ -188,7 +188,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	const { player } = useWardrobeActionContext();
 	const { targetSelector } = useWardrobeContext();
 
-	const characters: readonly ICharacter[] = useSpaceCharacters();
+	const characters: readonly Character[] = useSpaceCharacters();
 
 	let contents: ReactNode;
 

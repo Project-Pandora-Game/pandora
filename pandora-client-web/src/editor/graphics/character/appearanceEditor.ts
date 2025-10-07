@@ -1,3 +1,4 @@
+import { freeze } from 'immer';
 import { cloneDeep } from 'lodash-es';
 import {
 	ActionSpaceContext,
@@ -20,9 +21,11 @@ import {
 	ICharacterRoomData,
 	ItemId,
 	TypedEventEmitter,
+	type ActionTargetSelector,
 	type AssetFrameworkGlobalState,
 } from 'pandora-common';
-import { CharacterEvents, ICharacter } from '../../../character/character.ts';
+import { Character, CharacterEvents } from '../../../character/character.ts';
+import type { PlayerCharacter } from '../../../character/player.ts';
 import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe.tsx';
 import { Editor } from '../../editor.tsx';
 import { useEditorState } from '../../editorContextProvider.tsx';
@@ -139,10 +142,11 @@ export class AppearanceEditor extends CharacterAppearance {
 
 export const EDITOR_CHARACTER_ID: CharacterId = 'c0';
 
-export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacterRoomData>> implements ICharacter<ICharacterRoomData> {
+export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacterRoomData>> implements Character<ICharacterRoomData> {
 	public readonly type = 'character';
 	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
+	public readonly actionSelector: ActionTargetSelector;
 
 	public readonly editor: Editor;
 	protected readonly logger = GetLogger('EditorCharacter');
@@ -153,6 +157,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 	constructor(editor: Editor) {
 		super();
 		this.editor = editor;
+		this.actionSelector = freeze<ActionTargetSelector>({ type: 'character', characterId: this.id }, true);
 		this.data = {
 			id: this.id,
 			accountId: 0,
@@ -166,8 +171,8 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));
 	}
 
-	public isPlayer(): boolean {
-		return true;
+	public isPlayer(): this is PlayerCharacter {
+		return false;
 	}
 
 	public getAppearance(globalState?: AssetFrameworkGlobalState): AppearanceEditor {

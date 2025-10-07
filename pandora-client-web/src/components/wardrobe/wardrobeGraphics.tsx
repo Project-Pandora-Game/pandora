@@ -14,7 +14,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
-import { Character, IChatroomCharacter } from '../../character/character.ts';
+import { Character } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport.tsx';
@@ -38,7 +38,7 @@ import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView.t
 import { useWardrobeContext } from './wardrobeContext.tsx';
 
 export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 	globalState: AssetFrameworkGlobalState;
 	isPreview?: boolean;
@@ -129,7 +129,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 }
 
 export function CharacterPreview({ character, characterState, globalState, hideClothes = false, overlay, viewportRef }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 	globalState: AssetFrameworkGlobalState;
 	hideClothes?: boolean;

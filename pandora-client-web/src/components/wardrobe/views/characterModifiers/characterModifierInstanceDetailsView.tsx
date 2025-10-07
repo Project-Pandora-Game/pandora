@@ -23,7 +23,7 @@ import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';
 import deleteIcon from '../../../../assets/icons/delete.svg';
 import exportIcon from '../../../../assets/icons/export.svg';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import type { ChildrenProps } from '../../../../common/reactTypes.ts';
 import { useAsyncEvent } from '../../../../common/useEvent.ts';
 import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';
@@ -46,7 +46,7 @@ import { CharacterModifierConditionList } from './conditions/characterModifierCo
 import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
 export interface WardrobeCharacterModifierInstanceDetailsViewProps {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient | null;
 	allModifiers: readonly GameLogicModifierInstanceClient[];
 	unfocus: () => void;
@@ -376,7 +376,7 @@ export function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onCh
 }
 
 function ModifierInstanceReorderButton({ character, instance, allModifiers, shift, children }: ChildrenProps & {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 	allModifiers: readonly GameLogicModifierInstanceClient[];
 	shift: number;
@@ -454,7 +454,7 @@ function ModifierInstanceReorderButton({ character, instance, allModifiers, shif
 }
 
 function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 	unfocus: () => void;
 }): ReactElement {

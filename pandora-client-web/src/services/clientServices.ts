@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { BaseServicesDefinition, Satisfies, ServiceManager, type IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import { DirectoryConnectorServiceProvider, type DirectoryConnector } from '../networking/directoryConnector.ts';
-import type { ShardConnector } from '../networking/shardConnector.ts';
+import { ShardConnectorServiceProvider, type ShardConnector } from '../networking/shardConnector.ts';
 import { AccountManagerServiceProvider, type IAccountManager } from './accountLogic/accountManager.ts';
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
 import { AudioServiceProvider, type AudioService } from './audio.ts';
@@ -56,4 +56,12 @@ export function GenerateClientUsermodeServices(): ServiceManager<ClientServices>
 		.registerService(NotificationHandlerServiceProvider)
 		.registerService(DirectMessageManagerServiceProvider)
 		.registerService(ShardConnectionManagerServiceProvider);
+}
+
+/**
+ * Generates an un-initialized service manager containing all usermode services.
+ */
+export function GenerateClientGameLogicServices(dependencies: ClientGameLogicServicesDependencies): ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies> {
+	return new ServiceManager<ClientGameLogicServices, ClientGameLogicServicesDependencies>(dependencies)
+		.registerService(ShardConnectorServiceProvider);
 }

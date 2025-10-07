@@ -1,4 +1,4 @@
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, SetConsoleOutput } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
@@ -8,7 +8,7 @@ import { useEvent } from '../common/useEvent.ts';
 import { EulaGate } from '../components/Eula/index.tsx';
 import { Button } from '../components/common/button/button.tsx';
 import { NODE_ENV, USER_DEBUG } from '../config/Environment.ts';
-import { LoadSearchArgs } from '../config/searchArgs.ts';
+import { ConfigLogLevel, LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
 import '../index.scss';
 import { useObservable } from '../observable.ts';
@@ -77,7 +77,7 @@ async function Start(): Promise<void> {
  * Configures logging for the application.
  */
 function SetupLogging(): void {
-	SetConsoleOutput(LogLevel.DEBUG);
+	SetConsoleOutput(ConfigLogLevel.value);
 }
 
 function AssetLoaderElement() {

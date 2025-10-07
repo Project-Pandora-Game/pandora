@@ -49,9 +49,17 @@ export class EditorAssetGraphicsManagerClass {
 		return this._originalSourceDefinitions.pointTemplates;
 	}
 
+	private readonly _builtTexturesGetter = new Observable<((path: string) => Texture | undefined)>(() => undefined);
+	public get builtTexturesGetter(): ReadonlyObservable<((path: string) => Texture | undefined)> {
+		return this._builtTexturesGetter;
+	}
+
 	constructor() {
 		this.editedPointTemplates.subscribe(() => {
 			this._reloadRuntimeGraphicsManager();
+		});
+		this.editedAssetGraphics.subscribe(() => {
+			this._onBuiltTexturesChanged();
 		});
 	}
 
@@ -110,22 +118,34 @@ export class EditorAssetGraphicsManagerClass {
 		if (sourceInfo.type === 'worn') {
 			Assert(asset.isType('bodypart') || asset.isType('personal'));
 			graphics = new EditorAssetGraphicsWorn(asset.id, sourceInfo.definition, () => {
-				this._onAssetDefinitionChanged(graphics)
-					.catch((err) => {
-						this.logger.error('Crash in asset definition change handler:', err);
-					});
+				queueMicrotask(() => {
+					if (graphics == null)
+						return;
+					this._onAssetDefinitionChanged(graphics)
+						.catch((err) => {
+							this.logger.error('Crash in asset definition change handler:', err);
+						});
+				});
 			});
 		} else if (sourceInfo.type === 'roomDevice') {
 			Assert(asset.isType('roomDevice'));
 			graphics = new EditorAssetGraphicsRoomDevice(asset.id, sourceInfo.definition, () => {
-				this._onAssetDefinitionChanged(graphics)
-					.catch((err) => {
-						this.logger.error('Crash in asset definition change handler:', err);
-					});
+				queueMicrotask(() => {
+					if (graphics == null)
+						return;
+					this._onAssetDefinitionChanged(graphics)
+						.catch((err) => {
+							this.logger.error('Crash in asset definition change handler:', err);
+						});
+				});
 			});
 		} else {
 			AssertNever(sourceInfo);
 		}
+
+		graphics.buildTextures.subscribe(() => {
+			this._onBuiltTexturesChanged();
+		});
 
 		this._editedAssetGraphics.produce((d) => {
 			const result = new Map(d);
@@ -262,6 +282,21 @@ export class EditorAssetGraphicsManagerClass {
 		asset.buildLog.value = logResult;
 
 		this._reloadRuntimeGraphicsManager();
+	}
+
+	private _onBuiltTexturesChanged(): void {
+		const newTextureMap = new Map<string, Texture>();
+
+		for (const asset of this._editedAssetGraphics.value.values()) {
+			const builtTextures = asset.buildTextures.value;
+			if (builtTextures != null) {
+				for (const [image, texture] of builtTextures) {
+					newTextureMap.set(image, texture);
+				}
+			}
+		}
+
+		this._builtTexturesGetter.value = (image) => newTextureMap.get(image);
 	}
 
 	private _editorGraphicsVersion: number = 0;

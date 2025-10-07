@@ -2,8 +2,10 @@ import { AssertNotNullable, type ServiceProvider } from 'pandora-common';
 import { createContext, useContext, type ReactElement } from 'react';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { useDebugExpose } from '../../common/useDebugExpose.ts';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
 import { ServiceManagerContextProvider } from '../../services/serviceProvider.tsx';
+import { EditorAssetGraphicsManager } from '../assets/editorAssetGraphicsManager.ts';
 import { EditorAssetUpdateService } from '../assets/editorAssetUpdater.tsx';
 import type { EditorServices } from './editorServices.ts';
 
@@ -20,15 +22,19 @@ export function EditorServiceManagerContextProvider({ children, serviceManager }
 	const editor = useObservable(editorService.editor);
 	useDebugExpose('editor', editor);
 
+	const textureGetterOverride = useObservable(EditorAssetGraphicsManager.builtTexturesGetter);
+
 	return (
 		<EditorServiceManagerContext.Provider value={ serviceManager }>
 			<ServiceManagerContextProvider serviceManager={ serviceManager }>
-				{
-					editor != null ? (
-						<EditorAssetUpdateService />
-					) : null
-				}
-				{ children }
+				<UseTextureGetterOverride.Provider value={ textureGetterOverride }>
+					{
+						editor != null ? (
+							<EditorAssetUpdateService />
+						) : null
+					}
+					{ children }
+				</UseTextureGetterOverride.Provider>
 			</ServiceManagerContextProvider>
 		</EditorServiceManagerContext.Provider>
 	);

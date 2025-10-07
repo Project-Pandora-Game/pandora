@@ -46,6 +46,7 @@ import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -411,7 +412,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 										resolution={ dpr }
 										backgroundColor={ 0x000000 }
 										backgroundAlpha={ 0 }
-										forwardContexts={ [serviceManagerContext] }
+										forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 									>
 										<Container
 											scale={ { x: previewScale, y: previewScale } }

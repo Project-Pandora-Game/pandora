@@ -18,6 +18,7 @@ import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { type PointLike } from '../../../graphics/common/point.ts';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
@@ -192,7 +193,7 @@ export function CharacterPreviewDialog({ close }: {
 					<GraphicsSceneBackgroundRenderer
 						renderArea={ canvasSize }
 						resolution={ 1 }
-						forwardContexts={ useMemo(() => [serviceManagerContext], []) }
+						forwardContexts={ useMemo(() => [serviceManagerContext, UseTextureGetterOverride], []) }
 						backgroundColor={ 0xffffff }
 					>
 						<GraphicsCharacter

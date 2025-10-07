@@ -42,6 +42,7 @@ import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharac
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
+import { UseTextureGetterOverride } from '../useTexture.ts';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -356,7 +357,7 @@ export function RoomSceneInteractive({ className }: {
 		viewportConfig,
 		viewportRef,
 		viewportOnMove,
-		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),

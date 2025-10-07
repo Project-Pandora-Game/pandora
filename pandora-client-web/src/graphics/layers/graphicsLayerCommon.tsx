@@ -11,7 +11,7 @@ import {
 	type PointDefinitionCalculated,
 	type Rectangle,
 } from 'pandora-common';
-import { DEG_TO_RAD, Texture } from 'pixi.js';
+import { DEG_TO_RAD } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useObservable, type ReadonlyObservable } from '../../observable.ts';
@@ -123,7 +123,6 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 	 */
 	characterBlinking?: ReadonlyObservable<boolean>;
 
-	getTexture?: (path: string) => Texture;
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
 

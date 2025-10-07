@@ -49,6 +49,7 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
@@ -694,7 +695,7 @@ function BackgroundPreview({ background, previewSize, className }: {
 				resolution={ dpr }
 				backgroundColor={ 0x000000 }
 				backgroundAlpha={ 0 }
-				forwardContexts={ [serviceManagerContext] }
+				forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 			>
 				<Container
 					scale={ { x: previewScale, y: previewScale } }

@@ -33,6 +33,7 @@ import { usePlayerVisionFilters } from '../../../graphics/common/visionFilters.t
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
@@ -372,7 +373,7 @@ function OutfitPreview({ outfit }: {
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
 				backgroundColor={ Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16) }
-				forwardContexts={ [serviceManagerContext] }
+				forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 			>
 				<GraphicsCharacter
 					position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }

@@ -34,6 +34,7 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GRAPHICS_BACKGROUND_TILE_SIZE, GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import './backgroundSelect.scss';
@@ -451,7 +452,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							renderArea={ { x: 0, y: 0, width: previewSize, height: previewSize } }
 							resolution={ dpr }
 							backgroundColor={ 0x000000 }
-							forwardContexts={ [serviceManagerContext] }
+							forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 						>
 							<Container
 								scale={ { x: previewScale, y: previewScale } }

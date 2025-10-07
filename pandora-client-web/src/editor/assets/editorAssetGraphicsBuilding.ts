@@ -104,7 +104,7 @@ export function EditorBuildAssetGraphicsContext<TAssetData>(
 			if (texture == null) {
 				throw new Error(`Image ${image} not found`);
 			}
-			return new EditorImageResource(image, texture, buildTextures);
+			return new EditorImageResource(`editor://${encodeURIComponent(asset.id)}/${image}`, texture, buildTextures);
 		},
 		builtAssetData,
 	};

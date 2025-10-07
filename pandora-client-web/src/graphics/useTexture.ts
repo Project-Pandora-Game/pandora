@@ -1,6 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { ERROR_TEXTURE } from '../assets/graphicsLoader.ts';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { useObservable } from '../observable.ts';
@@ -18,6 +18,12 @@ const SPECIAL_TEXTURES: ReadonlyMap<string, Texture> = new Map<string, Texture>(
 ]);
 
 /**
+ * This context allows overriding how useTexture behaves.
+ * If a function is supplied and returns non-empty result, it will be used instead of the usual result.
+ */
+export const UseTextureGetterOverride = createContext<((path: string) => Texture | undefined) | undefined>(undefined);
+
+/**
  * Resolves an image string to a texture. Supported image formats:
  * - `''` (empty string): `Texture.EMPTY`
  * - `'*'`: `Texture.WHITE`
@@ -25,15 +31,14 @@ const SPECIAL_TEXTURES: ReadonlyMap<string, Texture> = new Map<string, Texture>(
  * - `https://...`: Image available on URL
  * @param image - The image to resolve to texture
  * @param preferBlank - True: prefer blank (`Texture.EMPTY`) when texture is not ready; False (default): Reuse last ready texture when new texture is not ready
- * @param customGetTexture - Optional getter for resolving http-based textures (is not used for special ones)
  * @returns The requested texture, or `Texture.EMPTY` when the texture is not yet ready
  */
 export function useTexture(
 	image: string | '' | '*',
 	preferBlank: boolean = false,
-	customGetTexture?: (path: string) => Texture,
 ): Texture {
 	const manager = useObservable(GraphicsManagerInstance);
+	const customGetTexture = useContext(UseTextureGetterOverride);
 
 	const wanted = useRef('');
 	const [texture, setTexture] = useState<{
@@ -44,7 +49,7 @@ export function useTexture(
 
 	useEffect(() => {
 		const loader = manager?.loader;
-		if (customGetTexture || loader == null || SPECIAL_TEXTURES.has(image)) {
+		if (customGetTexture?.(image) || loader == null || SPECIAL_TEXTURES.has(image)) {
 			wanted.current = '';
 			setTexture(RESULT_NO_TEXTURE);
 			return;
@@ -107,9 +112,10 @@ export function useTexture(
 	}
 
 	// Custom getter has priority over loaded textures
-	if (customGetTexture != null) {
+	const customTexture = customGetTexture?.(image);
+	if (customTexture != null) {
 		suspenseAsset.setReady(true);
-		return customGetTexture(image);
+		return customTexture;
 	}
 
 	// If the loaded texture is the one we requested, return it

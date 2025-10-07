@@ -18,6 +18,7 @@ import { useEditor } from '../editorContextProvider.tsx';
 import { EditorServiceManagerContext } from '../services/editorServiceProvider.tsx';
 import { ResultCharacter, SetupCharacter } from './character/index.ts';
 import { ImageExporter } from './export/imageExporter.ts';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 
 function EditorColorPicker({ throttle: throttleMs }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -86,7 +87,7 @@ export function EditorScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext, EditorServiceManagerContext],
+		forwardContexts: [serviceManagerContext, EditorServiceManagerContext, UseTextureGetterOverride],
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,

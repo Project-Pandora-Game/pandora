@@ -10,7 +10,6 @@ import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
 import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { usePixiApp } from '../../../graphics/reconciler/appContext.ts';
-import { useTexture } from '../../../graphics/useTexture.ts';
 import { GetTextureBoundingBox } from '../../../graphics/utility/textureBoundingBox.ts';
 import { useObservable } from '../../../observable.ts';
 import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
@@ -93,11 +92,11 @@ export function SetupMeshLayerSelected({
 	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
 
-	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
+	const editorGetTexture = useMemo<((image: string) => Texture)>(() => {
 		return (i) => (editorAssetTextures.get(i) ?? Texture.EMPTY);
 	}, [editorAssetTextures]);
 
-	const texture = useTexture(image, undefined, editorGetTexture);
+	const texture = !image ? Texture.EMPTY : editorGetTexture(image);
 
 	const { color, alpha } = useItemColor(characterState.items, item, colorizationKey, state);
 
@@ -241,11 +240,11 @@ export function SetupAlphaImageMeshLayerSelected({
 	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
 
-	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
+	const editorGetTexture = useMemo<((image: string) => Texture)>(() => {
 		return (i) => (editorAssetTextures.get(i) ?? Texture.EMPTY);
 	}, [editorAssetTextures]);
 
-	const texture = useTexture(image, undefined, editorGetTexture);
+	const texture = !image ? Texture.EMPTY : editorGetTexture(image);
 
 	return (
 		<Container

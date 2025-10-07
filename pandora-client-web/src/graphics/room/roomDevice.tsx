@@ -725,10 +725,9 @@ function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null
 	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
 
-function GraphicsLayerRoomDeviceSprite({ item, layer, getTexture, roomMask }: {
+function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
-	getTexture?: (path: string) => PIXI.Texture;
 	roomMask?: PixiMaskSource;
 }): ReactElement | null {
 
@@ -747,7 +746,7 @@ function GraphicsLayerRoomDeviceSprite({ item, layer, getTexture, roomMask }: {
 		scale,
 	} = useImageResolutionAlternative(image);
 
-	const texture = useTexture(resizedImage, undefined, getTexture);
+	const texture = useTexture(resizedImage, undefined);
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 

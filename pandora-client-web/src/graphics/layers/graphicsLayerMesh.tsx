@@ -23,7 +23,6 @@ export function GraphicsLayerMesh({
 	item,
 	displayUvPose = false,
 	state,
-	getTexture,
 	debugConfig,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement {
@@ -44,8 +43,8 @@ export function GraphicsLayerMesh({
 	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
 
-	const texture = useTexture(useImageResolutionAlternative(image).image, undefined, getTexture);
-	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*', undefined, getTexture);
+	const texture = useTexture(useImageResolutionAlternative(image).image);
+	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
 	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
 
@@ -100,12 +99,10 @@ export function GraphicsLayerMesh({
 export function GraphicsLayerRoomDeviceMesh({
 	item,
 	layer,
-	getTexture,
 	roomMask,
 }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
-	getTexture?: (path: string) => PIXI.Texture;
 	roomMask?: PixiMaskSource;
 }): ReactElement {
 	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
@@ -158,8 +155,8 @@ export function GraphicsLayerRoomDeviceMesh({
 		return pixiState;
 	}, [cullClockwise]);
 
-	const texture = useTexture(useImageResolutionAlternative(image).image, undefined, getTexture);
-	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*', undefined, getTexture);
+	const texture = useTexture(useImageResolutionAlternative(image).image);
+	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
 	if (geometryData.type === '2d') {
 		return (

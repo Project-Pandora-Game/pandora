@@ -27,6 +27,7 @@ import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSetting
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
 import { useRoomViewProjection } from '../../graphics/room/roomProjection.tsx';
 import { RoomGraphics } from '../../graphics/room/roomScene.tsx';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
@@ -167,7 +168,7 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride],
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [viewportRef, viewportConfig]);
 
@@ -333,7 +334,7 @@ export function RoomPreview({
 	}, [focusDevice, graphicsManager, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
-		forwardContexts: [serviceManagerContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride],
 		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
 		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),

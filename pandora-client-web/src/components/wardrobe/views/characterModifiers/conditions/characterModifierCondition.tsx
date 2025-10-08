@@ -11,6 +11,11 @@ import { ConditionItemWithAttribute } from './conditionItemWithAttribute.tsx';
 import { ConditionItemWithEffect } from './conditionItemWithEffect.tsx';
 import { ConditionItemWithName } from './conditionItemWithName.tsx';
 
+export type CharacterModifierConditionListEntryData = {
+	condition: CharacterModifierCondition;
+	invert: boolean;
+};
+
 export type CharacterModifierConditionListEntryProps<TCondition extends CharacterModifierCondition['type'] = CharacterModifierCondition['type']> = {
 	condition: Immutable<Extract<CharacterModifierCondition, { type: TCondition; }>>;
 	setCondition?: (newCondition: Extract<CharacterModifierCondition, { type: TCondition; }>) => void;

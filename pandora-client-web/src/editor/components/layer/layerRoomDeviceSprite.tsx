@@ -1,12 +1,14 @@
 import { castDraft, produce, type Immutable } from 'immer';
-import { EMPTY_ARRAY, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride } from 'pandora-common';
+import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride } from 'pandora-common';
 import { ReactElement, useCallback, useId } from 'react';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useStandaloneConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 import { LayerImageSelectInput, LayerOffsetSettingTemplate, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 import { EditorLayerColorPicker, LayerColorizationSetting } from './layerMesh.tsx';
 
@@ -22,6 +24,16 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 		image,
 		imageOverrides,
 	} = useObservable(layer.definition);
+
+	const characterState = useEditorCharacterState();
+	const evaluator = useStandaloneConditionEvaluator(characterState.assetManager);
+	const wornItem = characterState.items
+		.filter((i) => i.isType('roomDeviceWearablePart'))
+		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);
+
+	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
+		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
+	}, [evaluator, wornItem]);
 
 	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
 		return (
@@ -67,6 +79,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 					d.condition = castDraft(newConditions);
 				}) }
 				makeNewEntry={ () => ({ offset: { x: offset?.x ?? 0, y: offset?.y ?? 0 }, condition: [[]] }) }
+				conditionEvalutator={ evaluateCondition }
 			/>
 			<hr />
 			<LayerColorizationSetting layer={ layer } />
@@ -136,6 +149,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 					d.condition = castDraft(newConditions);
 				}) }
 				makeNewEntry={ () => ({ image: '', condition: [[]] }) }
+				conditionEvalutator={ evaluateCondition }
 			/>
 		</>
 	);

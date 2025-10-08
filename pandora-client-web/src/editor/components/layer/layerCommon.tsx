@@ -1,18 +1,16 @@
 import type { Immutable } from 'immer';
-import { SortPathStrings, type Condition, type GraphicsSourceLayer } from 'pandora-common';
-import { ReactElement, useCallback, useId, useMemo, useState, type ReactNode } from 'react';
-import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { SortPathStrings, type AtomicCondition, type Condition, type GraphicsSourceLayer } from 'pandora-common';
+import { ReactElement, useId, useMemo, type ReactNode } from 'react';
 import { useEvent } from '../../../common/useEvent.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
 import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetGraphicsBase.ts';
-import { ParseCondition, SerializeCondition } from '../../parsing.ts';
+import { EditorConditionInput } from './conditionEditor.tsx';
 
 export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
 	const id = useId();
@@ -140,7 +138,7 @@ export function LayerOffsetSetting({ layer }: { layer: EditorAssetGraphicsWornLa
 }
 
 export type SettingConditionOverrideTemplateDetails<OverrideEntry> = React.FC<{ entry: OverrideEntry; update: (newValue: OverrideEntry) => void; }>;
-export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, getConditions, withConditions, makeNewEntry }: {
+export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator }: {
 	overrides: readonly OverrideEntry[];
 	update: (newValue: readonly OverrideEntry[]) => void;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -148,6 +146,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 	getConditions: (entry: OverrideEntry) => Immutable<Condition>;
 	withConditions: (entry: OverrideEntry, newConditions: Immutable<Condition>) => OverrideEntry;
 	makeNewEntry: () => OverrideEntry;
+	conditionEvalutator?: (condition: Immutable<AtomicCondition>) => boolean | undefined;
 }): ReactElement {
 	return (
 		<Column className='SettingConditionOverrideTemplate' padding='small'>
@@ -176,11 +175,12 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 							</Button>
 						</Column>
 					</Row>
-					<ConditionInput
+					<EditorConditionInput
 						condition={ getConditions(entry) }
 						update={ (newConditions) => {
 							update(overrides.toSpliced(i, 1, withConditions(entry, newConditions)));
 						} }
+						conditionEvalutator={ conditionEvalutator }
 					/>
 				</Column>
 			)) }
@@ -195,88 +195,6 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 			>
 				Add override
 			</Button>
-		</Column>
-	);
-}
-
-function ConditionInput({ condition, update }: { condition: Immutable<Condition>; update: (newCondition: Immutable<Condition>) => void; }): ReactElement | null {
-	const id = useId();
-	const assetManager = useAssetManager();
-	const [value, setValue] = useUpdatedUserInput(SerializeCondition(condition));
-	const [error, setError] = useState<string | null>(null);
-
-	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setValue(e.target.value);
-		try {
-			const result = ParseCondition(e.target.value, assetManager.getAllBones().map((b) => b.name));
-			setError(null);
-			update(result);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : String(err));
-		}
-	}, [setValue, assetManager, update]);
-
-	return (
-		<Column gap='small' className='ConditionInput'>
-			<Row alignY='center'>
-				<label htmlFor={ `${id}:input` }>Condition:</label>
-				<ContextHelpButton>
-					<p>
-						This field lets you define conditions for when this override should trigger.<br />
-						Examples further down. Conditions can be chained with AND ( <code>&amp;</code> ) and OR ( <code>|</code> ) characters.
-					</p>
-					<p>
-						A condition follows the format <code>[name][&lt;|=|&gt;][value]</code>.<br />
-						The first value of a condition can either be the name of a bone or of a module defined in<br />
-						'*.asset.ts' file of the current asset later on.<br />
-						If it is the name of a module you need to prefix it with <code>m_</code> such as <code>m_[modulename]</code>.
-					</p>
-					<p>
-						The value of a bone can be between -180 and 180 (see Pose-tab).<br />
-						The value of a module is typically the id of the related variant.
-					</p>
-					<p>
-						You can find the names of all bones in the file <code>/pandora-assets/src/bones.ts</code><br />
-						Note that <code>arm_r</code> means only the right arm but there is also <code>arm_l</code> for the left one.
-					</p>
-					<p>
-						Hand rotation and finger positions can also be specified: <br />
-						<code>hand_&lt;'rotation' | 'fingers'&gt;_&lt;'left' | 'right'&gt;</code> <br />
-						For rotation, the options are: <code>up</code>, <code>down</code>, <code>forward</code>, <code>backward</code>.<br />
-						For fingers, the options are: <code>fist</code> and <code>spread</code>.
-					</p>
-					Some examples:
-					<ul>
-						<li>
-							<code>m_ropeStateModule=harness&amp;breasts&gt;100</code><br />
-							This means that if the module with the name <code>ropeStateModule</code> has <code>harness</code> selected<br />
-							and the breasts slider is larger than 100, this override will activate.
-						</li>
-						<li>
-							<code>leg_l&lt;0|backView&gt;0</code><br />
-							This means that if the left leg slider is in the negative OR the character is in<br />
-							the back view, this override will activate.<br />
-							<code>backView</code> is a fake bone that has two states: <code>backView&gt;0</code> and <code>backView=0</code>
-						</li>
-						<li>
-							<code>hand_rotation_left=up</code><br />
-							This means that if the left hand is rotated up, this override will activate.
-						</li>
-						<li>
-							<code>hand_fingers_right=spread</code><br />
-							This means that if the right hand fingers are in a spread position, this override will activate.
-						</li>
-					</ul>
-				</ContextHelpButton>
-			</Row>
-			<textarea
-				id={ `${id}:input` }
-				spellCheck='false'
-				rows={ 1 }
-				value={ value }
-				onChange={ onChange }
-			/>
-			{ error != null && <div className='error'>{ error }</div> }
 		</Column>
 	);
 }

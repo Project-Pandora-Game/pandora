@@ -1,14 +1,16 @@
 import { castDraft, produce, type Draft, type Immutable } from 'immer';
-import { CloneDeepMutable, EMPTY_ARRAY, type RoomDeviceGraphicsCharacterPosition, type RoomDeviceGraphicsCharacterPositionOverride } from 'pandora-common';
-import { ReactElement, useId } from 'react';
+import { CloneDeepMutable, EMPTY_ARRAY, type AtomicCondition, type RoomDeviceGraphicsCharacterPosition, type RoomDeviceGraphicsCharacterPositionOverride } from 'pandora-common';
+import { ReactElement, useCallback, useId } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 import { LayerOffsetSettingTemplate, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 
 export function LayerRoomDeviceSlotUI({ layer }: {
@@ -25,6 +27,16 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 		characterPosition,
 		characterPositionOverrides,
 	} = useObservable(layer.definition);
+
+	const characterState = useEditorCharacterState();
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const wornItem = characterState.items
+		.filter((i) => i.isType('roomDeviceWearablePart'))
+		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);
+
+	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
+		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
+	}, [evaluator, wornItem]);
 
 	return (
 		<>
@@ -84,6 +96,7 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 					d.condition = castDraft(newConditions);
 				}) }
 				makeNewEntry={ () => ({ position: CloneDeepMutable(characterPosition), condition: [[]] }) }
+				conditionEvalutator={ evaluateCondition }
 			/>
 		</>
 	);

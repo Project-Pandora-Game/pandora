@@ -1,0 +1,67 @@
+@use '../../../styles/common';
+
+.LogicConditionEditor {
+	display: grid;
+	grid-template-columns: 4em 0.25em minmax(min-content, 1fr) auto; // And/Or | status bar | details | actions
+	grid-auto-rows: minmax(2em, auto);
+	gap: 0.25em;
+
+	.logicToggle {
+		height: 2em;
+		width: 3em;
+		transform: translate(0, -50%);
+
+		&.and {
+			justify-self: end;
+		}
+	}
+
+	.groupIndicator {
+		width: 0.25em;
+		margin: 0.2em 0;
+
+		&.inactive {
+			background-color: common.$theme-wardrobe-modifiers-indication-inactive;
+		}
+
+		&.active {
+			background-color: common.$theme-wardrobe-modifiers-indication-active;
+		}
+	}
+
+	.conditionDetails {
+		padding-left: 0.25em;
+		padding-right: 0.2em;
+		overflow-wrap: anywhere;
+		background-color: common.$theme-normal-background-secondary;
+
+		&.inactive {
+			background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-inactive 17%, common.$theme-normal-background-secondary);
+		}
+
+		&.active {
+			background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-active 27%, common.$theme-normal-background-secondary);
+		}
+
+		> span {
+			display: inline-block;
+		}
+
+		> span, > div {
+			button {
+				display: inline;
+			}
+
+			select {
+				padding: 0.1em 0.3em;
+			}
+		}
+	}
+
+	.quickActions {
+		button {
+			width: 1.5em;
+			padding: 0.25em;
+		}
+	}
+}

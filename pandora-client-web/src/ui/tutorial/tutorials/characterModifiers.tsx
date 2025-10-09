@@ -308,7 +308,8 @@ export const TUTORIAL_CHARACTER_MODIFIERS: TutorialConfig = {
 								(e.g. the first entry has the highest priority and applies its effect first).
 							</p>
 							<p>
-								For the sake of this tutorial, please add this modifier without using a preconfigured template.
+								For the sake of this tutorial, please add this modifier without using a preconfigured template.<br />
+								Adding a modifier will not yet activate the modifier on your character.
 							</p>
 						</>
 					),

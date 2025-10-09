@@ -29,6 +29,14 @@ export function WikiNew(): ReactElement {
 				It may be advisable to first talk to other users a bit, get to know them, and look if they have a profile that tells you
 				something about them before you give any permissions to them.
 			</p>
+			<p>
+				That said, if you do not want other users to be able to send you permission prompts, e.g. because your character is
+				a pure dominant, or you feel pressured by suddenly appearing permission popups from other users,
+				you should consider changing the "Interact and to use other allowed permissions" master-permission in
+				the "Permissions" tab of the settings screen to "no".<br />
+				This would then show other users clearly that you are not interested in spontaneous plays without a
+				talk in advance.
+			</p>
 
 			<h3>Main chat message types</h3>
 

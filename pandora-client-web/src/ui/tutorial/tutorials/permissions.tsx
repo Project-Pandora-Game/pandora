@@ -96,10 +96,30 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							</p>
 							<p>
 								The master-permission is set to "prompt" by default, which is indicated by the icon of the figure with the
-								speech bubble on the right.<br />
-								It cannot be set to "yes" for everyone globally, only for individual characters. This is intentional
-								to make Pandora a safer and healthier platform, as it limits the potential for trolling severely
-								for the prize of a quick button press, as you typically decide this only once per
+								speech bubble on the right.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.settings-tab > .settings-tab-contents .flex-1',
+						filter: (e) => e.innerText.includes('Interact and to use other allowed permissions'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								If you do not want other users to be able to send you permission prompts, e.g. because your character is
+								a pure dominant, or you feel pressured by suddenly appearing permission popups from other users,
+								you should consider changing the "Interact and to use other allowed permissions" master-permission to "no".
+								This then also shows other users clearly that you are not interested in spontaneous plays without a
+								talk in advance.
+							</p>
+							<p>
+								Note that this particular permission cannot be set to "yes" for everyone globally, only for individual characters.
+								This is intentional to make Pandora a safer and healthier platform, as it limits the potential for trolling
+								severely for the prize of a quick button press, as you typically decide this only once per
 								new character you interact with.
 							</p>
 						</>

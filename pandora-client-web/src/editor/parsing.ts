@@ -1,7 +1,23 @@
 import { Immutable } from 'immer';
-import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher, AtomicConditionLegsSchema, CharacterViewSchema, SplitStringFirstOccurrence } from 'pandora-common';
+import {
+	ArmFingersSchema,
+	ArmRotationSchema,
+	Assert,
+	AssertNever,
+	AtomicCondition,
+	AtomicConditionLegsSchema,
+	CharacterViewSchema,
+	Condition,
+	ConditionEqOperatorSchema,
+	ConditionOperatorSchema,
+	LayerImageOverride,
+	SplitStringFirstOccurrence,
+	TransformDefinition,
+	ZodMatcher,
+} from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
+const IsEqConditionOperator = ZodMatcher(ConditionEqOperatorSchema);
 
 export function SplitAndClean(input: string, separator: string): string[] {
 	return input
@@ -93,6 +109,9 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	}
 
 	if (parsed[1].startsWith('m_')) {
+		if (!IsEqConditionOperator(parsed[2])) {
+			throw new Error(`Invalid operator in condition '${input}' (only = and != is supported)`);
+		}
 		return {
 			module: parsed[1].slice(2),
 			operator: parsed[2],
@@ -105,6 +124,9 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 			throw new Error(`Invalid arm side in condition '${input}'`);
 		}
 		if (armType === 'rotation') {
+			if (!IsEqConditionOperator(parsed[2])) {
+				throw new Error(`Invalid operator in condition '${input}' (only = and != is supported)`);
+			}
 			return {
 				armType,
 				side,
@@ -113,6 +135,9 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 			};
 		}
 		if (armType === 'fingers') {
+			if (!IsEqConditionOperator(parsed[2])) {
+				throw new Error(`Invalid operator in condition '${input}' (only = and != is supported)`);
+			}
 			return {
 				armType,
 				side,

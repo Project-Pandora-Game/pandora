@@ -4,7 +4,7 @@ import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
-import type { ConditionOperator } from '../graphics/index.ts';
+import type { ConditionEqOperator } from '../graphics/index.ts';
 import type { AppearanceItems, IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/index.ts';
 import type { IAssetModuleTypes, ModuleType } from '../modules.ts';
 
@@ -63,7 +63,7 @@ export interface IItemModule<out TProperties = unknown, out TStaticData = unknow
 
 	getProperties(): readonly Immutable<TProperties>[];
 
-	evalCondition(operator: ConditionOperator, value: string): boolean;
+	evalCondition(operator: ConditionEqOperator, value: string): boolean;
 	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes<TProperties, TStaticData>[Type]['actions']): IItemModule<TProperties, TStaticData, Type> | null;
 	getActionInteractionType?(action: IAssetModuleTypes<TProperties, TStaticData>[Type]['actions']): ItemInteractionType;
 

@@ -10,6 +10,7 @@ import {
 	BONE_MAX,
 	BONE_MIN,
 	CharacterViewSchema,
+	ConditionEqOperatorSchema,
 	ConditionOperatorSchema,
 	type AtomicCondition,
 	type Condition,
@@ -287,7 +288,7 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 					} }
 				/>
 				<EnumSelect
-					schema={ ConditionOperatorSchema }
+					schema={ ConditionEqOperatorSchema }
 					value={ condition.operator }
 					onChange={ (v) => {
 						setCondition?.(produce(condition, (d) => {
@@ -364,7 +365,7 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 					/>
 					{ ' arm rotation ' }
 					<EnumSelect
-						schema={ ConditionOperatorSchema }
+						schema={ ConditionEqOperatorSchema }
 						value={ condition.operator }
 						onChange={ (v) => {
 							setCondition?.(produce(condition, (d) => {
@@ -397,7 +398,7 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 					/>
 					{ ' arm fingers ' }
 					<EnumSelect
-						schema={ ConditionOperatorSchema }
+						schema={ ConditionEqOperatorSchema }
 						value={ condition.operator }
 						onChange={ (v) => {
 							setCondition?.(produce(condition, (d) => {

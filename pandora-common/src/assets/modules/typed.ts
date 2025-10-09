@@ -4,10 +4,10 @@ import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
-import { Satisfies } from '../../utility/misc.ts';
+import { AssertNever, Satisfies } from '../../utility/misc.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
-import type { ConditionOperator } from '../graphics/index.ts';
+import type { ConditionEqOperator } from '../graphics/index.ts';
 import type { AppearanceItems, IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/index.ts';
 import { IAssetModuleDefinition, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
@@ -210,10 +210,10 @@ export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknow
 		return [];
 	}
 
-	public evalCondition(operator: ConditionOperator, value: string): boolean {
+	public evalCondition(operator: ConditionEqOperator, value: string): boolean {
 		return operator === '=' ? this.activeVariant.id === value :
 			operator === '!=' ? this.activeVariant.id !== value :
-				false;
+				AssertNever(operator);
 	}
 
 	public doAction({ processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties, TStaticData> | null {

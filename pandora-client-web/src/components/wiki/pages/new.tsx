@@ -34,7 +34,7 @@ export function WikiNew(): ReactElement {
 				a pure dominant, or you feel pressured by suddenly appearing permission popups from other users,
 				you should consider changing the "Interact and to use other allowed permissions" master-permission in
 				the "Permissions" tab of the settings screen to "no".<br />
-				This would then shows other users clearly that you are not interested in spontaneous plays without a
+				This would then show other users clearly that you are not interested in spontaneous plays without a
 				talk in advance.
 			</p>
 

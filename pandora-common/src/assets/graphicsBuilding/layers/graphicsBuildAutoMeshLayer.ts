@@ -31,7 +31,7 @@ export function AutoMeshLayerGenerateVariableData(
 				currentOpen = stop;
 				return {
 					id: start.toString(10),
-					name: (start === end) ? `${start}` : `<${start},${end}>`,
+					name: (start === end) ? `${config.bone}=${start}` : `${config.bone} ∈〈${start},${end}〉`,
 					condition: (start === end) ? [{ bone: config.bone, operator: '=', value: start }] :
 						[
 							{ bone: config.bone, operator: '>=', value: start },

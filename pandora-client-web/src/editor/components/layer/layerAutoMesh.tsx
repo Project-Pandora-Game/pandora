@@ -639,7 +639,27 @@ function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }:
 			{
 				variable.type === 'bone' ? (
 					<Column className='flex-1'>
-						<span>Based on bone rotation</span>
+						<Row alignY='center' gap='small'>
+							<span>
+								Based on rotation of bone <code>{ variable.bone }</code>
+							</span>
+							<ContextHelpButton>
+								<p>
+									This variable will produce several image variants based on possible rotations of a given bone.<br />
+									To make use of this, enter the points where the image should change in the range of { BONE_MIN } to { BONE_MAX }<br />
+									as one or more values, separated by comma.
+								</p>
+								<p>
+									Example: <code>0, 90</code><br />
+									This will produce three ranges with one image assigned to each:
+								</p>
+								<ul>
+									<li><code>{ BONE_MIN }</code> to <code>-1</code></li>
+									<li><code>0</code> to <code>89</code></li>
+									<li><code>90</code> to <code>{ BONE_MAX }</code></li>
+								</ul>
+							</ContextHelpButton>
+						</Row>
 						<TextInput
 							value={ variable.stops.map((s) => s.toString(10)).join(', ') }
 							onChange={ (newValue) => {

@@ -26,6 +26,7 @@ const FORWARDED_PROPS = [
 	'placeholder',
 	'size',
 	'spellCheck',
+	'list',
 	// Events
 	'onKeyDown',
 	'onKeyPress',

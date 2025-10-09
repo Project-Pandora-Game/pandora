@@ -12,10 +12,12 @@ import {
 	CharacterViewSchema,
 	ConditionEqOperatorSchema,
 	ConditionOperatorSchema,
+	type Asset,
+	type AssetModuleDefinition,
 	type AtomicCondition,
 	type Condition,
 } from 'pandora-common';
-import { ReactElement, useCallback, useId, useMemo, useState, type ReactNode } from 'react';
+import { createContext, ReactElement, useCallback, useContext, useId, useMemo, useState, type ReactNode } from 'react';
 import * as z from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -29,10 +31,36 @@ import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobeUtils.t
 import { LogicConditionEditor, type LogicConditionEditorCondition, type LogicConditionEditorConditionComponentProps } from '../../../ui/components/logicConditionEditor/logicConditionEditor.tsx';
 import { ParseCondition, SerializeCondition } from '../../parsing.ts';
 
-export function EditorConditionInput({ condition, update, conditionEvalutator }: {
+export interface EditorConditionInputMetadata {
+	/** Map of modules to module options */
+	modules?: Record<string, string[] | null>;
+}
+
+export function GetEditorConditionInputMetadataForAsset(asset: Asset<'personal'> | Asset<'bodypart'> | Asset<'roomDevice'>): Immutable<EditorConditionInputMetadata> {
+	const result: EditorConditionInputMetadata = { };
+
+	if (asset.definition.modules != null) {
+		result.modules = {};
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		for (const [module, moduleDefinition] of Object.entries<Immutable<AssetModuleDefinition<any, any>>>(asset.definition.modules)) {
+			if (moduleDefinition.type === 'typed') {
+				result.modules[module] = moduleDefinition.variants.map((v) => v.id);
+			} else {
+				result.modules[module] = null;
+			}
+		}
+	}
+
+	return result;
+}
+
+const metadataContext = createContext<Immutable<EditorConditionInputMetadata> | undefined>(undefined);
+
+export function EditorConditionInput({ condition, update, conditionEvalutator, metadata }: {
 	condition: Immutable<Condition>;
 	update: (newCondition: Immutable<Condition>) => void;
 	conditionEvalutator?: (condition: Immutable<AtomicCondition>) => boolean | undefined;
+	metadata?: Immutable<EditorConditionInputMetadata>;
 }): ReactElement | null {
 	const [textMode, setTextMode] = useState(false);
 
@@ -100,18 +128,20 @@ export function EditorConditionInput({ condition, update, conditionEvalutator }:
 					Text
 				</Button>
 			</Row>
-			{ textMode ? (
-				<ConditionInputText
-					condition={ condition }
-					update={ update }
-				/>
-			) : (
-				<ConditionInputEditor
-					condition={ condition }
-					update={ update }
-					conditionEvalutator={ conditionEvalutator }
-				/>
-			) }
+			<metadataContext.Provider value={ metadata }>
+				{ textMode ? (
+					<ConditionInputText
+						condition={ condition }
+						update={ update }
+					/>
+				) : (
+					<ConditionInputEditor
+						condition={ condition }
+						update={ update }
+						conditionEvalutator={ conditionEvalutator }
+					/>
+				) }
+			</metadataContext.Provider>
 		</Column>
 	);
 }
@@ -271,7 +301,9 @@ function ConditionInputAdd({ addCondition }: {
 }
 
 function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorConditionComponentProps<Immutable<AtomicCondition>>): ReactNode {
+	const id = useId();
 	const assetManager = useAssetManager();
+	const metadata = useContext(metadataContext);
 
 	if ('module' in condition) {
 		Assert(condition.module != null);
@@ -280,6 +312,9 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 				{ 'Module ' }
 				<TextInput
 					className='zero-width flex-1'
+					autoComplete='off'
+					autoCorrect='off'
+					list={ metadata?.modules != null ? `${id}:module-data-list` : undefined }
 					value={ condition.module }
 					onChange={ (v) => {
 						setCondition?.(produce(condition, (d) => {
@@ -287,6 +322,13 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 						}));
 					} }
 				/>
+				{ metadata?.modules != null ? (
+					<datalist id={ `${id}:module-data-list` }>
+						{ Object.keys(metadata.modules).map((module) => (
+							<option key={ module } value={ module } />
+						)) }
+					</datalist>
+				) : null }
 				<EnumSelect
 					schema={ ConditionEqOperatorSchema }
 					value={ condition.operator }
@@ -298,6 +340,9 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 				/>
 				<TextInput
 					className='zero-width flex-1'
+					autoComplete='off'
+					autoCorrect='off'
+					list={ metadata?.modules != null && Object.hasOwn(metadata.modules, condition.module) ? `${id}:module-values-data-list` : undefined }
 					value={ condition.value }
 					onChange={ (v) => {
 						setCondition?.(produce(condition, (d) => {
@@ -305,6 +350,13 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 						}));
 					} }
 				/>
+				{ (metadata?.modules != null && Object.hasOwn(metadata.modules, condition.module)) ? (
+					<datalist id={ `${id}:module-values-data-list` }>
+						{ metadata.modules[condition.module]?.map((option, i) => (
+							<option key={ i } value={ option } />
+						)) }
+					</datalist>
+				) : null }
 			</Row>
 		);
 	} else if ('bone' in condition) {
@@ -434,11 +486,19 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 				</Button>
 				<TextInput
 					className='flex-1'
+					autoComplete='off'
+					autoCorrect='off'
+					list={ `${id}:attribute-data-list` }
 					value={ condition.attribute.replace(/^!/, '') }
 					onChange={ (v) => {
 						setCondition?.({ attribute: (condition.attribute.startsWith('!') ? '!' : '') + v });
 					} }
 				/>
+				<datalist id={ `${id}:attribute-data-list` }>
+					{ Array.from(assetManager.attributes.entries()).map(([attribute, definition]) => (
+						<option key={ attribute } value={ attribute } label={ `${definition.name} (${attribute})` } />
+					)) }
+				</datalist>
 			</Row>
 		);
 	} else if ('legs' in condition) {

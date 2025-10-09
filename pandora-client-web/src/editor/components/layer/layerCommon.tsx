@@ -10,7 +10,7 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { useObservable } from '../../../observable.ts';
 import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetGraphicsBase.ts';
-import { EditorConditionInput } from './conditionEditor.tsx';
+import { EditorConditionInput, type EditorConditionInputMetadata } from './conditionEditor.tsx';
 
 export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
 	const id = useId();
@@ -138,7 +138,7 @@ export function LayerOffsetSetting({ layer }: { layer: EditorAssetGraphicsWornLa
 }
 
 export type SettingConditionOverrideTemplateDetails<OverrideEntry> = React.FC<{ entry: OverrideEntry; update: (newValue: OverrideEntry) => void; }>;
-export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator }: {
+export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator, conditionsMetadata }: {
 	overrides: readonly OverrideEntry[];
 	update: (newValue: readonly OverrideEntry[]) => void;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -147,6 +147,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 	withConditions: (entry: OverrideEntry, newConditions: Immutable<Condition>) => OverrideEntry;
 	makeNewEntry: () => OverrideEntry;
 	conditionEvalutator?: (condition: Immutable<AtomicCondition>) => boolean | undefined;
+	conditionsMetadata?: Immutable<EditorConditionInputMetadata>;
 }): ReactElement {
 	return (
 		<Column className='SettingConditionOverrideTemplate' padding='small'>
@@ -181,6 +182,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 							update(overrides.toSpliced(i, 1, withConditions(entry, newConditions)));
 						} }
 						conditionEvalutator={ conditionEvalutator }
+						metadata={ conditionsMetadata }
 					/>
 				</Column>
 			)) }

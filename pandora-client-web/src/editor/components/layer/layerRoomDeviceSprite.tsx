@@ -1,6 +1,7 @@
 import { castDraft, produce, type Immutable } from 'immer';
 import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride } from 'pandora-common';
-import { ReactElement, useCallback, useId } from 'react';
+import { ReactElement, useCallback, useId, useMemo } from 'react';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
@@ -9,6 +10,7 @@ import { useStandaloneConditionEvaluator } from '../../../graphics/appearanceCon
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
+import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
 import { LayerImageSelectInput, LayerOffsetSettingTemplate, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 import { EditorLayerColorPicker, LayerColorizationSetting } from './layerMesh.tsx';
 
@@ -16,6 +18,10 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 	layer: EditorAssetGraphicsRoomDeviceLayer<'sprite'>;
 }): ReactElement {
 	const id = useId();
+	const assetManager = useAssetManager();
+	let asset = assetManager.getAssetById(layer.assetGraphics.id);
+	if (!asset?.isType('roomDevice'))
+		asset = undefined;
 
 	const {
 		offset,
@@ -80,6 +86,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 				}) }
 				makeNewEntry={ () => ({ offset: { x: offset?.x ?? 0, y: offset?.y ?? 0 }, condition: [[]] }) }
 				conditionEvalutator={ evaluateCondition }
+				conditionsMetadata={ useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]) }
 			/>
 			<hr />
 			<LayerColorizationSetting layer={ layer } />
@@ -150,6 +157,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 				}) }
 				makeNewEntry={ () => ({ image: '', condition: [[]] }) }
 				conditionEvalutator={ evaluateCondition }
+				conditionsMetadata={ useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]) }
 			/>
 		</>
 	);

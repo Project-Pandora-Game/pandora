@@ -1,6 +1,6 @@
 import { castDraft, produce, type Draft, type Immutable } from 'immer';
 import { CloneDeepMutable, EMPTY_ARRAY, type AtomicCondition, type RoomDeviceGraphicsCharacterPosition, type RoomDeviceGraphicsCharacterPositionOverride } from 'pandora-common';
-import { ReactElement, useCallback, useId } from 'react';
+import { ReactElement, useCallback, useId, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -11,6 +11,7 @@ import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceCon
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
+import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
 import { LayerOffsetSettingTemplate, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 
 export function LayerRoomDeviceSlotUI({ layer }: {
@@ -98,6 +99,7 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 				}) }
 				makeNewEntry={ () => ({ position: CloneDeepMutable(characterPosition), condition: [[]] }) }
 				conditionEvalutator={ evaluateCondition }
+				conditionsMetadata={ useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]) }
 			/>
 		</>
 	);

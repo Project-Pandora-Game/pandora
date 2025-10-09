@@ -1,16 +1,17 @@
+import { castDraft, produce, type Immutable } from 'immer';
 import { capitalize, cloneDeep, remove, uniq } from 'lodash-es';
-import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority, SortPathStrings } from 'pandora-common';
-import React, { ReactElement, useId, useMemo, useState } from 'react';
+import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority, SortPathStrings, type AtomicCondition, type LayerImageOverride } from 'pandora-common';
+import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useObservable } from '../../../observable.ts';
 import { useLayerImageSettingsForScalingStop, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
@@ -18,8 +19,9 @@ import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAsse
 import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditorLayerTint } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing.ts';
-import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
+import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
+import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 
 export function LayerMeshUI({ layer }: {
 	layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>;
@@ -493,100 +495,75 @@ function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'mes
 }
 
 function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>; stop?: number; }): ReactElement {
-	const assetManager = useAssetManager();
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
-	const [value, setValue] = useUpdatedUserInput(
-		SerializeLayerImageOverrides(stopSettings.overrides),
-		[layer, stop]);
-	const [error, setError] = useState<string | null>(null);
+	const assetManager = useAssetManager();
+	let asset = assetManager.getAssetById(layer.assetGraphics.id);
+	if (!asset || (!asset.isType('bodypart') && !asset.isType('personal') && !asset.isType('roomDevice'))) {
+		asset = undefined;
+	}
 
-	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setValue(e.target.value);
-		try {
-			const result = ParseLayerImageOverrides(e.target.value, assetManager.getAllBones().map((b) => b.name));
-			setError(null);
-			layer.modifyDefinition((d) => {
-				if (!stop) {
-					d.image.overrides = result.slice();
-					return;
-				}
-				const res = d.scaling?.stops.find((s) => s[0] === stop)?.[1];
-				if (!res) {
-					throw new Error('Failed to get stop');
-				}
-				res.overrides = result.slice();
-			});
-		} catch (err) {
-			setError(err instanceof Error ? err.message : String(err));
-		}
+	const characterState = useEditorCharacterState();
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const wornItem = characterState.items
+		.find((i) => i.asset.id === layer.assetGraphics.id || (i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === layer.assetGraphics.id));
 
-	});
+	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
+		if ('module' in c && wornItem == null)
+			return undefined;
+
+		return evaluator.evalCondition(c, wornItem ?? null);
+	}, [evaluator, wornItem]);
+
+	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
+		return (
+			<>
+				<LayerImageSelectInput
+					asset={ layer.assetGraphics }
+					value={ entry.image }
+					update={ (newValue) => {
+						update(produce(entry, (d) => {
+							d.image = newValue;
+						}));
+					} }
+				/>
+				{ entry.normalMapImage !== undefined ? (
+					<span>This entry has Editor-unsupported property <code>normalMapImage</code></span>
+				) : null }
+				{ entry.uvPose !== undefined ? (
+					<span>This entry has Editor-unsupported property <code>uvPose</code></span>
+				) : null }
+			</>
+		);
+	}, [layer]);
 
 	return (
-		<Row alignY='center'>
-			<div>
-				Image overrides:
-				<ContextHelpButton>
-					<p>
-						This field lets you define conditions for when the chosen image should be replaced.<br />
-						An image can be replaced with another image uploaded in the Asset-tab or the <br />
-						current image can be hidden by not providing a trailing filename for the override.<br />
-						Examples further down. Conditions can be chained with AND ( &amp; ) and OR ( | ) characters.
-					</p>
-					<p>
-						A condition follows the format [name][&lt;|=|&gt;][value] [image filename(optional)].<br />
-						The first value of a condition can either be the name of a bone or of a module defined in<br />
-						'*.asset.ts' file of the current asset later on.<br />
-						If it is the name of a module you need to prefix it with 'm_' such as m_[modulename].
-					</p>
-					<p>
-						The value of a bone can be between -180 and 180 (see Pose-tab).<br />
-						The value of a module is typically the id of the related variant.
-					</p>
-					<p>
-						You can find the names of all bones in the file /pandora-assets/src/bones.ts<br />
-						Note that arm_r means only the right arm but there is also arm_l for the left one.
-					</p>
-					<p>
-						Hand rotation and finger positions can also be specified: <br />
-						`hand_&lt;'rotation' | 'fingers'&gt;_&lt;'left' | 'right'&gt;` <br />
-						For rotation, the options are: up, down, forward, backward.<br />
-						For fingers, the options are: fist and spread.
-					</p>
-					Every line in the input field is one condition. Some examples:
-					<ul>
-						<li>
-							m_ropeStateModule=harness&amp;breasts&gt;100 rope_harness_largest.png<br />
-							This means that if the module with the name 'ropeStateModule' has harness selected<br />
-							and the breasts slider is larger than 100, the default layer image is replaced.
-						</li>
-						<li>
-							leg_l&lt;0|backView&gt;0 <br />
-							This means that if the left leg slider is in the negative OR the character is in<br />
-							the back view, we hide the current image (we replace it with no image).<br />
-							'backView' is a fake bone that has two states: backView&gt;0 and backView=0<br />
-							It is useful for some assets like shoes to stop the front or back view image<br />
-							from leaking from behind the body when undesired.
-						</li>
-						<li>
-							hand_rotation_left=up <br />
-							This means that if the left hand is rotated up, the default layer image is replaced.
-						</li>
-						<li>
-							hand_fingers_right=spread <br />
-							This means that if the right hand fingers are in a spread position, the default layer image is replaced.
-						</li>
-					</ul>
-				</ContextHelpButton>
-			</div>
-			<textarea
-				spellCheck='false'
-				rows={ 6 }
-				value={ value }
-				onChange={ onChange }
+		<>
+			<h4>Image overrides</h4>
+			<SettingConditionOverrideTemplate<Immutable<LayerImageOverride>>
+				overrides={ stopSettings.overrides }
+				update={ (newOverrides) => {
+					layer.modifyDefinition((d) => {
+						if (!stop) {
+							d.image.overrides = castDraft(newOverrides);
+							return;
+						}
+						const res = d.scaling?.stops.find((s) => s[0] === stop)?.[1];
+						if (!res) {
+							throw new Error('Failed to get stop');
+						}
+						res.overrides = castDraft(newOverrides);
+					});
+				} }
+				EntryDetails={ ImageOverridesDetail }
+				getConditions={ (entry) => entry.condition }
+				withConditions={ (entry, newConditions) => produce(entry, (d) => {
+					d.condition = castDraft(newConditions);
+				}) }
+				makeNewEntry={ () => ({ image: '', condition: [[]] }) }
+				conditionEvalutator={ evaluateCondition }
+				conditionsMetadata={ useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]) }
 			/>
-			{ error != null && <div className='error'>{ error }</div> }
-		</Row>
+		</>
 	);
 }
 

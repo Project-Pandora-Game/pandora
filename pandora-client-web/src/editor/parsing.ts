@@ -10,8 +10,6 @@ import {
 	Condition,
 	ConditionEqOperatorSchema,
 	ConditionOperatorSchema,
-	LayerImageOverride,
-	SplitStringFirstOccurrence,
 	TransformDefinition,
 	ZodMatcher,
 } from 'pandora-common';
@@ -265,27 +263,4 @@ export function SerializeTransforms(transforms: Immutable<TransformDefinition[]>
 export function ParseTransforms(input: string, validBones: string[]): TransformDefinition[] {
 	return SplitAndClean(input, '\n')
 		.map((line) => ParseTransform(line, validBones));
-}
-
-export function SerializeLayerImageOverride(imageOverride: Immutable<LayerImageOverride>): string {
-	return `${SerializeCondition(imageOverride.condition)} ${imageOverride.image}`;
-}
-
-export function ParseLayerImageOverride(input: string, validBones: string[]): LayerImageOverride {
-	const [condition, image] = SplitStringFirstOccurrence(input.trim(), ' ').map((i) => i.trim());
-	return {
-		image,
-		condition: ParseCondition(condition, validBones),
-	};
-}
-
-export function SerializeLayerImageOverrides(imageOverrides: Immutable<LayerImageOverride[]>): string {
-	return imageOverrides
-		.map(SerializeLayerImageOverride)
-		.join('\n');
-}
-
-export function ParseLayerImageOverrides(input: string, validBones: string[]): LayerImageOverride[] {
-	return SplitAndClean(input, '\n')
-		.map((line) => ParseLayerImageOverride(line, validBones));
 }

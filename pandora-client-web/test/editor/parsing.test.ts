@@ -1,5 +1,5 @@
-import { LayerImageOverride, TransformDefinition } from 'pandora-common';
-import { ParseCondition, ParseLayerImageOverride, ParseLayerImageOverrides, ParseTransforms, SerializeLayerImageOverride, SerializeLayerImageOverrides, SerializeTransforms, SplitAndClean } from '../../src/editor/parsing.ts';
+import { TransformDefinition } from 'pandora-common';
+import { ParseCondition, ParseTransforms, SerializeTransforms, SplitAndClean } from '../../src/editor/parsing.ts';
 
 describe('SplitAndClean()', () => {
 	it('should split but trim and filter out items', () => {
@@ -56,39 +56,4 @@ describe('Transforms', () => {
 		});
 	});
 
-});
-
-describe('LayerImageOverride', () => {
-	const mockImageOverride: LayerImageOverride = {
-		image: 'test_image',
-		condition: [[{
-			bone: 'test_bone',
-			operator: '=',
-			value: 10,
-		}]],
-	};
-
-	const serializeImageOverride = 'test_bone=10 test_image';
-
-	describe('ParseLayerImageOverride()', () => {
-		expect(ParseLayerImageOverride(serializeImageOverride, ['test_bone']))
-			.toStrictEqual(mockImageOverride);
-	});
-
-	describe('SerializeLayerImageOverride()', () => {
-		it('should serialize image override', () => {
-			expect(SerializeLayerImageOverride(mockImageOverride))
-				.toBe(serializeImageOverride);
-		});
-	});
-
-	describe('ParseLayerImageOverrides()', () => {
-		expect(ParseLayerImageOverrides(serializeImageOverride + '\n' + serializeImageOverride, ['test_bone']))
-			.toStrictEqual([mockImageOverride, mockImageOverride]);
-	});
-
-	describe('SerializeLayerImageOverrides()', () => {
-		expect(SerializeLayerImageOverrides([mockImageOverride, mockImageOverride]))
-			.toBe(serializeImageOverride + '\n' + serializeImageOverride);
-	});
 });

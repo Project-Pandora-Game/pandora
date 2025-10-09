@@ -26,6 +26,7 @@ import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { LogicConditionEditor, type LogicConditionEditorCondition, type LogicConditionEditorConditionComponentProps } from '../../../ui/components/logicConditionEditor/logicConditionEditor.tsx';
@@ -205,7 +206,7 @@ function ConditionInputEditor({ condition, update, conditionEvalutator }: {
 	}, [condition, conditionEvalutator]);
 
 	return (
-		<Column gap='large'>
+		<Column gap='tiny'>
 			{
 				condition.length === 0 ? (
 					<i>Never active</i>
@@ -268,35 +269,48 @@ const CONDITION_PRESETS: { name: string; value: Immutable<AtomicCondition>; }[] 
 function ConditionInputAdd({ addCondition }: {
 	addCondition: (newCondition: AtomicCondition) => void;
 }): ReactElement {
-	const [preset, setPreset] = useState<number | null>(null);
+	const [showAddCondition, setShowAddCondition] = useState(false);
 
 	return (
-		<Row gap='medium' className='flex-grow-1'>
-			<Select
-				value={ preset != null ? preset.toString(10) : '' }
-				onChange={ (ev) => setPreset(ev.target.value ? Number.parseInt(ev.target.value) : null) }
-				className='flex-1'
-				disabled={ addCondition == null }
-			>
-				<option value=''>- Select condition type -</option>
-				{ CONDITION_PRESETS.map(({ name }, index) => (
-					<option key={ index } value={ index.toString(10) }>
-						{ name }
-					</option>
-				)) }
-			</Select>
-			<Button
-				className='slim'
-				onClick={ () => {
-					if (preset != null && CONDITION_PRESETS[preset] != null) {
-						addCondition(cloneDeep(CONDITION_PRESETS[preset].value));
-					}
-				} }
-				disabled={ preset == null }
-			>
-				Add
+		<Row alignY='start' padding='small'>
+			<Button slim onClick={ () => {
+				setShowAddCondition(true);
+			} }>
+				Add condition
 			</Button>
+			{ showAddCondition ? (
+				<AddRoomDConditionInputAddDialog
+					addCondition={ addCondition }
+					close={ () => setShowAddCondition(false) }
+				/>
+			) : null }
 		</Row>
+	);
+}
+
+function AddRoomDConditionInputAddDialog({ addCondition, close }: {
+	addCondition: (newCondition: AtomicCondition) => void;
+	close: () => void;
+}): ReactElement {
+	return (
+		<ModalDialog>
+			<Column>
+				{ CONDITION_PRESETS.map(({ name, value }, index) => (
+					<Button key={ index } onClick={ () => {
+						addCondition(cloneDeep(value));
+						close();
+					} }>
+						{ name }
+					</Button>
+				)) }
+				<hr className='fill-x' />
+				<Button onClick={ () => {
+					close();
+				} }>
+					Cancel
+				</Button>
+			</Column>
+		</ModalDialog>
 	);
 }
 

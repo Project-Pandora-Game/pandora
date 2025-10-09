@@ -159,7 +159,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 								update(overrides.toSpliced(i, 1, newValue));
 							} } />
 						</Column>
-						<Column gap='small'>
+						<Row gap='small' alignY='start'>
 							<Button slim onClick={ () => {
 								if (i === 0)
 									return;
@@ -174,7 +174,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 							} } title='Remove this override'>
 								🗑️
 							</Button>
-						</Column>
+						</Row>
 					</Row>
 					<EditorConditionInput
 						condition={ getConditions(entry) }

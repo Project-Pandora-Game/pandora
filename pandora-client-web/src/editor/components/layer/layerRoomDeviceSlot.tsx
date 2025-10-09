@@ -36,6 +36,9 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);
 
 	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
+		if ('module' in c && wornItem?.roomDevice == null)
+			return undefined;
+
 		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
 	}, [evaluator, wornItem]);
 

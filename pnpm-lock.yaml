@@ -36,8 +36,8 @@ importers:
         specifier: 7.37.5
         version: 7.37.5(eslint@9.37.0(jiti@2.5.1))
       eslint-plugin-react-hooks:
-        specifier: 6.1.1
-        version: 6.1.1(eslint@9.37.0(jiti@2.5.1))
+        specifier: 7.0.0
+        version: 7.0.0(eslint@9.37.0(jiti@2.5.1))
       jest:
         specifier: 30.2.0
         version: 30.2.0(@types/node@22.18.8)
@@ -3430,8 +3430,8 @@ packages:
       '@typescript-eslint/parser':
         optional: true
 
-  eslint-plugin-react-hooks@6.1.1:
-    resolution: {integrity: sha512-St9EKZzOAQF704nt2oJvAKZHjhrpg25ClQoaAlHmPZuajFldVLqRDW4VBNAS01NzeiQF0m0qhG1ZA807K6aVaQ==}
+  eslint-plugin-react-hooks@7.0.0:
+    resolution: {integrity: sha512-fNXaOwvKwq2+pXiRpXc825Vd63+KM4DLL40Rtlycb8m7fYpp6efrTp1sa6ZbP/Ap58K2bEKFXRmhURE+CJAQWw==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
@@ -3849,6 +3849,12 @@ packages:
 
   heap@0.2.7:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
+
+  hermes-estree@0.25.1:
+    resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
+
+  hermes-parser@0.25.1:
+    resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
 
   history@5.3.0:
     resolution: {integrity: sha512-ZqaKwjjrAYUYfLG+htGaIIZ4nioX2L70ZUMIFysS3xvBsSG4x/n1V6TXV3N8ZYNuFGlDirFg32T7B6WOUPDYcQ==}
@@ -7268,7 +7274,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.27.5
       '@babel/helper-validator-option': 7.27.1
-      browserslist: 4.26.2
+      browserslist: 4.26.3
       lru-cache: 5.1.1
       semver: 6.3.1
 
@@ -9627,7 +9633,7 @@ snapshots:
 
   caniuse-api@3.0.0:
     dependencies:
-      browserslist: 4.26.2
+      browserslist: 4.26.3
       caniuse-lite: 1.0.30001743
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
@@ -10412,11 +10418,12 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-react-hooks@6.1.1(eslint@9.37.0(jiti@2.5.1)):
+  eslint-plugin-react-hooks@7.0.0(eslint@9.37.0(jiti@2.5.1)):
     dependencies:
       '@babel/core': 7.27.4
       '@babel/parser': 7.27.5
       eslint: 9.37.0(jiti@2.5.1)
+      hermes-parser: 0.25.1
       zod: 4.1.12
       zod-validation-error: 4.0.2(zod@4.1.12)
     transitivePeerDependencies:
@@ -10975,6 +10982,12 @@ snapshots:
   he@1.2.0: {}
 
   heap@0.2.7: {}
+
+  hermes-estree@0.25.1: {}
+
+  hermes-parser@0.25.1:
+    dependencies:
+      hermes-estree: 0.25.1
 
   history@5.3.0:
     dependencies:
@@ -13722,7 +13735,7 @@ snapshots:
 
   stylehacks@7.0.4(postcss@8.5.6):
     dependencies:
-      browserslist: 4.26.2
+      browserslist: 4.26.3
       postcss: 8.5.6
       postcss-selector-parser: 6.1.2
 

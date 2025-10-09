@@ -341,8 +341,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       discord.js:
-        specifier: 14.22.1
-        version: 14.22.1
+        specifier: 14.23.2
+        version: 14.23.2
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -1146,8 +1146,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@discordjs/builders@1.11.2':
-    resolution: {integrity: sha512-F1WTABdd8/R9D1icJzajC4IuLyyS8f3rTOz66JsSI3pKvpCAtsMBweu8cyNYsIyvcrKAVn9EPK+Psoymq+XC0A==}
+  '@discordjs/builders@1.12.2':
+    resolution: {integrity: sha512-AugKmrgRJOHXEyMkABH/hXpAmIBKbYokCEl9VAM4Kh6FvkdobQ+Zhv7AR6K+y5hS7+VQ7gKXPYCe1JQmV07H1g==}
     engines: {node: '>=16.11.0'}
 
   '@discordjs/collection@1.5.3':
@@ -3203,8 +3203,8 @@ packages:
   discord-api-types@0.38.29:
     resolution: {integrity: sha512-+5BfrjLJN1hrrcK0MxDQli6NSv5lQH7Y3/qaOfk9+k7itex8RkA/UcevVMMLe8B4IKIawr4ITBTb2fBB2vDORg==}
 
-  discord.js@14.22.1:
-    resolution: {integrity: sha512-3k+Kisd/v570Jr68A1kNs7qVhNehDwDJAPe4DZ2Syt+/zobf9zEcuYFvsfIaAOgCa0BiHMfOOKQY4eYINl0z7w==}
+  discord.js@14.23.2:
+    resolution: {integrity: sha512-tU2NFr823X3TXEc8KyR/4m296KLxPai4nirN3q9kHCpY4TKj96n9lHZnyLzRNMui8EbL07jg9hgH2PWWfKMGIg==}
     engines: {node: '>=18'}
 
   dns-packet@5.6.1:
@@ -7715,7 +7715,7 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  '@discordjs/builders@1.11.2':
+  '@discordjs/builders@1.12.2':
     dependencies:
       '@discordjs/formatters': 0.6.1
       '@discordjs/util': 1.1.1
@@ -10093,9 +10093,9 @@ snapshots:
 
   discord-api-types@0.38.29: {}
 
-  discord.js@14.22.1:
+  discord.js@14.23.2:
     dependencies:
-      '@discordjs/builders': 1.11.2
+      '@discordjs/builders': 1.12.2
       '@discordjs/collection': 1.5.3
       '@discordjs/formatters': 0.6.1
       '@discordjs/rest': 2.6.0

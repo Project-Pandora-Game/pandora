@@ -77,7 +77,7 @@ function Pronouns(): ReactElement {
 			<legend>Pronouns</legend>
 			<div className='input-row'>
 				<label>Pronoun</label>
-				<Select value={ pronoun } onChange={ (ev) => setPronoun(PronounKeySchema.parse(ev.target.value)) }>
+				<Select value={ pronoun } onChange={ (ev) => setPronoun(PronounKeySchema.parse(ev.target.value)) } noScrollChange>
 					{ Object.entries(PRONOUNS).map(([key, value]) => (
 						<option key={ key } value={ key }>
 							{ Object.values(value).join('/') }

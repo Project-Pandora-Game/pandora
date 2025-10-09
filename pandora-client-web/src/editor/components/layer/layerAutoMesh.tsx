@@ -211,6 +211,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 						d.points = id;
 					});
 				} }
+				noScrollChange
 			>
 				<option value='' key='!empty'>[ No points ]</option>
 				{ elements }

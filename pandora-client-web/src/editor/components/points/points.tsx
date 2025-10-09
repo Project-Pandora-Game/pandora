@@ -285,6 +285,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 						editor.targetTemplate.value = new PointTemplateEditor(event.target.value.substring(2), editor);
 					}
 				} }
+				noScrollChange
 			>
 				<option value='' key=''>[ None ]</option>
 				{

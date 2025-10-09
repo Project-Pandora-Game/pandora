@@ -46,6 +46,7 @@ export function LayerRoomDeviceTextUI({ layer }: {
 							d.dataModule = event.target.value;
 						});
 					} }
+					noScrollChange
 				>
 					<option value=''>- Select text module -</option>
 					{

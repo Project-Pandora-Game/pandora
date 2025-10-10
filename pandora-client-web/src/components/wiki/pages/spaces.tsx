@@ -1,4 +1,4 @@
-import { LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
+import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
 import { Link } from 'react-router';
 
@@ -66,9 +66,10 @@ export function WikiSpaces(): ReactElement {
 				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.
 			</p>
 			<ul>
-				<li>The ordered list of rooms next to the room grid in the space configuration's "Room management"-tab is there to define the order of the listed rooms under the "Room"-tab</li>
-				<li>In that ordered room list in the "Room management"-tab, the room at the top is the room characters joining the space appear in - reordering the list changes this</li>
-				<li>Room designs can also be exported and imported as a template when creating a new room</li>
+				<li>A space can store a maximum amount of { LIMIT_ITEM_SPACE_ITEMS_TOTAL } items in total across all rooms.</li>
+				<li>The ordered list of rooms next to the room grid in the space configuration's "Room management"-tab is there to define the order of the listed rooms under the "Room"-tab.</li>
+				<li>In that ordered room list in the "Room management"-tab, the room at the top is the room characters joining the space appear in - reordering the list changes this.</li>
+				<li>Room designs can also be exported and imported as a template when creating a new room.</li>
 				<li>
 					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
 					"Room" tab, or by using the '/moveto' command.
@@ -263,6 +264,10 @@ export function WikiSpaces(): ReactElement {
 				You can also move items from one room to another, inside the same space.<br />
 				Note that admins can interact with any room inventory from anywhere in the same space, but other users can only interact with the inventory of
 				the room their character is inside, as well as with the room inventories of directly neighboring rooms in the four cardinal directions.
+			</p>
+			<p>
+				A room can contain up to { LIMIT_ITEM_ROOM_INVENTORY } items in its room inventory, but only up
+				to { LIMIT_ITEM_SPACE_ITEMS_TOTAL } items in total across all rooms of a single space.
 			</p>
 
 		</>

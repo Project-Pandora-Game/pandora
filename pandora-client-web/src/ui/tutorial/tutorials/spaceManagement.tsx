@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
+import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 
 export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 	id: 'spaceManagement',
@@ -198,6 +199,11 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								The top section shows a map of all rooms on a grid on the left and on the
 								right is an ordered list of all rooms in the space. The top entry in this
 								list is the room characters always enter the space in.
+							</p>
+							<p>
+								Note: A space can contain up to { LIMIT_SPACE_ROOM_COUNT } rooms and every
+								room can contain up to { LIMIT_ITEM_ROOM_INVENTORY } items in its room inventory, but
+								only up to { LIMIT_ITEM_SPACE_ITEMS_TOTAL } items in total across all rooms of a single space.
 							</p>
 							<p>
 								The bottom section lets you configure the selected room. We will go over these

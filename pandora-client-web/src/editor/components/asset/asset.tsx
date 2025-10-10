@@ -136,9 +136,10 @@ export function AssetUI() {
 					multiple
 					type='file'
 					onChange={ (e) => {
-						if (e.target.files) {
+						const files = e.target.files;
+						if (files) {
 							ToastHandlePromise(
-								selectedAsset.addTexturesFromFiles(e.target.files),
+								selectedAsset.addTexturesFromFiles(files),
 								{
 									pending: 'Importing asset images...',
 									success: 'Images loaded',
@@ -147,6 +148,10 @@ export function AssetUI() {
 							)
 								.catch((err) => {
 									GetLogger('AssetUI').error('Error importing asset images:', err);
+								})
+								.finally(() => {
+									// Clear files after load so user can re-select same one easily
+									e.target.value = '';
 								});
 						}
 					} }
@@ -269,8 +274,10 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 							const files = e.target.files;
 							if (files && files.length === 1) {
 								const file = files.item(0);
-								if (!file || !file.name.endsWith('.json'))
+								if (!file || !file.name.endsWith('.json')) {
+									e.target.value = '';
 									return;
+								}
 								file
 									.text()
 									.then((content) => {
@@ -293,6 +300,10 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 									.catch((err) => {
 										toast(`Import failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
 										GetLogger('AssetImport').error(err);
+									})
+									.finally(() => {
+										// Clear files after load so user can re-select same one easily
+										e.target.value = '';
 									});
 							}
 						} }

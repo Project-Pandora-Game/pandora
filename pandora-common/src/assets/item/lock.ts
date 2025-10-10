@@ -113,10 +113,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Locking the lock modifies it
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
 
 		const result = this.lockLogic.lock({
 			player,
-			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			isSelfAction: permissionTarget.type === 'character' && permissionTarget.character.id === player.appearance.id,
 			executionContext: processingContext.executionContext,
 		}, action);
 
@@ -150,10 +151,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Unlocking the lock modifies it
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
 
 		const result = this.lockLogic.unlock({
 			player,
-			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			isSelfAction: permissionTarget.type === 'character' && permissionTarget.character.id === player.appearance.id,
 			executionContext: processingContext.executionContext,
 		}, action);
 
@@ -187,10 +189,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Showing password requires permission access to the lock
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
 
 		const result = this.lockLogic.showPassword({
 			player,
-			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			isSelfAction: permissionTarget.type === 'character' && permissionTarget.character.id === player.appearance.id,
 			executionContext: processingContext.executionContext,
 		});
 

@@ -12,7 +12,6 @@ export * from './graphics/index.ts';
 export * from './graphicsBuilding/index.ts';
 export * from './graphicsSource/index.ts';
 export * from './item/index.ts';
-export * from './itemLimits.ts';
 export * from './modules.ts';
 export * from './properties.ts';
 export * from './roomDeviceProperties.ts';

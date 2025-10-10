@@ -10,11 +10,11 @@ import {
 	EMPTY_ARRAY,
 	EvalContainerPath,
 	Item,
-	ITEM_LIMIT_CHARACTER_WORN,
-	ITEM_LIMIT_ROOM_INVENTORY,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
+	LIMIT_ITEM_CHARACTER_WORN,
+	LIMIT_ITEM_ROOM_INVENTORY,
 	SplitContainerPath,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
@@ -113,7 +113,7 @@ export function InventoryItemView({
 						<StorageUsageMeter
 							title={ title }
 							used={ itemCount }
-							limit={ targetSelector.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY }
+							limit={ targetSelector.type === 'character' ? LIMIT_ITEM_CHARACTER_WORN : LIMIT_ITEM_ROOM_INVENTORY }
 						/>
 					)
 				}

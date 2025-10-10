@@ -13,9 +13,9 @@ import {
 	CreateItemBundleFromTemplate,
 	GetDefaultAppearanceBundle,
 	GetLogger,
-	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	ItemContainerPath,
 	ItemTemplate,
+	LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE,
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
@@ -115,7 +115,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 			<div className='inventoryView'>
 				{ header }
 				<div className='toolbar'>
-					<StorageUsageMeter title='Storage used' used={ null } limit={ ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE } />
+					<StorageUsageMeter title='Storage used' used={ null } limit={ LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE } />
 					<div className='flex-1' />
 					<Button
 						onClick={ () => {
@@ -133,7 +133,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 	}
 
 	const storageUsed = storedOutfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
-	const storageAvailableTotal = ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE;
+	const storageAvailableTotal = LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE;
 
 	if (temporaryOutfit != null) {
 		const saveTemporaryOutfit = () => {

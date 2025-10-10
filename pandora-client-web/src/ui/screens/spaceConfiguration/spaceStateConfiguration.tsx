@@ -9,7 +9,9 @@ import {
 	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
 	KnownObject,
+	LIMIT_ITEM_SPACE_ITEMS_TOTAL,
 	LIMIT_ROOM_NAME_LENGTH,
+	LIMIT_SPACE_ROOM_COUNT,
 	ParseNotNullable,
 	ResolveBackground,
 	RoomId,
@@ -45,7 +47,7 @@ import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
-import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
+import { GameLogicActionButton, StorageUsageMeter } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
@@ -71,6 +73,18 @@ export function SpaceStateConfigurationUi({
 
 	return (
 		<Column className='SpaceStateConfigurationUi' alignX='center'>
+			<Row className='fill-x' alignX='space-evenly'>
+				<StorageUsageMeter
+					title='Rooms inside the space'
+					used={ globalState.space.rooms.length }
+					limit={ LIMIT_SPACE_ROOM_COUNT }
+				/>
+				<StorageUsageMeter
+					title='Total items across all room inventories'
+					used={ globalState.space.getTotalItemCount() }
+					limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
+				/>
+			</Row>
 			<Row
 				className={ classNames(
 					'spaceLayout',

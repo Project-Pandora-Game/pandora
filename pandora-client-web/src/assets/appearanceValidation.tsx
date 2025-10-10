@@ -229,6 +229,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 				return `Character can only be in a single device at a time.`;
 			case 'tooManyRooms':
 				return `The space can contain at most ${e.limit} rooms.`;
+			case 'tooManySpaceItems':
+				return `There are too many items inside this space.\nThe space can contain at most ${e.limit} items across all rooms.\nNote: This limit might be raised or even removed in the future, once more optimizations are implemented.`;
 			case 'roomError':
 				switch (e.problemDetail) {
 					case 'roomsOverlap':

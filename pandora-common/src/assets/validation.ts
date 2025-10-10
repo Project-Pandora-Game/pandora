@@ -1,18 +1,18 @@
+import { LIMIT_ITEM_CHARACTER_WORN, LIMIT_ITEM_ROOM_INVENTORY } from '../inputLimits.ts';
 import type { AppearanceValidationResult } from './appearanceValidation.ts';
 import type { AssetManager } from './assetManager.ts';
 import type { IItemLocationDescriptor, ItemId } from './item/index.ts';
 import type { AppearanceItems } from './item/items.ts';
-import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits.ts';
 import type { AssetFrameworkRoomState } from './state/roomState.ts';
 
 const VALIDATIONS = {
 	character: {
 		location: 'worn',
-		limit: ITEM_LIMIT_CHARACTER_WORN,
+		limit: LIMIT_ITEM_CHARACTER_WORN,
 	},
 	room: {
 		location: 'roomInventory',
-		limit: ITEM_LIMIT_ROOM_INVENTORY,
+		limit: LIMIT_ITEM_ROOM_INVENTORY,
 	},
 } as const satisfies Partial<Record<string, {
 	location: IItemLocationDescriptor;

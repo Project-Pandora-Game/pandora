@@ -72,7 +72,7 @@
 		"jest": "30.2.0",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",
-		"ts-jest": "29.4.4",
+		"ts-jest": "29.4.5",
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "7.2.0",
 		"tslib": "2.8.1",

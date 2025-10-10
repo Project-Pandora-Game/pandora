@@ -473,7 +473,10 @@ function InventoryAssetDropArea(): ReactElement | null {
 	);
 }
 
-export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
+/**
+ * Returns current wardrobe target's asset preferences, if the target is a character, or `null` if it is not.
+ */
+export function useAssetPreferences(): Immutable<AssetPreferencesPublic> | null {
 	const { targetSelector } = useWardrobeContext();
 	const characters = useSpaceCharacters();
 
@@ -485,9 +488,7 @@ export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
 
 	const characterPreferences = useCharacterDataOptional(character)?.assetPreferences;
 
-	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
-
-	return preferences;
+	return targetSelector.type === 'character' ? (characterPreferences ?? ASSET_PREFERENCES_DEFAULT) : null;
 }
 
 export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
@@ -495,6 +496,10 @@ export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceT
 	const preferences = useAssetPreferences();
 
 	return React.useCallback((asset) => {
+		// Use normal if we have no preference data (targetting a room)
+		if (preferences == null)
+			return 'normal';
+
 		const pref = ResolveAssetPreference(preferences, asset, player.id).preference;
 
 		return pref;

@@ -7,7 +7,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, ReactNode, useState } from 'react';
 import importIcon from '../../../../assets/icons/import.svg';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../../common/button/button.tsx';
 import { DivContainer, Row } from '../../../common/container/container.tsx';
@@ -16,7 +16,7 @@ import { CharacterModifierImportDialog } from './characterModifierImport.tsx';
 import './characterModifierInstanceView.scss';
 
 export function WardrobeCharacterModifierFullInstanceView({ character, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
-	character: ICharacter;
+	character: Character;
 	modifiers: readonly GameLogicModifierInstanceClient[];
 	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;

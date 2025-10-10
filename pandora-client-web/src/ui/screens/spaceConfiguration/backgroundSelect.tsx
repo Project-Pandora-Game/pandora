@@ -14,18 +14,22 @@ import {
 	RoomBackgroundInfo,
 	RoomBackgroundTagDefinition,
 	type AppearanceAction,
+	type AssetsTileTextureInfo,
 	type RoomBackground3dBoxSide,
 	type RoomGeometryConfig,
 	type RoomId,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useRef, useState } from 'react';
+import * as z from 'zod';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
+import iconSortAlphabetically from '../../../assets/icons/sort-alphabetic.svg';
+import { BrowserStorage } from '../../../browserStorage.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
-import { Button } from '../../../components/common/button/button.tsx';
+import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
@@ -34,6 +38,8 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GRAPHICS_BACKGROUND_TILE_SIZE, GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
+import { useObservable } from '../../../observable.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import './backgroundSelect.scss';
@@ -128,6 +134,7 @@ export function BackgroundSelectUi({ value, onChange, activeValue }: {
 								break;
 						}
 					} }
+					noScrollChange
 				>
 					<option value='3dBox'>Custom 3D box</option>
 					{
@@ -451,7 +458,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							renderArea={ { x: 0, y: 0, width: previewSize, height: previewSize } }
 							resolution={ dpr }
 							backgroundColor={ 0x000000 }
-							forwardContexts={ [serviceManagerContext] }
+							forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 						>
 							<Container
 								scale={ { x: previewScale, y: previewScale } }
@@ -609,6 +616,8 @@ function BackgroundSelectDialog3dBoxSide({ current, value, onChange, title }: {
 	);
 }
 
+const BackgroundSelectDialog3dBoxSortAlphabetically = BrowserStorage.create('backgroundSelect.sortAlphabetically', false, z.boolean());
+
 function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title, hide }: {
 	title: string;
 	current: Immutable<RoomBackground3dBoxSide> | null;
@@ -619,38 +628,64 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 	const id = useId();
 	const assetManager = useAssetManager();
 
+	const [nameFilter, setNameFilter] = useState('');
+	const sortAlphabetically = useObservable(BackgroundSelectDialog3dBoxSortAlphabetically);
+
+	type TileEntry = Immutable<AssetsTileTextureInfo> | Readonly<{ id: '*'; name: string; image: null; }>;
+	const backgroundSortOrder = useCallback((a: TileEntry, b: TileEntry): number => {
+		if ((a.image == null) !== (b.image == null))
+			return a.image == null ? -1 : 1;
+
+		if (sortAlphabetically && a.name !== b.name) {
+			return a.name.localeCompare(b.name);
+		}
+
+		return 0;
+	}, [sortAlphabetically]);
+
+	const tilesToShow = useMemo((): readonly TileEntry[] => {
+		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
+
+		const tiles: TileEntry[] = [
+			{ id: '*', name: '[ Solid color ]', image: null },
+			...assetManager.tileTextures.values(),
+		];
+
+		return tiles
+			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)))
+			.sort(backgroundSortOrder);
+	}, [nameFilter, assetManager, backgroundSortOrder]);
+
+	const nameFilterInput = useRef<TextInput>(null);
+	useInputAutofocus(nameFilterInput);
+
 	return (
 		<ModalDialog position='top' priority={ 4 }>
 			<div className='BackgroundSelect'>
 				<div className='header'>
 					<div className='header-filter'>
-						<span>Select a texture for { title.toLowerCase() }</span>
+						<TextInput ref={ nameFilterInput }
+							className='input-filter'
+							placeholder='Texture name…'
+							value={ nameFilter }
+							onChange={ setNameFilter }
+						/>
+						<Row>
+							<span className='flex-1'>Select a texture for { title.toLowerCase() }</span>
+							<IconButton
+								theme={ sortAlphabetically ? 'defaultActive' : 'default' }
+								slim
+								alt='Sort alphabetically'
+								src={ iconSortAlphabetically }
+								onClick={ () => {
+									BackgroundSelectDialog3dBoxSortAlphabetically.value = !sortAlphabetically;
+								} }
+							/>
+						</Row>
 					</div>
 				</div>
 				<div className='backgrounds'>
-					<SelectionIndicator
-						padding='tiny'
-						selected={ value.texture === '*' }
-						active={ current != null && current.texture === '*' }
-					>
-						<Button
-							className='fill'
-							onClick={ () => {
-								onChange(produce(value, (d) => {
-									d.texture = '*';
-								}));
-							} }
-						>
-							<Column
-								alignX='center'
-								alignY='center'
-								className='details fill'
-							>
-								<div className='name'>[ Solid color ]</div>
-							</Column>
-						</Button>
-					</SelectionIndicator>
-					{ Array.from(assetManager.tileTextures.values())
+					{ tilesToShow
 						.map((b) => (
 							<SelectionIndicator key={ b.id }
 								padding='tiny'
@@ -670,9 +705,11 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 										alignY='center'
 										className='details fill'
 									>
-										<div className={ classNames('preview', value.rotate ? 'rotate-90' : null) }>
-											<img src={ GetAssetsSourceUrl() + b.image } />
-										</div>
+										{ b.image != null ? (
+											<div className={ classNames('preview', value.rotate ? 'rotate-90' : null) }>
+												<img src={ GetAssetsSourceUrl() + b.image } />
+											</div>
+										) : null }
 										<div className='name'>{ b.name }</div>
 									</Column>
 								</Button>

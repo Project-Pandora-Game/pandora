@@ -1,4 +1,4 @@
-import { uniq } from 'lodash-es';
+import { isEqual, uniq } from 'lodash-es';
 import * as z from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
 import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
@@ -70,76 +70,79 @@ export function ActionMoveCharacter({
 				return processingContext.invalid();
 			}
 		}
-		// Additional checks if follow/leash is in use
-		if (action.moveTo.following != null) {
-			// Cannot follow oneself
-			if (action.moveTo.following.target === target.character.id)
-				return processingContext.invalid();
-			// Check this character can follow
-			if (!CharacterCanFollow(target.appearance.characterState, target.appearance.gameState)) {
-				return processingContext.invalid('characterMoveCannotFollow');
-			}
-
-			// All follow modes need move permission (even if admin)
-			player.checkInteractWithTarget(processingContext, target.appearance);
-			processingContext.addInteraction(target.character, 'moveCharacter');
-			// ... and generic access permission to the follow target (to prevent people annoying people)
-			const followTarget = processingContext.getCharacter(action.moveTo.following.target);
-			const followTargetRoom = followTarget?.appearance.getCurrentRoom();
-			if (followTarget == null || followTargetRoom == null)
-				return processingContext.invalid();
-			player.checkInteractWithTarget(processingContext, followTarget.appearance);
-			// And check that the target can actually be followed
-			if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
-				return processingContext.invalid('characterMoveCannotFollowTarget');
-			}
-			// And check the follow target is reachable from the current player (not the player following)
-			if (playerRoom.id !== followTargetRoom.id && playerRoom.getLinkToRoom(followTargetRoom) == null) {
-				processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
-			}
-			// Messages if follow starts
-			if ((originalPosition.following?.target) !== action.moveTo.following?.target) {
-				if (action.target.characterId === player.appearance.id) {
-					processingContext.queueMessage({
-						id: 'characterPositionFollowStartFollow',
-						rooms: uniq([originalRoom.id, followTargetRoom.id]),
-						target: {
-							type: 'character',
-							id: followTarget.appearance.id,
-						},
-					});
-				} else {
-					processingContext.queueMessage({
-						id: 'characterPositionFollowStartLead',
-						rooms: uniq([originalRoom.id, followTargetRoom.id]),
-						target: {
-							type: 'character',
-							id: target.appearance.id,
-						},
-					});
+		// Additional checks if follow/leash changes
+		if (!isEqual(action.moveTo.following, originalPosition.following)) {
+			// Additional checks if follow/leash is in use
+			if (action.moveTo.following != null) {
+				// Cannot follow oneself
+				if (action.moveTo.following.target === target.character.id)
+					return processingContext.invalid();
+				// Check this character can follow
+				if (!CharacterCanFollow(target.appearance.characterState, target.appearance.gameState)) {
+					return processingContext.invalid('characterMoveCannotFollow');
 				}
-			}
-		} else {
-			// Message if follow stops
-			if (originalPosition.following != null) {
-				if (action.target.characterId === player.appearance.id) {
-					processingContext.queueMessage({
-						id: 'characterPositionFollowStopFollow',
-						rooms: [originalRoom.id],
-						target: {
-							type: 'character',
-							id: originalPosition.following.target,
-						},
-					});
-				} else {
-					processingContext.queueMessage({
-						id: 'characterPositionFollowStopLead',
-						rooms: [originalRoom.id],
-						target: {
-							type: 'character',
-							id: target.appearance.id,
-						},
-					});
+
+				// All follow modes need move permission (even if admin)
+				player.checkInteractWithTarget(processingContext, target.appearance);
+				processingContext.addInteraction(target.character, 'moveCharacter');
+				// ... and generic access permission to the follow target (to prevent people annoying people)
+				const followTarget = processingContext.getCharacter(action.moveTo.following.target);
+				const followTargetRoom = followTarget?.appearance.getCurrentRoom();
+				if (followTarget == null || followTargetRoom == null)
+					return processingContext.invalid();
+				player.checkInteractWithTarget(processingContext, followTarget.appearance);
+				// And check that the target can actually be followed
+				if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
+					return processingContext.invalid('characterMoveCannotFollowTarget');
+				}
+				// And check the follow target is reachable from the current player (not the player following)
+				if (playerRoom.id !== followTargetRoom.id && playerRoom.getLinkToRoom(followTargetRoom) == null) {
+					processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
+				}
+				// Messages if follow starts
+				if ((originalPosition.following?.target) !== action.moveTo.following?.target) {
+					if (action.target.characterId === player.appearance.id) {
+						processingContext.queueMessage({
+							id: 'characterPositionFollowStartFollow',
+							rooms: uniq([originalRoom.id, followTargetRoom.id]),
+							target: {
+								type: 'character',
+								id: followTarget.appearance.id,
+							},
+						});
+					} else {
+						processingContext.queueMessage({
+							id: 'characterPositionFollowStartLead',
+							rooms: uniq([originalRoom.id, followTargetRoom.id]),
+							target: {
+								type: 'character',
+								id: target.appearance.id,
+							},
+						});
+					}
+				}
+			} else {
+				// Message if follow stops
+				if (originalPosition.following != null) {
+					if (action.target.characterId === player.appearance.id) {
+						processingContext.queueMessage({
+							id: 'characterPositionFollowStopFollow',
+							rooms: [originalRoom.id],
+							target: {
+								type: 'character',
+								id: originalPosition.following.target,
+							},
+						});
+					} else {
+						processingContext.queueMessage({
+							id: 'characterPositionFollowStopLead',
+							rooms: [originalRoom.id],
+							target: {
+								type: 'character',
+								id: target.appearance.id,
+							},
+						});
+					}
 				}
 			}
 		}

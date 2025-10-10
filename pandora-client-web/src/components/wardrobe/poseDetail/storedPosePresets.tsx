@@ -21,14 +21,13 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
-import { useServiceManager } from '../../../services/serviceProvider.tsx';
+import { useServiceManager, useServiceOptional } from '../../../services/serviceProvider.tsx';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog, type ExportDialogTarget } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { GeneratePosePreview, PoseButton } from '../views/wardrobePoseView.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
@@ -696,9 +695,14 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
  * @returns A callback usable to overwrite pose preset storage, saving data to the server
  */
 function useSaveStoredOutfits(): (newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => void {
-	const directoryConnector = useDirectoryConnector();
+	const directoryConnector = useServiceOptional('directoryConnector');
 
 	return React.useCallback((newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => {
+		if (directoryConnector == null) {
+			toast(`Error saving changes:\nNot connected`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
 		directoryConnector.awaitResponse('storedPosePresetsSave', {
 			storedPosePresets: newStorage,
 		})

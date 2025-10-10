@@ -27,6 +27,10 @@ export type LegSideOrder = z.infer<typeof LegSideOrderSchema>;
 export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
 export type LegsPose = z.infer<typeof LegsPoseSchema>;
 
+export const CONDITION_EQ_OPERATORS = ['=', '!='] as const;
+export const ConditionEqOperatorSchema = z.enum(CONDITION_EQ_OPERATORS);
+export type ConditionEqOperator = z.infer<typeof ConditionEqOperatorSchema>;
+
 export const CONDITION_OPERATORS = ['=', '<', '<=', '>', '>=', '!='] as const;
 export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
 export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
@@ -42,7 +46,7 @@ export const AtomicConditionBoneSchema = z.object({
 export type AtomicConditionBone = z.infer<typeof AtomicConditionBoneSchema>;
 export const AtomicConditionModuleSchema = z.object({
 	module: ModuleNameSchema,
-	operator: ConditionOperatorSchema,
+	operator: ConditionEqOperatorSchema,
 	value: z.string(),
 });
 export const AtomicConditionAttributeSchema = z.object({
@@ -55,13 +59,13 @@ export const AtomicConditionAttributeSchema = z.object({
 export const AtomicConditionArmRotationSchema = z.object({
 	armType: z.literal('rotation'),
 	side: z.enum(['left', 'right']),
-	operator: ConditionOperatorSchema,
+	operator: ConditionEqOperatorSchema,
 	value: ArmRotationSchema,
 });
 export const AtomicConditionArmFingersSchema = z.object({
 	armType: z.literal('fingers'),
 	side: z.enum(['left', 'right']),
-	operator: ConditionOperatorSchema,
+	operator: ConditionEqOperatorSchema,
 	value: ArmFingersSchema,
 });
 

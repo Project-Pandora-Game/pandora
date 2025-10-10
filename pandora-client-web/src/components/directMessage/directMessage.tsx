@@ -76,7 +76,15 @@ function DirectMessageList(): ReactElement | null {
 	const [ref] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
 
 	if (!account) {
-		return null;
+		return (
+			<div className='messagesArea'>
+				<Column className='fill'>
+					<div className='warning-box'>
+						Error: Not connected
+					</div>
+				</Column>
+			</div>
+		);
 	}
 
 	const lastInvalidKeyMessage = encryptedMessages.findLastIndex((message) => message.keyHash !== encryption.keyHash);

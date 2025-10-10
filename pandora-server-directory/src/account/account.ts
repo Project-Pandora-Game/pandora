@@ -13,10 +13,10 @@ import {
 	IDirectoryAccountInfo,
 	IDirectoryClient,
 	IShardAccountDefinition,
-	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	KnownObject,
 	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_CHARACTER_COUNT,
+	LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE,
 	LIMIT_SPACE_OWNED_COUNT,
 	OutfitMeasureCost,
 	ServerRoom,
@@ -270,7 +270,7 @@ export class Account implements ActorIdentity {
 	@AsyncSynchronized()
 	public async updateStoredOutfits(outfits: AssetFrameworkOutfitWithId[]): Promise<'ok' | 'storageFull'> {
 		const totalCost = outfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
-		if (!Number.isInteger(totalCost) || totalCost > ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE) {
+		if (!Number.isInteger(totalCost) || totalCost > LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE) {
 			return 'storageFull';
 		}
 

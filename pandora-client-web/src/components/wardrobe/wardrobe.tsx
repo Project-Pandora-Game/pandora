@@ -10,7 +10,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
-import { Character, IChatroomCharacter, useCharacterRestrictionManager } from '../../character/character.ts';
+import { Character, useCharacterRestrictionManager } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
@@ -185,7 +185,7 @@ function WardrobeRoom({ room }: {
 }
 
 function WardrobeCharacter({ character }: {
-	character: IChatroomCharacter;
+	character: Character;
 }): ReactElement {
 	const navigate = useNavigatePandora();
 	const { globalState, actions: { spaceContext } } = useWardrobeActionContext();

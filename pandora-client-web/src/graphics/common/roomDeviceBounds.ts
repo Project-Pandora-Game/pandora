@@ -1,12 +1,13 @@
-import { min } from 'lodash-es';
-import { AssertNever, CharacterSize, type Asset, type Rectangle } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { max, min } from 'lodash-es';
+import { AssertNever, CharacterSize, type Asset, type AssetGraphicsRoomDeviceDefinition, type Rectangle } from 'pandora-common';
 import { CHARACTER_PIVOT_POSITION } from '../graphicsCharacter.tsx';
 
 /**
  * Calculates approximate bounds for room device graphics, relative to its pivot
  * @param asset
  */
-export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>): Rectangle {
+export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, graphics: Immutable<AssetGraphicsRoomDeviceDefinition>): Rectangle {
 	const definition = asset.definition;
 
 	let itemLeft = definition.pivot.x - 20;
@@ -14,7 +15,7 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>): R
 	let itemTop = definition.pivot.y - 20;
 	let itemBottom = definition.pivot.y + 20;
 
-	for (const layer of definition.graphicsLayers) {
+	for (const layer of graphics.layers) {
 		if (layer.type === 'sprite') {
 			const offsetX = Math.min(layer.offset?.x ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.x)) ?? layer.offset?.x ?? 0);
 			const offsetY = Math.min(layer.offset?.y ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.y)) ?? layer.offset?.y ?? 0);
@@ -46,6 +47,26 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>): R
 			itemTop = Math.min(itemTop, offsetY);
 			itemRight = Math.max(itemRight, offsetX + layer.size.width);
 			itemBottom = Math.max(itemBottom, offsetY + layer.size.height);
+		} else if (layer.type === 'mesh') {
+			if (layer.geometry.type === '2d') {
+				const vertices = Math.floor(layer.geometry.positions.length / 2);
+				const offsetXmin = min([layer.geometry.offset?.x ?? 0, ...(layer.geometry.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
+				const offsetXmax = max([layer.geometry.offset?.x ?? 0, ...(layer.geometry.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
+				const offsetYmin = min([layer.geometry.offset?.y ?? 0, ...(layer.geometry.offsetOverrides?.map((o) => o.offset.y) ?? [])]) ?? 0;
+				const offsetYmax = max([layer.geometry.offset?.y ?? 0, ...(layer.geometry.offsetOverrides?.map((o) => o.offset.y) ?? [])]) ?? 0;
+
+				for (let vi = 0; vi < vertices; vi++) {
+					const x = layer.geometry.positions[2 * vi];
+					const y = layer.geometry.positions[2 * vi + 1];
+
+					itemLeft = Math.min(itemLeft, x + offsetXmin);
+					itemTop = Math.min(itemTop, y + offsetYmin);
+					itemRight = Math.max(itemRight, x + offsetXmax);
+					itemBottom = Math.max(itemBottom, y + offsetYmax);
+				}
+			} else {
+				AssertNever(layer.geometry.type);
+			}
 		} else {
 			AssertNever(layer);
 		}

@@ -3,7 +3,7 @@ import {
 	type ItemId,
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useState } from 'react';
-import { ICharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -13,7 +13,7 @@ import { InventoryAssetPreview } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 
 export function WardrobeExpressionGui({ characterState }: {
-	character: ICharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { focuser, targetSelector } = useWardrobeContext();

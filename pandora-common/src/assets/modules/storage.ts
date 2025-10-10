@@ -7,7 +7,7 @@ import { IsNotNullable, Satisfies } from '../../utility/misc.ts';
 import { AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { AssetSize, AssetSizeMapping } from '../definitions.ts';
-import { ConditionOperator } from '../graphics/index.ts';
+import { ConditionEqOperator } from '../graphics/index.ts';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base.ts';
 import type { AppearanceItems } from '../item/index.ts';
@@ -201,7 +201,7 @@ export class ItemModuleStorage<TProperties = unknown, TStaticData = unknown> imp
 		return [];
 	}
 
-	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
+	public evalCondition(_operator: ConditionEqOperator, _value: string): boolean {
 		return false;
 	}
 

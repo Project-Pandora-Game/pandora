@@ -10,7 +10,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
-import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
+import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 
 export function AssetInfoUI(): ReactElement {
@@ -55,10 +55,6 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 					</Row>
 				) : null
 			}
-			<Row alignY='center'>
-				<label htmlFor='graphics'>Has graphics: </label>
-				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
-			</Row>
 			<Colorization colorization={ definition.colorization } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />

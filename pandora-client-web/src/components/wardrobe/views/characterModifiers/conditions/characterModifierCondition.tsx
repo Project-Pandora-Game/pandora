@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { AssertNever, type CharacterModifierCondition } from 'pandora-common';
 import { type ReactElement } from 'react';
-import type { ICharacter } from '../../../../../character/character';
+import type { Character } from '../../../../../character/character';
 import { ConditionCharacterPresent } from './conditionCharacterPresent.tsx';
 import { ConditionInRoomWithName } from './conditionInRoomWithName.tsx';
 import { ConditionInSpaceId } from './conditionInSpaceId.tsx';
@@ -11,13 +11,18 @@ import { ConditionItemWithAttribute } from './conditionItemWithAttribute.tsx';
 import { ConditionItemWithEffect } from './conditionItemWithEffect.tsx';
 import { ConditionItemWithName } from './conditionItemWithName.tsx';
 
+export type CharacterModifierConditionListEntryData = {
+	condition: CharacterModifierCondition;
+	invert: boolean;
+};
+
 export type CharacterModifierConditionListEntryProps<TCondition extends CharacterModifierCondition['type'] = CharacterModifierCondition['type']> = {
 	condition: Immutable<Extract<CharacterModifierCondition, { type: TCondition; }>>;
 	setCondition?: (newCondition: Extract<CharacterModifierCondition, { type: TCondition; }>) => void;
 	invert: boolean;
 	setInvert?: (invert: boolean) => void;
 	processing: boolean;
-	character: ICharacter;
+	character: Character;
 };
 
 export function CharacterModifierConditionListEntry({ condition, ...props }: CharacterModifierConditionListEntryProps): ReactElement {

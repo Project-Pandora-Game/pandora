@@ -13,9 +13,9 @@ import {
 	CreateItemBundleFromTemplate,
 	GetDefaultAppearanceBundle,
 	GetLogger,
-	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	ItemContainerPath,
 	ItemTemplate,
+	LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE,
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
@@ -33,6 +33,7 @@ import { usePlayerVisionFilters } from '../../../graphics/common/visionFilters.t
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
@@ -114,7 +115,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 			<div className='inventoryView'>
 				{ header }
 				<div className='toolbar'>
-					<StorageUsageMeter title='Storage used' used={ null } limit={ ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE } />
+					<StorageUsageMeter title='Storage used' used={ null } limit={ LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE } />
 					<div className='flex-1' />
 					<Button
 						onClick={ () => {
@@ -132,7 +133,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 	}
 
 	const storageUsed = storedOutfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
-	const storageAvailableTotal = ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE;
+	const storageAvailableTotal = LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE;
 
 	if (temporaryOutfit != null) {
 		const saveTemporaryOutfit = () => {
@@ -372,7 +373,7 @@ function OutfitPreview({ outfit }: {
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
 				backgroundColor={ Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16) }
-				forwardContexts={ [serviceManagerContext] }
+				forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
 			>
 				<GraphicsCharacter
 					position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }

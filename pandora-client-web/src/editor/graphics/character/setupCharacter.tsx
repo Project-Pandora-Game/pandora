@@ -2,6 +2,7 @@ import { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { useObservable } from '../../../observable.ts';
+import { EditorAssetGraphicsWornLayerContainer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { DraggableBone } from '../draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
@@ -21,16 +22,13 @@ export function SetupCharacter(): ReactElement {
 
 	return (
 		<GraphicsCharacterEditor layer={ SetupLayer }>
-			{
-				!selectedLayer ? null :
-				(
-					<SetupLayerSelected
-						characterState={ editorCharacterState }
-						layer={ selectedLayer }
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-					/>
-				)
-			}
+			{ (selectedLayer != null && selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
+				<SetupLayerSelected
+					characterState={ editorCharacterState }
+					layer={ selectedLayer }
+					zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
+				/>
+			) : null }
 			{
 				selectedTemplate == null ? null :
 				(<PointTemplateEditLayer templateEditor={ selectedTemplate } />)

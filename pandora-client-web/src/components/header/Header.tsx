@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { isEqual } from 'lodash-es';
-import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, GetLogger, IsAuthorized, type AccountOnlineStatus } from 'pandora-common';
+import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, EMPTY_ARRAY, GetLogger, IsAuthorized, type AccountOnlineStatus } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import crossIcon from '../../assets/icons/cross.svg';
@@ -16,13 +16,13 @@ import statusIconOnline from '../../assets/icons/state-online.svg';
 import statusIconLookingSub from '../../assets/icons/state-sub.svg';
 import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
-import { useObservable, useObservableMultiple } from '../../observable.ts';
+import { useNullableObservable, useObservable, useObservableMultiple } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useNotify } from '../../services/notificationHandler.tsx';
-import { useService } from '../../services/serviceProvider.tsx';
+import { useService, useServiceOptional } from '../../services/serviceProvider.tsx';
 import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
 import { AccountContactContext, GetCurrentAccountContacts, useAccountContacts } from '../accountContacts/accountContactContext.ts';
 import { GetAccountDMUrl } from '../accountContacts/accountContacts.tsx';
@@ -30,7 +30,7 @@ import { Button, IconButton } from '../common/button/button.tsx';
 import { IconHamburger } from '../common/button/domIcons.tsx';
 import { Column, DivContainer, Row } from '../common/container/container.tsx';
 import { DialogInPortal, DraggableDialog } from '../dialog/dialog.tsx';
-import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { useNotificationHeader } from '../gameContext/notificationProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -90,24 +90,28 @@ function LeftHeader({ onAnyClick }: {
 
 	const navigate = useNavigatePandora();
 	const goToWardrobe = useCallback(() => {
-		if (connectionInfo != null) {
-			navigate(`/wardrobe/character/${connectionInfo.characterId}`);
+		if (characterData != null) {
+			navigate(`/wardrobe/character/${characterData.id}`);
 			onAnyClick?.();
 		}
-	}, [navigate, onAnyClick, connectionInfo]);
+	}, [navigate, onAnyClick, characterData]);
 
 	return (
 		<div className='leftHeader flex'>
-			{ connectionInfo && (
+			{ characterData ? (
 				<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
 					{ preview ? (<img className='avatar' src={ preview } />) : null }
 					<span className='headerText'>
 						<span className='label'>Current character:</span>
-						{ characterName ?? `[Character ${connectionInfo.characterId}]` }
+						{ characterName ?? `[Character ${characterData.id}]` }
 					</span>
 				</button>
-			) }
-			{ !connectionInfo && (
+			) : connectionInfo ? (
+				<span className='headerText'>
+					<span className='label'>Current character:</span>
+					{ `[Character ${connectionInfo.characterId}]` }
+				</span>
+			) : (
 				<span className='headerText'>
 					<span className='label'>Current character:</span>
 					[no character selected]
@@ -207,7 +211,7 @@ function StatusSelector({ open, close }: {
 	open: boolean;
 	close: () => void;
 }): ReactElement {
-	const directory = useDirectoryConnector();
+	const directory = useServiceOptional('directoryConnector');
 
 	return (
 		<div className={ open ? 'statusSelectorMenuContainer open' : 'statusSelectorMenuContainer' } inert={ !open }>
@@ -217,7 +221,7 @@ function StatusSelector({ open, close }: {
 						<Button key={ o }
 							theme='transparent'
 							onClick={ () => {
-								directory.awaitResponse('changeSettings', {
+								directory?.awaitResponse('changeSettings', {
 									type: 'set',
 									settings: { onlineStatus: o },
 								})
@@ -316,16 +320,16 @@ function FriendsHeaderButton({ onClickExtra }: {
 	onClickExtra?: () => void;
 }): ReactElement {
 	const navigate = useNavigatePandora();
-	const directMessageManager = useService('directMessageManager');
+	const directMessageManager = useServiceOptional('directMessageManager');
 	const notify = useNotify();
 	const unreadDirectMessageCount = useObservableMultiple(
-		useObservable(directMessageManager.chats)
+		(useNullableObservable(directMessageManager?.chats) ?? EMPTY_ARRAY)
 			.map((c) => c.displayInfo),
 	).filter((c) => c.hasUnread).length;
 	const incomingFriendRequestCount = useAccountContacts('incoming').length;
 	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
-	useEffect(() => directMessageManager.on('newMessage', (chat: DirectMessageChat) => {
+	useEffect(() => directMessageManager?.on('newMessage', (chat: DirectMessageChat) => {
 		const contacts = GetCurrentAccountContacts();
 		const isContact = contacts.some((c) => c.id === chat.id);
 		notify({
@@ -399,8 +403,9 @@ function CollapsableHeader(): ReactElement {
 			<span className='headerText'>
 				{
 					currentAccount == null ? '[not logged in]' :
-					connectionInfo == null ? '[no character selected]' :
-					(characterName ?? `[Character ${connectionInfo.characterId}]`)
+					characterData != null ? (characterName ?? `[Character ${characterData.id}]`) :
+					connectionInfo != null ? `[Character ${connectionInfo.characterId}]` :
+					'[no character selected]'
 				}
 			</span>
 			<button className='collapsableHeaderButton' onClick={ () => {
@@ -436,7 +441,7 @@ export function Header(): ReactElement {
 }
 
 function Announcement(): ReactElement | null {
-	const { announcement } = useObservable(useDirectoryConnector().directoryStatus);
+	const announcement = useNullableObservable(useServiceOptional('directoryConnector')?.directoryStatus)?.announcement;
 
 	const [open, setOpen] = useState(false);
 	const [dismissedAnnouncement, setDismissedAnnouncement] = useState<DirectoryStatusAnnouncement | null>(null);

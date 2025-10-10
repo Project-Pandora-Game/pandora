@@ -22,7 +22,7 @@ import { createContext, useCallback, useContext, useMemo, type ReactElement, typ
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
-import type { ICharacter } from '../../character/character.ts';
+import type { Character } from '../../character/character.ts';
 import type { PlayerCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
@@ -35,7 +35,7 @@ import { ActionWarningContent } from './wardrobeComponents.tsx';
 import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils.ts';
 
 export interface WardrobeActionContext {
-	player: ICharacter;
+	player: Character;
 	globalState: AssetFrameworkGlobalState;
 	actions: AppearanceActionContext;
 	doImmediateAction: (action: Immutable<AppearanceAction>) => IClientShardResult['gameLogicAction'];
@@ -189,6 +189,7 @@ export function useWardrobePermissionRequestCallback() {
 					toast('Failed to request the permissions', TOAST_OPTIONS_ERROR);
 					break;
 				case undefined:
+					toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 					break;
 				default:
 					AssertNever(result);

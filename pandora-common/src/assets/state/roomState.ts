@@ -15,6 +15,7 @@ import { RoomDeviceDeploymentSchema } from '../item/roomDevice.ts';
 import { ItemTemplateSchema } from '../item/unified.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
+import { AppearanceItemsCalculateTotalCount } from '../validation.ts';
 import { ResolveBackground, RoomGeometryConfigSchema, type RoomBackgroundData, type RoomGeometryConfig } from './roomGeometry.ts';
 import { DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG, RoomNeighborLinkNodesConfigSchema, type RoomLinkNodeData, type RoomNeighborLinkNodesConfig, type RoomNeighborLinkNodesData } from './roomLinkNodeDefinitions.ts';
 import { ResolveRoomNeighborLinkData, SpaceRoomLayoutUnitVectorToCardinalDirection } from './roomLinkNodes.ts';
@@ -163,6 +164,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			return null;
 		const link = this.roomLinkData[direction];
 		return (link.disabled && !allowDisabledLinks) ? null : link;
+	}
+
+	public getTotalItemCount(): number {
+		return AppearanceItemsCalculateTotalCount(this.items);
 	}
 
 	public isValid(): boolean {

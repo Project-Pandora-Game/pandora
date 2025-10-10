@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { CHARACTER_SETTINGS_DEFAULT, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type CharacterSettings, type Rectangle, type ServiceManager } from 'pandora-common';
+import { CHARACTER_SETTINGS_DEFAULT, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type CharacterSettings, type Rectangle, type ServiceProvider } from 'pandora-common';
 import type { GraphicsContext } from 'pixi.js';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
@@ -18,6 +18,7 @@ import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { type PointLike } from '../../../graphics/common/point.ts';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
@@ -57,7 +58,7 @@ export function CharacterPreviewGenerationButton(): ReactElement {
 async function CreateAndSaveCharacterPreview(
 	characterState: AssetFrameworkCharacterState,
 	settings: Immutable<CharacterSettings['previewGeneration']>,
-	serviceManager: ServiceManager<ClientServices>,
+	serviceManager: ServiceProvider<ClientServices>,
 	authToken: string,
 ): Promise<void> {
 	const { areaSize, areaYOffset } = settings;
@@ -192,7 +193,7 @@ export function CharacterPreviewDialog({ close }: {
 					<GraphicsSceneBackgroundRenderer
 						renderArea={ canvasSize }
 						resolution={ 1 }
-						forwardContexts={ useMemo(() => [serviceManagerContext], []) }
+						forwardContexts={ useMemo(() => [serviceManagerContext, UseTextureGetterOverride], []) }
 						backgroundColor={ 0xffffff }
 					>
 						<GraphicsCharacter

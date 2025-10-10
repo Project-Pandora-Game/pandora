@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { noop } from 'lodash-es';
 import { AppearanceAction, IClientShardNormalResult, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents } from 'pandora-common';
 import {
@@ -11,7 +12,7 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
-import { useService } from '../../services/serviceProvider.tsx';
+import { useGameLogicServiceOptional } from '../../services/serviceProvider.tsx';
 import { useDebugContext } from '../error/debugContextProvider.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 import { useGameStateOptional } from './gameStateContextProvider.tsx';
@@ -24,11 +25,11 @@ export function ShardConnectorContextProvider(): null {
 
 	const shardConnector = useShardConnector();
 	const shardState = useNullableObservable(shardConnector?.state);
-	const shardConnectionInfo = useNullableObservable(shardConnector?.connectionInfo);
+	const shardConnectionInfo = shardConnector?.connectionInfo;
 
 	const { setDebugData } = useDebugContext();
 
-	const gameState = useNullableObservable(shardConnector?.gameState);
+	const gameState = useGameStateOptional();
 
 	useEffect(() => {
 		return gameState?.on('uiNavigate', (target) => {
@@ -56,7 +57,7 @@ export function ShardConnectorContextProvider(): null {
 }
 
 export function useShardConnector(): ShardConnector | null {
-	return useObservable(useService('shardConnectionManager').shardConnector);
+	return useGameLogicServiceOptional('shardConnector');
 }
 
 export function useShardChangeListener(
@@ -100,7 +101,7 @@ export function useAppearanceActionEvent(action: AppearanceAction, handler: (res
 	}, handler);
 }
 
-export function useShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
+export function useShardConnectionInfo(): Immutable<IDirectoryCharacterConnectionInfo> | null {
 	const shardConnector = useShardConnector();
-	return useNullableObservable(shardConnector?.connectionInfo);
+	return shardConnector?.connectionInfo ?? null;
 }

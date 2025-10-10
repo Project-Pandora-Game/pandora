@@ -1,17 +1,10 @@
-import { Immutable } from 'immer';
 import {
-	AbortActionAttempt,
-	ActionSpaceContext,
 	AppearanceActionContext,
-	AppearanceActionProcessingContext,
-	ApplyAction,
 	Assert,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	EvalItemPath,
-	FinishActionAttempt,
 	ItemId,
-	StartActionAttempt,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
@@ -32,20 +25,6 @@ import { Observable, useObservable } from '../../../observable.ts';
 import { useEditor, useEditorState } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 
-export const EDITOR_SPACE_CONTEXT = {
-	features: [
-		'development',
-		'allowBodyChanges',
-	],
-	isAdmin: () => true,
-	development: {
-		autoAdmin: true,
-		disableSafemodeCooldown: true,
-	},
-	// Editor has no character modifiers
-	getCharacterModifierEffects: () => EMPTY_ARRAY,
-} as const satisfies Immutable<ActionSpaceContext>;
-
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
 	const editor = useEditor();
 	const globalState = useEditorState();
@@ -62,14 +41,14 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const actions = useMemo((): AppearanceActionContext => ({
 		executionContext: 'clientOnlyVerify',
 		player: character.gameLogicCharacter,
-		spaceContext: EDITOR_SPACE_CONTEXT,
+		spaceContext: editor.getCurrentSpaceContext(),
 		getCharacter: (id) => {
 			if (id === character.id) {
 				return character.gameLogicCharacter;
 			}
 			return null;
 		},
-	}), [character]);
+	}), [character, editor]);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {
@@ -85,96 +64,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		player: character,
 		globalState,
 		actions,
-		doImmediateAction: (action) => {
-			// We do direct apply to skip need for attempt in some edge cases.
-			const processingContext = new AppearanceActionProcessingContext({
-				...actions,
-				executionContext: 'act',
-			}, editor.globalState.currentState);
-			const result = ApplyAction(processingContext, action);
-
-			// Check if result is valid
-			if (!result.valid) {
-				return {
-					result: 'failure',
-					problems: result.problems.slice(),
-				};
-			}
-
-			// Apply the action
-			editor.globalState.setState(result.resultState);
-
-			return {
-				result: 'success',
-				data: result.actionData,
-			};
-		},
-		startActionAttempt: (action) => {
-			const result = StartActionAttempt(action, {
-				...actions,
-				executionContext: 'act',
-			}, editor.globalState.currentState, Date.now());
-
-			// Check if result is valid
-			if (!result.valid) {
-				return {
-					result: 'failure',
-					problems: result.problems.slice(),
-				};
-			}
-
-			// Apply the action
-			editor.globalState.setState(result.resultState);
-
-			return {
-				result: 'success',
-				data: result.actionData,
-			};
-		},
-		completeCurrentActionAttempt: () => {
-			const result = FinishActionAttempt({
-				...actions,
-				executionContext: 'act',
-			}, editor.globalState.currentState, Date.now());
-
-			// Check if result is valid
-			if (!result.valid) {
-				return {
-					result: 'failure',
-					problems: result.problems.slice(),
-				};
-			}
-
-			// Apply the action
-			editor.globalState.setState(result.resultState);
-
-			return {
-				result: 'success',
-				data: result.actionData,
-			};
-		},
-		abortCurrentActionAttempt: () => {
-			const result = AbortActionAttempt({
-				...actions,
-				executionContext: 'act',
-			}, editor.globalState.currentState);
-
-			// Check if result is valid
-			if (!result.valid) {
-				return {
-					result: 'failure',
-					problems: result.problems.slice(),
-				};
-			}
-
-			// Apply the action
-			editor.globalState.setState(result.resultState);
-
-			return {
-				result: 'success',
-				data: result.actionData,
-			};
-		},
+		doImmediateAction: (action) => editor.doImmediateAction(action),
+		startActionAttempt: (action) => editor.startActionAttempt(action),
+		completeCurrentActionAttempt: () => editor.completeCurrentActionAttempt(),
+		abortCurrentActionAttempt: () => editor.abortCurrentActionAttempt(),
 		sendPermissionRequest: (_target, _permissions) => {
 			// Editor does not support permission manipulations
 			return { result: 'failure' };

@@ -23,6 +23,12 @@ export type IRoomSceneMode = {
 	deviceItemId: ItemId;
 };
 
+type IRoomContextMenuCharacterFocus = {
+	type: 'character';
+	character: Character<ICharacterRoomData>;
+	position: Readonly<PointLike>;
+};
+
 type IRoomContextMenuDeviceFocus = {
 	type: 'device';
 	room: RoomId;
@@ -30,17 +36,13 @@ type IRoomContextMenuDeviceFocus = {
 	position: Readonly<PointLike>;
 };
 
-export type IRoomContextMenuFocus = {
-	type: 'character';
-	character: Character<ICharacterRoomData>;
-	position: Readonly<PointLike>;
-} | IRoomContextMenuDeviceFocus;
+export type IRoomContextMenuFocus = IRoomContextMenuCharacterFocus | IRoomContextMenuDeviceFocus;
 
 type RoomScreenContext = {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	contextMenuFocus: Readonly<IRoomContextMenuFocus> | null;
-	openContextMenu: (target: Character<ICharacterRoomData> | Omit<IRoomContextMenuDeviceFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
+	openContextMenu: (target: Omit<IRoomContextMenuCharacterFocus, 'position'> | Omit<IRoomContextMenuDeviceFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
 };
 
 export const roomScreenContext = createContext<RoomScreenContext | null>(null);
@@ -70,10 +72,10 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 	const openContextMenu = useCallback<RoomScreenContext['openContextMenu']>((target, position) => {
 		if (!target || !position) {
 			setContextMenuFocus(null);
-		} else if (target instanceof Character) {
+		} else if (target.type === 'character') {
 			setContextMenuFocus({
 				type: 'character',
-				character: target,
+				character: target.character,
 				position,
 			});
 		} else if (target.type === 'device') {

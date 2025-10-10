@@ -125,8 +125,10 @@ export function ImportDialog<T extends z.ZodType>({
 							const files = e.target.files;
 							if (files && files.length === 1) {
 								const file = files.item(0);
-								if (!file)
+								if (!file) {
+									e.target.value = '';
 									return;
+								}
 								file
 									.text()
 									.then((content) => {
@@ -135,6 +137,10 @@ export function ImportDialog<T extends z.ZodType>({
 									.catch((err) => {
 										logger.error('Failed to load file:', err);
 										toast(`Loading file failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
+									})
+									.finally(() => {
+										// Clear files after load so user can re-select same one easily
+										e.target.value = '';
 									});
 							}
 						} }

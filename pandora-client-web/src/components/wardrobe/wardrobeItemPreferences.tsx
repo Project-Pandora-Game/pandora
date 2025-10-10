@@ -180,7 +180,7 @@ function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
 }): ReactElement {
 	const { focus, setFocus } = useContext(WardrobeItemPreferencesFocusContext);
 	const isFocused = focus.type === 'attribute' && focus.attribute === attribute;
-	const preference: AssetPreferenceType = useAssetPreferences().attributes[attribute]?.base ?? 'normal';
+	const preference: AssetPreferenceType = useAssetPreferences()?.attributes[attribute]?.base ?? 'normal';
 
 	return (
 		<div
@@ -303,11 +303,11 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 	const assetManager = useAssetManager();
 	const shardConnector = useShardConnector();
 	const currentPreferences = useAssetPreferences();
-	const currentAssetPreference: AssetPreference | null = currentPreferences.assets[asset.id] ?? null;
+	const currentAssetPreference: AssetPreference | null = currentPreferences?.assets[asset.id] ?? null;
 	// Get the attribute preference resolution - ignoring asset-specific value
 	const attributeBasedPreference = useMemo(() => {
 		return ResolveAssetPreference({
-			attributes: currentPreferences.attributes,
+			attributes: currentPreferences?.attributes ?? {},
 			assets: {},
 		}, asset);
 	}, [asset, currentPreferences]);
@@ -317,7 +317,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 		if (value === (currentAssetPreference?.base ?? null))
 			return;
 
-		const updated = CloneDeepMutable(currentPreferences.assets);
+		const updated = CloneDeepMutable(currentPreferences?.assets ?? {});
 
 		if (value != null) {
 			updated[asset.id] = {
@@ -327,11 +327,16 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 			delete updated[asset.id];
 		}
 
-		shardConnector?.awaitResponse('updateAssetPreferences', {
+		if (shardConnector == null) {
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		shardConnector.awaitResponse('updateAssetPreferences', {
 			assets: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
-				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+				toast('Asset cannot be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
 		}).catch((err) => {
 			if (err instanceof Error)
 				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
@@ -377,7 +382,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 								.filter(([_attribute, definition]) => (showNonFilterableAttributes || (definition.useAsAssetPreference ?? true)))
 								.filter(([attribute, _definition]) => asset.staticAttributes.has(attribute))
 								.map(([attribute, definition]) => {
-									const attributePreference: AssetPreferenceType = currentPreferences.attributes[attribute]?.base ?? 'normal';
+									const attributePreference: AssetPreferenceType = currentPreferences?.attributes[attribute]?.base ?? 'normal';
 
 									return (
 										<div key={ attribute }
@@ -437,7 +442,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 	const shardConnector = useShardConnector();
 	const resolvePreference = useAssetPreferenceResolver();
 	const currentPreferences = useAssetPreferences();
-	const currentAttributePreference: AssetPreference | null = currentPreferences.attributes[attribute] ?? null;
+	const currentAttributePreference: AssetPreference | null = currentPreferences?.attributes[attribute] ?? null;
 
 	const isConfigurable = definition.useAsAssetPreference ?? true;
 
@@ -446,7 +451,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 		if (value === (currentAttributePreference?.base ?? 'normal') || !isConfigurable)
 			return;
 
-		const updated = CloneDeepMutable(currentPreferences.attributes);
+		const updated = CloneDeepMutable(currentPreferences?.attributes ?? {});
 
 		if (value !== 'normal') {
 			updated[attribute] = {
@@ -456,14 +461,19 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			delete updated[attribute];
 		}
 
-		shardConnector?.awaitResponse('updateAssetPreferences', {
+		if (shardConnector == null) {
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		shardConnector.awaitResponse('updateAssetPreferences', {
 			attributes: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
-				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+				toast('No asset with this attribute can be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
 		}).catch((err) => {
 			if (err instanceof Error)
-				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
+				toast(`Failed to update attribute preference: ${err.message}`, TOAST_OPTIONS_ERROR);
 		});
 	}, [shardConnector, isConfigurable, attribute, currentPreferences, currentAttributePreference]);
 

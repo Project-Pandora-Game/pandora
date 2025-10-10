@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ICharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
@@ -9,7 +9,7 @@ import { usePlayerId } from '../../gameContext/playerContextProvider.tsx';
 import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents.tsx';
 
 export function WardrobeRandomizationGui({ character }: {
-	character: ICharacter;
+	character: Character;
 }): ReactElement {
 	const playerId = usePlayerId();
 

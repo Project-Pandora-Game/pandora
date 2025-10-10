@@ -6,16 +6,16 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { useObservable } from '../../../observable.ts';
-import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 import { EditorLayerColorPicker, EditorLayerPrioritySelect, LayerColorizationSetting } from './layerMesh.tsx';
 
 export function LayerTextUI({ layer }: {
-	layer: EditorAssetGraphicsLayer<'text'>;
+	layer: EditorAssetGraphicsWornLayer<'text'>;
 }): ReactElement {
 	const id = useId();
 	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(layer.asset.id);
+	const asset = assetManager.getAssetById(layer.assetGraphics.id);
 
 	const {
 		dataModule,
@@ -27,13 +27,13 @@ export function LayerTextUI({ layer }: {
 	return (
 		<>
 			<hr />
-			<LayerHeightAndWidthSetting layer={ layer } asset={ layer.asset } />
-			<LayerOffsetSetting layer={ layer } asset={ layer.asset } />
+			<LayerHeightAndWidthSetting layer={ layer } />
+			<LayerOffsetSetting layer={ layer } />
 			<hr />
 			<LayerColorizationSetting layer={ layer } />
-			<EditorLayerColorPicker layer={ layer } asset={ layer.asset } />
+			<EditorLayerColorPicker layer={ layer } />
 			<hr />
-			<EditorLayerPrioritySelect layer={ layer } asset={ layer.asset } />
+			<EditorLayerPrioritySelect layer={ layer } />
 			<Row alignY='center'>
 				<label htmlFor={ id + ':data-module' }>
 					Text module:
@@ -47,6 +47,7 @@ export function LayerTextUI({ layer }: {
 							d.dataModule = event.target.value;
 						});
 					} }
+					noScrollChange
 				>
 					<option value=''>- Select text module -</option>
 					{
@@ -78,6 +79,7 @@ export function LayerTextUI({ layer }: {
 							d.followBone = event.target.value || null;
 						});
 					} }
+					noScrollChange
 				>
 					<option value=''>[ None ]</option>
 					{

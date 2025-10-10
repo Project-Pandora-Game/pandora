@@ -12,9 +12,9 @@ export type ServiceConfigBase = {
 };
 
 /** Definition of the service's provider that will be passed to the service manager. */
-export type ServiceProviderDefinition<TServices extends BaseServicesDefinition, TName extends (keyof TServices & string), TConfig extends ServiceConfigBase> = {
+export type ServiceProviderDefinition<TServices extends BaseServicesDefinition, TName extends (keyof TServices & string), TConfig extends ServiceConfigBase, TExternalDependencies extends BaseServicesDefinition = Record<never, never>> = {
 	name: TName;
-	ctor: new (serviceInit: ServiceInitArgs<ServiceConfigFixupDependencies<TServices, TConfig>>) => (TServices[TName]);
+	ctor: new (serviceInit: ServiceInitArgs<ServiceConfigFixupDependencies<Omit<TServices & TExternalDependencies, TName>, TConfig>>) => (TServices[TName]);
 	dependencies: Record<keyof TConfig['dependencies'] & string, true>;
 };
 
@@ -101,8 +101,9 @@ export type ServiceInitArgs<TConfig extends ServiceConfigBase> = {
 /**
  * Helper for re-typing dependencies of a config the service requires to those the service manager will actually pass along.
  * This is done because in some cases service manager might have more concrete type of a service than the service itself requires as a dependency.
+ * It also safeguards against service requesting dependency that the manager doesn't provide, at compile-time.
  */
-export type ServiceConfigFixupDependencies<TServices extends BaseServicesDefinition, TConfig extends ServiceConfigBase> = {
-	dependencies: Pick<TServices, keyof TConfig['dependencies'] & string>;
+export type ServiceConfigFixupDependencies<TDependencies extends BaseServicesDefinition, TConfig extends ServiceConfigBase> = {
+	dependencies: Pick<TDependencies, keyof TConfig['dependencies'] & string>;
 	events: TConfig['events'];
 };

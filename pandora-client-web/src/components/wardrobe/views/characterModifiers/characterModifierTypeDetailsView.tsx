@@ -16,7 +16,7 @@ import {
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../../assets/assetManager.tsx';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import { useAsyncEvent } from '../../../../common/useEvent.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
 import { RenderChatPart } from '../../../../ui/components/chat/chatMessages.tsx';
@@ -32,7 +32,7 @@ import './characterModifierTypeDetailsView.scss';
 
 export function WardrobeCharacterModifierTypeDetailsView({ type, character, focusModifierInstance }: {
 	type: CharacterModifierType;
-	character: ICharacter;
+	character: Character;
 	focusModifierInstance: (id: CharacterModifierId) => void;
 }): ReactElement | null {
 	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
@@ -80,7 +80,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 }
 
 export function WardrobeCharacterModifierAddButton({ character, modifier, onSuccess }: {
-	character: ICharacter;
+	character: Character;
 	modifier: CharacterModifierTemplate;
 	onSuccess?: (newInstanceId: CharacterModifierId) => void;
 }): ReactElement {
@@ -107,7 +107,7 @@ export function WardrobeCharacterModifierAddButton({ character, modifier, onSucc
 		});
 	}, (result: IClientShardNormalResult['characterModifierAdd'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			onSuccess?.(result.instanceId);
 		} else if (result.result === 'characterNotFound') {
@@ -178,7 +178,7 @@ export function WardrobeCharacterModifierTypeDescription({ type }: {
 
 export function WardrobeCharacterModifierTypeInbuiltTemplates({ type, character, focusModifierInstance }: {
 	type: CharacterModifierType;
-	character: ICharacter;
+	character: Character;
 	focusModifierInstance: (id: CharacterModifierId) => void;
 }): ReactElement | null {
 	const [selectedTemplate, setSelectedTemplate] = useState<CharacterModifierTemplate | null>(null);

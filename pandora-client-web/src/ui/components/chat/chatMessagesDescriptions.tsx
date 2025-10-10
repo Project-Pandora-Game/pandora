@@ -16,7 +16,7 @@ import {
 } from 'pandora-common';
 import { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
-import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character.ts';
+import { useCharacterDataOptional, type Character } from '../../../character/character.ts';
 import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
@@ -24,7 +24,7 @@ import { DescribeAsset } from './chatMessages.tsx';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;
-	actionOriginator: IChatroomCharacter;
+	actionOriginator: Character;
 	globalState: AssetFrameworkGlobalState;
 }
 

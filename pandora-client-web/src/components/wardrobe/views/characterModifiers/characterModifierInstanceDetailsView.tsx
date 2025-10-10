@@ -23,7 +23,7 @@ import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';
 import deleteIcon from '../../../../assets/icons/delete.svg';
 import exportIcon from '../../../../assets/icons/export.svg';
-import type { ICharacter } from '../../../../character/character.ts';
+import type { Character } from '../../../../character/character.ts';
 import type { ChildrenProps } from '../../../../common/reactTypes.ts';
 import { useAsyncEvent } from '../../../../common/useEvent.ts';
 import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';
@@ -46,7 +46,7 @@ import { CharacterModifierConditionList } from './conditions/characterModifierCo
 import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
 export interface WardrobeCharacterModifierInstanceDetailsViewProps {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient | null;
 	allModifiers: readonly GameLogicModifierInstanceClient[];
 	unfocus: () => void;
@@ -98,7 +98,7 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 
 	const updateConfig = useCallback(async (config: CharacterModifierConfigurationChange): Promise<void> => {
 		if (shard == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 
@@ -376,7 +376,7 @@ export function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onCh
 }
 
 function ModifierInstanceReorderButton({ character, instance, allModifiers, shift, children }: ChildrenProps & {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 	allModifiers: readonly GameLogicModifierInstanceClient[];
 	shift: number;
@@ -404,7 +404,7 @@ function ModifierInstanceReorderButton({ character, instance, allModifiers, shif
 		});
 	}, (result: IClientShardNormalResult['characterModifierReorder'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			// Nothing to do here
 			return;
@@ -454,7 +454,7 @@ function ModifierInstanceReorderButton({ character, instance, allModifiers, shif
 }
 
 function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
-	character: ICharacter;
+	character: Character;
 	instance: GameLogicModifierInstanceClient;
 	unfocus: () => void;
 }): ReactElement {
@@ -480,7 +480,7 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 		});
 	}, (result: IClientShardNormalResult['characterModifierDelete'] | null) => {
 		if (result == null) {
-			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
 			unfocus();
 			return;

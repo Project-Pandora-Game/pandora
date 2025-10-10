@@ -33,12 +33,21 @@ export const LIMIT_SPACE_NAME_LENGTH = 48;
 /** The pattern used for validating space's name */
 export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 
-/** The maximum count of rooms per space */
-export const LIMIT_SPACE_ROOM_COUNT = 16;
 /** The maximum length of a room name */
 export const LIMIT_ROOM_NAME_LENGTH = 48;
 /** The pattern used for validating room name */
 export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]*$/;
+
+/** The maximum number of items a room can store */
+export const LIMIT_ITEM_ROOM_INVENTORY = 150;
+/** The maximum count of rooms per space */
+export const LIMIT_SPACE_ROOM_COUNT = 32;
+/** The maximum number of items in whole space (not including characters) */
+export const LIMIT_ITEM_SPACE_ITEMS_TOTAL = 2400;
+/** The maximum number of items across all saved outfits */
+export const LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE = 200;
+/** The maximum number of items a character can wear */
+export const LIMIT_ITEM_CHARACTER_WORN = 100;
 
 /** The maximum length of a spaces's description */
 export const LIMIT_SPACE_DESCRIPTION_LENGTH = 10_000;

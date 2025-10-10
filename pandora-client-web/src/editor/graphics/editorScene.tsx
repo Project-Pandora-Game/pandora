@@ -14,9 +14,11 @@ import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseC
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
-import { EditorContext, useEditor } from '../editorContextProvider.tsx';
+import { useEditor } from '../editorContextProvider.tsx';
+import { EditorServiceManagerContext } from '../services/editorServiceProvider.tsx';
 import { ResultCharacter, SetupCharacter } from './character/index.ts';
 import { ImageExporter } from './export/imageExporter.ts';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 
 function EditorColorPicker({ throttle: throttleMs }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -85,7 +87,7 @@ export function EditorScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext, EditorContext],
+		forwardContexts: [serviceManagerContext, EditorServiceManagerContext, UseTextureGetterOverride],
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,

@@ -1,3 +1,5 @@
+@use '../../../styles/common';
+
 .editor-setupui .layer-size-setup {
 	display: grid;
 	grid-template:
@@ -7,6 +9,12 @@
 	gap: 0.5em 0.25em;
 	margin: 0.25em 0;
 	align-items: center;
+
+	&.noTitle {
+		grid-template:
+			"xLabel xInput yLabel yInput" 1.75em
+			/ 20% minmax(0, 1fr) 20% minmax(0, 1fr);
+	}
 
 	.area-title {
 		grid-area: title;
@@ -24,5 +32,16 @@
 	}
 	.area-yInput {
 		grid-area: yInput;
+	}
+}
+
+.editor-setupui .SettingConditionOverrideTemplate {
+	.override-entry {
+		background: common.$theme-normal-background-secondary;
+		border: 1px solid common.$theme-separator;
+	}
+
+	.ConditionInput > textarea {
+		resize: vertical;
 	}
 }

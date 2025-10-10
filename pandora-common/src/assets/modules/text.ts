@@ -9,7 +9,7 @@ import { Satisfies } from '../../utility/misc.ts';
 import { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
-import { ConditionOperator } from '../graphics/index.ts';
+import { ConditionEqOperator } from '../graphics/index.ts';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base.ts';
 import type { AppearanceItems } from '../item/index.ts';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
@@ -179,7 +179,7 @@ export class ItemModuleText<TProperties = unknown, TStaticData = unknown> implem
 		return [];
 	}
 
-	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
+	public evalCondition(_operator: ConditionEqOperator, _value: string): boolean {
 		return false;
 	}
 

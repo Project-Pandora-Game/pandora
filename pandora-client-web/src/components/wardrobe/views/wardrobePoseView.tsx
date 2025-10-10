@@ -27,7 +27,7 @@ import {
 	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
 	type ReadonlyAppearanceLimitTree,
-	type ServiceManager,
+	type ServiceProvider,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import * as z from 'zod';
@@ -35,7 +35,7 @@ import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
 import starIcon from '../../../assets/icons/star.svg';
 import { useBrowserStorage } from '../../../browserStorage.ts';
-import { IChatroomCharacter } from '../../../character/character.ts';
+import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useDebouncedValue } from '../../../common/useDebounceValue.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -453,7 +453,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 }
 
 export function WardrobePoseGui({ character, characterState }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
@@ -727,7 +727,7 @@ export async function GeneratePosePreview(
 	assetManager: AssetManager,
 	preview: Immutable<AssetsPosePresetPreview>,
 	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
-	serviceManager: ServiceManager<ClientServices>,
+	serviceManager: ServiceProvider<ClientServices>,
 	previewSize: number,
 ): Promise<HTMLCanvasElement> {
 	// Get a cache

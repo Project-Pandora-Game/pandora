@@ -108,8 +108,13 @@ export function Chat(): ReactElement | null {
 		}
 	}, [messagesDiv, resizeObserver]);
 
-	if (!shardConnector)
-		return null;
+	if (!shardConnector) {
+		return (
+			<div className='warning-box'>
+				Error: Not connected
+			</div>
+		);
+	}
 
 	if (!isScrolling) {
 		newMessageCount = messages.length - lastMessageCount.current;

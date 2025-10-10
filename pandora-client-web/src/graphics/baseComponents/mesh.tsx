@@ -1,16 +1,22 @@
 import { Mesh, MeshGeometry, State, Texture, type ColorSource } from 'pixi.js';
-import { RegisterPixiComponent } from '../reconciler/component.ts';
-import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
+import { RegisterPixiComponent, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component.ts';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
-export interface PixiMeshProps {
+const PIXI_MESH_AUTO_PROPS = {
+	...CONTAINER_AUTO_PROPS,
+} as const satisfies Readonly<Partial<Record<keyof PixiDisplayObjectWriteableProps<Mesh>, true>>>;
+export type PixiMeshAutoProps = keyof typeof PIXI_MESH_AUTO_PROPS;
+
+export interface PixiMeshCustomProps {
 	vertices: Float32Array;
 	uvs: Float32Array;
 	indices: Uint32Array;
 	texture: Texture;
 	state?: State;
 	tint?: ColorSource;
-	alpha?: number;
 }
+
+export type PixiMeshProps = PixiComponentProps<Mesh, PixiMeshAutoProps, ContainerEventMap, PixiMeshCustomProps>;
 
 /**
  * Base mesh class.
@@ -26,7 +32,7 @@ export interface PixiMeshProps {
  *
  * Through a combination of the above elements you can render anything you want, 2D or 3D!
  */
-export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, PixiMeshProps>('PixiMesh', {
+export const PixiMesh = RegisterPixiComponent<Mesh, PixiMeshAutoProps, ContainerEventMap, PixiMeshCustomProps>('PixiMesh', {
 	create(props) {
 		const {
 			vertices,
@@ -35,7 +41,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			texture,
 			state,
 			tint,
-			alpha,
 		} = props;
 
 		const geometry = new MeshGeometry({
@@ -55,7 +60,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			state,
 		});
 		mesh.tint = tint ?? 0xffffff;
-		mesh.alpha = alpha ?? 1;
 
 		return mesh;
 	},
@@ -77,7 +81,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			texture: oldTexture,
 			state: oldState,
 			tint: oldTint,
-			alpha: oldAlpha,
 		} = oldProps as Partial<typeof newProps>;
 		const {
 			vertices,
@@ -86,7 +89,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			texture,
 			state,
 			tint,
-			alpha,
 		} = newProps;
 
 		let updated = false;
@@ -119,13 +121,8 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			updated = true;
 		}
 
-		if (alpha !== oldAlpha) {
-			mesh.alpha = alpha ?? 1;
-			updated = true;
-		}
-
 		return updated;
 	},
-	autoProps: {},
+	autoProps: PIXI_MESH_AUTO_PROPS,
 	events: CONTAINER_EVENTS,
 });

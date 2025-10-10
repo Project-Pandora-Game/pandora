@@ -46,10 +46,6 @@
 	@include common.center-absolute;
 }
 
-.center-fixed {
-	@include common.center-fixed;
-}
-
 .center-flex {
 	@include common.center-flex;
 	// Give this a default gap so things look better without custom style

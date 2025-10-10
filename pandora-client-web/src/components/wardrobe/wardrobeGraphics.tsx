@@ -13,7 +13,8 @@ import {
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
-import { Character, IChatroomCharacter } from '../../character/character.ts';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
+import { Character } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport.tsx';
@@ -26,6 +27,7 @@ import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSetting
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
 import { useRoomViewProjection } from '../../graphics/room/roomProjection.tsx';
 import { RoomGraphics } from '../../graphics/room/roomScene.tsx';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
@@ -37,7 +39,7 @@ import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView.t
 import { useWardrobeContext } from './wardrobeContext.tsx';
 
 export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 	globalState: AssetFrameworkGlobalState;
 	isPreview?: boolean;
@@ -128,7 +130,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 }
 
 export function CharacterPreview({ character, characterState, globalState, hideClothes = false, overlay, viewportRef }: {
-	character: IChatroomCharacter;
+	character: Character;
 	characterState: AssetFrameworkCharacterState;
 	globalState: AssetFrameworkGlobalState;
 	hideClothes?: boolean;
@@ -166,7 +168,7 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride],
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [viewportRef, viewportConfig]);
 
@@ -302,12 +304,17 @@ export function RoomPreview({
 }: RoomPreviewProps): ReactElement {
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
 		if (focusDevice == null || !focusDevice.isDeployed())
 			return undefined;
 
-		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset);
+		const graphics = graphicsManager?.assetGraphics[focusDevice.asset.id];
+		if (graphics?.type !== 'roomDevice')
+			return undefined;
+
+		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset, graphics);
 
 		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
 			focusDevice.deployment.x,
@@ -324,10 +331,10 @@ export function RoomPreview({
 			width: Math.ceil(width * scale),
 			height: Math.ceil(height * scale),
 		};
-	}, [focusDevice, projectionResolver]);
+	}, [focusDevice, graphicsManager, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
-		forwardContexts: [serviceManagerContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride],
 		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
 		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),

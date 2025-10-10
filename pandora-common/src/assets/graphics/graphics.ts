@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { AssetIdSchema } from '../base.ts';
 import type { BoneType } from './conditions.ts';
 import { InversePosingHandleSchema } from './inversePosing.ts';
-import { GraphicsLayerSchema } from './layer.ts';
+import { GraphicsLayerSchema, RoomDeviceGraphicsLayerSchema } from './layer.ts';
 import { PointTemplateSchema } from './points.ts';
 
 export const CharacterSize = {
@@ -23,9 +23,23 @@ export interface BoneDefinition {
 	type: BoneType;
 }
 
-export const AssetGraphicsDefinitionSchema = z.object({
+export const AssetGraphicsWornDefinitionSchema = z.object({
+	type: z.literal('worn'),
 	layers: GraphicsLayerSchema.array(),
 }).strict();
+export type AssetGraphicsWornDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
+
+export const AssetGraphicsRoomDeviceDefinitionSchema = z.object({
+	type: z.literal('roomDevice'),
+	/** The graphical display of the device */
+	layers: RoomDeviceGraphicsLayerSchema.array(),
+}).strict();
+export type AssetGraphicsRoomDeviceDefinition = z.infer<typeof AssetGraphicsRoomDeviceDefinitionSchema>;
+
+export const AssetGraphicsDefinitionSchema = z.discriminatedUnion('type', [
+	AssetGraphicsWornDefinitionSchema,
+	AssetGraphicsRoomDeviceDefinitionSchema,
+]);
 export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 
 export const GraphicsImageFormatSchema = z.enum(['avif', 'webp']);

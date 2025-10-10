@@ -26,7 +26,6 @@ export function GraphicsLayerAlphaImageMesh({
 	layer,
 	item,
 	displayUvPose = false,
-	getTexture,
 	characterBlinking,
 }: GraphicsLayerProps<'alphaImageMesh'>): ReactElement {
 
@@ -53,7 +52,7 @@ export function GraphicsLayerAlphaImageMesh({
 	}), [vertices, uv, triangles]);
 
 	return (
-		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ zIndex } getTexture={ getTexture }>
+		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ zIndex }>
 			{ children }
 		</MaskContainer>
 	);
@@ -70,7 +69,6 @@ interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
 	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
 	zIndex?: number;
-	getTexture?: (path: string) => Texture;
 }
 
 function MaskContainer({
@@ -97,10 +95,9 @@ function MaskContainerPixi({
 	maskImage,
 	maskMesh,
 	zIndex,
-	getTexture,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
-	const alphaTexture = useTexture(maskImage, true, getTexture);
+	const alphaTexture = useTexture(maskImage, true);
 
 	const finalAlphaTexture = useRef<Texture | null>(null);
 	const maskSprite = useRef<PIXI.Sprite | null>(null);
@@ -187,7 +184,6 @@ function MaskContainerCustom({
 	maskImage,
 	maskMesh,
 	zIndex,
-	getTexture,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
 
@@ -195,7 +191,7 @@ function MaskContainerCustom({
 	const maskContainer = useRef<PIXI.Container | null>(null);
 	const maskGeometryFinal = useRef<PIXI.MeshGeometry | undefined | null>(null);
 
-	const maskImageTexture = useTexture(maskImage, true, getTexture);
+	const maskImageTexture = useTexture(maskImage, true);
 	const maskImageTextureSaved = useRef<PIXI.Texture | null>(null);
 
 	const update = useCallback(() => {

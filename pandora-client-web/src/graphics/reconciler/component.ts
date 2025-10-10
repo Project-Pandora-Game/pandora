@@ -102,14 +102,14 @@ type DisplayObjectListenersMap<EventMap extends (EventEmitter.ValidEventTypes)> 
 /** Properties a registered pixi components has access to; combination of custom-defined properties, event properties and automatically-setable properties. */
 export type PixiComponentProps<
 	Element extends Container,
-	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
+	AutoPropKeys extends (keyof Element) = never,
 	EventMap extends (EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > =
 	// Any properties defined by the component
 	CustomProps
 	// All properties that are auto-assigned
-	& Partial<Pick<PixiDisplayObjectWriteableProps<Element>, AutoPropKeys>>
+	& Partial<Omit<Pick<Element, AutoPropKeys>, DisplayObjectPrivateProps | DisplayObjectSpecialPropKeys>>
 	// Special properties can be used on any object
 	& Partial<DisplayObjectSpecialProps>
 	// Event listeners, with `on` prefix

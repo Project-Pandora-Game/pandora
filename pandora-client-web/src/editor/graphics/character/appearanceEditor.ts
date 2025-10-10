@@ -1,15 +1,14 @@
+import { freeze } from 'immer';
 import { cloneDeep } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	AppearanceAction,
-	AppearanceActionContext,
 	AppearanceActionProcessingContext,
 	ApplyAction,
 	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalStateContainer,
 	CharacterAppearance,
 	CharacterId,
 	CharacterRestrictionsManager,
@@ -20,10 +19,12 @@ import {
 	ICharacterRoomData,
 	ItemId,
 	TypedEventEmitter,
+	type ActionTargetSelector,
 	type AssetFrameworkGlobalState,
+	type ICharacterPrivateData,
 } from 'pandora-common';
-import { CharacterEvents, ICharacter } from '../../../character/character.ts';
-import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe.tsx';
+import { CharacterEvents } from '../../../character/character.ts';
+import type { PlayerCharacter } from '../../../character/player.ts';
 import { Editor } from '../../editor.tsx';
 import { useEditorState } from '../../editorContextProvider.tsx';
 
@@ -32,32 +33,18 @@ export interface EditorActionContext {
 }
 
 export class AppearanceEditor extends CharacterAppearance {
-	public readonly globalStateContainer: AssetFrameworkGlobalStateContainer;
+	public readonly editor: Editor;
 
-	constructor(globalState: AssetFrameworkGlobalState, character: GameLogicCharacter, globalStateContainer: AssetFrameworkGlobalStateContainer) {
+	constructor(globalState: AssetFrameworkGlobalState, character: GameLogicCharacter, editor: Editor) {
 		super(globalState, character);
-		this.globalStateContainer = globalStateContainer;
-	}
-
-	protected _makeActionContext(): AppearanceActionContext {
-		return {
-			executionContext: 'act',
-			player: this.character,
-			spaceContext: EDITOR_SPACE_CONTEXT,
-			getCharacter: (id) => {
-				if (id === this.id) {
-					return this.character;
-				}
-				return null;
-			},
-		};
+		this.editor = editor;
 	}
 
 	public editorDoAction(
 		action: AppearanceAction,
 		{ dryRun = false }: EditorActionContext = {},
 	): boolean {
-		const processingContext = new AppearanceActionProcessingContext(this._makeActionContext(), this.globalStateContainer.currentState);
+		const processingContext = new AppearanceActionProcessingContext(this.editor.getAppearanceActionContext('act'), this.editor.globalState.currentState);
 		const result = ApplyAction(processingContext, action);
 
 		if (!result.valid) {
@@ -65,7 +52,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		}
 
 		if (!dryRun) {
-			this.globalStateContainer.setState(result.resultState);
+			this.editor.globalState.setState(result.resultState);
 		}
 		return true;
 	}
@@ -137,46 +124,54 @@ export class AppearanceEditor extends CharacterAppearance {
 	}
 }
 
-export const EDITOR_CHARACTER_ID: CharacterId = 'c0';
+export const EDITOR_CHARACTER_ID: CharacterId = 'c1';
 
-export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacterRoomData>> implements ICharacter<ICharacterRoomData> {
+export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacterPrivateData & ICharacterRoomData>> implements PlayerCharacter {
 	public readonly type = 'character';
 	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
+	public readonly actionSelector: ActionTargetSelector;
 
 	public readonly editor: Editor;
 	protected readonly logger = GetLogger('EditorCharacter');
 
-	public readonly data: ICharacterRoomData;
+	public readonly data: ICharacterPrivateData & ICharacterRoomData;
 	public readonly gameLogicCharacter: GameLogicCharacterClient;
 
 	constructor(editor: Editor) {
 		super();
 		this.editor = editor;
+		this.actionSelector = freeze<ActionTargetSelector>({ type: 'character', characterId: this.id }, true);
 		this.data = {
 			id: this.id,
-			accountId: 0,
-			accountDisplayName: 'EditorCharacter',
-			name: 'EditorCharacter',
+			accountId: 1,
+			accountDisplayName: 'Editor Account',
+			name: 'Editor Character',
 			profileDescription: 'An editor character',
 			publicSettings: {},
 			onlineStatus: 'online',
 			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
+			created: editor.created,
+			settings: {},
 		};
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));
 	}
 
-	public isPlayer(): boolean {
+	public isPlayer(): this is PlayerCharacter {
 		return true;
 	}
 
 	public getAppearance(globalState?: AssetFrameworkGlobalState): AppearanceEditor {
 		globalState ??= this.editor.globalState.currentState;
-		return new AppearanceEditor(globalState, this.gameLogicCharacter, this.editor.globalState);
+		return new AppearanceEditor(globalState, this.gameLogicCharacter, this.editor);
 	}
 
 	public getRestrictionManager(globalState: AssetFrameworkGlobalState | undefined, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
 		return this.getAppearance(globalState).getRestrictionManager(spaceContext);
+	}
+
+	public setCreationComplete(): void {
+		throw new Error('Character creation inside Editor is not supported');
 	}
 }
 

@@ -1,16 +1,21 @@
 import { type Immutable } from 'immer';
-import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
+import { Assert, EMPTY_ARRAY, LoadAssetLayer, LoadAssetRoomDeviceLayer, type Asset, type AssetGraphicsRoomDeviceDefinition, type AssetGraphicsWornDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildContextRoomDeviceData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger, type RoomDeviceGraphicsLayer } from 'pandora-common';
 import { Application, Rectangle, Texture } from 'pixi.js';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import { CreatePixiApplication } from '../../graphics/graphicsAppManager.ts';
 import { GetTextureBoundingBox } from '../../graphics/utility/textureBoundingBox.ts';
-import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
-import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
 import { EditorAssetGraphicsManager } from './editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsRoomDeviceLayer } from './editorAssetGraphicsRoomDeviceLayer.ts';
+import type { EditorAssetGraphicsWornLayer } from './editorAssetGraphicsWornLayer.ts';
+import type { EditorAssetGraphicsBase } from './graphics/editorAssetGraphicsBase.ts';
+import type { EditorAssetGraphicsRoomDevice } from './graphics/editorAssetGraphicsRoomDevice.ts';
+import type { EditorWornLayersContainer } from './graphics/editorAssetGraphicsWorn.ts';
 
 /** Map to editor asset graphics source layer. Only used in editor. */
-export const AssetGraphicsSourceMap = new WeakMap<Immutable<GraphicsLayer>, EditorAssetGraphicsLayer>();
+export const AssetGraphicsWornSourceMap = new WeakMap<Immutable<GraphicsLayer>, EditorAssetGraphicsWornLayer>();
+
+/** Map to editor asset graphics source layer. Only used in editor. */
+export const AssetGraphicsRoomDeviceSourceMap = new WeakMap<Immutable<RoomDeviceGraphicsLayer>, EditorAssetGraphicsRoomDeviceLayer>();
 
 let BuildingPixiApplication: Application | null = null;
 let BuildingPixiApplicationPromise: Promise<Application> | null = null;
@@ -74,21 +79,12 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	}
 }
 
-export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logicAsset: Asset, assetManager: AssetManager, buildTextures?: Map<string, Texture>): GraphicsBuildContext {
-	const graphicsManager = GraphicsManagerInstance.value;
-	AssertNotNullable(graphicsManager);
-
-	const builtAssetData: Immutable<GraphicsBuildContextAssetData> = {
-		modules: (logicAsset.isType('personal') || logicAsset.isType('bodypart')) ? (
-			logicAsset.definition.modules
-		) : undefined,
-		colorizationKeys: new Set(
-			(logicAsset.isType('personal') || logicAsset.isType('bodypart') || logicAsset.isType('roomDevice')) ?
-				Object.keys(logicAsset.definition.colorization ?? {}) :
-				[],
-		),
-	};
-
+export function EditorBuildAssetGraphicsContext<TAssetData>(
+	asset: EditorAssetGraphicsBase,
+	assetManager: AssetManager,
+	builtAssetData: TAssetData,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<TAssetData> {
 	const textures = asset.textures.value;
 
 	return {
@@ -108,33 +104,143 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 			if (texture == null) {
 				throw new Error(`Image ${image} not found`);
 			}
-			return new EditorImageResource(image, texture, buildTextures);
+			return new EditorImageResource(`editor://${encodeURIComponent(asset.id)}/${image}`, texture, buildTextures);
 		},
 		builtAssetData,
 	};
 }
 
-export async function EditorBuildAssetGraphics(
-	asset: EditorAssetGraphics,
-	logicAsset: Asset,
+export function EditorBuiltAssetDataFromWornAsset(asset: Asset<'personal'> | Asset<'bodypart'>): Immutable<GraphicsBuildContextAssetData> {
+	return {
+		modules: asset.definition.modules,
+		colorizationKeys: new Set(Object.keys(asset.definition.colorization ?? {})),
+	};
+}
+
+export function EditorBuildAssetGraphicsWornContext(
+	asset: EditorAssetGraphicsBase,
+	logicAsset: Asset<'personal'> | Asset<'bodypart'> | Asset<'roomDevice'>,
+	assetManager: AssetManager,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> {
+	if (logicAsset.isType('roomDevice')) {
+		const roomDeviceBuildData = EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset);
+
+		return EditorBuildAssetGraphicsContext<Immutable<GraphicsBuildContextAssetData>>(
+			asset,
+			assetManager,
+			{
+				modules: roomDeviceBuildData.modules,
+				colorizationKeys: roomDeviceBuildData.colorizationKeys,
+			},
+			buildTextures,
+		);
+	}
+	return EditorBuildAssetGraphicsContext(asset, assetManager, EditorBuiltAssetDataFromWornAsset(logicAsset), buildTextures);
+}
+
+export function EditorBuiltAssetDataFromRoomDeviceAsset(asset: Asset<'roomDevice'>): Immutable<GraphicsBuildContextRoomDeviceData> {
+	return {
+		modules: asset.definition.modules,
+		colorizationKeys: new Set(Object.keys(asset.definition.colorization ?? {})),
+		slotIds: new Set(Object.keys(asset.definition.slots)),
+	};
+}
+
+export function EditorBuildAssetRoomDeviceGraphicsContext(
+	asset: EditorAssetGraphicsRoomDevice,
+	logicAsset: Asset<'roomDevice'>,
+	assetManager: AssetManager,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> {
+	return EditorBuildAssetGraphicsContext(asset, assetManager, EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset), buildTextures);
+}
+
+export async function EditorBuildWornAssetGraphics(
+	asset: EditorWornLayersContainer,
+	builtAssetData: Immutable<GraphicsBuildContextAssetData>,
 	assetManager: AssetManager,
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
-): Promise<Immutable<AssetGraphicsDefinition>> {
-	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(asset, logicAsset, assetManager, buildTextures);
+): Promise<Immutable<AssetGraphicsWornDefinition>> {
+	const assetLoadContext: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> = EditorBuildAssetGraphicsContext(
+		asset.assetGraphics,
+		assetManager,
+		builtAssetData,
+		buildTextures,
+	);
 
 	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
 		LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)
 			.then((layerBuildResult) => {
 				// Add source map for the built layer
 				for (const builtLayer of layerBuildResult) {
-					AssetGraphicsSourceMap.set(builtLayer, sourceLayer);
+					AssetGraphicsWornSourceMap.set(builtLayer, sourceLayer);
 				}
 				return layerBuildResult;
 			}),
 	))).flat();
 
 	return {
+		type: 'worn',
 		layers,
+	};
+}
+
+export async function EditorBuildRoomDeviceAssetGraphics(
+	asset: EditorAssetGraphicsRoomDevice,
+	builtAssetData: Immutable<GraphicsBuildContextRoomDeviceData>,
+	assetManager: AssetManager,
+	logger: Logger,
+	buildTextures: Map<string, Texture>,
+): Promise<{
+	graphics: Immutable<AssetGraphicsRoomDeviceDefinition>;
+	slotGraphics: Immutable<Record<string, AssetGraphicsWornDefinition>>;
+}> {
+	const assetLoadContext: GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> = EditorBuildAssetGraphicsContext(
+		asset,
+		assetManager,
+		builtAssetData,
+		buildTextures,
+	);
+
+	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
+		LoadAssetRoomDeviceLayer(sourceLayer.definition.value, assetLoadContext, logger)
+			.then((layerBuildResult) => {
+				// Add source map for the built layer
+				for (const builtLayer of layerBuildResult) {
+					AssetGraphicsRoomDeviceSourceMap.set(builtLayer, sourceLayer);
+				}
+				return layerBuildResult;
+			}),
+	))).flat();
+
+	const slotGraphics: Record<string, Immutable<AssetGraphicsWornDefinition>> = {};
+	for (const [slot, slotGraphicsSource] of asset.slotGraphics.value) {
+		const slotLogger = logger.prefixMessages(`Slot '${slot}':\n\t\t`);
+		if (slotGraphicsSource.layers.value.length === 0) {
+			slotLogger.warning('Slot has no layers. Either add layers or remove slot graphics altogether.');
+		}
+
+		const slotResult = await EditorBuildWornAssetGraphics(
+			slotGraphicsSource,
+			{
+				modules: builtAssetData.modules,
+				colorizationKeys: builtAssetData.colorizationKeys,
+			},
+			assetManager,
+			slotLogger,
+			buildTextures,
+		);
+
+		slotGraphics[slot] = slotResult;
+	}
+
+	return {
+		graphics: {
+			type: 'roomDevice',
+			layers,
+		},
+		slotGraphics,
 	};
 }

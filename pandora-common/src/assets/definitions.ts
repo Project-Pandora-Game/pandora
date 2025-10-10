@@ -6,7 +6,7 @@ import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';
 import type { Satisfies } from '../utility/misc.ts';
 import { HexRGBAColorString } from '../validation.ts';
 import type { AssetId } from './base.ts';
-import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegSideOrder, LegsPose, Size } from './graphics/index.ts';
+import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegSideOrder, LegsPose } from './graphics/index.ts';
 import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
@@ -194,9 +194,6 @@ export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
-
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
@@ -253,9 +250,6 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
-
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -264,91 +258,6 @@ export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionE
 	name: string;
 	wearableAsset: AssetId;
 };
-
-export type IRoomDeviceGraphicsLayerSprite = {
-	type: 'sprite';
-	image: string;
-	imageOverrides?: LayerImageOverride[];
-	/** Name of colorization key used to color this sprite layer */
-	colorizationKey?: string;
-	/**
-	 * Offset of this sprite relative to cage's origin point
-	 * @default { x: 0, y: 0 }
-	 */
-	offset?: Coordinates;
-	offsetOverrides?: {
-		offset: Coordinates;
-		condition: Condition;
-	}[];
-	/**
-	 * Clips the graphics to the room, at the matching perspective transform depth.
-	 * This is useful mainly for items that want to stop at a wall or ceiling (e.g. a chain going to ceiling), no matter how far the wall is.
-	 * @default false
-	 */
-	clipToRoom?: boolean;
-};
-
-export type IRoomDeviceGraphicsCharacterPosition = {
-	offsetX: number;
-	offsetY: number;
-	/**
-	 * Offset to apply to the character's pivot. (point around which character rotates and turns around)
-	 * @see {CHARACTER_PIVOT_POSITION}
-	 * @default
-	 * { x: 0, y: 0 }
-	 */
-	pivotOffset?: Coordinates;
-	/**
-	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
-	 * compared to this room device scaled inside the room
-	 * @default 1
-	 */
-	relativeScale?: number;
-	/**
-	 * Prevents pose from changing character's offset or scale while inside this room device slot
-	 * (for slots that allow different poses, but require precision)
-	 * @default false
-	 */
-	disablePoseOffset?: boolean;
-};
-
-export type IRoomDeviceGraphicsCharacterPositionOverride = {
-	position: IRoomDeviceGraphicsCharacterPosition;
-	condition: Condition;
-};
-
-export type IRoomDeviceGraphicsLayerSlot = {
-	type: 'slot';
-	/**
-	 * Is the name of the character slot that is drawn on this layer.
-	 */
-	slot: string;
-	characterPosition: IRoomDeviceGraphicsCharacterPosition;
-	characterPositionOverrides?: IRoomDeviceGraphicsCharacterPositionOverride[];
-};
-
-export type IRoomDeviceGraphicsLayerText = {
-	type: 'text';
-	/** Module from which text is used. Must be a 'text' type module. */
-	dataModule: string;
-	/**
-	 * Offset of this layer relative to top-left
-	 */
-	offset?: Coordinates;
-	/** Size for the text */
-	size: Size;
-	/** Angle of the text */
-	angle?: number;
-	/**
-	 * Maximum font size to use. Affects size of small text and performance.
-	 * @default 32
-	 */
-	fontSize: number;
-	/** Key of colorization to use for the text */
-	colorizationKey?: string;
-};
-
-export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot | IRoomDeviceGraphicsLayerText;
 
 export interface RoomDeviceModuleStaticData {
 	/**
@@ -369,8 +278,6 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	slots: Record<string, RoomDeviceSlot<A>>;
 	/** Modules this device has */
 	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>, RoomDeviceModuleStaticData>>;
-	/** The graphical display of the device */
-	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */
 	staticAttributes?: (A['attributes'])[];
 	/**
@@ -406,8 +313,6 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 }
 
 export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 	/** Extra pose presets available when wearing this asset, extends device's pose presets */
 	posePresets?: AssetsPosePreset<A['bones']>[];
 	/**
@@ -448,8 +353,6 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	 * @default 'Locked by CHARACTER at TIME'
 	 */
 	lockedText?: string;
-	/** If this item has any graphics to be loaded or is only virtual */
-	hasGraphics: boolean;
 }
 
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =

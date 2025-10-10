@@ -8,18 +8,21 @@ import {
 	CloneDeepMutable,
 	Coordinates,
 	EMPTY_ARRAY,
+	GetLogger,
 	GetRoomPositionBounds,
 	ICharacterRoomData,
-	IRoomDeviceGraphicsLayerSlot,
-	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
+	RoomDeviceGraphicsLayerSlot,
+	RoomDeviceGraphicsLayerSprite,
 	type AssetFrameworkRoomState,
+	type AssetId,
+	type RoomDeviceGraphicsLayer,
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
@@ -40,10 +43,11 @@ import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
+import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
 import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
@@ -470,7 +474,10 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 				if (held) {
 					ev.stopPropagation();
 					setHeld(false);
-					openContextMenu(character, {
+					openContextMenu({
+						type: 'character',
+						character,
+					}, {
 						x: ev.pageX,
 						y: ev.pageY,
 					});
@@ -625,7 +632,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	onPointerMove?: (event: PIXI.FederatedPointerEvent) => void;
 }
 
-function RoomDeviceGraphicsWithManagerImpl({
+function RoomDeviceGraphicsWithManager({
 	item,
 	globalState,
 	characters,
@@ -641,8 +648,11 @@ function RoomDeviceGraphicsWithManagerImpl({
 	eventMode,
 	hitArea,
 	roomMask,
+	graphicsGetter,
 	...graphicsProps
-}: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
+}: RoomDeviceGraphicsProps & {
+	graphicsGetter: GraphicsGetterFunction;
+}): ReactElement {
 	const asset = item.asset;
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: 0, y: 0 }), [pivotExtra]);
 	const position = useMemo<PointLike>(() => ({
@@ -652,10 +662,22 @@ function RoomDeviceGraphicsWithManagerImpl({
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: 1, y: 1 }), [scaleExtra]);
 
+	const layers = useMemo<Immutable<RoomDeviceGraphicsLayer[]>>(() => {
+		const graphics = graphicsGetter(asset.id);
+		if (!graphics) {
+			GetLogger('RoomDeviceGraphics').warning(`Asset ${asset.id} no graphics found`);
+			return EMPTY_ARRAY;
+		} else if (graphics.type !== 'roomDevice') {
+			GetLogger('RoomDeviceGraphics').warning(`Asset ${asset.id} is room device, but graphics has type ${graphics.type}`);
+			return EMPTY_ARRAY;
+		}
+
+		return graphics.layers;
+	}, [asset, graphicsGetter]);
+
 	return (
 		<Container
 			{ ...graphicsProps }
-			ref={ ref }
 			pivot={ pivot }
 			position={ position }
 			scale={ scale }
@@ -670,14 +692,16 @@ function RoomDeviceGraphicsWithManagerImpl({
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{
-					asset.definition.graphicsLayers.map((layer, i) => {
+					layers.map((layer, i) => {
 						let graphics: ReactElement;
 						if (layer.type === 'sprite') {
-							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } roomMask={ roomMask } />;
+							graphics = <GraphicsLayerRoomDeviceSprite item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else if (layer.type === 'slot') {
-							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
+							graphics = <GraphicsLayerRoomDeviceSlot globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
 						} else if (layer.type === 'text') {
 							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
+						} else if (layer.type === 'mesh') {
+							graphics = <GraphicsLayerRoomDeviceMesh item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else {
 							AssertNever(layer);
 						}
@@ -690,23 +714,20 @@ function RoomDeviceGraphicsWithManagerImpl({
 	);
 }
 
-const RoomDeviceGraphicsWithManager = React.forwardRef(RoomDeviceGraphicsWithManagerImpl);
-
-function RoomDeviceGraphicsImpl(props: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement | null {
+function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
+	const assetGraphics = manager?.assetGraphics;
+	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => assetGraphics == null ? undefined : ((id: AssetId) => assetGraphics[id]), [assetGraphics]);
 
-	if (!manager)
+	if (!graphicsGetter)
 		return null;
 
-	return <RoomDeviceGraphicsWithManager { ...props } ref={ ref } />;
+	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
 
-const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
-
-function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture, roomMask }: {
+function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 	item: ItemRoomDevice;
-	layer: Immutable<IRoomDeviceGraphicsLayerSprite>;
-	getTexture?: (path: string) => PIXI.Texture;
+	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
 	roomMask?: PixiMaskSource;
 }): ReactElement | null {
 
@@ -725,7 +746,7 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture, roomMask }: {
 		scale,
 	} = useImageResolutionAlternative(image);
 
-	const texture = useTexture(resizedImage, undefined, getTexture);
+	const texture = useTexture(resizedImage, undefined);
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
@@ -748,9 +769,9 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture, roomMask }: {
 	);
 }
 
-function RoomDeviceGraphicsLayerSlot({ item, layer, globalState, characters }: {
+function GraphicsLayerRoomDeviceSlot({ item, layer, globalState, characters }: {
 	item: ItemRoomDevice;
-	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
 	globalState: AssetFrameworkGlobalState;
 	characters: readonly Character<ICharacterRoomData>[];
 }): ReactElement | null {
@@ -766,7 +787,7 @@ function RoomDeviceGraphicsLayerSlot({ item, layer, globalState, characters }: {
 		return null;
 
 	return (
-		<RoomDeviceGraphicsLayerSlotCharacter
+		<GraphicsLayerRoomDeviceSlotCharacter
 			item={ item }
 			layer={ layer }
 			character={ character }
@@ -776,16 +797,16 @@ function RoomDeviceGraphicsLayerSlot({ item, layer, globalState, characters }: {
 	);
 }
 
-export interface CalculateCharacterDeviceSlotPositionArgs {
+export interface CalculateCharacterDeviceSlotPositionProps {
 	item: ItemRoomDevice;
-	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
 	characterState: AssetFrameworkCharacterState;
 	evaluator: AppearanceConditionEvaluator;
 	baseScale: number;
 	pivot: Readonly<PointLike>;
 }
 
-export function CalculateCharacterDeviceSlotPosition({ item, layer, characterState, evaluator, baseScale, pivot }: CalculateCharacterDeviceSlotPositionArgs): {
+export function CalculateCharacterDeviceSlotPosition({ item, layer, characterState, evaluator, baseScale, pivot }: CalculateCharacterDeviceSlotPositionProps): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Final scale of the character (both pose and room scaling applied) */
@@ -821,9 +842,9 @@ export function CalculateCharacterDeviceSlotPosition({ item, layer, characterSta
 	};
 }
 
-function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState, globalState }: {
+function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState, globalState }: {
 	item: ItemRoomDevice;
-	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
 	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 	globalState: AssetFrameworkGlobalState;

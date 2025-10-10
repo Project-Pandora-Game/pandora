@@ -10,8 +10,8 @@ import { DIRECTORY_ADDRESS } from '../../config/Environment.ts';
 import { ConfigServerIndex } from '../../config/searchArgs.ts';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../networking/directoryConnector.ts';
 import { SocketIOConnector } from '../../networking/socketio_connector.ts';
-import { useObservable } from '../../observable.ts';
-import { useService } from '../../services/serviceProvider.tsx';
+import { useNullableObservable } from '../../observable.ts';
+import { useService, useServiceOptional } from '../../services/serviceProvider.tsx';
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function GetDirectoryAddress(): string {
@@ -87,13 +87,12 @@ export function useDirectoryChangeListener(
 }
 
 export function useAuthToken(): AuthToken | undefined {
-	const directoryConnector = useDirectoryConnector();
-	return useObservable(directoryConnector.authToken);
+	const directoryConnector = useServiceOptional('directoryConnector');
+	return useNullableObservable(directoryConnector?.authToken) ?? undefined;
 }
 
 export function useAuthTokenHeader(): string | undefined {
-	const directoryConnector = useDirectoryConnector();
-	const token = useObservable(directoryConnector.authToken);
+	const token = useAuthToken();
 	if (!token)
 		return;
 

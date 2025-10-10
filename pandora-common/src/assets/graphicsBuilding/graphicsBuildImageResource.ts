@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
-import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
-import type { LayerImageOverride, LayerImageSetting } from '../graphics/layers/common.ts';
 import { CloneDeepMutable } from '../../utility/misc.ts';
+import type { LayerImageOverride, LayerImageSetting } from '../graphics/layers/common.ts';
+import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
 
 export type LayerImageTrimArea = [left: number, top: number, right: number, bottom: number] | null;
 
@@ -29,7 +29,7 @@ export interface GraphicsBuildImageResource {
 	getContentBoundingBox(): Promise<ImageBoundingBox>;
 }
 
-export function LoadLayerImage(image: string, context: GraphicsBuildContext, imageTrimArea: LayerImageTrimArea): string {
+export function LoadLayerImage(image: string, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea): string {
 	let resource = context.loadImage(image);
 
 	if (imageTrimArea != null) {
@@ -43,7 +43,7 @@ export function LoadLayerImage(image: string, context: GraphicsBuildContext, ima
 	return resource.resultName;
 }
 
-export function ListLayerImageSettingImages(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext): GraphicsBuildImageResource[] {
+export function ListLayerImageSettingImages(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext<unknown>): GraphicsBuildImageResource[] {
 	const resources = new Set<GraphicsBuildImageResource>();
 
 	setting.overrides.forEach(({ image }) => {
@@ -59,7 +59,7 @@ export function ListLayerImageSettingImages(setting: Immutable<LayerImageSetting
 	return Array.from(resources);
 }
 
-export function LoadLayerImageSetting(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext, imageTrimArea: LayerImageTrimArea): LayerImageSetting {
+export function LoadLayerImageSetting(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea): LayerImageSetting {
 	const overrides: LayerImageOverride[] = setting.overrides
 		.map((override): LayerImageOverride => ({
 			image: override.image && LoadLayerImage(override.image, context, imageTrimArea),

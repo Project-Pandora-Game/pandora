@@ -11,7 +11,7 @@ import {
 	useLogout,
 } from '../../src/networking/account_manager.ts';
 import { DirectoryConnector } from '../../src/networking/directoryConnector.ts';
-import type { AccountManager } from '../../src/services/accountLogic/accountManager.ts';
+import type { IAccountManager } from '../../src/services/accountLogic/accountManager.ts';
 import type { ClientServices } from '../../src/services/clientServices.ts';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../testUtils.tsx';
 const jest = import.meta.jest; // Jest is not properly injected in ESM
@@ -19,7 +19,7 @@ const jest = import.meta.jest; // Jest is not properly injected in ESM
 describe('Account Manager', () => {
 	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
-	let accountManager: AccountManager;
+	let accountManager: IAccountManager;
 
 	beforeEach(() => {
 		serviceManager = MockServiceManager();

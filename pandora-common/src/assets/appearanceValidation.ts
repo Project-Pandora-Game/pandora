@@ -56,6 +56,10 @@ export type AppearanceValidationError =
 		limit: number;
 	}
 	| {
+		problem: 'tooManySpaceItems';
+		limit: number;
+	}
+	| {
 		/** Room is in an invalid state */
 		problem: 'roomError';
 		problemDetail: 'roomsOverlap' | 'invalidPosition';

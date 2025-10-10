@@ -7,7 +7,7 @@ import {
 import { useMemo } from 'react';
 import { useNullableObservable, useObservable } from '../../observable.ts';
 import { useService, useServiceOptional } from '../serviceProvider.tsx';
-import type { AccountManager } from './accountManager.ts';
+import type { IAccountManager } from './accountManager.ts';
 
 export function useCurrentAccount(): IDirectoryAccountInfo | null {
 	const accountManager = useService('accountManager');
@@ -35,7 +35,7 @@ export function useAccountSettings(): Immutable<AccountSettings> {
 	}), [modifiedSettings]);
 }
 
-export function GetAccountSettings(accountManager: AccountManager): Immutable<AccountSettings> {
+export function GetAccountSettings(accountManager: IAccountManager): Immutable<AccountSettings> {
 	return {
 		...ACCOUNT_SETTINGS_DEFAULT,
 		...(accountManager.currentAccount?.value?.settings),

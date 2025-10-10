@@ -17,7 +17,7 @@ import type { GameState, IChatMessageSender } from '../../../components/gameCont
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../../networking/shardConnector.ts';
 import type { NavigateFunctionPandora } from '../../../routing/navigate.ts';
-import type { AccountManager } from '../../../services/accountLogic/accountManager.ts';
+import type { IAccountManager } from '../../../services/accountLogic/accountManager.ts';
 import type { IChatInputHandler } from './chatInput.tsx';
 
 export const COMMAND_KEY = '/';
@@ -25,7 +25,7 @@ export const COMMAND_KEY = '/';
 export interface ICommandExecutionContextClient extends ICommandExecutionContext {
 	shardConnector: ShardConnector;
 	directoryConnector: DirectoryConnector;
-	accountManager: AccountManager;
+	accountManager: IAccountManager;
 	gameState: GameState;
 	globalState: AssetFrameworkGlobalState;
 	player: PlayerCharacter;

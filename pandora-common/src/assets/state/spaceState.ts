@@ -2,6 +2,7 @@ import { freeze, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
 import * as z from 'zod';
+import { LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/space.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
@@ -12,7 +13,6 @@ import type { AssetManager } from '../assetManager.ts';
 import type { Coordinates } from '../graphics/common.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomBundleSchema, RoomClientDeltaBundleSchema } from './roomState.ts';
-import { LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 
 export const SpaceStateBundleSchema = z.object({
 	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.string(), z.unknown())),
@@ -71,6 +71,14 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		return this.rooms.find((r) => r.position.x === position.x && r.position.y === position.y) ?? null;
 	}
 
+	public getTotalItemCount(): number {
+		let itemCount = 0;
+		for (const room of this.rooms) {
+			itemCount += room.getTotalItemCount();
+		}
+		return itemCount;
+	}
+
 	public isValid(): boolean {
 		return this.validate().success;
 	}
@@ -88,12 +96,12 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		}
 
 		// Room count is limited
-		if (this.rooms.length > LIMIT_SPACE_ROOM_COUNT) {
+		if (this.getTotalItemCount() > LIMIT_ITEM_SPACE_ITEMS_TOTAL) {
 			return {
 				success: false,
 				error: {
-					problem: 'tooManyRooms',
-					limit: LIMIT_SPACE_ROOM_COUNT,
+					problem: 'tooManySpaceItems',
+					limit: LIMIT_ITEM_SPACE_ITEMS_TOTAL,
 				},
 			};
 		}

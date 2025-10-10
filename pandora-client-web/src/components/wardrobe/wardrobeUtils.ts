@@ -16,7 +16,7 @@ import {
 	type ItemContainerPath,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { ICharacter } from '../../character/character.ts';
+import { Character } from '../../character/character.ts';
 import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
 import { WardrobeFocus } from './wardrobeTypes.ts';
@@ -79,7 +79,7 @@ export function useWardrobeContainerAccessCheck(target: ActionTargetSelector, co
 }
 
 export function WardrobeCheckResultForConfirmationWarnings(
-	player: ICharacter,
+	player: Character,
 	spaceContext: ActionSpaceContext | null,
 	action: Immutable<AppearanceAction>,
 	result: AppearanceActionProcessingResult,
@@ -113,6 +113,7 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		}
 	}
 
+	// Warn about room device undeploy removing characters from it
 	if (action.type === 'roomDeviceDeploy' && !action.deployment.deployed) {
 		const originalDeviceState = EvalItemPath(result.originalState.getItems(action.target) ?? [], action.item);
 		if (
@@ -125,8 +126,25 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		}
 	}
 
+	// Deleting room is often problematic
 	if (action.type === 'spaceRoomLayout' && action.subaction.type === 'deleteRoom') {
 		warnings.push(`Deleting a room deletes all items stored inside and cannot be easily undone`);
+	}
+
+	// Warn about deleting item containing other items
+	if (action.type === 'delete') {
+		const deletedItem = result.originalState.getItem(action.target, action.item);
+		if (deletedItem != null) {
+			function countSignificantDeletedItems(item: Item): number {
+				return Array.from(item.getModules().keys())
+					.reduce((s, module) => s + item.getModuleItems(module).reduce((s2, innerItem) => s2 + (!innerItem.isType('lock') ? 1 : 0) + countSignificantDeletedItems(innerItem), 0), 0);
+			}
+
+			const deletedCount = countSignificantDeletedItems(deletedItem);
+			if (deletedCount > 0) {
+				warnings.push(`Deleting this item will also delete ${deletedCount} ${ deletedCount > 1 ? 'items' : 'item' } stored inside (count does not include locks).`);
+			}
+		}
 	}
 
 	return warnings;

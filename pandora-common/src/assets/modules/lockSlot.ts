@@ -8,7 +8,7 @@ import { AssertNever, Satisfies } from '../../utility/misc.ts';
 import { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
-import { ConditionOperator } from '../graphics/index.ts';
+import { ConditionEqOperator } from '../graphics/index.ts';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base.ts';
 import type { AppearanceItems } from '../item/index.ts';
@@ -176,7 +176,7 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 		return [];
 	}
 
-	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
+	public evalCondition(_operator: ConditionEqOperator, _value: string): boolean {
 		return false;
 	}
 

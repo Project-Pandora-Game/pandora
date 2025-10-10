@@ -1,7 +1,9 @@
 import classNames from 'classnames';
-import { AssetSourceGraphicsDefinitionSchema, GetLogger } from 'pandora-common';
-import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
+import type { Immutable } from 'immer';
+import { AssertNever, AssetSourceGraphicsDefinitionSchema, AssetSourceGraphicsRoomDeviceDefinitionSchema, GetLogger, SortPathStrings, type RoomDeviceSlot } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
@@ -9,11 +11,15 @@ import { LogItem } from '../../../components/debug/logs/log.tsx';
 import { DraggableDialog, ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
-import { useObservable } from '../../../observable.ts';
+import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS, ToastHandlePromise } from '../../../persistentToast.ts';
 import { useLayerHasAlphaMasks, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
-import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
-import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
+import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
+import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
+import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetGraphicsBase.ts';
+import { EditorAssetGraphicsRoomDevice } from '../../assets/graphics/editorAssetGraphicsRoomDevice.ts';
+import { EditorAssetGraphicsWorn, type EditorWornLayersContainer } from '../../assets/graphics/editorAssetGraphicsWorn.ts';
 import { EDITOR_ALPHA_ICONS } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import './asset.scss';
@@ -21,6 +27,7 @@ import './asset.scss';
 export function AssetUI() {
 	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
+	const targetLayer = useObservable(editor.targetLayer);
 	const [showAddLayer, setShowAddLayer] = useState(false);
 
 	if (!selectedAsset) {
@@ -84,20 +91,30 @@ export function AssetUI() {
 			</h3>
 			<AssetExportImport asset={ selectedAsset } />
 			<AssetBuildResult asset={ selectedAsset } />
-			<AssetLayerList asset={ selectedAsset } />
-			<Button onClick={ () => {
-				setShowAddLayer(true);
-			} }>
-				Add layer
+			<Button onClick={ () => editor.targetLayer.value = null } className='slim' disabled={ targetLayer == null }>
+				Unselect layer
 			</Button>
-			{
-				showAddLayer ? (
-					<AddLayerUiDialog
-						close={ () => setShowAddLayer(false) }
-						selectedAsset={ selectedAsset }
-					/>
-				) : null
-			}
+			{ (selectedAsset instanceof EditorAssetGraphicsWorn) ? (
+				<>
+					<AssetLayerList asset={ selectedAsset } />
+					<Button onClick={ () => {
+						setShowAddLayer(true);
+					} }>
+						Add layer
+					</Button>
+					{ showAddLayer ? (
+						<AddWornLayerUiDialog
+							close={ () => setShowAddLayer(false) }
+							layerContainer={ selectedAsset }
+						/>
+					) : null }
+				</>
+			) : (selectedAsset instanceof EditorAssetGraphicsRoomDevice) ? (
+				<RoomDeviceLayerView asset={ selectedAsset } />
+			) : (
+				AssertNever(selectedAsset)
+			) }
+			<hr className='fill-x' />
 			<h4>
 				Image management
 				<ContextHelpButton>
@@ -119,9 +136,10 @@ export function AssetUI() {
 					multiple
 					type='file'
 					onChange={ (e) => {
-						if (e.target.files) {
+						const files = e.target.files;
+						if (files) {
 							ToastHandlePromise(
-								selectedAsset.addTexturesFromFiles(e.target.files),
+								selectedAsset.addTexturesFromFiles(files),
 								{
 									pending: 'Importing asset images...',
 									success: 'Images loaded',
@@ -130,6 +148,10 @@ export function AssetUI() {
 							)
 								.catch((err) => {
 									GetLogger('AssetUI').error('Error importing asset images:', err);
+								})
+								.finally(() => {
+									// Clear files after load so user can re-select same one easily
+									e.target.value = '';
 								});
 						}
 					} }
@@ -143,35 +165,76 @@ export function AssetUI() {
 	);
 }
 
-function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selectedAsset: EditorAssetGraphics; }): ReactElement {
+function AddWornLayerUiDialog({ close, layerContainer }: { close: () => void; layerContainer: EditorWornLayersContainer; }): ReactElement {
 	const editor = useEditor();
 
 	return (
 		<ModalDialog>
 			<Column>
 				<Button onClick={ () => {
-					editor.targetLayer.value = selectedAsset.addLayer('autoMesh');
+					editor.targetLayer.value = layerContainer.addLayer('autoMesh');
 					close();
 				} }>
 					Add automatic image layer
 				</Button>
 				<Button onClick={ () => {
-					editor.targetLayer.value = selectedAsset.addLayer('mesh');
+					editor.targetLayer.value = layerContainer.addLayer('mesh');
 					close();
 				} }>
 					Add image layer
 				</Button>
 				<Button onClick={ () => {
-					editor.targetLayer.value = selectedAsset.addLayer('text');
+					editor.targetLayer.value = layerContainer.addLayer('text');
 					close();
 				} }>
 					Add text layer
 				</Button>
 				<Button onClick={ () => {
-					editor.targetLayer.value = selectedAsset.addLayer('alphaImageMesh');
+					editor.targetLayer.value = layerContainer.addLayer('alphaImageMesh');
 					close();
 				} }>
 					Add alpha image layer
+				</Button>
+				<hr className='fill-x' />
+				<Button onClick={ () => {
+					close();
+				} }>
+					Cancel
+				</Button>
+			</Column>
+		</ModalDialog>
+	);
+}
+
+function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => void; layerContainer: EditorAssetGraphicsRoomDevice; }): ReactElement {
+	const editor = useEditor();
+
+	return (
+		<ModalDialog>
+			<Column>
+				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('slot');
+					close();
+				} }>
+					Add character slot layer
+				</Button>
+				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('sprite');
+					close();
+				} }>
+					Add simple image layer
+				</Button>
+				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('text');
+					close();
+				} }>
+					Add text layer
+				</Button>
+				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('mesh');
+					close();
+				} }>
+					Add custom mesh layer
 				</Button>
 				<hr className='fill-x' />
 				<Button onClick={ () => {
@@ -211,22 +274,36 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 							const files = e.target.files;
 							if (files && files.length === 1) {
 								const file = files.item(0);
-								if (!file || !file.name.endsWith('.json'))
+								if (!file || !file.name.endsWith('.json')) {
+									e.target.value = '';
 									return;
+								}
 								file
 									.text()
 									.then((content) => {
-										const definition = AssetSourceGraphicsDefinitionSchema.parse(JSON.parse(
+										const raw: unknown = JSON.parse(
 											content
 												.split('\n')
 												.filter((line) => !line.trimStart().startsWith('//'))
 												.join('\n'),
-										));
-										asset.load(definition);
+										);
+										if (asset instanceof EditorAssetGraphicsWorn) {
+											const definition = AssetSourceGraphicsDefinitionSchema.parse(raw);
+											asset.load(definition);
+										} else if (asset instanceof EditorAssetGraphicsRoomDevice) {
+											const definition = AssetSourceGraphicsRoomDeviceDefinitionSchema.parse(raw);
+											asset.load(definition);
+										} else {
+											AssertNever(asset);
+										}
 									})
 									.catch((err) => {
 										toast(`Import failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
 										GetLogger('AssetImport').error(err);
+									})
+									.finally(() => {
+										// Clear files after load so user can re-select same one easily
+										e.target.value = '';
 									});
 							}
 						} }
@@ -240,7 +317,7 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 	);
 }
 
-function AssetBuildResult({ asset }: { asset: EditorAssetGraphics; }): ReactElement | null {
+function AssetBuildResult({ asset }: { asset: EditorAssetGraphicsBase; }): ReactElement | null {
 	const buildLog = useObservable(asset.buildLog);
 	const [showDialog, setShowDialog] = useState(false);
 
@@ -300,21 +377,102 @@ function AssetBuildResult({ asset }: { asset: EditorAssetGraphics; }): ReactElem
 	);
 }
 
-function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
-	const editor = useEditor();
+function RoomDeviceLayerView({ asset }: { asset: EditorAssetGraphicsRoomDevice; }): ReactElement | null {
+	const [showAddLayer, setShowAddLayer] = useState(false);
+	const assetManager = useAssetManager();
+
+	const logicalAsset = assetManager.getAssetById(asset.id);
+
+	if (!logicalAsset?.isType('roomDevice'))
+		return null;
+
+	return (
+		<>
+			<h4>Room device layers</h4>
+			<AssetLayerList asset={ asset } />
+			<Button onClick={ () => {
+				setShowAddLayer(true);
+			} }>
+				Add layer
+			</Button>
+			{ showAddLayer ? (
+				<AddRoomDeviceLayerUiDialog
+					close={ () => setShowAddLayer(false) }
+					layerContainer={ asset }
+				/>
+			) : null }
+			{ Array.from(Object.entries(logicalAsset.definition.slots)).map(([slotName, slot]) => (
+				<RoomDeviceSlotLayerView key={ slotName } asset={ asset } slotName={ slotName } slot={ slot } />
+			)) }
+		</>
+	);
+}
+
+function RoomDeviceSlotLayerView({ asset, slotName }: { asset: EditorAssetGraphicsRoomDevice; slotName: string; slot: Immutable<RoomDeviceSlot>; }): ReactElement | null {
+	const [showAddLayer, setShowAddLayer] = useState(false);
+
+	const slotLayerContainer = useObservable(asset.slotGraphics).get(slotName);
+	const slotLayers = useNullableObservable(slotLayerContainer?.layers);
+
+	if (slotLayerContainer == null) {
+		return (
+			<>
+				<hr className='fill-x' />
+				<Column padding='medium'>
+					<h4>Slot '{ slotName }'</h4>
+					<span>This slot has no graphics</span>
+					<Button onClick={ () => {
+						asset.getOrCreateGraphicsForSlot(slotName);
+					} }>
+						Create slot-based graphics
+					</Button>
+				</Column>
+			</>
+		);
+	}
+
+	return (
+		<>
+			<hr className='fill-x' />
+			<Column padding='medium'>
+				<h4>Slot '{ slotName }' layers</h4>
+				<AssetLayerList asset={ slotLayerContainer } />
+				<Button onClick={ () => {
+					setShowAddLayer(true);
+				} }>
+					Add layer
+				</Button>
+				{ showAddLayer ? (
+					<AddWornLayerUiDialog
+						close={ () => setShowAddLayer(false) }
+						layerContainer={ slotLayerContainer }
+					/>
+				) : null }
+				{ slotLayers != null && slotLayers.length === 0 ? (
+					<Button onClick={ () => {
+						asset.deleteGraphicsForSlot(slotName);
+					} }>
+						Remove slot-based graphics
+					</Button>
+				) : null }
+			</Column>
+		</>
+	);
+}
+
+function AssetLayerList({ asset }: { asset: EditorWornLayersContainer | EditorAssetGraphicsRoomDevice; }): ReactElement {
 	const layers = useObservable(asset.layers);
 
 	return (
 		<div className='layerList'>
-			<Button onClick={ () => editor.targetLayer.value = null } className='slim' >Unselect layer</Button>
 			<ul>
-				{ layers.map((layer, index) => <AssetLayerListLayer key={ index } asset={ asset } layer={ layer } />) }
+				{ layers.map((layer, index) => <AssetLayerListLayer key={ index } layer={ layer } />) }
 			</ul>
 		</div>
 	);
 }
 
-function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: EditorAssetGraphicsLayer; }): ReactElement {
+function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer; }): ReactElement {
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
@@ -343,7 +501,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 			>
 				{ name }
 			</button>
-			<Button className='slim hideDisabled' aria-label='move' onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
+			<Button className='slim hideDisabled' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
 				🠉
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
@@ -356,7 +514,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				if (editor.targetLayer.value === layer) {
 					editor.targetLayer.value = null;
 				}
-				asset.deleteLayer(layer);
+				layer.deleteFromAsset();
 			} } title='DELETE this layer'>
 				🗑️
 			</Button>
@@ -364,14 +522,18 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 	);
 }
 
-function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
-	const imageList = useObservable(asset.loadedTextures);
+function AssetImageList({ asset }: { asset: EditorAssetGraphicsBase; }): ReactElement {
+	const assetTextures = useObservable(asset.textures);
 
-	const elements: ReactElement[] = [];
+	const elements = useMemo((): readonly ReactElement[] => (
+		Array.from(assetTextures.keys())
+			.filter(Boolean)
+			.toSorted(SortPathStrings)
+			.map((image) => (
+				<AssetImageLi key={ image } image={ image } asset={ asset } />
+			))
+	), [assetTextures, asset]);
 
-	for (const image of imageList) {
-		elements.push(<AssetImageLi key={ image } image={ image } asset={ asset } />);
-	}
 	return (
 		<div className='assetImageList'>
 			<ul>
@@ -381,7 +543,7 @@ function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElemen
 	);
 }
 
-function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraphics; }): ReactElement {
+function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraphicsBase; }): ReactElement {
 	const [preview, setPreview] = useState<string>('');
 
 	const onTogglePreview = useEvent(() => {

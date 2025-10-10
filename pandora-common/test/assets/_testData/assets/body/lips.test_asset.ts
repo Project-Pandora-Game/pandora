@@ -8,7 +8,6 @@ export default {
 	size: 'bodypart',
 	id: 'a/body/lips',
 	allowRandomizerUsage: true,
-	hasGraphics: false,
 	colorization: {
 		lips: {
 			name: 'Lips',

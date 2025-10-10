@@ -1,54 +1,34 @@
-import { noop } from 'lodash-es';
-import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
-import { createContext, ReactElement, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { AssetFrameworkGlobalState, type ServiceProvider } from 'pandora-common';
+import { ReactElement, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { AnchorAutoscroll } from '../common/anchorAutoscroll.tsx';
 import type { ChildrenProps } from '../common/reactTypes.ts';
-import { useDebugExpose } from '../common/useDebugExpose.ts';
 import { Dialogs } from '../components/dialog/dialog.tsx';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider.tsx';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary.tsx';
+import { InterfaceSettingsProvider } from '../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider.tsx';
-import type { ClientServices } from '../services/clientServices.ts';
-import { ServiceManagerContextProvider } from '../services/serviceProvider.tsx';
-import { EditorAssetUpdateService } from './assets/editorAssetUpdater.tsx';
+import { useNullableObservable } from '../observable.ts';
 import { Editor } from './editor.tsx';
-
-export const EditorContext = createContext({
-	editor: null as Editor | null,
-	setEditor: noop as (editor: Editor | null) => void,
-});
+import { EditorServiceManagerContextProvider, useEditorServiceOptional } from './services/editorServiceProvider.tsx';
+import type { EditorServices } from './services/editorServices.ts';
 
 export interface EditorContextProviderProps extends ChildrenProps {
-	serviceManager: ServiceManager<ClientServices>;
+	serviceManager: ServiceProvider<EditorServices>;
 }
 
 export function EditorContextProvider({ children, serviceManager }: EditorContextProviderProps): ReactElement {
-	const [editor, setEditor] = useState<Editor | null>(null);
-	const context = useMemo(() => ({
-		editor,
-		setEditor,
-	}), [editor]);
-
-	useDebugExpose('editor', editor);
-
 	return (
 		<DebugContextProvider>
 			<EditorErrorBoundary>
-				<ServiceManagerContextProvider serviceManager={ serviceManager }>
+				<EditorServiceManagerContextProvider serviceManager={ serviceManager }>
 					<Dialogs location='global' />
 					<Dialogs location='mainOverlay' />
 					<AnchorAutoscroll />
-					{
-						editor != null ? (
-							<EditorAssetUpdateService />
-						) : null
-					}
-					<EditorContext.Provider value={ context }>
-						<PermissionCheckServiceProvider>
-							{ children }
-						</PermissionCheckServiceProvider>
-					</EditorContext.Provider>
-				</ServiceManagerContextProvider>
+					<InterfaceSettingsProvider />
+					<PermissionCheckServiceProvider>
+						{ children }
+					</PermissionCheckServiceProvider>
+				</EditorServiceManagerContextProvider>
 			</EditorErrorBoundary>
 		</DebugContextProvider>
 	);
@@ -78,7 +58,8 @@ function EditorErrorBoundary({ children }: ChildrenProps): ReactElement {
 }
 
 export function useMaybeEditor(): Editor | null {
-	return useContext(EditorContext).editor;
+	const editorService = useEditorServiceOptional('editor');
+	return useNullableObservable(editorService?.editor) ?? null;
 }
 
 export function useEditor(): Editor {
@@ -97,8 +78,4 @@ export function useEditorState(): AssetFrameworkGlobalState {
 			onChange();
 		});
 	}, () => editor.globalState.currentState);
-}
-
-export function useSetEditor(): (editor: Editor | null) => void {
-	return useContext(EditorContext).setEditor;
 }

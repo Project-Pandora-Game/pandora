@@ -1,13 +1,13 @@
 import { type Immutable } from 'immer';
-import type { Logger } from '../../logging/logger.ts';
-import type { GraphicsLayer } from '../graphics/layer.ts';
-import type { GraphicsTextLayer } from '../graphics/layers/text.ts';
-import type { GraphicsSourceTextLayer } from '../graphicsSource/index.ts';
-import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
+import type { Logger } from '../../../logging/logger.ts';
+import type { GraphicsLayer } from '../../graphics/layer.ts';
+import type { GraphicsTextLayer } from '../../graphics/layers/text.ts';
+import type { GraphicsSourceTextLayer } from '../../graphicsSource/index.ts';
+import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
 
 export function LoadAssetTextLayer(
 	layer: Immutable<GraphicsSourceTextLayer>,
-	context: GraphicsBuildContext,
+	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
 ): Promise<Immutable<GraphicsLayer[]>> {
 	logger = logger.prefixMessages(`[Layer ${layer.name || '[unnamed]'}]`);

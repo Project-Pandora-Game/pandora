@@ -7,7 +7,6 @@ export default {
 	type: 'bodypart',
 	size: 'bodypart',
 	id: 'a/body/back_hair_short',
-	hasGraphics: false,
 	colorization: {
 		hair: {
 			name: 'Hair',

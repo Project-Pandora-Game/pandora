@@ -2,10 +2,12 @@ import { freeze, type Immutable } from 'immer';
 import {
 	AnyToString,
 	Assert,
+	AssertNever,
 	AsyncSynchronized,
 	GetLogger,
 	Logger,
 	LogLevel,
+	type Asset,
 	type AssetGraphicsDefinition,
 	type AssetId,
 	type AssetSourceGraphicsInfo,
@@ -22,8 +24,11 @@ import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Observable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
-import { EditorAssetGraphics, type EditorAssetGraphicsBuildLogResult } from './editorAssetGraphics.ts';
-import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
+import { EditorBuildRoomDeviceAssetGraphics, EditorBuildWornAssetGraphics, EditorBuiltAssetDataFromRoomDeviceAsset, EditorBuiltAssetDataFromWornAsset } from './editorAssetGraphicsBuilding.ts';
+import type { EditorAssetGraphics } from './graphics/editorAssetGraphics.ts';
+import { type EditorAssetGraphicsBuildLogResult } from './graphics/editorAssetGraphicsBase.ts';
+import { EditorAssetGraphicsRoomDevice } from './graphics/editorAssetGraphicsRoomDevice.ts';
+import { EditorAssetGraphicsWorn } from './graphics/editorAssetGraphicsWorn.ts';
 
 /** Class that handles "source" asset graphics inside editor. */
 export class EditorAssetGraphicsManagerClass {
@@ -44,9 +49,17 @@ export class EditorAssetGraphicsManagerClass {
 		return this._originalSourceDefinitions.pointTemplates;
 	}
 
+	private readonly _builtTexturesGetter = new Observable<((path: string) => Texture | undefined)>(() => undefined);
+	public get builtTexturesGetter(): ReadonlyObservable<((path: string) => Texture | undefined)> {
+		return this._builtTexturesGetter;
+	}
+
 	constructor() {
 		this.editedPointTemplates.subscribe(() => {
 			this._reloadRuntimeGraphicsManager();
+		});
+		this.editedAssetGraphics.subscribe(() => {
+			this._onBuiltTexturesChanged();
 		});
 	}
 
@@ -68,34 +81,75 @@ export class EditorAssetGraphicsManagerClass {
 			});
 	}
 
-	public startEditAsset(asset: AssetId): EditorAssetGraphics {
+	public startEditAsset(asset: Asset): EditorAssetGraphics {
 		Assert(GraphicsManagerInstance.value != null, 'Runtime graphics manager should be loaded before editor graphics manager');
+		Assert(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice'), `Unsupported asset type for editing: ${asset.type}`);
 
-		const existingGraphics = this._editedAssetGraphics.value.get(asset);
+		const existingGraphics = this._editedAssetGraphics.value.get(asset.id);
 		if (existingGraphics != null) {
 			return existingGraphics;
 		}
 
-		let sourceInfo: Immutable<AssetSourceGraphicsInfo> | undefined = this._originalSourceDefinitions.assets[asset];
+		let sourceInfo: Immutable<AssetSourceGraphicsInfo> | undefined = this._originalSourceDefinitions.assets[asset.id];
 		// If the asst had no graphics before, create empty one
 		if (sourceInfo == null) {
-			sourceInfo = {
-				definition: {
-					layers: [],
-				},
-				originalImagesMap: {},
-			};
+			if (asset.isType('bodypart') || asset.isType('personal')) {
+				sourceInfo = {
+					type: 'worn',
+					definition: {
+						layers: [],
+					},
+					originalImagesMap: {},
+				};
+			} else if (asset.isType('roomDevice')) {
+				sourceInfo = {
+					type: 'roomDevice',
+					definition: {
+						layers: [],
+						slots: {},
+					},
+					originalImagesMap: {},
+				};
+			} else {
+				AssertNever(asset);
+			}
 		}
-		const graphics = new EditorAssetGraphics(asset, sourceInfo.definition, () => {
-			this._onAssetDefinitionChanged(graphics)
-				.catch((err) => {
-					this.logger.error('Crash in asset definition change handler:', err);
+		let graphics: EditorAssetGraphics;
+		if (sourceInfo.type === 'worn') {
+			Assert(asset.isType('bodypart') || asset.isType('personal'));
+			graphics = new EditorAssetGraphicsWorn(asset.id, sourceInfo.definition, () => {
+				queueMicrotask(() => {
+					if (graphics == null)
+						return;
+					this._onAssetDefinitionChanged(graphics)
+						.catch((err) => {
+							this.logger.error('Crash in asset definition change handler:', err);
+						});
 				});
+			});
+		} else if (sourceInfo.type === 'roomDevice') {
+			Assert(asset.isType('roomDevice'));
+			graphics = new EditorAssetGraphicsRoomDevice(asset.id, sourceInfo.definition, () => {
+				queueMicrotask(() => {
+					if (graphics == null)
+						return;
+					this._onAssetDefinitionChanged(graphics)
+						.catch((err) => {
+							this.logger.error('Crash in asset definition change handler:', err);
+						});
+				});
+			});
+		} else {
+			AssertNever(sourceInfo);
+		}
+
+		graphics.buildTextures.subscribe(() => {
+			this._onBuiltTexturesChanged();
 		});
 
 		this._editedAssetGraphics.produce((d) => {
 			const result = new Map(d);
-			result.set(asset, graphics);
+			result.set(asset.id, graphics);
 			return result;
 		});
 
@@ -128,11 +182,19 @@ export class EditorAssetGraphicsManagerClass {
 			return result;
 		});
 
-		this._editedGraphicsBuildCache.delete(asset);
+		// Regenerate all edited assets to make sure multi-graphics assets (room device slots) were purged
+		this._editedGraphicsBuildCache.clear();
 		this._reloadRuntimeGraphicsManager();
+
+		for (const editedAsset of Array.from(this._editedAssetGraphics.value.values())) {
+			this._onAssetDefinitionChanged(editedAsset)
+				.catch((err) => {
+					this.logger.error('Crash in asset definition change handler:', err);
+				});
+		}
 	}
 
-	@AsyncSynchronized()
+	@AsyncSynchronized(undefined, { maxPending: Number.MAX_SAFE_INTEGER })
 	private async _onAssetDefinitionChanged(asset: EditorAssetGraphics): Promise<void> {
 		// Ignore if the asset is no longer being edited
 		if (this._editedAssetGraphics.value.get(asset.id) !== asset)
@@ -183,8 +245,44 @@ export class EditorAssetGraphicsManagerClass {
 				throw new Error('Asset not found');
 			}
 
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, assetManager, logger, buildTextures);
-			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
+			if (asset instanceof EditorAssetGraphicsWorn) {
+				Assert(logicAsset.isType('bodypart') || logicAsset.isType('personal'));
+				const graphicsDefinition = await EditorBuildWornAssetGraphics(
+					asset,
+					EditorBuiltAssetDataFromWornAsset(logicAsset),
+					assetManager,
+					logger,
+					buildTextures,
+				);
+				this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
+			} else if (asset instanceof EditorAssetGraphicsRoomDevice) {
+				Assert(logicAsset.isType('roomDevice'));
+				const graphicsDefinition = await EditorBuildRoomDeviceAssetGraphics(
+					asset,
+					EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset),
+					assetManager,
+					logger,
+					buildTextures,
+				);
+				this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition.graphics, true));
+
+				const usedSlots = new Set<string>();
+				for (const [k, v] of Object.entries(logicAsset.definition.slots)) {
+					if (Object.hasOwn(graphicsDefinition.slotGraphics, k)) {
+						Assert(graphicsDefinition.slotGraphics[k] != null);
+						usedSlots.add(k);
+						this._editedGraphicsBuildCache.set(v.wearableAsset, freeze(graphicsDefinition.slotGraphics[k], true));
+					}
+				}
+
+				for (const k of Object.keys(graphicsDefinition.slotGraphics)) {
+					if (!usedSlots.has(k)) {
+						logger.warning(`Graphics contains entry for unknown slot '${k}'`);
+					}
+				}
+			} else {
+				AssertNever(asset);
+			}
 			asset.buildTextures.value = buildTextures;
 		} catch (error) {
 			logger.error('Build failed with error:', error);
@@ -192,6 +290,21 @@ export class EditorAssetGraphicsManagerClass {
 		asset.buildLog.value = logResult;
 
 		this._reloadRuntimeGraphicsManager();
+	}
+
+	private _onBuiltTexturesChanged(): void {
+		const newTextureMap = new Map<string, Texture>();
+
+		for (const asset of this._editedAssetGraphics.value.values()) {
+			const builtTextures = asset.buildTextures.value;
+			if (builtTextures != null) {
+				for (const [image, texture] of builtTextures) {
+					newTextureMap.set(image, texture);
+				}
+			}
+		}
+
+		this._builtTexturesGetter.value = (image) => newTextureMap.get(image);
 	}
 
 	private _editorGraphicsVersion: number = 0;

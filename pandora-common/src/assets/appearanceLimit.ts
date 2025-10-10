@@ -27,13 +27,13 @@ export type PoseTypeToLimits<T extends PoseTypeBase> = {
 
 // Create a strongly-typed dimensional data, where each dimension is named and its value is a numeric coordinate.
 type TreeLimitDimension = PoseTypeToDimensions<PartialAppearancePose>;
-type TreeLimitDimensionData = ReadonlyMap<TreeLimitDimension, [number, number][]>;
-type TreeLimitMutableDimensionData = Satisfies<Map<TreeLimitDimension, [number, number][]>, TreeLimitDimensionData>;
+type TreeLimitDimensionData = ReadonlyMap<TreeLimitDimension, readonly (readonly [number, number])[]>;
+type TreeLimitMutableDimensionData = Satisfies<Map<TreeLimitDimension, readonly (readonly [number, number])[]>, TreeLimitDimensionData>;
 
 class TreeLimit {
 	private readonly limit: TreeLimitDimensionData;
 
-	constructor(limit: TreeLimitDimensionData = new Map<TreeLimitDimension, [number, number][]>()) {
+	constructor(limit: TreeLimitDimensionData = new Map<TreeLimitDimension, readonly (readonly [number, number])[]>()) {
 		this.limit = limit;
 	}
 
@@ -90,16 +90,18 @@ class TreeLimit {
 	}
 
 	/**
-	 * Selects keys that are present in both limits and calculates the intersection of their values.
+	 * Returns a limit that describes intersection of this and given limits.
 	 */
 	public intersection(other: TreeLimit): TreeLimit | null {
-		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>();
-		for (const [key, value] of this.limit) {
-			const otherValue = other.limit.get(key);
-			if (!otherValue)
+		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, readonly (readonly [number, number])[]>(this.limit);
+		for (const [key, otherValue] of other.limit) {
+			const currentValue = newLimit.get(key);
+			if (!currentValue) {
+				newLimit.set(key, otherValue);
 				continue;
+			}
 
-			const newValue = IntervalSetIntersection(value, otherValue);
+			const newValue = IntervalSetIntersection(currentValue, otherValue);
 			if (newValue.length === 0)
 				return null;
 
@@ -109,24 +111,10 @@ class TreeLimit {
 	}
 
 	/**
-	 * Adds all keys from other that are not present in the current limit.
-	 */
-	public extend(other: TreeLimit): TreeLimit {
-		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>(this.limit);
-		for (const [key, value] of other.limit) {
-			if (newLimit.has(key))
-				continue;
-
-			newLimit.set(key, value);
-		}
-		return new TreeLimit(newLimit);
-	}
-
-	/**
 	 * Removes all keys that store the same values as in other.
 	 */
 	public prune(other: TreeLimit): TreeLimit {
-		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>(this.limit);
+		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, readonly (readonly [number, number])[]>(this.limit);
 		for (const [key, value] of other.limit) {
 			const newValue = newLimit.get(key);
 			if (!newValue)
@@ -136,6 +124,10 @@ class TreeLimit {
 				newLimit.delete(key);
 		}
 		return new TreeLimit(newLimit);
+	}
+
+	public toJSON(): unknown {
+		return Object.fromEntries(this.limit);
 	}
 }
 
@@ -223,27 +215,27 @@ class TreeNode {
 		if (intersection == null)
 			return null;
 
-		const newLimit = prune
-			? intersection.extend(this.limit).prune(limit)
-			: intersection.extend(this.limit).extend(limit);
+		const newLimit = prune ? intersection.prune(limit) : intersection;
 
 		if (this.children == null)
 			return new TreeNode(newLimit);
 
-		const childLimiter = newLimit.prune(this.limit);
 		const newChildren = this.children
-			.map((child) => child.intersectionWithLimit(childLimiter, true))
+			.map((child) => child.intersectionWithLimit(intersection, true))
 			.filter(IsNotNullable);
 
 		return TreeNode.fromResult(newLimit, newChildren);
 	}
 
 	private static fromResult(limit: TreeLimit, children: TreeNode[]): TreeNode | null {
+		// If there is no valid child, then this node is invalid
 		if (children.length === 0)
 			return null;
 
-		if (children.length === 1)
-			return new TreeNode(children[0].limit.extend(limit), children[0].children);
+		// Collapse children if there is only single valid one
+		if (children.length === 1) {
+			return children[0].intersectionWithLimit(limit);
+		}
 
 		return new TreeNode(limit, children);
 	}

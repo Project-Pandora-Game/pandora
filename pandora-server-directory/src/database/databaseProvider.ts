@@ -80,6 +80,12 @@ export interface PandoraDatabase extends ServerService {
 
 	queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>>;
 
+	/**
+	 * Counts accounts who logged in within a given time frame
+	 * @param from - timestamp in milliseconds
+	 */
+	getCountOfAccountsLastLoggedInAfter(from: number): Promise<number>;
+
 	//#region Character
 
 	/**

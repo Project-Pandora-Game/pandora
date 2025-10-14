@@ -415,6 +415,10 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
+	public async getCountOfAccountsLastLoggedInAfter(from: number): Promise<number> {
+		return await this._accounts.countDocuments({ lastLogin: { $gte: from } });
+	}
+
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		const result: DatabaseCharacterSelfInfo[] = await this._characters
 			.find({ accountId })

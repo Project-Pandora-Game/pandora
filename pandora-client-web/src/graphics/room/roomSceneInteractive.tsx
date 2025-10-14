@@ -37,12 +37,12 @@ import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } fr
 import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
+import { UseTextureGetterOverride } from '../useTexture.ts';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
-import { UseTextureGetterOverride } from '../useTexture.ts';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -244,7 +244,6 @@ export function RoomGraphicsInteractive({
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							gameState={ gameState }
 						/>
 					) : null))
 				}

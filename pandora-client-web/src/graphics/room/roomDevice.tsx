@@ -27,8 +27,9 @@ import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalcula
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
-import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
+import { useEvent } from '../../common/useEvent.ts';
 import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -88,18 +89,19 @@ export function RoomDeviceMovementTool({
 	item,
 	deployment,
 	projectionResolver,
-	gameState,
-}: Pick<RoomDeviceInteractiveProps, 'roomState' | 'item' | 'deployment' | 'projectionResolver' | 'gameState'>): ReactElement | null {
+}: Pick<RoomDeviceInteractiveProps, 'roomState' | 'item' | 'deployment' | 'projectionResolver'>): ReactElement | null {
 	const asset = item.asset;
 
 	const {
 		setRoomSceneMode,
 	} = useRoomScreenContext();
 
-	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
+
+	const setPositionRaw = useCallback((newX: number, newY: number, newYOffset: number) => {
 		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
 
-		await gameState.doImmediateAction({
+		execute({
 			type: 'roomDeviceDeploy',
 			target: {
 				type: 'room',
@@ -118,9 +120,7 @@ export function RoomDeviceMovementTool({
 				},
 			},
 		});
-	}, () => {
-		/* Do nothing */
-	});
+	}, [execute, roomState.id, item.id, projectionResolver]);
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 

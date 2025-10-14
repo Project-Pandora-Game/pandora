@@ -18,13 +18,14 @@ import {
 	type Nullable,
 	type PermissionGroup,
 } from 'pandora-common';
-import { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import type { Character } from '../../character/character.ts';
 import type { PlayerCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
+import { LIVE_UPDATE_ERROR_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Column } from '../common/container/container.tsx';
@@ -113,6 +114,12 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultiple
 	const {
 		wardrobeItemDisplayNameType,
 	} = useAccountSettings();
+
+	const errorCooldown = useRef<{
+		error: Extract<IClientShardNormalResult['gameLogicAction'], { result: Exclude<IClientShardNormalResult['gameLogicAction']['result'], 'success'>; }>;
+		cooldownUntil: number;
+	}>(null);
+
 	return useAsyncEvent(
 		async (action: Immutable<AppearanceAction>, operation?: 'start' | 'complete' | 'abort'): Promise<[IClientShardNormalResult['gameLogicAction'], Parameters<WardrobeExecuteCallback>[1]]> => {
 			if (operation === 'start') {
@@ -132,28 +139,55 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultiple
 					onSuccess?.(result.data, operation);
 					break;
 				case 'promptSent':
-					toast('Prompt sent', TOAST_OPTIONS_WARNING);
+					if (
+						errorCooldown.current != null &&
+						errorCooldown.current.cooldownUntil >= Date.now() &&
+						isEqual(errorCooldown.current.error, result)
+					) {
+						// Silent error because recently same one happened
+					} else {
+						errorCooldown.current = { error: result, cooldownUntil: Date.now() + LIVE_UPDATE_ERROR_THROTTLE };
+						toast('Prompt sent', TOAST_OPTIONS_WARNING);
+					}
 					onFailure?.([]);
 					break;
 				case 'promptFailedCharacterOffline':
-					toast('Character is offline, try again later', TOAST_OPTIONS_ERROR);
+					if (
+						errorCooldown.current != null &&
+						errorCooldown.current.cooldownUntil >= Date.now() &&
+						isEqual(errorCooldown.current.error, result)
+					) {
+						// Silent error because recently same one happened
+					} else {
+						errorCooldown.current = { error: result, cooldownUntil: Date.now() + LIVE_UPDATE_ERROR_THROTTLE };
+						toast('Character is offline, try again later', TOAST_OPTIONS_ERROR);
+					}
 					onFailure?.([]);
 					break;
 				case 'failure':
 					GetLogger('wardrobeExecute').info('Failure executing action:', result.problems);
-					toast(
-						<Column>
-							<span>Problems performing action:</span>
-							<ul>
-								{
-									result.problems.map((problem, i) => (
-										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType) }</li>
-									))
-								}
-							</ul>
-						</Column>,
-						TOAST_OPTIONS_ERROR,
-					);
+					if (
+						errorCooldown.current != null &&
+						errorCooldown.current.cooldownUntil >= Date.now() &&
+						isEqual(errorCooldown.current.error, result)
+					) {
+						// Silent error because recently same one happened
+					} else {
+						errorCooldown.current = { error: result, cooldownUntil: Date.now() + LIVE_UPDATE_ERROR_THROTTLE };
+						toast(
+							<Column>
+								<span>Problems performing action:</span>
+								<ul>
+									{
+										result.problems.map((problem, i) => (
+											<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType) }</li>
+										))
+									}
+								</ul>
+							</Column>,
+							TOAST_OPTIONS_ERROR,
+						);
+					}
 					onFailure?.(result.problems);
 					break;
 				case undefined:

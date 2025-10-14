@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { diffString } from 'json-diff';
-import { cloneDeep, isEqual } from 'lodash-es';
+import { cloneDeep, isEqual, max } from 'lodash-es';
 import { Binary, CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
@@ -43,6 +43,7 @@ import * as z from 'zod';
 import { ENV } from '../config.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
 import {
+	AccountTokenReason,
 	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
 	DatabaseAccount,
 	DatabaseAccountContact,
@@ -412,6 +413,10 @@ export default class MongoDatabase implements PandoraDatabase {
 			result[acc.id] = acc.settings.displayName ?? acc.username;
 		}
 		return result;
+	}
+
+	public async getCountOfAccountsLastLoggedInAfter(from: number): Promise<number> {
+		return await this._accounts.countDocuments({ lastLogin: { $gte: from } });
 	}
 
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
@@ -1172,6 +1177,44 @@ export default class MongoDatabase implements PandoraDatabase {
 								personalSpace: {
 									spaceState: newSpaceState,
 								},
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		//#endregion
+
+		//#region Backfill account `lastLogin` data (10/2025)
+
+		await accountCollection.doManualMigration(this._client, this._db, {
+			oldSchema: DatabaseAccountWithSecureSchema.pick({
+				id: true,
+				created: true,
+				lastLogin: true,
+				secure: true,
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const account of oldStream) {
+					if (account == null || !account.secure.activated || account.lastLogin !== undefined)
+						continue;
+
+					const lastLogin = max(
+						account.secure.tokens
+							.filter((token) => token.reason === AccountTokenReason.LOGIN)
+							.map((token) => token.expires - ENV.LOGIN_TOKEN_EXPIRATION),
+					) ?? account.created;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Calculated last login for account ${account.id}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: account.id },
+						{
+							$set: {
+								lastLogin,
 							},
 						},
 					);

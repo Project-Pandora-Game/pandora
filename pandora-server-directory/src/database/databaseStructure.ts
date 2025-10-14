@@ -97,6 +97,11 @@ export const DatabaseAccountSchema = z.object({
 	username: z.string(),
 	id: AccountIdSchema,
 	created: z.number(),
+	/**
+	 * Timestamp of last login (both normal and token-based count).
+	 * Not filled for accounts that didn't complete activation.
+	 */
+	lastLogin: z.number().optional(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
 	profileDescription: z.string().transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)).catch(''),
 	/**
@@ -122,6 +127,7 @@ export const DatabaseAccountSchema = z.object({
 export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;
 
 export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
+	'lastLogin',
 	'roles',
 	'profileDescription',
 	'settings',

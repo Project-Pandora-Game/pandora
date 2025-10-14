@@ -206,6 +206,16 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(result);
 	}
 
+	public getCountOfAccountsLastLoggedInAfter(from: number): Promise<number> {
+		let result: number = 0;
+		for (const acc of this.accountDbView) {
+			if (acc.lastLogin && acc.lastLogin >= from) {
+				result++;
+			}
+		}
+		return Promise.resolve(result);
+	}
+
 	public getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		return Promise.resolve(
 			Array.from(this.characterDb.values())

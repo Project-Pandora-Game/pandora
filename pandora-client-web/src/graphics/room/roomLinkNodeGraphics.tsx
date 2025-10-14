@@ -3,11 +3,11 @@ import { max, min, throttle } from 'lodash-es';
 import { AssertNotNullable, GenerateInitialRoomPosition, ROOM_NODE_RADIUS, SpaceRoomLayoutNeighborRoomCoordinates, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type CardinalDirection, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
-import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
+import { useEvent } from '../../common/useEvent.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { usePlayerId } from '../../components/gameContext/playerContextProvider.tsx';
-import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
+import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -301,24 +301,22 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 }): ReactElement {
 	const currentConfig = room.roomLinkNodes[direction];
 
-	const {
-		doImmediateAction,
-	} = useWardrobeActionContext();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
-	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number) => {
+	const setPositionRaw = useCallback((newX: number, newY: number) => {
 		[newX, newY] = projectionResolver.fixupPosition([newX, newY, 0]);
 
 		const updatedLink = produce(currentConfig, (d) => {
 			d.position = [newX, newY];
 		});
-		await doImmediateAction({
+		execute({
 			type: 'roomConfigure',
 			roomId: room.id,
 			roomLinkNodes: {
 				[direction]: updatedLink,
 			},
 		});
-	}, null);
+	}, [currentConfig, direction, execute, projectionResolver, room.id]);
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 

@@ -9,8 +9,8 @@ import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
-import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext.tsx';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
+import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -63,9 +63,15 @@ function RoomCharacterMovementToolImpl({
 
 	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
 
+	const setPositionErrorCooldown = useRef<number>(null);
 	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
 		if (disableManualMove) {
-			toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
+			if (setPositionErrorCooldown.current != null && setPositionErrorCooldown.current >= Date.now()) {
+				// Silent error because recently same one happened
+			} else {
+				setPositionErrorCooldown.current = Date.now() + LIVE_UPDATE_ERROR_THROTTLE;
+				toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
+			}
 			return;
 		}
 
@@ -249,14 +255,12 @@ export function RoomCharacterPosingTool({
 		return null;
 
 	return (
-		<WardrobeActionContextProvider player={ player }>
-			<RoomCharacterPosingToolImpl
-				{ ...props }
-				globalState={ globalState }
-				character={ character }
-				characterState={ characterState }
-			/>
-		</WardrobeActionContextProvider>
+		<RoomCharacterPosingToolImpl
+			{ ...props }
+			globalState={ globalState }
+			character={ character }
+			characterState={ characterState }
+		/>
 	);
 }
 

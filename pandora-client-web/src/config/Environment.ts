@@ -22,3 +22,6 @@ export const BUILD_TIME = ENV.BUILD_TIME;
 
 /** How often should an update be sent (at most) for things that update "live", such as movement, color picker, posing, ... */
 export const LIVE_UPDATE_THROTTLE = 125; // ms
+
+/** How long to silence same errors for for things that update "live" */
+export const LIVE_UPDATE_ERROR_THROTTLE = 2_000; // ms

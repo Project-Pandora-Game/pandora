@@ -8,6 +8,7 @@ import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, Data
 import { AUDIT_LOG } from '../logging.ts';
 import { DiscordBot } from '../services/discord/discordBot.ts';
 import { Account, CreateAccountData } from './account.ts';
+import './accountMetrics.ts';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;

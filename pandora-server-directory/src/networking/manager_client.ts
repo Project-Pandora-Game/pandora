@@ -238,6 +238,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
+		await account.secure.onLogin();
 		AUDIT_LOG.verbose(`${connection.id} logged in as ${account.data.username}`);
 		connection.setAccount(account, token);
 		return {
@@ -740,6 +741,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const token = account?.secure.getLoginToken(auth.token);
 		// Verify the token validity
 		if (account && token) {
+			await account.secure.onLogin();
 			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
 			connection.setAccount(account, token);
 			if (auth.character) {

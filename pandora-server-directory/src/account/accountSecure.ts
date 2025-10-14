@@ -162,6 +162,14 @@ export default class AccountSecure {
 		return true;
 	}
 
+	/** Handle user logging in, doing security-based actions (such as updating last login time) */
+	public async onLogin(): Promise<void> {
+		const currentTime = Date.now();
+
+		this.#account.data.lastLogin = currentTime;
+		await GetDatabase().updateAccountData(this.#account.id, { lastLogin: currentTime });
+	}
+
 	public generateNewLoginToken(): Promise<AccountToken> {
 		Assert(!this.isDisabled());
 		return this.#generateToken(AccountTokenReason.LOGIN);

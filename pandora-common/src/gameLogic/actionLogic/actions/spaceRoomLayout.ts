@@ -4,6 +4,7 @@ import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
 import { CardinalDirectionSchema, IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
 import { AssetFrameworkRoomState, RoomTemplateSchema } from '../../../assets/state/roomState.ts';
 import { AssertNever, CloneDeepMutable } from '../../../utility/misc.ts';
+import { GameLogicRoomSettingsSchema } from '../../spaceSettings/roomSettings.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -15,6 +16,7 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 			template: RoomTemplateSchema,
 			position: IntegerCoordinatesSchema,
 			direction: CardinalDirectionSchema,
+			settings: GameLogicRoomSettingsSchema.partial(),
 		}),
 		z.object({
 			type: z.literal('deleteRoom'),
@@ -59,6 +61,7 @@ export function ActionSpaceRoomLayout({
 					`room:${nanoid()}`,
 					CloneDeepMutable(subaction.position),
 					subaction.direction,
+					subaction.settings,
 					processingContext.assetManager,
 					s.spaceId,
 					processingContext.player,

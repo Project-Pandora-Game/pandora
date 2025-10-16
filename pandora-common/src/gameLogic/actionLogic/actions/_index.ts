@@ -19,6 +19,7 @@ import { ActionRoomConfigure, AppearanceActionRoomConfigure } from './roomConfig
 import { ActionRoomDeviceDeploy, AppearanceActionRoomDeviceDeploy } from './roomDeviceDeploy.ts';
 import { ActionRoomDeviceEnter, AppearanceActionRoomDeviceEnter } from './roomDeviceEnter.ts';
 import { ActionRoomDeviceLeave, AppearanceActionRoomDeviceLeave } from './roomDeviceLeave.ts';
+import { ActionSpaceConfigure, AppearanceActionSpaceConfigure } from './spaceConfigure.ts';
 import { ActionSpaceRoomLayout, AppearanceActionSpaceRoomLayout } from './spaceRoomLayout.ts';
 import { ActionTransferItem, AppearanceActionTransferSchema } from './transfer.ts';
 
@@ -39,6 +40,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionRoomDeviceEnter,
 	AppearanceActionRoomDeviceLeave,
 	AppearanceActionRoomConfigure,
+	AppearanceActionSpaceConfigure,
 	AppearanceActionSpaceRoomLayout,
 	AppearanceActionAttemptInterruptSchema,
 ]);
@@ -103,6 +105,8 @@ function ApplyActionBase(
 			return ActionRoomDeviceLeave({ ...arg, action });
 		case 'roomConfigure':
 			return ActionRoomConfigure({ ...arg, action });
+		case 'spaceConfigure':
+			return ActionSpaceConfigure({ ...arg, action });
 		case 'spaceRoomLayout':
 			return ActionSpaceRoomLayout({ ...arg, action });
 		case 'actionAttemptInterrupt':

@@ -565,6 +565,7 @@ function RoomCreation({ globalState, close }: {
 			template: CloneDeepMutable(roomTemplate),
 			position: CloneDeepMutable(position),
 			direction: 'N', // TODO
+			settings: {},
 		},
 	}), [roomTemplate, position]);
 

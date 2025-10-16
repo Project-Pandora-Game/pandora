@@ -280,7 +280,18 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public getActionSpaceContext(): ActionSpaceContext {
 		return {
 			features: this.config.features,
-			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
+			getAccountSpaceRole: (account) => {
+				const characters = Array.from(this.characters).filter((c) => c.accountId === account);
+
+				if (characters.some((c) => this.isOwner(c)))
+					return 'owner';
+				if (characters.some((c) => this.isAdmin(c)))
+					return 'admin';
+				if (characters.some((c) => this.isAllowed(c)))
+					return 'allowlisted';
+
+				return 'everyone';
+			},
 			development: this.config.development,
 			getCharacterModifierEffects: (characterId, gameState) => {
 				const character = Array.from(this.characters).find((c) => c.id === characterId);

@@ -24,9 +24,9 @@ export function ActionColor({
 	if (!target)
 		return processingContext.invalid();
 	const item = target.getItem(action.item);
-	// To manipulate the color of room devices, player must be an admin
-	if (item?.isType('roomDevice')) {
-		processingContext.checkPlayerIsSpaceAdmin();
+	// To manipulate the color of deployed room devices, player must have appropriate space role
+	if (item?.isType('roomDevice') && item.isDeployed()) {
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveRoomSettings(action.target.type === 'room' ? action.target.roomId : null).roomDeviceDeploymentMinimumRole);
 	}
 	// Player coloring the item must be able to interact with the item
 	processingContext.checkCanUseItem(target, action.item, ItemInteractionType.STYLING);

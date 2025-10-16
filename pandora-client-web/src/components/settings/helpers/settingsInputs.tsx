@@ -239,7 +239,7 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 	);
 }
 
-export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, disabled, noWrapper = false, noReset = false, deps, children }: {
+export interface SelectSettingInputProps<TValue extends string> {
 	driver: Readonly<SettingDriver<TValue>>;
 	label: ReactNode;
 	stringify: NoInfer<Readonly<Record<TValue, string | (() => string)>>>;
@@ -250,7 +250,9 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 	noReset?: boolean;
 	deps?: DependencyList;
 	children?: ReactNode;
-}): ReactElement {
+}
+
+export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, disabled, noWrapper = false, noReset = false, deps, children }: SelectSettingInputProps<TValue>): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput<TValue | undefined>(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {

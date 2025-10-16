@@ -46,7 +46,7 @@ export function ActionSpaceRoomLayout({
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionSpaceRoomLayout>>): AppearanceActionProcessingResult {
 	const { subaction } = action;
 
-	processingContext.checkPlayerIsSpaceAdmin();
+	processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 	if (subaction.type === 'createRoom') {
 		if (!processingContext.manipulator.produceSpaceState((s) => {

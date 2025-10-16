@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from 'react';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
+import { SPACE_ROLE_TEXT, SPACE_ROLE_TEXT_CUMULATIVE } from '../ui/components/commonInputs/spaceRoleSelect.tsx';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -141,12 +142,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 				return `You cannot touch others while either you or they are in safemode or timeout mode.`;
 			case 'modifyBodyRoom':
 				return `You cannot modify body in this room.`;
-			case 'modifyRoomRestriction':
-				switch (e.reason) {
-					case 'notAdmin':
-						return `You must be a room admin or a room owner to do this.`;
-				}
-				break;
+			case 'missingSpaceRole':
+				if (e.required === 'none')
+					return `The current space settings do not allow anyone to perform this action.`;
+				return `Only space ${ SPACE_ROLE_TEXT_CUMULATIVE[e.required] } are allowed to do this, but you are ${ SPACE_ROLE_TEXT[e.actual] }.`;
 			case 'itemCustomizeOther':
 				return `You cannot customize other people's items.`;
 			case 'inRoomDevice':
@@ -168,8 +167,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 				return `Character modifier "${e.modifierName}" modifier is locked.`;
 			case 'invalid':
 				return '';
+			default:
+				AssertNever(e);
 		}
-		AssertNever(e);
+		AssertNever();
 	} else if (result.result === 'validationError') {
 		const e = result.validationError;
 		switch (e.problem) {

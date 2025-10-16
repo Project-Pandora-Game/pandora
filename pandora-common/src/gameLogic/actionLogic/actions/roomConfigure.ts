@@ -31,14 +31,14 @@ export function ActionRoomConfigure({
 	} = action;
 
 	if (name != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withName(name)))
 			return processingContext.invalid();
 	}
 
 	if (roomGeometry != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.produceWithRoomGeometry(roomGeometry)))
 			return processingContext.invalid();
@@ -66,7 +66,7 @@ export function ActionRoomConfigure({
 	}
 
 	if (roomLinkNodes != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withRoomLinkNodes({
 			far: roomLinkNodes.far ?? r.roomLinkNodes.far,
@@ -78,7 +78,7 @@ export function ActionRoomConfigure({
 	}
 
 	if (settings != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withSettings(settings)))
 			return processingContext.invalid();

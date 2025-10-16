@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -258,7 +258,7 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	// In all other cases it is either intentionally private or public because of this user
 	if (
 		spaceConfig.public === 'public-with-admin' &&
-		!characterData.some((c) => c.onlineStatus !== 'offline' && ctx.isAdmin(c.accountId))
+		!characterData.some((c) => c.onlineStatus !== 'offline' && CompareSpaceRoles(ctx.getAccountSpaceRole(c.accountId), 'admin') >= 0)
 	) {
 		return (
 			<span className='space-warning'>

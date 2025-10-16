@@ -9,6 +9,7 @@ import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { ToggleSettingInput, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
+import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 
 export function RoomSettingsDialog({ room, globalState, close }: {
 	room: AssetFrameworkRoomState;
@@ -199,49 +200,89 @@ function RoomSettingsFeatures({
 	getSettingDriver,
 }: RoomSettingsTabProps): ReactElement {
 	return (
-		<fieldset>
-			<legend>Chat</legend>
-			<Column>
-				<Column gap='tiny'>
-					<ToggleSettingInput
-						driver={ getSettingDriver('itemActionMessages') }
-						label={ <>Show an action message when an item is spawned, deleted, equipped or unequipped</> }
-					>
-						<ContextHelpButton>
-							<p>
-								This affects if an action message is shown in the following cases:
-							</p>
-							<ul>
-								<li>An item is spawned or deleted</li>
-								<li>A body part is changed for another</li>
-								<li>An item is equipped on or unequipped from a character</li>
-								<li>An item is stored or removed from a storage on a character</li>
-								<li>An item is attached or detached from another item (e.g. a lock put into a lock slot)</li>
-								<li>A room device is deployed or stowed</li>
-							</ul>
-						</ContextHelpButton>
-					</ToggleSettingInput>
-					<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('itemActionMessages') } />
+		<>
+			<fieldset>
+				<legend>Chat</legend>
+				<Column>
+					<Column gap='tiny'>
+						<ToggleSettingInput
+							driver={ getSettingDriver('itemActionMessages') }
+							label={ <>Show an action message when an item is spawned, deleted, equipped or unequipped</> }
+						>
+							<ContextHelpButton>
+								<p>
+									This affects if an action message is shown in the following cases:
+								</p>
+								<ul>
+									<li>An item is spawned or deleted</li>
+									<li>A body part is changed for another</li>
+									<li>An item is equipped on or unequipped from a character</li>
+									<li>An item is stored or removed from a storage on a character</li>
+									<li>An item is attached or detached from another item (e.g. a lock put into a lock slot)</li>
+									<li>A room device is deployed or stowed</li>
+								</ul>
+							</ContextHelpButton>
+						</ToggleSettingInput>
+						<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('itemActionMessages') } />
+					</Column>
+					<Column gap='tiny'>
+						<ToggleSettingInput
+							driver={ getSettingDriver('lockActionMessages') }
+							label={ <>Show an action message when a lock is interacted with</> }
+						>
+							<ContextHelpButton>
+								<p>
+									This affects if an action message is shown in the following cases:
+								</p>
+								<ul>
+									<li>A lock is locked or unlocked</li>
+									<li>An important lock setting is changed (e.g. registered fingerprints for fingerprint lock)</li>
+								</ul>
+							</ContextHelpButton>
+						</ToggleSettingInput>
+						<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('lockActionMessages') } />
+					</Column>
 				</Column>
-				<Column gap='tiny'>
-					<ToggleSettingInput
-						driver={ getSettingDriver('lockActionMessages') }
-						label={ <>Show an action message when a lock is interacted with</> }
-					>
-						<ContextHelpButton>
-							<p>
-								This affects if an action message is shown in the following cases:
-							</p>
-							<ul>
-								<li>A lock is locked or unlocked</li>
-								<li>An important lock setting is changed (e.g. registered fingerprints for fingerprint lock)</li>
-							</ul>
-						</ContextHelpButton>
-					</ToggleSettingInput>
-					<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('lockActionMessages') } />
+			</fieldset>
+			<fieldset>
+				<legend>Actions</legend>
+				<Column>
+					<Column gap='tiny'>
+						<SpaceRoleOrNoneSelectInput
+							driver={ getSettingDriver('roomDeviceDeploymentMinimumRole') }
+							label='Accounts allowed to make changes to the room devices inside the room:'
+							cumulative
+						>
+							<ContextHelpButton>
+								<p>This affects being able to:</p>
+								<ul>
+									<li>Deploy or undeploy a room device</li>
+									<li>Move a deployed room device within the room</li>
+									<li>Customize or colorize a deployed room device</li>
+								</ul>
+								<p>Note: When moving a deployed room device between two rooms, only "Default room settings" are checked for the required role.</p>
+							</ContextHelpButton>
+						</SpaceRoleOrNoneSelectInput>
+						<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('roomDeviceDeploymentMinimumRole') } />
+					</Column>
+					<Column gap='tiny'>
+						<SpaceRoleOrNoneSelectInput
+							driver={ getSettingDriver('itemSpawnMinimumRole') }
+							label='Accounts allowed to spawn or delete items inside the room or on characters inside the room:'
+							cumulative
+						>
+							<ContextHelpButton>
+								<p>
+									Note: Only the room the character is currently inside is considered for this setting.<br />
+									It is possible to spawn an item into neighboring room (or arbitrary room for admins), even if the target room has this setting more restrictive.
+								</p>
+							</ContextHelpButton>
+						</SpaceRoleOrNoneSelectInput>
+						<GlobalSettingNotice roomId={ roomId } driver={ getSettingDriver('itemSpawnMinimumRole') } />
+					</Column>
 				</Column>
-			</Column>
-		</fieldset>
+			</fieldset>
+		</>
 	);
 }
 

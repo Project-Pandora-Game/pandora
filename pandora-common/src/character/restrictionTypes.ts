@@ -1,5 +1,6 @@
 import type { AssetId } from '../assets/base.ts';
 import type { CharacterModifierId, CharacterModifierType, PermissionGroup, PermissionTypeInvalid } from '../gameLogic/index.ts';
+import type { SpaceRole, SpaceRoleOrNone } from '../space/spaceRoles.ts';
 import type { AssetPreferenceResolution } from './assetPreferences.ts';
 import type { CharacterId } from './characterTypes.ts';
 
@@ -85,8 +86,9 @@ export type Restriction =
 		type: 'modifyBodyRoom';
 	}
 	| {
-		type: 'modifyRoomRestriction';
-		reason: 'notAdmin';
+		type: 'missingSpaceRole';
+		actual: SpaceRole;
+		required: SpaceRoleOrNone;
 	}
 	| {
 		type: 'itemCustomizeOther';

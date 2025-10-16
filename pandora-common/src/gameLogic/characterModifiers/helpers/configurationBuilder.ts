@@ -11,7 +11,7 @@ type ModifierConfigurationDataTypeSchemaMap = {
 	characterList: z.ZodCatch<z.ZodArray<typeof CharacterIdSchema>>;
 	number: z.ZodCatch<z.ZodNumber>;
 	string: z.ZodCatch<z.ZodString>;
-	stringList: z.ZodCatch<z.ZodPipe<z.ZodArray<z.ZodString>, z.ZodTransform<string[], string[]>>>;
+	stringList: z.ZodCatch<z.ZodPipe<z.ZodArray<z.ZodType>, z.ZodTransform<string[], unknown[]>>>;
 	toggle: z.ZodCatch<z.ZodBoolean>;
 };
 

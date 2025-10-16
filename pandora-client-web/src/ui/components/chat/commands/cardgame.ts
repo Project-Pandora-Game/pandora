@@ -14,7 +14,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 				description: 'Create a new game with a deck of 52 cards for the current space. Adding "public" after the command shows game messages also to non-participants.',
 				handler: ctx
 					.argumentOptional('publicGame', CommandSelectorEnum(['public']))
-					.handler(({ shardConnector }, { publicGame }) => {
+					.handler(({ shardConnector, globalState, displayError }, { publicGame }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: {
@@ -28,7 +33,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 			stop: {
 				description: 'Stop an ongoing game. Only possible for the creator of the game or a space admin.',
 				handler: ctx
-					.handler(({ shardConnector }) => {
+					.handler(({ shardConnector, globalState, displayError }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: { action: 'stop' },
@@ -39,7 +49,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 			join: {
 				description: 'Join an ongoing game.',
 				handler: ctx
-					.handler(({ shardConnector }) => {
+					.handler(({ shardConnector, globalState, displayError }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: { action: 'join' },
@@ -51,7 +66,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 				description: `Deal cards from the space's deck to the space's table. Only possible for the game creator.`,
 				handler: ctx
 					.argumentOptional('cards', CommandSelectorNumber())
-					.handler(({ shardConnector }, { cards }) => {
+					.handler(({ shardConnector, globalState, displayError }, { cards }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: {
@@ -67,7 +87,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 				handler: ctx
 					.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
 					.argumentOptional('cards', CommandSelectorNumber())
-					.handler(({ shardConnector }, { target, cards }) => {
+					.handler(({ shardConnector, globalState, displayError }, { target, cards }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						if (target) {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
@@ -88,7 +113,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 				handler: ctx
 					.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
 					.argumentOptional('cards', CommandSelectorNumber())
-					.handler(({ shardConnector }, { target, cards }) => {
+					.handler(({ shardConnector, globalState, displayError }, { target, cards }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						if (target) {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
@@ -107,7 +137,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 			reveal: {
 				description: `Reveal the cards of all players. Only available for the game's creator.`,
 				handler: ctx
-					.handler(({ shardConnector }) => {
+					.handler(({ shardConnector, globalState, displayError }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: { action: 'reveal' },
@@ -118,7 +153,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 			check: {
 				description: 'Have a look at the cards that were dealt and revealed',
 				handler: ctx
-					.handler(({ shardConnector }) => {
+					.handler(({ shardConnector, globalState, displayError }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: { action: 'check' },
@@ -129,7 +169,12 @@ export const COMMAND_CARDGAME: IClientCommand<ICommandExecutionContextClient> = 
 			show: {
 				description: 'Show your current cards to all players',
 				handler: ctx
-					.handler(({ shardConnector }) => {
+					.handler(({ shardConnector, globalState, displayError }) => {
+						if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+							displayError?.('This command is disabled in this space.');
+							return false;
+						}
+
 						shardConnector.sendMessage('gamblingAction', {
 							type: 'cards',
 							action: { action: 'show' },

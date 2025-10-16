@@ -327,10 +327,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			type: 'character',
 			id: client.character.id,
 		};
-		const characterRoom = client.character.getRestrictionManager().appearance.characterState.currentRoom;
+		const characterAppearance = client.character.getRestrictionManager().appearance;
+		const spaceState = characterAppearance.gameState;
+		const characterRoom = characterAppearance.characterState.currentRoom;
 
 		switch (game.type) {
 			case 'coinFlip':
+				if (spaceState.space.getEffectiveSpaceSettings().disabledMinigames.includes('dice'))
+					return;
+
 				space.handleActionMessage({
 					id: 'gamblingCoin',
 					rooms: [characterRoom],
@@ -339,6 +344,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				});
 				break;
 			case 'diceRoll': {
+				if (spaceState.space.getEffectiveSpaceSettings().disabledMinigames.includes('dice'))
+					return;
+
 				const rolls: number[] = [];
 				for (let i = 0; i < game.dice; i++)
 					rolls.push(Math.floor(Math.random() * game.sides + 1));
@@ -383,6 +391,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				break;
 			}
 			case 'rps': {
+				if (spaceState.space.getEffectiveSpaceSettings().disabledMinigames.includes('rockpaperscissors'))
+					return;
+
 				if (game.choice === 'show') {
 					const rock: string[] = [];
 					const paper: string[] = [];
@@ -425,6 +436,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				break;
 			}
 			case 'cards': {
+				if (spaceState.space.getEffectiveSpaceSettings().disabledMinigames.includes('cards')) {
+					if (space.cardGame) {
+						space.cardGame = null;
+					}
+					return;
+				}
+
 				const player = space.getCharacterById(character.id);
 				if (player) {
 					if (space.cardGame) {

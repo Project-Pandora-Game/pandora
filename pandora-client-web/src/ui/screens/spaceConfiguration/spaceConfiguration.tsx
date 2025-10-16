@@ -944,6 +944,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					admin: 'Owner or Admin',
 					allowed: 'Owner, Admin, or on the Allowlist',
 				} }
+				disabled={ !canEdit }
 			/>
 		</>
 	);

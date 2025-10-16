@@ -1,7 +1,4 @@
 const CHAT_ACTIONS_DEF = {
-	// Custom action should always provide customText replacement
-	custom: '[ ERROR: Custom action without text ]',
-
 	//#region Directory (server) messages
 	characterEntered: 'SOURCE_CHARACTER entered.',
 	characterLeft: 'SOURCE_CHARACTER left.',
@@ -10,6 +7,8 @@ const CHAT_ACTIONS_DEF = {
 	characterKicked: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
 	characterAutoKicked: `TARGET_CHARACTER left with the help of Pandora's Space Service.`,
 	characterBanned: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
+
+	spaceEntryText: 'SPACE_ENTRY_TEXT',
 
 	spaceUpdatedSingle: `SOURCE_CHARACTER changed the spaces's CHANGE.`,
 	spaceUpdatedMultiple: `SOURCE_CHARACTER changed COUNT space settings:`,

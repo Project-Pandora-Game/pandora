@@ -573,7 +573,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public mapActionMessageToChatMessage({
 		id,
-		customText,
 		rooms,
 		character,
 		target,
@@ -588,7 +587,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return {
 			type: 'action',
 			id,
-			customText,
 			rooms,
 			sendTo,
 			time: this.nextMessageTime(),

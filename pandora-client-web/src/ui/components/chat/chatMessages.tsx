@@ -237,9 +237,6 @@ export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>
 }
 
 function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
-	if (action.customText != null)
-		return action.customText;
-
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);
 	const itemPrevious = action.data?.itemPrevious ?? item;

@@ -106,8 +106,6 @@ export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
-	/** Custom text is used instead of the `id` lookup result, if specified */
-	customText?: string;
 	/** The array of characters the message should be sent to */
 	sendTo?: CharacterId[];
 	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */

@@ -17,10 +17,6 @@ export type GameLogicSpaceMinigames = z.infer<typeof GameLogicSpaceMinigamesSche
 
 export const GameLogicSpaceSettingsSchema = z.object({
 	/**
-	 * Whether to display space logic change messages or not (logic settings, room-specific changes).
-	 */
-	spaceChangeActionMessages: z.boolean(),
-	/**
 	 * Whether to display character movement messages - character follow state changes and character room device enter/leave
 	 */
 	characterMovementActionMessages: z.boolean(),
@@ -31,7 +27,6 @@ export const GameLogicSpaceSettingsSchema = z.object({
 export type GameLogicSpaceSettings = z.infer<typeof GameLogicSpaceSettingsSchema>;
 
 export const GAME_LOGIC_SPACE_SETTINGS_DEFAULT = Object.freeze<GameLogicSpaceSettings>({
-	spaceChangeActionMessages: true,
 	characterMovementActionMessages: true,
 	disabledMinigames: [],
 });

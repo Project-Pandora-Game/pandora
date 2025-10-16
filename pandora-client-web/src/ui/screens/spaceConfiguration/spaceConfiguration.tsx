@@ -865,26 +865,6 @@ function SpaceConfigurationFeaturesInner({
 							</ul>
 						</ContextHelpButton>
 					</ToggleSettingInput>
-					<ToggleSettingInput
-						driver={ getLogicSettingDriver('spaceChangeActionMessages') }
-						label={ <>Show an action message when inside of a space is modified</> }
-					>
-						<ContextHelpButton>
-							<p>
-								This affects if an action message is shown in the following cases:
-							</p>
-							<ul>
-								<li>A room is added, removed, or moved inside the space</li>
-								<li>Any room's configuration (settings or background) is changed</li>
-								<li>Space's default room settings are changed</li>
-								<li>Settings in the "Features" tab are changed</li>
-							</ul>
-							<p>
-								<strong>Note: </strong>Settings in the <code>General</code> and <code>Rights management</code> tabs,
-								as well as actions such as kicking or banning a character will always produce a chat message.
-							</p>
-						</ContextHelpButton>
-					</ToggleSettingInput>
 				</Column>
 			</fieldset>
 		</>

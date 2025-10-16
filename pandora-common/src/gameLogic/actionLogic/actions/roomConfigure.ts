@@ -35,8 +35,6 @@ export function ActionRoomConfigure({
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withName(name)))
 			return processingContext.invalid();
-
-		processingContext.queueMessage({ id: 'roomConfigureName', rooms: [roomId] });
 	}
 
 	if (roomGeometry != null) {
@@ -65,8 +63,6 @@ export function ActionRoomConfigure({
 
 			return c;
 		});
-
-		processingContext.queueMessage({ id: 'roomConfigureBackground', rooms: [roomId] });
 	}
 
 	if (roomLinkNodes != null) {

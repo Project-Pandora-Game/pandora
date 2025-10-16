@@ -118,20 +118,6 @@ const CHAT_ACTIONS_DEF = {
 		message: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	},
 
-	// Room & space changes
-	roomConfigureBackground: {
-		type: 'spaceConfiguration',
-		message: `SOURCE_CHARACTER changed room background.`,
-	},
-	roomConfigureName: {
-		type: 'spaceConfiguration',
-		message: `SOURCE_CHARACTER changed room name.`,
-	},
-	spaceLayoutChange: {
-		type: 'spaceConfiguration',
-		message: `SOURCE_CHARACTER changed the space's layout.`,
-	},
-
 	// Room device interaction
 	/** User deploys a previously stored device into the room */
 	roomDeviceDeploy: {
@@ -441,7 +427,6 @@ export type ChatActionId = keyof typeof CHAT_ACTIONS_DEF;
 export const ChatActionTypeSchema = z.enum([
 	'system', // System messages, e.g. character entering/leaving a space, or configuration changes
 	'important', // Important messages, e.g. safemode changes, action interruptions, messages from space admins (e.g. join message)
-	'spaceConfiguration', // Changes to space logic configuration (room changes, logic settings)
 	'itemInteraction', // Interaction with items
 	'lockChange', // Interaction with existing locks
 	'characterMovement', // Character follow changes
@@ -474,9 +459,6 @@ export function ChatActionHidden(action: Immutable<ActionHandlerMessage>, global
 		case 'characterModifierChange':
 		case 'minigame':
 			return false;
-
-		case 'spaceConfiguration':
-			return !globalState.space.getEffectiveSpaceSettings().spaceChangeActionMessages;
 
 		case 'characterMovement':
 			return !globalState.space.getEffectiveSpaceSettings().characterMovementActionMessages;

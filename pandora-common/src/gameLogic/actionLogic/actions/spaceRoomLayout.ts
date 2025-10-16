@@ -70,8 +70,6 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else if (subaction.type === 'deleteRoom') {
 		if (
 			Array.from(processingContext.manipulator.currentState.characters.values())
@@ -89,8 +87,6 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else if (subaction.type === 'reorderRoomList') {
 		if (!processingContext.manipulator.produceSpaceState((s) => {
 			const index = s.rooms.findIndex((r) => r.id === subaction.id);
@@ -106,13 +102,9 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		// Intentionally no message
 	} else if (subaction.type === 'moveRoom') {
 		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position).withDirection(subaction.direction)))
 			return processingContext.invalid();
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else {
 		AssertNever(subaction);
 	}

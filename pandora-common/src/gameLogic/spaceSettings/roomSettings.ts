@@ -9,11 +9,21 @@ If an action cannot be narrowed down to a specific room, a space-wide setting mi
 */
 
 export const GameLogicRoomSettingsSchema = z.object({
+	/**
+	 * Whether to display messages about interacting with items (move, spawn, delete, ...)
+	 */
+	itemActionMessages: z.boolean(),
+	/**
+	 * Whether to display messages about interacting with locks
+	 */
+	lockActionMessages: z.boolean(),
 });
 
 export type GameLogicRoomSettings = z.infer<typeof GameLogicRoomSettingsSchema>;
 
 export const GAME_LOGIC_ROOM_SETTINGS_DEFAULT = Object.freeze<GameLogicRoomSettings>({
+	itemActionMessages: true,
+	lockActionMessages: true,
 });
 
 //#endregion

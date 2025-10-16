@@ -16,6 +16,7 @@ import {
 	AssetManager,
 	CardGameGame,
 	CharacterId,
+	ChatActionHidden,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
 	GameStateUpdate,
@@ -144,6 +145,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
+			// Hide a message if both original and result state request hiding it
+			if (ChatActionHidden(message, result.resultState) && ChatActionHidden(message, result.originalState))
+				continue;
+
 			this.handleActionMessage(message);
 		}
 	}

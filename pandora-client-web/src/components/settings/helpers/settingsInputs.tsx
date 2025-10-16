@@ -121,17 +121,16 @@ export function useEnumSetMembershipDriver<const T extends string>(
 			}
 			return parentDriver.onChange(newSet.toSorted((a, b) => a.localeCompare(b)));
 		},
-		onReset: parentDriver.onReset,
 	}), [parentDriver, value]);
 }
 
-export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY }: {
+export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY, children }: {
 	driver: Readonly<SettingDriver<boolean>>;
 	label: ReactNode;
 	noReset?: boolean;
 	disabled?: boolean;
 	deps?: DependencyList;
-}): ReactElement {
+} & ChildrenProps): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
@@ -162,6 +161,7 @@ export function ToggleSettingInput({ driver, label, disabled, noReset = false, d
 			>
 				{ label }
 			</label>
+			{ children }
 			{
 				noReset ? null : (
 					<Button

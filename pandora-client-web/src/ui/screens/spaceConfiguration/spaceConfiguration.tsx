@@ -818,23 +818,76 @@ function SpaceConfigurationFeaturesInner({
 	const disabledMinigames = getLogicSettingDriver('disabledMinigames');
 
 	return (
-		<fieldset>
-			<legend>Minigames</legend>
-			<Column>
-				<ToggleSettingInput
-					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'dice')) }
-					label={ <>Allow usage of the <code>/dice</code> and <code>/coinflip</code> commands</> }
-				/>
-				<ToggleSettingInput
-					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'rockpaperscissors')) }
-					label={ <>Allow usage of the <code>/rockpaperscissors</code> command</> }
-				/>
-				<ToggleSettingInput
-					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'cards')) }
-					label={ <>Allow usage of the <code>/cards</code> command</> }
-				/>
-			</Column>
-		</fieldset>
+		<>
+			<fieldset>
+				<legend>Minigames</legend>
+				<Row>
+					<Column className='flex-1'>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'dice')) }
+							label={ <>Allow usage of the <code>/dice</code> and <code>/coinflip</code> commands</> }
+							noReset
+						/>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'rockpaperscissors')) }
+							label={ <>Allow usage of the <code>/rockpaperscissors</code> command</> }
+							noReset
+						/>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'cards')) }
+							label={ <>Allow usage of the <code>/cards</code> command</> }
+							noReset
+						/>
+					</Column>
+					<Button
+						className='slim'
+						onClick={ () => disabledMinigames.onReset?.() }
+						disabled={ disabledMinigames.currentValue === undefined }
+					>
+						↺
+					</Button>
+				</Row>
+			</fieldset>
+			<fieldset>
+				<legend>Chat</legend>
+				<Column>
+					<ToggleSettingInput
+						driver={ getLogicSettingDriver('characterMovementActionMessages') }
+						label={ <>Show an action message when an important change to character movement happens</> }
+					>
+						<ContextHelpButton>
+							<p>
+								This affects if an action message is shown in the following cases:
+							</p>
+							<ul>
+								<li>A character starts or stops following/leading another character</li>
+								<li>A character enters or leaves a room device</li>
+							</ul>
+						</ContextHelpButton>
+					</ToggleSettingInput>
+					<ToggleSettingInput
+						driver={ getLogicSettingDriver('spaceChangeActionMessages') }
+						label={ <>Show an action message when inside of a space is modified</> }
+					>
+						<ContextHelpButton>
+							<p>
+								This affects if an action message is shown in the following cases:
+							</p>
+							<ul>
+								<li>A room is added, removed, or moved inside the space</li>
+								<li>Any room's configuration (settings or background) is changed</li>
+								<li>Space's default room settings are changed</li>
+								<li>Settings in the "Features" tab are changed</li>
+							</ul>
+							<p>
+								<strong>Note: </strong>Settings in the <code>General</code> and <code>Rights management</code> tabs,
+								as well as actions such as kicking or banning a character will always produce a chat message.
+							</p>
+						</ContextHelpButton>
+					</ToggleSettingInput>
+				</Column>
+			</fieldset>
+		</>
 	);
 }
 

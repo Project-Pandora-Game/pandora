@@ -54,7 +54,7 @@ import {
 import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { SelectSettingInput, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
@@ -139,7 +139,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		}
 		return result;
 	}, {});
-	const [spaceLogicConfigUpdate, setSpaceLogicConfigUpdate] = useState<Partial<GameLogicSpaceSettings> | null>(null);
+	const [spaceLogicConfigUpdate, setSpaceLogicConfigUpdate] = useState<Partial<Immutable<GameLogicSpaceSettings>> | null>(null);
 
 	const currentConfig = useMemo((): Immutable<SpaceDirectoryConfig> => canEdit ? ({
 		...(currentSpaceInfo?.config ?? DefaultConfig()),
@@ -296,9 +296,10 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			currentValue,
 			defaultValue: GAME_LOGIC_SPACE_SETTINGS_DEFAULT[setting],
 			onChange(newValue) {
-				setSpaceLogicConfigUpdate(produce(settings, (d) => {
-					d[setting] = newValue;
-				}));
+				setSpaceLogicConfigUpdate({
+					...settings,
+					[setting]: newValue,
+				});
 			},
 			onReset() {
 				setSpaceLogicConfigUpdate(produce(settings, (d) => {
@@ -341,6 +342,9 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				</Tab>
 				<Tab name='Rights management'>
 					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRights } />
+				</Tab>
+				<Tab name='Features'>
+					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationFeatures } />
 				</Tab>
 				<Tab name='Room management'>
 					<SpaceConfigurationRoom { ...tabProps } />
@@ -789,6 +793,48 @@ function SpaceConfigurationRights({
 			</fieldset>
 			{ (!creation && currentSpaceInfo?.id != null) && <SpaceInvites spaceId={ currentSpaceInfo.id } isPlayerAdmin={ isPlayerAdmin } /> }
 		</>
+	);
+}
+
+function SpaceConfigurationFeatures({
+	creation,
+	currentSpaceState,
+	getLogicSettingDriver,
+}: SpaceConfigurationTabProps): ReactElement {
+	if (creation || currentSpaceState == null) {
+		return (
+			<strong>Some space settings can only be changed from inside the space</strong>
+		);
+	}
+
+	return (
+		<SpaceConfigurationFeaturesInner getLogicSettingDriver={ getLogicSettingDriver } />
+	);
+}
+
+function SpaceConfigurationFeaturesInner({
+	getLogicSettingDriver,
+}: Pick<SpaceConfigurationTabProps, 'getLogicSettingDriver'>): ReactElement {
+	const disabledMinigames = getLogicSettingDriver('disabledMinigames');
+
+	return (
+		<fieldset>
+			<legend>Minigames</legend>
+			<Column>
+				<ToggleSettingInput
+					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'dice')) }
+					label={ <>Allow usage of the <code>/dice</code> and <code>/coinflip</code> commands</> }
+				/>
+				<ToggleSettingInput
+					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'rockpaperscissors')) }
+					label={ <>Allow usage of the <code>/rockpaperscissors</code> command</> }
+				/>
+				<ToggleSettingInput
+					driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'cards')) }
+					label={ <>Allow usage of the <code>/cards</code> command</> }
+				/>
+			</Column>
+		</fieldset>
 	);
 }
 

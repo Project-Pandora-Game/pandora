@@ -86,6 +86,45 @@ export function useValueMapDriver<const TIn, const TOut>(
 	}), [parentDriver, forwardMapping, backwardMapping]);
 }
 
+function InvertBoolean(v: boolean): boolean {
+	return !v;
+}
+
+/**
+ * Takes a driver for a boolean and creates an inverse driver (with true and false swapped)
+ */
+export function useBooleanInvertDriver(
+	parentDriver: SettingDriver<boolean>,
+): SettingDriver<boolean> {
+	return useValueMapDriver(parentDriver, InvertBoolean, InvertBoolean);
+}
+
+/**
+ * Takes a driver for an enum set and returns a driver for a presence of a given value.
+ */
+export function useEnumSetMembershipDriver<const T extends string>(
+	parentDriver: SettingDriver<readonly T[]>,
+	value: NoInfer<T>,
+): SettingDriver<boolean> {
+	return useMemo((): SettingDriver<boolean> => ({
+		currentValue: parentDriver.currentValue !== undefined ? parentDriver.currentValue.includes(value) : undefined,
+		defaultValue: parentDriver.defaultValue.includes(value),
+		onChange(newValue) {
+			let newSet = (parentDriver.currentValue ?? parentDriver.defaultValue);
+			if (newValue) {
+				if (!newSet.includes(value)) {
+					newSet = [...newSet, value];
+					return parentDriver.onChange(newSet);
+				}
+			} else {
+				newSet = newSet.filter((v) => v !== value);
+			}
+			return parentDriver.onChange(newSet.toSorted((a, b) => a.localeCompare(b)));
+		},
+		onReset: parentDriver.onReset,
+	}), [parentDriver, value]);
+}
+
 export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY }: {
 	driver: Readonly<SettingDriver<boolean>>;
 	label: ReactNode;

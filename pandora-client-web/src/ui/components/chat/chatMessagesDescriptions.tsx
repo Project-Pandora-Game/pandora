@@ -62,6 +62,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
 		case 'roomConfigure':
 			return <DescribeGameLogicActionRoomConfigure action={ action } { ...props } />;
+		case 'spaceConfigure':
+			return <DescribeGameLogicActionSpaceConfigure action={ action } { ...props } />;
 		case 'spaceRoomLayout':
 			return <DescribeGameLogicActionSpaceRoomLayout action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
@@ -292,6 +294,10 @@ function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, glob
 
 function DescribeGameLogicActionRoomConfigure(_props: DescribeGameLogicActionProps<'roomConfigure'>): ReactElement {
 	return <>Update the room's configuration.</>;
+}
+
+function DescribeGameLogicActionSpaceConfigure(_props: DescribeGameLogicActionProps<'spaceConfigure'>): ReactElement {
+	return <>Update the space's configuration.</>;
 }
 
 function DescribeGameLogicActionSpaceRoomLayout(_props: DescribeGameLogicActionProps<'spaceRoomLayout'>): ReactElement {

@@ -16,15 +16,18 @@ import {
 	CharacterId,
 	CharacterIdSchema,
 	CloneDeepMutable,
-	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GetLogger,
 	HexColorStringSchema,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
+	ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE,
+	ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	RoomBundleSchema,
 	RoomGeometryConfigSchema,
 	SPACE_DIRECTORY_PROPERTIES,
+	SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE,
+	SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
 	SpaceDataSchema,
@@ -1104,15 +1107,12 @@ export default class MongoDatabase implements PandoraDatabase {
 					migrationLogger.verbose(`Migrating space ${space.id} for multiple rooms`);
 
 					const newSpaceState: SpaceStateBundle = {
+						...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
 						rooms: [
 							{
-								id: 'room:default',
-								name: 'Unnamed room',
+								...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE),
 								items: space.inventory.items,
-								position: { x: 0, y: 0 },
 								roomGeometry: space.inventory.roomGeometry,
-								roomLinkNodes: CloneDeepMutable(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
-								direction: 'N',
 							},
 						],
 					};
@@ -1154,15 +1154,12 @@ export default class MongoDatabase implements PandoraDatabase {
 					migrationLogger.verbose(`Migrating character ${character.id} space for multiple rooms`);
 
 					const newSpaceState: SpaceStateBundle = {
+						...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE),
 						rooms: [
 							{
-								id: 'room:default',
-								name: 'My personal room',
+								...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE),
 								items: character.personalRoom.inventory.items,
-								position: { x: 0, y: 0 },
 								roomGeometry: character.personalRoom.inventory.roomGeometry,
-								roomLinkNodes: CloneDeepMutable(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
-								direction: 'N',
 							},
 						],
 					};

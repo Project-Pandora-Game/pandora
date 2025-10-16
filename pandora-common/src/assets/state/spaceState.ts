@@ -2,10 +2,12 @@ import { freeze, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
 import * as z from 'zod';
+import { GAME_LOGIC_ROOM_SETTINGS_DEFAULT, GameLogicRoomSettingsSchema, type GameLogicRoomSettings } from '../../gameLogic/spaceSettings/roomSettings.ts';
+import { GAME_LOGIC_SPACE_SETTINGS_DEFAULT, GameLogicSpaceSettingsSchema, type GameLogicSpaceSettings } from '../../gameLogic/spaceSettings/spaceSettings.ts';
 import { LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/space.ts';
-import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { RoomIdSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
@@ -16,6 +18,20 @@ import { AssetFrameworkRoomState, ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE, ROOM_BUNDL
 
 export const SpaceStateBundleSchema = z.object({
 	rooms: ZodArrayWithInvalidDrop(RoomBundleSchema, z.record(z.string(), z.unknown())),
+	/**
+	 * Settings of the space.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * @see Account['settings'] for more info
+	 */
+	spaceSettings: GameLogicSpaceSettingsSchema.partial().catch(() => ({})),
+	/**
+	 * Defaults settings for rooms that don't specify override.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * @see Account['settings'] for more info
+	 */
+	globalRoomSettings: GameLogicRoomSettingsSchema.partial().catch(() => ({})),
 	clientOnly: z.boolean().optional(),
 });
 
@@ -28,15 +44,21 @@ export const SpaceStateClientDeltaBundleSchema = z.object({
 		deltas: RoomClientDeltaBundleSchema.array().optional(),
 		bundles: RoomBundleSchema.array().optional(),
 	}).optional(),
+	spaceSettings: GameLogicSpaceSettingsSchema.partial().optional(),
+	globalRoomSettings: GameLogicRoomSettingsSchema.partial().optional(),
 });
 export type SpaceStateClientDeltaBundle = z.infer<typeof SpaceStateClientDeltaBundleSchema>;
 
 export const SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<SpaceStateBundle>>({
 	rooms: [ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE],
+	spaceSettings: {},
+	globalRoomSettings: {},
 }, true);
 
 export const SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<SpaceStateBundle>>({
 	rooms: [ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE],
+	spaceSettings: {},
+	globalRoomSettings: {},
 }, true);
 
 type AssetFrameworkSpaceStateProps = {
@@ -44,6 +66,8 @@ type AssetFrameworkSpaceStateProps = {
 	readonly spaceId: SpaceId | null;
 
 	readonly rooms: readonly AssetFrameworkRoomState[];
+	readonly spaceSettings: Immutable<Partial<GameLogicSpaceSettings>>;
+	readonly globalRoomSettings: Immutable<Partial<GameLogicRoomSettings>>;
 };
 
 /**
@@ -54,6 +78,8 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 	public readonly spaceId: SpaceId | null;
 
 	public readonly rooms: readonly AssetFrameworkRoomState[];
+	public readonly spaceSettings: Immutable<Partial<GameLogicSpaceSettings>>;
+	public readonly globalRoomSettings: Immutable<Partial<GameLogicRoomSettings>>;
 
 	private constructor(props: AssetFrameworkSpaceStateProps);
 	private constructor(old: AssetFrameworkSpaceState, override: Partial<AssetFrameworkSpaceStateProps>);
@@ -61,6 +87,8 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		this.assetManager = override?.assetManager ?? props.assetManager;
 		this.spaceId = override?.spaceId ?? props.spaceId;
 		this.rooms = override?.rooms ?? props.rooms;
+		this.spaceSettings = override?.spaceSettings ?? props.spaceSettings;
+		this.globalRoomSettings = override?.globalRoomSettings ?? props.globalRoomSettings;
 	}
 
 	public getRoom(roomId: RoomId): AssetFrameworkRoomState | null {
@@ -77,6 +105,29 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 			itemCount += room.getTotalItemCount();
 		}
 		return itemCount;
+	}
+
+	/**
+	 * Gets settings for this space.
+	 */
+	public getEffectiveSpaceSettings(): Immutable<GameLogicSpaceSettings> {
+		return {
+			...GAME_LOGIC_SPACE_SETTINGS_DEFAULT,
+			...this.spaceSettings,
+		};
+	}
+
+	/**
+	 * Gets settings for a specified room. If the room is `null` or does not exist, global room settings are returned instead
+	 */
+	public getEffectiveRoomSettings(roomId: RoomId | null): Immutable<GameLogicRoomSettings> {
+		const room = roomId == null ? null : this.getRoom(roomId);
+
+		return {
+			...GAME_LOGIC_ROOM_SETTINGS_DEFAULT,
+			...this.globalRoomSettings,
+			...room?.settings,
+		};
 	}
 
 	public isValid(): boolean {
@@ -165,9 +216,25 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		return new AssetFrameworkSpaceState(this, { rooms: newRooms });
 	}
 
+	public withSpaceSettings(spaceSettings: Immutable<Partial<GameLogicSpaceSettings>>): AssetFrameworkSpaceState {
+		if (isEqual(this.spaceSettings, spaceSettings))
+			return this;
+
+		return new AssetFrameworkSpaceState(this, { spaceSettings: freeze(spaceSettings, true) });
+	}
+
+	public withGlobalRoomSettings(globalRoomSettings: Immutable<Partial<GameLogicRoomSettings>>): AssetFrameworkSpaceState {
+		if (isEqual(this.globalRoomSettings, globalRoomSettings))
+			return this;
+
+		return new AssetFrameworkSpaceState(this, { globalRoomSettings: freeze(globalRoomSettings, true) });
+	}
+
 	public exportToBundle(): SpaceStateBundle {
 		return {
 			rooms: this.rooms.map((r) => r.exportToBundle()),
+			spaceSettings: CloneDeepMutable(this.spaceSettings),
+			globalRoomSettings: CloneDeepMutable(this.globalRoomSettings),
 		};
 	}
 
@@ -175,6 +242,8 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 		options.clientOnly = true;
 		return {
 			rooms: this.rooms.map((r) => r.exportToClientBundle(options)),
+			spaceSettings: CloneDeepMutable(this.spaceSettings),
+			globalRoomSettings: CloneDeepMutable(this.globalRoomSettings),
 			clientOnly: true,
 		};
 	}
@@ -202,6 +271,13 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 					result.rooms.deltas.push(room.exportToClientDeltaBundle(originalRoom, options));
 				}
 			}
+		}
+
+		if (this.spaceSettings !== originalState.spaceSettings) {
+			result.spaceSettings = CloneDeepMutable(this.spaceSettings);
+		}
+		if (this.globalRoomSettings !== originalState.globalRoomSettings) {
+			result.globalRoomSettings = CloneDeepMutable(this.globalRoomSettings);
 		}
 
 		return result;
@@ -239,6 +315,13 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 				Assert(room != null, 'DESYNC: Room in delta bundle not found');
 				return room;
 			});
+		}
+
+		if (bundle.spaceSettings !== undefined) {
+			update.spaceSettings = freeze(bundle.spaceSettings, true);
+		}
+		if (bundle.globalRoomSettings !== undefined) {
+			update.globalRoomSettings = freeze(bundle.globalRoomSettings, true);
 		}
 
 		const resultState = freeze(new AssetFrameworkSpaceState(this, update), true);
@@ -296,6 +379,8 @@ export class AssetFrameworkSpaceState implements AssetFrameworkSpaceStateProps {
 			assetManager,
 			spaceId,
 			rooms,
+			spaceSettings: freeze(parsed.spaceSettings, true),
+			globalRoomSettings: freeze(parsed.globalRoomSettings, true),
 		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after load');

@@ -867,13 +867,14 @@ export class Space {
 		});
 
 		// send entry text, if there is any
-		// TODO: Must be changed later to send room and not space specific entry texts
 		if (this.config.entryText) {
 			this.sendMessage({
 				type: 'action',
+				id: 'spaceEntryText',
 				sendTo: [character.baseInfo.id],
-				id: 'custom',
-				customText: this.config.entryText,
+				dictionary: {
+					SPACE_ENTRY_TEXT: this.config.entryText,
+				},
 			});
 		}
 

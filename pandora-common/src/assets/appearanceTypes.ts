@@ -52,8 +52,6 @@ export type ActionTargetSelector = z.infer<typeof ActionTargetSelectorSchema>;
 
 export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMessageAction['data']>, 'character' | 'target'> {
 	id: ChatActionId;
-	/** Custom text is used instead of the `id` lookup result, if specified */
-	customText?: string;
 	dictionary?: Record<string, string>;
 }
 

@@ -592,7 +592,6 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					if (
 						lastMessage.type === 'action' &&
 						lastMessage.id === message.id &&
-						lastMessage.customText === message.customText &&
 						isEqual(lastMessage.sendTo, message.sendTo) &&
 						isEqual(lastMessage.data, message.data) &&
 						isEqual(lastMessage.dictionary, message.dictionary)

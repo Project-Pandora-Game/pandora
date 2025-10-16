@@ -13,6 +13,7 @@ import {
 	ChatCharacterStatus,
 	ChatTypeSchema,
 	CloneDeepMutable,
+	CompareSpaceRoles,
 	EMPTY_ARRAY,
 	GameStateUpdate,
 	GetLogger,
@@ -51,6 +52,7 @@ import {
 	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
+	type SpaceRole,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
@@ -890,11 +892,11 @@ export function MakeActionSpaceContext(
 ): ActionSpaceContext {
 	return {
 		features: spaceInfo.config.features,
-		isAdmin: (accountId) => {
+		getAccountSpaceRole: (accountId) => {
 			if (accountId === playerAccount?.id) {
-				return IsSpaceAdmin(spaceInfo.config, playerAccount);
+				return GetSpaceInfoAccountRole(spaceInfo.config, playerAccount);
 			}
-			return IsSpaceAdmin(spaceInfo.config, { id: accountId });
+			return GetSpaceInfoAccountRole(spaceInfo.config, { id: accountId });
 		},
 		development: spaceInfo.config.development,
 		getCharacterModifierEffects: (characterId) => {
@@ -1015,17 +1017,23 @@ export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id:
 	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 
-export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
-	if (!account?.id)
-		return false;
+export function GetSpaceInfoAccountRole(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): SpaceRole {
+	if (account?.id == null)
+		return 'everyone';
 
 	if (data.owners.includes(account.id))
-		return true;
+		return 'owner';
 	if (data.admin.includes(account.id))
-		return true;
+		return 'admin';
 
 	if (data.development?.autoAdmin && IsAuthorized(account.roles, 'developer'))
-		return true;
+		return 'admin';
+	if (data.allow.includes(account.id))
+		return 'allowlisted';
 
-	return false;
+	return 'everyone';
+}
+
+export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
+	return CompareSpaceRoles(GetSpaceInfoAccountRole(data, account), 'admin') >= 0;
 }

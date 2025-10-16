@@ -21,14 +21,14 @@ export function ActionSpaceConfigure({
 	} = action;
 
 	if (spaceSettings != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole('admin');
 
 		if (!processingContext.manipulator.produceSpaceState((s) => s.withSpaceSettings(spaceSettings)))
 			return processingContext.invalid();
 	}
 
 	if (globalRoomSettings != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceSpaceState((s) => s.withGlobalRoomSettings(globalRoomSettings)))
 			return processingContext.invalid();

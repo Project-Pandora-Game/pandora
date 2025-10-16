@@ -264,7 +264,7 @@ export class Editor extends TypedEventEmitter<{
 				'development',
 				'allowBodyChanges',
 			],
-			isAdmin: () => true,
+			getAccountSpaceRole: () => 'owner',
 			development: {
 				autoAdmin: true,
 				disableSafemodeCooldown: true,

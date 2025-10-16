@@ -43,7 +43,8 @@ export function ActionMoveCharacter({
 		}
 	} else {
 		// Admins can move others freely, non-admins need to be able to interact with target and a permission
-		if (!player.isCurrentSpaceAdmin()) {
+		// TODO: Maybe consider setting for this?
+		if (!player.hasSpaceRole('admin')) {
 			processingContext.checkInteractWithTarget(target.appearance);
 			processingContext.addInteraction(target.character, 'moveCharacter');
 		}
@@ -56,7 +57,8 @@ export function ActionMoveCharacter({
 		if (room == null)
 			return processingContext.invalid();
 		// And be reachable from both starting point and for current player (ignored for admins)
-		if (!player.isCurrentSpaceAdmin()) {
+		// TODO: Maybe consider setting for this?
+		if (!player.hasSpaceRole('admin')) {
 			if (originalRoom.id !== room.id && originalRoom.getLinkToRoom(room) == null) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}

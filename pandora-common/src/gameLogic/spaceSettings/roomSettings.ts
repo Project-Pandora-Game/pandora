@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { SpaceRoleOrNoneSchema } from '../../space/spaceRoles.ts';
 import { KnownObject } from '../../utility/misc.ts';
 
 //#region Settings declarations
@@ -17,6 +18,14 @@ export const GameLogicRoomSettingsSchema = z.object({
 	 * Whether to display messages about interacting with locks
 	 */
 	lockActionMessages: z.boolean(),
+	/**
+	 * What role is required to change room device deployment
+	 */
+	roomDeviceDeploymentMinimumRole: SpaceRoleOrNoneSchema,
+	/**
+	 * What role is required to spawn or delete items
+	 */
+	itemSpawnMinimumRole: SpaceRoleOrNoneSchema,
 });
 
 export type GameLogicRoomSettings = z.infer<typeof GameLogicRoomSettingsSchema>;
@@ -24,6 +33,8 @@ export type GameLogicRoomSettings = z.infer<typeof GameLogicRoomSettingsSchema>;
 export const GAME_LOGIC_ROOM_SETTINGS_DEFAULT = Object.freeze<GameLogicRoomSettings>({
 	itemActionMessages: true,
 	lockActionMessages: true,
+	roomDeviceDeploymentMinimumRole: 'admin',
+	itemSpawnMinimumRole: 'everyone',
 });
 
 //#endregion

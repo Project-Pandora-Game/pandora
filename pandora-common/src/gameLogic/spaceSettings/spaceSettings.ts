@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { SpaceRoleOrNoneSchema } from '../../space/spaceRoles.ts';
 import { KnownObject } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 
@@ -22,6 +23,10 @@ export const GameLogicSpaceSettingsSchema = z.object({
 	characterMovementActionMessages: z.boolean(),
 	/** List of minigames to disallow inside this space (default is to allow all, enabling new ones by default as well). */
 	disabledMinigames: ZodArrayWithInvalidDrop(GameLogicSpaceMinigamesSchema, undefined, GameLogicSpaceMinigamesSchema.options.length),
+	/**
+	 * What role is required to change rooms layout (creating, deleting, reordering rooms) or settings
+	 */
+	roomChangeMinimumRole: SpaceRoleOrNoneSchema,
 });
 
 export type GameLogicSpaceSettings = z.infer<typeof GameLogicSpaceSettingsSchema>;
@@ -29,6 +34,7 @@ export type GameLogicSpaceSettings = z.infer<typeof GameLogicSpaceSettingsSchema
 export const GAME_LOGIC_SPACE_SETTINGS_DEFAULT = Object.freeze<GameLogicSpaceSettings>({
 	characterMovementActionMessages: true,
 	disabledMinigames: [],
+	roomChangeMinimumRole: 'admin',
 });
 
 //#endregion

@@ -62,6 +62,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
+import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
@@ -865,6 +866,16 @@ function SpaceConfigurationFeaturesInner({
 							</ul>
 						</ContextHelpButton>
 					</ToggleSettingInput>
+				</Column>
+			</fieldset>
+			<fieldset>
+				<legend>Space changes</legend>
+				<Column>
+					<SpaceRoleOrNoneSelectInput
+						driver={ getLogicSettingDriver('roomChangeMinimumRole') }
+						label="Accounts allowed to make changes to the space's room layout and room settings:"
+						cumulative
+					/>
 				</Column>
 			</fieldset>
 		</>

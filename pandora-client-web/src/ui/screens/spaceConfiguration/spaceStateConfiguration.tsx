@@ -55,10 +55,11 @@ import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsScene
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { SpaceRoleSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
-import './spaceStateConfiguration.scss';
 import { RoomSettingsDialog, RoomSpaceGlobalSettingsDialog } from './roomSettings.tsx';
+import './spaceStateConfiguration.scss';
 
 export type SpaceStateConfigurationUiProps = {
 	globalState: AssetFrameworkGlobalState;
@@ -276,7 +277,7 @@ function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: As
 		return null;
 
 	return (
-		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : 'enabled'}` }>
+		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : (linkData.useMinimumRole != null && linkData.useMinimumRole !== 'everyone') ? 'limited' : 'enabled'}` }>
 			{ linkData.disabled ? '×' : arrows[linkData.direction] }
 		</div>
 	);
@@ -457,13 +458,14 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 					</GameLogicActionButton>
 				</Row>
 				<fieldset>
-					<legend>Position of links to other rooms</legend>
+					<legend>Paths to other rooms</legend>
 					<table>
 						<thead>
 							<tr>
 								<th>Direction</th>
 								<th>Enabled</th>
 								<th>Position</th>
+								<th>Can be used by</th>
 								<th></th>
 							</tr>
 						</thead>
@@ -509,29 +511,35 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 				/>
 			</td>
 			<td>
-				<Row alignY='center'>
-					<label>X:</label>
-					<NumberInput
-						className='flex-1'
-						value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
-						onChange={ (newValue) => {
-							setChangedConfig((v) => produce(v ?? config, (d) => {
-								d.position ??= CloneDeepMutable(data.position);
-								d.position[0] = newValue;
-							}));
-						} }
-					/>
-					<label>Y:</label>
-					<NumberInput
-						className='flex-1'
-						value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
-						onChange={ (newValue) => {
-							setChangedConfig((v) => produce(v ?? config, (d) => {
-								d.position ??= CloneDeepMutable(data.position);
-								d.position[1] = newValue;
-							}));
-						} }
-					/>
+				<Row>
+					<Column>
+						<Row alignY='center'>
+							<label>X:</label>
+							<NumberInput
+								className='flex-1'
+								value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
+								onChange={ (newValue) => {
+									setChangedConfig((v) => produce(v ?? config, (d) => {
+										d.position ??= CloneDeepMutable(data.position);
+										d.position[0] = newValue;
+									}));
+								} }
+							/>
+						</Row>
+						<Row alignY='center'>
+							<label>Y:</label>
+							<NumberInput
+								className='flex-1'
+								value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
+								onChange={ (newValue) => {
+									setChangedConfig((v) => produce(v ?? config, (d) => {
+										d.position ??= CloneDeepMutable(data.position);
+										d.position[1] = newValue;
+									}));
+								} }
+							/>
+						</Row>
+					</Column>
 					<Button
 						slim
 						onClick={ () => {
@@ -544,6 +552,27 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 						↺
 					</Button>
 				</Row>
+			</td>
+			<td>
+				<SpaceRoleSelectInput
+					driver={ {
+						currentValue: (changedConfig ?? config).useMinimumRole,
+						defaultValue: 'everyone',
+						onChange(newValue) {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.useMinimumRole = newValue;
+							}));
+						},
+						onReset() {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								delete d.useMinimumRole;
+							}));
+						},
+					} }
+					label={ null }
+					noWrapper
+					cumulative
+				/>
 			</td>
 			<td>
 				<GameLogicActionButton

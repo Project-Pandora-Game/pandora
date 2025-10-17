@@ -6,6 +6,7 @@ import type { ActionTarget, ItemContainerPath, ItemPath } from '../assets/appear
 import { AppearanceItemProperties } from '../assets/appearanceValidation.ts';
 import { Asset } from '../assets/asset.ts';
 import { EffectsDefinition, MergeEffects } from '../assets/effects.ts';
+import type { RoomLinkNodeData } from '../assets/index.ts';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item/index.ts';
 import { AssetPropertiesResult } from '../assets/properties.ts';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes.ts';
@@ -256,6 +257,13 @@ export class CharacterRestrictionsManager {
 		}
 	}
 
+	public canUseRoomLink(link: Immutable<RoomLinkNodeData> | null): boolean {
+		if (link == null)
+			return false;
+
+		return !link.disabled && (link.useMinimumRole === undefined || this.hasSpaceRole(link.useMinimumRole));
+	}
+
 	/**
 	 * Check that this character can use hands.
 	 * @param context - Context of the action
@@ -295,7 +303,7 @@ export class CharacterRestrictionsManager {
 			const playerRoom = this.appearance.getCurrentRoom();
 			const targetRoom = target.getCurrentRoom();
 			if (playerRoom != null && targetRoom != null) {
-				if (playerRoom.id !== targetRoom.id && playerRoom.getLinkToRoom(targetRoom) == null) {
+				if (playerRoom.id !== targetRoom.id && !this.canUseRoomLink(playerRoom.getLinkToRoom(targetRoom))) {
 					context.addRestriction({ type: 'tooFar', subtype: 'characterInteraction' });
 				}
 			} else {
@@ -307,7 +315,7 @@ export class CharacterRestrictionsManager {
 			const playerRoom = this.appearance.getCurrentRoom();
 			if (!this.hasSpaceRole('admin')) {
 				if (playerRoom != null) {
-					if (playerRoom.id !== target.roomState.id && playerRoom.getLinkToRoom(target.roomState) == null) {
+					if (playerRoom.id !== target.roomState.id && !this.canUseRoomLink(playerRoom.getLinkToRoom(target.roomState))) {
 						context.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 					}
 				} else {

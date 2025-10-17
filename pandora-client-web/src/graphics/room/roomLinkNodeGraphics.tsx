@@ -6,7 +6,7 @@ import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react
 import { useEvent } from '../../common/useEvent.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
-import { usePlayerId } from '../../components/gameContext/playerContextProvider.tsx';
+import { usePlayerId, usePlayerRestrictionManager } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
@@ -68,6 +68,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 	const [execute] = useWardrobeExecuteCallback();
 	const playerId = usePlayerId();
 	AssertNotNullable(playerId);
+	const playerRestrictionManager = usePlayerRestrictionManager();
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
 
@@ -251,7 +252,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 
 	// Hide if there is no neighbor room (unless in construction mode)
 	// Also hide if the space has only a single room
-	if (!roomConstructionMode && (neighborRoom == null || nodeData.disabled || !showRoomLinks) ||
+	if (!roomConstructionMode && (neighborRoom == null || !playerRestrictionManager.canUseRoomLink(nodeData) || !showRoomLinks) ||
 		globalState.space.rooms.length < 2
 	) {
 		return null;

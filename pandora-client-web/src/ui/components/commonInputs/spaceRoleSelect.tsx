@@ -2,20 +2,28 @@ import { SpaceRoleOrNoneSchema, SpaceRoleSchema, type SpaceRole, type SpaceRoleO
 import type { ReactElement } from 'react';
 import { SelectSettingInput, type SelectSettingInputProps } from '../../../components/settings/helpers/settingsInputs.tsx';
 
-export const SPACE_ROLE_TEXT: Readonly<Record<SpaceRoleOrNone, string>> = {
-	none: 'None',
+const SPACE_ROLE_NO_NONE_TEXT: Readonly<Record<SpaceRole, string>> = {
 	owner: 'Owner',
 	admin: 'Admin',
 	allowlisted: 'Allowlisted account',
 	everyone: 'Visitor (no role)',
 };
 
-export const SPACE_ROLE_TEXT_CUMULATIVE: Readonly<Record<SpaceRoleOrNone, string>> = {
-	none: 'No one',
+export const SPACE_ROLE_TEXT: Readonly<Record<SpaceRoleOrNone, string>> = {
+	none: 'None',
+	...SPACE_ROLE_NO_NONE_TEXT,
+};
+
+const SPACE_ROLE_NO_NONE_TEXT_CUMULATIVE: Readonly<Record<SpaceRole, string>> = {
 	owner: 'Owners',
 	admin: 'Owners and Admins',
 	allowlisted: 'Owners, Admins, and Allowlisted accounts',
 	everyone: 'Everyone',
+};
+
+export const SPACE_ROLE_TEXT_CUMULATIVE: Readonly<Record<SpaceRoleOrNone, string>> = {
+	none: 'No one',
+	...SPACE_ROLE_NO_NONE_TEXT_CUMULATIVE,
 };
 
 export function SpaceRoleSelectInput({ cumulative = false, ...props }: {
@@ -26,7 +34,7 @@ export function SpaceRoleSelectInput({ cumulative = false, ...props }: {
 		<SelectSettingInput<SpaceRole>
 			{ ...props }
 			schema={ SpaceRoleSchema }
-			stringify={ cumulative ? SPACE_ROLE_TEXT_CUMULATIVE : SPACE_ROLE_TEXT }
+			stringify={ cumulative ? SPACE_ROLE_NO_NONE_TEXT_CUMULATIVE : SPACE_ROLE_NO_NONE_TEXT }
 			optionOrder={ undefined }
 		/>
 	);

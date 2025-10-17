@@ -1,4 +1,4 @@
-import { freeze, Immutable } from 'immer';
+import { freeze, Immutable, produce } from 'immer';
 import { isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
 import * as z from 'zod';
@@ -220,7 +220,12 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 					return template;
 				}),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
-			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
+			roomLinkNodes: CloneDeepMutable(produce(this.roomLinkNodes, (d) => {
+				delete d.left.useMinimumRole;
+				delete d.right.useMinimumRole;
+				delete d.near.useMinimumRole;
+				delete d.far.useMinimumRole;
+			})),
 		};
 	}
 
@@ -416,7 +421,12 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			position: CloneDeepMutable(position),
 			roomGeometryConfig,
 			roomBackground,
-			roomLinkNodes: CloneDeepMutable(template.roomLinkNodes),
+			roomLinkNodes: produce(CloneDeepMutable(template.roomLinkNodes), (d) => {
+				delete d.left.useMinimumRole;
+				delete d.right.useMinimumRole;
+				delete d.near.useMinimumRole;
+				delete d.far.useMinimumRole;
+			}),
 			direction,
 			settings: freeze(CloneDeepMutable(settings), true),
 		}), true);

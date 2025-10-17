@@ -43,6 +43,7 @@ export function ResolveRoomNeighborLinkData(linkConfig: Immutable<RoomNeighborLi
 			direction: 'N', // Will be overwritten before return
 			internalDirection: d,
 			disabled: config.disabled,
+			useMinimumRole: config.useMinimumRole,
 			position: FixRoomPosition(position, background),
 		};
 

@@ -1,5 +1,6 @@
 import { freeze, type Immutable } from 'immer';
 import * as z from 'zod';
+import { SpaceRoleSchema } from '../../space/spaceRoles.ts';
 import type { CardinalDirection } from '../graphics/common.ts';
 
 /*
@@ -21,6 +22,11 @@ export const RoomLinkNodeConfigSchema = z.object({
 	 * Note, that even enabled link might not be usable, e.g. due to no room being in its direction.
 	 */
 	disabled: z.boolean().catch(false),
+	/**
+	 * Minimum space role required to use this room link node.
+	 * @note This property is not saved in room templates and if used as part of it, has no effect.
+	 */
+	useMinimumRole: SpaceRoleSchema.optional().catch(undefined),
 });
 /** A config for a single room link node */
 export type RoomLinkNodeConfig = z.infer<typeof RoomLinkNodeConfigSchema>;

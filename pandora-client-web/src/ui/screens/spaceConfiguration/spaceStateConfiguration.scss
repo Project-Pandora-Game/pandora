@@ -115,6 +115,12 @@
 							background-color: #00aa0088;
 						}
 
+						&.state-limited {
+							border-color: #fff600;
+							background-color: #ad930088;
+							border-style: dashed;
+						}
+
 						&.state-disabled {
 							border-color: #880000;
 							background-color: #88000088;

@@ -292,7 +292,9 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 
 	return (
 		<Wrapper>
-			<label htmlFor={ id }>{ label }</label>
+			{ label != null ? (
+				<label htmlFor={ id }>{ label }</label>
+			) : null }
 			<Row alignY='center'>
 				<Select
 					id={ id }

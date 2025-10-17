@@ -59,10 +59,10 @@ export function ActionMoveCharacter({
 		// And be reachable from both starting point and for current player (ignored for admins)
 		// TODO: Maybe consider setting for this?
 		if (!player.hasSpaceRole('admin')) {
-			if (originalRoom.id !== room.id && originalRoom.getLinkToRoom(room) == null) {
+			if (originalRoom.id !== room.id && !player.canUseRoomLink(originalRoom.getLinkToRoom(room))) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
-			if (playerRoom.id !== room.id && playerRoom.getLinkToRoom(room) == null) {
+			if (playerRoom.id !== room.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(room))) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
 		}
@@ -98,7 +98,7 @@ export function ActionMoveCharacter({
 					return processingContext.invalid('characterMoveCannotFollowTarget');
 				}
 				// And check the follow target is reachable from the current player (not the player following)
-				if (playerRoom.id !== followTargetRoom.id && playerRoom.getLinkToRoom(followTargetRoom) == null) {
+				if (playerRoom.id !== followTargetRoom.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(followTargetRoom))) {
 					processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
 				}
 				// Messages if follow starts

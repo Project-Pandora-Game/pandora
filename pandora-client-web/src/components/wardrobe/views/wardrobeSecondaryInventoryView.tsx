@@ -10,7 +10,7 @@ import {
 	type AppearanceItems,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import deleteIcon from '../../../assets/icons/delete.svg';
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Column } from '../../common/container/container.tsx';
@@ -175,11 +175,8 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 		<Column gap='none'>
 			<div
 				tabIndex={ 0 }
-				className={ classNames('inventoryViewItem', 'listMode', 'allowed') }
+				className={ classNames('inventoryViewItem', 'listMode') }
 				data-asset-id={ asset.id }
-				onClick={ () => {
-					setHeldItem(heldItemSelector);
-				} }
 			>
 				{
 					ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
@@ -202,25 +199,25 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 						/>
 					) : null }
 					{ wardrobeExtraActionButtons ? (
-						<>
-							<WardrobeActionButton action={ {
-								type: 'delete',
-								target,
-								item: itemPath,
-							} }>
-								<img src={ deleteIcon } alt='Delete action' />
-							</WardrobeActionButton>
-							<WardrobeActionButton action={ {
-								type: 'transfer',
-								source: target,
-								item: itemPath,
-								target: quickActionTarget,
-								container: quickActionTargetContainer,
-							} }>
-								◁
-							</WardrobeActionButton>
-						</>
+						<WardrobeActionButton action={ {
+							type: 'transfer',
+							source: target,
+							item: itemPath,
+							target: quickActionTarget,
+							container: quickActionTargetContainer,
+						} }>
+							◁
+						</WardrobeActionButton>
 					) : null }
+					<button
+						className='wardrobeActionButton allowed'
+						onClick={ (ev) => {
+							ev.stopPropagation();
+							setHeldItem(heldItemSelector);
+						} }
+					>
+						<img src={ arrowAllIcon } alt='Quick-action mode' />
+					</button>
 				</div>
 				{
 					isHeld ? (

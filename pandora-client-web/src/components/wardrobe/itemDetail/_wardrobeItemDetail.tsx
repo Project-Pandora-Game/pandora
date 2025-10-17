@@ -163,16 +163,6 @@ export function WardrobeItemConfigMenu({
 							</>
 						)
 					}
-					<WardrobeActionButton
-						action={ {
-							type: 'delete',
-							target: targetSelector,
-							item,
-						} }
-						onExecute={ close }
-					>
-						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
-					</WardrobeActionButton>
 					{
 						!isRoomInventory ? (
 							<WardrobeActionButton
@@ -186,11 +176,21 @@ export function WardrobeItemConfigMenu({
 								onExecute={ close }
 							>
 								<span>
-									<u>▽</u> Store in room
+									<u>▽</u> Remove and store in room
 								</span>
 							</WardrobeActionButton>
 						) : null
 					}
+					<WardrobeActionButton
+						action={ {
+							type: 'delete',
+							target: targetSelector,
+							item,
+						} }
+						onExecute={ close }
+					>
+						<img src={ deleteIcon } alt='Delete action' /> Delete item
+					</WardrobeActionButton>
 				</Row>
 				{
 					(!wornItem.isType('roomDeviceWearablePart')) ? (

@@ -400,19 +400,15 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 						)
 					}
 					{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
-					{
-						singleItemContainer ? null : (
-							<button
-								className='wardrobeActionButton allowed'
-								onClick={ (ev) => {
-									ev.stopPropagation();
-									setHeldItem(heldItemSelector);
-								} }
-							>
-								<img src={ arrowAllIcon } alt='Quick-action mode' />
-							</button>
-						)
-					}
+					<button
+						className='wardrobeActionButton allowed'
+						onClick={ (ev) => {
+							ev.stopPropagation();
+							setHeldItem(heldItemSelector);
+						} }
+					>
+						<img src={ arrowAllIcon } alt='Quick-action mode' />
+					</button>
 				</div>
 				{
 					isHeld ? (

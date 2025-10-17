@@ -615,7 +615,7 @@ function DisplayCharacter({ char, globalState }: {
 				<button onClick={ openMenu }>
 					<span>
 						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
-						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
+						<span><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
 				</button>

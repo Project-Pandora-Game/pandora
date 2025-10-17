@@ -640,11 +640,12 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					highlight: [
 						{
 							query: '.wardrobeActionButton',
-							filter: (e) => e.innerText.includes('Remove and delete'),
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+							filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'delete'),
 						},
 						{
 							query: '.wardrobeActionButton',
-							filter: (e) => e.innerText.includes('Store in room'),
+							filter: (e) => e.innerText.includes('Remove and store in room'),
 						},
 					],
 				},

@@ -618,11 +618,13 @@ $drop-overlay-gap: 0.3em;
 	color: common.$theme-wardrobe-actionbutton-normal-text;
 
 	&.selected {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-selected-background;
 		color: common.$theme-wardrobe-actionbutton-selected-text;
 	}
 
 	&.requiresAttempt:not(:disabled):not(.selected) {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-requiresAttempt-background;
 		color: common.$theme-wardrobe-actionbutton-requiresAttempt-text;
 
@@ -633,6 +635,7 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.pendingAttempt:not(.progressDone) {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-progress-pending;
 		--progress: 0%;
 		background: linear-gradient(
@@ -647,11 +650,8 @@ $drop-overlay-gap: 0.3em;
 		// );
 	}
 
-	:not(:disabled) {
-		cursor: pointer;
-	}
-
 	&.allowed:not(:disabled) {
+		cursor: pointer;
 		&:hover:not(.pendingAttempt:not(.progressDone)) {
 			background: common.$theme-wardrobe-actionbutton-hover-background;
 			color: common.$theme-wardrobe-actionbutton-hover-text;
@@ -669,16 +669,19 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.blocked:not(.selected) {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-blocked-background;
 		color: common.$theme-wardrobe-actionbutton-blocked-text;
 	}
 
 	&.pending:not(.selected) {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-pending-background;
 		color: common.$theme-wardrobe-actionbutton-pending-text;
 	}
 
 	&.promptRequired:not(.selected) {
+		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-promptRequired-background;
 		color: common.$theme-wardrobe-actionbutton-promptRequired-text;
 	}

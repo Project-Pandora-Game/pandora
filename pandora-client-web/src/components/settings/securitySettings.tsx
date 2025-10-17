@@ -7,6 +7,7 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { DEVELOPMENT } from '../../config/Environment.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
 import type { AuthToken } from '../../networking/directoryConnector.ts';
 import { useObservable } from '../../observable.ts';
@@ -310,9 +311,14 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 						name='newPassword'
 						options={ {
 							required: 'New password is required',
-							validate: FormCreateStringValidator(PasswordSchema, 'password'),
+							validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
 						} }
 					/>
+					{
+						DEVELOPMENT ? (
+							<em>Running in development mode.<br />Password restrictions are disabled.</em>
+						) : null
+					}
 					<FormFieldError error={ errors.newPassword } />
 				</FormField>
 				<FormField>

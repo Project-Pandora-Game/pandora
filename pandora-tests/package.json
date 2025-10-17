@@ -17,8 +17,8 @@
 		"playwright-setup-ci": "playwright install --with-deps chromium"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.56.0",
-		"@types/node": "22.18.10",
+		"@playwright/test": "1.56.1",
+		"@types/node": "22.18.11",
 		"nyc": "17.1.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",

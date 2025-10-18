@@ -3,8 +3,7 @@ import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphic
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
-import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
@@ -15,12 +14,10 @@ export function GraphicsLayerText({
 	layer,
 	item,
 	state,
-	characterBlinking,
 }: GraphicsLayerProps<'text'>): ReactElement {
 	const app = usePixiAppOptional();
 
-	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	const dataModule = item?.getModules().get(layer.dataModule);
 	const textModule = (dataModule != null && dataModule instanceof ItemModuleText) ? dataModule : undefined;

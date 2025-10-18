@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import type { GraphicsCharacterLayerBuilder } from '../../../graphics/graphicsCharacter.tsx';
@@ -93,9 +93,9 @@ export function EditorGraphicsResultLayerMesh({
 	const { points: pointTemplate, x, y, width, height } = layer;
 	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
-	const vertices = useLayerVertices(evaluator, points, layer, item).vertices;
+	const vertices = useLayerVertices(evaluator, points, layer).vertices;
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer
@@ -189,9 +189,9 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 	const { points: pointTemplate, x, y, width, height } = layer;
 	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
-	const vertices = useLayerVertices(evaluator, points, layer, item).vertices;
+	const vertices = useLayerVertices(evaluator, points, layer).vertices;
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer
@@ -276,7 +276,6 @@ function EditorGraphicsResultLayerText({
 	layer,
 	item,
 	characterState,
-	characterBlinking,
 	...props
 }: GraphicsLayerProps<'text'>): ReactElement {
 	const editor = useEditor();
@@ -290,8 +289,7 @@ function EditorGraphicsResultLayerText({
 
 	}, [layer]);
 
-	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	const position = useMemo(() => {
 		const point = new PIXI.Point(layer.x, layer.y);
@@ -309,7 +307,6 @@ function EditorGraphicsResultLayerText({
 					layer={ layer }
 					item={ item }
 					characterState={ characterState }
-					characterBlinking={ characterBlinking }
 				/>
 			</EditorUseTextureGetterOverride>
 			{

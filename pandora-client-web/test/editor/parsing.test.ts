@@ -26,13 +26,11 @@ describe('Transforms', () => {
 		value: 10,
 		bone: 'base_bone',
 		condition: [
-			[
-				{
-					bone: 'test_bone',
-					operator: '=',
-					value: 10,
-				},
-			],
+			{
+				bone: 'test_bone',
+				operator: '=',
+				value: 10,
+			},
 		],
 	};
 

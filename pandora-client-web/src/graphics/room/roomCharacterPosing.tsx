@@ -16,7 +16,7 @@ import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { type PointLike } from '../common/point.ts';
@@ -488,8 +488,8 @@ function PosingToolIKHandle({
 		};
 	}, [assetManager, ikHandle, yOffsetExtra, pivot]);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-	const handlePosition = useMemo(() => evaluator.evalTransform([ikHandle.x, ikHandle.y], ikHandle.transforms ?? EMPTY_ARRAY, false, null), [ikHandle, evaluator]);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const handlePosition = useMemo(() => evaluator.evalTransform([ikHandle.x, ikHandle.y], ikHandle.transforms ?? EMPTY_ARRAY), [ikHandle, evaluator]);
 
 	const onMove = useEvent((x: number, y: number): void => {
 		const result = FindInverseKinematicOptimum(
@@ -693,7 +693,7 @@ function PosingToolBone({
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
 	const graphicsRef = useRef<PIXI.Graphics>(null);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	const [posX, posY, angle] = useMemo((): [number, number, number] => {
 		let rotation = evaluator.getBoneLikeValue(definition.name) + (definition.baseRotation ?? 0);
@@ -703,7 +703,7 @@ function PosingToolBone({
 			(definition.y + (definition.uiPositionOffset?.[1] ?? 0));
 		if (definition.parent) {
 			rotation += evaluator.getBoneLikeValue(definition.parent.name);
-			[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }], definition.isMirror, null);
+			[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
 		}
 		if (definition.isMirror) {
 			rotation = 180 - rotation;

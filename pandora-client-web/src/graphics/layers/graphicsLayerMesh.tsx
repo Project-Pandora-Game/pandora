@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { useTexture } from '../useTexture.ts';
@@ -21,7 +21,6 @@ export function GraphicsLayerMesh({
 	debugConfig,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement {
-
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
@@ -29,14 +28,14 @@ export function GraphicsLayerMesh({
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
 
-	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
+	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
 	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
@@ -92,7 +91,7 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 	roomMask?: PixiMaskSource;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {
-	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+	const evaluator = useStandaloneConditionEvaluator();
 
 	const { image, normalMapImage } = useMemo<Immutable<RoomDeviceLayerImageSetting> | Immutable<RoomDeviceLayerImageOverride>>(() => {
 		return layer.image.overrides?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item))) ?? layer.image;

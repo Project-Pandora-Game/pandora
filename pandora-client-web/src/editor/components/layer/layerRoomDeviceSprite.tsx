@@ -32,7 +32,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 	} = useObservable(layer.definition);
 
 	const characterState = useEditorCharacterState();
-	const evaluator = useStandaloneConditionEvaluator(characterState.assetManager);
+	const evaluator = useStandaloneConditionEvaluator();
 	const wornItem = characterState.items
 		.filter((i) => i.isType('roomDeviceWearablePart'))
 		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);

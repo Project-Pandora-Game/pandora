@@ -9,7 +9,7 @@ import { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState }
 import { useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { type PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -35,13 +35,13 @@ export function GraphicsLayerAlphaImageMesh({
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
 
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false).vertices;
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const alphaImage = image;
 	const alphaMesh = useMemo(() => ({

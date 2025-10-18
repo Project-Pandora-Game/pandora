@@ -1,10 +1,10 @@
 import type { Immutable } from 'immer';
-import { AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type Item, type LayerImageSetting, type Rectangle, type WearableAssetType } from 'pandora-common';
+import { APPEARANCE_POSE_DEFAULT, AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type Item, type LayerImageSetting, type Rectangle, type WearableAssetType } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { SCALING_IMAGE_UV_EMPTY, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
@@ -147,11 +147,11 @@ export function SetupMeshLayerSelected({
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
@@ -255,11 +255,11 @@ export function SetupAlphaImageMeshLayerSelected({
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();
@@ -337,7 +337,6 @@ export function SetupAlphaImageMeshLayerSelected({
 
 export function SetupAutomeshLayerSelected({
 	characterState,
-	item,
 	zIndex,
 	layer,
 }: {
@@ -376,8 +375,8 @@ export function SetupAutomeshLayerSelected({
 		pointType,
 	});
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, SCALING_IMAGE_UV_EMPTY);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, APPEARANCE_POSE_DEFAULT);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();

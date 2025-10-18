@@ -31,7 +31,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts';
-import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, type CharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
@@ -93,9 +93,9 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
 	/** Appearance condition evaluator for the character */
-	evaluator: AppearanceConditionEvaluator;
+	evaluator: CharacterPoseEvaluator;
 } {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	let baseScale = 1;
 	if (evaluator.pose.legs.pose === 'sitting') {
@@ -160,8 +160,9 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 		yOffset,
 		pivot,
 		rotationAngle,
-		evaluator,
 	} = useRoomCharacterOffsets(characterState);
+
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 

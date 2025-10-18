@@ -14,7 +14,7 @@ import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent } from 'pixi.js';
 import { ReactElement, useMemo, useRef } from 'react';
 import { useEvent } from '../../common/useEvent.ts';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
+import { useCharacterPoseEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
 import { GetAngle, RotateVector } from '../../graphics/utility.ts';
 import { DotGraphics } from '../../graphics/utility/dotGraphics.tsx';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable.ts';
@@ -196,14 +196,14 @@ export function DraggableBone({
 	characterState: AssetFrameworkCharacterState;
 	type: 'setup' | 'result';
 }): ReactElement {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {
 			let bx = definition.x;
 			let by = definition.y;
 			if (definition.parent) {
-				[bx, by] = evaluator.evalTransform([bx, by], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }], definition.isMirror, null);
+				[bx, by] = evaluator.evalTransform([bx, by], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
 			}
 			let angle = GetAngle(x - bx, y - by);
 			if (definition.isMirror) {
@@ -228,7 +228,7 @@ export function DraggableBone({
 			let y = definition.y;
 			if (definition.parent) {
 				angle += evaluator.getBoneLikeValue(definition.parent.name);
-				[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }], definition.isMirror, null);
+				[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
 			}
 			if (definition.isMirror) {
 				angle = 180 - angle;

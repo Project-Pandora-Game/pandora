@@ -335,11 +335,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirectionObservable swap={ swapCullingScale }>
 					<Container zIndex={ 0 }>
-						{
-							sortOrder.flatMap((priority) => {
-								return priorityLayers.get(priority) ?? null;
-							})
-						}
+						{ sortOrder.flatMap((priority) => priorityLayers.get(priority) ?? null) }
 					</Container>
 					{ children }
 				</SwapCullingDirectionObservable>

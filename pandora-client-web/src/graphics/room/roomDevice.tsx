@@ -36,7 +36,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
-import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -731,7 +731,7 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement | null {
 
-	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+	const evaluator = useStandaloneConditionEvaluator();
 
 	const image = useMemo<string>(() => {
 		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
@@ -857,8 +857,9 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 		baseScale,
 		pivot,
 		rotationAngle,
-		evaluator,
 	} = useRoomCharacterOffsets(characterState);
+
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const {
 		position,

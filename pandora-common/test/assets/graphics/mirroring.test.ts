@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import type { Coordinates } from '../../../src/assets/graphics/common.ts';
-import type { AtomicCondition, Condition } from '../../../src/assets/graphics/conditions.ts';
-import { MirrorBoneLike, MirrorCondition, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
+import type { AtomicPoseCondition, Condition, PoseCondition } from '../../../src/assets/graphics/conditions.ts';
+import { MirrorAtomicPoseCondition, MirrorBoneLike, MirrorCondition, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
 import type { TransformDefinition } from '../../../src/assets/graphics/points.ts';
 
 describe('MirrorBoneLike()', () => {
@@ -88,22 +88,22 @@ describe('MirrorTransform()', () => {
 		['const-rotate', 'test_l', -100, 'test_r', 100, undefined],
 	])(
 		'should %p bone: %p, value: %p into bone: %p, value: %p',
-		(type, ibone, ivalue, ebone, evalue, condition) => {
+		(type, ibone, ivalue, ebone, evalue, condition: PoseCondition | undefined) => {
 			const input = SetupTransform(ibone, type as 'rotate' | 'shift', condition, ivalue);
-			const exp = SetupTransform(ebone, type as 'rotate' | 'shift', MirrorCondition(condition), evalue);
+			const exp = SetupTransform(ebone, type as 'rotate' | 'shift', condition?.map(MirrorAtomicPoseCondition), evalue);
 			expect(MirrorTransform(input)).toStrictEqual(exp);
 		},
 	);
 
-	const conditions: AtomicCondition = {
+	const conditions: AtomicPoseCondition = {
 		bone: 'test_l',
 		operator: '=',
 		value: 0,
 	};
 
 	it('should mirror condition', () => {
-		const input = SetupTransform('test', 'rotate', [[conditions]], 100);
-		const exp = SetupTransform('test', 'rotate', MirrorCondition([[conditions]]), -100);
+		const input = SetupTransform('test', 'rotate', [conditions], 100);
+		const exp = SetupTransform('test', 'rotate', [MirrorAtomicPoseCondition(conditions)], -100);
 		expect(MirrorTransform(input)).toStrictEqual(exp);
 	});
 

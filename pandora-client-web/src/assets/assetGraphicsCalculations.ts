@@ -1,15 +1,17 @@
-import { Immutable } from 'immer';
+import { Immutable, produce } from 'immer';
 import { maxBy, minBy } from 'lodash-es';
 import {
+	APPEARANCE_POSE_DEFAULT,
 	Assert,
 	BitField,
-	BoneName,
 	CalculatePointsTrianglesFlat,
 	CloneDeepMutable,
 	Item,
 	LayerImageSetting,
 	MakeMirroredPoints,
 	PointDefinition,
+	ProduceAppearancePose,
+	type AppearancePose,
 	type GraphicsLayer,
 	type PointDefinitionCalculated,
 	type PointTemplate,
@@ -23,36 +25,31 @@ import { useObservable } from '../observable.ts';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolutionHooks.ts';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
 
-/** Constant for the most common case, so caches can just use reference to this object. */
-export const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
 export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
 	{ image: scalingBaseimage, scaling }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image' | 'scaling'>,
 	item: Item | null,
-): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; normalMapImage?: string; imageUv: Record<BoneName, number>; }> {
-	const [setting, scalingUv] = useMemo((): Immutable<[LayerImageSetting, scalingUv: Record<BoneName, number>]> => {
+): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; normalMapImage?: string; imageUvPose: Immutable<AppearancePose>; }> {
+	const [setting, imageUvPose] = useMemo((): Immutable<[LayerImageSetting, imageUvPose: Immutable<AppearancePose>]> => {
 		if (scaling) {
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
+			const value = evaluator.poseEvaluator.getBoneLikeValue(scaling.scaleBone);
 			// Find the best matching scaling override
+			let best: Immutable<[number, LayerImageSetting]> | undefined;
 			if (value > 0) {
-				const best = maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0]);
-				if (best != null) {
-					return [
-						best[1],
-						{ [scaling.scaleBone]: best[0] },
-					];
-				}
+				best = maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0]);
 			} else if (value < 0) {
-				const best = minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0]);
-				if (best != null) {
-					return [
-						best[1],
-						{ [scaling.scaleBone]: best[0] },
-					];
-				}
+				best = minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0]);
+			}
+			if (best != null) {
+				return [
+					best[1],
+					produce(APPEARANCE_POSE_DEFAULT, (d) => {
+						d.bones[scaling.scaleBone] = best[0];
+					}),
+				];
 			}
 		}
-		return [scalingBaseimage, SCALING_IMAGE_UV_EMPTY];
+		return [scalingBaseimage, APPEARANCE_POSE_DEFAULT];
 	}, [evaluator, scaling, scalingBaseimage]);
 
 	return useMemo((): ReturnType<typeof useLayerImageSource> => {
@@ -62,12 +59,13 @@ export function useLayerImageSource(
 			setting,
 			image: resultSetting.image,
 			normalMapImage: resultSetting.normalMapImage,
-			imageUv: resultSetting.uvPose ? {
-				...resultSetting.uvPose,
-				...scalingUv,
-			} : scalingUv,
+			imageUvPose: resultSetting.uvPose ? ProduceAppearancePose(
+				imageUvPose,
+				{ assetManager: evaluator.poseEvaluator.assetManager },
+				resultSetting.uvPose,
+			) : imageUvPose,
 		};
-	}, [evaluator, item, setting, scalingUv]);
+	}, [evaluator, item, setting, imageUvPose]);
 }
 
 const calculatedPointsCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinitionCalculated[]>>();

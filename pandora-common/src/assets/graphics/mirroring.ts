@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { Assert, AssertNever } from '../../utility/misc.ts';
-import type { Condition } from './conditions.ts';
+import type { AtomicCondition, AtomicPoseCondition, Condition } from './conditions.ts';
 import { CharacterSize } from './graphics.ts';
 import type { LayerImageOverride, LayerImageSetting } from './layers/common.ts';
 import type { PointDefinition, TransformDefinition } from './points.ts';
@@ -16,60 +16,67 @@ export function MirrorBoneLike<T extends Maybe<string>>(bone: T): T {
 	return bone?.replace(/_[lr]$/, (m) => m === '_l' ? '_r' : '_l') as T;
 }
 
+export function MirrorAtomicPoseCondition(c: Immutable<AtomicPoseCondition>): AtomicPoseCondition {
+	if ('bone' in c) {
+		Assert(c.bone != null);
+		return {
+			...c,
+			bone: MirrorBoneLike(c.bone),
+		};
+	} else if ('armType' in c) {
+		Assert(c.armType != null);
+		return {
+			...c,
+			side: c.side === 'left' ? 'right' : 'left',
+		};
+	} else if ('legs' in c) {
+		Assert(c.legs != null);
+		return {
+			...c,
+		};
+	} else if ('view' in c) {
+		Assert(c.view != null);
+		return {
+			...c,
+		};
+	}
+	AssertNever(c);
+}
+
+export function MirrorAtomicCondition(c: Immutable<AtomicCondition>): AtomicCondition {
+	if ('module' in c) {
+		Assert(c.module != null);
+		return {
+			...c,
+			module: MirrorBoneLike(c.module),
+		};
+	} else if ('attribute' in c) {
+		Assert(c.attribute != null);
+		return {
+			...c,
+		};
+	} else if ('blinking' in c) {
+		Assert(c.blinking != null);
+		return {
+			...c,
+		};
+	}
+
+	return MirrorAtomicPoseCondition(c);
+}
+
 export function MirrorCondition(condition: Immutable<Condition>): Condition;
 export function MirrorCondition(condition: Immutable<Condition> | undefined): Condition | undefined;
 export function MirrorCondition(condition: Immutable<Condition> | undefined): Condition | undefined {
 	if (!condition)
 		return undefined;
 
-	return condition.map((cause) => cause.map((c) => {
-		if ('bone' in c) {
-			Assert(c.bone != null);
-			return {
-				...c,
-				bone: MirrorBoneLike(c.bone),
-			};
-		} else if ('module' in c) {
-			Assert(c.module != null);
-			return {
-				...c,
-				module: MirrorBoneLike(c.module),
-			};
-		} else if ('armType' in c) {
-			Assert(c.armType != null);
-			return {
-				...c,
-				side: c.side === 'left' ? 'right' : 'left',
-			};
-		} else if ('attribute' in c) {
-			Assert(c.attribute != null);
-			return {
-				...c,
-			};
-		} else if ('legs' in c) {
-			Assert(c.legs != null);
-			return {
-				...c,
-			};
-		} else if ('view' in c) {
-			Assert(c.view != null);
-			return {
-				...c,
-			};
-		} else if ('blinking' in c) {
-			Assert(c.blinking != null);
-			return {
-				...c,
-			};
-		} else {
-			AssertNever(c);
-		}
-	}));
+	return condition.map((cause) => cause.map(MirrorAtomicCondition));
 }
 
 export function MirrorTransform(transform: Immutable<TransformDefinition>): TransformDefinition {
 	const type = transform.type;
-	const condition = MirrorCondition(transform.condition);
+	const condition = transform.condition?.map(MirrorAtomicPoseCondition);
 	switch (type) {
 		case 'const-rotate': {
 			const rotate = transform.value;

@@ -7,7 +7,6 @@ import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
@@ -86,10 +85,12 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 	item,
 	layer,
 	roomMask,
+	getFilters,
 }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
 	roomMask?: PixiMaskSource;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {
 	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
 
@@ -127,8 +128,7 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
 

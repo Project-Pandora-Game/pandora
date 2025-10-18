@@ -43,7 +43,7 @@ import { Sprite } from '../baseComponents/sprite.ts';
 import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
+import { useCharacterDisplayFilters, usePlayerVisionFilters, usePlayerVisionFiltersFactory } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -560,8 +560,8 @@ export function RoomDevice({
 				characters={ characters }
 				globalState={ globalState }
 				item={ item }
-				position={ { x, y: y - yOffsetExtra } }
-				scale={ { x: scale, y: scale } }
+				position={ useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]) }
+				scale={ useMemo((): PointLike => ({ x: scale, y: scale }), [scale]) }
 				pivot={ pivot }
 				hitArea={ hitArea }
 				eventMode={ eventMode }
@@ -675,6 +675,8 @@ function RoomDeviceGraphicsWithManager({
 		return graphics.layers;
 	}, [asset, graphicsGetter]);
 
+	const filters = usePlayerVisionFiltersFactory(false);
+
 	return (
 		<Container
 			{ ...graphicsProps }
@@ -692,20 +694,18 @@ function RoomDeviceGraphicsWithManager({
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				<Container zIndex={ 0 }>
-					{
-						layers.map((layer, i) => {
-							if (layer.type === 'sprite') {
-								return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } />;
-							} else if (layer.type === 'slot') {
-								return <GraphicsLayerRoomDeviceSlot key={ i } globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
-							} else if (layer.type === 'text') {
-								return <GraphicsLayerRoomDeviceText key={ i } item={ item } layer={ layer } />;
-							} else if (layer.type === 'mesh') {
-								return <GraphicsLayerRoomDeviceMesh key={ i } item={ item } layer={ layer } roomMask={ roomMask } />;
-							}
-							AssertNever(layer);
-						})
-					}
+					{ useMemo(() => layers.map((layer, i) => {
+						if (layer.type === 'sprite') {
+							return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
+						} else if (layer.type === 'slot') {
+							return <GraphicsLayerRoomDeviceSlot key={ i } globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
+						} else if (layer.type === 'text') {
+							return <GraphicsLayerRoomDeviceText key={ i } item={ item } layer={ layer } getFilters={ filters } />;
+						} else if (layer.type === 'mesh') {
+							return <GraphicsLayerRoomDeviceMesh key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
+						}
+						AssertNever(layer);
+					}), [layers, item, roomMask, filters, characters, globalState]) }
 				</Container>
 				{ children }
 			</SwapCullingDirection>
@@ -724,10 +724,11 @@ function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null
 	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
 
-const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
+const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask, getFilters }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
 	roomMask?: PixiMaskSource;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement | null {
 
 	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
@@ -749,8 +750,7 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
 

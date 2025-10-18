@@ -17,7 +17,7 @@ export function GraphicsBackground({
 	zIndex,
 }: {
 	background: Immutable<RoomBackgroundData>;
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	if (background.graphics.type === 'image') {
@@ -51,7 +51,7 @@ function GraphicsBackgroundImage({
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: 'image'; }>>;
 	backgroundSize: readonly [number, number];
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	const backgroundResult = useMemo<{
@@ -117,7 +117,7 @@ function GraphicsBackground3DBox({
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: '3dBox'; }>>;
 	background: Immutable<RoomBackgroundData>;
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	const projection = useRoomViewProjection(background);

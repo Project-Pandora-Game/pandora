@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { EMPTY_ARRAY, PANDORA_FONTS, type RoomDeviceGraphicsLayerText, type ItemRoomDevice } from 'pandora-common';
+import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphicsLayerText } from 'pandora-common';
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
@@ -7,7 +7,6 @@ import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
@@ -98,9 +97,11 @@ export function GraphicsLayerText({
 export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceText({
 	layer,
 	item,
+	getFilters,
 }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerText>;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {
 	const app = usePixiAppOptional();
 
@@ -126,8 +127,7 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	useLayoutEffect(() => {
 		const sprite = ref.current;

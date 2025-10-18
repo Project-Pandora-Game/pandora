@@ -83,6 +83,7 @@ export function WikiCharacters(): ReactElement {
 			<ul>
 				<li>You can lead several characters at the same time, but you cannot chain following characters.</li>
 				<li>A character can follow another character within the same space, but Pandora will not allow to automatically follow into another space.</li>
+				<li>A character that has access to a role-restricted pathway can lead another character into the linked room that they would not have been able to move to on their own.</li>
 				<li>While having the according <Link to='#CH_Character_permissions'>permission</Link>, other characters are also able to move your character.</li>
 				<li>Space admins are always permitted to move other characters inside their rooms.</li>
 				<li>
@@ -91,7 +92,7 @@ export function WikiCharacters(): ReactElement {
 				</li>
 				<li>If you have problems dragging the name because it is too small, you can zoom in with mouse wheel or pinch-to-zoom gesture.</li>
 				<li>Items can prevent character movement.</li>
-				<li>Characters can also by rotated by up to 360 degrees in the "Pose"-tab.</li>
+				<li>Characters can also be rotated by up to 360 degrees in the "Pose"-tab.</li>
 				<li>
 					The "Character Y Offset" value inside the "Pose"-tab can shift your character upwards and downwards alongside the z-axis
 					without changing your character's relative size in an unrealistic way.

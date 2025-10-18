@@ -55,8 +55,9 @@ export function WikiSpaces(): ReactElement {
 			<h4 id='SP_Multiple_rooms'>Multiple rooms per space</h4>
 			<p>
 				The up to { LIMIT_SPACE_ROOM_COUNT } rooms per space are freely placed on a rectangular grid by the space's admins to create a layout/map of the space.
-				This grid is also used to move between rooms and can be found under the "Room"-tab. A character can only move to a room that is a direct
-				neighbor of the current room in the four cardinal directions. So, for instance, if there is a gap on the grid between the current room and the room to the west, you
+				This grid is also used to move between rooms and can be found under the "Room"-tab, though it only shows neighboring rooms when there is an accessible path.
+				A character can only move to a room that is a direct neighbor of the current room in the four cardinal directions.
+				So, for instance, if there is a gap on the grid between the current room and the room to the west, you
 				cannot move to that room, unless there is another path through a chain of rooms. Admins of a space can freely move their character
 				or other characters, though. They can also interact with all room inventories from everywhere.<br />
 				Note that rooms are not a privacy barrier and the chat is space-wide, so every message can be seen from every room of the same space.
@@ -73,6 +74,10 @@ export function WikiSpaces(): ReactElement {
 				<li>
 					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
 					"Room" tab, or by using the '/moveto' command.
+				</li>
+				<li>
+					A path is not shown if there is no neighboring room in the cardinal direction this path leads to, if the path is disabled (e.g. representing a wall between two rooms), or
+					if the path is usage restricted based on roles, such as "admin" or "allowed user", defined in the space configuration's rights management tab.
 				</li>
 			</ul>
 

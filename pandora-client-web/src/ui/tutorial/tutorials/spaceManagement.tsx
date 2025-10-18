@@ -1,6 +1,6 @@
+import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 import { Link } from 'react-router';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
-import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 
 export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 	id: 'spaceManagement',
@@ -61,17 +61,17 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 						<>
 							<p>
 								Your personal space works almost identically to the online spaces for multiple characters that you can create.
-								That means that you can decorate it with persistent room-level items and add more rooms to it, as
-								every space comes with a single room from the start.
+								That means that you can customize backgrounds, decorate the space with persistent room-level items, and add
+								more rooms to it. Every space comes with a single room from the start.
 							</p>
 							<p>
 								You may already be familiar with how to create new spaces and how to manage and use room devices from
 								the <Link to='/wiki/new'>new user guide</Link> in Pandora's wiki.
 							</p>
 							<p>
-								To quickly recap: Only in a room's inventory, you can create room-level items. To make them show in the room,
-								you need to select the item in the room inventory and then "Deploy the device". Afterwards,
-								in the room view, you need to toggle on "Enable room construction mode", to be able to move
+								To quickly recap: You can create room-level items only in a room's inventory. To make them show in the room,
+								you need to select the item in the room inventory and then press "Deploy the device". Afterwards,
+								in the room view, you need to toggle on "Enable room construction mode". This enables you to move
 								deployed room-level items for arranging them on the background, by clicking on the red icons.<br />
 								We will not dive deeper into this topic as part of this tutorial, though. Let's proceed instead.
 							</p>
@@ -114,9 +114,10 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								In a space for multiple characters, the button to do this is called "Space configuration".
 								Aside from being able to manage the space's room layout, the space configuration screen also
 								has tabs to change the general settings of such a space
-								(such as name, size, space description, and entry message) and to manage the
+								(such as name, size, space description, and entry message), to manage the
 								space's rights (such as who is admin, who are allowed users with special access rights,
-								and if and when offline characters are removed).
+								and if and when offline characters are removed), and to configure space-wide
+								features (such as who is allowed to manage the rooms of the space).
 							</p>
 							<p>
 								In your personal space, though, you only have a button to change the space layout.<br />
@@ -195,10 +196,10 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								You are now on the room management view. It consists of two sections:<br />
+								You are now in the room management view. It consists of two sections:<br />
 								The top section shows a map of all rooms on a grid on the left and on the
 								right is an ordered list of all rooms in the space. The top entry in this
-								list is the room characters always enter the space in.
+								list is the room where characters always enter the space in.
 							</p>
 							<p>
 								Note: A space can contain up to { LIMIT_SPACE_ROOM_COUNT } rooms and every
@@ -273,14 +274,101 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
+								But first, please take note of the "Default room settings" button top right.
+								Feel free to click on it.
+							</p>
+							<p>
+								It opens an overlay that lets you change the default room settings that
+								apply to all rooms of the space, but can be overridden by the according
+								setting for each room individually.
+							</p>
+							<p>
+								These are settings such as who can deploy/undeploy, move, and color room devices
+								or who is allowed to create new items inside a room.
+							</p>
+							<p>
+								If you have opened the default room settings view, please close it again now.
+								Then, let us proceed with the configuration of individual rooms next.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.Button',
+							filter: (e) => e.innerText.includes('Default room settings'),
+						},
+					],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the room screen.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <p>Open the "Personal Space" tab.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							Please press the button "Change space layout".
+						</p>
+					),
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.dialog-content .Button[title="Close"]',
+					}],
+					highlight: [
+						{
+							query: '.Button',
+							filter: (e) => e.innerText.includes('space layout'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							Select any room to show the room configuration section.
+						</p>
+					),
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomConfiguration .wardrobeActionButton',
+						filter: (e) => e.innerText.includes('Reorder higher'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
 								The buttons at the top allow you to reorder the rooms inside the top right list.
 								This order is also used for the list of rooms in the "Room" tab. As said, if you
 								want to set a room to be the one characters appear in first when joining the space,
 								you need to move it to the top of the list.
 							</p>
 							<p>
-								Next to those buttons, there is one to delete a room from the space. This can only be done if no character is inside it.<br />
-								The last button allows you to export the room with its settings and the complete room
+								Next to those buttons, there is one to delete a room from the space. This can only be done if
+								no character is inside it.<br />
+								The "Export" button allows you to export the room with its settings and the complete room
 								inventory as a template.
 							</p>
 							<p>
@@ -288,6 +376,10 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								or you can save it as a text file alongside a preview image of the room.
 								Feel free to share your exported room templates in the #pandora&#8209;templates channel
 								on Pandora's Discord with other users.
+							</p>
+							<p>
+								The last button allows you to deviate from the space's default room settings for
+								this particular room.
 							</p>
 							<p>
 								For now let's proceed.
@@ -621,7 +713,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The last section "Position of links to other room" on the bottom lets you manage the
+								The last section "Paths to other room" on the bottom lets you manage the
 								room's path squares, which are small areas on the floor that let characters
 								enter and leave a room towards a neighboring one.
 							</p>
@@ -635,6 +727,16 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								directions (North, South, West, East) printed on them to identify in which direction a path
 								is leading to. The letter is especially important for orientation if the room was rotated
 								and the far side is not north as it is usually.
+							</p>
+							<p>
+								Additionally, you can set who can use each path.<br />
+								A path is not shown in the room if there is no neighboring room in the
+								cardinal direction this path leads to, if the path is disabled,
+								or if the path's usage is restricted for your user account's role,
+								such as "admin" or "allowed user",
+								defined in the space configuration's rights management tab.<br />
+								That said, limiting a path's usage in your personal space makes not much sense,
+								as you will always be its owner and no other character can enter it.
 							</p>
 							<p>
 								Note: Sometimes, in very large rooms, the path squares can be hard to identify.
@@ -982,12 +1084,16 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								Pressing on the square itself switches it between enabled and disabled.
 								Disabling squares can make sense if you want normal users to be unable to move to
 								a neighboring room in that direction. For example, because you consider a door or
-								hatch to be locked or to simulate a wall with no path between two bordering rooms.
+								hatch to be locked or to simulate a wall with no path between two bordering rooms.<br />
+								Users who cannot use a path because they do not have the set role cannot see the
+								path square as well and neither see the room on the minimap.
 							</p>
 							<p>
-								Note that if you do not disable the path square in the neighboring room as well, you
-								create a one way path that cannot be used to go back to the previous room.
-								You can also create trap rooms like this, but a character can leave a space from
+								Note that if you do not disable the path square in the neighboring room as well
+								or restrict their use,
+								you create a one way path that cannot be used to go back to the previous room.
+								You can also create trap rooms like this.<br />
+								That said, a character can leave a space from
 								any room without having to go back to the starting room, unless there is an effect
 								applied that prevents leaving the space generally or while in specific rooms, like
 								through character modifiers, or while inside room devices.
@@ -1004,7 +1110,8 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					text: (
 						<p>
 							Note that if you make another user's account admin in your space, they can also manage
-							the space in all the ways described in this tutorial, including adding more admins or
+							the space in all the ways described in this tutorial (unless the space configuration was
+							changed from the default), including adding more admins or
 							deleting them. But they cannot remove you or any other owners. Space owners always
 							have admin rights implicitly.
 						</p>

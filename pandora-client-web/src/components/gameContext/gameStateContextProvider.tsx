@@ -945,14 +945,17 @@ export function useChatCharacterStatus(): { data: ICharacterRoomData; status: Ch
 export function useGlobalState(context: GameState): AssetFrameworkGlobalState;
 export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null;
 export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null {
-	return useSyncExternalStore((onChange) => {
-		if (context == null)
-			return noop;
+	return useSyncExternalStore(
+		useCallback((onChange) => {
+			if (context == null)
+				return noop;
 
-		return context.on('globalStateChange', () => {
-			onChange();
-		});
-	}, () => (context?.globalState.currentState ?? null));
+			return context.on('globalStateChange', () => {
+				onChange();
+			});
+		}, [context]),
+		useCallback(() => (context?.globalState.currentState ?? null), [context]),
+	);
 }
 
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {

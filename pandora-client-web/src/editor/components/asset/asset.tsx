@@ -476,13 +476,16 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
-	const alphaIndex = useSyncExternalStore<number>((changed) => {
-		return editor.on('layerOverrideChange', (changedLayer) => {
-			if (changedLayer === layer) {
-				changed();
-			}
-		});
-	}, () => editor.getLayersAlphaOverrideIndex(layer));
+	const alphaIndex = useSyncExternalStore<number>(
+		useCallback((changed) => {
+			return editor.on('layerOverrideChange', (changedLayer) => {
+				if (changedLayer === layer) {
+					changed();
+				}
+			});
+		}, [editor, layer]),
+		useCallback(() => editor.getLayersAlphaOverrideIndex(layer), [editor, layer]),
+	);
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 

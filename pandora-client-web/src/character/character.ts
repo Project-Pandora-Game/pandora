@@ -93,13 +93,17 @@ export type CharacterEvents<T extends ICharacterRoomData> = {
 };
 
 export function useCharacterData<T extends ICharacterRoomData>(character: Character<T>): Readonly<T> {
-	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
+	return useSyncExternalStore(
+		useMemo(() => character.getSubscriber('update'), [character]),
+		useCallback(() => character.data, [character]),
+	);
 }
 
 export function useCharacterDataOptional<T extends ICharacterRoomData>(character: Character<T> | null): Readonly<T> | null {
-	const subscriber = useMemo(() => (character?.getSubscriber('update') ?? (() => noop)), [character]);
-
-	return useSyncExternalStore(subscriber, () => (character?.data ?? null));
+	return useSyncExternalStore(
+		useMemo(() => (character?.getSubscriber('update') ?? (() => noop)), [character]),
+		useCallback(() => (character?.data ?? null), [character]),
+	);
 }
 
 const MULTIPLE_DATA_CACHE = new WeakMap<readonly Character[], readonly Readonly<ICharacterRoomData>[]>();

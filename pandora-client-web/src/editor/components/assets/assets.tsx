@@ -1,6 +1,6 @@
 import classNames from 'classnames';
-import { Assert, AssertNotNullable, Asset, AssetId, GetLogger, Item } from 'pandora-common';
-import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
+import { Assert, AssertNotNullable, Asset, AssetId, EMPTY_ARRAY, GetLogger, Item } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
@@ -221,9 +221,12 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	const asset = item.asset;
 	const editorAssetGraphics = useObservable(EditorAssetGraphicsManager.editedAssetGraphics).get(asset.id);
 	const editorAssetGraphicsWorn = (editorAssetGraphics != null && editorAssetGraphics instanceof EditorAssetGraphicsWorn) ? editorAssetGraphics : null;
-	const layers = useNullableObservable(editorAssetGraphicsWorn?.layers) ?? [];
+	const layers = useNullableObservable(editorAssetGraphicsWorn?.layers) ?? EMPTY_ARRAY;
 
-	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...layers));
+	const alphaIndex = useSyncExternalStore<number>(
+		useMemo(() => editor.getSubscriber('layerOverrideChange'), [editor]),
+		useCallback(() => editor.getLayersAlphaOverrideIndex(...layers), [editor, layers]),
+	);
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
@@ -267,13 +270,16 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 
 function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement {
 	const editor = useEditor();
-	const alphaIndex = useSyncExternalStore<number>((changed) => {
-		return editor.on('layerOverrideChange', (changedLayer) => {
-			if (changedLayer === layer) {
-				changed();
-			}
-		});
-	}, () => editor.getLayersAlphaOverrideIndex(layer));
+	const alphaIndex = useSyncExternalStore<number>(
+		useCallback((changed) => {
+			return editor.on('layerOverrideChange', (changedLayer) => {
+				if (changedLayer === layer) {
+					changed();
+				}
+			});
+		}, [editor, layer]),
+		useCallback(() => editor.getLayersAlphaOverrideIndex(layer), [editor, layer]),
+	);
 
 	const tint = useEditorLayerTint(layer);
 	const visibleName = useLayerName(layer);

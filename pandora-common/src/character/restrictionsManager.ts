@@ -24,7 +24,9 @@ import { Assert, AssertNever, IsNotNullable, MemoizeNoArg } from '../utility/mis
 import { ItemInteractionType } from './restrictionTypes.ts';
 
 /**
- * All functions should return a stable value, or useSyncExternalStore will not work properly.
+ * This classes allows for calculating what is character allowed to do.
+ * The returned values are based off of the character state at the moment of creation and will not change while it exists.
+ * To get a new result, get a new restriction manager based on newer character state.
  */
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;

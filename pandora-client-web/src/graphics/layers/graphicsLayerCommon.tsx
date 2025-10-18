@@ -102,10 +102,8 @@ export function useLayerVertices(
 	}, [layerArea, evaluator, item, points, normalize]);
 }
 
-export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> extends ChildrenProps {
+export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> {
 	characterState: AssetFrameworkCharacterState;
-	zIndex: number;
-	lowerZIndex: number;
 	layer: Immutable<Extract<GraphicsLayer, { type: TLayerType; }>>;
 	item: Item | null;
 

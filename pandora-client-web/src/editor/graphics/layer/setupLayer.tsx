@@ -8,26 +8,90 @@ import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceCon
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
-import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
+import type { GraphicsCharacterLayerBuilder } from '../../../graphics/graphicsCharacter.tsx';
+import { GraphicsLayerAlphaImageMesh } from '../../../graphics/layers/graphicsLayerAlphaImageMesh.tsx';
+import { useItemColor, useLayerVertices } from '../../../graphics/layers/graphicsLayerCommon.tsx';
+import { GraphicsLayerMesh } from '../../../graphics/layers/graphicsLayerMesh.tsx';
+import { GraphicsLayerText } from '../../../graphics/layers/graphicsLayerText.tsx';
 import { usePixiApp } from '../../../graphics/reconciler/appContext.ts';
 import { GetTextureBoundingBox } from '../../../graphics/utility/textureBoundingBox.ts';
 import { useObservable } from '../../../observable.ts';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
-export function SetupLayer({
-	...props
-}: GraphicsLayerProps): ReactElement {
-	return (
-		<EditorLayer
-			{ ...props }
-			displayUvPose
-		/>
-	);
-}
+export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, characterState, characterBlinking, debugConfig) {
+	switch (layer.layer.type) {
+		case 'mesh': {
+			previousLayers ??= [];
+			const res = (
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerMesh
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						characterState={ characterState }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					/>
+				</EditorUseTextureGetterOverride>
+			);
+			if (reverse) {
+				previousLayers.unshift(res);
+			} else {
+				previousLayers.push(res);
+			}
+			return previousLayers;
+		}
+		case 'alphaImageMesh': {
+			return [
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerAlphaImageMesh
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						characterState={ characterState }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					>
+						{ previousLayers }
+					</GraphicsLayerAlphaImageMesh>
+				</EditorUseTextureGetterOverride>,
+			];
+		}
+		case 'text': {
+			previousLayers ??= [];
+			const res = (
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerText
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						characterState={ characterState }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					/>
+				</EditorUseTextureGetterOverride>
+			);
+			if (reverse) {
+				previousLayers.unshift(res);
+			} else {
+				previousLayers.push(res);
+			}
+			return previousLayers;
+		}
+	}
+	AssertNever(layer.layer);
+};
 
 export function SetupLayerSelected({
 	layer,

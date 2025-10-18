@@ -437,13 +437,16 @@ function RoomCharacterDisplay({
 		setHover(false);
 	}, []);
 
+	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
+	const innserScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
+
 	if (roomDeviceLink != null)
 		return null;
 
 	return (
 		<TransitionedContainer
 			position={ position }
-			scale={ { x: scale, y: scale } }
+			scale={ scale }
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
@@ -461,8 +464,8 @@ function RoomCharacterDisplay({
 		>
 			<GraphicsCharacter
 				characterState={ characterState }
-				position={ { x: 0, y: -yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
+				position={ innerPosition }
+				scale={ innserScale }
 				pivot={ pivot }
 				angle={ rotationAngle }
 				useBlinking

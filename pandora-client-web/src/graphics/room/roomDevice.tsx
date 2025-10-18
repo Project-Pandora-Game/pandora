@@ -22,13 +22,13 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
-import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
@@ -691,23 +691,22 @@ function RoomDeviceGraphicsWithManager({
 			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-				{
-					layers.map((layer, i) => {
-						let graphics: ReactElement;
-						if (layer.type === 'sprite') {
-							graphics = <GraphicsLayerRoomDeviceSprite item={ item } layer={ layer } roomMask={ roomMask } />;
-						} else if (layer.type === 'slot') {
-							graphics = <GraphicsLayerRoomDeviceSlot globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
-						} else if (layer.type === 'text') {
-							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
-						} else if (layer.type === 'mesh') {
-							graphics = <GraphicsLayerRoomDeviceMesh item={ item } layer={ layer } roomMask={ roomMask } />;
-						} else {
+				<Container zIndex={ 0 }>
+					{
+						layers.map((layer, i) => {
+							if (layer.type === 'sprite') {
+								return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } />;
+							} else if (layer.type === 'slot') {
+								return <GraphicsLayerRoomDeviceSlot key={ i } globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
+							} else if (layer.type === 'text') {
+								return <GraphicsLayerRoomDeviceText key={ i } item={ item } layer={ layer } />;
+							} else if (layer.type === 'mesh') {
+								return <GraphicsLayerRoomDeviceMesh key={ i } item={ item } layer={ layer } roomMask={ roomMask } />;
+							}
 							AssertNever(layer);
-						}
-						return <Container key={ i } zIndex={ i }>{ graphics }</Container>;
-					})
-				}
+						})
+					}
+				</Container>
 				{ children }
 			</SwapCullingDirection>
 		</Container>
@@ -725,7 +724,7 @@ function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null
 	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
 
-function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
+const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
 	roomMask?: PixiMaskSource;
@@ -767,7 +766,7 @@ function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 			filters={ actualFilters }
 		/>
 	);
-}
+});
 
 function GraphicsLayerRoomDeviceSlot({ item, layer, globalState, characters }: {
 	item: ItemRoomDevice;
@@ -792,7 +791,6 @@ function GraphicsLayerRoomDeviceSlot({ item, layer, globalState, characters }: {
 			layer={ layer }
 			character={ character }
 			characterState={ characterState }
-			globalState={ globalState }
 		/>
 	);
 }
@@ -842,12 +840,11 @@ export function CalculateCharacterDeviceSlotPosition({ item, layer, characterSta
 	};
 }
 
-function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState, globalState }: {
+function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
 	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
-	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const debugConfig = useDebugConfig();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
@@ -878,7 +875,7 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
-	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
 	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
 		return null;
 

@@ -22,12 +22,11 @@ import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon
 export function GraphicsLayerAlphaImageMesh({
 	characterState,
 	children,
-	zIndex,
 	layer,
 	item,
 	displayUvPose = false,
 	characterBlinking,
-}: GraphicsLayerProps<'alphaImageMesh'>): ReactElement {
+}: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
 
 	const { points, triangles } = useLayerMeshPoints(layer);
 
@@ -52,7 +51,7 @@ export function GraphicsLayerAlphaImageMesh({
 	}), [vertices, uv, triangles]);
 
 	return (
-		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ zIndex }>
+		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh }>
 			{ children }
 		</MaskContainer>
 	);
@@ -68,11 +67,9 @@ export const MASK_SIZE: Readonly<PandoraRectangle> = {
 interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
 	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
-	zIndex?: number;
 }
 
 function MaskContainer({
-	zIndex,
 	children,
 	...props
 }: MaskContainerProps): ReactElement {
@@ -81,20 +78,19 @@ function MaskContainer({
 	const hasApp = usePixiAppOptional() != null;
 
 	if (alphamaskEngine === 'pixi' && hasApp)
-		return <MaskContainerPixi { ...props } zIndex={ zIndex }>{ children }</MaskContainerPixi>;
+		return <MaskContainerPixi { ...props }>{ children }</MaskContainerPixi>;
 
 	if (alphamaskEngine === 'customShader' && hasApp)
-		return <MaskContainerCustom { ...props } zIndex={ zIndex }>{ children }</MaskContainerCustom>;
+		return <MaskContainerCustom { ...props }>{ children }</MaskContainerCustom>;
 
 	// Default - ignore masks
-	return <Container zIndex={ zIndex }>{ children }</Container>;
+	return <Container>{ children }</Container>;
 }
 
 function MaskContainerPixi({
 	children,
 	maskImage,
 	maskMesh,
-	zIndex,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
 	const alphaTexture = useTexture(maskImage, true);
@@ -171,7 +167,7 @@ function MaskContainerPixi({
 
 	return (
 		<>
-			<Container ref={ setMaskContainer } zIndex={ zIndex }>
+			<Container ref={ setMaskContainer }>
 				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
@@ -183,7 +179,6 @@ function MaskContainerCustom({
 	children,
 	maskImage,
 	maskMesh,
-	zIndex,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
 
@@ -256,7 +251,7 @@ function MaskContainerCustom({
 
 	return (
 		<>
-			<Container ref={ setMaskContainer } zIndex={ zIndex }>
+			<Container ref={ setMaskContainer }>
 				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />

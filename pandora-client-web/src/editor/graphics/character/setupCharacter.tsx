@@ -6,7 +6,7 @@ import { EditorAssetGraphicsWornLayerContainer } from '../../assets/editorAssetG
 import { useEditor } from '../../editorContextProvider.tsx';
 import { DraggableBone } from '../draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
-import { SetupLayer, SetupLayerSelected } from '../layer/index.ts';
+import { EditorSetupGraphicsCharacterLayerBuilder, SetupLayerSelected } from '../layer/index.ts';
 import { PointTemplateEditLayer } from '../pointTemplateEditor.tsx';
 import { useEditorCharacterState } from './appearanceEditor.ts';
 import { GraphicsCharacterEditor } from './editorCharacter.tsx';
@@ -21,7 +21,7 @@ export function SetupCharacter(): ReactElement {
 	const selectedTemplate = useObservable(editor.targetTemplate);
 
 	return (
-		<GraphicsCharacterEditor layer={ SetupLayer }>
+		<GraphicsCharacterEditor layerBuilder={ EditorSetupGraphicsCharacterLayerBuilder }>
 			{ (selectedLayer != null && selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
 				<SetupLayerSelected
 					characterState={ editorCharacterState }

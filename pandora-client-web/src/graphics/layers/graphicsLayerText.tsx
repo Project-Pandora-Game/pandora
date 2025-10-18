@@ -2,7 +2,7 @@ import type { Immutable } from 'immer';
 import { EMPTY_ARRAY, PANDORA_FONTS, type RoomDeviceGraphicsLayerText, type ItemRoomDevice } from 'pandora-common';
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
+import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
 import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
@@ -13,9 +13,6 @@ import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx
 
 export function GraphicsLayerText({
 	characterState,
-	children,
-	zIndex,
-	lowerZIndex,
 	layer,
 	item,
 	state,
@@ -87,26 +84,18 @@ export function GraphicsLayerText({
 
 	return (
 		<Container
-			zIndex={ zIndex }
-			sortableChildren
+			position={ position }
+			angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
 		>
-			<Container
-				position={ position }
-				angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
-			>
-				<Sprite
-					ref={ ref }
-					alpha={ alpha }
-				/>
-			</Container>
-			<Container zIndex={ lowerZIndex }>
-				{ children }
-			</Container>
+			<Sprite
+				ref={ ref }
+				alpha={ alpha }
+			/>
 		</Container>
 	);
 }
 
-export function GraphicsLayerRoomDeviceText({
+export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceText({
 	layer,
 	item,
 }: {
@@ -185,4 +174,4 @@ export function GraphicsLayerRoomDeviceText({
 			/>
 		</Container>
 	);
-}
+});

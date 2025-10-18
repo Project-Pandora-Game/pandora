@@ -1,11 +1,10 @@
 import type { Immutable } from 'immer';
 import { AssertNever, EMPTY_ARRAY, type ItemRoomDevice, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useContext, useMemo } from 'react';
+import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
-import { Container } from '../baseComponents/container.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
@@ -16,9 +15,6 @@ import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
 export function GraphicsLayerMesh({
 	characterState,
-	children,
-	zIndex,
-	lowerZIndex,
 	layer,
 	item,
 	displayUvPose = false,
@@ -58,45 +54,35 @@ export function GraphicsLayerMesh({
 	}, [cullClockwise]);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
-			{
-				layer.normalMap != null ? (
-					<GraphicsLayerMeshNormals
-						vertices={ vertices }
-						vertexRotations={ vertexRotations }
-						uvs={ uv }
-						triangles={ triangles }
-						texture={ texture }
-						normalMapTexture={ normalMapTexture }
-						normalMapData={ layer.normalMap }
-						state={ cullingState }
-						color={ color }
-						alpha={ alpha }
-						debugConfig={ debugConfig }
-					/>
-				) : (
-					<PixiMesh
-						state={ cullingState }
-						vertices={ vertices }
-						uvs={ uv }
-						indices={ triangles }
-						texture={ texture }
-						tint={ color }
-						alpha={ alpha }
-					/>
-				)
-			}
-			<Container zIndex={ lowerZIndex }>
-				{ children }
-			</Container>
-		</Container>
+		layer.normalMap != null ? (
+			<GraphicsLayerMeshNormals
+				vertices={ vertices }
+				vertexRotations={ vertexRotations }
+				uvs={ uv }
+				triangles={ triangles }
+				texture={ texture }
+				normalMapTexture={ normalMapTexture }
+				normalMapData={ layer.normalMap }
+				state={ cullingState }
+				color={ color }
+				alpha={ alpha }
+				debugConfig={ debugConfig }
+			/>
+		) : (
+			<PixiMesh
+				state={ cullingState }
+				vertices={ vertices }
+				uvs={ uv }
+				indices={ triangles }
+				texture={ texture }
+				tint={ color }
+				alpha={ alpha }
+			/>
+		)
 	);
 }
 
-export function GraphicsLayerRoomDeviceMesh({
+export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMesh({
 	item,
 	layer,
 	roomMask,
@@ -192,4 +178,4 @@ export function GraphicsLayerRoomDeviceMesh({
 	} else {
 		AssertNever(geometryData.type);
 	}
-}
+});

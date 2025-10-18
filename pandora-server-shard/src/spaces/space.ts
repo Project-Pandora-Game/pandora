@@ -1,9 +1,10 @@
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import { diffString } from 'json-diff';
 import { chain, cloneDeep, isEqual, omit } from 'lodash-es';
 import {
 	AccountId,
 	ActionHandlerMessage,
+	ActionLogShouldDeduplicate,
 	ActionSpaceContext,
 	AppearanceBundle,
 	Assert,
@@ -18,6 +19,8 @@ import {
 	CharacterId,
 	ChatActionHidden,
 	ChatCharacterStatus,
+	CloneDeepMutable,
+	CreateActionLogFromGameLogicAction,
 	EMPTY_ARRAY,
 	GameStateUpdate,
 	IChatMessage,
@@ -34,6 +37,7 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessageActionLogEntry,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
 	type IChatMessageAction,
@@ -64,7 +68,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
 	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; target?: CharacterId; }>();
-	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
+	protected readonly actionCache = new Map<CharacterId, {
+		descriptor: IChatMessageActionTargetCharacter;
+		lastAction: [entry: Immutable<ChatMessageActionLogEntry>, time: number] | null;
+		leave?: number;
+	}>();
 	protected readonly tickInterval: NodeJS.Timeout;
 
 	private readonly _gameState: AssetFrameworkGlobalStateContainer;
@@ -150,6 +158,32 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				continue;
 
 			this.handleActionMessage(message);
+		}
+
+		// Send action log entries
+		const actor = this._getCharacterActionInfo(result.actor.id);
+		const actorActionCacheEntry = this.actionCache.get(result.actor.id);
+		const now = Date.now();
+		for (const performedAction of result.performedActions) {
+			const entry = CreateActionLogFromGameLogicAction(performedAction, actor);
+
+			// Allow skipping action if last one was too similar
+			if (actorActionCacheEntry?.lastAction != null &&
+				ActionLogShouldDeduplicate(entry, now, actorActionCacheEntry.lastAction[0], actorActionCacheEntry.lastAction[1])
+			) {
+				continue;
+			}
+
+			if (actorActionCacheEntry != null) {
+				actorActionCacheEntry.lastAction = [entry, now];
+			}
+			this._queueMessages([
+				{
+					type: 'actionLog',
+					time: this.nextMessageTime(),
+					entry: CloneDeepMutable(entry),
+				},
+			]);
 		}
 	}
 
@@ -631,6 +665,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 						return true;
 					case 'action':
 						return msg.sendTo === undefined || msg.sendTo.includes(character.id);
+					case 'actionLog':
+						return true;
 					case 'serverMessage':
 						return true;
 					default:
@@ -658,13 +694,15 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			.max().value() ?? this.lastDirectoryMessageTime;
 	}
 
+	private _getCharacterActionInfo(id: CharacterId): IChatMessageActionTargetCharacter;
+	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined;
 	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined {
 		if (!id)
 			return undefined;
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? {
+			return this.actionCache.get(id)?.descriptor ?? {
 				type: 'character',
 				id,
 				name: '[UNKNOWN]',
@@ -672,16 +710,24 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				labelColor: '#ffffff',
 			};
 
-		const result: IChatMessageActionTargetCharacter = {
+		const descriptor: IChatMessageActionTargetCharacter = {
 			type: 'character',
 			id: char.id,
 			name: char.name,
 			pronoun: char.getEffectiveSettings().pronoun,
 			labelColor: char.getEffectiveSettings().labelColor,
 		};
-		this.actionCache.set(id, { result });
+		const actionCacheEntry = this.actionCache.get(id);
+		if (actionCacheEntry == null) {
+			this.actionCache.set(id, {
+				descriptor,
+				lastAction: null,
+			});
+		} else {
+			actionCacheEntry.descriptor = descriptor;
+		}
 
-		return result;
+		return descriptor;
 	}
 
 	private _cleanActionCache(id: CharacterId): void {

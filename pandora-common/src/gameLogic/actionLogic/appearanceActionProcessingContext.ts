@@ -316,6 +316,7 @@ abstract class AppearanceActionProcessingResultBase {
 	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
 	public readonly actionExtraSlowdown: number;
 
+	public readonly actor: GameLogicCharacter;
 	public readonly performedActions: readonly Immutable<AppearanceAction>[];
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
@@ -329,6 +330,7 @@ abstract class AppearanceActionProcessingResultBase {
 			this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
 		}
 		this.actionExtraSlowdown = actionExtraSlowdown;
+		this.actor = processingContext.player;
 		this.performedActions = processingContext.performedActions;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}

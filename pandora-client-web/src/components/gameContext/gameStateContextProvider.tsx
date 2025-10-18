@@ -453,6 +453,8 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					case 'action':
 					case 'serverMessage':
 						return ({ ...m, spaceId, roomsData: m.rooms?.map(processRoom) ?? null, receivedRoomId: roomId });
+					case 'actionLog':
+						return ({ ...m, spaceId });
 					case 'deleted':
 						return ({ ...m, spaceId, receivedRoomId: roomId });
 				}
@@ -471,7 +473,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 				let found = false;
 				const acc: IChatMessageProcessed[] = [];
 				for (const m of nextMessages) {
-					if (m.id !== message.id)
+					if ((m.type !== 'chat' && m.type !== 'ooc' && m.type !== 'me' && m.type !== 'emote') || m.id !== message.id)
 						acc.push(m);
 					else if (!found) {
 						found = true;

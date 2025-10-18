@@ -2,9 +2,10 @@ import * as z from 'zod';
 import type { AssetId } from '../assets/base.ts';
 import type { ItemId, RoomId } from '../assets/index.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
-import type { PronounKey } from '../character/pronouns.ts';
+import { PronounKeySchema } from '../character/pronouns.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
-import type { HexColorString } from '../validation.ts';
+import { HexColorStringSchema } from '../validation.ts';
+import type { ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionId } from './chatActions.ts';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
@@ -76,13 +77,15 @@ export type IChatMessageDeleted = {
 	from: CharacterId;
 };
 
-export type IChatMessageActionTargetCharacter = {
-	type: 'character';
-	id: CharacterId;
-	name: string;
-	pronoun: PronounKey;
-	labelColor: HexColorString;
-};
+export const IChatMessageActionTargetCharacterSchema = z.object({
+	type: z.literal('character'),
+	id: CharacterIdSchema,
+	name: z.string(),
+	pronoun: PronounKeySchema,
+	labelColor: HexColorStringSchema,
+});
+export type IChatMessageActionTargetCharacter = z.infer<typeof IChatMessageActionTargetCharacterSchema>;
+
 export type IChatMessageActionItem = {
 	id: ItemId;
 	assetId: AssetId;
@@ -125,7 +128,7 @@ export type IChatMessageAction = {
 	dictionary?: Record<string, string>;
 };
 
-export type IChatMessageBase = IChatMessageChat | IChatMessageAction | IChatMessageDeleted;
+export type IChatMessageBase = IChatMessageChat | IChatMessageAction | IChatMessageDeleted | ChatMessageActionLog;
 export type IChatMessage = IChatMessageBase & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;

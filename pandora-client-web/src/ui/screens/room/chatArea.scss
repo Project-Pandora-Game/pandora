@@ -58,6 +58,17 @@
 				}
 			}
 
+			&.actionLogEntry {
+				padding: 0.2em;
+				font-family: common.$theme-font-family-monospace;
+				background: common.$theme-chat-actionLogEntry-background;
+				color: common.$theme-chat-actionLogEntry-text;
+
+				&:nth-child(even of .actionLogEntry) {
+					background: common.$theme-chat-actionLogEntry-background-alt;
+				}
+			}
+
 			&.serverMessage {
 				border-left: 5px solid common.$theme-chat-serverMessage-notch;
 				background: common.$theme-chat-serverMessage-background;

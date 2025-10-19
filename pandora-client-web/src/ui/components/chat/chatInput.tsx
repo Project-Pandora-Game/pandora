@@ -207,7 +207,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 	return (
 		<>
 			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
-			<ActionLogActiveNotifier scroll={ scroll } />
+			<ActionLogActiveNotifier />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<ChatModeSelector />
@@ -686,15 +686,8 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	);
 }
 
-function ActionLogActiveNotifier({ scroll }: { scroll: (forceScroll: boolean) => void; }): ReactElement | null {
+function ActionLogActiveNotifier(): ReactElement | null {
 	const actionLog = useObservable(ChatActionLog);
-
-	useEffect(() => {
-		if (actionLog) {
-			scroll(true);
-		}
-	}, [actionLog, scroll]);
-
 	if (!actionLog)
 		return null;
 
@@ -705,9 +698,6 @@ function ActionLogActiveNotifier({ scroll }: { scroll: (forceScroll: boolean) =>
 				<Button className='slim' onClick={ (ev) => {
 					ev.stopPropagation();
 					ChatActionLog.value = false;
-					setTimeout(() => {
-						scroll(true);
-					}, 30);
 				} }>
 					Hide
 				</Button>

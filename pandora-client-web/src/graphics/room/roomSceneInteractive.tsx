@@ -6,6 +6,7 @@ import {
 	AssetFrameworkGlobalState,
 	CalculateBackgroundDataFromCalibrationData,
 	CardinalDirectionSchema,
+	EMPTY_ARRAY,
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
@@ -13,7 +14,9 @@ import {
 	RoomBackgroundData,
 	SpaceClientInfo,
 	SpaceIdSchema,
+	type AssetFrameworkCharacterState,
 	type AssetFrameworkRoomState,
+	type ItemId,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
@@ -34,7 +37,7 @@ import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomD
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from '../baseComponents/pixiViewport.tsx';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
+import { usePlayerVisionFilters, usePlayerVisionFiltersFactory } from '../common/visionFilters.tsx';
 import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { UseTextureGetterOverride } from '../useTexture.ts';
@@ -73,7 +76,6 @@ interface RoomGraphicsInteractiveProps {
 export function RoomGraphicsInteractive({
 	room,
 	characters,
-	gameState,
 	globalState,
 	info,
 	debugConfig,
@@ -83,6 +85,22 @@ export function RoomGraphicsInteractive({
 	} = useRoomScreenContext();
 
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (room.items.filter(FilterItemType('roomDevice')) ?? []), [room]);
+	// Optimize for the fact, that vast majority of room devices do not have a character
+	const roomDeviceCharacters = useMemo((): ReadonlyMap<ItemId, readonly AssetFrameworkCharacterState[]> => {
+		const result = new Map<ItemId, AssetFrameworkCharacterState[]>();
+		for (const character of globalState.characters.values()) {
+			const link = character.getRoomDeviceWearablePart()?.roomDeviceLink;
+			if (link != null) {
+				let deviceResult = result.get(link.device);
+				if (deviceResult === undefined) {
+					result.set(link.device, (deviceResult = []));
+				}
+				deviceResult.push(character);
+			}
+		}
+		return result;
+	}, [globalState]);
+
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && room.roomBackground.graphics.type === 'image' && info.features.includes('development')) {
 			return CalculateBackgroundDataFromCalibrationData(room.roomBackground.graphics.image, {
@@ -95,6 +113,8 @@ export function RoomGraphicsInteractive({
 	}, [room, info, debugConfig]);
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
+	const playerVisionFilters = usePlayerVisionFiltersFactory(false);
+	const playerSelfVisionFilters = usePlayerVisionFiltersFactory(true);
 
 	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
@@ -187,11 +207,12 @@ export function RoomGraphicsInteractive({
 						return (
 							<RoomCharacterInteractive
 								key={ character.id }
-								globalState={ globalState }
+								characterState={ characterState }
 								character={ character }
 								spaceInfo={ info }
 								debugConfig={ debugConfig }
 								projectionResolver={ projectionResolver }
+								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
 							/>
 						);
 					})
@@ -201,40 +222,51 @@ export function RoomGraphicsInteractive({
 						<RoomDeviceInteractive
 							key={ device.id }
 							characters={ characters }
-							globalState={ globalState }
+							charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
 							roomState={ room }
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							gameState={ gameState }
+							filters={ playerVisionFilters }
 						/>
 					) : null))
 				}
 			</Container>
 			<Container sortableChildren>
 				{
-					characters.map((character) => ((roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id) ? (
-						<RoomCharacterMovementTool
-							key={ character.id }
-							globalState={ globalState }
-							character={ character }
-							spaceInfo={ info }
-							debugConfig={ debugConfig }
-							projectionResolver={ projectionResolver }
-						/>
-					) : null))
-				}
-				{
-					characters.map((character) => ((roomSceneMode.mode === 'poseCharacter' && roomSceneMode.characterId === character.id) ? (
-						<RoomCharacterPosingTool
-							key={ character.id }
-							globalState={ globalState }
-							character={ character }
-							spaceInfo={ info }
-							debugConfig={ debugConfig }
-							projectionResolver={ projectionResolver }
-						/>
-					) : null))
+					characters.map((character) => {
+						const characterState = globalState.characters.get(character.id);
+						if (characterState == null)
+							return null;
+
+						if (roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id) {
+							return (
+								<RoomCharacterMovementTool
+									key={ character.id }
+									characterState={ characterState }
+									character={ character }
+									spaceInfo={ info }
+									debugConfig={ debugConfig }
+									projectionResolver={ projectionResolver }
+									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+								/>
+							);
+						} else if (roomSceneMode.mode === 'poseCharacter' && roomSceneMode.characterId === character.id) {
+							return (
+								<RoomCharacterPosingTool
+									key={ character.id }
+									characterState={ characterState }
+									character={ character }
+									spaceInfo={ info }
+									debugConfig={ debugConfig }
+									projectionResolver={ projectionResolver }
+									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+								/>
+							);
+						}
+
+						return null;
+					})
 				}
 				{
 					roomDevices.map((device) => ((roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === device.id && device.isDeployed()) ? (

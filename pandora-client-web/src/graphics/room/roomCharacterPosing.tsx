@@ -8,7 +8,6 @@ import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
-import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
@@ -26,33 +25,13 @@ import { MovementHelperGraphics, PosingStateHelperGraphics } from '../movementHe
 import { useTickerRef } from '../reconciler/tick.ts';
 import { GetAngle } from '../utility.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
-import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
+import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
 
 export function RoomCharacterMovementTool({
-	globalState,
-	character,
-	...props
-}: RoomCharacterInteractiveProps): ReactElement | null {
-	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
-
-	if (!characterState)
-		return null;
-
-	return (
-		<RoomCharacterMovementToolImpl
-			{ ...props }
-			globalState={ globalState }
-			character={ character }
-			characterState={ characterState }
-		/>
-	);
-}
-
-function RoomCharacterMovementToolImpl({
 	character,
 	characterState,
 	projectionResolver,
-}: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+}: RoomCharacterInteractiveProps): ReactElement | null {
 	const id = characterState.id;
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
@@ -244,31 +223,10 @@ function RoomCharacterMovementToolImpl({
 }
 
 export function RoomCharacterPosingTool({
-	globalState,
-	character,
-	...props
-}: RoomCharacterInteractiveProps): ReactElement | null {
-	const player = usePlayer();
-	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
-
-	if (!player || !characterState)
-		return null;
-
-	return (
-		<RoomCharacterPosingToolImpl
-			{ ...props }
-			globalState={ globalState }
-			character={ character }
-			characterState={ characterState }
-		/>
-	);
-}
-
-function RoomCharacterPosingToolImpl({
 	character,
 	characterState,
 	projectionResolver,
-}: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+}: RoomCharacterInteractiveProps): ReactElement | null {
 	const { interfacePosingStyle } = useAccountSettings();
 
 	const assetManager = useAssetManager();

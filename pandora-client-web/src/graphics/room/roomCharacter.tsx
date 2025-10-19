@@ -435,7 +435,7 @@ export const RoomCharacter = memo(function RoomCharacter({
 	}, []);
 
 	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
-	const innserScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
+	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
 
 	if (roomDeviceLink != null)
 		return null;
@@ -462,7 +462,7 @@ export const RoomCharacter = memo(function RoomCharacter({
 			<GraphicsCharacter
 				characterState={ characterState }
 				position={ innerPosition }
-				scale={ innserScale }
+				scale={ innerScale }
 				pivot={ pivot }
 				angle={ rotationAngle }
 				useBlinking

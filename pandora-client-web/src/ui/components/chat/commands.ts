@@ -307,7 +307,6 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								return false;
 							}
 
-							// TODO: Consider setting
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'rps',
 								choice: 'show',

@@ -1,3 +1,5 @@
+import './earyload.ts'; // Stuff that must happen before ANYTHING else
+
 import { GetLogger, SetConsoleOutput } from 'pandora-common';
 import React from 'react';
 import { createRoot } from 'react-dom/client';

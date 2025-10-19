@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css' with { type: 'css' };
 import { useEvent } from '../common/useEvent.ts';
 import { EulaGate } from '../components/Eula/index.tsx';
 import { Button } from '../components/common/button/button.tsx';
+import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider.tsx';
 import { NODE_ENV, USER_DEBUG } from '../config/Environment.ts';
 import { ConfigLogLevel, LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
@@ -83,6 +84,7 @@ function SetupLogging(): void {
 function AssetLoaderElement() {
 	const editorService = useEditorService('editor');
 	const editor = useObservable(editorService.editor);
+	const editorGameState = useGameStateOptional();
 	const [pending, setPending] = useState(false);
 
 	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<AssetManagerEditor>) => {
@@ -107,7 +109,7 @@ function AssetLoaderElement() {
 		}
 	});
 
-	if (editor) {
+	if (editor != null && editorGameState != null) {
 		return (
 			<EditorWardrobeContextProvider>
 				<EditorView />

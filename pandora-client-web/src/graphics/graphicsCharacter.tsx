@@ -100,7 +100,13 @@ const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFram
 	mix(a, b, ratio) {
 		// We base the animation off of "actualPose" despite doing it by setting "requestedPose",
 		// as it looks more natural with most of the item limits
-		return b.produceWithRequestedPose(CombineAppearancePoses(a.actualPose, b.actualPose, ratio));
+		const pose = CombineAppearancePoses(a.actualPose, b.actualPose, ratio);
+
+		// Optimization: If the pose matches target actual pose, simply return that instead
+		if (b.actualPose === pose)
+			return b;
+
+		return b.produceWithRequestedPose(pose);
 	},
 	isTransitionable(a, b) {
 		return a.id === b.id;

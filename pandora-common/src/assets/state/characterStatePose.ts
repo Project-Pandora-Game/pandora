@@ -229,7 +229,8 @@ export function CombineAppearancePoses(
 	poseB: Immutable<AppearancePose>,
 	ratio: number,
 ): Immutable<AppearancePose> {
-	if (ratio <= 0)
+	// If we didn't start or the poses are actually equal, simply return the first one
+	if (ratio <= 0 || poseA === poseB)
 		return poseA;
 
 	if (ratio >= 1)

@@ -1,30 +1,21 @@
 import type { Immutable } from 'immer';
-import { EMPTY_ARRAY, PANDORA_FONTS, type RoomDeviceGraphicsLayerText, type ItemRoomDevice } from 'pandora-common';
+import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphicsLayerText } from 'pandora-common';
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
-import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export function GraphicsLayerText({
-	characterState,
-	children,
-	zIndex,
-	lowerZIndex,
+export const GraphicsLayerText = memo(function GraphicsLayerText({
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	state,
-	characterBlinking,
 }: GraphicsLayerProps<'text'>): ReactElement {
 	const app = usePixiAppOptional();
-
-	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
 
 	const dataModule = item?.getModules().get(layer.dataModule);
 	const textModule = (dataModule != null && dataModule instanceof ItemModuleText) ? dataModule : undefined;
@@ -45,12 +36,12 @@ export function GraphicsLayerText({
 	const position = useMemo(() => {
 		const point = new PIXI.Point(layer.x, layer.y);
 		if (layer.followBone != null) {
-			evaluator.evalBoneTransform(layer.followBone).apply(point, point);
+			poseEvaluator.evalBoneTransform(layer.followBone).apply(point, point);
 		}
 		return point;
-	}, [layer, evaluator]);
+	}, [layer, poseEvaluator]);
 
-	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
+	const { color, alpha } = useItemColor(wornItems, item, layer.colorizationKey, state);
 
 	useLayoutEffect(() => {
 		const sprite = ref.current;
@@ -87,31 +78,25 @@ export function GraphicsLayerText({
 
 	return (
 		<Container
-			zIndex={ zIndex }
-			sortableChildren
+			position={ position }
+			angle={ (layer.followBone != null ? poseEvaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
 		>
-			<Container
-				position={ position }
-				angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
-			>
-				<Sprite
-					ref={ ref }
-					alpha={ alpha }
-				/>
-			</Container>
-			<Container zIndex={ lowerZIndex }>
-				{ children }
-			</Container>
+			<Sprite
+				ref={ ref }
+				alpha={ alpha }
+			/>
 		</Container>
 	);
-}
+});
 
-export function GraphicsLayerRoomDeviceText({
+export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceText({
 	layer,
 	item,
+	getFilters,
 }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerText>;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {
 	const app = usePixiAppOptional();
 
@@ -137,8 +122,7 @@ export function GraphicsLayerRoomDeviceText({
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	useLayoutEffect(() => {
 		const sprite = ref.current;
@@ -185,4 +169,4 @@ export function GraphicsLayerRoomDeviceText({
 			/>
 		</Container>
 	);
-}
+});

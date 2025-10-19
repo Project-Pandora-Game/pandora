@@ -261,7 +261,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: '',
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector }) => {
+			.handler(({ shardConnector, globalState, displayError }) => {
+				if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('dice')) {
+					displayError?.('This command is disabled in this space.');
+					return false;
+				}
+
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'coinFlip',
 				});
@@ -280,7 +285,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					description: 'Choose what you will play in the next round',
 					handler: ctx
 						.argument('option', CommandSelectorEnum(['rock', 'paper', 'scissors']))
-						.handler(({ shardConnector }, { option }) => {
+						.handler(({ shardConnector, globalState, displayError }, { option }) => {
+							if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('rockpaperscissors')) {
+								displayError?.('This command is disabled in this space.');
+								return false;
+							}
+
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'rps',
 								choice: option,
@@ -291,7 +301,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				show: {
 					description: 'Reveal the choice of all players',
 					handler: ctx
-						.handler(({ shardConnector }) => {
+						.handler(({ shardConnector, globalState, displayError }) => {
+							if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('rockpaperscissors')) {
+								displayError?.('This command is disabled in this space.');
+								return false;
+							}
+
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'rps',
 								choice: 'show',
@@ -335,7 +350,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					return { success: true, value: { dice, sides, hidden } };
 				},
 			})
-			.handler(({ shardConnector }, { options }) => {
+			.handler(({ shardConnector, globalState, displayError }, { options }) => {
+				if (globalState.space.getEffectiveSpaceSettings().disabledMinigames.includes('dice')) {
+					displayError?.('This command is disabled in this space.');
+					return false;
+				}
+
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'diceRoll',
 					...options,

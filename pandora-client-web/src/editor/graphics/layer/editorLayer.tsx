@@ -1,19 +1,15 @@
 import { Texture } from 'pixi.js';
-import { ReactElement, useMemo } from 'react';
-import { GraphicsLayer } from '../../../graphics/layers/graphicsLayer.tsx';
-import type { GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
+import { ReactElement, useMemo, type ReactNode } from 'react';
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useNullableObservable } from '../../../observable.ts';
-import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
+import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 
 export const EDITOR_LAYER_Z_INDEX_EXTRA = 10000;
 
-export function EditorLayer({
-	layer,
-	...props
-}: GraphicsLayerProps): ReactElement {
-	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
-	const asset = editorLayer?.assetGraphics;
+export function EditorUseTextureGetterOverride({ asset, children }: {
+	asset: EditorAssetGraphics | undefined;
+	children: ReactNode;
+}): ReactElement {
 	const editorAssetTextures = useNullableObservable(asset?.textures);
 	const editorAssetBuildTextures = useNullableObservable(asset?.buildTextures);
 
@@ -27,10 +23,7 @@ export function EditorLayer({
 
 	return (
 		<UseTextureGetterOverride value={ editorGetTexture }>
-			<GraphicsLayer
-				{ ...props }
-				layer={ layer }
-			/>
+			{ children }
 		</UseTextureGetterOverride>
 	);
 }

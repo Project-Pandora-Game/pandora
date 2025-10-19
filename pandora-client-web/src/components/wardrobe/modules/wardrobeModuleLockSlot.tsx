@@ -57,24 +57,6 @@ export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: Wa
 				<Row wrap>
 					<WardrobeActionButton
 						action={ {
-							type: 'delete',
-							target,
-							item: {
-								container: [
-									...item.container,
-									{
-										item: item.itemId,
-										module: moduleName,
-									},
-								],
-								itemId: m.lock.id,
-							},
-						} }
-					>
-						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
-					</WardrobeActionButton>
-					<WardrobeActionButton
-						action={ {
 							type: 'transfer',
 							source: target,
 							item: {
@@ -92,8 +74,26 @@ export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: Wa
 						} }
 					>
 						<span>
-							<u>▽</u> Store in room
+							<u>▽</u> Remove and store in room
 						</span>
+					</WardrobeActionButton>
+					<WardrobeActionButton
+						action={ {
+							type: 'delete',
+							target,
+							item: {
+								container: [
+									...item.container,
+									{
+										item: item.itemId,
+										module: moduleName,
+									},
+								],
+								itemId: m.lock.id,
+							},
+						} }
+					>
+						<img src={ deleteIcon } alt='Delete action' /> Delete the lock
 					</WardrobeActionButton>
 				</Row>
 				<WardrobeLockSlotUnlocked target={ target } item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />

@@ -1,6 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ERROR_TEXTURE } from '../assets/graphicsLoader.ts';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { useObservable } from '../observable.ts';
@@ -98,7 +98,7 @@ export function useTexture(
 
 	const suspenseAsset = useRegisterSuspenseAsset();
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		return texture.lock?.();
 	}, [texture]);
 

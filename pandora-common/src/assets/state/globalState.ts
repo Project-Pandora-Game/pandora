@@ -286,6 +286,9 @@ export class AssetFrameworkGlobalState {
 	}
 
 	public withSpaceState(newState: AssetFrameworkSpaceState): AssetFrameworkGlobalState {
+		if (this.space === newState)
+			return this;
+
 		const newCharacters = new Map(this.characters);
 		for (const [id, character] of newCharacters) {
 			const room = newState.getRoom(character.currentRoom);

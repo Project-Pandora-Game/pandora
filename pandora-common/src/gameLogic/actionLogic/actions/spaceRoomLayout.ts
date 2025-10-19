@@ -4,6 +4,7 @@ import { RoomIdSchema } from '../../../assets/appearanceTypes.ts';
 import { CardinalDirectionSchema, IntegerCoordinatesSchema } from '../../../assets/graphics/common.ts';
 import { AssetFrameworkRoomState, RoomTemplateSchema } from '../../../assets/state/roomState.ts';
 import { AssertNever, CloneDeepMutable } from '../../../utility/misc.ts';
+import { GameLogicRoomSettingsSchema } from '../../spaceSettings/roomSettings.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -15,6 +16,7 @@ export const AppearanceActionSpaceRoomLayout = z.object({
 			template: RoomTemplateSchema,
 			position: IntegerCoordinatesSchema,
 			direction: CardinalDirectionSchema,
+			settings: GameLogicRoomSettingsSchema.partial(),
 		}),
 		z.object({
 			type: z.literal('deleteRoom'),
@@ -44,7 +46,7 @@ export function ActionSpaceRoomLayout({
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionSpaceRoomLayout>>): AppearanceActionProcessingResult {
 	const { subaction } = action;
 
-	processingContext.checkPlayerIsSpaceAdmin();
+	processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 	if (subaction.type === 'createRoom') {
 		if (!processingContext.manipulator.produceSpaceState((s) => {
@@ -59,6 +61,7 @@ export function ActionSpaceRoomLayout({
 					`room:${nanoid()}`,
 					CloneDeepMutable(subaction.position),
 					subaction.direction,
+					subaction.settings,
 					processingContext.assetManager,
 					s.spaceId,
 					processingContext.player,
@@ -67,8 +70,6 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else if (subaction.type === 'deleteRoom') {
 		if (
 			Array.from(processingContext.manipulator.currentState.characters.values())
@@ -86,8 +87,6 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else if (subaction.type === 'reorderRoomList') {
 		if (!processingContext.manipulator.produceSpaceState((s) => {
 			const index = s.rooms.findIndex((r) => r.id === subaction.id);
@@ -103,13 +102,9 @@ export function ActionSpaceRoomLayout({
 		})) {
 			return processingContext.invalid();
 		}
-
-		// Intentionally no message
 	} else if (subaction.type === 'moveRoom') {
 		if (!processingContext.manipulator.produceRoomState(subaction.id, (r) => r.withPosition(subaction.position).withDirection(subaction.direction)))
 			return processingContext.invalid();
-
-		processingContext.queueMessage({ id: 'spaceLayoutChange', rooms: null });
 	} else {
 		AssertNever(subaction);
 	}

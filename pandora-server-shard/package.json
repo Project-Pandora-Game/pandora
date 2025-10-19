@@ -11,8 +11,8 @@
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && tsc -p ./tsconfig.json",
-		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --enable-source-maps --env-file=.env dist/index.js --development\"",
-		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --inspect=25861 --enable-source-maps --env-file=.env dist/index.js --development\"",
+		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --skipLibCheck --noClear --onFirstSuccess \"nodemon --enable-source-maps --env-file=.env dist/index.js --development\"",
+		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --skipLibCheck --noClear --onFirstSuccess \"nodemon --inspect=25861 --enable-source-maps --env-file=.env dist/index.js --development\"",
 		"start": "node --enable-source-maps --env-file=.env dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",

@@ -1,5 +1,5 @@
 import { AssetFrameworkGlobalState, type ServiceProvider } from 'pandora-common';
-import { ReactElement, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { AnchorAutoscroll } from '../common/anchorAutoscroll.tsx';
 import type { ChildrenProps } from '../common/reactTypes.ts';
 import { Dialogs } from '../components/dialog/dialog.tsx';
@@ -73,9 +73,12 @@ export function useEditor(): Editor {
 export function useEditorState(): AssetFrameworkGlobalState {
 	const editor = useEditor();
 
-	return useSyncExternalStore((onChange) => {
-		return editor.on('globalStateChange', () => {
-			onChange();
-		});
-	}, () => editor.globalState.currentState);
+	return useSyncExternalStore(
+		useCallback((onChange) => {
+			return editor.on('globalStateChange', () => {
+				onChange();
+			});
+		}, [editor]),
+		useCallback(() => editor.globalState.currentState, [editor]),
+	);
 }

@@ -1,9 +1,10 @@
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import { diffString } from 'json-diff';
 import { chain, cloneDeep, isEqual, omit } from 'lodash-es';
 import {
 	AccountId,
 	ActionHandlerMessage,
+	ActionLogShouldDeduplicate,
 	ActionSpaceContext,
 	AppearanceBundle,
 	Assert,
@@ -16,7 +17,10 @@ import {
 	AssetManager,
 	CardGameGame,
 	CharacterId,
+	ChatActionHidden,
 	ChatCharacterStatus,
+	CloneDeepMutable,
+	CreateActionLogFromGameLogicAction,
 	EMPTY_ARRAY,
 	GameStateUpdate,
 	IChatMessage,
@@ -33,6 +37,7 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessageActionLogEntry,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
 	type IChatMessageAction,
@@ -63,7 +68,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
 	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; target?: CharacterId; }>();
-	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
+	protected readonly actionCache = new Map<CharacterId, {
+		descriptor: IChatMessageActionTargetCharacter;
+		lastAction: [entry: Immutable<ChatMessageActionLogEntry>, time: number] | null;
+		leave?: number;
+	}>();
 	protected readonly tickInterval: NodeJS.Timeout;
 
 	private readonly _gameState: AssetFrameworkGlobalStateContainer;
@@ -144,7 +153,37 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
+			// Hide a message if both original and result state request hiding it
+			if (ChatActionHidden(message, result.resultState) && ChatActionHidden(message, result.originalState))
+				continue;
+
 			this.handleActionMessage(message);
+		}
+
+		// Send action log entries
+		const actor = this._getCharacterActionInfo(result.actor.id);
+		const actorActionCacheEntry = this.actionCache.get(result.actor.id);
+		const now = Date.now();
+		for (const performedAction of result.performedActions) {
+			const entry = CreateActionLogFromGameLogicAction(performedAction, actor);
+
+			// Allow skipping action if last one was too similar
+			if (actorActionCacheEntry?.lastAction != null &&
+				ActionLogShouldDeduplicate(entry, now, actorActionCacheEntry.lastAction[0], actorActionCacheEntry.lastAction[1])
+			) {
+				continue;
+			}
+
+			if (actorActionCacheEntry != null) {
+				actorActionCacheEntry.lastAction = [entry, now];
+			}
+			this._queueMessages([
+				{
+					type: 'actionLog',
+					time: this.nextMessageTime(),
+					entry: CloneDeepMutable(entry),
+				},
+			]);
 		}
 	}
 
@@ -275,7 +314,18 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public getActionSpaceContext(): ActionSpaceContext {
 		return {
 			features: this.config.features,
-			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
+			getAccountSpaceRole: (account) => {
+				const characters = Array.from(this.characters).filter((c) => c.accountId === account);
+
+				if (characters.some((c) => this.isOwner(c)))
+					return 'owner';
+				if (characters.some((c) => this.isAdmin(c)))
+					return 'admin';
+				if (characters.some((c) => this.isAllowed(c)))
+					return 'allowlisted';
+
+				return 'everyone';
+			},
 			development: this.config.development,
 			getCharacterModifierEffects: (characterId, gameState) => {
 				const character = Array.from(this.characters).find((c) => c.id === characterId);
@@ -573,7 +623,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public mapActionMessageToChatMessage({
 		id,
-		customText,
 		rooms,
 		character,
 		target,
@@ -588,7 +637,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return {
 			type: 'action',
 			id,
-			customText,
 			rooms,
 			sendTo,
 			time: this.nextMessageTime(),
@@ -617,6 +665,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 						return true;
 					case 'action':
 						return msg.sendTo === undefined || msg.sendTo.includes(character.id);
+					case 'actionLog':
+						return true;
 					case 'serverMessage':
 						return true;
 					default:
@@ -644,13 +694,15 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			.max().value() ?? this.lastDirectoryMessageTime;
 	}
 
+	private _getCharacterActionInfo(id: CharacterId): IChatMessageActionTargetCharacter;
+	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined;
 	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined {
 		if (!id)
 			return undefined;
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? {
+			return this.actionCache.get(id)?.descriptor ?? {
 				type: 'character',
 				id,
 				name: '[UNKNOWN]',
@@ -658,16 +710,24 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				labelColor: '#ffffff',
 			};
 
-		const result: IChatMessageActionTargetCharacter = {
+		const descriptor: IChatMessageActionTargetCharacter = {
 			type: 'character',
 			id: char.id,
 			name: char.name,
 			pronoun: char.getEffectiveSettings().pronoun,
 			labelColor: char.getEffectiveSettings().labelColor,
 		};
-		this.actionCache.set(id, { result });
+		const actionCacheEntry = this.actionCache.get(id);
+		if (actionCacheEntry == null) {
+			this.actionCache.set(id, {
+				descriptor,
+				lastAction: null,
+			});
+		} else {
+			actionCacheEntry.descriptor = descriptor;
+		}
 
-		return result;
+		return descriptor;
 	}
 
 	private _cleanActionCache(id: CharacterId): void {

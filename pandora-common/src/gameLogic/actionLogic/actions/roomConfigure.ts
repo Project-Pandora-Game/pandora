@@ -3,6 +3,7 @@ import { RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts
 import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
 import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodeDefinitions.ts';
 import { AssertNever } from '../../../utility/misc.ts';
+import { GameLogicRoomSettingsSchema } from '../../spaceSettings/roomSettings.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -13,9 +14,10 @@ export const AppearanceActionRoomConfigure = z.object({
 	/** Room geometry to set */
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.partial().optional(),
+	settings: GameLogicRoomSettingsSchema.partial().optional(),
 });
 
-/** Moves an item within inventory, reordering the worn order. */
+/** Configures a specific room in a space. */
 export function ActionRoomConfigure({
 	action,
 	processingContext,
@@ -25,19 +27,18 @@ export function ActionRoomConfigure({
 		name,
 		roomGeometry,
 		roomLinkNodes,
+		settings,
 	} = action;
 
 	if (name != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withName(name)))
 			return processingContext.invalid();
-
-		processingContext.queueMessage({ id: 'roomConfigureName', rooms: [roomId] });
 	}
 
 	if (roomGeometry != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.produceWithRoomGeometry(roomGeometry)))
 			return processingContext.invalid();
@@ -62,12 +63,10 @@ export function ActionRoomConfigure({
 
 			return c;
 		});
-
-		processingContext.queueMessage({ id: 'roomConfigureBackground', rooms: [roomId] });
 	}
 
 	if (roomLinkNodes != null) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withRoomLinkNodes({
 			far: roomLinkNodes.far ?? r.roomLinkNodes.far,
@@ -75,6 +74,13 @@ export function ActionRoomConfigure({
 			near: roomLinkNodes.near ?? r.roomLinkNodes.near,
 			left: roomLinkNodes.left ?? r.roomLinkNodes.left,
 		})))
+			return processingContext.invalid();
+	}
+
+	if (settings != null) {
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
+
+		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withSettings(settings)))
 			return processingContext.invalid();
 	}
 

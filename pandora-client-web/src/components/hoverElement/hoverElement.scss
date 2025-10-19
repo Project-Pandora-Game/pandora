@@ -5,8 +5,9 @@
 	z-index: 90000;
 	isolation: isolate;
 	pointer-events: none;
-}
 
-*:has(> .hover-element) {
-	position: relative;
+	width: max-content;
+	max-width: 95vw;
+	height: max-content;
+	max-height: 95vh;
 }

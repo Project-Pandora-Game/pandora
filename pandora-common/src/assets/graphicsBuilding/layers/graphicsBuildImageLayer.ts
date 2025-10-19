@@ -2,13 +2,15 @@ import { produce, type Immutable } from 'immer';
 import type { Logger } from '../../../logging/logger.ts';
 import { BitField } from '../../../utility/bitfield.ts';
 import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../../utility/misc.ts';
+import { ConditionsCombineAnd, type Condition } from '../../graphics/conditions.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../../graphics/layers/alphaImageMesh.ts';
-import { LayerMirror, MirrorPriority } from '../../graphics/layers/common.ts';
+import { LayerMirror, MirrorPriority, type LayerImageOverride } from '../../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../../graphics/layers/mesh.ts';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../../graphics/mirroring.ts';
 import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../../graphics/points.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../../graphicsSource/layers/mesh.ts';
+import { BONE_MAX, BONE_MIN, MergePartialAppearancePoses, type PartialAppearancePose } from '../../state/characterStatePose.ts';
 import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
 import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrimArea } from '../graphicsBuildImageResource.ts';
 import { TriangleRectangleOverlap } from '../math/intersections.ts';
@@ -25,18 +27,89 @@ async function LoadAssetImageLayerSingle(
 		throw new Error(`Layer ${layer.name ?? '[unnamed]'} refers to unknown template '${layer.points}'`);
 	}
 
-	// Check if the image has any UV pose manipulation or not
-	let hasUvManipulation: boolean = false;
+	const imageSetting = CloneDeepMutable(layer.image);
+	// Downlevel scaling bone
 	if (layer.scaling != null) {
-		hasUvManipulation = true;
 		if (layer.scaling.stops.length === 0) {
 			logger.warning(`Has scaling enabled, but no scaling stops. Disable the scaling altogether if it isn't needed`);
 		}
+		if (layer.scaling.stops.some((s) => s[0] === 0)) {
+			logger.warning('Has scaling stop with weight 0. This will not come into effect');
+		}
+		const scalingOverrides: LayerImageOverride[] = [];
+		// Split scaling to negative and positive to handle them separately
+		const negativeScaling = layer.scaling.stops
+			.filter((s) => s[0] < 0)
+			.sort((a, b) => a[0] - b[0]); // Ascending
+		let last = BONE_MIN - 1;
+		for (const ns of negativeScaling) {
+			if (ns[0] <= last) {
+				logger.warning(`Scaling with weight ${ns[0]} is either outside of allowed range or duplicate.`);
+				continue;
+			}
+			const condition: Condition = [[
+				{ bone: layer.scaling.scaleBone, operator: '>', value: last }, // &&
+				{ bone: layer.scaling.scaleBone, operator: '<=', value: ns[0] },
+			]];
+			const pose: Immutable<PartialAppearancePose> = { bones: { [layer.scaling.scaleBone]: ns[0] } };
+			for (const override of ns[1].overrides) {
+				scalingOverrides.push({
+					image: override.image,
+					normalMapImage: override.normalMapImage,
+					uvPose: override.uvPose ? MergePartialAppearancePoses(pose, override.uvPose) : pose,
+					condition: CloneDeepMutable(ConditionsCombineAnd(condition, override.condition)),
+				});
+			}
+			scalingOverrides.push({
+				image: ns[1].image,
+				normalMapImage: ns[1].normalMapImage,
+				uvPose: ns[1].uvPose ? MergePartialAppearancePoses(pose, ns[1].uvPose) : pose,
+				condition,
+			});
+
+			last = ns[0];
+		}
+		const positiveScaling = layer.scaling.stops
+			.filter((s) => s[0] > 0)
+			.sort((a, b) => b[0] - a[0]); // Descending
+		last = BONE_MAX + 1;
+		for (const ns of positiveScaling) {
+			if (ns[0] >= last) {
+				logger.warning(`Scaling with weight ${ns[0]} is either outside of allowed range or duplicate.`);
+				continue;
+			}
+			const condition: Condition = [[
+				{ bone: layer.scaling.scaleBone, operator: '>=', value: ns[0] }, // &&
+				{ bone: layer.scaling.scaleBone, operator: '<', value: last },
+			]];
+			const pose: Immutable<PartialAppearancePose> = { bones: { [layer.scaling.scaleBone]: ns[0] } };
+			for (const override of ns[1].overrides) {
+				scalingOverrides.push({
+					image: override.image,
+					normalMapImage: override.normalMapImage,
+					uvPose: override.uvPose ? MergePartialAppearancePoses(pose, override.uvPose) : pose,
+					condition: CloneDeepMutable(ConditionsCombineAnd(condition, override.condition)),
+				});
+			}
+			scalingOverrides.push({
+				image: ns[1].image,
+				normalMapImage: ns[1].normalMapImage,
+				uvPose: ns[1].uvPose ? MergePartialAppearancePoses(pose, ns[1].uvPose) : pose,
+				condition,
+			});
+
+			last = ns[0];
+		}
+
+		imageSetting.overrides.unshift(...scalingOverrides);
 	}
-	if (layer.image.uvPose != null) {
+
+	// Check if the image has any UV pose manipulation or not
+	let hasUvManipulation: boolean = false;
+	if (imageSetting.uvPose != null) {
 		hasUvManipulation = true;
 	}
-	for (const imageOverride of layer.image.overrides) {
+	for (const imageOverride of imageSetting.overrides) {
 		if (imageOverride.uvPose != null) {
 			hasUvManipulation = true;
 		}
@@ -51,10 +124,9 @@ async function LoadAssetImageLayerSingle(
 	} else {
 		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
 		// Get all the images and their bounding boxes for this layer
-		const images = Array.from(new Set([
-			...ListLayerImageSettingImages(layer.image, context),
-			...(layer.scaling ? layer.scaling.stops.flatMap((stop) => ListLayerImageSettingImages(stop[1], context)) : []),
-		]));
+		const images = Array.from(new Set(
+			ListLayerImageSettingImages(imageSetting, context),
+		));
 		const boundingBoxes = await Promise.all(images.map((i) => i.getContentBoundingBox()));
 		// Calculate total image bounding boxes
 		const imageBoundingBox = [1, 1, 0, 0]; // left, top, rightExclusive, bottomExclusive
@@ -241,11 +313,7 @@ async function LoadAssetImageLayerSingle(
 		points: layer.points,
 		pointType: layer.pointType?.slice(),
 		pointFilterMask: layerPointFilterMask,
-		image: LoadLayerImageSetting(layer.image, context, normalizedImageTrimArea),
-		scaling: layer.scaling && {
-			scaleBone: layer.scaling.scaleBone,
-			stops: layer.scaling.stops.map((stop) => [stop[0], LoadLayerImageSetting(stop[1], context, normalizedImageTrimArea)]),
-		},
+		image: LoadLayerImageSetting(imageSetting, context, normalizedImageTrimArea),
 	};
 
 	// Some properties only exist for mesh layer

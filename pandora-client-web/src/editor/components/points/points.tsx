@@ -14,7 +14,7 @@ import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
@@ -101,7 +101,7 @@ export function PointsHelperMathUi(): ReactElement | null {
 	const selectedPointDefinition = useNullableObservable(selectedPoint?.definition);
 
 	const characterState = useEditorCharacterState();
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 	const selectedPointFinal = useMemo((): (readonly [number, number]) | undefined => {
 		if (selectedPointDefinition == null)
 			return undefined;
@@ -109,8 +109,6 @@ export function PointsHelperMathUi(): ReactElement | null {
 		return evaluator.evalTransform(
 			selectedPointDefinition.pos,
 			selectedPointDefinition.transforms,
-			selectedPointDefinition.mirror,
-			null,
 		);
 	}, [selectedPointDefinition, evaluator]);
 

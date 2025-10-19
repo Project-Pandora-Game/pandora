@@ -8,6 +8,7 @@ import type { CharacterModifierEffectData } from '../gameLogic/index.ts';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
 import { ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
+import type { SpaceRole } from './spaceRoles.ts';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -26,7 +27,7 @@ export type SpaceFeature = z.infer<typeof SpaceFeatureSchema>;
 export type ActionSpaceContext = {
 	features: readonly SpaceFeature[];
 	development: Readonly<SpaceDevelopmentConfig> | undefined;
-	isAdmin(account: AccountId): boolean;
+	getAccountSpaceRole(account: AccountId): SpaceRole;
 	getCharacterModifierEffects(character: CharacterId, gameState: AssetFrameworkGlobalState): readonly Immutable<CharacterModifierEffectData>[];
 };
 

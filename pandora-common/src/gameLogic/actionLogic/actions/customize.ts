@@ -34,9 +34,9 @@ export function ActionAppearanceCustomize({
 		return processingContext.invalid();
 	}
 
-	// To customize deployed room devices, player must be an admin
+	// To customize deployed room devices, player must have appropriate space role
 	if (item.isType('roomDevice') && item.isDeployed()) {
-		processingContext.checkPlayerIsSpaceAdmin();
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveRoomSettings(action.target.type === 'room' ? action.target.roomId : null).roomDeviceDeploymentMinimumRole);
 	}
 
 	// Determinate the interaction type(s) based on what is edited

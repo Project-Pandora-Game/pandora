@@ -4,66 +4,36 @@ import {
 	AppearancePose,
 	Assert,
 	AssertNever,
-	AssetFrameworkCharacterState,
 	AssetManager,
 	AtomicCondition,
-	BoneName,
 	ConditionOperator,
 	Item,
 	TransformDefinition,
+	type AppearanceItems,
+	type AtomicPoseCondition,
 	type BoneDefinition,
+	type WearableAssetType,
 } from 'pandora-common';
 import { DEG_TO_RAD, Matrix, Point } from 'pixi.js';
 import { useMemo } from 'react';
-import { EvaluateCondition, RotateVector } from './utility.ts';
+import { RotateVector } from './utility.ts';
 
-export abstract class ConditionEvaluatorBase {
+export class CharacterPoseEvaluator {
 	public readonly assetManager: AssetManager;
-	public readonly valueOverrides: Readonly<Record<BoneName, number>> | undefined;
+	public readonly pose: Immutable<AppearancePose>;
 
-	constructor(assetManager: AssetManager, valueOverrides?: Record<BoneName, number>) {
+	constructor(assetManager: AssetManager, pose: Immutable<AppearancePose>) {
 		this.assetManager = assetManager;
-		this.valueOverrides = valueOverrides;
+		this.pose = pose;
 	}
 
 	//#region Point transform
-	public abstract evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean;
-
-	protected _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; operator: ConditionOperator; }, currentValue: T): boolean {
-		let diff = 0;
-		if (typeof currentValue === 'string' && typeof value === 'string') {
-			diff = currentValue.localeCompare(value);
-		} else if (typeof currentValue === 'number' && typeof value === 'number') {
-			diff = currentValue - value;
-		} else {
-			AssertNever();
-		}
-		switch (operator) {
-			case '>':
-				return diff > 0;
-			case '<':
-				return diff < 0;
-			case '=':
-				return diff === 0;
-			case '!=':
-				return diff !== 0;
-			case '>=':
-				return diff >= 0;
-			case '<=':
-				return diff <= 0;
-		}
-		AssertNever(operator);
-	}
-
-	public evalTransform([x, y]: readonly [number, number], transforms: Immutable<TransformDefinition[]>, _mirror: boolean, item: Item | null): [number, number] {
+	public evalTransform([x, y]: readonly [number, number], transforms: Immutable<TransformDefinition[]>): [number, number] {
 		let resX = x;
 		let resY = y;
 		for (const transform of transforms) {
 			const { type, condition } = transform;
-			if (this.valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
-				continue;
-			}
-			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
+			if (condition && !condition.every((c) => this.evalCondition(c))) {
 				continue;
 			}
 			if (type === 'const-shift') {
@@ -72,7 +42,7 @@ export abstract class ConditionEvaluatorBase {
 				continue;
 			}
 			const boneName = transform.bone;
-			const rotation = this.valueOverrides ? (this.valueOverrides[boneName] ?? 0) : this.getBoneLikeValue(boneName);
+			const rotation = this.getBoneLikeValue(boneName);
 
 			switch (type) {
 				case 'const-rotate':
@@ -97,19 +67,16 @@ export abstract class ConditionEvaluatorBase {
 		return [resX, resY];
 	}
 
-	public evalTransformAngle(transforms: Immutable<TransformDefinition[]>, item: Item | null): number {
+	public evalTransformAngle(transforms: Immutable<TransformDefinition[]>): number {
 		let angle = 0;
 		for (const transform of transforms) {
 			const { type, condition } = transform;
-			if (this.valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
-				continue;
-			}
-			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
+			if (condition && !condition.every((c) => this.evalCondition(c))) {
 				continue;
 			}
 			if (type === 'const-rotate' || type === 'rotate') {
 				const boneName = transform.bone;
-				const rotation = this.valueOverrides ? (this.valueOverrides[boneName] ?? 0) : this.getBoneLikeValue(boneName);
+				const rotation = this.getBoneLikeValue(boneName);
 				const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
 				angle += value;
 			}
@@ -160,35 +127,9 @@ export abstract class ConditionEvaluatorBase {
 		return definition;
 	}
 
-	public abstract getBoneLikeValue(name: string): number;
-}
-
-export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
-	public readonly pose: Immutable<AppearancePose>;
-	public readonly attributes: ReadonlySet<string>;
-
-	/** Whether the character is currently mid-blink */
-	public readonly blinking: boolean;
-
-	constructor(character: AssetFrameworkCharacterState, blinking: boolean, valueOverrides?: Record<BoneName, number>) {
-		super(character.assetManager, valueOverrides);
-		this.pose = character.actualPose;
-		this.attributes = AppearanceItemProperties(character.items).attributes;
-		this.blinking = blinking;
-	}
-
 	private readonly _evalCache = new Map<string, boolean>();
-	public override evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
-		if ('module' in condition) {
-			Assert(condition.module != null);
-			const m = (item?.isType('roomDeviceWearablePart') ? item?.roomDevice?.getModules() : item?.getModules())
-				?.get(condition.module);
-			// If there is no item or no module, the value is always not equal
-			if (!m) {
-				return condition.operator === '!=';
-			}
-			return m.evalCondition(condition.operator, condition.value);
-		} else if ('bone' in condition) {
+	public evalCondition(condition: Immutable<AtomicPoseCondition>): boolean {
+		if ('bone' in condition) {
 			Assert(condition.bone != null);
 			const key = `${condition.bone}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
@@ -206,13 +147,6 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
-		} else if ('attribute' in condition) {
-			Assert(condition.attribute != null);
-			if (condition.attribute[0] === '!') {
-				return !this.attributes.has(condition.attribute.slice(1));
-			} else {
-				return this.attributes.has(condition.attribute);
-			}
 		} else if ('legs' in condition) {
 			Assert(condition.legs != null);
 			if (condition.legs.startsWith('!')) {
@@ -222,16 +156,104 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
 			return this.pose.view === condition.view;
-		} else if ('blinking' in condition) {
-			Assert(condition.blinking != null);
-			return this.blinking === condition.blinking;
 		} else {
 			AssertNever(condition);
 		}
 	}
 
-	public override getBoneLikeValue(name: string): number {
+	protected _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; operator: ConditionOperator; }, currentValue: T): boolean {
+		let diff = 0;
+		if (typeof currentValue === 'string' && typeof value === 'string') {
+			diff = currentValue.localeCompare(value);
+		} else if (typeof currentValue === 'number' && typeof value === 'number') {
+			diff = currentValue - value;
+		} else {
+			AssertNever();
+		}
+		switch (operator) {
+			case '>':
+				return diff > 0;
+			case '<':
+				return diff < 0;
+			case '=':
+				return diff === 0;
+			case '!=':
+				return diff !== 0;
+			case '>=':
+				return diff >= 0;
+			case '<=':
+				return diff <= 0;
+		}
+		AssertNever(operator);
+	}
+
+	public getBoneLikeValue(name: string): number {
 		return this.pose.bones[name] || 0;
+	}
+}
+
+const poseEvaluatorInstanceCache = new WeakMap<AssetManager, WeakMap<Immutable<AppearancePose>, CharacterPoseEvaluator>>();
+function GetCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>): CharacterPoseEvaluator {
+	let assetManagerCache = poseEvaluatorInstanceCache.get(assetManager);
+	if (assetManagerCache === undefined) {
+		assetManagerCache = new WeakMap();
+		poseEvaluatorInstanceCache.set(assetManager, assetManagerCache);
+	}
+
+	let cacheEntry: CharacterPoseEvaluator | undefined = assetManagerCache.get(pose);
+	if (cacheEntry === undefined) {
+		cacheEntry = new CharacterPoseEvaluator(assetManager, pose);
+		assetManagerCache.set(pose, cacheEntry);
+	}
+
+	return cacheEntry;
+}
+/**
+ * Gets an pose evaluator for the character
+ * @param characterState - Character state
+ * @returns The requested appearance condition evaluator
+ */
+export function useCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>): CharacterPoseEvaluator {
+	return useMemo(() => GetCharacterPoseEvaluator(assetManager, pose), [assetManager, pose]);
+}
+
+export class AppearanceConditionEvaluator {
+	public readonly attributes: ReadonlySet<string>;
+
+	/** Whether the character is currently mid-blink */
+	public readonly blinking: boolean;
+
+	public readonly poseEvaluator: CharacterPoseEvaluator;
+
+	constructor(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, blinking: boolean) {
+		this.poseEvaluator = poseEvaluator;
+		this.attributes = AppearanceItemProperties(wornItems).attributes;
+		this.blinking = blinking;
+	}
+
+	public evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
+		if ('module' in condition) {
+			Assert(condition.module != null);
+			const m = (item?.isType('roomDeviceWearablePart') ? item?.roomDevice?.getModules() : item?.getModules())
+				?.get(condition.module);
+			// If there is no item or no module, the value is always not equal
+			if (!m) {
+				return condition.operator === '!=';
+			}
+			return m.evalCondition(condition.operator, condition.value);
+		} else if ('attribute' in condition) {
+			Assert(condition.attribute != null);
+			if (condition.attribute[0] === '!') {
+				return !this.attributes.has(condition.attribute.slice(1));
+			} else {
+				return this.attributes.has(condition.attribute);
+			}
+		} else if ('blinking' in condition) {
+			Assert(condition.blinking != null);
+			return this.blinking === condition.blinking;
+		}
+
+		return this.poseEvaluator.evalCondition(condition);
 	}
 }
 
@@ -240,57 +262,37 @@ type EvaluatorInstanceCacheValueEntry = {
 	blink: AppearanceConditionEvaluator;
 };
 
-type EvaluatorInstanceCacheEntry = {
-	base: EvaluatorInstanceCacheValueEntry;
-	withOverrides: WeakMap<Record<BoneName, number>, {
-		normal: AppearanceConditionEvaluator;
-		blink: AppearanceConditionEvaluator;
-	}>;
-};
-
-const evaluatorInstanceCache = new WeakMap<AssetFrameworkCharacterState, EvaluatorInstanceCacheEntry>();
-
+const evaluatorInstanceCache = new WeakMap<CharacterPoseEvaluator, WeakMap<AppearanceItems<WearableAssetType>, EvaluatorInstanceCacheValueEntry>>();
 /**
  * Gets an appearance condition evaluator for the character
  * @param characterState - Character state
  * @param isBlinking - Whether the character is currently mid-blink
- * @param valueOverrides - Overrides for bone values the evaluator should use
  * @returns The requested appearance condition evaluator
  */
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false, valueOverrides?: Record<BoneName, number>): AppearanceConditionEvaluator {
+export function useAppearanceConditionEvaluator(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, isBlinking: boolean = false): AppearanceConditionEvaluator {
 	return useMemo((): AppearanceConditionEvaluator => {
-		let cacheEntry: EvaluatorInstanceCacheEntry | undefined = evaluatorInstanceCache.get(characterState);
+		let poseCacheEntry = evaluatorInstanceCache.get(poseEvaluator);
+		if (poseCacheEntry === undefined) {
+			poseCacheEntry = new WeakMap();
+			evaluatorInstanceCache.set(poseEvaluator, poseCacheEntry);
+		}
+
+		let cacheEntry: EvaluatorInstanceCacheValueEntry | undefined = poseCacheEntry.get(wornItems);
 		if (cacheEntry === undefined) {
 			cacheEntry = {
-				base: {
-					normal: new AppearanceConditionEvaluator(characterState, false),
-					blink: new AppearanceConditionEvaluator(characterState, true),
-				},
-				withOverrides: new WeakMap(),
+				normal: new AppearanceConditionEvaluator(poseEvaluator, wornItems, false),
+				blink: new AppearanceConditionEvaluator(poseEvaluator, wornItems, true),
 			};
-			evaluatorInstanceCache.set(characterState, cacheEntry);
+			poseCacheEntry.set(wornItems, cacheEntry);
 		}
 
-		let value: EvaluatorInstanceCacheValueEntry = cacheEntry.base;
-		if (valueOverrides != null) {
-			let overrideValue: EvaluatorInstanceCacheValueEntry | undefined = cacheEntry.withOverrides.get(valueOverrides);
-			if (overrideValue === undefined) {
-				overrideValue = {
-					normal: new AppearanceConditionEvaluator(characterState, false, valueOverrides),
-					blink: new AppearanceConditionEvaluator(characterState, true, valueOverrides),
-				};
-				cacheEntry.withOverrides.set(valueOverrides, overrideValue);
-			}
-			value = overrideValue;
-		}
-
-		return isBlinking ? value.blink : value.normal;
-	}, [characterState, isBlinking, valueOverrides]);
+		return isBlinking ? cacheEntry.blink : cacheEntry.normal;
+	}, [poseEvaluator, wornItems, isBlinking]);
 }
 
-export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
+export class StandaloneConditionEvaluator {
 	private readonly _evalCache = new Map<string, boolean>();
-	public override evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
+	public evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
 		if ('module' in condition) {
 			Assert(condition.module != null);
 			const m = item?.getModules().get(condition.module);
@@ -321,12 +323,8 @@ export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
 			AssertNever(condition);
 		}
 	}
-
-	public override getBoneLikeValue(_name: string): number {
-		throw new Error(`Attempt to get bone value in standalone evaluator`);
-	}
 }
 
-export function useStandaloneConditionEvaluator(assetManager: AssetManager): StandaloneConditionEvaluator {
-	return useMemo(() => new StandaloneConditionEvaluator(assetManager), [assetManager]);
+export function useStandaloneConditionEvaluator(): StandaloneConditionEvaluator {
+	return useMemo(() => new StandaloneConditionEvaluator(), []);
 }

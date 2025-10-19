@@ -128,8 +128,8 @@ export function ActionWarning({ checkResult, parent, actionInProgress }: {
 						</div>
 					) : null
 				}
-				{
-					slowdown > 0 ? (
+				{ // Show slowdown only if the result is valid to make things less complicated
+					(checkResult.valid && slowdown > 0) ? (
 						<div>
 							<ActionSlowdownContent slowdownReasons={ checkResult.actionSlowdownReasons } slowdownTime={ slowdown } />
 						</div>

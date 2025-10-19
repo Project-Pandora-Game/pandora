@@ -12,6 +12,7 @@ import type {
 	ActionTargetSelector,
 	ItemContainerPath,
 	ItemPath,
+	RoomId,
 } from '../../assets/appearanceTypes.ts';
 import type { AssetManager } from '../../assets/assetManager.ts';
 import type { Item, ItemId } from '../../assets/item/index.ts';
@@ -20,9 +21,9 @@ import { RoomInventory } from '../../assets/roomInventory.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
 import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
 import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes.ts';
-import type { ActionSpaceContext } from '../../space/index.ts';
+import type { ActionSpaceContext, SpaceRoleOrNone } from '../../space/index.ts';
 import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc.ts';
-import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '../index.ts';
+import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, GameLogicRoomSettings, GameLogicSpaceSettings, InteractionId } from '../index.ts';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems.ts';
 import type { AppearanceActionContext } from './appearanceActions.ts';
 import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown.ts';
@@ -114,6 +115,20 @@ export class AppearanceActionProcessingContext {
 		return new RoomInventory(room);
 	}
 
+	/**
+	 * Gets settings for this space.
+	 */
+	public getEffectiveSpaceSettings(): Immutable<GameLogicSpaceSettings> {
+		return this.manipulator.currentState.space.getEffectiveSpaceSettings();
+	}
+
+	/**
+	 * Gets settings for a specified room. If the room is `null` or does not exist, global room settings are returned instead
+	 */
+	public getEffectiveRoomSettings(roomId: RoomId | null): Immutable<GameLogicRoomSettings> {
+		return this.manipulator.currentState.space.getEffectiveRoomSettings(roomId);
+	}
+
 	public getTarget(target: ActionTargetSelector): ActionTarget | null {
 		if (target.type === 'character') {
 			return this.getTargetCharacter(target);
@@ -198,17 +213,9 @@ export class AppearanceActionProcessingContext {
 		});
 	}
 
-	public checkPlayerIsSpaceAdmin(): void {
+	public checkPlayerHasSpaceRole(role: SpaceRoleOrNone): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		if (!restrictionManager.isCurrentSpaceAdmin()) {
-			this.addProblem({
-				result: 'restrictionError',
-				restriction: {
-					type: 'modifyRoomRestriction',
-					reason: 'notAdmin',
-				},
-			});
-		}
+		restrictionManager.checkHasSpaceRole(this, role);
 	}
 
 	public checkInteractWithTarget(target: ActionTarget): void {
@@ -309,6 +316,7 @@ abstract class AppearanceActionProcessingResultBase {
 	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
 	public readonly actionExtraSlowdown: number;
 
+	public readonly actor: GameLogicCharacter;
 	public readonly performedActions: readonly Immutable<AppearanceAction>[];
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
@@ -322,6 +330,7 @@ abstract class AppearanceActionProcessingResultBase {
 			this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
 		}
 		this.actionExtraSlowdown = actionExtraSlowdown;
+		this.actor = processingContext.player;
 		this.performedActions = processingContext.performedActions;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}

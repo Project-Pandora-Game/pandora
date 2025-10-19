@@ -4,8 +4,8 @@ import * as z from 'zod';
 import { CalculateObjectKeysDelta } from '../../utility/deltas.ts';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
-import type { BoneType, CharacterView, LayerPriority } from '../graphics/index.ts';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from '../graphics/index.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema, type BoneType, type CharacterView } from '../graphics/conditions.ts';
+import type { LayerPriority } from '../graphics/layers/common.ts';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
@@ -65,6 +65,7 @@ export function GetDefaultAppearancePose(): AppearancePose {
 		view: 'front',
 	};
 }
+export const APPEARANCE_POSE_DEFAULT = freeze<Immutable<AppearancePose>>(GetDefaultAppearancePose(), true);
 
 export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	bones?: Partial<Record<Bones, number>>;
@@ -228,7 +229,8 @@ export function CombineAppearancePoses(
 	poseB: Immutable<AppearancePose>,
 	ratio: number,
 ): Immutable<AppearancePose> {
-	if (ratio <= 0)
+	// If we didn't start or the poses are actually equal, simply return the first one
+	if (ratio <= 0 || poseA === poseB)
 		return poseA;
 
 	if (ratio >= 1)

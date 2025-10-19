@@ -21,6 +21,7 @@ export function WikiSafety(): ReactElement {
 				<li><Link to='#SA_Out-of-character_communication'>Out-of-character communication</Link></li>
 				<li><Link to='#SA_Timeout_mode'>Timeout mode</Link></li>
 				<li><Link to='#SA_Safemode'>Safemode</Link></li>
+				<li><Link to='#SA_Action_log'>Action log</Link></li>
 				<li><Link to='#SA_Display_name'>Display name</Link></li>
 			</ul>
 
@@ -85,6 +86,16 @@ export function WikiSafety(): ReactElement {
 				</li>
 				<li>As we add further features that support user safety, we will likely increase the safemode cooldown time.</li>
 			</ul>
+
+			<h4 id='SA_Action_log'>Action log</h4>
+			<p>
+				The action log is a special chat state that you can enable by pressing the bar with the white cog above the chat input field and then toggling
+				"Show action log".<br />
+				This mode shows the history of actions interleaved between the regular chat messages by time stamp. The action log lists
+				all the actions that were taken by any character in the current space in great detail and should be seen as OOC knowledge. You can temporarily show
+				the log if you require clarity on what happened or who did something. The log is constantly created next to the normal chat message history, even while
+				you do not have it enabled, and cleared alongside it (e.g. when leaving the space or closing the browser).
+			</p>
 
 			<h4 id='SA_Display_name'>Display name</h4>
 			<p>

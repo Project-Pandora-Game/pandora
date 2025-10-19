@@ -34,6 +34,7 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import exportIcon from '../../../assets/icons/export.svg';
 import importIcon from '../../../assets/icons/import.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
+import settingIcon from '../../../assets/icons/setting.svg';
 import { useCharacterAppearance } from '../../../character/character.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -54,8 +55,10 @@ import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsScene
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { SpaceRoleSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog, BackgroundSelectUi } from './backgroundSelect.tsx';
+import { RoomSettingsDialog, RoomSpaceGlobalSettingsDialog } from './roomSettings.tsx';
 import './spaceStateConfiguration.scss';
 
 export type SpaceStateConfigurationUiProps = {
@@ -68,22 +71,34 @@ export function SpaceStateConfigurationUi({
 	const { playerState } = usePlayerState();
 	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(playerState.currentRoom);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
+	const [showGlobalRoomSettings, setShowGlobalRoomSettings] = useState(false);
 
 	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
 
 	return (
-		<Column className='SpaceStateConfigurationUi' alignX='center'>
-			<Row className='fill-x' alignX='space-evenly'>
-				<StorageUsageMeter
-					title='Rooms inside the space'
-					used={ globalState.space.rooms.length }
-					limit={ LIMIT_SPACE_ROOM_COUNT }
-				/>
-				<StorageUsageMeter
-					title='Total items across all room inventories'
-					used={ globalState.space.getTotalItemCount() }
-					limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
-				/>
+		<Column className='SpaceStateConfigurationUi' alignX='center' gap='none'>
+			<Row className='fill-x' padding='small'>
+				<Row className='flex-2' alignX='space-evenly' alignY='center'>
+					<StorageUsageMeter
+						title='Rooms inside the space'
+						used={ globalState.space.rooms.length }
+						limit={ LIMIT_SPACE_ROOM_COUNT }
+					/>
+					<StorageUsageMeter
+						title='Total items across all room inventories'
+						used={ globalState.space.getTotalItemCount() }
+						limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
+					/>
+				</Row>
+				<Row className='flex-1' alignX='end'>
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowGlobalRoomSettings(true) }
+					>
+						<img src={ settingIcon } />
+						<div>Default room settings</div>
+					</Button>
+				</Row>
 			</Row>
 			<Row
 				className={ classNames(
@@ -134,6 +149,14 @@ export function SpaceStateConfigurationUi({
 						globalState={ globalState }
 						close={ () => {
 							setShowRoomCreation(false);
+						} }
+					/>
+				) : null }
+				{ showGlobalRoomSettings ? (
+					<RoomSpaceGlobalSettingsDialog
+						globalState={ globalState }
+						close={ () => {
+							setShowGlobalRoomSettings(false);
 						} }
 					/>
 				) : null }
@@ -254,7 +277,7 @@ function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: As
 		return null;
 
 	return (
-		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : 'enabled'}` }>
+		<div className={ `directionArrow direction-${linkData.direction} state-${linkData.disabled ? 'disabled' : (linkData.useMinimumRole != null && linkData.useMinimumRole !== 'everyone') ? 'limited' : 'enabled'}` }>
 			{ linkData.disabled ? '×' : arrows[linkData.direction] }
 		</div>
 	);
@@ -268,6 +291,8 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 }): ReactElement {
 	const id = useId();
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [showRoomSettings, setShowRoomSettings] = useState(false);
+
 	const [name, setName] = useState<string | null>(null);
 	const nameValueError = name != null ? FormCreateStringValidator(RoomNameSchema.def.in.max(LIMIT_ROOM_NAME_LENGTH), 'value')(name) : undefined;
 	const [positionChange, setPositionChange] = useState<Immutable<Coordinates> | null>(null);
@@ -316,7 +341,23 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
 					<RoomExportButton roomState={ roomState } globalState={ globalState } />
+					<Button
+						className='half-slim align-start'
+						onClick={ () => setShowRoomSettings(true) }
+					>
+						<img src={ settingIcon } />
+						<div>Room settings</div>
+					</Button>
 				</Row>
+				{ showRoomSettings ? (
+					<RoomSettingsDialog
+						room={ roomState }
+						globalState={ globalState }
+						close={ () => {
+							setShowRoomSettings(false);
+						} }
+					/>
+				) : null }
 				{
 					isEntryRoom ? (
 						<span>Newly joining characters appear in this room</span>
@@ -417,13 +458,14 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 					</GameLogicActionButton>
 				</Row>
 				<fieldset>
-					<legend>Position of links to other rooms</legend>
+					<legend>Paths to other rooms</legend>
 					<table>
 						<thead>
 							<tr>
 								<th>Direction</th>
 								<th>Enabled</th>
 								<th>Position</th>
+								<th>Can be used by</th>
 								<th></th>
 							</tr>
 						</thead>
@@ -469,29 +511,35 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 				/>
 			</td>
 			<td>
-				<Row alignY='center'>
-					<label>X:</label>
-					<NumberInput
-						className='flex-1'
-						value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
-						onChange={ (newValue) => {
-							setChangedConfig((v) => produce(v ?? config, (d) => {
-								d.position ??= CloneDeepMutable(data.position);
-								d.position[0] = newValue;
-							}));
-						} }
-					/>
-					<label>Y:</label>
-					<NumberInput
-						className='flex-1'
-						value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
-						onChange={ (newValue) => {
-							setChangedConfig((v) => produce(v ?? config, (d) => {
-								d.position ??= CloneDeepMutable(data.position);
-								d.position[1] = newValue;
-							}));
-						} }
-					/>
+				<Row>
+					<Column>
+						<Row alignY='center'>
+							<label>X:</label>
+							<NumberInput
+								className='flex-1'
+								value={ (changedConfig ?? config).position?.[0] ?? data.position[0] }
+								onChange={ (newValue) => {
+									setChangedConfig((v) => produce(v ?? config, (d) => {
+										d.position ??= CloneDeepMutable(data.position);
+										d.position[0] = newValue;
+									}));
+								} }
+							/>
+						</Row>
+						<Row alignY='center'>
+							<label>Y:</label>
+							<NumberInput
+								className='flex-1'
+								value={ (changedConfig ?? config).position?.[1] ?? data.position[1] }
+								onChange={ (newValue) => {
+									setChangedConfig((v) => produce(v ?? config, (d) => {
+										d.position ??= CloneDeepMutable(data.position);
+										d.position[1] = newValue;
+									}));
+								} }
+							/>
+						</Row>
+					</Column>
 					<Button
 						slim
 						onClick={ () => {
@@ -504,6 +552,27 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 						↺
 					</Button>
 				</Row>
+			</td>
+			<td>
+				<SpaceRoleSelectInput
+					driver={ {
+						currentValue: (changedConfig ?? config).useMinimumRole,
+						defaultValue: 'everyone',
+						onChange(newValue) {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.useMinimumRole = newValue;
+							}));
+						},
+						onReset() {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								delete d.useMinimumRole;
+							}));
+						},
+					} }
+					label={ null }
+					noWrapper
+					cumulative
+				/>
 			</td>
 			<td>
 				<GameLogicActionButton
@@ -565,6 +634,7 @@ function RoomCreation({ globalState, close }: {
 			template: CloneDeepMutable(roomTemplate),
 			position: CloneDeepMutable(position),
 			direction: 'N', // TODO
+			settings: {},
 		},
 	}), [roomTemplate, position]);
 

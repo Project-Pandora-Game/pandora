@@ -27,8 +27,8 @@ export function ActionRoomDeviceDeploy({
 	// Player deploying the device must be able to interact with it
 	processingContext.checkCanUseItem(target, action.item, ItemInteractionType.MODIFY);
 
-	// To manipulate room devices, player must be an admin
-	processingContext.checkPlayerIsSpaceAdmin();
+	// To manipulate room devices, player must have appropriate role
+	processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveRoomSettings(action.target.type === 'room' ? action.target.roomId : null).roomDeviceDeploymentMinimumRole);
 
 	const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 

@@ -3,7 +3,6 @@ import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalState,
 	CharacterSize,
 	CloneDeepMutable,
 	Coordinates,
@@ -22,13 +21,13 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import { ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
-import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
@@ -36,7 +35,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
-import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -60,21 +59,22 @@ const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type RoomDeviceInteractiveProps = {
 	characters: readonly Character<ICharacterRoomData>[];
-	globalState: AssetFrameworkGlobalState;
+	charactersInDevice: readonly AssetFrameworkCharacterState[];
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: RoomProjectionResolver;
-	gameState: GameState;
+	filters: () => readonly PIXI.Filter[];
 };
 
 type RoomDeviceProps = {
 	characters: readonly Character<ICharacterRoomData>[];
-	globalState: AssetFrameworkGlobalState;
+	charactersInDevice: readonly AssetFrameworkCharacterState[];
 	roomState: AssetFrameworkRoomState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: RoomProjectionResolver;
+	filters: () => readonly PIXI.Filter[];
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;
@@ -253,13 +253,14 @@ export function RoomDeviceMovementTool({
 	);
 }
 
-export function RoomDeviceInteractive({
+export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	characters,
-	globalState,
+	charactersInDevice,
 	roomState,
 	item,
 	deployment,
 	projectionResolver,
+	filters,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 
@@ -340,11 +341,12 @@ export function RoomDeviceInteractive({
 		<>
 			<RoomDevice
 				characters={ characters }
-				globalState={ globalState }
+				charactersInDevice={ charactersInDevice }
 				roomState={ roomState }
 				item={ item }
 				deployment={ deployment }
 				projectionResolver={ projectionResolver }
+				filters={ filters }
 				hitArea={ hitArea }
 				cursor={ enableMenu ? 'pointer' : 'none' }
 				eventMode={ enableMenu ? 'static' : 'none' }
@@ -372,7 +374,7 @@ export function RoomDeviceInteractive({
 			}
 		</>
 	);
-}
+});
 
 function RoomDeviceCharacterNames({
 	item,
@@ -502,13 +504,14 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 	);
 }
 
-export function RoomDevice({
+export const RoomDevice = memo(function RoomDevice({
 	characters,
-	globalState,
+	charactersInDevice,
 	roomState,
 	item,
 	deployment,
 	projectionResolver,
+	filters,
 
 	children,
 	hitArea,
@@ -558,10 +561,11 @@ export function RoomDevice({
 		<>
 			<RoomDeviceGraphics
 				characters={ characters }
-				globalState={ globalState }
+				charactersInDevice={ charactersInDevice }
 				item={ item }
-				position={ { x, y: y - yOffsetExtra } }
-				scale={ { x: scale, y: scale } }
+				filters={ filters }
+				position={ useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]) }
+				scale={ useMemo((): PointLike => ({ x: scale, y: scale }), [scale]) }
 				pivot={ pivot }
 				hitArea={ hitArea }
 				eventMode={ eventMode }
@@ -587,7 +591,7 @@ export function RoomDevice({
 			/>
 		</>
 	);
-}
+});
 
 function RoomDeviceDebugGraphics({ pivot }: {
 	pivot: Readonly<PointLike>;
@@ -615,8 +619,9 @@ function RoomDeviceDebugGraphics({ pivot }: {
 
 export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	item: ItemRoomDevice;
-	globalState: AssetFrameworkGlobalState;
+	charactersInDevice: readonly AssetFrameworkCharacterState[];
 	characters: readonly Character<ICharacterRoomData>[];
+	filters: () => readonly PIXI.Filter[];
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
@@ -634,8 +639,9 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 
 function RoomDeviceGraphicsWithManager({
 	item,
-	globalState,
+	charactersInDevice,
 	characters,
+	filters,
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -691,23 +697,20 @@ function RoomDeviceGraphicsWithManager({
 			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-				{
-					layers.map((layer, i) => {
-						let graphics: ReactElement;
+				<Container zIndex={ 0 }>
+					{ useMemo(() => layers.map((layer, i) => {
 						if (layer.type === 'sprite') {
-							graphics = <GraphicsLayerRoomDeviceSprite item={ item } layer={ layer } roomMask={ roomMask } />;
+							return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
 						} else if (layer.type === 'slot') {
-							graphics = <GraphicsLayerRoomDeviceSlot globalState={ globalState } item={ item } layer={ layer } characters={ characters } />;
+							return <GraphicsLayerRoomDeviceSlot key={ i } charactersInDevice={ charactersInDevice } item={ item } layer={ layer } characters={ characters } />;
 						} else if (layer.type === 'text') {
-							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
+							return <GraphicsLayerRoomDeviceText key={ i } item={ item } layer={ layer } getFilters={ filters } />;
 						} else if (layer.type === 'mesh') {
-							graphics = <GraphicsLayerRoomDeviceMesh item={ item } layer={ layer } roomMask={ roomMask } />;
-						} else {
-							AssertNever(layer);
+							return <GraphicsLayerRoomDeviceMesh key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
 						}
-						return <Container key={ i } zIndex={ i }>{ graphics }</Container>;
-					})
-				}
+						AssertNever(layer);
+					}), [layers, item, roomMask, filters, characters, charactersInDevice]) }
+				</Container>
 				{ children }
 			</SwapCullingDirection>
 		</Container>
@@ -725,13 +728,14 @@ function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null
 	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
 
-function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
+const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask, getFilters }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
 	roomMask?: PixiMaskSource;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement | null {
 
-	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+	const evaluator = useStandaloneConditionEvaluator();
 
 	const image = useMemo<string>(() => {
 		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
@@ -750,8 +754,7 @@ function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
 
@@ -767,16 +770,16 @@ function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask }: {
 			filters={ actualFilters }
 		/>
 	);
-}
+});
 
-function GraphicsLayerRoomDeviceSlot({ item, layer, globalState, characters }: {
+function GraphicsLayerRoomDeviceSlot({ item, layer, charactersInDevice, characters }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
-	globalState: AssetFrameworkGlobalState;
+	charactersInDevice: readonly AssetFrameworkCharacterState[];
 	characters: readonly Character<ICharacterRoomData>[];
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
-	const characterState = useMemo(() => (characterId != null ? globalState.characters.get(characterId) : undefined), [globalState, characterId]);
+	const characterState = useMemo(() => (characterId != null ? charactersInDevice.find((c) => c.id === characterId) : undefined), [charactersInDevice, characterId]);
 
 	if (!characterId)
 		return null;
@@ -792,7 +795,6 @@ function GraphicsLayerRoomDeviceSlot({ item, layer, globalState, characters }: {
 			layer={ layer }
 			character={ character }
 			characterState={ characterState }
-			globalState={ globalState }
 		/>
 	);
 }
@@ -842,12 +844,11 @@ export function CalculateCharacterDeviceSlotPosition({ item, layer, characterSta
 	};
 }
 
-function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState, globalState }: {
+function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
 	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
-	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const debugConfig = useDebugConfig();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
@@ -860,8 +861,10 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 		baseScale,
 		pivot,
 		rotationAngle,
-		evaluator,
 	} = useRoomCharacterOffsets(characterState);
+
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
 		position,
@@ -878,7 +881,7 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
-	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
 	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
 		return null;
 

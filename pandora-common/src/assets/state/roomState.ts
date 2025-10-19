@@ -1,6 +1,8 @@
-import { freeze, Immutable } from 'immer';
+import { freeze, Immutable, produce } from 'immer';
+import { isEqual } from 'lodash-es';
 import type { Writable } from 'type-fest';
 import * as z from 'zod';
+import { GameLogicRoomSettingsSchema, type GameLogicRoomSettings } from '../../gameLogic/spaceSettings/roomSettings.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
@@ -28,6 +30,13 @@ export const RoomBundleSchema = z.object({
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
 	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.catch(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
 	direction: CardinalDirectionSchema.catch('N'),
+	/**
+	 * Settings for this room.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * @see Account['settings'] for more info
+	 */
+	settings: GameLogicRoomSettingsSchema.partial().catch(() => ({})),
 	clientOnly: z.boolean().optional(),
 });
 
@@ -55,6 +64,7 @@ export const RoomClientDeltaBundleSchema = z.object({
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.optional(),
 	direction: CardinalDirectionSchema.optional(),
+	settings: GameLogicRoomSettingsSchema.partial().optional(),
 });
 export type RoomClientDeltaBundle = z.infer<typeof RoomClientDeltaBundleSchema>;
 
@@ -66,6 +76,7 @@ export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
 	roomGeometry: { type: 'defaultPublicSpace' },
 	roomLinkNodes: DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	direction: 'N',
+	settings: {},
 }, true);
 
 export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>({
@@ -76,6 +87,7 @@ export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>(
 	roomGeometry: { type: 'defaultPersonalSpace' },
 	roomLinkNodes: DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	direction: 'N',
+	settings: {},
 }, true);
 
 type AssetFrameworkRoomStateProps = {
@@ -89,6 +101,7 @@ type AssetFrameworkRoomStateProps = {
 	readonly roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>;
 	/** The direction room's +y axis is pointing relative to the space's layout */
 	readonly direction: CardinalDirection;
+	readonly settings: Immutable<Partial<GameLogicRoomSettings>>;
 };
 
 /**
@@ -106,6 +119,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public readonly roomBackground: Immutable<RoomBackgroundData>;
 	public readonly roomLinkNodes: Immutable<RoomNeighborLinkNodesConfig>;
 	public readonly direction: CardinalDirection;
+	public readonly settings: Immutable<Partial<GameLogicRoomSettings>>;
 
 	public readonly roomLinkData: Immutable<RoomNeighborLinkNodesData>;
 
@@ -125,6 +139,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		this.roomBackground = override?.roomBackground ?? props.roomBackground;
 		this.roomLinkNodes = override?.roomLinkNodes ?? props.roomLinkNodes;
 		this.direction = override?.direction ?? props.direction;
+		this.settings = override?.settings ?? props.settings;
 
 		if (props instanceof AssetFrameworkRoomState &&
 			this.roomLinkNodes === props.roomLinkNodes &&
@@ -205,7 +220,12 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 					return template;
 				}),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
-			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
+			roomLinkNodes: CloneDeepMutable(produce(this.roomLinkNodes, (d) => {
+				delete d.left.useMinimumRole;
+				delete d.right.useMinimumRole;
+				delete d.near.useMinimumRole;
+				delete d.far.useMinimumRole;
+			})),
 		};
 	}
 
@@ -218,6 +238,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
 			direction: this.direction,
+			settings: CloneDeepMutable(this.settings),
 		};
 	}
 
@@ -231,6 +252,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			roomLinkNodes: CloneDeepMutable(this.roomLinkNodes),
 			direction: this.direction,
+			settings: CloneDeepMutable(this.settings),
 			clientOnly: true,
 		};
 	}
@@ -260,6 +282,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		}
 		if (this.direction !== originalState.direction) {
 			result.direction = this.direction;
+		}
+		if (this.settings !== originalState.settings) {
+			result.settings = CloneDeepMutable(this.settings);
 		}
 
 		return result;
@@ -294,6 +319,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		if (bundle.direction !== undefined) {
 			update.direction = bundle.direction;
+		}
+
+		if (bundle.settings !== undefined) {
+			update.settings = freeze(bundle.settings, true);
 		}
 
 		const resultState = freeze(new AssetFrameworkRoomState(this, update), true);
@@ -333,11 +362,19 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		return new AssetFrameworkRoomState(this, { roomLinkNodes: freeze(roomLinkNodes, true) });
 	}
 
+	public withSettings(settings: Immutable<Partial<GameLogicRoomSettings>>): AssetFrameworkRoomState {
+		if (isEqual(this.settings, settings))
+			return this;
+
+		return new AssetFrameworkRoomState(this, { settings: freeze(settings, true) });
+	}
+
 	public static createFromTemplate(
 		template: Immutable<RoomTemplate>,
 		id: RoomId,
 		position: Coordinates,
 		direction: CardinalDirection,
+		settings: Immutable<Partial<GameLogicRoomSettings>>,
 		assetManager: AssetManager,
 		spaceId: SpaceId | null,
 		creator: IItemCreationContext['creator'],
@@ -384,8 +421,14 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			position: CloneDeepMutable(position),
 			roomGeometryConfig,
 			roomBackground,
-			roomLinkNodes: CloneDeepMutable(template.roomLinkNodes),
+			roomLinkNodes: produce(CloneDeepMutable(template.roomLinkNodes), (d) => {
+				delete d.left.useMinimumRole;
+				delete d.right.useMinimumRole;
+				delete d.near.useMinimumRole;
+				delete d.far.useMinimumRole;
+			}),
 			direction,
+			settings: freeze(CloneDeepMutable(settings), true),
 		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after creation from template');
@@ -437,6 +480,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomBackground,
 			roomLinkNodes: freeze(parsed.roomLinkNodes, true),
 			direction: parsed.direction,
+			settings: freeze(parsed.settings, true),
 		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after load');

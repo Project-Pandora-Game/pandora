@@ -1,3 +1,4 @@
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_SAFEMODE: TutorialConfig = {
@@ -301,7 +302,24 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 			],
 		},
 		{
+
 			steps: [
+				{
+					text: (
+						<>
+							<p>
+								Besides these modes, there is another tool that can help you to stay safe: the action log.
+							</p>
+							<p>
+								It temporarily displays the history of all the actions that were taken by any character in the current space.
+								You can show/hide the log in the menu above the chat input field.<br />
+								More information about all user safety features are available
+								in the <ExternalLink href='https://project-pandora.com/wiki/safety'>wiki</ExternalLink>.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
 				{
 					text: (
 						<p>

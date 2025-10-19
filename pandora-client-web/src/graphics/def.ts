@@ -7,8 +7,10 @@ import {
 	Item,
 	LAYER_PRIORITIES,
 	LayerPriority,
+	type AppearanceItems,
 	type GraphicsLayer,
 	type LayerStateOverrides,
+	type WearableAssetType,
 } from 'pandora-common';
 import { useMemo } from 'react';
 
@@ -17,6 +19,8 @@ export type LayerState = {
 	layer: Immutable<GraphicsLayer>;
 	item: Item | null;
 	state?: LayerStateOverrides;
+
+	wornItems: AppearanceItems<WearableAssetType>;
 };
 
 export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm, legs }: Immutable<AppearancePose>): readonly LayerPriority[] {

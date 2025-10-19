@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { AssertNever, GetRoomPositionBounds, type RoomBackground3dBoxSide, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
 import { Filter, Texture } from 'pixi.js';
-import { ReactElement, useMemo } from 'react';
+import { memo, ReactElement, useMemo } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../assets/assetManager.tsx';
 import { Container } from './baseComponents/container.ts';
@@ -11,13 +11,13 @@ import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
 import { useRoomViewProjection } from './room/roomProjection.tsx';
 import { useTexture } from './useTexture.ts';
 
-export function GraphicsBackground({
+export const GraphicsBackground = memo(function GraphicsBackground({
 	background,
 	backgroundFilters,
 	zIndex,
 }: {
 	background: Immutable<RoomBackgroundData>;
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	if (background.graphics.type === 'image') {
@@ -41,7 +41,7 @@ export function GraphicsBackground({
 	}
 
 	AssertNever(background.graphics);
-}
+});
 
 function GraphicsBackgroundImage({
 	graphics,
@@ -51,7 +51,7 @@ function GraphicsBackgroundImage({
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: 'image'; }>>;
 	backgroundSize: readonly [number, number];
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	const backgroundResult = useMemo<{
@@ -117,7 +117,7 @@ function GraphicsBackground3DBox({
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: '3dBox'; }>>;
 	background: Immutable<RoomBackgroundData>;
-	backgroundFilters?: Filter[];
+	backgroundFilters?: readonly Filter[];
 	zIndex?: number;
 }): ReactElement | null {
 	const projection = useRoomViewProjection(background);

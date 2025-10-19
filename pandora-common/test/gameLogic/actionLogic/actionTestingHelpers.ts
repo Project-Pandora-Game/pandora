@@ -36,8 +36,11 @@ export function TestCreateActionContext(player: GameLogicCharacter, options?: {
 		spaceContext: {
 			features: options?.spaceFeatures ?? EMPTY_ARRAY,
 			development: undefined,
-			isAdmin(account) {
-				return options?.admins?.includes(account) ?? false;
+			getAccountSpaceRole(account) {
+				if (options?.admins?.includes(account))
+					return 'admin';
+
+				return 'everyone';
 			},
 			getCharacterModifierEffects(_character, _gameState) {
 				return EMPTY_ARRAY;

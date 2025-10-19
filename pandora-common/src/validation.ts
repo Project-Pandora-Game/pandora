@@ -25,7 +25,7 @@ export function ZodMatcher<T extends z.ZodType>(validator: T, passthrough?: true
 	};
 }
 
-export function ZodArrayWithInvalidDrop<ZodShape extends z.ZodType, ZodPreCheck extends z.ZodType>(shape: ZodShape, preCheck: ZodPreCheck, maxLength?: number) {
+export function ZodArrayWithInvalidDrop<ZodShape extends z.ZodType>(shape: ZodShape, preCheck: z.ZodType = z.unknown(), maxLength?: number) {
 	return z.array(preCheck).transform((values) => {
 		const res: z.output<ZodShape>[] = [];
 		for (const value of values) {

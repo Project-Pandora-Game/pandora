@@ -3,7 +3,6 @@ import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalState,
 	CHARACTER_SETTINGS_DEFAULT,
 	CharacterSize,
 	ICharacterRoomData,
@@ -11,8 +10,8 @@ import {
 	SpaceClientInfo,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode, type Filter } from 'pixi.js';
+import { memo, ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
@@ -21,7 +20,6 @@ import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useFetchedResourceText } from '../../common/useFetch.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
-import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
@@ -31,13 +29,13 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts';
-import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, type CharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
 import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
+import { useCharacterDisplayFilters } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -46,17 +44,19 @@ import { useTickerRef } from '../reconciler/tick.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
 
 export type RoomCharacterInteractiveProps = {
-	globalState: AssetFrameworkGlobalState;
+	characterState: AssetFrameworkCharacterState;
 	character: Character<ICharacterRoomData>;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: RoomProjectionResolver;
+	visionFilters: () => readonly Filter[];
 };
 
 type RoomCharacterDisplayProps = {
-	globalState: AssetFrameworkGlobalState;
+	characterState: AssetFrameworkCharacterState;
 	character: Character<ICharacterRoomData>;
 	projectionResolver: RoomProjectionResolver;
+	visionFilters: () => readonly Filter[];
 	showName: boolean;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
@@ -68,10 +68,6 @@ type RoomCharacterDisplayProps = {
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 	onPointerMove?: (event: FederatedPointerEvent) => void;
-};
-
-export type CharacterStateProps = {
-	characterState: AssetFrameworkCharacterState;
 };
 
 export const PIVOT_TO_LABEL_OFFSET = 100;
@@ -93,9 +89,9 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
 	/** Appearance condition evaluator for the character */
-	evaluator: AppearanceConditionEvaluator;
+	evaluator: CharacterPoseEvaluator;
 } {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	let baseScale = 1;
 	if (evaluator.pose.legs.pose === 'sitting') {
@@ -160,8 +156,10 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 		yOffset,
 		pivot,
 		rotationAngle,
-		evaluator,
 	} = useRoomCharacterOffsets(characterState);
+
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 
@@ -237,14 +235,14 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 	}, [baseScale, characterState, evaluator, pivot, posX, posY, projectionResolver, rotationAngle, yOffset, yOffsetExtra, graphicsManager]);
 }
 
-function RoomCharacterInteractiveImpl({
-	globalState,
+export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 	character,
 	characterState,
 	spaceInfo,
 	debugConfig,
 	projectionResolver,
-}: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+	visionFilters,
+}: RoomCharacterInteractiveProps): ReactElement | null {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const id = characterState.id;
 
@@ -350,11 +348,11 @@ function RoomCharacterInteractiveImpl({
 	const enableMenu = !isFocused;
 
 	return (
-		<RoomCharacterDisplay
-			globalState={ globalState }
+		<RoomCharacter
 			character={ character }
 			characterState={ characterState }
 			projectionResolver={ projectionResolver }
+			visionFilters={ visionFilters }
 			debugConfig={ debugConfig }
 			showName={ enableMenu }
 			quickTransitions={ isFocused }
@@ -366,13 +364,13 @@ function RoomCharacterInteractiveImpl({
 			onPointerMove={ onPointerMove }
 		/>
 	);
-}
+});
 
-function RoomCharacterDisplay({
+export const RoomCharacter = memo(function RoomCharacter({
 	character,
 	characterState,
-	globalState,
 	projectionResolver,
+	visionFilters,
 	showName,
 	debugConfig,
 
@@ -383,12 +381,11 @@ function RoomCharacterDisplay({
 	onPointerDown: onPointerDownOuter,
 	onPointerMove,
 	onPointerUp: onPointerUpOuter,
-}: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
+}: RoomCharacterDisplayProps): ReactElement | null {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
-	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
-	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
+	const filters = useMemo(() => [...visionFilters(), ...characterFilters], [visionFilters, characterFilters]);
 
 	const [held, setHeld] = useState(false);
 	const [hover, setHover] = useState(false);
@@ -412,7 +409,7 @@ function RoomCharacterDisplay({
 	showName = useObservable(SettingDisplayCharacterName) && showName;
 
 	// If character is in a device, do not render it here, it will be rendered by the device
-	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink;
 
 	const transitionTickerRef = useTickerRef();
 	const movementTransitionDuration = !smoothMovementEnabled ? 0 :
@@ -437,13 +434,16 @@ function RoomCharacterDisplay({
 		setHover(false);
 	}, []);
 
+	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
+	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
+
 	if (roomDeviceLink != null)
 		return null;
 
 	return (
 		<TransitionedContainer
 			position={ position }
-			scale={ { x: scale, y: scale } }
+			scale={ scale }
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
@@ -461,8 +461,8 @@ function RoomCharacterDisplay({
 		>
 			<GraphicsCharacter
 				characterState={ characterState }
-				position={ { x: 0, y: -yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
+				position={ innerPosition }
+				scale={ innerScale }
 				pivot={ pivot }
 				angle={ rotationAngle }
 				useBlinking
@@ -495,7 +495,7 @@ function RoomCharacterDisplay({
 			}
 		</TransitionedContainer>
 	);
-}
+});
 
 export function RoomCharacterLabel({ position, character, theme }: {
 	position?: PixiPointLike;
@@ -650,45 +650,5 @@ function RoomCharacterDebugGraphicsOuter({ pivot, hitArea }: {
 			<Graphics draw={ pivotDraw } />
 			<Graphics draw={ hitboxDebugDraw } />
 		</>
-	);
-}
-
-export function RoomCharacterInteractive({
-	globalState,
-	character,
-	...props
-}: RoomCharacterInteractiveProps): ReactElement | null {
-	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
-
-	if (!characterState)
-		return null;
-
-	return (
-		<RoomCharacterInteractiveImpl
-			{ ...props }
-			globalState={ globalState }
-			character={ character }
-			characterState={ characterState }
-		/>
-	);
-}
-
-export function RoomCharacter({
-	globalState,
-	character,
-	...props
-}: RoomCharacterDisplayProps): ReactElement | null {
-	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
-
-	if (!characterState)
-		return null;
-
-	return (
-		<RoomCharacterDisplay
-			{ ...props }
-			globalState={ globalState }
-			character={ character }
-			characterState={ characterState }
-		/>
 	);
 }

@@ -13,18 +13,22 @@ import {
 	type CharacterId,
 	type Item,
 	type ItemContainerPath,
+	type ItemId,
 } from 'pandora-common';
 import { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
-import { useCharacterDataOptional, type Character } from '../../../character/character.ts';
-import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useCharacterDataOptional } from '../../../character/character.ts';
+import { FindItemById, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { DescribeAsset } from './chatMessages.tsx';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;
-	actionOriginator: Character;
+	actionOriginator: {
+		readonly id: CharacterId;
+		readonly name: string;
+	};
 	globalState: AssetFrameworkGlobalState;
 }
 
@@ -62,6 +66,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
 		case 'roomConfigure':
 			return <DescribeGameLogicActionRoomConfigure action={ action } { ...props } />;
+		case 'spaceConfigure':
+			return <DescribeGameLogicActionSpaceConfigure action={ action } { ...props } />;
 		case 'spaceRoomLayout':
 			return <DescribeGameLogicActionSpaceRoomLayout action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
@@ -72,26 +78,26 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 }
 
 function DescribeGameLogicActionCreate({ action, globalState, actionOriginator }: DescribeGameLogicActionProps<'create'>): ReactElement {
-	const item = globalState.assetManager.createItemFromTemplate(action.itemTemplate, actionOriginator) ?? null;
+	const item = globalState?.assetManager.createItemFromTemplate(action.itemTemplate, actionOriginator) ?? null;
 
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.container);
 
 	return (
 		<>
-			{ isPhysicallyEquipped ? 'Create and equip' : 'Create and store' } <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? 'Create and equip' : 'Create and store' } <DescribeItem item={ item } globalState={ globalState } />
 			{ isPhysicallyEquipped ? ' onto' : ' into' } <DescribeContainer target={ action.target } container={ action.container } globalState={ globalState } />.
 		</>
 	);
 }
 
 function DescribeGameLogicActionDelete({ action, globalState }: DescribeGameLogicActionProps<'delete'>): ReactElement {
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
 
 	return (
 		<>
-			{ isPhysicallyEquipped ? 'Unequip and delete' : 'Delete' } <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? 'Unequip and delete' : 'Delete' } <DescribeItem item={ item } globalState={ globalState } />
 			{ ' from' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);
@@ -100,7 +106,7 @@ function DescribeGameLogicActionDelete({ action, globalState }: DescribeGameLogi
 function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLogicActionProps<'transfer'>): ReactElement {
 	// If the source and target container are the same, the action is only a reorder
 	const isReorder = isEqual(action.source, action.target) && isEqual(action.item.container, action.container);
-	const item = EvalItemPath(globalState.getItems(action.source) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.source) ?? [], action.item) ?? action.item.itemId;
 
 	const isSourcePhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.source, action.item.container);
 	const isTargetPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.container);
@@ -111,7 +117,7 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 
 	return (
 		<>
-			{ isTargetPhysicallyEquipped ? 'Equip' : isSourcePhysicallyEquipped ? 'Unequip' : 'Move' } <DescribeItem item={ item } />
+			{ isTargetPhysicallyEquipped ? 'Equip' : isSourcePhysicallyEquipped ? 'Unequip' : 'Move' } <DescribeItem item={ item } globalState={ globalState } />
 			{ ' from' } <DescribeContainer target={ action.source } container={ action.item.container } globalState={ globalState } />
 			{ isTargetPhysicallyEquipped ? ' onto' : ' into' } <DescribeContainer target={ action.target } container={ action.container } globalState={ globalState } />.
 		</>
@@ -138,11 +144,11 @@ function DescribeGameLogicActionMove({ action, globalState }: DescribeGameLogicA
 
 function DescribeGameLogicActionColor({ action, globalState }: DescribeGameLogicActionProps<'color'>): ReactElement {
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
 	return (
 		<>
-			Change the color of <DescribeItem item={ item } />
+			Change the color of <DescribeItem item={ item } globalState={ globalState } />
 			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);
@@ -150,7 +156,7 @@ function DescribeGameLogicActionColor({ action, globalState }: DescribeGameLogic
 
 function DescribeGameLogicActionCustomize({ action, globalState }: DescribeGameLogicActionProps<'customize'>): ReactElement {
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
 	const changes = NaturalListJoin([
 		(action.name != null) ? 'name' : null,
@@ -160,7 +166,7 @@ function DescribeGameLogicActionCustomize({ action, globalState }: DescribeGameL
 
 	return (
 		<>
-			Change the { changes } of <DescribeItem item={ item } />
+			Change the { changes } of <DescribeItem item={ item } globalState={ globalState } />
 			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);
@@ -168,14 +174,14 @@ function DescribeGameLogicActionCustomize({ action, globalState }: DescribeGameL
 
 function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGameLogicActionProps<'moduleAction'>): ReactElement {
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
-	const moduleName = item?.getModules().get(action.module)?.config.name ?? '[UNKNOWN]';
+	const moduleName = (item && typeof item !== 'string' ? item : null)?.getModules().get(action.module)?.config.name ?? null;
 
 	let actionDescription: ReactElement;
 	switch (action.action.moduleType) {
 		case 'typed':
-			actionDescription = <>Change the selected variant of the "{ moduleName }" module</>;
+			actionDescription = <>Change the selected variant of the "{ moduleName ?? <code>{ action.module }</code> }" module</>;
 			break;
 		case 'storage':
 			// Nothing possible here
@@ -184,23 +190,23 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 		case 'lockSlot':
 			switch (action.action.lockAction.action) {
 				case 'lock':
-					actionDescription = <>Lock the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					actionDescription = <>Lock the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
 					break;
 				case 'unlock':
-					actionDescription = <>Unlock the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					actionDescription = <>Unlock the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
 					break;
 				case 'showPassword':
-					actionDescription = <>Remember the password of the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					actionDescription = <>Remember the password of the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
 					break;
 				case 'updateFingerprint':
-					actionDescription = <>Update the registered fingerprints of the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					actionDescription = <>Update the registered fingerprints of the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
 					break;
 				default:
 					AssertNever(action.action.lockAction);
 			}
 			break;
 		case 'text':
-			actionDescription = <>Change text of the "{ moduleName }" module</>;
+			actionDescription = <>Change text of the "{ moduleName ?? <code>{ action.module }</code> }" module</>;
 			break;
 		default:
 			AssertNever(action.action);
@@ -208,7 +214,7 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 
 	return (
 		<>
-			{ actionDescription } of <DescribeItem item={ item } />
+			{ actionDescription } of <DescribeItem item={ item } globalState={ globalState } />
 			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);
@@ -239,45 +245,49 @@ function DescribeGameLogicActionRandomize({ action }: DescribeGameLogicActionPro
 }
 
 function DescribeGameLogicActionRoomDeviceDeploy({ action, globalState }: DescribeGameLogicActionProps<'roomDeviceDeploy'>): ReactElement {
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+
+	if (typeof item === 'string') {
+		return <>Change the deployment or position of the room device <DescribeItem item={ item } globalState={ globalState } />.</>;
+	}
 
 	if (!action.deployment.deployed) {
-		return <>Store the <DescribeItem item={ item } /> into the room inventory.</>;
+		return <>Store the <DescribeItem item={ item } globalState={ globalState } /> into the room inventory.</>;
 	}
 
 	if (item?.isType('roomDevice') && item.isDeployed()) {
-		return <>Reposition the <DescribeItem item={ item } />.</>;
+		return <>Reposition the <DescribeItem item={ item } globalState={ globalState } />.</>;
 	}
 
-	return <>Deploy the <DescribeItem item={ item } /> from the room inventory.</>;
+	return <>Deploy the <DescribeItem item={ item } globalState={ globalState } /> from the room inventory.</>;
 }
 
 function DescribeGameLogicActionRoomDeviceEnter({ action, actionOriginator, globalState }: DescribeGameLogicActionProps<'roomDeviceEnter'>): ReactElement {
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
-	const slot = item?.isType('roomDevice') ? (item.asset.definition.slots[action.slot]) : undefined;
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+	const slot = (item != null && typeof item !== 'string' && item.isType('roomDevice')) ? (item.asset.definition.slots[action.slot]) : undefined;
 
-	const slotName = slot?.name ?? '[UNKNOWN]';
+	const slotName = slot?.name ?? null;
 
 	return (
 		<>
 			{ action.character.characterId === actionOriginator.id ? 'Enter' : (<>Put <DescribeSpaceCharacter id={ action.character.characterId } /></>) }
-			{ ' into' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
+			{ ' into' } the "{ slotName ?? <code>{ action.slot }</code> }" slot of the <DescribeItem item={ item } globalState={ globalState } />.
 		</>
 	);
 }
 
 function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, globalState }: DescribeGameLogicActionProps<'roomDeviceLeave'>): ReactElement {
-	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
-	const slot = item?.isType('roomDevice') ? (item.asset.definition.slots[action.slot]) : undefined;
-	const slotName = slot?.name ?? '[UNKNOWN]';
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+	const slot = (item != null && typeof item !== 'string' && item.isType('roomDevice')) ? (item.asset.definition.slots[action.slot]) : undefined;
+	const slotName = slot?.name ?? null;
 
-	const currentCharacter = item?.isType('roomDevice') ? (item.slotOccupancy.get(action.slot)) : undefined;
+	const currentCharacter = (item != null && typeof item !== 'string' && item.isType('roomDevice')) ? (item.slotOccupancy.get(action.slot)) : undefined;
 	const characterPresent = currentCharacter != null && globalState.getCharacterState(currentCharacter) != null;
 
 	if (!characterPresent) {
 		return (
 			<>
-				Clear the "{ slotName }" slot of the <DescribeItem item={ item } />.
+				Clear the "{ slotName ?? <code>{ action.slot }</code> }" slot of the <DescribeItem item={ item } globalState={ globalState } />.
 			</>
 		);
 	}
@@ -285,13 +295,17 @@ function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, glob
 	return (
 		<>
 			{ currentCharacter === actionOriginator.id ? 'Leave' : (<>Remove <DescribeSpaceCharacter id={ currentCharacter ?? null } /></>) }
-			{ ' from' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
+			{ ' from' } the "{ slotName ?? <code>{ action.slot }</code> }" slot of the <DescribeItem item={ item } globalState={ globalState } />.
 		</>
 	);
 }
 
 function DescribeGameLogicActionRoomConfigure(_props: DescribeGameLogicActionProps<'roomConfigure'>): ReactElement {
 	return <>Update the room's configuration.</>;
+}
+
+function DescribeGameLogicActionSpaceConfigure(_props: DescribeGameLogicActionProps<'spaceConfigure'>): ReactElement {
+	return <>Update the space's configuration.</>;
 }
 
 function DescribeGameLogicActionSpaceRoomLayout(_props: DescribeGameLogicActionProps<'spaceRoomLayout'>): ReactElement {
@@ -304,14 +318,24 @@ function DescribeGameLogicActionInterrupt({ action }: DescribeGameLogicActionPro
 
 //#region Utilities
 
-export function DescribeItem({ item }: {
-	item: Item | null;
+export function DescribeItem({ item, globalState }: {
+	item: Item | ItemId | null;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
 
 	if (item == null)
 		return <>[UNKNOWN]</>;
+
+	if (typeof item === 'string') {
+		const relocatedItem = FindItemById(globalState, item);
+		if (relocatedItem.length === 1) {
+			item = relocatedItem[0].item;
+		} else {
+			return <>[Item <code>{ item }</code>]</>;
+		}
+	}
 
 	return <>{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.asset.id), item.name, interfaceChatroomItemDisplayNameType) }</>;
 }
@@ -329,7 +353,7 @@ export function DescribeContainer({ target, container, globalState }: {
 			return <DescribeSpaceCharacter id={ target.characterId } />;
 		}
 	} else if (container.length === 1) {
-		const item = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? null } />;
+		const item = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? container[0].item } globalState={ globalState } />;
 
 		if (target.type === 'room') {
 			// TODO: Should this now include name of the room?
@@ -338,12 +362,12 @@ export function DescribeContainer({ target, container, globalState }: {
 			return <><DescribeSpaceCharacter id={ target.characterId } form='possessive' /> { item }</>;
 		}
 	} else {
-		const itemFirst = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? null } />;
+		const itemFirst = <DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], { container: [], itemId: container[0].item }) ?? container[0].item } globalState={ globalState } />;
 		const itemLast = (
 			<DescribeItem item={ EvalItemPath(globalState.getItems(target) ?? [], {
 				container: container.slice(0, -1),
 				itemId: container[container.length - 1].item,
-			}) ?? null } />
+			}) ?? container[container.length - 1].item } globalState={ globalState } />
 		);
 
 		if (target.type === 'room') {

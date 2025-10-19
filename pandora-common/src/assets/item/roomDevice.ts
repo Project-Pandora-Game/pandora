@@ -170,9 +170,9 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	}
 
 	public override checkAllowTransfer(context: AppearanceActionProcessingContext): void {
-		// Only admin can move deployed room devices between inventories
+		// Moving deployed room devices between inventories requires role as specified by global room settings
 		if (this.isDeployed()) {
-			context.checkPlayerIsSpaceAdmin();
+			context.checkPlayerHasSpaceRole(context.getEffectiveRoomSettings(null).roomDeviceDeploymentMinimumRole);
 		}
 	}
 

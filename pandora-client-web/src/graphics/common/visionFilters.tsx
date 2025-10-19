@@ -4,7 +4,7 @@ import {
 	ICharacterRoomData,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { createContext, useContext, useMemo, type ReactElement } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactElement } from 'react';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import { useActionSpaceContext } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
@@ -22,7 +22,7 @@ export function VisionFilterBypass({ children, setting }: ChildrenProps & { sett
 	);
 }
 
-export function usePlayerVisionFilters(targetIsPlayer: boolean): PIXI.Filter[] {
+export function usePlayerVisionFiltersFactory(targetIsPlayer: boolean): () => readonly PIXI.Filter[] {
 	const { player, globalState } = usePlayerState();
 	const spaceContext = useActionSpaceContext();
 	const restrictionManager = useCharacterRestrictionManager(player, globalState, spaceContext);
@@ -30,7 +30,7 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): PIXI.Filter[] {
 	const blurines = clamp(restrictionManager.getEffects().blurVision, 0, 16);
 	const bypass = useContext(VisionFilterBypassContext);
 
-	return useMemo((): PIXI.Filter[] => {
+	return useCallback((): PIXI.Filter[] => {
 		if (targetIsPlayer || bypass === 'bypass')
 			return [];
 		const filters: PIXI.Filter[] = [];
@@ -54,6 +54,11 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): PIXI.Filter[] {
 
 		return filters;
 	}, [blindness, blurines, targetIsPlayer, bypass]);
+}
+
+export function usePlayerVisionFilters(targetIsPlayer: boolean): readonly PIXI.Filter[] {
+	const factory = usePlayerVisionFiltersFactory(targetIsPlayer);
+	return useMemo(factory, [factory]);
 }
 
 export function useCharacterDisplayFilters(character: Character<ICharacterRoomData>): PIXI.Filter[] {

@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { Immutable } from 'immer';
+import { Immutable, produce } from 'immer';
 import { noop } from 'lodash-es';
 import {
 	AccountId,
@@ -8,6 +8,7 @@ import {
 	CloneDeepMutable,
 	EMPTY,
 	FormatTimeInterval,
+	GAME_LOGIC_SPACE_SETTINGS_DEFAULT,
 	GetLogger,
 	IDirectoryShardInfo,
 	IsAuthorized,
@@ -23,7 +24,9 @@ import {
 	SpaceInvite,
 	SpacePublicSettingSchema,
 	ZodMatcher,
+	type AssetFrameworkGlobalState,
 	type CurrentSpaceInfo,
+	type GameLogicSpaceSettings,
 	type IDirectoryAccountInfo,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
@@ -31,6 +34,8 @@ import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo,
 import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
+import { RenderAppearanceActionProblem } from '../../../assets/appearanceValidation.tsx';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { CopyToClipboard } from '../../../common/clipboard.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -49,13 +54,15 @@ import {
 import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
-import { PersistentToast, TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
+import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
@@ -88,11 +95,18 @@ export function SpaceCreate(): ReactElement {
 
 export function SpaceConfiguration({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
 	const navigate = useNavigatePandora();
-	const create = useCreateSpace();
 	const directoryConnector = useDirectoryConnector();
+	const assetManager = useAssetManager();
+	const {
+		wardrobeItemDisplayNameType,
+	} = useAccountSettings();
 
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
+
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+
 	let currentSpaceInfo: Immutable<CurrentSpaceInfo> | null = useSpaceInfo();
 	const lastSpaceId = useRef<SpaceId>(null);
 	const isInPublicSpace = currentSpaceInfo.id != null;
@@ -126,7 +140,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		}
 		return result;
 	}, {});
-	const [showCommitDialog, setShowCommitDialog] = useState(false);
+	const [spaceLogicConfigUpdate, setSpaceLogicConfigUpdate] = useState<Partial<Immutable<GameLogicSpaceSettings>> | null>(null);
 
 	const currentConfig = useMemo((): Immutable<SpaceDirectoryConfig> => canEdit ? ({
 		...(currentSpaceInfo?.config ?? DefaultConfig()),
@@ -137,23 +151,164 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		navigate(creation ? '/spaces/search' : '/room');
 	}, [creation, navigate]);
 
+	const [showCommitDialog, setShowCommitDialog] = useState(false);
+	const [commitProcess, setCommitProcess] = useState<ReactNode | null>(null);
 	const [commit, processingCommit] = useAsyncEvent(async () => {
 		if (creation) {
-			await create(CloneDeepMutable(currentConfig));
+			const validatedConfig = SpaceDirectoryConfigSchema.safeParse(CloneDeepMutable(currentConfig));
+			if (!validatedConfig.success) {
+				const issue = z.prettifyError(validatedConfig.error);
+				setCommitProcess(
+					<Column>
+						<div>❌ Error during space creation:</div>
+						<div>Invalid data</div>
+						<pre>{ issue }</pre>
+					</Column>,
+				);
+				return;
+			}
+			setCommitProcess(
+				<Column>
+					<div>⏳ Creating space...</div>
+				</Column>,
+			);
+			const result = await directoryConnector.awaitResponse('spaceCreate', validatedConfig.data);
+			if (result.result !== 'ok') {
+				// TODO: Translate error codes to nicer texts
+				setCommitProcess(
+					<Column>
+						<div>❌ Failed to create space:</div>
+						<code>{ result.result }</code>
+					</Column>,
+				);
+				return;
+			}
+			setCommitProcess(
+				<Column>
+					<div>✅ Space created!</div>
+				</Column>,
+			);
 		} else {
-			UpdateSpace(directoryConnector, modifiedData, () => navigate('/room'));
+			const shouldUpdateSpaceSettings = spaceLogicConfigUpdate != null;
+			const shouldUpdateDirectoryData = Object.keys(modifiedData).length > 0;
+
+			if (shouldUpdateSpaceSettings) {
+				setCommitProcess(
+					<Column>
+						<div>⏳ Updating logic settings...</div>
+						{ shouldUpdateDirectoryData ? <div>⬜ Updating directory settings...</div> : null }
+					</Column>,
+				);
+
+				const result = await gameState.doImmediateAction({
+					type: 'spaceConfigure',
+					spaceSettings: spaceLogicConfigUpdate,
+				});
+
+				if (result.result === 'success') {
+					// Nothing to do!
+				} else if (result.result === 'failure') {
+					setCommitProcess(
+						<Column>
+							<div>❌ Failed to update logic settings:</div>
+							<ul>
+								{
+									result.problems.map((problem, i) => (
+										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType) }</li>
+									))
+								}
+							</ul>
+							{ shouldUpdateDirectoryData ? <div>⬜ <s>Updating directory settings</s></div> : null }
+						</Column>,
+					);
+					return;
+				} else {
+					// These shouldn't really happen, so we can be lazy with the result code
+					setCommitProcess(
+						<Column>
+							<div>❌ Failed to update logic settings:</div>
+							<code>{ result.result }</code>
+							{ shouldUpdateDirectoryData ? <div>⬜ <s>Updating directory settings</s></div> : null }
+						</Column>,
+					);
+					return;
+
+				}
+
+				setSpaceLogicConfigUpdate(null);
+			}
+
+			if (shouldUpdateDirectoryData) {
+				setCommitProcess(
+					<Column>
+						{ shouldUpdateSpaceSettings ? <div>✅ Updated logic settings</div> : null }
+						<div>⏳ Updating directory settings...</div>
+					</Column>,
+				);
+
+				const result = await directoryConnector.awaitResponse('spaceUpdate', modifiedData);
+				if (result.result !== 'ok') {
+					// TODO: Translate error codes to nicer texts
+					setCommitProcess(
+						<Column>
+							{ shouldUpdateSpaceSettings ? <div>✅ Updated logic settings</div> : null }
+							<div>❌ Failed to update directory settings:</div>
+							<code>{ result.result }</code>
+						</Column>,
+					);
+					return;
+				}
+			}
+
+			setCommitProcess(
+				<Column>
+					{ shouldUpdateSpaceSettings ? <div>✅ Updated logic settings</div> : null }
+					{ shouldUpdateDirectoryData ? <div>✅ Updated directory settings</div> : null }
+				</Column>,
+			);
 		}
-	}, null);
+
+		await Sleep(350);
+		setCommitProcess(null);
+		navigate('/room');
+	}, null, {
+		errorHandler: (err) => {
+			GetLogger('SpaceConfiguration').warning('Error during space update', err);
+			toast(`Error processing action:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
+			setCommitProcess(null);
+		},
+	});
 
 	const onCloseClick = useCallback(() => {
 		// If there is no pending modification, close immediately
-		if (!canEdit || Object.keys(modifiedData).length === 0) {
+		if ((!canEdit || Object.keys(modifiedData).length === 0) && spaceLogicConfigUpdate == null) {
 			close();
 			return;
 		}
 		// Otherwise show close confirmation dialog
 		setShowCommitDialog(true);
-	}, [canEdit, close, modifiedData]);
+	}, [canEdit, close, modifiedData, spaceLogicConfigUpdate]);
+
+	const getLogicSettingDriver = useCallback((function <const Setting extends keyof GameLogicSpaceSettings>(setting: Setting): SettingDriver<Immutable<GameLogicSpaceSettings>[Setting]> {
+		const settings: Partial<Immutable<GameLogicSpaceSettings>> = (spaceLogicConfigUpdate ?? (currentSpaceInfo != null && globalState.space.spaceId === currentSpaceInfo.id ? globalState.space.spaceSettings : {}));
+		const currentValue: Immutable<GameLogicSpaceSettings>[Setting] | undefined = settings[setting];
+
+		return {
+			currentValue,
+			defaultValue: GAME_LOGIC_SPACE_SETTINGS_DEFAULT[setting],
+			onChange(newValue) {
+				setSpaceLogicConfigUpdate({
+					...settings,
+					[setting]: newValue,
+				});
+			},
+			onReset() {
+				setSpaceLogicConfigUpdate(produce(settings, (d) => {
+					delete d[setting];
+				}));
+			},
+		};
+	}), [currentSpaceInfo, globalState, spaceLogicConfigUpdate]);
 
 	const tabProps: SpaceConfigurationTabProps = {
 		creation,
@@ -163,6 +318,8 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		currentAccount,
 		currentSpaceInfo,
 		isPlayerAdmin,
+		currentSpaceState: (currentSpaceInfo != null && globalState.space.spaceId === currentSpaceInfo.id ? globalState : null),
+		getLogicSettingDriver,
 	};
 
 	if (!creation && currentSpaceInfo != null && currentSpaceInfo.id !== lastSpaceId.current) {
@@ -186,6 +343,9 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				</Tab>
 				<Tab name='Rights management'>
 					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRights } />
+				</Tab>
+				<Tab name='Features'>
+					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationFeatures } />
 				</Tab>
 				<Tab name='Room management'>
 					<SpaceConfigurationRoom { ...tabProps } />
@@ -223,6 +383,9 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 									<p>Confirm your changes to the space's configuration?</p>
 								)
 							}
+							<Column alignX='center'>
+								{ commitProcess }
+							</Column>
 							<Row wrap gap='large' alignY='center'>
 								<Button
 									onClick={ close }
@@ -233,6 +396,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 								<Button
 									slim
 									onClick={ () => {
+										setCommitProcess(null);
 										setShowCommitDialog(false);
 									} }
 									disabled={ processingCommit }
@@ -262,6 +426,8 @@ type SpaceConfigurationTabProps = {
 	currentAccount: IDirectoryAccountInfo;
 	isPlayerAdmin: boolean;
 	currentSpaceInfo: Immutable<CurrentSpaceInfo> | null;
+	currentSpaceState: AssetFrameworkGlobalState | null;
+	getLogicSettingDriver: <const Setting extends keyof GameLogicSpaceSettings>(setting: Setting) => SettingDriver<Immutable<GameLogicSpaceSettings>[Setting]>;
 };
 
 function SpaceConfigurationTab({ element: Element, ...props }: SpaceConfigurationTabProps & { element: (props: SpaceConfigurationTabProps) => ReactElement | null; }): ReactElement {
@@ -631,16 +797,99 @@ function SpaceConfigurationRights({
 	);
 }
 
+function SpaceConfigurationFeatures({
+	creation,
+	currentSpaceState,
+	getLogicSettingDriver,
+}: SpaceConfigurationTabProps): ReactElement {
+	if (creation || currentSpaceState == null) {
+		return (
+			<strong>Some space settings can only be changed from inside the space</strong>
+		);
+	}
+
+	return (
+		<SpaceConfigurationFeaturesInner getLogicSettingDriver={ getLogicSettingDriver } />
+	);
+}
+
+function SpaceConfigurationFeaturesInner({
+	getLogicSettingDriver,
+}: Pick<SpaceConfigurationTabProps, 'getLogicSettingDriver'>): ReactElement {
+	const disabledMinigames = getLogicSettingDriver('disabledMinigames');
+
+	return (
+		<>
+			<fieldset>
+				<legend>Minigames</legend>
+				<Row>
+					<Column className='flex-1'>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'dice')) }
+							label={ <>Allow usage of the <code>/dice</code> and <code>/coinflip</code> commands</> }
+							noReset
+						/>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'rockpaperscissors')) }
+							label={ <>Allow usage of the <code>/rockpaperscissors</code> command</> }
+							noReset
+						/>
+						<ToggleSettingInput
+							driver={ useBooleanInvertDriver(useEnumSetMembershipDriver(disabledMinigames, 'cards')) }
+							label={ <>Allow usage of the <code>/cards</code> command</> }
+							noReset
+						/>
+					</Column>
+					<Button
+						className='slim'
+						onClick={ () => disabledMinigames.onReset?.() }
+						disabled={ disabledMinigames.currentValue === undefined }
+					>
+						↺
+					</Button>
+				</Row>
+			</fieldset>
+			<fieldset>
+				<legend>Chat</legend>
+				<Column>
+					<ToggleSettingInput
+						driver={ getLogicSettingDriver('characterMovementActionMessages') }
+						label={ <>Show an action message when an important change to character movement happens</> }
+					>
+						<ContextHelpButton>
+							<p>
+								This affects if an action message is shown in the following cases:
+							</p>
+							<ul>
+								<li>A character starts or stops following/leading another character</li>
+								<li>A character enters or leaves a room device</li>
+							</ul>
+						</ContextHelpButton>
+					</ToggleSettingInput>
+				</Column>
+			</fieldset>
+			<fieldset>
+				<legend>Space changes</legend>
+				<Column>
+					<SpaceRoleOrNoneSelectInput
+						driver={ getLogicSettingDriver('roomChangeMinimumRole') }
+						label="Accounts allowed to make changes to the space's room layout and room settings:"
+						cumulative
+					/>
+				</Column>
+			</fieldset>
+		</>
+	);
+}
+
 function SpaceConfigurationRoom({
 	creation,
-	currentSpaceInfo,
+	currentSpaceState,
 }: SpaceConfigurationTabProps): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
-	const gameState = useGameState();
-	const globalState = useGlobalState(gameState);
 
-	if (creation || currentSpaceInfo == null || globalState.space.spaceId !== currentSpaceInfo.id) {
+	if (creation || currentSpaceState == null) {
 		return (
 			<strong>Room configuration can only be changed from inside the space</strong>
 		);
@@ -650,7 +899,7 @@ function SpaceConfigurationRoom({
 		<WardrobeActionContextProvider player={ player }>
 			<Column className='fill contain-size' overflowY='auto'>
 				<SpaceStateConfigurationUi
-					globalState={ globalState }
+					globalState={ currentSpaceState }
 				/>
 			</Column>
 		</WardrobeActionContextProvider>
@@ -785,6 +1034,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					admin: 'Owner or Admin',
 					allowed: 'Owner, Admin, or on the Allowlist',
 				} }
+				disabled={ !canEdit }
 			/>
 		</>
 	);
@@ -1029,57 +1279,6 @@ function NumberListWarning({ values, invalid }: {
 	return (
 		<Column gap='none'>{ invalidWarning }</Column>
 	);
-}
-
-const SpaceConfigurationProgress = new PersistentToast();
-
-function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
-	const directoryConnector = useDirectoryConnector();
-	const navigate = useNavigatePandora();
-	return useCallback(async (config) => {
-		const validatedConfig = SpaceDirectoryConfigSchema.safeParse(config);
-		if (!validatedConfig.success) {
-			const issue = z.prettifyError(validatedConfig.error);
-			SpaceConfigurationProgress.show('error', (
-				<>
-					Error during space creation:<br />
-					Invalid data:<br />
-					{ issue }
-				</>
-			));
-			return;
-		}
-		try {
-			SpaceConfigurationProgress.show('progress', 'Creating space...');
-			const result = await directoryConnector.awaitResponse('spaceCreate', config);
-			if (result.result === 'ok') {
-				SpaceConfigurationProgress.show('success', 'Space created!');
-				navigate('/room');
-			} else {
-				SpaceConfigurationProgress.show('error', `Failed to create space:\n${result.result}`);
-			}
-		} catch (err) {
-			GetLogger('CreateSpace').warning('Error during space creation', err);
-			SpaceConfigurationProgress.show('error', `Error during space creation:\n${err instanceof Error ? err.message : String(err)}`);
-		}
-	}, [directoryConnector, navigate]);
-}
-
-function UpdateSpace(directoryConnector: DirectoryConnector, config: Partial<SpaceDirectoryConfig>, onSuccess?: () => void): void {
-	(async () => {
-		SpaceConfigurationProgress.show('progress', 'Updating space...');
-		const result = await directoryConnector.awaitResponse('spaceUpdate', config);
-		if (result.result === 'ok') {
-			SpaceConfigurationProgress.show('success', 'Space updated!');
-			onSuccess?.();
-		} else {
-			SpaceConfigurationProgress.show('error', `Failed to update space:\n${result.result}`);
-		}
-	})()
-		.catch((err) => {
-			GetLogger('UpdateSpace').warning('Error during space update', err);
-			SpaceConfigurationProgress.show('error', `Error during space update:\n${err instanceof Error ? err.message : String(err)}`);
-		});
 }
 
 function useShards(): IDirectoryShardInfo[] | undefined {

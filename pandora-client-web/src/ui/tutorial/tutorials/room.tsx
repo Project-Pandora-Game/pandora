@@ -384,7 +384,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								In this mode you can see two circles with arrows under the character.<br />
 								By dragging the red/green arrows, you can move in the room.<br />
 								By dragging the blue up/down arrow, you can fly! Or sink into the ground...<br />
-								This can be useful for finely positioning your character elevation against another object.
+								This can be useful for finely positioning your character elevation against another object, such
+								as standing on a chair, as otherwise your character would have the wrong perspective-based size.
 							</p>
 							<p>
 								You can also click the circles:<br />
@@ -432,11 +433,11 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								To quickly move your character simply drag its name instead of clicking it.
 							</p>
 							<p>
-								Note: Spaces can consist of more than one room. Users can move between neighboring rooms with
-								an active path in three primary ways: By using the path squares on the ground, by clicking on the room in
+								Note: Spaces can consist of more than one room. Users can move between neighboring rooms that have an
+								accessible path in between in three primary ways: By using the path squares on the ground, by clicking on the room in
 								the map under the "Room" tab, or by using the '/moveto' command. Your personal space is most
 								likely only having a single room right now. There is a later tutorial that will explain the topic
-								of multiple rooms in detail.
+								of multiple rooms in detail.<br />
 							</p>
 						</>
 					),
@@ -572,10 +573,16 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				},
 				{
 					text: (
-						<p>
-							The second tab we will briefly cover in this tutorial is the "Chat".<br />
-							Please switch to it now.
-						</p>
+						<>
+							<p>
+								Perfect! This was just to demonstrate another option to bring up this menu.
+								You can now close it again.
+							</p>
+							<p>
+								The second tab we will briefly cover in this tutorial is the "Chat".<br />
+								Please switch to it now.
+							</p>
+						</>
 					),
 					hideWhenCompleted: true,
 					conditions: [{
@@ -762,7 +769,9 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								These usually happen as a result of interacting with character's items,
 								but can also be created through the use of various commands.<br />
-								Try doing just that by using the "/dice" command to roll a dice.
+								A list of all commands in Pandora can be brought up by entering a single
+								"/" into the chat.<br />
+								Try using the "/dice" command to roll a dice.
 							</p>
 						</>
 					),
@@ -846,6 +855,54 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						</>
 					),
 					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								To all write all messages in a certain way, such as OOC or as emotes, you can switch the chat mode.
+								To do that, open the chat menu by pressing the bar with the white cog above the chat input field.
+								Feel free to open it now.
+							</p>
+							<p>
+								There you can select from a drop-down list of all available chat modes.
+								Switching modes can also be done with chat commands, e.g. '/ooc' without anything afterwards.
+								You can read more about chat modes in the <ExternalLink href='https://project-pandora.com/wiki/chat'>wiki</ExternalLink>.
+							</p>
+							<p>
+								You can close the menu by again pressing on the highlighted bar.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.typing-indicator',
+					}],
 				},
 			],
 		},

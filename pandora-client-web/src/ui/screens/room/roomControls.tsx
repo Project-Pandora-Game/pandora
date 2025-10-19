@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -25,7 +25,7 @@ import { Column, DivContainer, Row } from '../../../components/common/container/
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { usePlayer, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
@@ -33,6 +33,7 @@ import { USER_DEBUG } from '../../../config/Environment.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -46,7 +47,6 @@ import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
-import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -258,7 +258,7 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	// In all other cases it is either intentionally private or public because of this user
 	if (
 		spaceConfig.public === 'public-with-admin' &&
-		!characterData.some((c) => c.onlineStatus !== 'offline' && ctx.isAdmin(c.accountId))
+		!characterData.some((c) => c.onlineStatus !== 'offline' && CompareSpaceRoles(ctx.getAccountSpaceRole(c.accountId), 'admin') >= 0)
 	) {
 		return (
 			<span className='space-warning'>
@@ -357,6 +357,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 }): ReactElement | null {
 	const playerRoom = globalState.space.getRoom(playerState.currentRoom);
 	const dpr = useDevicePixelRatio();
+	const playerRestrictionManager = usePlayerRestrictionManager();
 
 	if (globalState.space.rooms.length <= 1 || playerRoom == null)
 		return null;
@@ -370,7 +371,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 				[centerY - 1, centerY, centerY + 1].flatMap((y) => [centerX - 1, centerX, centerX + 1].map((x) => {
 					const room = globalState.space.getRoomByPosition({ x, y });
 					if (room == null ||
-						(playerRoom.id !== room.id && playerRoom.getLinkToRoom(room) == null) ||
+						(playerRoom.id !== room.id && !playerRestrictionManager.canUseRoomLink(playerRoom.getLinkToRoom(room))) ||
 						(y !== centerY && x !== centerX)
 					) {
 						// Filler when there is no room, no link between rooms, the link is disabled, or for corners
@@ -614,7 +615,7 @@ function DisplayCharacter({ char, globalState }: {
 				<button onClick={ openMenu }>
 					<span>
 						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
-						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
+						<span><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
 				</button>

@@ -1,7 +1,7 @@
 import { Draft, enableMapSet, freeze, produce } from 'immer';
 import { noop } from 'lodash-es';
 import { Assert, ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { NODE_ENV, USER_DEBUG } from './config/Environment.ts';
 
 // Enable "Map" and "Set" support from immer, so they can be easily used in observables
@@ -131,7 +131,10 @@ export const NULL_OBSERVABLE: ReadonlyObservable<null> = new StaticObservable(nu
 export function useObservable<TObservable extends ReadonlyObservable<any>>(obs: TObservable): TObservable['value'];
 export function useObservable<T>(obs: ReadonlyObservable<T>): T;
 export function useObservable<T>(obs: ReadonlyObservable<T>): T {
-	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);
+	return useSyncExternalStore(
+		useCallback((cb) => obs.subscribe(cb), [obs]),
+		useCallback(() => obs.value, [obs]),
+	);
 }
 
 const MULTIPLE_OBSERVABLE_CACHE = new WeakMap<readonly ReadonlyObservable<unknown>[], readonly unknown[]>();
@@ -198,5 +201,8 @@ export function ObservableProperty<T extends TypedEvent, K extends keyof T & (st
 }
 
 export function useObservableProperty<T extends TypedEvent, const K extends keyof T>(obs: IObservableClass<T>, key: K): T[K] {
-	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);
+	return useSyncExternalStore(
+		useMemo(() => obs.getSubscriber(key), [obs, key]),
+		useCallback(() => obs[key], [obs, key]),
+	);
 }

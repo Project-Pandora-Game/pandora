@@ -13,6 +13,7 @@ import {
 	ChatCharacterStatus,
 	ChatTypeSchema,
 	CloneDeepMutable,
+	CompareSpaceRoles,
 	EMPTY_ARRAY,
 	GameStateUpdate,
 	GetLogger,
@@ -51,6 +52,7 @@ import {
 	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
+	type SpaceRole,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
@@ -451,6 +453,8 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					case 'action':
 					case 'serverMessage':
 						return ({ ...m, spaceId, roomsData: m.rooms?.map(processRoom) ?? null, receivedRoomId: roomId });
+					case 'actionLog':
+						return ({ ...m, spaceId });
 					case 'deleted':
 						return ({ ...m, spaceId, receivedRoomId: roomId });
 				}
@@ -469,7 +473,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 				let found = false;
 				const acc: IChatMessageProcessed[] = [];
 				for (const m of nextMessages) {
-					if (m.id !== message.id)
+					if ((m.type !== 'chat' && m.type !== 'ooc' && m.type !== 'me' && m.type !== 'emote') || m.id !== message.id)
 						acc.push(m);
 					else if (!found) {
 						found = true;
@@ -592,7 +596,6 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					if (
 						lastMessage.type === 'action' &&
 						lastMessage.id === message.id &&
-						lastMessage.customText === message.customText &&
 						isEqual(lastMessage.sendTo, message.sendTo) &&
 						isEqual(lastMessage.data, message.data) &&
 						isEqual(lastMessage.dictionary, message.dictionary)
@@ -891,11 +894,11 @@ export function MakeActionSpaceContext(
 ): ActionSpaceContext {
 	return {
 		features: spaceInfo.config.features,
-		isAdmin: (accountId) => {
+		getAccountSpaceRole: (accountId) => {
 			if (accountId === playerAccount?.id) {
-				return IsSpaceAdmin(spaceInfo.config, playerAccount);
+				return GetSpaceInfoAccountRole(spaceInfo.config, playerAccount);
 			}
-			return IsSpaceAdmin(spaceInfo.config, { id: accountId });
+			return GetSpaceInfoAccountRole(spaceInfo.config, { id: accountId });
 		},
 		development: spaceInfo.config.development,
 		getCharacterModifierEffects: (characterId) => {
@@ -942,14 +945,17 @@ export function useChatCharacterStatus(): { data: ICharacterRoomData; status: Ch
 export function useGlobalState(context: GameState): AssetFrameworkGlobalState;
 export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null;
 export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null {
-	return useSyncExternalStore((onChange) => {
-		if (context == null)
-			return noop;
+	return useSyncExternalStore(
+		useCallback((onChange) => {
+			if (context == null)
+				return noop;
 
-		return context.on('globalStateChange', () => {
-			onChange();
-		});
-	}, () => (context?.globalState.currentState ?? null));
+			return context.on('globalStateChange', () => {
+				onChange();
+			});
+		}, [context]),
+		useCallback(() => (context?.globalState.currentState ?? null), [context]),
+	);
 }
 
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
@@ -1016,17 +1022,23 @@ export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id:
 	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 
-export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
-	if (!account?.id)
-		return false;
+export function GetSpaceInfoAccountRole(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): SpaceRole {
+	if (account?.id == null)
+		return 'everyone';
 
 	if (data.owners.includes(account.id))
-		return true;
+		return 'owner';
 	if (data.admin.includes(account.id))
-		return true;
+		return 'admin';
 
 	if (data.development?.autoAdmin && IsAuthorized(account.roles, 'developer'))
-		return true;
+		return 'admin';
+	if (data.allow.includes(account.id))
+		return 'allowlisted';
 
-	return false;
+	return 'everyone';
+}
+
+export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
+	return CompareSpaceRoles(GetSpaceInfoAccountRole(data, account), 'admin') >= 0;
 }

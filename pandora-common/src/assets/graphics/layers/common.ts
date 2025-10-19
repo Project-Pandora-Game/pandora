@@ -1,5 +1,6 @@
 import * as z from 'zod';
-import { BoneNameSchema, ConditionSchema } from '../conditions.ts';
+import { PartialAppearancePoseSchema } from '../../state/characterStatePose.ts';
+import { ConditionSchema } from '../conditions.ts';
 
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
@@ -9,7 +10,7 @@ export const LayerImageOverrideSchema = z.object({
 	 *
 	 * EXPERIMENTAL - subject to change, will likely be merged with `scaling` options soon.
 	 */
-	uvPose: z.record(BoneNameSchema, z.number()).optional(),
+	uvPose: PartialAppearancePoseSchema.optional(),
 	condition: ConditionSchema,
 });
 export type LayerImageOverride = z.infer<typeof LayerImageOverrideSchema>;
@@ -107,7 +108,7 @@ export const LayerImageSettingSchema = z.object({
 	 *
 	 * EXPERIMENTAL - subject to change, will likely be merged with `scaling` options soon.
 	 */
-	uvPose: z.record(BoneNameSchema, z.number()).optional(),
+	uvPose: PartialAppearancePoseSchema.optional(),
 	overrides: z.array(LayerImageOverrideSchema),
 }).strict();
 export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;

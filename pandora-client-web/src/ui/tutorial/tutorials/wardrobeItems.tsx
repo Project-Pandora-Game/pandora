@@ -481,15 +481,21 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				},
 				{
 					text: (
-						<p>
-							The bound usage system was added for self-bondage and for roleplaying tightening restraints or struggling out of items. It comes with a delay of five
-							seconds before you can choose to complete the attempt to actually do the bound action. However, this arbitrary delay does not mean that
-							Pandora defines that it always takes five seconds to struggle out successfully, for instance. It is impossible to estimate well enough
-							how long it should take, as many factors that are impossible to know affect this process.
-							Therefore, this system lets you flexibly decide yourself how long it should realistically take before you can succeed.<br />
-							That said, there is a character modifier "Delayed bound usage attempts" that allows you or others to configure this time, for instance for
-							individual items or item groups. Character modifiers are topic of another tutorial, though.
-						</p>
+						<>
+							<p>
+								The bound usage system was added for self-bondage and for roleplaying tightening restraints or struggling out of items. It comes with a delay of five
+								seconds before you can choose to complete the attempt to actually do the bound action. However, this arbitrary delay does not mean that
+								Pandora defines that it always takes five seconds to struggle out successfully, for instance. It is impossible to estimate well enough
+								how long it should take, as many factors that are impossible to know affect this process.
+								Therefore, this system lets you flexibly decide yourself how long it should realistically take before you can succeed.<br />
+								That said, there is a character modifier "Delayed bound usage attempts" that allows you or others to configure this time, for instance for
+								individual items or item groups. Character modifiers are topic of another tutorial, though.
+							</p>
+							<p>
+								Note that creating or deleting items, and changing the bound usage setting on existing items always requires free hands and cannot be
+								achieved with bound usage.
+							</p>
+						</>
 					),
 					conditions: [{ type: 'next' }],
 				},
@@ -577,15 +583,15 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 									(e.g. a chest in the room inventory) or out of one.
 								</li>
 								<li>
-									Removing the item from the character and deleting it.<br />
-									Note that you can do this action also with the trash can
-									button in the left pane, while the "Create new item" tab on the right pane is the active one.
-								</li>
-								<li>
 									Removing the item from the character and moving it to the room inventory.<br />
 									Note that you can do this action also with the
 									triangle arrow button in the left pane (likely not currently visible), while the "Room inventory" tab on the right
 									pane is the active one.
+								</li>
+								<li>
+									Removing the item from the character and deleting it.<br />
+									Note that you can do this action also with the trash can
+									button in the left pane, while the "Create new item" tab on the right pane is the active one.
 								</li>
 							</ul>
 							<p>
@@ -640,11 +646,12 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					highlight: [
 						{
 							query: '.wardrobeActionButton',
-							filter: (e) => e.innerText.includes('Remove and delete'),
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+							filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'delete'),
 						},
 						{
 							query: '.wardrobeActionButton',
-							filter: (e) => e.innerText.includes('Store in room'),
+							filter: (e) => e.innerText.includes('Remove and store in room'),
 						},
 					],
 				},

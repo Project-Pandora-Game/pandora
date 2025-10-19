@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import * as z from 'zod';
 import { ZodOverridable } from '../../validation.ts';
 
@@ -84,17 +85,61 @@ export const AtomicConditionViewSchema = z.object({
 export const AtomicConditionBlinkingSchema = z.object({
 	blinking: z.boolean(),
 });
-export const AtomicConditionSchema = z.union([
+
+/** Smallest condition segment that can be used for pose transforms */
+export const AtomicPoseConditionSchema = z.union([
 	AtomicConditionBoneSchema,
-	AtomicConditionModuleSchema,
-	AtomicConditionAttributeSchema,
 	AtomicConditionArmRotationSchema,
 	AtomicConditionArmFingersSchema,
 	AtomicConditionLegsSchema,
 	AtomicConditionViewSchema,
+]);
+/** Smallest condition segment that can be used for pose transforms */
+export type AtomicPoseCondition = z.infer<typeof AtomicPoseConditionSchema>;
+
+/**
+ * A condition usable in posing.
+ * Allows only single string of atomic conditions connected by AND operator.
+ * If transform needs to be conditioned with OR, it should be duplicated instead.
+ */
+export const PoseConditionSchema = AtomicPoseConditionSchema.array();
+/**
+ * A condition usable in posing.
+ * Allows only single string of atomic conditions connected by AND operator.
+ * If transform needs to be conditioned with OR, it should be duplicated instead.
+ */
+export type PoseCondition = z.infer<typeof PoseConditionSchema>;
+
+/** Smallest condition segment that can be used graphics decisions */
+export const AtomicConditionSchema = z.union([
+	AtomicPoseConditionSchema,
+	AtomicConditionModuleSchema,
+	AtomicConditionAttributeSchema,
 	AtomicConditionBlinkingSchema,
 ]);
+/** Smallest condition segment that can be used graphics decisions */
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 
 export const ConditionSchema = z.array(z.array(AtomicConditionSchema));
 export type Condition = z.infer<typeof ConditionSchema>;
+
+/**
+ * Takes two logic conditions in DNF and produces a new DNF condition that is OR of the two.
+ */
+export function ConditionsCombineOr(a: Immutable<Condition>, b: Immutable<Condition>): Immutable<Condition> {
+	return [...a, ...b];
+}
+/**
+ * Takes two logic conditions in DNF and produces a new DNF condition that is AND of the two.
+ */
+export function ConditionsCombineAnd(a: Immutable<Condition>, b: Immutable<Condition>): Immutable<Condition> {
+	// Result is and between individual clauses, for every OR combination
+	// We don't do simplification as usually it is not worth it, as we usually combine with something without OR operators.
+	const result: Immutable<AtomicCondition>[][] = [];
+	for (const ca of a) {
+		for (const cb of b) {
+			result.push([...ca, ...cb]);
+		}
+	}
+	return result;
+}

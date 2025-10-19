@@ -1,52 +1,47 @@
 import type { Immutable } from 'immer';
 import { AssertNever, EMPTY_ARRAY, type ItemRoomDevice, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useContext, useMemo } from 'react';
+import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
-import { Container } from '../baseComponents/container.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
-export function GraphicsLayerMesh({
-	characterState,
-	children,
-	zIndex,
-	lowerZIndex,
+export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	displayUvPose = false,
 	state,
 	debugConfig,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement {
-
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 
-	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
+	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
 	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
-	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
+	const { color, alpha } = useItemColor(wornItems, item, layer.colorizationKey, state);
 
 	const cullClockwise = useContext(ContextCullClockwise);
 
@@ -58,54 +53,46 @@ export function GraphicsLayerMesh({
 	}, [cullClockwise]);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
-			{
-				layer.normalMap != null ? (
-					<GraphicsLayerMeshNormals
-						vertices={ vertices }
-						vertexRotations={ vertexRotations }
-						uvs={ uv }
-						triangles={ triangles }
-						texture={ texture }
-						normalMapTexture={ normalMapTexture }
-						normalMapData={ layer.normalMap }
-						state={ cullingState }
-						color={ color }
-						alpha={ alpha }
-						debugConfig={ debugConfig }
-					/>
-				) : (
-					<PixiMesh
-						state={ cullingState }
-						vertices={ vertices }
-						uvs={ uv }
-						indices={ triangles }
-						texture={ texture }
-						tint={ color }
-						alpha={ alpha }
-					/>
-				)
-			}
-			<Container zIndex={ lowerZIndex }>
-				{ children }
-			</Container>
-		</Container>
+		layer.normalMap != null ? (
+			<GraphicsLayerMeshNormals
+				vertices={ vertices }
+				vertexRotations={ vertexRotations }
+				uvs={ uv }
+				triangles={ triangles }
+				texture={ texture }
+				normalMapTexture={ normalMapTexture }
+				normalMapData={ layer.normalMap }
+				state={ cullingState }
+				color={ color }
+				alpha={ alpha }
+				debugConfig={ debugConfig }
+			/>
+		) : (
+			<PixiMesh
+				state={ cullingState }
+				vertices={ vertices }
+				uvs={ uv }
+				indices={ triangles }
+				texture={ texture }
+				tint={ color }
+				alpha={ alpha }
+			/>
+		)
 	);
-}
+});
 
-export function GraphicsLayerRoomDeviceMesh({
+export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMesh({
 	item,
 	layer,
 	roomMask,
+	getFilters,
 }: {
 	item: ItemRoomDevice;
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
 	roomMask?: PixiMaskSource;
+	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {
-	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+	const evaluator = useStandaloneConditionEvaluator();
 
 	const { image, normalMapImage } = useMemo<Immutable<RoomDeviceLayerImageSetting> | Immutable<RoomDeviceLayerImageOverride>>(() => {
 		return layer.image.overrides?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item))) ?? layer.image;
@@ -141,8 +128,7 @@ export function GraphicsLayerRoomDeviceMesh({
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
-	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
 	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
 
@@ -192,4 +178,4 @@ export function GraphicsLayerRoomDeviceMesh({
 	} else {
 		AssertNever(geometryData.type);
 	}
-}
+});

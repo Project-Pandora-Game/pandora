@@ -1,14 +1,5 @@
-import { DependencyList, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { DependencyList, useEffect, useRef, useState } from 'react';
 import { useEvent } from './useEvent.ts';
-
-export function useSyncUserInput<T extends string | number | boolean>(
-	subscribe: (onStoreChange: () => void) => () => void,
-	getSnapshot: () => T,
-	deps: DependencyList = [],
-): [T, (newValue: T) => void] {
-	const originalValue = useSyncExternalStore(subscribe, getSnapshot);
-	return useUpdatedUserInput(originalValue, deps);
-}
 
 export function useUpdatedUserInput<T extends string | number | boolean | undefined | null>(
 	originalValue: T,

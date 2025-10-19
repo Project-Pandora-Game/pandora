@@ -16,11 +16,12 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
-import { Observable, useObservable } from '../observable.ts';
+import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
 import type { ChatroomDebugConfig } from '../ui/screens/room/roomDebug.tsx';
+import { useCharacterPoseEvaluator, type CharacterPoseEvaluator } from './appearanceConditionEvaluator.ts';
 import { Container } from './baseComponents/container.ts';
 import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
 import type { PointLike } from './common/point.ts';
@@ -29,16 +30,28 @@ import { TransitionHandler, type TransitionHandlerValueProcessor } from './commo
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
-import { GraphicsLayer } from './layers/graphicsLayer.tsx';
-import { SwapCullingDirectionObservable, type GraphicsLayerProps } from './layers/graphicsLayerCommon.tsx';
+import { GraphicsCharacterDefaultLayerBuilder } from './layers/graphicsLayer.tsx';
+import { SwapCullingDirectionObservable } from './layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from './reconciler/tick.ts';
 
 const logger = GetLogger('GraphicsCharacter');
 
 export type GraphicsCharacterLayerFilter = (layer: LayerState) => boolean;
+/**
+ * This method receives a layer state, few other datapoints, and previous layer(s).
+ * It should produce a new result that represents the combination.
+ */
+export type GraphicsCharacterLayerBuilder = (
+	layer: LayerState,
+	previousLayers: ReactElement[] | undefined,
+	reverse: boolean,
+	poseEvaluator: CharacterPoseEvaluator,
+	characterBlinking?: ReadonlyObservable<boolean>,
+	debugConfig?: Immutable<ChatroomDebugConfig>,
+) => ReactElement[];
 
 export interface GraphicsCharacterProps extends ChildrenProps {
-	layer?: (props: GraphicsLayerProps) => ReactElement;
+	layerBuilder?: GraphicsCharacterLayerBuilder;
 	layerFilter?: GraphicsCharacterLayerFilter;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
 	characterState: AssetFrameworkCharacterState;
@@ -87,15 +100,21 @@ const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFram
 	mix(a, b, ratio) {
 		// We base the animation off of "actualPose" despite doing it by setting "requestedPose",
 		// as it looks more natural with most of the item limits
-		return b.produceWithRequestedPose(CombineAppearancePoses(a.actualPose, b.actualPose, ratio));
+		const pose = CombineAppearancePoses(a.actualPose, b.actualPose, ratio);
+
+		// Optimization: If the pose matches target actual pose, simply return that instead
+		if (b.actualPose === pose)
+			return b;
+
+		return b.produceWithRequestedPose(pose);
 	},
 	isTransitionable(a, b) {
 		return a.id === b.id;
 	},
 };
 
-export function GraphicsCharacterWithManager({
-	layer: Layer,
+export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithManager({
+	layerBuilder,
 	layerFilter,
 	characterState,
 	position: positionOffset = { x: 0, y: 0 },
@@ -175,6 +194,7 @@ export function GraphicsCharacterWithManager({
 
 	const effectiveCharacterState = (Number.isFinite(movementTransitionDuration) && movementTransitionDuration > 0) ? producedEffectiveCharacterState : characterState;
 	const items = effectiveCharacterState.items;
+	const poseEvaluator = useCharacterPoseEvaluator(effectiveCharacterState.assetManager, effectiveCharacterState.actualPose);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
@@ -263,6 +283,7 @@ export function GraphicsCharacterWithManager({
 					layer,
 					item,
 					state: layerStateOverrideGetter?.(layer),
+					wornItems: items,
 				})),
 			);
 		}
@@ -278,32 +299,18 @@ export function GraphicsCharacterWithManager({
 	const { view } = effectivePose;
 	const sortOrder = useComputedLayerPriority(effectivePose);
 
-	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, ReactElement>>(() => {
-		const result = new Map<LayerPriority, ReactElement>();
+	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
+		const result = new Map<LayerPriority, ReactElement[]>();
+		const actualLayerBuilder = layerBuilder ?? GraphicsCharacterDefaultLayerBuilder;
 		for (const layerState of layers) {
 			const priority = layerState.layer.priority;
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
-			const LayerElement = Layer ?? GraphicsLayer;
 
-			result.set(priority, (
-				<LayerElement
-					key={ layerState.layerKey }
-					zIndex={ reverse ? 1 : -1 }
-					lowerZIndex={ reverse ? 1 : -1 }
-					layer={ layerState.layer }
-					item={ layerState.item }
-					state={ layerState.state }
-					characterState={ effectiveCharacterState }
-					characterBlinking={ characterBlinking }
-					debugConfig={ debugConfig }
-				>
-					{ lowerLayer }
-				</LayerElement>
-			));
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, characterBlinking, debugConfig));
 		}
 		return result;
-	}, [Layer, effectiveCharacterState, layers, view, characterBlinking, debugConfig]);
+	}, [layerBuilder, poseEvaluator, layers, view, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
@@ -336,18 +343,15 @@ export function GraphicsCharacterWithManager({
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirectionObservable swap={ swapCullingScale }>
-					{
-						sortOrder.map((priority, i) => {
-							const layer = priorityLayers.get(priority);
-							return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
-						})
-					}
+					<Container zIndex={ 0 }>
+						{ sortOrder.flatMap((priority) => priorityLayers.get(priority) ?? null) }
+					</Container>
 					{ children }
 				</SwapCullingDirectionObservable>
 			</GraphicsSuspense>
 		</TransitionedContainer>
 	);
-}
+});
 
 export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);

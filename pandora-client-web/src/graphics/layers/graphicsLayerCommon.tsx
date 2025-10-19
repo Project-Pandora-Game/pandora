@@ -2,7 +2,6 @@ import type { Immutable } from 'immer';
 import {
 	AppearanceItems,
 	AssertNever,
-	AssetFrameworkCharacterState,
 	HexColorString,
 	Item,
 	type GraphicsLayer,
@@ -10,80 +9,59 @@ import {
 	type LayerStateOverrides,
 	type PointDefinitionCalculated,
 	type Rectangle,
+	type WearableAssetType,
 } from 'pandora-common';
 import { DEG_TO_RAD } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useObservable, type ReadonlyObservable } from '../../observable.ts';
 import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
-import { ConditionEvaluatorBase } from '../appearanceConditionEvaluator.ts';
+import { type CharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 
 type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, LayerVerticesResult>;
-type TransformEvalCacheEntry = {
-	noItem: TransformEvalCacheEntryValue;
-	withItem: WeakMap<Item, TransformEvalCacheEntryValue>;
-};
-
-const transformEvalCache = new WeakMap<ConditionEvaluatorBase, TransformEvalCacheEntry>();
+const transformEvalCache = new WeakMap<CharacterPoseEvaluator, TransformEvalCacheEntryValue>();
 
 export type LayerVerticesResult = {
 	vertices: Float32Array;
 	vertexRotations: Float32Array;
 };
 
-export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, item: Item | null, points: Immutable<PointDefinitionCalculated[]>): LayerVerticesResult {
-	let cacheEntry: TransformEvalCacheEntry | undefined = transformEvalCache.get(evaluator);
+export function EvalLayerVerticesTransform(evaluator: CharacterPoseEvaluator, points: Immutable<PointDefinitionCalculated[]>): LayerVerticesResult {
+	let cacheEntry: TransformEvalCacheEntryValue | undefined = transformEvalCache.get(evaluator);
 	if (cacheEntry === undefined) {
-		cacheEntry = {
-			noItem: new WeakMap(),
-			withItem: new WeakMap(),
-		};
+		cacheEntry = new WeakMap();
 		transformEvalCache.set(evaluator, cacheEntry);
 	}
 
-	let value: TransformEvalCacheEntryValue = cacheEntry.noItem;
-	if (item != null) {
-		let itemValue: TransformEvalCacheEntryValue | undefined = cacheEntry.withItem.get(item);
-		if (itemValue === undefined) {
-			itemValue = new WeakMap();
-			cacheEntry.withItem.set(item, itemValue);
-		}
-		value = itemValue;
-	}
-
-	let result: LayerVerticesResult | undefined = value.get(points);
+	let result: LayerVerticesResult | undefined = cacheEntry.get(points);
 	if (result === undefined) {
 		result = {
 			vertices: new Float32Array(points
 				.flatMap((point) => evaluator.evalTransform(
 					point.pos,
 					point.transforms,
-					point.mirror,
-					item,
 				)),
 			),
 			vertexRotations: new Float32Array(points
 				.map((point) => evaluator.evalTransformAngle(
 					point.transforms,
-					item,
 				) * DEG_TO_RAD),
 			),
 		};
-		value.set(points, result);
+		cacheEntry.set(points, result);
 	}
 	return result;
 }
 
 export function useLayerVertices(
-	evaluator: ConditionEvaluatorBase,
+	evaluator: CharacterPoseEvaluator,
 	points: Immutable<PointDefinitionCalculated[]>,
 	layerArea: Immutable<Rectangle>,
-	item: Item | null,
 	normalize: boolean = false,
 ): LayerVerticesResult {
 	return useMemo((): LayerVerticesResult => {
 		// Eval transform
-		const result = EvalLayerVerticesTransform(evaluator, item, points);
+		const result = EvalLayerVerticesTransform(evaluator, points);
 
 		// Normalize
 		if (normalize) {
@@ -99,13 +77,10 @@ export function useLayerVertices(
 			};
 		}
 		return result;
-	}, [layerArea, evaluator, item, points, normalize]);
+	}, [layerArea, evaluator, points, normalize]);
 }
 
-export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> extends ChildrenProps {
-	characterState: AssetFrameworkCharacterState;
-	zIndex: number;
-	lowerZIndex: number;
+export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> {
 	layer: Immutable<Extract<GraphicsLayer, { type: TLayerType; }>>;
 	item: Item | null;
 
@@ -117,6 +92,8 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 	displayUvPose?: boolean;
 	state?: LayerStateOverrides;
 
+	poseEvaluator: CharacterPoseEvaluator;
+	wornItems: AppearanceItems<WearableAssetType>;
 	/**
 	 * Observable for whether the character the layer belongs to is currently mid-blink.
 	 * If not passed, it is assumed to be `false`.

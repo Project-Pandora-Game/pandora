@@ -1,33 +1,100 @@
 import type { Immutable } from 'immer';
-import { AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type Item, type LayerImageSetting, type Rectangle, type WearableAssetType } from 'pandora-common';
+import { APPEARANCE_POSE_DEFAULT, AssertNever, AssetFrameworkCharacterState, IsNotNullable, LayerMirror, MirrorBoneLike, type Item, type LayerImageSetting, type Rectangle, type WearableAssetType } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { SCALING_IMAGE_UV_EMPTY, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
-import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
+import type { GraphicsCharacterLayerBuilder } from '../../../graphics/graphicsCharacter.tsx';
+import { GraphicsLayerAlphaImageMesh } from '../../../graphics/layers/graphicsLayerAlphaImageMesh.tsx';
+import { useItemColor, useLayerVertices } from '../../../graphics/layers/graphicsLayerCommon.tsx';
+import { GraphicsLayerMesh } from '../../../graphics/layers/graphicsLayerMesh.tsx';
+import { GraphicsLayerText } from '../../../graphics/layers/graphicsLayerText.tsx';
 import { usePixiApp } from '../../../graphics/reconciler/appContext.ts';
 import { GetTextureBoundingBox } from '../../../graphics/utility/textureBoundingBox.ts';
 import { useObservable } from '../../../observable.ts';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
-export function SetupLayer({
-	...props
-}: GraphicsLayerProps): ReactElement {
-	return (
-		<EditorLayer
-			{ ...props }
-			displayUvPose
-		/>
-	);
-}
+export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
+	switch (layer.layer.type) {
+		case 'mesh': {
+			previousLayers ??= [];
+			const res = (
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerMesh
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						poseEvaluator={ poseEvaluator }
+						wornItems={ layer.wornItems }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					/>
+				</EditorUseTextureGetterOverride>
+			);
+			if (reverse) {
+				previousLayers.unshift(res);
+			} else {
+				previousLayers.push(res);
+			}
+			return previousLayers;
+		}
+		case 'alphaImageMesh': {
+			return [
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerAlphaImageMesh
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						poseEvaluator={ poseEvaluator }
+						wornItems={ layer.wornItems }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					>
+						{ previousLayers }
+					</GraphicsLayerAlphaImageMesh>
+				</EditorUseTextureGetterOverride>,
+			];
+		}
+		case 'text': {
+			previousLayers ??= [];
+			const res = (
+				<EditorUseTextureGetterOverride key={ layer.layerKey } asset={ GetEditorSourceLayerForRuntimeLayer(layer.layer)?.assetGraphics }>
+					<GraphicsLayerText
+						key={ layer.layerKey }
+						layer={ layer.layer }
+						item={ layer.item }
+						state={ layer.state }
+						poseEvaluator={ poseEvaluator }
+						wornItems={ layer.wornItems }
+						characterBlinking={ characterBlinking }
+						debugConfig={ debugConfig }
+						displayUvPose
+					/>
+				</EditorUseTextureGetterOverride>
+			);
+			if (reverse) {
+				previousLayers.unshift(res);
+			} else {
+				previousLayers.push(res);
+			}
+			return previousLayers;
+		}
+	}
+	AssertNever(layer.layer);
+};
 
 export function SetupLayerSelected({
 	layer,
@@ -79,15 +146,16 @@ export function SetupMeshLayerSelected({
 
 	const { points, triangles } = useLayerMeshPoints(definition);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const asset = layer.assetGraphics;
 	const editorAssetTextures = useObservable(asset.textures);
@@ -187,15 +255,16 @@ export function SetupAlphaImageMeshLayerSelected({
 
 	const { points, triangles } = useLayerMeshPoints(definition);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();
@@ -273,7 +342,6 @@ export function SetupAlphaImageMeshLayerSelected({
 
 export function SetupAutomeshLayerSelected({
 	characterState,
-	item,
 	zIndex,
 	layer,
 }: {
@@ -312,8 +380,8 @@ export function SetupAutomeshLayerSelected({
 		pointType,
 	});
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, SCALING_IMAGE_UV_EMPTY);
-	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true).vertices;
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, APPEARANCE_POSE_DEFAULT);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
 		const imagesTmp = new Set<string>();

@@ -12,6 +12,7 @@ import {
 	IChatSegment,
 	SpaceId,
 	type AssetManager,
+	type ChatMessageActionLog,
 	type IChatMessageActionItem,
 	type IChatMessageChat,
 	type IChatMessageDeleted,
@@ -73,7 +74,14 @@ export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'>
 	dictionary?: ChatMessageProcessedDictionary;
 };
 
-export type IChatMessageProcessed = IChatNormalMessageProcessed | IChatDeletedMessageProcessed | IChatActionMessageProcessed;
+export type ChatActionLogMessageProcessed = ChatMessageActionLog & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+	/** The space this message was received in */
+	spaceId: SpaceId | null;
+};
+
+export type IChatMessageProcessed = IChatNormalMessageProcessed | IChatDeletedMessageProcessed | IChatActionMessageProcessed | ChatActionLogMessageProcessed;
 
 export function IsActionMessage(message: IChatMessageProcessed): message is IChatActionMessageProcessed {
 	return message.type === 'action' || message.type === 'serverMessage';
@@ -237,9 +245,6 @@ export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>
 }
 
 function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
-	if (action.customText != null)
-		return action.customText;
-
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);
 	const itemPrevious = action.data?.itemPrevious ?? item;

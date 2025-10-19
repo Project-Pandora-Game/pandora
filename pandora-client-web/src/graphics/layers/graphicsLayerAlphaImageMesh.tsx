@@ -5,11 +5,11 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
-import { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { type PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -19,30 +19,30 @@ import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
 import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export function GraphicsLayerAlphaImageMesh({
-	characterState,
+export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMesh({
 	children,
-	zIndex,
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	displayUvPose = false,
 	characterBlinking,
-}: GraphicsLayerProps<'alphaImageMesh'>): ReactElement {
+}: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
 
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const {
 		image,
-		imageUv,
+		imageUvPose,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false).vertices;
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true).vertices;
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const alphaImage = image;
 	const alphaMesh = useMemo(() => ({
@@ -52,11 +52,11 @@ export function GraphicsLayerAlphaImageMesh({
 	}), [vertices, uv, triangles]);
 
 	return (
-		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ zIndex }>
+		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh }>
 			{ children }
 		</MaskContainer>
 	);
-}
+});
 
 const MASK_X_OVERSCAN = 250;
 export const MASK_SIZE: Readonly<PandoraRectangle> = {
@@ -68,11 +68,9 @@ export const MASK_SIZE: Readonly<PandoraRectangle> = {
 interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
 	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
-	zIndex?: number;
 }
 
 function MaskContainer({
-	zIndex,
 	children,
 	...props
 }: MaskContainerProps): ReactElement {
@@ -81,20 +79,19 @@ function MaskContainer({
 	const hasApp = usePixiAppOptional() != null;
 
 	if (alphamaskEngine === 'pixi' && hasApp)
-		return <MaskContainerPixi { ...props } zIndex={ zIndex }>{ children }</MaskContainerPixi>;
+		return <MaskContainerPixi { ...props }>{ children }</MaskContainerPixi>;
 
 	if (alphamaskEngine === 'customShader' && hasApp)
-		return <MaskContainerCustom { ...props } zIndex={ zIndex }>{ children }</MaskContainerCustom>;
+		return <MaskContainerCustom { ...props }>{ children }</MaskContainerCustom>;
 
 	// Default - ignore masks
-	return <Container zIndex={ zIndex }>{ children }</Container>;
+	return <Container>{ children }</Container>;
 }
 
 function MaskContainerPixi({
 	children,
 	maskImage,
 	maskMesh,
-	zIndex,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
 	const alphaTexture = useTexture(maskImage, true);
@@ -171,7 +168,7 @@ function MaskContainerPixi({
 
 	return (
 		<>
-			<Container ref={ setMaskContainer } zIndex={ zIndex }>
+			<Container ref={ setMaskContainer }>
 				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
@@ -183,7 +180,6 @@ function MaskContainerCustom({
 	children,
 	maskImage,
 	maskMesh,
-	zIndex,
 }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
 
@@ -256,7 +252,7 @@ function MaskContainerCustom({
 
 	return (
 		<>
-			<Container ref={ setMaskContainer } zIndex={ zIndex }>
+			<Container ref={ setMaskContainer }>
 				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />

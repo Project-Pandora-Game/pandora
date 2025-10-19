@@ -1,16 +1,19 @@
 import {
 	AssetFrameworkGlobalState,
+	EMPTY_ARRAY,
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
+	type AssetFrameworkCharacterState,
 	type AssetFrameworkRoomState,
+	type ItemId,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import type { Character } from '../../character/character.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { usePlayerVisionFilters } from '../common/visionFilters.tsx';
+import { usePlayerVisionFiltersFactory } from '../common/visionFilters.tsx';
 import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { RoomCharacter } from './roomCharacter.tsx';
 import { RoomDevice } from './roomDevice.tsx';
@@ -30,8 +33,26 @@ export function RoomGraphics({
 	showCharacterNames,
 }: RoomGraphicsProps): ReactElement {
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (room.items.filter(FilterItemType('roomDevice')) ?? []), [room]);
+	// Optimize for the fact, that vast majority of room devices do not have a character
+	const roomDeviceCharacters = useMemo((): ReadonlyMap<ItemId, readonly AssetFrameworkCharacterState[]> => {
+		const result = new Map<ItemId, AssetFrameworkCharacterState[]>();
+		for (const character of globalState.characters.values()) {
+			const link = character.getRoomDeviceWearablePart()?.roomDeviceLink;
+			if (link != null) {
+				let deviceResult = result.get(link.device);
+				if (deviceResult === undefined) {
+					result.set(link.device, (deviceResult = []));
+				}
+				deviceResult.push(character);
+			}
+		}
+		return result;
+	}, [globalState]);
+
 	const { roomBackground } = room;
 	const projectionResolver = useRoomViewProjection(roomBackground);
+	const playerVisionFilters = usePlayerVisionFiltersFactory(false);
+	const playerSelfVisionFilters = usePlayerVisionFiltersFactory(true);
 
 	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
@@ -43,7 +64,7 @@ export function RoomGraphics({
 		<Container key={ room.id }>
 			<GraphicsBackground
 				background={ roomBackground }
-				backgroundFilters={ usePlayerVisionFilters(false) }
+				backgroundFilters={ useMemo(playerVisionFilters, [playerVisionFilters]) }
 			/>
 			<Graphics
 				draw={ borderDraw }
@@ -62,10 +83,11 @@ export function RoomGraphics({
 						return (
 							<RoomCharacter
 								key={ character.id }
-								globalState={ globalState }
+								characterState={ characterState }
 								character={ character }
 								projectionResolver={ projectionResolver }
 								showName={ showCharacterNames }
+								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
 							/>
 						);
 					})
@@ -75,11 +97,12 @@ export function RoomGraphics({
 						<RoomDevice
 							key={ device.id }
 							characters={ characters }
-							globalState={ globalState }
+							charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
 							roomState={ room }
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
+							filters={ playerVisionFilters }
 						/>
 					) : null))
 				}

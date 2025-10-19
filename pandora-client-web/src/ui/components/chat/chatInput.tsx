@@ -56,9 +56,16 @@ export const chatInputContext = createContext<IChatInputHandler | null>(null);
  * In focus mode, messages from other rooms that would be dimmed are instead hidden altogether.
  */
 export const ChatFocusMode = new Observable<boolean>(false);
+/**
+ * Whether the chat should display the ugly, but detailed action log.
+ */
+export const ChatActionLog = new Observable<boolean>(false);
 
 export function useChatFocusModeForced(): boolean | null {
 	return usePlayerRestrictionManager().getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
+}
+export function useChatActionLogDisabled(): boolean {
+	return usePlayerRestrictionManager().getModifierEffectsByType('setting_chat_action_log').length > 0;
 }
 
 const ChatInputSaveSchema = z.object({
@@ -203,6 +210,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 	return (
 		<>
 			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
+			<ActionLogActiveNotifier />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<ChatModeSelector />
@@ -681,6 +689,28 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	);
 }
 
+function ActionLogActiveNotifier(): ReactElement | null {
+	const actionLog = useObservable(ChatActionLog);
+	const actionLogDisabled = useChatActionLogDisabled();
+
+	if (!actionLog || actionLogDisabled)
+		return null;
+
+	return (
+		<div className='input-modifiers'>
+			<span>
+				<span>{ 'Showing action log ' }</span>
+				<Button className='slim' onClick={ (ev) => {
+					ev.stopPropagation();
+					ChatActionLog.value = false;
+				} }>
+					Hide
+				</Button>
+			</span>
+		</div>
+	);
+}
+
 export function useChatCommandContext(): ICommandInvokeContext<ICommandExecutionContextClient> {
 	const gameState = useGameState();
 	const globalState = useGlobalState(gameState);
@@ -812,6 +842,8 @@ function ChatModeSelector(): ReactElement | null {
 	const id = useId();
 	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
 	const focusModeSetting = useObservable(ChatFocusMode);
+	const actionLogSetting = useObservable(ChatActionLog);
+	const actionLogDisabled = useChatActionLogDisabled();
 	const focusModeForced = useChatFocusModeForced();
 	const focusMode = focusModeForced ?? focusModeSetting;
 	const ref = useRef<HTMLSelectElement>(null);
@@ -893,6 +925,22 @@ function ChatModeSelector(): ReactElement | null {
 					Enable focus mode - hide messages from other rooms
 				</label>
 				{ focusModeForced != null ? (
+					<span>(controlled by a character modifier)</span>
+				) : null }
+			</div>
+			<div className='input-modifiers padding-small' onClick={ stopPropagation }>
+				<Checkbox
+					checked={ actionLogSetting && !actionLogDisabled }
+					onChange={ (newValue) => {
+						ChatActionLog.value = newValue;
+					} }
+					disabled={ actionLogDisabled }
+					id={ `${id}:action-log-toggle` }
+				/>
+				<label htmlFor={ `${id}:action-log-toggle` }>
+					Show action log
+				</label>
+				{ actionLogDisabled ? (
 					<span>(controlled by a character modifier)</span>
 				) : null }
 			</div>

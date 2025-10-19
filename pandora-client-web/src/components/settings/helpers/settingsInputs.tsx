@@ -86,13 +86,51 @@ export function useValueMapDriver<const TIn, const TOut>(
 	}), [parentDriver, forwardMapping, backwardMapping]);
 }
 
-export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY }: {
+function InvertBoolean(v: boolean): boolean {
+	return !v;
+}
+
+/**
+ * Takes a driver for a boolean and creates an inverse driver (with true and false swapped)
+ */
+export function useBooleanInvertDriver(
+	parentDriver: SettingDriver<boolean>,
+): SettingDriver<boolean> {
+	return useValueMapDriver(parentDriver, InvertBoolean, InvertBoolean);
+}
+
+/**
+ * Takes a driver for an enum set and returns a driver for a presence of a given value.
+ */
+export function useEnumSetMembershipDriver<const T extends string>(
+	parentDriver: SettingDriver<readonly T[]>,
+	value: NoInfer<T>,
+): SettingDriver<boolean> {
+	return useMemo((): SettingDriver<boolean> => ({
+		currentValue: parentDriver.currentValue !== undefined ? parentDriver.currentValue.includes(value) : undefined,
+		defaultValue: parentDriver.defaultValue.includes(value),
+		onChange(newValue) {
+			let newSet = (parentDriver.currentValue ?? parentDriver.defaultValue);
+			if (newValue) {
+				if (!newSet.includes(value)) {
+					newSet = [...newSet, value];
+					return parentDriver.onChange(newSet);
+				}
+			} else {
+				newSet = newSet.filter((v) => v !== value);
+			}
+			return parentDriver.onChange(newSet.toSorted((a, b) => a.localeCompare(b)));
+		},
+	}), [parentDriver, value]);
+}
+
+export function ToggleSettingInput({ driver, label, disabled, noReset = false, deps = EMPTY_ARRAY, children }: {
 	driver: Readonly<SettingDriver<boolean>>;
 	label: ReactNode;
 	noReset?: boolean;
 	disabled?: boolean;
 	deps?: DependencyList;
-}): ReactElement {
+} & ChildrenProps): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
@@ -123,6 +161,7 @@ export function ToggleSettingInput({ driver, label, disabled, noReset = false, d
 			>
 				{ label }
 			</label>
+			{ children }
 			{
 				noReset ? null : (
 					<Button
@@ -200,7 +239,7 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 	);
 }
 
-export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, disabled, noWrapper = false, noReset = false, deps, children }: {
+export interface SelectSettingInputProps<TValue extends string> {
 	driver: Readonly<SettingDriver<TValue>>;
 	label: ReactNode;
 	stringify: NoInfer<Readonly<Record<TValue, string | (() => string)>>>;
@@ -211,7 +250,9 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 	noReset?: boolean;
 	deps?: DependencyList;
 	children?: ReactNode;
-}): ReactElement {
+}
+
+export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, disabled, noWrapper = false, noReset = false, deps, children }: SelectSettingInputProps<TValue>): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput<TValue | undefined>(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
@@ -251,7 +292,9 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 
 	return (
 		<Wrapper>
-			<label htmlFor={ id }>{ label }</label>
+			{ label != null ? (
+				<label htmlFor={ id }>{ label }</label>
+			) : null }
 			<Row alignY='center'>
 				<Select
 					id={ id }

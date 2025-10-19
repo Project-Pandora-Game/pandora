@@ -134,7 +134,7 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 			typescript: {
 				configOverwrite: {
 					compilerOptions: {
-						skipLibCheck: false,
+						skipLibCheck: !env.prod,
 						sourceMap: false,
 						inlineSourceMap: false,
 						declarationMap: false,

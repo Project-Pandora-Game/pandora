@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
+import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -22,8 +22,9 @@ import { useShardConnector } from '../../../components/gameContext/shardConnecto
 import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
+import { ActionLogDisplayEntriesContext, ActionLogEntry } from './actionLogEntry.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
-import { AutoCompleteHint, ChatFocusMode, ChatInputArea, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
+import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatActionLogDisabled, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
@@ -33,7 +34,9 @@ export function Chat(): ReactElement | null {
 	const injectedMessages = useChatInjectedMessages(gameState);
 	const focusModeSetting = useObservable(ChatFocusMode);
 	const focusModeForced = useChatFocusModeForced();
+	const actionLogDisabled = useChatActionLogDisabled();
 	const focusMode = focusModeForced ?? focusModeSetting;
+	const actionLogSetting = useObservable(ChatActionLog);
 
 	const shardConnector = useShardConnector();
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
@@ -131,15 +134,17 @@ export function Chat(): ReactElement | null {
 					focusMode ? 'hideDimmed' : null,
 				) }
 			>
-				<Scrollable
-					ref={ messagesDivHandler }
-					className='fill'
-					tabIndex={ 1 }
-				>
-					<Column gap='none' className='messagesContainer'>
-						{ finalMessages }
-					</Column>
-				</Scrollable>
+				<ActionLogDisplayEntriesContext.Provider value={ actionLogSetting && !actionLogDisabled }>
+					<Scrollable
+						ref={ messagesDivHandler }
+						className='fill'
+						tabIndex={ 1 }
+					>
+						<Column gap='none' className='messagesContainer'>
+							{ finalMessages }
+						</Column>
+					</Scrollable>
+				</ActionLogDisplayEntriesContext.Provider>
 				<ChatAutoCompleteHint />
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
@@ -154,40 +159,27 @@ function ChatAutoCompleteHint() {
 	);
 }
 
-function ChatMessageEquals(a: IChatMessageProcessed, b: IChatMessageProcessed): boolean {
-	if (a.time !== b.time || a.spaceId !== b.spaceId)
-		return false;
-
-	switch (a.type) {
-		case 'chat':
-		case 'ooc':
-		case 'me':
-		case 'emote':
-			return b.type === a.type && a.edited === b.edited;
-		case 'deleted':
-			return b.type === a.type;
-		case 'action':
-		case 'serverMessage':
-			return b.type === a.type && a.repetitions === b.repetitions;
-	}
-	AssertNever(a);
-}
-
 const Message = memo(function Message({ message, playerId }: { message: IChatMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
+	}
+	if (message.type === 'actionLog') {
+		return <ActionLogEntry entry={ message } />;
 	}
 	if (message.type === 'deleted') {
 		return null;
 	}
 	return <DisplayUserMessage message={ message } playerId={ playerId } />;
 }, (prev, next) => {
-	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
+	return prev.message === next.message && prev.playerId === next.playerId;
 });
 
 export function RenderChatMessageToString(message: IChatMessageProcessed, accountSettings: Immutable<AccountSettings>): string {
 	if (IsActionMessage(message)) {
 		return RenderActionMessageToString(message, accountSettings);
+	}
+	if (message.type === 'actionLog') {
+		return ''; // Action log does not support rendering to string
 	}
 	if (message.type === 'deleted') {
 		return '';

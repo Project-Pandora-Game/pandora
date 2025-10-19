@@ -10,7 +10,7 @@ import { CharacterContextMenu } from '../../../graphics/room/contextMenus/charac
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu.tsx';
 import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions.tsx';
 import { RoomItemDialogsProviderEnabler } from './roomItemDialog.tsx';
-import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks.tsx';
+import { RoomConstructionModeCheckProvider, RoomScreenSceneModeCheckProvider } from './roomPermissionChecks.tsx';
 import { useIsRoomConstructionModeEnabled } from './roomState.ts';
 
 export type IRoomSceneMode = {
@@ -108,6 +108,7 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 		<roomScreenContext.Provider value={ context }>
 			<WardrobeActionContextProvider player={ player }>
 				<RoomScreenSceneModeCheckProvider />
+				<RoomConstructionModeCheckProvider />
 				<RoomItemDialogsProviderEnabler />
 				{ children }
 				{

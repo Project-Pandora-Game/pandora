@@ -6,7 +6,7 @@ import { PreviewCutterRectangle } from '../../components/previewCutter/previewCu
 import { useEditor } from '../../editorContextProvider.tsx';
 import { DraggableBone } from '../draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
-import { ResultLayer } from '../layer/index.ts';
+import { EditorResultGraphicsCharacterLayerBuilder } from '../layer/index.ts';
 import { useEditorCharacterState } from './appearanceEditor.ts';
 import { GraphicsCharacterEditor } from './editorCharacter.tsx';
 
@@ -18,7 +18,7 @@ export function ResultCharacter(): ReactElement {
 	const showBones = useObservable(editor.showBones);
 
 	return (
-		<GraphicsCharacterEditor layer={ ResultLayer }>
+		<GraphicsCharacterEditor layerBuilder={ EditorResultGraphicsCharacterLayerBuilder }>
 			{
 				!showBones ? null :
 				(

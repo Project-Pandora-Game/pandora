@@ -105,12 +105,7 @@ type ExecuteCallbackOptions = {
 
 export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultipleSimultaneousExecutions }: ExecuteCallbackOptions = {}): [WardrobeExecuteCallback, processing: boolean] {
 	const assetManager = useAssetManager();
-	const {
-		doImmediateAction,
-		startActionAttempt,
-		completeCurrentActionAttempt,
-		abortCurrentActionAttempt,
-	} = useWardrobeActionContext();
+	const gameState = useGameState();
 	const {
 		wardrobeItemDisplayNameType,
 	} = useAccountSettings();
@@ -123,13 +118,13 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultiple
 	return useAsyncEvent(
 		async (action: Immutable<AppearanceAction>, operation?: 'start' | 'complete' | 'abort'): Promise<[IClientShardNormalResult['gameLogicAction'], Parameters<WardrobeExecuteCallback>[1]]> => {
 			if (operation === 'start') {
-				return [await startActionAttempt(action), 'start'];
+				return [await gameState.startActionAttempt(action), 'start'];
 			} else if (operation === 'complete') {
-				return [await completeCurrentActionAttempt(), 'complete'];
+				return [await gameState.completeCurrentActionAttempt(), 'complete'];
 			} else if (operation === 'abort') {
-				return [await abortCurrentActionAttempt(), 'abort'];
+				return [await gameState.abortCurrentActionAttempt(), 'abort'];
 			} else if (operation === undefined) {
-				return [await doImmediateAction(action), undefined];
+				return [await gameState.doImmediateAction(action), undefined];
 			}
 			AssertNever(operation);
 		},

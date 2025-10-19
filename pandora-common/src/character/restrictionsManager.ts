@@ -6,6 +6,7 @@ import type { ActionTarget, ItemContainerPath, ItemPath } from '../assets/appear
 import { AppearanceItemProperties } from '../assets/appearanceValidation.ts';
 import { Asset } from '../assets/asset.ts';
 import { EffectsDefinition, MergeEffects } from '../assets/effects.ts';
+import type { RoomLinkNodeData } from '../assets/index.ts';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item/index.ts';
 import { AssetPropertiesResult } from '../assets/properties.ts';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes.ts';
@@ -18,11 +19,14 @@ import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers/index.ts';
 import type { CharacterModifierEffectData, CharacterModifierEffectDataSpecific, CharacterModifierPropertiesApplier, CharacterModifierSpecificConfig, CharacterModifierType, CharacterModifierTypeDefinition } from '../gameLogic/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
+import { CompareSpaceRoles, type SpaceRole, type SpaceRoleOrNone } from '../space/spaceRoles.ts';
 import { Assert, AssertNever, IsNotNullable, MemoizeNoArg } from '../utility/misc.ts';
 import { ItemInteractionType } from './restrictionTypes.ts';
 
 /**
- * All functions should return a stable value, or useSyncExternalStore will not work properly.
+ * This classes allows for calculating what is character allowed to do.
+ * The returned values are based off of the character state at the moment of creation and will not change while it exists.
+ * To get a new result, get a new restriction manager based on newer character state.
  */
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
@@ -233,11 +237,33 @@ export class CharacterRestrictionsManager {
 		return this.restrictionOverrideConfig.forceAllowRoomLeave;
 	}
 
-	public isCurrentSpaceAdmin(): boolean {
-		if (this.spaceContext.isAdmin(this.character.accountId))
-			return true;
+	@MemoizeNoArg
+	public getSpaceRole(): SpaceRole {
+		return this.spaceContext.getAccountSpaceRole(this.character.accountId);
+	}
 
-		return false;
+	public hasSpaceRole(role: SpaceRoleOrNone): boolean {
+		return CompareSpaceRoles(this.getSpaceRole(), role) >= 0;
+	}
+
+	public checkHasSpaceRole(context: AppearanceActionProcessingContext, role: SpaceRoleOrNone): void {
+		if (!this.hasSpaceRole(role)) {
+			context.addProblem({
+				result: 'restrictionError',
+				restriction: {
+					type: 'missingSpaceRole',
+					actual: this.getSpaceRole(),
+					required: role,
+				},
+			});
+		}
+	}
+
+	public canUseRoomLink(link: Immutable<RoomLinkNodeData> | null): boolean {
+		if (link == null)
+			return false;
+
+		return !link.disabled && (link.useMinimumRole === undefined || this.hasSpaceRole(link.useMinimumRole));
 	}
 
 	/**
@@ -279,7 +305,7 @@ export class CharacterRestrictionsManager {
 			const playerRoom = this.appearance.getCurrentRoom();
 			const targetRoom = target.getCurrentRoom();
 			if (playerRoom != null && targetRoom != null) {
-				if (playerRoom.id !== targetRoom.id && playerRoom.getLinkToRoom(targetRoom) == null) {
+				if (playerRoom.id !== targetRoom.id && !this.canUseRoomLink(playerRoom.getLinkToRoom(targetRoom))) {
 					context.addRestriction({ type: 'tooFar', subtype: 'characterInteraction' });
 				}
 			} else {
@@ -287,10 +313,11 @@ export class CharacterRestrictionsManager {
 			}
 		} else if (target.type === 'room') {
 			// Non-admins can only interact with current room and rooms that can be reached from it.
+			// TODO: Maybe consider setting for this?
 			const playerRoom = this.appearance.getCurrentRoom();
-			if (!this.isCurrentSpaceAdmin()) {
+			if (!this.hasSpaceRole('admin')) {
 				if (playerRoom != null) {
-					if (playerRoom.id !== target.roomState.id && playerRoom.getLinkToRoom(target.roomState) == null) {
+					if (playerRoom.id !== target.roomState.id && !this.canUseRoomLink(playerRoom.getLinkToRoom(target.roomState))) {
 						context.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 					}
 				} else {
@@ -623,6 +650,9 @@ export class CharacterRestrictionsManager {
 
 		// Must be able to use hands to spawn a new item
 		this.checkUseHands(context, false);
+
+		// The current room must allow spawning items
+		this.checkHasSpaceRole(context, context.getEffectiveRoomSettings(this.appearance.getCurrentRoom()?.id ?? null).itemSpawnMinimumRole);
 	}
 
 	/**
@@ -633,5 +663,8 @@ export class CharacterRestrictionsManager {
 	public checkDeleteItem(context: AppearanceActionProcessingContext, _item: Item): void {
 		// Must be able to use hands to delete an item
 		this.checkUseHands(context, false);
+
+		// The current room must allow deleting items
+		this.checkHasSpaceRole(context, context.getEffectiveRoomSettings(this.appearance.getCurrentRoom()?.id ?? null).itemSpawnMinimumRole);
 	}
 }

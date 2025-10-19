@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { GraphicsSourceAutoMeshTemplateSchema } from '../graphicsSource/layers/autoMesh.ts';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
-import { BoneNameSchema, ConditionSchema } from './conditions.ts';
+import { BoneNameSchema, PoseConditionSchema } from './conditions.ts';
 import { LayerPrioritySchema, type LayerPriority } from './layers/common.ts';
 
 export const TransformDefinitionSchema = z.discriminatedUnion('type', [
@@ -9,24 +9,24 @@ export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 		type: z.literal('rotate'),
 		bone: BoneNameSchema,
 		value: z.number(),
-		condition: ConditionSchema.optional(),
+		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
 		type: z.literal('shift'),
 		bone: BoneNameSchema,
 		value: CoordinatesSchema,
-		condition: ConditionSchema.optional(),
+		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
 		type: z.literal('const-rotate'),
 		bone: BoneNameSchema,
 		value: z.number(),
-		condition: ConditionSchema.optional(),
+		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
 		type: z.literal('const-shift'),
 		value: CoordinatesSchema,
-		condition: ConditionSchema.optional(),
+		condition: PoseConditionSchema.optional(),
 	}),
 ]);
 export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;

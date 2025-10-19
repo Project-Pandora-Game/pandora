@@ -1,5 +1,4 @@
-import { Immutable, produce } from 'immer';
-import { maxBy, minBy } from 'lodash-es';
+import { Immutable } from 'immer';
 import {
 	APPEARANCE_POSE_DEFAULT,
 	Assert,
@@ -27,31 +26,9 @@ import { GraphicsManagerInstance } from './graphicsManager.ts';
 
 export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
-	{ image: scalingBaseimage, scaling }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image' | 'scaling'>,
+	{ image: setting }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image'>,
 	item: Item | null,
 ): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; normalMapImage?: string; imageUvPose: Immutable<AppearancePose>; }> {
-	const [setting, imageUvPose] = useMemo((): Immutable<[LayerImageSetting, imageUvPose: Immutable<AppearancePose>]> => {
-		if (scaling) {
-			const value = evaluator.poseEvaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			let best: Immutable<[number, LayerImageSetting]> | undefined;
-			if (value > 0) {
-				best = maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0]);
-			} else if (value < 0) {
-				best = minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0]);
-			}
-			if (best != null) {
-				return [
-					best[1],
-					produce(APPEARANCE_POSE_DEFAULT, (d) => {
-						d.bones[scaling.scaleBone] = best[0];
-					}),
-				];
-			}
-		}
-		return [scalingBaseimage, APPEARANCE_POSE_DEFAULT];
-	}, [evaluator, scaling, scalingBaseimage]);
-
 	return useMemo((): ReturnType<typeof useLayerImageSource> => {
 		const resultSetting = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item))) ?? setting;
 
@@ -60,12 +37,12 @@ export function useLayerImageSource(
 			image: resultSetting.image,
 			normalMapImage: resultSetting.normalMapImage,
 			imageUvPose: resultSetting.uvPose ? ProduceAppearancePose(
-				imageUvPose,
+				APPEARANCE_POSE_DEFAULT,
 				{ assetManager: evaluator.poseEvaluator.assetManager },
 				resultSetting.uvPose,
-			) : imageUvPose,
+			) : APPEARANCE_POSE_DEFAULT,
 		};
-	}, [evaluator, item, setting, imageUvPose]);
+	}, [evaluator, item, setting]);
 }
 
 const calculatedPointsCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinitionCalculated[]>>();

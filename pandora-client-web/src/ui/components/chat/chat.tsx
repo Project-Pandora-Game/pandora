@@ -24,7 +24,7 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { ActionLogDisplayEntriesContext, ActionLogEntry } from './actionLogEntry.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
-import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
+import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatActionLogDisabled, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
@@ -34,8 +34,9 @@ export function Chat(): ReactElement | null {
 	const injectedMessages = useChatInjectedMessages(gameState);
 	const focusModeSetting = useObservable(ChatFocusMode);
 	const focusModeForced = useChatFocusModeForced();
+	const actionLogDisabled = useChatActionLogDisabled();
 	const focusMode = focusModeForced ?? focusModeSetting;
-	const actionLog = useObservable(ChatActionLog);
+	const actionLogSetting = useObservable(ChatActionLog);
 
 	const shardConnector = useShardConnector();
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
@@ -133,7 +134,7 @@ export function Chat(): ReactElement | null {
 					focusMode ? 'hideDimmed' : null,
 				) }
 			>
-				<ActionLogDisplayEntriesContext.Provider value={ actionLog }>
+				<ActionLogDisplayEntriesContext.Provider value={ actionLogSetting && !actionLogDisabled }>
 					<Scrollable
 						ref={ messagesDivHandler }
 						className='fill'

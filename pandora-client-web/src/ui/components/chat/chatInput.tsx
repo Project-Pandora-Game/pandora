@@ -64,6 +64,9 @@ export const ChatActionLog = new Observable<boolean>(false);
 export function useChatFocusModeForced(): boolean | null {
 	return usePlayerRestrictionManager().getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
 }
+export function useChatActionLogDisabled(): boolean {
+	return usePlayerRestrictionManager().getModifierEffectsByType('setting_chat_action_log').length > 0;
+}
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -688,7 +691,9 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 
 function ActionLogActiveNotifier(): ReactElement | null {
 	const actionLog = useObservable(ChatActionLog);
-	if (!actionLog)
+	const actionLogDisabled = useChatActionLogDisabled();
+
+	if (!actionLog || actionLogDisabled)
 		return null;
 
 	return (
@@ -838,6 +843,7 @@ function ChatModeSelector(): ReactElement | null {
 	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
 	const focusModeSetting = useObservable(ChatFocusMode);
 	const actionLogSetting = useObservable(ChatActionLog);
+	const actionLogDisabled = useChatActionLogDisabled();
 	const focusModeForced = useChatFocusModeForced();
 	const focusMode = focusModeForced ?? focusModeSetting;
 	const ref = useRef<HTMLSelectElement>(null);
@@ -924,15 +930,19 @@ function ChatModeSelector(): ReactElement | null {
 			</div>
 			<div className='input-modifiers padding-small' onClick={ stopPropagation }>
 				<Checkbox
-					checked={ actionLogSetting }
+					checked={ actionLogSetting && !actionLogDisabled }
 					onChange={ (newValue) => {
 						ChatActionLog.value = newValue;
 					} }
+					disabled={ actionLogDisabled }
 					id={ `${id}:action-log-toggle` }
 				/>
 				<label htmlFor={ `${id}:action-log-toggle` }>
 					Show action log
 				</label>
+				{ actionLogDisabled ? (
+					<span>(controlled by a character modifier)</span>
+				) : null }
 			</div>
 		</>
 	);

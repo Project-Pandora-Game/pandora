@@ -17,13 +17,11 @@ import './chatArea.scss';
 import './room.scss';
 import { RoomScreenContextProvider } from './roomContext.tsx';
 import { PersonalSpaceControls, RoomControls } from './roomControls.tsx';
-import { useRoomConstructionModeCheckProvider } from './roomPermissionChecks.tsx';
 
 export function RoomScreen(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useAccountSettings();
 	const isPortrait = useIsPortrait();
 	const spaceInfo = useSpaceInfo();
-	useRoomConstructionModeCheckProvider();
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
@@ -50,7 +48,6 @@ function InteractionBox({ isPortrait, className }: {
 	className?: string;
 }): ReactElement {
 	const { interfaceChatroomChatSplitHorizontal, interfaceChatroomChatSplitVertical } = useAccountSettings();
-	const { player, playerState } = usePlayerState();
 	const spaceInfo = useSpaceInfo();
 	const isLowScreen = useIsLowScreen();
 	const isNarrowScreen = useIsNarrowScreen();
@@ -127,13 +124,9 @@ function InteractionBox({ isPortrait, className }: {
 										</Scrollable>
 									)
 								) : tab === 'pose' ? (
-									<WardrobeExternalContextProvider target={ player.actionSelector }>
-										<WardrobePoseGui character={ player } characterState={ playerState } />
-									</WardrobeExternalContextProvider>
+									<InteractionBoxPose />
 								) : tab === 'expressions' ? (
-									<WardrobeExternalContextProvider target={ player.actionSelector }>
-										<WardrobeExpressionGui character={ player } characterState={ playerState } />
-									</WardrobeExternalContextProvider>
+									<InteractionBoxExpressions />
 								) : AssertNever(tab)
 							}
 						</Column>
@@ -146,5 +139,25 @@ function InteractionBox({ isPortrait, className }: {
 				}
 			</DivContainer>
 		</Column>
+	);
+}
+
+function InteractionBoxPose(): ReactElement {
+	const { player, playerState } = usePlayerState();
+
+	return (
+		<WardrobeExternalContextProvider target={ player.actionSelector }>
+			<WardrobePoseGui character={ player } characterState={ playerState } />
+		</WardrobeExternalContextProvider>
+	);
+}
+
+function InteractionBoxExpressions(): ReactElement {
+	const { player, playerState } = usePlayerState();
+
+	return (
+		<WardrobeExternalContextProvider target={ player.actionSelector }>
+			<WardrobeExpressionGui character={ player } characterState={ playerState } />
+		</WardrobeExternalContextProvider>
 	);
 }

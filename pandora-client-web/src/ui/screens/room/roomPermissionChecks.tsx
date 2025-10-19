@@ -20,7 +20,7 @@ import { DeviceOverlayState } from './roomState.ts';
  * - User stops being an admin
  * - User stops being able to use hands
  */
-export function useRoomConstructionModeCheckProvider(): void {
+export function RoomConstructionModeCheckProvider(): null {
 	const value = useObservable(DeviceOverlayState);
 	const currentAccount = useCurrentAccount();
 	const spaceInfo = useSpaceInfo();
@@ -54,6 +54,8 @@ export function useRoomConstructionModeCheckProvider(): void {
 		}
 		DeviceOverlayState.value = nextValue;
 	}, [value, spaceInfo.id, isPlayerAdmin, canUseHands]);
+
+	return null;
 }
 
 /**

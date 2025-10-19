@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { sortBy } from 'lodash-es';
-import { AssertNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type CharacterActionAttempt, type ICharacterRoomData, type SpaceId } from 'pandora-common';
+import { AssertNotNullable, EMPTY_ARRAY, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type CharacterActionAttempt, type ICharacterRoomData, type SpaceId } from 'pandora-common';
 import { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { PlayerCharacter } from '../../../character/player.ts';
@@ -40,6 +40,11 @@ export function useChatInjectedMessages(gameState: GameState): readonly ChatInje
 		if (currentSpace.id != null && currentSpace.config.ownerInvites.includes(player.data.accountId)) {
 			result.push(MessageForSpaceOwnershipInvitation(currentSpace.id));
 		}
+
+		// Most likely scenario: Nothing to show
+		// Optimize this by always returning same reference, so the update does not cause message list update
+		if (result.length === 0)
+			return EMPTY_ARRAY;
 
 		return sortBy(result, (m) => m.time);
 	}, [currentSpace, currentState, characters, player]);

@@ -3,21 +3,19 @@ import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphic
 import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
-import { useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export function GraphicsLayerText({
-	characterState,
+export const GraphicsLayerText = memo(function GraphicsLayerText({
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	state,
 }: GraphicsLayerProps<'text'>): ReactElement {
 	const app = usePixiAppOptional();
-
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
 	const dataModule = item?.getModules().get(layer.dataModule);
 	const textModule = (dataModule != null && dataModule instanceof ItemModuleText) ? dataModule : undefined;
@@ -38,12 +36,12 @@ export function GraphicsLayerText({
 	const position = useMemo(() => {
 		const point = new PIXI.Point(layer.x, layer.y);
 		if (layer.followBone != null) {
-			evaluator.evalBoneTransform(layer.followBone).apply(point, point);
+			poseEvaluator.evalBoneTransform(layer.followBone).apply(point, point);
 		}
 		return point;
-	}, [layer, evaluator]);
+	}, [layer, poseEvaluator]);
 
-	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
+	const { color, alpha } = useItemColor(wornItems, item, layer.colorizationKey, state);
 
 	useLayoutEffect(() => {
 		const sprite = ref.current;
@@ -81,7 +79,7 @@ export function GraphicsLayerText({
 	return (
 		<Container
 			position={ position }
-			angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
+			angle={ (layer.followBone != null ? poseEvaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
 		>
 			<Sprite
 				ref={ ref }
@@ -89,7 +87,7 @@ export function GraphicsLayerText({
 			/>
 		</Container>
 	);
-}
+});
 
 export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceText({
 	layer,

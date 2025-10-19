@@ -21,6 +21,7 @@ import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
 import type { ChatroomDebugConfig } from '../ui/screens/room/roomDebug.tsx';
+import { useCharacterPoseEvaluator, type CharacterPoseEvaluator } from './appearanceConditionEvaluator.ts';
 import { Container } from './baseComponents/container.ts';
 import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
 import type { PointLike } from './common/point.ts';
@@ -44,7 +45,7 @@ export type GraphicsCharacterLayerBuilder = (
 	layer: LayerState,
 	previousLayers: ReactElement[] | undefined,
 	reverse: boolean,
-	characterState: AssetFrameworkCharacterState,
+	poseEvaluator: CharacterPoseEvaluator,
 	characterBlinking?: ReadonlyObservable<boolean>,
 	debugConfig?: Immutable<ChatroomDebugConfig>,
 ) => ReactElement[];
@@ -187,6 +188,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 
 	const effectiveCharacterState = (Number.isFinite(movementTransitionDuration) && movementTransitionDuration > 0) ? producedEffectiveCharacterState : characterState;
 	const items = effectiveCharacterState.items;
+	const poseEvaluator = useCharacterPoseEvaluator(effectiveCharacterState.assetManager, effectiveCharacterState.actualPose);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
@@ -275,6 +277,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 					layer,
 					item,
 					state: layerStateOverrideGetter?.(layer),
+					wornItems: items,
 				})),
 			);
 		}
@@ -298,10 +301,10 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
 
-			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, effectiveCharacterState, characterBlinking, debugConfig));
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, characterBlinking, debugConfig));
 		}
 		return result;
-	}, [layerBuilder, effectiveCharacterState, layers, view, characterBlinking, debugConfig]);
+	}, [layerBuilder, poseEvaluator, layers, view, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

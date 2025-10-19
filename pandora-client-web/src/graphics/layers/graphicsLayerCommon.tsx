@@ -2,7 +2,6 @@ import type { Immutable } from 'immer';
 import {
 	AppearanceItems,
 	AssertNever,
-	AssetFrameworkCharacterState,
 	HexColorString,
 	Item,
 	type GraphicsLayer,
@@ -10,6 +9,7 @@ import {
 	type LayerStateOverrides,
 	type PointDefinitionCalculated,
 	type Rectangle,
+	type WearableAssetType,
 } from 'pandora-common';
 import { DEG_TO_RAD } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
@@ -81,7 +81,6 @@ export function useLayerVertices(
 }
 
 export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> {
-	characterState: AssetFrameworkCharacterState;
 	layer: Immutable<Extract<GraphicsLayer, { type: TLayerType; }>>;
 	item: Item | null;
 
@@ -93,6 +92,8 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 	displayUvPose?: boolean;
 	state?: LayerStateOverrides;
 
+	poseEvaluator: CharacterPoseEvaluator;
+	wornItems: AppearanceItems<WearableAssetType>;
 	/**
 	 * Observable for whether the character the layer belongs to is currently mid-blink.
 	 * If not passed, it is assumed to be `false`.

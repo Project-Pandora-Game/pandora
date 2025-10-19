@@ -1,7 +1,7 @@
-import { Immutable } from 'immer';
+import { freeze, Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import * as z from 'zod';
-import { Assert, CloneDeepMutable, IntervalSetIntersection, IsNotNullable, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
+import { Assert, CloneDeepMutable, IntervalSetIntersection, IsNotNullable, IsReadonlyArray, MemoizeSingleObjectArg, type Satisfies } from '../utility/misc.ts';
 import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionLegsPosePoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from './graphics/index.ts';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearanceLegsPose, AppearancePose } from './state/characterStatePose.ts';
@@ -263,7 +263,8 @@ export class AppearanceLimitTree implements ReadonlyAppearanceLimitTree {
 		return this.root != null && this.root.validate(FromPose(pose));
 	}
 
-	public force(pose: Immutable<AppearancePose>): { pose: AppearancePose; changed: boolean; } {
+	@MemoizeSingleObjectArg
+	public force(pose: Immutable<AppearancePose>): { readonly pose: Immutable<AppearancePose>; readonly changed: boolean; } {
 		if (this.root == null)
 			return { pose, changed: false };
 
@@ -271,7 +272,7 @@ export class AppearanceLimitTree implements ReadonlyAppearanceLimitTree {
 		if (diff === 0)
 			return { pose, changed: false };
 
-		return { pose: ToPose(data), changed: true };
+		return freeze({ pose: ToPose(data), changed: true }, true);
 	}
 
 	public merge(limits?: Immutable<AssetDefinitionPoseLimits>): boolean {

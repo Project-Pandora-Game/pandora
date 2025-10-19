@@ -4,14 +4,15 @@ import {
 	AppearancePose,
 	Assert,
 	AssertNever,
-	AssetFrameworkCharacterState,
 	AssetManager,
 	AtomicCondition,
 	ConditionOperator,
 	Item,
 	TransformDefinition,
+	type AppearanceItems,
 	type AtomicPoseCondition,
 	type BoneDefinition,
+	type WearableAssetType,
 } from 'pandora-common';
 import { DEG_TO_RAD, Matrix, Point } from 'pixi.js';
 import { useMemo } from 'react';
@@ -224,9 +225,9 @@ export class AppearanceConditionEvaluator {
 
 	public readonly poseEvaluator: CharacterPoseEvaluator;
 
-	constructor(character: AssetFrameworkCharacterState, blinking: boolean) {
-		this.poseEvaluator = GetCharacterPoseEvaluator(character.assetManager, character.actualPose);
-		this.attributes = AppearanceItemProperties(character.items).attributes;
+	constructor(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, blinking: boolean) {
+		this.poseEvaluator = poseEvaluator;
+		this.attributes = AppearanceItemProperties(wornItems).attributes;
 		this.blinking = blinking;
 	}
 
@@ -261,26 +262,32 @@ type EvaluatorInstanceCacheValueEntry = {
 	blink: AppearanceConditionEvaluator;
 };
 
-const evaluatorInstanceCache = new WeakMap<AssetFrameworkCharacterState, EvaluatorInstanceCacheValueEntry>();
+const evaluatorInstanceCache = new WeakMap<CharacterPoseEvaluator, WeakMap<AppearanceItems<WearableAssetType>, EvaluatorInstanceCacheValueEntry>>();
 /**
  * Gets an appearance condition evaluator for the character
  * @param characterState - Character state
  * @param isBlinking - Whether the character is currently mid-blink
  * @returns The requested appearance condition evaluator
  */
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {
+export function useAppearanceConditionEvaluator(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, isBlinking: boolean = false): AppearanceConditionEvaluator {
 	return useMemo((): AppearanceConditionEvaluator => {
-		let cacheEntry: EvaluatorInstanceCacheValueEntry | undefined = evaluatorInstanceCache.get(characterState);
+		let poseCacheEntry = evaluatorInstanceCache.get(poseEvaluator);
+		if (poseCacheEntry === undefined) {
+			poseCacheEntry = new WeakMap();
+			evaluatorInstanceCache.set(poseEvaluator, poseCacheEntry);
+		}
+
+		let cacheEntry: EvaluatorInstanceCacheValueEntry | undefined = poseCacheEntry.get(wornItems);
 		if (cacheEntry === undefined) {
 			cacheEntry = {
-				normal: new AppearanceConditionEvaluator(characterState, false),
-				blink: new AppearanceConditionEvaluator(characterState, true),
+				normal: new AppearanceConditionEvaluator(poseEvaluator, wornItems, false),
+				blink: new AppearanceConditionEvaluator(poseEvaluator, wornItems, true),
 			};
-			evaluatorInstanceCache.set(characterState, cacheEntry);
+			poseCacheEntry.set(wornItems, cacheEntry);
 		}
 
 		return isBlinking ? cacheEntry.blink : cacheEntry.normal;
-	}, [characterState, isBlinking]);
+	}, [poseEvaluator, wornItems, isBlinking]);
 }
 
 export class StandaloneConditionEvaluator {

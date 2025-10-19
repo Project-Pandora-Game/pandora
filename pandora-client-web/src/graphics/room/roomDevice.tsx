@@ -36,7 +36,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
-import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -859,7 +859,8 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 		rotationAngle,
 	} = useRoomCharacterOffsets(characterState);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
 		position,

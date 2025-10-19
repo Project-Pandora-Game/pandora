@@ -162,7 +162,8 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 		rotationAngle,
 	} = useRoomCharacterOffsets(characterState);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 

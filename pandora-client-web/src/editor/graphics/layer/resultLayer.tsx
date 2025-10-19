@@ -4,7 +4,6 @@ import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
-import { useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import type { GraphicsCharacterLayerBuilder } from '../../../graphics/graphicsCharacter.tsx';
@@ -19,7 +18,7 @@ import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCal
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
-export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, characterState, characterBlinking, debugConfig) {
+export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
 			previousLayers ??= [];
@@ -29,7 +28,8 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>
@@ -48,7 +48,8 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				>
@@ -64,7 +65,8 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>
@@ -83,7 +85,7 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 export function EditorGraphicsResultLayerMesh({
 	layer,
 	item,
-	characterState,
+	poseEvaluator,
 	...props
 }: GraphicsLayerProps<'mesh'>): ReactElement {
 	const editor = useEditor();
@@ -93,9 +95,7 @@ export function EditorGraphicsResultLayerMesh({
 	const { points: pointTemplate, x, y, width, height } = layer;
 	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-
-	const vertices = useLayerVertices(evaluator, points, layer).vertices;
+	const vertices = useLayerVertices(poseEvaluator, points, layer).vertices;
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer
@@ -142,7 +142,7 @@ export function EditorGraphicsResultLayerMesh({
 					{ ...props }
 					layer={ layer }
 					item={ item }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
 			{
@@ -179,7 +179,7 @@ export function EditorGraphicsResultLayerMesh({
 export function EditorGraphicsResultLayerAlphaImageMesh({
 	layer,
 	item,
-	characterState,
+	poseEvaluator,
 	...props
 }: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
 	const editor = useEditor();
@@ -189,9 +189,7 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 	const { points: pointTemplate, x, y, width, height } = layer;
 	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-
-	const vertices = useLayerVertices(evaluator, points, layer).vertices;
+	const vertices = useLayerVertices(poseEvaluator, points, layer).vertices;
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer
@@ -238,7 +236,7 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 					{ ...props }
 					layer={ layer }
 					item={ item }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
 			{
@@ -275,7 +273,7 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 function EditorGraphicsResultLayerText({
 	layer,
 	item,
-	characterState,
+	poseEvaluator,
 	...props
 }: GraphicsLayerProps<'text'>): ReactElement {
 	const editor = useEditor();
@@ -289,15 +287,13 @@ function EditorGraphicsResultLayerText({
 
 	}, [layer]);
 
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-
 	const position = useMemo(() => {
 		const point = new PIXI.Point(layer.x, layer.y);
 		if (layer.followBone != null) {
-			evaluator.evalBoneTransform(layer.followBone).apply(point, point);
+			poseEvaluator.evalBoneTransform(layer.followBone).apply(point, point);
 		}
 		return point;
-	}, [layer, evaluator]);
+	}, [layer, poseEvaluator]);
 
 	return (
 		<>
@@ -306,14 +302,14 @@ function EditorGraphicsResultLayerText({
 					{ ...props }
 					layer={ layer }
 					item={ item }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
 			{
 				!showHelpers ? null : (
 					<Graphics
 						position={ position }
-						angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
+						angle={ (layer.followBone != null ? poseEvaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
 						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 						draw={ drawWireFrame }
 					/>

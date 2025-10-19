@@ -5,7 +5,7 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
-import { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useNullableObservable } from '../../observable.ts';
@@ -19,11 +19,12 @@ import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
 import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export function GraphicsLayerAlphaImageMesh({
-	characterState,
+export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMesh({
 	children,
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	displayUvPose = false,
 	characterBlinking,
 }: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
@@ -31,14 +32,14 @@ export function GraphicsLayerAlphaImageMesh({
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const {
 		image,
 		imageUvPose,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 
 	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
@@ -55,7 +56,7 @@ export function GraphicsLayerAlphaImageMesh({
 			{ children }
 		</MaskContainer>
 	);
-}
+});
 
 const MASK_X_OVERSCAN = 250;
 export const MASK_SIZE: Readonly<PandoraRectangle> = {

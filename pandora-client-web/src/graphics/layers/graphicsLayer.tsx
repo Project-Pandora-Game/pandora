@@ -4,7 +4,7 @@ import { GraphicsLayerAlphaImageMesh } from './graphicsLayerAlphaImageMesh.tsx';
 import { GraphicsLayerMesh } from './graphicsLayerMesh.tsx';
 import { GraphicsLayerText } from './graphicsLayerText.tsx';
 
-export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, characterState, characterBlinking, debugConfig) {
+export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
 			previousLayers ??= [];
@@ -14,7 +14,8 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>
@@ -33,7 +34,8 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				>
@@ -49,7 +51,8 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					layer={ layer.layer }
 					item={ layer.item }
 					state={ layer.state }
-					characterState={ characterState }
+					poseEvaluator={ poseEvaluator }
+					wornItems={ layer.wornItems }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>

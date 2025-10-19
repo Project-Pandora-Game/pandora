@@ -7,7 +7,7 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -30,7 +30,8 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 	} = useObservable(layer.definition);
 
 	const characterState = useEditorCharacterState();
-	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 	const wornItem = characterState.items
 		.filter((i) => i.isType('roomDeviceWearablePart'))
 		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);

@@ -12,10 +12,11 @@ import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
-export function GraphicsLayerMesh({
-	characterState,
+export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 	layer,
 	item,
+	poseEvaluator,
+	wornItems,
 	displayUvPose = false,
 	state,
 	debugConfig,
@@ -24,7 +25,7 @@ export function GraphicsLayerMesh({
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const {
 		image,
@@ -32,7 +33,7 @@ export function GraphicsLayerMesh({
 		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 
 	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
@@ -40,7 +41,7 @@ export function GraphicsLayerMesh({
 	const texture = useTexture(useImageResolutionAlternative(image).image);
 	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
-	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
+	const { color, alpha } = useItemColor(wornItems, item, layer.colorizationKey, state);
 
 	const cullClockwise = useContext(ContextCullClockwise);
 
@@ -78,7 +79,7 @@ export function GraphicsLayerMesh({
 			/>
 		)
 	);
-}
+});
 
 export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMesh({
 	item,

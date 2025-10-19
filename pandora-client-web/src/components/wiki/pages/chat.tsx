@@ -93,6 +93,19 @@ export function WikiChat(): ReactElement {
 					That said, if you intend to format the rest of the message in the same way, you do not need to close a shortcut syntax at the end.
 				</li>
 			</ul>
+			<p>
+				Additionally, there are two special modes that you can put the chat into in parallel to the normal chat modes:
+				<ul>
+					<li>Focus mode: While this mode is on, it lets you only see chat messages originating from your current room. So this hides all,
+						slightly greyed, messages from other rooms for yourself, for more immersion or to focus on the conversation in your current room. You can see
+						a small eye icon on the bar with the cog to indicate when this mode is active. There also is a character modifier to enforce this mode, if desired.
+					</li>
+					<li>
+						<Link to='/wiki/safety#SA_Action_log'>Action log</Link>: This mode shows the history of actions interleaved between the regular chat messages by time stamp.
+						The action log lists all the actions that were taken by any character in the current space and should be seen as OOC knowledge.
+					</li>
+				</ul>
+			</p>
 
 			<h4 id='CHA_Editing_text'>Editing text</h4>
 			<p>

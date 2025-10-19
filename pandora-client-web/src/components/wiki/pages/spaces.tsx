@@ -61,7 +61,8 @@ export function WikiSpaces(): ReactElement {
 				cannot move to that room, unless there is another path through a chain of rooms. Admins of a space can freely move their character
 				or other characters, though. They can also interact with all room inventories from everywhere.<br />
 				Note that rooms are not a privacy barrier and the chat is space-wide, so every message can be seen from every room of the same space.
-				If you want privacy or hide something or someone, you should use a space that is private.<br />
+				You can filter out chat messages from other rooms for yourself, though, by enabling focus mode by pressing the bar with the white cog above the chat input field.
+				That said, if you want privacy or hide something or someone, you should use a space that is private.<br />
 				Interactions with rooms or characters in those rooms are only possible if you are in that room or in a directly neighboring room.
 				But you can still see the location of every character from everywhere, can open their profile, or preview how they
 				look based on their wardrobe. Different rooms currently do not hide information and are just there to enhance roleplaying possibilities.

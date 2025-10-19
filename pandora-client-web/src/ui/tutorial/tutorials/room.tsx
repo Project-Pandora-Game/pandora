@@ -771,7 +771,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								but can also be created through the use of various commands.<br />
 								A list of all commands in Pandora can be brought up by entering a single
 								"/" into the chat.<br />
-								Try using a command now, such as the "/dice" command to roll a dice.
+								Try using the "/dice" command to roll a dice.
 							</p>
 						</>
 					),
@@ -855,6 +855,54 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						</>
 					),
 					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								To all write all messages in a certain way, such as OOC or as emotes, you can switch the chat mode.
+								To do that, open the chat menu by pressing the bar with the white cog above the chat input field.
+								Feel free to open it now.
+							</p>
+							<p>
+								There you can select from a drop-down list of all available chat modes.
+								Switching modes can also be done with chat commands, e.g. '/ooc' without anything afterwards.
+								You can read more about chat modes in the <ExternalLink href='https://project-pandora.com/wiki/chat'>wiki</ExternalLink>.
+							</p>
+							<p>
+								You can close the menu by again pressing on the highlighted bar.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.typing-indicator',
+					}],
 				},
 			],
 		},

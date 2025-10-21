@@ -1,6 +1,6 @@
 import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -23,7 +23,6 @@ import { TransitionedContainer } from '../common/transitions/transitionedContain
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MovementHelperGraphics, PosingStateHelperGraphics } from '../movementHelper.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
-import { GetAngle } from '../utility.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
 
@@ -670,7 +669,7 @@ function PosingToolBone({
 	}, [definition, evaluator, bonePoseOverride]);
 
 	const onMove = useEvent((x: number, y: number): void => {
-		let graphicsAngle = GetAngle(x - posX, y - posY);
+		let graphicsAngle = Vector2GetAngle(x - posX, y - posY);
 		if (definition.isMirror) {
 			graphicsAngle = ((180 + 360) - graphicsAngle) % 360;
 		}

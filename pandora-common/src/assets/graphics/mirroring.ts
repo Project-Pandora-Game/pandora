@@ -78,10 +78,6 @@ export function MirrorTransform(transform: Immutable<TransformDefinition>): Tran
 	const type = transform.type;
 	const condition = transform.condition?.map(MirrorAtomicPoseCondition);
 	switch (type) {
-		case 'const-rotate': {
-			const rotate = transform.value;
-			return { condition, type, value: rotate * -1, bone: MirrorBoneLike(transform.bone) };
-		}
 		case 'rotate': {
 			const rotate = transform.value;
 			return { condition, type, value: rotate * -1, bone: MirrorBoneLike(transform.bone) };

@@ -18,12 +18,6 @@ export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
-		type: z.literal('const-rotate'),
-		bone: BoneNameSchema,
-		value: z.number(),
-		condition: PoseConditionSchema.optional(),
-	}),
-	z.object({
 		type: z.literal('const-shift'),
 		value: CoordinatesSchema,
 		condition: PoseConditionSchema.optional(),

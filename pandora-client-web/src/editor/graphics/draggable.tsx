@@ -8,6 +8,8 @@ import {
 	MirrorBoneLike,
 	MirrorTransform,
 	PointDefinition,
+	Vector2GetAngle,
+	Vector2Rotate,
 	type PointDefinitionCalculated,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
@@ -15,7 +17,6 @@ import { FederatedPointerEvent } from 'pixi.js';
 import { ReactElement, useMemo, useRef } from 'react';
 import { useEvent } from '../../common/useEvent.ts';
 import { useCharacterPoseEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
-import { GetAngle, RotateVector } from '../../graphics/utility.ts';
 import { DotGraphics } from '../../graphics/utility/dotGraphics.tsx';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable.ts';
 import { EditorCharacter } from './character/appearanceEditor.ts';
@@ -205,7 +206,7 @@ export function DraggableBone({
 			if (definition.parent) {
 				[bx, by] = evaluator.evalTransform([bx, by], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
 			}
-			let angle = GetAngle(x - bx, y - by);
+			let angle = Vector2GetAngle(x - bx, y - by);
 			if (definition.isMirror) {
 				angle = ((180 + 360) - angle) % 360;
 			}
@@ -233,7 +234,7 @@ export function DraggableBone({
 			if (definition.isMirror) {
 				angle = 180 - angle;
 			}
-			const [shiftX, shiftY] = RotateVector(20, 0, angle);
+			const [shiftX, shiftY] = Vector2Rotate(20, 0, angle);
 			return [x + shiftX, y + shiftY];
 		} else {
 			return [definition.x, definition.y];

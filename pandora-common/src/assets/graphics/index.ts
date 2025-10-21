@@ -8,3 +8,4 @@ export * from './layers/index.ts';
 export * from './mirroring.ts';
 export * from './points.ts';
 export * from './points_delta.ts';
+export * from './transform/index.ts';

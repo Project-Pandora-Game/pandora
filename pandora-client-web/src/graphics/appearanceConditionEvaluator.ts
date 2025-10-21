@@ -45,12 +45,11 @@ export class CharacterPoseEvaluator {
 			const rotation = this.getBoneLikeValue(boneName);
 
 			switch (type) {
-				case 'const-rotate':
 				case 'rotate': {
 					const bone = this._getBone(boneName);
 					let vecX = resX - bone.x;
 					let vecY = resY - bone.y;
-					const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
+					const value = transform.value * rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
 					resX = bone.x + vecX;
 					resY = bone.y + vecY;
@@ -74,10 +73,10 @@ export class CharacterPoseEvaluator {
 			if (condition && !condition.every((c) => this.evalCondition(c))) {
 				continue;
 			}
-			if (type === 'const-rotate' || type === 'rotate') {
+			if (type === 'rotate') {
 				const boneName = transform.bone;
 				const rotation = this.getBoneLikeValue(boneName);
-				const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
+				const value = transform.value * rotation;
 				angle += value;
 			}
 		}

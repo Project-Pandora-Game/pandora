@@ -8,6 +8,7 @@ import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoun
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from './graphicsAppManager.ts';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
+import type { GraphicsUpscalingSetting } from './graphicsSettings.tsx';
 import { PixiAppContext } from './reconciler/appContext.ts';
 import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler.ts';
 import { PixiTicker, PixiTickerContext } from './reconciler/tick.ts';
@@ -15,6 +16,8 @@ import { PixiTicker, PixiTickerContext } from './reconciler/tick.ts';
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;
 	resolution: number;
+	/** Upscaling, if resolution is not 1. Defaults to "auto" */
+	upscaling?: GraphicsUpscalingSetting;
 	backgroundColor?: number;
 	backgroundAlpha?: number;
 	onMount?: (app: Application) => void;
@@ -64,6 +67,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		const {
 			container,
 			resolution,
+			upscaling,
 			backgroundColor,
 			backgroundAlpha,
 		} = this.props;
@@ -79,7 +83,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		if (resolution !== oldProps.resolution && this.app != null) {
 			this.app.renderer.resolution = resolution;
+			this.app.canvas.style.imageRendering = upscaling ?? 'auto';
 			needsUpdate = true;
+		} else if (upscaling !== oldProps.upscaling && this.app != null) {
+			this.app.canvas.style.imageRendering = upscaling ?? 'auto';
 		}
 
 		if (container !== oldProps.container || resolution !== oldProps.resolution) {
@@ -127,6 +134,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			onMount,
 			container,
 			resolution,
+			upscaling,
 			backgroundColor = DEFAULT_BACKGROUND_COLOR,
 			backgroundAlpha = 1,
 		} = this.props;
@@ -144,6 +152,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app.resize();
 		app.renderer.background.color = backgroundColor;
 		app.renderer.background.alpha = backgroundAlpha;
+		app.canvas.style.imageRendering = upscaling ?? 'auto';
 		container.appendChild(app.canvas);
 		this.app.ticker.add(this.ticker.tick);
 		onMount?.(this.app);
@@ -182,6 +191,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 			this.app.ticker.remove(this.ticker.tick);
 			this.app.canvas.remove();
+			this.app.canvas.style.imageRendering = 'auto';
 			this.app = null;
 		}
 
@@ -238,6 +248,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 export function GraphicsSceneRendererShared({
 	children,
 	resolution,
+	upscaling,
 	backgroundColor,
 	backgroundAlpha,
 	onMount,
@@ -251,6 +262,7 @@ export function GraphicsSceneRendererShared({
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneRendererSharedImpl
 				resolution={ resolution }
+				upscaling={ upscaling }
 				backgroundColor={ backgroundColor }
 				backgroundAlpha={ backgroundAlpha }
 				onMount={ onMount }
@@ -444,6 +456,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		app.renderer.resize(renderArea.width, renderArea.height, resolution);
 		app.renderer.background.color = backgroundColor;
 		app.renderer.background.alpha = backgroundAlpha;
+		app.canvas.style.imageRendering = 'auto';
 		app.stage.addChild(this._stage);
 
 		onMount?.(this._app);

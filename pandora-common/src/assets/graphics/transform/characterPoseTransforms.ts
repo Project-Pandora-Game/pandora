@@ -1,11 +1,11 @@
 import type { Immutable } from 'immer';
-import { Vector2Rotate } from '../../../math/index.ts';
+import { DEG_TO_RAD, DualQuaternion, Matrix4x4, Quaternion, Vector2, Vector2Rotate, Vector3, Vector4 } from '../../../math/index.ts';
 import { Assert, AssertNever } from '../../../utility/misc.ts';
 import type { AssetManager } from '../../assetManager.ts';
 import type { AppearancePose } from '../../state/characterStatePose.ts';
-import type { AtomicCondition, AtomicPoseCondition, ConditionOperator } from '../conditions.ts';
+import type { AtomicCondition, AtomicPoseCondition, BoneName, ConditionOperator } from '../conditions.ts';
 import type { BoneDefinition } from '../graphics.ts';
-import type { TransformDefinition } from '../points.ts';
+import type { PointSkinningDefinition, TransformDefinition } from '../points.ts';
 
 export class CharacterPoseTransforms {
 	public readonly assetManager: AssetManager;
@@ -82,6 +82,63 @@ export class CharacterPoseTransforms {
 		}
 
 		return result;
+	}
+
+	public skinPoint(position: Vector2, skinning: Immutable<PointSkinningDefinition>, pretransforms?: Immutable<TransformDefinition[]>): void {
+		if (pretransforms != null) {
+			[position.x, position.y] = this.evalTransform([position.x, position.y], pretransforms);
+		}
+
+		const skinQuaterion = new DualQuaternion();
+		const tmp = new DualQuaternion();
+		for (const { bone, weight } of skinning) {
+			if (weight === 0)
+				continue;
+
+			this._getBoneTransformQuaterion(tmp, bone);
+			tmp.multiplyByScalar(weight);
+			skinQuaterion.add(tmp);
+		}
+
+		const matrix = new Matrix4x4();
+		skinQuaterion.toTransformationMatrix(matrix);
+
+		const vec4 = new Vector4(position.x, position.y, 0, 1);
+		vec4.multiplyByMatrix4x4(matrix);
+		position.x = vec4.x;
+		position.y = vec4.y;
+	}
+
+	private readonly _boneTransformCache = new Map<BoneName, DualQuaternion>();
+	protected _getBoneTransformQuaterion(target: DualQuaternion, bone: BoneName | null): void {
+		if (bone == null) {
+			target.set(1, 0, 0, 0, 0, 0, 0, 0);
+			return;
+		}
+
+		let result = this._boneTransformCache.get(bone);
+		if (result === undefined) {
+			result = new DualQuaternion().set(1, 0, 0, 0, 0, 0, 0, 0);
+			this._boneTransformCache.set(bone, result);
+
+			const boneDef = this._getBone(bone);
+
+			const bonePos = new Vector2(boneDef.x, boneDef.y);
+			if (boneDef.parent != null) {
+				this._getBoneTransformQuaterion(result, boneDef.parent?.name ?? null);
+				this.skinPoint(bonePos, [{ bone: boneDef.parent.name, weight: 1 }]);
+			}
+			const localTransform = new DualQuaternion();
+			localTransform.fromRotationAroundPoint(
+				Quaternion.fromAxisAngle(new Vector3(0, 0, 1), this.getBoneLikeValue(bone) * DEG_TO_RAD * (boneDef.isMirror ? -1 : 1)),
+				new Vector3(bonePos.x, bonePos.y, 0),
+			);
+
+			// Apply parent transformation
+			localTransform.multiply(result);
+			result.assign(localTransform);
+		}
+		target.assign(result);
 	}
 
 	protected _getBone(bone: string): BoneDefinition {

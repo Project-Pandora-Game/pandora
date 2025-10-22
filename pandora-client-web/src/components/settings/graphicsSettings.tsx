@@ -2,7 +2,7 @@ import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import * as z from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
-import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAutomaticResolution } from '../../services/screenResolution/screenResolutionHooks.ts';
 import { Button } from '../common/button/button.tsx';
@@ -66,6 +66,7 @@ function QualitySettings(): ReactElement {
 	}), [automaticTextureResolution]);
 
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
+	const upscalingDriver = useGraphicsSettingDriver('upscaling');
 	const currentGraphicsSettings = useGraphicsSettings();
 
 	return (
@@ -92,13 +93,25 @@ function QualitySettings(): ReactElement {
 					label='Render resolution'
 					stringify={
 						Object.fromEntries(
-							([100, 90, 80, 65, 50, 25, 0])
+							([100, 90, 80, 65, 50, 25, 20, 10, 0])
 								.map((v) => [v.toString(), `${v}%`]),
 						)
 					}
-					optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
+					optionOrder={ [100, 90, 80, 65, 50, 25, 20, 10, 0].map(String) }
 					schema={ z.string() }
 				/>
+				{ (renderResolutionDriver.currentValue ?? renderResolutionDriver.defaultValue) < 100 ? (
+					<SelectSettingInput<GraphicsUpscalingSetting>
+						driver={ upscalingDriver }
+						label='Upscaling'
+						stringify={ {
+							'smooth': 'Bilinear',
+							'crisp-edges': 'Pixelated + Crisp edges',
+							'pixelated': 'Pixelated',
+						} }
+						schema={ GraphicsUpscalingSettingSchema }
+					/>
+				) : null }
 				<Column gap='none'>
 					<ToggleSettingInput
 						driver={ useGraphicsSettingDriver('antialias') }

@@ -90,7 +90,7 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 							disabled={ onChange == null || processing }
 						/>
 					) : (
-						<strong className='flex-grow-1 value tabularFont'>{ parsedValue }</strong>
+						<strong className='flex-grow-1 value font-tabular'>{ parsedValue }</strong>
 					)
 				}
 				{

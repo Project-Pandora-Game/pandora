@@ -128,7 +128,7 @@ export class DraggablePoint {
 		this._definition.value = point;
 	}
 
-	private _modifyPoint(producer: (draft: Draft<Immutable<PointDefinition>>) => void): void {
+	public modifyPoint(producer: (draft: Draft<Immutable<PointDefinition>>) => void): void {
 		const index = this.index;
 
 		this.template.modifyTemplate((d) => {
@@ -141,25 +141,25 @@ export class DraggablePoint {
 		if (this._definition.value.isMirror) {
 			x = CharacterSize.WIDTH - x;
 		}
-		this._modifyPoint((p) => {
+		this.modifyPoint((p) => {
 			p.pos = [x, y];
 		});
 	}
 
 	public setPointType(type: PointDefinition['pointType']): void {
-		this._modifyPoint((p) => {
+		this.modifyPoint((p) => {
 			p.pointType = type;
 		});
 	}
 
 	public setMirror(value: boolean): void {
-		this._modifyPoint((p) => {
+		this.modifyPoint((p) => {
 			p.mirror = value;
 		});
 	}
 
 	public mirrorSwap(): void {
-		this._modifyPoint((p) => {
+		this.modifyPoint((p) => {
 			p.pos[0] = CharacterSize.WIDTH - p.pos[0];
 			p.transforms = p.transforms.map(MirrorTransform);
 			p.pointType = MirrorBoneLike(p.pointType);
@@ -167,7 +167,7 @@ export class DraggablePoint {
 	}
 
 	public setTransforms(value: PointDefinition['transforms']): void {
-		this._modifyPoint((p) => {
+		this.modifyPoint((p) => {
 			p.transforms = cloneDeep(value);
 		});
 	}

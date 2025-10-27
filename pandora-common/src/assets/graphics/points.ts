@@ -26,8 +26,8 @@ export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
 
 export const PointSkinningEntrySchema = z.object({
-	/** Name of a bone to use for skinning, or `null` to use character root bone that never moves. */
-	bone: BoneNameSchema.nullable(),
+	/** Name of a bone to use for skinning. */
+	bone: BoneNameSchema,
 	/** The weight of this bone. All weights should add up to 1 to produce result that makes sense. */
 	weight: z.number(),
 });

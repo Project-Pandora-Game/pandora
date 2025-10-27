@@ -165,6 +165,21 @@
 	color: common.$theme-normal-text-dim;
 }
 
+.font-standard {
+	font-family: common.$theme-font-family;
+	font-feature-settings: common.$theme-font-features;
+}
+
+.font-tabular {
+	font-family: common.$theme-font-family;
+	font-feature-settings: common.$theme-font-features-tabular;
+}
+
+.font-monospace {
+	font-family: common.$theme-font-family-monospace;
+	font-feature-settings: normal;
+}
+
 //#endregion
 
 //#region Misc

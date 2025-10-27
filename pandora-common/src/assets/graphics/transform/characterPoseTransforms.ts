@@ -91,12 +91,19 @@ export class CharacterPoseTransforms {
 
 		const skinQuaterion = new DualQuaternion();
 		const tmp = new DualQuaternion();
+		let remainingWeight = 1;
 		for (const { bone, weight } of skinning) {
 			if (weight === 0)
 				continue;
 
 			this._getBoneTransformQuaterion(tmp, bone);
 			tmp.multiplyByScalar(weight);
+			skinQuaterion.add(tmp);
+			remainingWeight -= weight;
+		}
+		if (remainingWeight !== 0) {
+			this._getBoneTransformQuaterion(tmp, null);
+			tmp.multiplyByScalar(remainingWeight);
 			skinQuaterion.add(tmp);
 		}
 

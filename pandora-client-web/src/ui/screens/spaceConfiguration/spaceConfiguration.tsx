@@ -488,10 +488,11 @@ function SpaceConfigurationGeneral({
 							</p>
 							<h3>Locked</h3>
 							<ul>
-								<li>Owners, Admins and "Allowed users" users can see this space.</li>
+								<li>Owners, Admins and "Allowed users" users can see this space, but not who is inside.</li>
 								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
 								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
 								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
+								<li>Locked spaces do not prevent anyone from being able to leave the space.</li>
 							</ul>
 							<h3>Private</h3>
 							<ul>
@@ -745,7 +746,7 @@ function SpaceConfigurationRights({
 						</p>
 						<ul>
 							<li>They can always see this space in their list of spaces, even while it is empty.</li>
-							<li>They can join the space while it is public or private, but not while it is locked..</li>
+							<li>They can join the space while it is public or private, but not while it is locked.</li>
 							<li>They can see who is currently inside without joining, unless the space is locked.</li>
 						</ul>
 					</ContextHelpButton>

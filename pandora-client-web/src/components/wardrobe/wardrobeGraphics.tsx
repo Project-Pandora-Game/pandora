@@ -176,9 +176,12 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	const layerFilter = useCallback<GraphicsCharacterLayerFilter>((layer) => {
-		if (hideClothes && layer.item != null) {
+		if (layer.item != null) {
 			const asset = layer.item.asset;
-			if (asset.isType('personal')) {
+			if (asset.isType('roomDeviceWearablePart')) {
+				return false;
+			}
+			if (hideClothes && asset.isType('personal')) {
 				return false;
 			}
 		}

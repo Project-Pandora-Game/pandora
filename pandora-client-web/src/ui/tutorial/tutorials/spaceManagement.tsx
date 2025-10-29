@@ -115,7 +115,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								Aside from being able to manage the space's room layout, the space configuration screen also
 								has tabs to change the general settings of such a space
 								(such as name, size, space description, and entry message), to manage the
-								space's rights (such as who is admin, who are allowed users with special access rights,
+								space's rights (such as who is admin, who are "allowed users" with special access rights,
 								and if and when offline characters are removed), and to configure space-wide
 								features (such as who is allowed to manage the rooms of the space).
 							</p>

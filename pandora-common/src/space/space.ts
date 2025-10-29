@@ -113,7 +113,7 @@ export const SpaceGhostManagementConfigSchema = z.object({
 	 * - `none` = applies to all characters
 	 * - `owner` = Owners are excluded
 	 * - `admin` = Owners and admins are excluded
-	 * - `allowed` = Owners, admins, and people on allowlist are excluded
+	 * - `allowed` = Owners, admins, and people on the "allowed users" list are excluded
 	 */
 	ignore: z.enum(['none', 'owner', 'admin', 'allowed']),
 	/**

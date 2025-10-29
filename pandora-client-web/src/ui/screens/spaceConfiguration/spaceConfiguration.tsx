@@ -748,7 +748,9 @@ function SpaceConfigurationRights({
 							<li>They can always see this space in their list of spaces, even while it is empty.</li>
 							<li>They can join the space while it is public or private, but not while it is locked.</li>
 							<li>They can see who is currently inside without joining, unless the space is locked.</li>
+							<li>In certain space configurations, they can use paths between rooms that other users are not able to see and use.</li>
 						</ul>
+						<br />
 					</ContextHelpButton>
 				</legend>
 				<div className='input-container'>
@@ -1033,7 +1035,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					none: '[None] (all characters are affected)',
 					owner: 'Owner',
 					admin: 'Owner or Admin',
-					allowed: 'Owner, Admin, or on the Allowlist',
+					allowed: 'Owner, Admin, or "Allowed Users"',
 				} }
 				disabled={ !canEdit }
 			/>

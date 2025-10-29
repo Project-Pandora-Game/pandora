@@ -38,8 +38,8 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "3.918.0",
-		"@aws-sdk/credential-provider-node": "3.918.0",
+		"@aws-sdk/client-sesv2": "3.919.0",
+		"@aws-sdk/credential-provider-node": "3.919.0",
 		"@octokit/auth-oauth-app": "9.0.2",
 		"@octokit/rest": "22.0.0",
 		"argon2": "0.44.0",

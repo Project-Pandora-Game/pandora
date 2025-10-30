@@ -267,14 +267,22 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 				},
 				{
 					text: (
-						<p>
-							A final note on permission prompts:<br />
-							When someone tries an action that leads to a prompt, indicated by a different button color (yellow),
-							they are not directly informed about your decision.
-							After you have granted the permission, the action is not automatically executed, as the server does not queue this.
-							Therefore, the interaction that was leading to the prompt has to be repeated again by the requesting character, after
-							they see the button color changing from "yellow" to the normal color. It could also turn "red", if the permissions was denied.
-						</p>
+						<>
+							<p>
+								A final note on permission prompts:<br />
+								When someone tries an action that leads to a prompt, indicated by a different button color (yellow),
+								they are not directly informed about your decision.
+								After you have granted the permission, the action that triggered the prompt is not automatically executed, as the server does not queue this.
+								Therefore, the interaction that was leading to the prompt has to be repeated again by the requesting character, after
+								they see the button color changing from "yellow" to the normal color. It could also turn "red", if the permissions was denied.
+							</p>
+							<p>
+								The action leading to the permission prompt is not automatically executed after granting the missing permissions, because the prompt will stay open
+								any amount of time and it is not unlikely that after a certain amount of time the action may no longer fit or be desirable.
+								The prompt stays open indefinitely, until you have take a decision to allow, deny, or simply click the request away while taking no action.
+								So you can take your time to decide or talk to the person requesting the permission and you will also never missing it, if you are away.
+							</p>
+						</>
 					),
 					conditions: [{ type: 'next' }],
 				},

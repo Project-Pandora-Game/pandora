@@ -88,6 +88,19 @@ export class Quaternion {
 		return this;
 	}
 
+	/** Similar to `multiply`, but does `this = other * this` */
+	public leftMultiply(other: Quaternion): this {
+		const aa = other.a, ab = other.b, ac = other.c, ad = other.d;
+		const ba = this.a, bb = this.x, bc = this.c, bd = this.d;
+
+		this.a = aa * ba - ab * bb - ac * bc - ad * bd;
+		this.b = ab * ba + aa * bb + ac * bd - ad * bc;
+		this.c = ac * ba + aa * bc + ad * bb - ab * bd;
+		this.d = ad * ba + aa * bd + ab * bc - ac * bb;
+
+		return this;
+	}
+
 	public multiplyByScalar(scalar: number): this {
 		this.a *= scalar;
 		this.b *= scalar;

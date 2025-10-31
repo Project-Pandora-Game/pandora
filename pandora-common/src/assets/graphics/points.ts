@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { ZodWrapInternString } from '../../validation.ts';
 import { GraphicsSourceAutoMeshTemplateSchema } from '../graphicsSource/layers/autoMesh.ts';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
 import { BoneNameSchema, PoseConditionSchema } from './conditions.ts';
@@ -6,19 +7,19 @@ import { LayerPrioritySchema, type LayerPriority } from './layers/common.ts';
 
 export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 	z.object({
-		type: z.literal('rotate'),
+		type: ZodWrapInternString(z.literal('rotate')),
 		bone: BoneNameSchema,
 		value: z.number(),
 		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
-		type: z.literal('shift'),
+		type: ZodWrapInternString(z.literal('shift')),
 		bone: BoneNameSchema,
 		value: CoordinatesSchema,
 		condition: PoseConditionSchema.optional(),
 	}),
 	z.object({
-		type: z.literal('const-shift'),
+		type: ZodWrapInternString(z.literal('const-shift')),
 		value: CoordinatesSchema,
 		condition: PoseConditionSchema.optional(),
 	}),

@@ -14,6 +14,50 @@ export class Vector4 {
 		this.w = w;
 	}
 
+	public set(x: number, y: number, z: number, w: number): this {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.w = w;
+
+		return this;
+	}
+
+	public zero(): this {
+		return this.set(0, 0, 0, 0);
+	}
+
+	public assign(other: Vector4): this {
+		return this.set(other.x, other.y, other.z, other.w);
+	}
+
+	public add(other: Vector4): this {
+		this.x += other.x;
+		this.y += other.y;
+		this.z += other.z;
+		this.w += other.w;
+
+		return this;
+	}
+
+	public substract(other: Vector4): this {
+		this.x -= other.x;
+		this.y -= other.y;
+		this.z -= other.z;
+		this.w -= other.w;
+
+		return this;
+	}
+
+	public multiplyByScalar(scalar: number): this {
+		this.x *= scalar;
+		this.y *= scalar;
+		this.z *= scalar;
+		this.w *= scalar;
+
+		return this;
+	}
+
 	public multiplyByMatrix4x4(m: Matrix4x4): this {
 		const x = this.x, y = this.y, z = this.z, w = this.w;
 		const e = m.elements;
@@ -28,5 +72,15 @@ export class Vector4 {
 
 	public clone(): Vector4 {
 		return new Vector4(this.x, this.y, this.z, this.w);
+	}
+
+	/** Calculates length (norm) of this vector */
+	public getLength(): number {
+		return Math.hypot(this.x, this.y, this.z, this.w);
+	}
+
+	/** Calculates square length of this vector */
+	public getLengthSq(): number {
+		return (this.x * this.x) + (this.y * this.y) + (this.z * this.z) + (this.w * this.w);
 	}
 }

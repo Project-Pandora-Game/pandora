@@ -92,7 +92,39 @@ type MongoDbInit = Readonly<{
 	dbPath?: string;
 }>;
 
-export const MONGODB_SERVER_VERSION: string = '6.0.5';
+type MongoDbVersion = {
+	version: string;
+	/** Checks that the database's `featureCompatibilityVersion` is this. */
+	featureCompatibilityVersionTarget: string;
+	/** If database's `featureCompatibilityVersion` is this, starting will try to update it to `featureCompatibilityVersionTarget` */
+	featureCompatibilityVersionUpdateFrom?: string;
+	/** Do not pass `confirm: true` to update process (for old versions) */
+	featureCompatibilityVersionUpdateNoConfirm?: boolean;
+	/** Version to try if trying to start MongoDB produces error 62 with current data */
+	incompatibleDataPreviousVersion?: MongoDbVersion;
+};
+
+export const MONGODB_SERVER_VERSION: MongoDbVersion = {
+	version: '8.2.1',
+	featureCompatibilityVersionTarget: '8.2',
+	featureCompatibilityVersionUpdateFrom: '8.0',
+	incompatibleDataPreviousVersion: {
+		version: '8.0.15',
+		featureCompatibilityVersionTarget: '8.0',
+		featureCompatibilityVersionUpdateFrom: '7.0',
+		incompatibleDataPreviousVersion: {
+			version: '7.0.25',
+			featureCompatibilityVersionTarget: '7.0',
+			featureCompatibilityVersionUpdateFrom: '6.0',
+			incompatibleDataPreviousVersion: {
+				version: '6.0.26',
+				featureCompatibilityVersionTarget: '6.0',
+				featureCompatibilityVersionUpdateFrom: '5.0',
+				featureCompatibilityVersionUpdateNoConfirm: true,
+			},
+		},
+	},
+};
 
 const accountCollection = new ValidatedCollection(
 	logger,
@@ -1231,25 +1263,84 @@ async function CreateInMemoryMongo({
 }: {
 	dbPath?: string;
 } = {}): Promise<MongoMemoryServer> {
-	const { MongoMemoryServer } = await import('mongodb-memory-server-core');
 	if (dbPath) {
 		const { mkdir } = await import('fs/promises');
 		await mkdir(dbPath, { recursive: true });
 	}
-	return await MongoMemoryServer.create({
-		binary: {
-			version: MONGODB_SERVER_VERSION,
-			checkMD5: false,
-		},
-		instance: {
-			dbPath,
-			storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
-			args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
-		},
-		spawn: {
-			detached: true,
-		},
-	});
+	return await MongoDbServerStart(MONGODB_SERVER_VERSION, dbPath);
+}
+
+async function MongoDbServerStart(version: MongoDbVersion, dbPath?: string): Promise<MongoMemoryServer> {
+	const { MongoMemoryServer, errors } = await import('mongodb-memory-server-core');
+
+	let instance: MongoMemoryServer;
+	try {
+		instance = await MongoMemoryServer.create({
+			binary: {
+				version: version.version,
+				checkMD5: false,
+			},
+			instance: {
+				dbPath,
+				storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
+				args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
+			},
+			spawn: {
+				detached: true,
+			},
+		});
+	} catch (error) {
+		if (error instanceof errors.UnexpectedCloseError && error.message.includes('code "62"') && version.incompatibleDataPreviousVersion != null) {
+			logger.warning('MongoDB failed to start with error code 62. Trying earlier version for data migration.');
+			const earlierInstance = await MongoDbServerStart(version.incompatibleDataPreviousVersion, dbPath);
+
+			// Close earlier instance and try this version again
+			const stopResult = await earlierInstance.stop();
+			Assert(stopResult, 'Stop failed');
+
+			// Re-try current version with no previous version migration
+			return MongoDbServerStart({
+				...version,
+				incompatibleDataPreviousVersion: undefined,
+			}, dbPath);
+		}
+
+		throw new Error('MongoDB failed to start', { cause: error });
+	}
+
+	const client = new MongoClient(instance.getUri(), { ignoreUndefined: true });
+	await client.connect();
+	try {
+		const adm = client.db('admin').admin();
+		const currentVersion = await adm.command({ getParameter: 1, featureCompatibilityVersion: 1 });
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		let featureCompatibilityVersion: unknown = currentVersion?.featureCompatibilityVersion?.version;
+		Assert(typeof featureCompatibilityVersion === 'string');
+
+		if (version.featureCompatibilityVersionUpdateFrom != null && version.featureCompatibilityVersionUpdateFrom === featureCompatibilityVersion) {
+			Assert(version.featureCompatibilityVersionUpdateFrom !== version.featureCompatibilityVersionTarget);
+			logger.alert(`Local MongoDB featureCompatibilityVersion is ${featureCompatibilityVersion}, upgrading to ${version.featureCompatibilityVersionTarget}`);
+
+			const result = await adm.command(
+				version.featureCompatibilityVersionUpdateNoConfirm ? { setFeatureCompatibilityVersion: version.featureCompatibilityVersionTarget } :
+					{ setFeatureCompatibilityVersion: version.featureCompatibilityVersionTarget, confirm: true },
+			);
+			logger.alert('Local MongoDB upgrade result:', result);
+			Assert(result.ok === 1);
+
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			featureCompatibilityVersion = (await adm.command({ getParameter: 1, featureCompatibilityVersion: 1 }))?.featureCompatibilityVersion?.version;
+			Assert(typeof featureCompatibilityVersion === 'string');
+			Assert(featureCompatibilityVersion === version.featureCompatibilityVersionTarget, `Unexpected featureCompatibilityVersion '${featureCompatibilityVersion}' after update.`);
+		}
+
+		Assert(featureCompatibilityVersion === version.featureCompatibilityVersionTarget, `Unexpected featureCompatibilityVersion '${featureCompatibilityVersion}'.`);
+	} finally {
+		await client.close();
+	}
+
+	return instance;
 }
 
 function CharacterIdToStringId(id: number | CharacterId): CharacterId {

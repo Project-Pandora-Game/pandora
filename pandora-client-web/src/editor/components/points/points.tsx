@@ -13,6 +13,7 @@ import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobeUtils.ts';
@@ -24,6 +25,7 @@ import { useEditorCharacterState } from '../../graphics/character/appearanceEdit
 import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable.tsx';
 import { PointTemplateEditor } from '../../graphics/pointTemplateEditor.tsx';
 import { ParseTransforms, SerializeTransforms } from '../../parsing.ts';
+import { PointTransformComparsionDetail } from './pointTransformComparisonDetail.tsx';
 
 export function PointsUI(): ReactElement {
 	const [editingEnabled, setEditingEnabled] = useBrowserStorage('editor.point-edit.enable', false, z.boolean());
@@ -258,6 +260,15 @@ export function PointsHelperMathUi(): ReactElement | null {
 					/>
 				</Row>
 			</Column>
+			<FieldsetToggle legend='Old-New transform comparison' open={ false }>
+				{ selectedPointDefinition != null ? (
+					<Column alignX='start'>
+						<PointTransformComparsionDetail
+							point={ selectedPointDefinition }
+						/>
+					</Column>
+				) : null }
+			</FieldsetToggle>
 		</>
 	);
 }

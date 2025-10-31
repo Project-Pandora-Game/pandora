@@ -6,6 +6,8 @@ import type { Vector3 } from './vector3.ts';
 
 const TempQuaternion1 = /*@__PURE__*/ new Quaternion();
 const TempQuaternion2 = /*@__PURE__*/ new Quaternion();
+const TempQuaternion3 = /*@__PURE__*/ new Quaternion();
+const TempQuaternion4 = /*@__PURE__*/ new Quaternion();
 
 export class DualQuaternion {
 	/** The real part of the Quaternion */
@@ -145,21 +147,40 @@ export class DualQuaternion {
 	}
 
 	public multiply(other: DualQuaternion): this {
-		const aReal = new Quaternion();
-		const aDual = new Quaternion();
-		const bReal = new Quaternion();
-		const bDual = new Quaternion();
+		const aReal = TempQuaternion1;
+		const aDual = TempQuaternion2;
+		const bReal = TempQuaternion3;
+		const bDual = TempQuaternion4;
 
 		this.extractRealQuaternion(aReal);
 		this.extractDualQuaternion(aDual);
 		other.extractRealQuaternion(bReal);
 		other.extractDualQuaternion(bDual);
 
-		const dualResult = new Quaternion()
-			.assign(aReal).multiply(bDual)
-			.add(new Quaternion().assign(aDual).multiply(bReal));
+		const dualResult = bDual.leftMultiply(aReal)
+			.add(aDual.multiply(bReal));
 
-		const realResult = new Quaternion().assign(aReal).multiply(bReal);
+		const realResult = aReal.multiply(bReal);
+
+		return this.set(realResult.a, realResult.b, realResult.c, realResult.d, dualResult.a, dualResult.b, dualResult.c, dualResult.d);
+	}
+
+	/** Similar to `multiply`, but does `this = other * this` */
+	public leftMultiply(other: DualQuaternion): this {
+		const aReal = TempQuaternion1;
+		const aDual = TempQuaternion2;
+		const bReal = TempQuaternion3;
+		const bDual = TempQuaternion4;
+
+		other.extractRealQuaternion(aReal);
+		other.extractDualQuaternion(aDual);
+		this.extractRealQuaternion(bReal);
+		this.extractDualQuaternion(bDual);
+
+		const dualResult = bDual.leftMultiply(aReal)
+			.add(aDual.multiply(bReal));
+
+		const realResult = aReal.multiply(bReal);
 
 		return this.set(realResult.a, realResult.b, realResult.c, realResult.d, dualResult.a, dualResult.b, dualResult.c, dualResult.d);
 	}
@@ -214,7 +235,7 @@ export class DualQuaternion {
 	public fromRotationTranslation(rotation: Quaternion, translation: Vector3): this {
 		this.assignReal(rotation);
 
-		const dual = new Quaternion(0, translation.x, translation.y, translation.z);
+		const dual = TempQuaternion1.set(0, translation.x, translation.y, translation.z);
 		dual.multiply(rotation);
 		dual.multiplyByScalar(0.5);
 		this.assignDual(dual);

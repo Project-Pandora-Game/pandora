@@ -25,6 +25,7 @@
 		},
 		{
 			"matchPackageNames": [
+				"node",
 				"docker.io/node",
 				"@types/node"
 			],

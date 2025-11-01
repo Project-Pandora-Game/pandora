@@ -8,7 +8,6 @@ import { TextDecoder, TextEncoder } from 'util';
 import { TEST_DIRECTORY_ADDRESS } from './testEnv.ts';
 
 Assert(typeof globalThis.TextEncoder === 'undefined');
-// @ts-expect-error - Polyfill TextDecoder as JSDom doesn't support it
 globalThis.TextEncoder = TextEncoder;
 
 Assert(typeof globalThis.TextDecoder === 'undefined');

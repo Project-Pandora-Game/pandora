@@ -59,6 +59,14 @@ export class DualQuaternion {
 		this.ce = value;
 	}
 
+	/** The `z` coordinate when considering this quaternion as 3d space rotation */
+	public get z(): number {
+		return this.d;
+	}
+	public set z(value: number) {
+		this.d = value;
+	}
+
 	/** The dual part of `z` coordinate when considering this quaternion as 3d space rotation */
 	public get ze(): number {
 		return this.de;

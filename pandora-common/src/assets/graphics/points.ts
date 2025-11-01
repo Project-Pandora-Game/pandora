@@ -29,7 +29,7 @@ export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
 export const PointSkinningEntrySchema = z.object({
 	/** Name of a bone to use for skinning. */
 	bone: BoneNameSchema,
-	/** The weight of this bone. All weights should add up to 1 to produce result that makes sense. */
+	/** The weight of this bone. All weights should add up to 1 or less, otherwise things might break. Remaining weight will be filled with identity transform. */
 	weight: z.number(),
 });
 export type PointSkinningEntry = z.infer<typeof PointSkinningEntrySchema>;

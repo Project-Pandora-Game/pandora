@@ -78,7 +78,7 @@ export class Quaternion {
 
 	public multiply(other: Quaternion): this {
 		const aa = this.a, ab = this.b, ac = this.c, ad = this.d;
-		const ba = other.a, bb = other.x, bc = other.c, bd = other.d;
+		const ba = other.a, bb = other.b, bc = other.c, bd = other.d;
 
 		this.a = aa * ba - ab * bb - ac * bc - ad * bd;
 		this.b = ab * ba + aa * bb + ac * bd - ad * bc;
@@ -91,7 +91,7 @@ export class Quaternion {
 	/** Similar to `multiply`, but does `this = other * this` */
 	public leftMultiply(other: Quaternion): this {
 		const aa = other.a, ab = other.b, ac = other.c, ad = other.d;
-		const ba = this.a, bb = this.x, bc = this.c, bd = this.d;
+		const ba = this.a, bb = this.b, bc = this.c, bd = this.d;
 
 		this.a = aa * ba - ab * bb - ac * bc - ad * bd;
 		this.b = ab * ba + aa * bb + ac * bd - ad * bc;

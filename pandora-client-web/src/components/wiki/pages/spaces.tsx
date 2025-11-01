@@ -78,7 +78,7 @@ export function WikiSpaces(): ReactElement {
 				</li>
 				<li>
 					A path is not shown if there is no neighboring room in the cardinal direction this path leads to, if the path is disabled (e.g. representing a wall between two rooms), or
-					if the path is usage restricted based on roles, such as "admin" or "allowed user", defined in the space configuration's rights management tab.
+					if the path is usage restricted based on roles, such as "Admin" or "Allowed user", defined in the space configuration's rights management tab.
 				</li>
 			</ul>
 
@@ -121,7 +121,7 @@ export function WikiSpaces(): ReactElement {
 				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
 				Note, that the "Public" setting means that it is only public while anyone is online inside the space. Offline characters inside do not count.
 				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
-				Even then, owners and admins of that space as well as users whose account is on the "allowed users" list of the space can still see these unlisted public spaces and join them.
+				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces and join them.
 				Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
 				The "Public while an admin is inside" setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.<br />
 				<br />
@@ -131,7 +131,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>The default when creating a new space is private.</li>
-				<li>Private spaces only show in the list of spaces for owners and admins of that space as well as users whose account is on the "allowed users" list of the space.</li>
+				<li>Private spaces only show in the list of spaces for owners and admins of that space as well as users whose account is on the "Allowed users" list of the space.</li>
 				<li>Accounts can still see spaces they are banned from</li>
 				<li>
 					Certain information about a space can be seen in the space preview popup by anyone able to enter the space even without actually entering it.
@@ -144,7 +144,7 @@ export function WikiSpaces(): ReactElement {
 				Spaces in Pandora that are publicly listed can be joined unless a user is banned from it or the space is full.
 				A private space can only be seen and joined by owners, admins and people on the allow list of said space. To invite other users to a private space,
 				they have to either be added to one of these lists or be invited by an admin in order to join.
-				The admin and "allowed users" lists can be found in the "Rights management"-tab of the space configuration view. Note that these lists
+				The admin and "Allowed users" lists can be found in the "Rights management"-tab of the space configuration view. Note that these lists
 				work with user account IDs and not with character IDs.
 			</p>
 			<ul>
@@ -160,7 +160,7 @@ export function WikiSpaces(): ReactElement {
 				Let's summarize how to best manage access to private spaces:<br />
 			</p>
 			<ul>
-				<li>If you want a user and all their characters to have permanent access to your space, add them to the list of allowed users.</li>
+				<li>If you want a user and all their characters to have permanent access to your space, add them to the list of Allowed users.</li>
 				<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character.</li>
 				<li>If you want to invite another character for one time, send a direct message to them using the "/invite" command.</li>
 			</ul>
@@ -219,7 +219,7 @@ export function WikiSpaces(): ReactElement {
 				<li>You can set the space's visibility. The default is that the space is private.</li>
 				<li>You can set the space's name and a long space description that both are visible from the outside to accounts that can see the space.</li>
 				<li>Under the "Rights management"-tab, you can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
-				<li>The admins, banned, and allowed users lists require the player account id, as they are account-wide.<br />
+				<li>The Admins, Banned, and "Allowed users" lists require the player account id, as they are account-wide.<br />
 					The player account id number can be looked up in the account profile of the player.<br />
 					<strong>Careful:</strong> Do not mix it up with the character id which starts with "c" followed by a number.<br />
 					Alternatively, you can look up the player account id of a character inside the space in the "Room"-Tab. It is the last number behind the name.<br />

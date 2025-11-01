@@ -154,11 +154,11 @@ function SpaceSearchList({ list }: {
 						<p>
 							In Pandora, each space is persistent and has one or more owners.<br />
 							It only gets deleted when it no longer has any owners.<br />
-							A space is listed in this view for everyone (except accounts banned from it), if it has<br />
+							A space is listed in this view for everyone, if it has<br />
 							the space visibility "public" and there are one or more characters online inside.<br />
 							The default setting for newly created spaces is space visibility "Private".<br />
 							You can always see spaces where you are either admin or owner of, or where<br />
-							you are on the space's allowed users list.
+							you are on the space's Allowed users list.
 						</p>
 						<p>
 							Each <strong>account</strong> has a maximum number of spaces it can own.<br />

@@ -5,6 +5,7 @@ import {
 	AssertNotNullable,
 	AssetFrameworkPosePresetSchema,
 	GetLogger,
+	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
 	type AppearanceArmPose,
 	type AppearanceArmsOrder,
@@ -14,7 +15,7 @@ import {
 	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
-import React, { useMemo, type ReactNode } from 'react';
+import React, { useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -40,6 +41,7 @@ import importIcon from '../../../assets/icons/import.svg';
 import triangleDown from '../../../assets/icons/triangle_down.svg';
 import triangleUp from '../../../assets/icons/triangle_up.svg';
 
+import { StorageUsageMeter } from '../wardrobeComponents.tsx';
 import './storedPosePresets.scss';
 
 type WardrobeStoredPosePresetsProps = {
@@ -616,13 +618,26 @@ function PosePresetBoneRow({ preset, bone, storedValue, currentValue }: { preset
 	);
 }
 
+export function PosePresetButtons(): ReactElement {
+	return (
+		<Row alignX='end'>
+			<PosePresetCreateButton />
+			<PosePresetImportButton />
+		</Row>
+	);
+}
+
 function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 	const { presets } = usePosePresetContext();
 	return (
 		<DraggableDialog title='Edit saved poses' close={ close }>
-			<Row alignX='end'>
-				<PosePresetCreateButton />
-				<PosePresetImportButton />
+			<Row padding='large' alignX='space-between'>
+				<StorageUsageMeter
+					title='Saved pose slots used'
+					used={ presets ? presets?.length : 0 }
+					limit={ LIMIT_ACCOUNT_POSE_PRESET_STORAGE }
+				/>
+				<PosePresetButtons />
 			</Row>
 			<table className='pose-presets-table'>
 				<thead>

@@ -149,15 +149,16 @@ function SpaceSearchList({ list }: {
 					My spaces ({ ownSpaces.length }/{ account.spaceOwnershipLimit })
 					<ContextHelpButton>
 						<p>
-							Spaces are a place where you can meet other characters.
+							Spaces are places where you can meet other characters.
 						</p>
 						<p>
 							In Pandora, each space is persistent and has one or more owners.<br />
 							It only gets deleted when it no longer has any owners.<br />
-							A space is visible to everyone (except accounts banned from it),<br />
-							if it is marked as public and there is at least one admin inside the space.<br />
-							The default setting for newly created spaces is private visibility.<br />
-							You can always see spaces you are either admin or owner of.
+							A space is listed in this view for everyone, if it has<br />
+							the space visibility "public" and there are one or more characters online inside.<br />
+							The default setting for newly created spaces is space visibility "Private".<br />
+							You can always see spaces where you are either an Admin or an Owner, or where<br />
+							you are on the space's Allowed users list.
 						</p>
 						<p>
 							Each <strong>account</strong> has a maximum number of spaces it can own.<br />

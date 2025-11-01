@@ -488,28 +488,29 @@ function SpaceConfigurationGeneral({
 							</p>
 							<h3>Locked</h3>
 							<ul>
-								<li>Owners, Admins and "Allowed users" users can see this space.</li>
+								<li>Owners, Admins and Allowed users can see this space, but not who is inside.</li>
 								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
 								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
 								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
+								<li>Locked spaces do not prevent anyone from being able to leave the space.</li>
 							</ul>
 							<h3>Private</h3>
 							<ul>
-								<li>Owners, Admins and "Allowed users" users can see this space.</li>
-								<li>Owners, Admins and "Allowed users" users can join at any time.</li>
+								<li>Owners, Admins and Allowed users can see this space.</li>
+								<li>Owners, Admins and Allowed users can join at any time.</li>
 								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
 							</ul>
 							<h3>Public while an admin is inside</h3>
 							<ul>
-								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
+								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and Allowed users can see it.</li>
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
 							</ul>
 							<h3>Public</h3>
 							<ul>
-								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
+								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and Allowed users can see it.</li>
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
@@ -745,9 +746,11 @@ function SpaceConfigurationRights({
 						</p>
 						<ul>
 							<li>They can always see this space in their list of spaces, even while it is empty.</li>
-							<li>They can join the space while it is public or private, but not while it is locked..</li>
+							<li>They can join the space while it is public or private, but not while it is locked.</li>
 							<li>They can see who is currently inside without joining, unless the space is locked.</li>
+							<li>In certain space configurations, they can use paths between rooms that other users are not able to see and use.</li>
 						</ul>
+						<br />
 					</ContextHelpButton>
 				</legend>
 				<div className='input-container'>
@@ -1032,7 +1035,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					none: '[None] (all characters are affected)',
 					owner: 'Owner',
 					admin: 'Owner or Admin',
-					allowed: 'Owner, Admin, or on the Allowlist',
+					allowed: 'Owner, Admin, or Allowed users',
 				} }
 				disabled={ !canEdit }
 			/>

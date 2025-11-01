@@ -115,7 +115,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								Aside from being able to manage the space's room layout, the space configuration screen also
 								has tabs to change the general settings of such a space
 								(such as name, size, space description, and entry message), to manage the
-								space's rights (such as who is admin, who are allowed users with special access rights,
+								space's rights (such as who is Admin, who are "Allowed users" with special access rights,
 								and if and when offline characters are removed), and to configure space-wide
 								features (such as who is allowed to manage the rooms of the space).
 							</p>
@@ -733,7 +733,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								A path is not shown in the room if there is no neighboring room in the
 								cardinal direction this path leads to, if the path is disabled,
 								or if the path's usage is restricted for your user account's role,
-								such as "admin" or "allowed user",
+								such as "Admin" or "Allowed user",
 								defined in the space configuration's rights management tab.<br />
 								That said, limiting a path's usage in your personal space makes not much sense,
 								as you will always be its owner and no other character can enter it.

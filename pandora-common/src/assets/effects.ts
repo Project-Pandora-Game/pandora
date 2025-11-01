@@ -77,7 +77,7 @@ export const EFFECT_NAMES: Record<EffectName, string> = {
 	mouthBreath: 'Muffle: Air breath sounds',
 	throatBreath: 'Muffle: Strong throat vibration sounds',
 	coherency: 'Muffle: Hinting letters',
-	stimulus: 'Stuttering',
+	stimulus: 'Muffle: Stuttering amount',
 
 	// hearing impairment
 	distortion: 'Hearing: Distortion',

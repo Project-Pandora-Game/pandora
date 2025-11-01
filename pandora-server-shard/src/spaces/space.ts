@@ -356,7 +356,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	/** Checks if the specified character is on the allowlist */
+	/** Checks if the specified character is on the "allowed users" list */
 	public isAllowed(character: Character): boolean {
 		if (this.isAdmin(character))
 			return true;

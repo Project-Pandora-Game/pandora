@@ -5,7 +5,7 @@ import { SelectSettingInput, type SelectSettingInputProps } from '../../../compo
 const SPACE_ROLE_NO_NONE_TEXT: Readonly<Record<SpaceRole, string>> = {
 	owner: 'Owner',
 	admin: 'Admin',
-	allowlisted: 'Allowlisted account',
+	allowlisted: 'Allowed user',
 	everyone: 'Visitor (no role)',
 };
 
@@ -17,7 +17,7 @@ export const SPACE_ROLE_TEXT: Readonly<Record<SpaceRoleOrNone, string>> = {
 const SPACE_ROLE_NO_NONE_TEXT_CUMULATIVE: Readonly<Record<SpaceRole, string>> = {
 	owner: 'Owners',
 	admin: 'Owners and Admins',
-	allowlisted: 'Owners, Admins, and Allowlisted accounts',
+	allowlisted: 'Owners, Admins, and Allowed users',
 	everyone: 'Everyone',
 };
 

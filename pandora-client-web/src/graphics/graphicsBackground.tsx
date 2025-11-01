@@ -108,7 +108,7 @@ export const GRAPHICS_BACKGROUND_TILE_SIZE = 128;
  * We subdivide title to reduce warping effect along the diagonal with our perspective transform.
  * This variable defines how many levels of subdivision happen.
  */
-export const GRAPHICS_BACKGROUND_TILE_SUBDIVISION = 2;
+export const GRAPHICS_BACKGROUND_TILE_SUBDIVISION = 1;
 function GraphicsBackground3DBox({
 	graphics,
 	background,
@@ -135,7 +135,7 @@ function GraphicsBackground3DBox({
 			transform: (u: number, v: number) => [x: number, y: number],
 		): GraphicsBackground3DBoxPart {
 			const tileSize = GRAPHICS_BACKGROUND_TILE_SIZE * data.tileScale;
-			const squareSize = tileSize / (2 ** GRAPHICS_BACKGROUND_TILE_SUBDIVISION);
+			const squareSize = GRAPHICS_BACKGROUND_TILE_SIZE / (2 ** GRAPHICS_BACKGROUND_TILE_SUBDIVISION);
 			const widthCount = Math.ceil(width / squareSize);
 			const heightCount = Math.ceil(height / squareSize);
 			const vertexCount = (widthCount + 1) * (heightCount + 1);

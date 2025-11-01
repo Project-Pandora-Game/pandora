@@ -157,7 +157,7 @@ function SpaceSearchList({ list }: {
 							A space is listed in this view for everyone, if it has<br />
 							the space visibility "public" and there are one or more characters online inside.<br />
 							The default setting for newly created spaces is space visibility "Private".<br />
-							You can always see spaces where you are either admin or owner of, or where<br />
+							You can always see spaces where you are either an Admin or an Owner, or where<br />
 							you are on the space's Allowed users list.
 						</p>
 						<p>

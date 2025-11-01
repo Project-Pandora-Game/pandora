@@ -1,13 +1,11 @@
 import classNames from 'classnames';
-import { noop } from 'lodash-es';
 import {
 	AssertNotNullable,
-	EMPTY,
 	SpaceListExtendedInfo,
 	SpaceListInfo,
 	type SpacePublicSetting,
 } from 'pandora-common';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { Navigate } from 'react-router';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
 import closedDoor from '../../../assets/icons/closed-door.svg';
@@ -17,7 +15,7 @@ import publicDoor from '../../../assets/icons/public-door.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
@@ -27,6 +25,7 @@ import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetails } from './spaceDetails.tsx';
 import './spacesSearch.scss';
 import { useSpaceExtendedInfo } from './useSpaceExtendedInfo.tsx';
+import { useSpacesList } from '../../../common/useSpaceList.ts';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -316,22 +315,4 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 			<SpaceDetails info={ info } hasFullInfo={ extendedInfo?.result === 'success' } hide={ hide } />
 		</ModalDialog>
 	);
-}
-
-function useSpacesList(): SpaceListInfo[] | undefined {
-	const [data, setData] = useState<SpaceListInfo[]>();
-	const directoryConnector = useDirectoryConnector();
-
-	const fetchData = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('listSpaces', EMPTY);
-		if (result && result.spaces) {
-			setData(result.spaces);
-		}
-	}, [directoryConnector]);
-
-	useDirectoryChangeListener('spaceList', () => {
-		fetchData().catch(noop);
-	});
-
-	return data;
 }

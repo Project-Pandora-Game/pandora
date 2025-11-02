@@ -175,6 +175,11 @@ export async function LoadAssetAutoMeshLayer(
 			let imageSetting: LayerImageSetting;
 
 			if (variants.length > 0) {
+				imageSetting = {
+					image: '',
+					overrides: imageVariants,
+				};
+
 				for (const combination of GenerateMultipleListsFullJoin(variants)) {
 					const combinationId = combination.map((c) => c.id).join(':');
 					const combinationName = combination.map((c) => c.name).join(' | ');
@@ -194,11 +199,17 @@ export async function LoadAssetAutoMeshLayer(
 						image = imageLayers[i];
 					}
 
-					imageVariants.push({
+					const overrideVariant: LayerImageOverride = {
 						image,
 						normalMapImage: (layer.normalMap != null && image) ? `normal_map/${image}` : undefined,
 						condition: [combinationCondition],
-					});
+					};
+
+					if (overrideVariant.image !== imageSetting.image || overrideVariant.normalMapImage !== imageSetting.normalMapImage) {
+						// Only include overrides that differ from the base case
+						// We can afford to do this, because automesh guarantees that no further overrides can overlap with this one
+						imageVariants.push(overrideVariant);
+					}
 				}
 
 				imageSetting = {

@@ -84,8 +84,9 @@
 
 	textarea {
 		height: unset;
-		min-height: 4em;
+		flex-shrink: 0;
 		resize: vertical;
+		text-indent: 0.75em hanging each-line;
 	}
 
 	.error {

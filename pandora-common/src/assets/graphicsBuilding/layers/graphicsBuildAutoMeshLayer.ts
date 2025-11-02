@@ -4,7 +4,7 @@ import type { Logger } from '../../../logging/logger.ts';
 import { Assert, AssertNever, CloneDeepMutable, GenerateMultipleListsFullJoin } from '../../../utility/misc.ts';
 import { ArmFingersSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema, type AtomicCondition } from '../../graphics/conditions.ts';
 import type { GraphicsLayer } from '../../graphics/layer.ts';
-import { LayerMirror, type LayerImageOverride } from '../../graphics/layers/common.ts';
+import { LayerMirror, type LayerImageOverride, type LayerImageSetting } from '../../graphics/layers/common.ts';
 import type { GraphicsSourceAutoMeshLayer, GraphicsSourceAutoMeshLayerVariable, GraphicsSourceMeshLayer } from '../../graphicsSource/index.ts';
 import { BONE_MAX, BONE_MIN } from '../../state/characterStatePose.ts';
 import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
@@ -172,11 +172,42 @@ export async function LoadAssetAutoMeshLayer(
 				imageVariants.push(...CloneDeepMutable(graphicalLayer.imageOverrides));
 			}
 
-			for (const combination of (variants.length > 0 ? GenerateMultipleListsFullJoin(variants) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]])) {
-				const combinationId = combination.map((c) => c.id).join(':');
-				const combinationName = combination.map((c) => c.name).join(' | ');
-				// Conditions inside combination are joined with "AND" and we want "AND" across all combinations.
-				const combinationCondition: AtomicCondition[] = combination.map((c) => c.condition).flat();
+			let imageSetting: LayerImageSetting;
+
+			if (variants.length > 0) {
+				for (const combination of GenerateMultipleListsFullJoin(variants)) {
+					const combinationId = combination.map((c) => c.id).join(':');
+					const combinationName = combination.map((c) => c.name).join(' | ');
+					// Conditions inside combination are joined with "AND" and we want "AND" across all combinations.
+					const combinationCondition: AtomicCondition[] = combination.map((c) => c.condition).flat();
+
+					unusedImageMaps.delete(combinationId);
+					const imageLayers: (readonly string[]) | undefined = layer.imageMap[combinationId];
+					let image: string;
+					if (imageLayers == null) {
+						localLogger.warning('Missing mapped image for generated combination', combinationName);
+						image = '';
+					} else if (imageLayers.length !== layer.graphicalLayers.length) {
+						localLogger.warning('Mapped image combination does not match graphical layer count for combination', combinationName);
+						image = '';
+					} else {
+						image = imageLayers[i];
+					}
+
+					imageVariants.push({
+						image,
+						normalMapImage: (layer.normalMap != null && image) ? `normal_map/${image}` : undefined,
+						condition: [combinationCondition],
+					});
+				}
+
+				imageSetting = {
+					image: '',
+					overrides: imageVariants,
+				};
+			} else {
+				const combinationId = GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT.id;
+				const combinationName = GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT.name;
 
 				unusedImageMaps.delete(combinationId);
 				const imageLayers: (readonly string[]) | undefined = layer.imageMap[combinationId];
@@ -191,11 +222,11 @@ export async function LoadAssetAutoMeshLayer(
 					image = imageLayers[i];
 				}
 
-				imageVariants.push({
+				imageSetting = {
 					image,
 					normalMapImage: (layer.normalMap != null && image) ? `normal_map/${image}` : undefined,
-					condition: [combinationCondition],
-				});
+					overrides: imageVariants,
+				};
 			}
 
 			resultLayers.push({
@@ -212,10 +243,7 @@ export async function LoadAssetAutoMeshLayer(
 				mirror: templatePart.mirror ?? LayerMirror.NONE,
 				colorizationKey: graphicalLayer.colorizationKey,
 				normalMap: layer.normalMap,
-				image: {
-					image: '',
-					overrides: imageVariants,
-				},
+				image: imageSetting,
 			});
 		}
 	}

@@ -18,17 +18,31 @@ export function ZodTemplateString<T extends string>(validator: z.ZodString, rege
  * @param baseSchema The schema to wrap
  * @returns Schema wrapped with the interning effect
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function ZodWrapInternString<const T extends z.ZodLiteral<any>>(baseSchema: T): z.ZodPipe<T, z.ZodTransform<z.core.output<T>, z.core.output<T>>> {
-	return baseSchema.transform<z.core.output<T>>((v): z.core.output<T> => {
-		for (const internedValue of baseSchema.values) {
-			if (v === internedValue) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-				return internedValue as typeof v;
-			}
-		}
-		AssertNever(v as never);
-	});
+
+export function ZodWrapInternString<const T extends string>(baseSchema: z.ZodLiteral<T>): z.ZodCodec<z.ZodLiteral<T>, z.ZodLiteral<T>> {
+	// We use a "codec" here, because (unlike transform) it doesn't prevent generation of a JSON schema
+	return z.codec(
+		baseSchema,
+		baseSchema,
+		{
+			decode(value): T {
+				for (const internedValue of baseSchema.values) {
+					if (value === internedValue) {
+						return internedValue;
+					}
+				}
+				AssertNever(value as never);
+			},
+			encode(value): T {
+				for (const internedValue of baseSchema.values) {
+					if (value === internedValue) {
+						return internedValue;
+					}
+				}
+				AssertNever(value as never);
+			},
+		},
+	);
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */

@@ -251,24 +251,24 @@ export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphic
 	return (
 		<Row alignY='center'>
 			<label htmlFor='layer-priority-select'>
-				Layer priority type:
-				<ContextHelpButton>
-					<p>
-						This selects the priority of this layer so that it is ordered correctly<br />
-						between the numerous body layers, which are filled with the images from<br />
-						all equipped items on the character.
-					</p>
-					<p>
-						You likely need to experiment a bit here and watch how it changes the<br />
-						editor character in the Preview-tab. Also, turn the character view around in<br />
-						the Pose-tab to see how it looks from behind.
-					</p>
-					<p>
-						Sometimes, you may need to use the same image in two layers at different priorities,<br />
-						e.g. once above the breasts and the same image also once below the breasts.
-					</p>
-				</ContextHelpButton>
+				Layer priority:
 			</label>
+			<ContextHelpButton>
+				<p>
+					This selects the priority of this layer so that it is ordered correctly<br />
+					between the numerous body layers, which are filled with the images from<br />
+					all equipped items on the character.
+				</p>
+				<p>
+					You likely need to experiment a bit here and watch how it changes the<br />
+					editor character in the Preview-tab. Also, turn the character view around in<br />
+					the Pose-tab to see how it looks from behind.
+				</p>
+				<p>
+					Sometimes, you may need to use the same image in two layers at different priorities,<br />
+					e.g. once above the breasts and the same image also once below the breasts.
+				</p>
+			</ContextHelpButton>
 			<Select
 				id='layer-priority-select'
 				className='flex-1'
@@ -303,32 +303,32 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'m
 	return (
 		<Row alignY='center'>
 			<label htmlFor='layer-template-select'>
-				Point template for layer:
-				<ContextHelpButton>
-					<p>
-						This is a very important selector.<br />
-						It lets you define the set of points this layer should use for<br />
-						transformations based on pose changes.
-					</p>
-					<p>
-						The templates should be self-explanatory.<br />
-						If you make any asset that should change alongside body changes,<br />
-						you use 'body' - unless it is an asset where a more specialized<br />
-						template exists, e.g. 'shirt' for tops, or 'skirt_short/skirt_long'.
-					</p>
-					<p>
-						A special template is 'static'. This one covers the whole canvas<br />
-						and does not use any transformations. That way, it can be used for images<br />
-						that should always be on the same spot in the same size.
-					</p>
-					<p>
-						If you cannot find a suitable template for your purpose or the<br />
-						chosen template cuts off parts of your image: Please get help on<br />
-						Discord, as you either need custom points for this layer or we<br />
-						need to make a new template for your asset.
-					</p>
-				</ContextHelpButton>
+				Point template:
 			</label>
+			<ContextHelpButton>
+				<p>
+					This is a very important selector.<br />
+					It lets you define the set of points this layer should use for<br />
+					transformations based on pose changes.
+				</p>
+				<p>
+					The templates should be self-explanatory.<br />
+					If you make any asset that should change alongside body changes,<br />
+					you use 'body' - unless it is an asset where a more specialized<br />
+					template exists, e.g. 'shirt' for tops, or 'skirt_short/skirt_long'.
+				</p>
+				<p>
+					A special template is 'static'. This one covers the whole canvas<br />
+					and does not use any transformations. That way, it can be used for images<br />
+					that should always be on the same spot in the same size.
+				</p>
+				<p>
+					If you cannot find a suitable template for your purpose or the<br />
+					chosen template cuts off parts of your image: Please get help on<br />
+					Discord, as you either need custom points for this layer or we<br />
+					need to make a new template for your asset.
+				</p>
+			</ContextHelpButton>
 			<Select
 				id='layer-template-select'
 				className='flex-1'

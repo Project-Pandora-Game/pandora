@@ -1,4 +1,5 @@
 import { produce, type Immutable } from 'immer';
+import { isEqual } from 'lodash-es';
 import type { Logger } from '../../../logging/logger.ts';
 import { BitField } from '../../../utility/bitfield.ts';
 import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../../utility/misc.ts';
@@ -8,9 +9,10 @@ import { LayerMirror, MirrorPriority, type LayerImageOverride } from '../../grap
 import type { GraphicsMeshLayer } from '../../graphics/layers/mesh.ts';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../../graphics/mirroring.ts';
 import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../../graphics/points.ts';
+import { CharacterPoseTransforms } from '../../graphics/transform/characterPoseTransforms.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../../graphicsSource/layers/mesh.ts';
-import { BONE_MAX, BONE_MIN, MergePartialAppearancePoses, type PartialAppearancePose } from '../../state/characterStatePose.ts';
+import { APPEARANCE_POSE_DEFAULT, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, ProduceAppearancePose, type AppearancePose, type PartialAppearancePose } from '../../state/characterStatePose.ts';
 import type { GraphicsBuildContext, GraphicsBuildContextAssetData } from '../graphicsBuildContext.ts';
 import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrimArea } from '../graphicsBuildImageResource.ts';
 import { TriangleRectangleOverlap } from '../math/intersections.ts';
@@ -104,14 +106,22 @@ async function LoadAssetImageLayerSingle(
 		imageSetting.overrides.unshift(...scalingOverrides);
 	}
 
-	// Check if the image has any UV pose manipulation or not
-	let hasUvManipulation: boolean = false;
-	if (imageSetting.uvPose != null) {
-		hasUvManipulation = true;
-	}
-	for (const imageOverride of imageSetting.overrides) {
+	// Collect poses we will need to check
+	const uvPoses: AppearancePose[] = [];
+	for (const imageOverride of [imageSetting, ...imageSetting.overrides]) {
 		if (imageOverride.uvPose != null) {
-			hasUvManipulation = true;
+			const pose = ProduceAppearancePose(
+				APPEARANCE_POSE_DEFAULT,
+				{ assetManager: context.assetManager },
+				imageOverride.uvPose,
+			);
+			if (!uvPoses.some((p) => isEqual(p, pose))) {
+				uvPoses.push(pose);
+			}
+		} else {
+			if (!uvPoses.includes(APPEARANCE_POSE_DEFAULT)) {
+				uvPoses.unshift(APPEARANCE_POSE_DEFAULT);
+			}
 		}
 	}
 
@@ -119,8 +129,6 @@ async function LoadAssetImageLayerSingle(
 	let imageTrimArea: LayerImageTrimArea = null;
 	if (!context.runImageBasedChecks && !context.generateOptimizedTextures) {
 		// NOOP
-	} else if (hasUvManipulation) {
-		logger.debug('Layer has UV manipulation, skipping texture optimization');
 	} else {
 		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
 		// Get all the images and their bounding boxes for this layer
@@ -165,7 +173,9 @@ async function LoadAssetImageLayerSingle(
 
 		// Calculate which points are relevant to the image, excluding those that aren't
 		const pointFilter = new BitField(calculatedPoints.length);
-		{
+		for (const pose of uvPoses) {
+			const poseEvaluator = new CharacterPoseTransforms(context.assetManager, pose);
+
 			// Rectangle corners for nicer calculation
 			const x1 = Math.floor(layer.x + imageBoundingBox[0] * layer.width);
 			const y1 = Math.floor(layer.y + imageBoundingBox[1] * layer.height);
@@ -173,16 +183,22 @@ async function LoadAssetImageLayerSingle(
 			const y2 = Math.ceil(layer.y + imageBoundingBox[3] * layer.height) - 1;
 
 			// For each triangle determinate if it has intersection with the rectangle
-			for (const [a, b, c] of triangles) {
-				if (TriangleRectangleOverlap([calculatedPoints[a].pos, calculatedPoints[b].pos, calculatedPoints[c].pos], [x1, y1, x2, y2])) {
-					pointFilter.set(a, true);
-					pointFilter.set(b, true);
-					pointFilter.set(c, true);
+			for (const trianglePoints of triangles) {
+				const [a, b, c] = trianglePoints.map((pi) => {
+					const point = calculatedPoints[pi];
+					return poseEvaluator.evalTransform(
+						point.pos,
+						point.transforms,
+					);
+				});
 
-					// All the points above should have already passed point type filter to reach this place
-					Assert(pointTypeFilter.get(a));
-					Assert(pointTypeFilter.get(b));
-					Assert(pointTypeFilter.get(c));
+				if (TriangleRectangleOverlap([a, b, c], [x1, y1, x2, y2])) {
+					for (const pi of trianglePoints) {
+						pointFilter.set(pi, true);
+
+						// All the points above should have already passed point type filter to reach this place
+						Assert(pointTypeFilter.get(pi));
+					}
 				}
 			}
 		}

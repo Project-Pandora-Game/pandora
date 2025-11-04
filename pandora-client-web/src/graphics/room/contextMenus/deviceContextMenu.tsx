@@ -5,6 +5,7 @@ import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
+import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
@@ -52,9 +53,9 @@ function StoreDeviceMenu({ roomState, device, close }: {
 	};
 
 	return (
-		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
+		<Button theme='transparent' onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			Store the device
-		</button>
+		</Button>
 	);
 }
 
@@ -97,9 +98,9 @@ function MoveDeviceMenu({ roomState, device, close }: {
 	};
 
 	return (
-		<button onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>
+		<Button theme='transparent' onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>
 			Move
-		</button>
+		</Button>
 	);
 }
 
@@ -126,9 +127,9 @@ function DeviceSlotClear({ roomState, device, slot, children, close }: ChildrenP
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
+		<Button theme='transparent' onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			{ children }
-		</button>
+		</Button>
 	);
 }
 
@@ -180,7 +181,8 @@ function OccupyDeviceSlotMenu({ roomState, device, slot, character, close }: {
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<button
+		<Button
+			theme='transparent'
 			onClick={ execute }
 			disabled={ processing }
 			className={ available ? '' : 'text-strikethrough' }
@@ -189,7 +191,7 @@ function OccupyDeviceSlotMenu({ roomState, device, slot, character, close }: {
 			} }
 		>
 			{ character.name } ({ character.id })
-		</button>
+		</Button>
 	);
 }
 
@@ -227,23 +229,23 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 					{ device.asset.definition.slots[slot].name }
 				</span>
 				<hr />
-				<button
+				<Button theme='transparent'
 					onClick={ onSelectCharacter }
 					style={ {
 						backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
 					} }
 				>
 					{ character?.name } ({ occupancy })
-				</button>
+				</Button>
 				<hr />
 				<DeviceSlotClear roomState={ roomState } device={ device } slot={ slot } close={ close }>
 					{ (character)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
 				</DeviceSlotClear>
-				<button onClick={ closeSlot }>
+				<Button theme='transparent' onClick={ closeSlot }>
 					Back
-				</button>
+				</Button>
 			</>
 		);
 	}
@@ -261,9 +263,9 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 				<OccupyDeviceSlotMenu key={ char.id } roomState={ roomState } device={ device } slot={ slot } character={ char } close={ close } />
 			)) }
 			<hr />
-			<button onClick={ closeSlot }>
+			<Button theme='transparent' onClick={ closeSlot }>
 				Back
-			</button>
+			</Button>
 		</>
 	);
 }
@@ -281,9 +283,9 @@ function DeviceMainMenu({ roomState, device, position, close }: {
 			<>
 				{ Object.keys(device.asset.definition.slots).length > 0 ? (<hr />) : null }
 				{ Object.entries(device.asset.definition.slots).map(([name, definition]) => (
-					<button key={ name } onClick={ () => setSlot(name) }>
+					<Button theme='transparent' key={ name } onClick={ () => setSlot(name) }>
 						{ definition.name }
-					</button>
+					</Button>
 				)) }
 				<hr />
 				<LeaveDeviceMenu roomState={ roomState } device={ device } close={ close } />
@@ -332,12 +334,12 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 				<Scrollable>
 					<Column>
 						<WardrobeActionContextProvider player={ player }>
-							<button onClick={ () => {
+							<Button theme='transparent' onClick={ () => {
 								onCloseActual();
 								navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }), { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
 							} }>
 								{ device.asset.definition.name }
-							</button>
+							</Button>
 							{ menu === 'main' && (
 								<DeviceMainMenu
 									roomState={ roomState }
@@ -347,9 +349,9 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 								/>
 							) }
 						</WardrobeActionContextProvider>
-						<button onClick={ onClose } >
+						<Button theme='transparent' onClick={ onClose } >
 							Close
-						</button>
+						</Button>
 					</Column>
 				</Scrollable>
 			</div>

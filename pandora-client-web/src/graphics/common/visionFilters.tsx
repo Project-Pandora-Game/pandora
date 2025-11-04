@@ -1,15 +1,19 @@
 import { clamp } from 'lodash-es';
 import {
 	AssertNever,
+	EMPTY_ARRAY,
 	ICharacterRoomData,
+	type CharacterHideSetting,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { createContext, useCallback, useContext, useMemo, type ReactElement } from 'react';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
+import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { useActionSpaceContext } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
+import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import type { ChildrenProps } from '../../common/reactTypes.ts';
+import { CharacterTemporaryHiding } from '../../ui/screens/room/roomState.ts';
 
 export type VisionFilterBypass = null | 'no-ghost' | 'bypass';
 const VisionFilterBypassContext = createContext<VisionFilterBypass>(null);
@@ -61,33 +65,51 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): readonly PIXI.F
 	return useMemo(factory, [factory]);
 }
 
-export function useCharacterDisplayFilters(character: Character<ICharacterRoomData>): PIXI.Filter[] {
+type CharacterDisplayStyle = CharacterHideSetting | 'darken';
+export function useCharacterDisplayStyle(character: Character<ICharacterRoomData>): CharacterDisplayStyle {
 	const {
 		onlineStatus,
 	} = useCharacterData(character);
 
 	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
+	const characterHiding = useObservable(CharacterTemporaryHiding);
 	const bypass = useContext(VisionFilterBypassContext);
 
-	const onlineFilters = useMemo(() => [], []);
+	const online = onlineStatus !== 'offline' || bypass != null;
 
-	const offlineFilters = useMemo(() => {
-		if (interfaceChatroomOfflineCharacterFilter === 'none') {
-			return [];
-		} else if (interfaceChatroomOfflineCharacterFilter === 'icon') {
-			return [];
-		} else if (interfaceChatroomOfflineCharacterFilter === 'darken') {
-			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
-			colorFilter.brightness(0.4, true);
-			return [colorFilter];
-		} else if (interfaceChatroomOfflineCharacterFilter === 'ghost') {
-			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
-			colorFilter.brightness(0.4, true);
-			const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8, resolution: 'inherit' });
-			return [colorFilter, alphaFilter];
+	const displayStyle = characterHiding[character.id] ?? (online ? 'normal' : interfaceChatroomOfflineCharacterFilter);
+
+	// offline "icon" is handled by `RoomCharacterLabel` only
+	return displayStyle === 'icon' ? 'normal' : displayStyle;
+}
+
+export function useCharacterDisplayFilters(displayStyle: CharacterDisplayStyle): readonly PIXI.Filter[] {
+	return useMemo((): readonly PIXI.Filter[] => {
+		switch (displayStyle) {
+			case 'normal':
+				return EMPTY_ARRAY;
+			case 'darken': {
+				const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
+				colorFilter.brightness(0.4, true);
+				return [colorFilter];
+			}
+			case 'ghost': {
+				const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
+				colorFilter.brightness(0.4, true);
+				const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8, resolution: 'inherit' });
+				return [colorFilter, alphaFilter];
+			}
+			case 'silhouette': {
+				const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
+				colorFilter.brightness(0, true);
+				const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.25, resolution: 'inherit' });
+				return [colorFilter, alphaFilter];
+			}
+			case 'name-only':
+			case 'hidden': {
+				return [new PIXI.AlphaFilter({ alpha: 0 })];
+			}
 		}
-		AssertNever(interfaceChatroomOfflineCharacterFilter);
-	}, [interfaceChatroomOfflineCharacterFilter]);
-
-	return (onlineStatus !== 'offline' || bypass != null) ? onlineFilters : offlineFilters;
+		AssertNever(displayStyle);
+	}, [displayStyle]);
 }

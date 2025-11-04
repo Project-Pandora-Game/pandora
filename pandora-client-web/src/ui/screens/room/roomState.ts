@@ -1,4 +1,4 @@
-import { SpaceIdSchema } from 'pandora-common';
+import { CharacterHideSettingSchema, CharacterIdSchema, SpaceIdSchema } from 'pandora-common';
 import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { useObservable } from '../../../observable.ts';
@@ -27,3 +27,9 @@ export function useIsRoomConstructionModeEnabled(): boolean {
 	const { roomConstructionMode } = useObservable(DeviceOverlayState);
 	return roomConstructionMode;
 }
+
+export const CharacterTemporaryHiding = BrowserStorage.createSession(
+	'room.character-hide',
+	{},
+	z.partialRecord(CharacterIdSchema, CharacterHideSettingSchema.optional().catch(undefined)),
+);

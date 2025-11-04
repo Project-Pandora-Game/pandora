@@ -42,7 +42,7 @@ import { Sprite } from '../baseComponents/sprite.ts';
 import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from '../common/visionFilters.tsx';
+import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -449,13 +449,18 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 	zIndex: number;
 	scale: number;
 	spacing: number;
-}): ReactElement {
+}): ReactElement | null {
 	const {
 		openContextMenu,
 	} = useRoomScreenContext();
 
+	const characterDisplayStyle = useCharacterDisplayStyle(character);
+
 	const [hover, setHover] = useState(false);
 	const [held, setHeld] = useState(false);
+
+	if (characterDisplayStyle === 'hidden')
+		return null;
 
 	return (
 		<Container
@@ -854,7 +859,8 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
-	const characterFilters = useCharacterDisplayFilters(character);
+	const characterDisplayStyle = useCharacterDisplayStyle(character);
+	const characterFilters = useCharacterDisplayFilters(characterDisplayStyle);
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
 	const {
@@ -882,7 +888,7 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
 	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
-	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
+	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot || characterDisplayStyle === 'hidden' || characterDisplayStyle === 'name-only')
 		return null;
 
 	const movementTransitionDuration = !smoothMovementEnabled ? 0 : CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;

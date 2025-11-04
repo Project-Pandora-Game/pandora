@@ -13,6 +13,18 @@ import { TutorialIdSchema } from './tutorials.ts';
 const ItemDisplayNameTypeSchema = z.enum(['original', 'custom', 'custom_with_original_in_brackets']);
 export type ItemDisplayNameType = z.infer<typeof ItemDisplayNameTypeSchema>;
 
+/**
+ * Determines how hidden a character should be
+ * Options are:
+ * - `normal` - show character normally
+ * - `ghost` - show as a ghost (darken + semi-transparent)
+ * - `silhouette` - show only silhouette (fully black tint and mostly transparent)
+ * - `name-only` - show only name
+ * - `hidden` - do not show at all in the room
+ */
+export const CharacterHideSettingSchema = z.enum(['normal', 'ghost', 'silhouette', 'name-only', 'hidden']);
+export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
+
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema,
@@ -83,13 +95,18 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfaceChatroomChatSplitVertical: z.enum(['disabled', 'horizontal', 'vertical']),
 	/**
-	 * Controls how offline characters are displayed in a room:
-	 * - None: No difference between online and offline characters
+	 * Controls how offline characters are displayed in a room.
+	 *
+	 * Offers all options from `CharacterHideSetting` and in addition:
 	 * - Icon: Show disconnected icon under the name (not shown on other options)
 	 * - Darken: The characters are darkened (similar to blindness)
-	 * - Ghost: Darken + semi-transparent
 	 */
-	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']),
+	interfaceChatroomOfflineCharacterFilter: z.preprocess((v) => {
+		if (v === 'none')
+			return 'normal';
+
+		return v;
+	}, CharacterHideSettingSchema.or(z.enum(['icon', 'darken']))),
 	/**
 	 * Controls how big the font size used in the main chat area is
 	 */

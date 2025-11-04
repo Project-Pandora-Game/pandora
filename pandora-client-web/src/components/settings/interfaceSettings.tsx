@@ -268,10 +268,13 @@ function ChatroomCharacterPosintStyle(): ReactElement {
 
 function ChatroomOfflineCharacters(): ReactElement {
 	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> => ({
-		none: 'No effect (displayed the same as online characters)',
-		icon: 'Show icon next to the character name',
-		darken: 'Darken',
-		ghost: 'Ghost (darken + semi-transparent)',
+		'normal': 'No effect (displayed the same as online characters)',
+		'icon': 'Show icon next to the character name',
+		'darken': 'Darken',
+		'ghost': 'Ghost (darken + semi-transparent)',
+		'silhouette': 'Silhouette (mostly transparent silhouette)',
+		'name-only': 'Show only character name',
+		'hidden': 'Hide both the character and the name (show only in room list)',
 	}), []);
 
 	return <SelectAccountSettings setting='interfaceChatroomOfflineCharacterFilter' label='Offline characters display effect' stringify={ SELECTION_DESCRIPTIONS } />;

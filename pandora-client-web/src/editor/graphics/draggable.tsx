@@ -1,10 +1,11 @@
 import { Draft, Immutable } from 'immer';
-import { clamp, cloneDeep } from 'lodash-es';
+import { clamp } from 'lodash-es';
 import {
 	Assert,
 	AssetFrameworkCharacterState,
 	BoneDefinition,
 	CharacterSize,
+	CloneDeepMutable,
 	MirrorBoneLike,
 	MirrorTransform,
 	PointDefinition,
@@ -166,9 +167,9 @@ export class DraggablePoint {
 		});
 	}
 
-	public setTransforms(value: PointDefinition['transforms']): void {
+	public setTransforms(value: Immutable<PointDefinition['transforms']>): void {
 		this.modifyPoint((p) => {
-			p.transforms = cloneDeep(value);
+			p.transforms = CloneDeepMutable(value);
 		});
 	}
 

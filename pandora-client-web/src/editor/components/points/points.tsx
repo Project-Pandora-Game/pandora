@@ -1,5 +1,6 @@
+import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import { Assert, GetLogger, PointTemplateSourceSchema } from 'pandora-common';
+import { Assert, GetLogger, PointTemplateSourceSchema, type TransformDefinition } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -260,15 +261,15 @@ export function PointsHelperMathUi(): ReactElement | null {
 					/>
 				</Row>
 			</Column>
-			<FieldsetToggle legend='Old-New transform comparison' open={ false }>
-				{ selectedPointDefinition != null ? (
+			{ selectedPointDefinition != null ? (
+				<FieldsetToggle legend='Old-New transform comparison' open={ false }>
 					<Column alignX='start'>
 						<PointTransformComparsionDetail
 							point={ selectedPointDefinition }
 						/>
 					</Column>
-				) : null }
-			</FieldsetToggle>
+				</FieldsetToggle>
+			) : null }
 		</>
 	);
 }
@@ -310,7 +311,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 
 function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const { pos, mirror, pointType, skinning } = useDraggablePointDefinition(point);
+	const { pos, mirror, pointType, transforms, skinning } = useDraggablePointDefinition(point);
 	const pointX = pos[0];
 	const pointY = pos[1];
 
@@ -340,7 +341,9 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				/>
 			</div>
 			<div>List of transformations for this point:</div>
-			<PointTransformationsTextarea point={ point } />
+			<PointTransformationsTextarea transforms={ transforms } setTransforms={ (newTransforms) => {
+				point.setTransforms(newTransforms);
+			} } />
 			<div>
 				<label>Mirror point to the opposing character half</label>
 				<Checkbox
@@ -499,9 +502,9 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 	);
 }
 
-function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
+export function PointTransformationsTextarea({ transforms, setTransforms }: { transforms: Immutable<TransformDefinition[]>; setTransforms?: (newValue: Immutable<TransformDefinition[]>) => void; }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(useDraggablePointDefinition(point).transforms), [point]);
+	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(transforms), []);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -509,11 +512,11 @@ function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): Re
 		try {
 			const result = ParseTransforms(e.target.value, assetManager.getAllBones().map((b) => b.name));
 			setError(null);
-			point.setTransforms(result);
+			setTransforms?.(result);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
-	}, [point, setValue, assetManager]);
+	}, [setTransforms, setValue, assetManager]);
 
 	return (
 		<>

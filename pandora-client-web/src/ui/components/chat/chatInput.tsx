@@ -885,7 +885,7 @@ function ChatModeSelector(): ReactElement | null {
 
 	return (
 		<>
-			<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' } noScrollChange>
+			<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
 				<option value=''>
 					Chat mode: Normal Chat
 				</option>

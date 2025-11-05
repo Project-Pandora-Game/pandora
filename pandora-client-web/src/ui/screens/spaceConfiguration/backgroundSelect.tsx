@@ -134,7 +134,6 @@ export function BackgroundSelectUi({ value, onChange, activeValue }: {
 								break;
 						}
 					} }
-					noScrollChange
 				>
 					<option value='3dBox'>Custom 3D box</option>
 					{

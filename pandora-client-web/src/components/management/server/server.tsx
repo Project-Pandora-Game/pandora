@@ -40,7 +40,6 @@ function Announcement(): ReactElement {
 							setType(DirectoryStatusAnnouncementSchema.shape.type.parse(ev.target.value));
 						} }
 						disabled={ !authorized }
-						noScrollChange
 					>
 						{
 							DirectoryStatusAnnouncementSchema.shape.type.options.map((o) => (

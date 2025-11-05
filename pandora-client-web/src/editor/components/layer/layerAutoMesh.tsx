@@ -211,7 +211,6 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 						d.points = id;
 					});
 				} }
-				noScrollChange
 			>
 				<option value='' key='!empty'>[ No points ]</option>
 				{ elements }
@@ -264,7 +263,6 @@ function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsWorn
 							d.automeshTemplate = value;
 						});
 					} }
-					noScrollChange
 				>
 					<option value='' key='!empty'>- Select a template -</option>
 					{ elements }
@@ -466,7 +464,6 @@ function LayerAutomeshGraphicalLayerItemColorization({ value, onChange, layer }:
 					}
 					onChange(newValue);
 				} }
-				noScrollChange
 			>
 				<option value='' key='!empty'>- None -</option>
 				{ elements }
@@ -1059,7 +1056,6 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 											map[li] = event.target.value;
 										});
 									} }
-									noScrollChange
 								>
 									{ imageSelectElements }
 								</Select>
@@ -1101,7 +1097,6 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 													delete d.imageMap[k];
 												});
 											} }
-											noScrollChange
 										>
 											<option value=''>- Select variant -</option>
 											{

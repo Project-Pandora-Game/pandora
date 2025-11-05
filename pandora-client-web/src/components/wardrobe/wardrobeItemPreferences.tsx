@@ -352,7 +352,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 			<Scrollable>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Item preference:</label>
-					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
+					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' }>
 						<option value='' title='Select the preference for the item based on the most limited attribute'>
 							Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
 						</option>
@@ -486,7 +486,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			<Scrollable>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
-					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange disabled={ !isConfigurable }>
+					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } disabled={ !isConfigurable }>
 						{
 							KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
 								<option key={ key } value={ key } title={ description }>

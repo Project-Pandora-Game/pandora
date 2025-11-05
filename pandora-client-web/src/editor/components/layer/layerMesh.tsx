@@ -107,7 +107,6 @@ function LayerImageSelect({ layer, stop }: { layer: EditorAssetGraphicsWornLayer
 						res.image = event.target.value;
 					});
 				} }
-				noScrollChange
 			>
 				{ elements }
 			</Select>
@@ -189,7 +188,6 @@ export function LayerColorizationSetting({ layer }: {
 					}
 					onChange(newValue);
 				} }
-				noScrollChange
 			>
 				<option value='' key='!empty'>- None -</option>
 				{ elements }
@@ -278,7 +276,6 @@ export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphic
 						d.priority = event.target.value as LayerPriority;
 					});
 				} }
-				noScrollChange
 			>
 				{ elements }
 			</Select>
@@ -342,7 +339,6 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'m
 						d.points = source;
 					});
 				} }
-				noScrollChange
 			>
 				<option value='t/' key='t/'>[ No points ]</option>
 				{ elements }
@@ -486,7 +482,6 @@ function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'mes
 						d.mirror = LayerMirrorSchema.parse(Number.parseInt(event.target.value));
 					});
 				} }
-				noScrollChange
 			>
 				{ elements }
 			</Select>
@@ -635,7 +630,6 @@ function LayerScalingConfig({ layer }: { layer: EditorAssetGraphicsWornLayer<'me
 							}
 						});
 					} }
-					noScrollChange
 				>
 					{ elements }
 				</Select>
@@ -707,7 +701,6 @@ function LayerScalingList({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh
 					onChange={ (event) => {
 						setToAdd(event.target.value);
 					} }
-					noScrollChange
 				>
 					{ optionsToAdd }
 				</Select>

@@ -395,6 +395,7 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 							Assert(TABS.some((t) => t[0] === ev.target.value));
 							setTab(ev.target.value as TabsName);
 						} }
+						scrollChange
 					>
 						{
 							TABS.map((t) => (

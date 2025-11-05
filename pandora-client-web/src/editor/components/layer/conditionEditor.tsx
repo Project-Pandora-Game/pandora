@@ -385,7 +385,6 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 							d.bone = e.target.value;
 						}));
 					} }
-					noScrollChange
 				>
 					{ assetManager.getAllBones().map((b) => (
 						<option key={ b.name } value={ b.name }>
@@ -576,7 +575,6 @@ function EnumSelect<T extends z.ZodEnum<z.util.EnumLike>>({ value, onChange, sch
 			onChange={ (e) => {
 				onChange(schema.parse(e.target.value));
 			} }
-			noScrollChange
 		>
 			{ schema.options.map((v) => (
 				<option key={ v } value={ v }>

@@ -47,7 +47,6 @@ export function LayerTextUI({ layer }: {
 							d.dataModule = event.target.value;
 						});
 					} }
-					noScrollChange
 				>
 					<option value=''>- Select text module -</option>
 					{
@@ -79,7 +78,6 @@ export function LayerTextUI({ layer }: {
 							d.followBone = event.target.value || null;
 						});
 					} }
-					noScrollChange
 				>
 					<option value=''>[ None ]</option>
 					{

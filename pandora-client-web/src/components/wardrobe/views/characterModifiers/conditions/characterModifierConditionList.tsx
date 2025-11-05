@@ -204,6 +204,7 @@ function CharacterModifierConditionAdd({ processing, addCondition }: {
 				onChange={ (ev) => setType(ev.target.value as (CharacterModifierCondition['type'] | '')) }
 				className='flex-1'
 				disabled={ addCondition == null }
+				scrollChange
 			>
 				<option value=''>- Select condition type -</option>
 				{ Object.entries(CONDITION_PRESETS).map(([key, value]) => (

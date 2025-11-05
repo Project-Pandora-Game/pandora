@@ -86,7 +86,9 @@ function QualitySettings(): ReactElement {
 					max={ 100 }
 					step={ 5 }
 					withSlider
-				/>
+				>
+					<span>%</span>
+				</NumberSettingInput>
 				{ (renderResolutionDriver.currentValue ?? renderResolutionDriver.defaultValue) < 100 ? (
 					<SelectSettingInput<GraphicsUpscalingSetting>
 						driver={ upscalingDriver }

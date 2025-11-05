@@ -174,7 +174,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	notificationGlobalSettings: {
 		sound: {
 			sound: '',
-			volume: '100',
+			volume: 100,
 		},
 		usePlatformPopup: false,
 	},

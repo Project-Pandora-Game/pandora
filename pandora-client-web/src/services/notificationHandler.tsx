@@ -7,7 +7,6 @@ import {
 	type ClientNotificationGlobalSettings,
 	type ClientNotificationSound,
 	type ClientNotificationSoundSettings,
-	type ClientNotificationSoundVolume,
 	type ClientNotificationType,
 	type ClientNotificationTypeSetting,
 	type Satisfies,
@@ -26,14 +25,6 @@ import { Observable, ReadonlyObservable } from '../observable.ts';
 import { GetAccountSettings } from './accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from './clientServices.ts';
 import { useService } from './serviceProvider.tsx';
-
-export const NOTIFICATION_AUDIO_VOLUME: Readonly<Record<ClientNotificationSoundVolume, string>> = {
-	'0': '0%',
-	'25': '25%',
-	'50': '50%',
-	'75': '75%',
-	'100': '100%',
-};
 
 export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<ClientNotificationSound, string>> = {
 	'': '<None>',
@@ -170,7 +161,7 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 
 	private _playSound(sound: Immutable<ClientNotificationSoundSettings>) {
 		const soundSource = NOTIFICATION_AUDIO_SOUNDS[sound.sound];
-		const volume = Number(sound.volume) / 100;
+		const volume = sound.volume / 100;
 
 		if (!soundSource || !volume)
 			return;

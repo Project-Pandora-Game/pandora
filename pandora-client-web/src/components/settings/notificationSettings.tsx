@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
-import { AssertNotNullable, CLIENT_NOTIFICATION_GROUPS, CLIENT_NOTIFICATION_TYPES, ClientNotificationSoundSchema, ClientNotificationSoundVolumeSchema, ClientNotificationSuppressionSettingSchema, KnownObject, type AccountSettings, type ClientNotificationSound, type ClientNotificationSoundVolume, type ClientNotificationType } from 'pandora-common';
+import { AssertNotNullable, CLIENT_NOTIFICATION_GROUPS, CLIENT_NOTIFICATION_TYPES, ClientNotificationSoundSchema, ClientNotificationSuppressionSettingSchema, KnownObject, type AccountSettings, type ClientNotificationSound, type ClientNotificationType } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import * as z from 'zod';
 import popupIcon from '../../assets/icons/bubble.svg';
@@ -8,12 +8,12 @@ import notificationIcon from '../../assets/icons/notification.svg';
 import soundOffIcon from '../../assets/icons/sound-0.svg';
 import soundOnIcon from '../../assets/icons/sound-3.svg';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler.tsx';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS } from '../../services/notificationHandler.tsx';
 import { NotificationPermissionRequest } from '../../ui/components/notifications/notificationPermissionRequest.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column } from '../common/container/container.tsx';
 import { useAccountSettingDriver } from './helpers/accountSettings.tsx';
-import { SelectSettingInput, ToggleSettingInput, useOptionalSubsettingDriver, useSubsettingDriver, useValueMapDriver, type SettingDriver } from './helpers/settingsInputs.tsx';
+import { NumberSettingInput, SelectSettingInput, ToggleSettingInput, useOptionalSubsettingDriver, useSubsettingDriver, useValueMapDriver, type SettingDriver } from './helpers/settingsInputs.tsx';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -42,13 +42,16 @@ function NotificationGlobalSettings(): ReactElement {
 			<legend>Global settings</legend>
 			<Column gap='large'>
 				<h2>Sound</h2>
-				<SelectSettingInput
+				<NumberSettingInput
 					driver={ defaultVolumeDriver }
 					label='Sound notifications volume'
-					stringify={ NOTIFICATION_AUDIO_VOLUME }
-					optionOrder={ ['100', '75', '50', '25', '0'] }
-					schema={ ClientNotificationSoundVolumeSchema }
-				/>
+					min={ 0 }
+					max={ 100 }
+					step={ 1 }
+					withSlider
+				>
+					<span>%</span>
+				</NumberSettingInput>
 				<SelectSettingInput
 					driver={ defaultSoundDriver }
 					label='Default notification sound'
@@ -62,7 +65,7 @@ function NotificationGlobalSettings(): ReactElement {
 							const sound = NOTIFICATION_AUDIO_SOUNDS[defaultSound];
 							if (sound != null) {
 								const audio = new Audio(sound);
-								audio.volume = Number(defaultVolume) / 100;
+								audio.volume = defaultVolume / 100;
 								audio.play().catch(() => { /*ignore*/ });
 							}
 						} }
@@ -185,32 +188,33 @@ function NotificationTypeSetting({ globalDriver, type }: {
 							noReset
 						/>
 						<div className='selectsArea'>
-							<SelectSettingInput<ClientNotificationSoundVolume | '-default-'>
+							<NumberSettingInput
 								driver={ {
-									currentValue: currentSettings.sound?.volume ?? '-default-',
-									defaultValue: '-default-',
+									currentValue: currentSettings.sound?.volume,
+									defaultValue: notificationGlobalSettings.sound.volume,
 									onChange: (newValue) => {
 										AssertNotNullable(currentSettings.sound);
 										soundDriver.onChange(produce(currentSettings.sound, (d) => {
-											if (newValue !== '-default-') {
-												d.volume = newValue;
-											} else {
-												delete d.volume;
-											}
+											d.volume = newValue;
+										}));
+									},
+									onReset() {
+										AssertNotNullable(currentSettings.sound);
+										soundDriver.onChange(produce(currentSettings.sound, (d) => {
+											delete d.volume;
 										}));
 									},
 								} }
 								disabled={ currentSettings.sound == null }
 								label='Sound volume'
-								stringify={ {
-									...NOTIFICATION_AUDIO_VOLUME,
-									'-default-': '[ Use global setting ]',
-								} }
-								optionOrder={ ['-default-', '100', '75', '50', '25', '0'] }
-								schema={ ClientNotificationSoundVolumeSchema.or(z.literal('-default-')) }
+								min={ 0 }
+								max={ 100 }
+								step={ 1 }
+								withSlider
 								noWrapper
-								noReset
-							/>
+							>
+								<span>%</span>
+							</NumberSettingInput>
 							<SelectSettingInput<ClientNotificationSound | '-default-'>
 								driver={ {
 									currentValue: currentSettings.sound?.sound ?? '-default-',
@@ -246,7 +250,7 @@ function NotificationTypeSetting({ globalDriver, type }: {
 										const sound = NOTIFICATION_AUDIO_SOUNDS[soundSetting];
 										if (sound != null) {
 											const audio = new Audio(sound);
-											audio.volume = Number(volumeSetting) / 100;
+											audio.volume = volumeSetting / 100;
 											audio.play().catch(() => { /*ignore*/ });
 										}
 									} }

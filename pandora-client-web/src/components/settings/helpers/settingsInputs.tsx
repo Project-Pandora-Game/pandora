@@ -177,7 +177,7 @@ export function ToggleSettingInput({ driver, label, disabled, noReset = false, d
 	);
 }
 
-type NumberSettingInputProps = {
+type NumberSettingInputProps = ChildrenProps & {
 	driver: Readonly<SettingDriver<number>>;
 	label: string;
 	deps?: DependencyList;
@@ -190,7 +190,17 @@ type NumberSettingInputProps = {
 	noReset?: boolean;
 };
 
-export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlider = false, min, max, step, disabled = false, noWrapper = false, noReset = false }: NumberSettingInputProps): ReactElement {
+export function NumberSettingInput({
+	driver,
+	label,
+	deps = EMPTY_ARRAY,
+	withSlider = false,
+	min, max, step,
+	disabled = false,
+	noWrapper = false,
+	noReset = false,
+	children,
+}: NumberSettingInputProps): ReactElement {
 	const id = `setting-${useId()}`;
 
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
@@ -241,6 +251,7 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 					onChange={ setValue }
 					disabled={ disabled }
 				/>
+				{ children }
 				{ noReset ? null : (
 					<Button
 						className='slim'

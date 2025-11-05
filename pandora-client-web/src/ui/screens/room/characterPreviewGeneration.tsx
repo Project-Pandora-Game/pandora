@@ -208,30 +208,24 @@ export function CharacterPreviewDialog({ close }: {
 					</GraphicsSceneBackgroundRenderer>
 				</Column>
 				<Column gap='medium' padding='small'>
-					<fieldset>
-						<legend>Zoom</legend>
-						<NumberSettingInput
-							label='Zoom'
-							driver={ areaSizeDriver }
-							min={ PREVIEW_AREA_SIZE_MIN }
-							max={ PREVIEW_AREA_SIZE_MAX }
-							step={ 1 }
-							withSlider
-							disabled={ processing }
-						/>
-					</fieldset>
-					<fieldset>
-						<legend>Camera height</legend>
-						<NumberSettingInput
-							label='Camera height'
-							driver={ areaYOffsetDriver }
-							min={ 0 }
-							max={ CharacterSize.HEIGHT }
-							step={ 1 }
-							withSlider
-							disabled={ processing }
-						/>
-					</fieldset>
+					<NumberSettingInput
+						label='Zoom'
+						driver={ areaSizeDriver }
+						min={ PREVIEW_AREA_SIZE_MIN }
+						max={ PREVIEW_AREA_SIZE_MAX }
+						step={ 1 }
+						withSlider
+						disabled={ processing }
+					/>
+					<NumberSettingInput
+						label='Camera height'
+						driver={ areaYOffsetDriver }
+						min={ 0 }
+						max={ CharacterSize.HEIGHT }
+						step={ 1 }
+						withSlider
+						disabled={ processing }
+					/>
 					<ToggleSettingInput
 						label='Regularly update preview automatically'
 						driver={ automaticDriver }

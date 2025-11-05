@@ -8,7 +8,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../common/button/button.tsx';
-import { Row } from '../../common/container/container.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
 
 export interface SettingDriver<T> {
 	currentValue: NoInfer<T | undefined>;
@@ -177,7 +177,7 @@ export function ToggleSettingInput({ driver, label, disabled, noReset = false, d
 	);
 }
 
-export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlider = false, min, max, step, disabled = false }: {
+type NumberSettingInputProps = {
 	driver: Readonly<SettingDriver<number>>;
 	label: string;
 	deps?: DependencyList;
@@ -186,7 +186,13 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 	max?: number;
 	step?: number;
 	disabled?: boolean;
-}): ReactElement {
+	noWrapper?: boolean;
+	noReset?: boolean;
+};
+
+export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlider = false, min, max, step, disabled = false, noWrapper = false, noReset = false }: NumberSettingInputProps): ReactElement {
+	const id = `setting-${useId()}`;
+
 	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
@@ -201,41 +207,51 @@ export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlid
 		},
 	});
 
+	const Wrapper = useMemo(() => (noWrapper ? React.Fragment : ({ children: wrapperChildren }: ChildrenProps) => <Column gap='small'>{ wrapperChildren }</Column>), [noWrapper]);
+
 	return (
-		<Row alignY='center' gap='medium'>
-			{
-				withSlider && min != null && max != null ? (
-					<NumberInput
-						aria-label={ label }
-						className='flex-6 zero-width'
-						rangeSlider
-						min={ min }
-						max={ max }
-						step={ step }
-						value={ value ?? driver.defaultValue }
-						onChange={ setValue }
-						disabled={ disabled }
-					/>
-				) : null
-			}
-			<NumberInput
-				aria-label={ label }
-				className='flex-grow-1 value'
-				min={ min }
-				max={ max }
-				step={ step }
-				value={ value ?? driver.defaultValue }
-				onChange={ setValue }
-				disabled={ disabled }
-			/>
-			<Button
-				className='slim'
-				onClick={ () => setValue(undefined) }
-				disabled={ value === undefined }
-			>
-				↺
-			</Button>
-		</Row>
+		<Wrapper>
+			{ label != null ? (
+				<label htmlFor={ id }>{ label }</label>
+			) : null }
+			<Row alignY='center' gap='medium'>
+				{
+					withSlider && min != null && max != null ? (
+						<NumberInput
+							aria-label={ label }
+							className='flex-6 zero-width'
+							rangeSlider
+							min={ min }
+							max={ max }
+							step={ step }
+							value={ value ?? driver.defaultValue }
+							onChange={ setValue }
+							disabled={ disabled }
+						/>
+					) : null
+				}
+				<NumberInput
+					id={ id }
+					aria-label={ label }
+					className='flex-grow-1 value'
+					min={ min }
+					max={ max }
+					step={ step }
+					value={ value ?? driver.defaultValue }
+					onChange={ setValue }
+					disabled={ disabled }
+				/>
+				{ noReset ? null : (
+					<Button
+						className='slim'
+						onClick={ () => setValue(undefined) }
+						disabled={ value === undefined }
+					>
+						↺
+					</Button>
+				) }
+			</Row>
+		</Wrapper>
 	);
 }
 

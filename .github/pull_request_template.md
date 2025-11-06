@@ -67,4 +67,4 @@ Technical changes:
 <!-- Checklist for you to make sure you didn't miss something -->
 - [ ] The change has been tested locally
 - [ ] Added documentation to the new code and updated existing documentation where needed
-- [ ] I understand this patch is submitted under the [Pandora's Contributor Agreement](https://github.com/Project-Pandora-Game/pandora/blob/master/contributor-licence-agreement.md)
+- [ ] I understand this patch is submitted under the [Pandora's Contributor Agreement](https://github.com/Project-Pandora-Game/pandora/blob/master/contributor-license-agreement.md)

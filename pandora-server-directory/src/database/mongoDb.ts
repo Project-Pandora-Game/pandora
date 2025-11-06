@@ -201,6 +201,16 @@ const spaceCollection = new ValidatedCollection(
 			unique: true,
 			key: { id: 1 },
 		},
+		{
+			name: 'publicSpaceSearch',
+			key: {
+				'config.name': 1,
+				'id': 1,
+			},
+			partialFilterExpression: {
+				'config.public': 'public-with-anyone',
+			},
+		},
 	],
 );
 

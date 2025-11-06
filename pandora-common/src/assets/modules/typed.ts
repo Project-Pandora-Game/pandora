@@ -54,6 +54,18 @@ export type IModuleConfigTyped<TProperties, TStaticData> = IModuleConfigCommon<'
 
 	/** List of variants this typed module has */
 	variants: [IModuleTypedOption<TProperties>, ...IModuleTypedOption<TProperties>[]];
+
+	/**
+	 * Allows to migrate selected variant if an variant `id` changes. The value is a record mapping `old: new`.
+	 *
+	 * @example
+	 * // This shows an example where 'oldVariant' and 'anotherOldVariant' were merged into 'newVariant'
+	 * variantMigration: {
+	 *     'oldVariant': 'newVariant',
+	 *     'anotherOldVariant': 'newVariant',
+	 * }
+	 */
+	variantMigration?: Record<string, IModuleTypedOption<TProperties>['id']>;
 };
 
 export const ModuleItemDataTypedSchema = z.object({
@@ -164,7 +176,15 @@ export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknow
 
 	public static loadFromData<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties, TStaticData> {
 		// Get currently selected module
-		const activeVariant: Immutable<IModuleTypedOption<TProperties>> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
+		let activeVariant: Immutable<IModuleTypedOption<TProperties>> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
+		if (activeVariant == null && config.variantMigration != null && data.variant != null && Object.hasOwn(config.variantMigration, data.variant)) {
+			const migratedVariant = config.variantMigration[data.variant];
+			activeVariant = config.variants.find((v) => v.id === migratedVariant);
+			if (activeVariant == null) {
+				context.logger?.error(`Unknown typed module variant after migration '${data.variant}'->'${migratedVariant}'`);
+			}
+		}
+
 		// Warn if we were trying to find variant
 		if (!activeVariant && data.variant != null) {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);

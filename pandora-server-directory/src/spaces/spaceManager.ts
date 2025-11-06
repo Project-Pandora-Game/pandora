@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import promClient from 'prom-client';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
@@ -93,6 +93,10 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			}
 		}
 		return Array.from(result);
+	}
+
+	public async listPublicSpaces(args: SpaceSearchArguments, limit: number, skip: number): Promise<SpaceSearchResult> {
+		return await GetDatabase().searchSpace(args, limit, skip, false);
 	}
 
 	/** Returns a list of spaces currently in memory */

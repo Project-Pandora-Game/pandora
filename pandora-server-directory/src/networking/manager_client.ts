@@ -125,6 +125,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			shardInfo: this.handleShardInfo.bind(this),
 			listSpaces: this.handleListSpaces.bind(this),
+			spaceSearch: this.handleSpaceSearch.bind(this),
 			spaceGetInfo: this.handleSpaceGetInfo.bind(this),
 			spaceCreate: this.handleSpaceCreate.bind(this),
 			spaceEnter: this.handleSpaceEnter.bind(this),
@@ -480,9 +481,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const accountFriends = await account.contacts.getFriendsIds();
 
 		const spaces = (await SpaceManager.listSpacesVisibleTo(account))
-			.map((r) => r.getListInfo(account, accountFriends));
+			.map((s) => s.getListInfo(account, accountFriends));
 
 		return { spaces };
+	}
+
+	private async handleSpaceSearch({ args, limit, skip }: IClientDirectoryArgument['spaceSearch'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSearch'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			result: await SpaceManager.listPublicSpaces(args, limit, skip ?? 0),
+		};
 	}
 
 	private async handleSpaceGetInfo({ id, invite }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {

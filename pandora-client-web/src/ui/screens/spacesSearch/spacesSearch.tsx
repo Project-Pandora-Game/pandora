@@ -3,7 +3,6 @@ import { noop } from 'lodash-es';
 import {
 	AssertNotNullable,
 	EMPTY,
-	SpaceListExtendedInfo,
 	SpaceListInfo,
 	type SpacePublicSetting,
 } from 'pandora-common';
@@ -24,9 +23,8 @@ import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
-import { SpaceDetails } from './spaceDetails.tsx';
+import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import './spacesSearch.scss';
-import { useSpaceExtendedInfo } from './useSpaceExtendedInfo.tsx';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -93,6 +91,14 @@ export function SpacesSearch(): ReactElement {
 				</Row>
 			</Row>
 			{ !list ? <div className='loading'>Loading...</div> : <SpaceSearchList list={ list } /> }
+			<Column alignX='start'>
+				<div>Didn't find a space you were looking for?</div>
+				<Button onClick={ () => {
+					navigate('/spaces/public/search');
+				} }>
+					Search empty public spaces
+				</Button>
+			</Column>
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }
@@ -186,7 +192,7 @@ function SpaceSearchList({ list }: {
 				<h3>Found spaces ({ otherSpaces.length })</h3>
 				{
 					otherSpaces.length === 0 ? (
-						<p>No space matches your filter criteria</p>
+						<p>No space found</p>
 					) : (
 						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
@@ -197,6 +203,19 @@ function SpaceSearchList({ list }: {
 		</>
 	);
 }
+
+export const SPACE_SEARCH_PUBLIC_ICONS: Record<SpacePublicSetting, string> = {
+	'locked': closedDoorLocked,
+	'private': closedDoor,
+	'public-with-admin': publicDoor,
+	'public-with-anyone': publicDoor,
+};
+export const SPACE_SEARCH_PUBLIC_LABELS: Record<SpacePublicSetting, string> = {
+	'locked': 'Locked private space',
+	'private': 'Private space',
+	'public-with-admin': 'Public space',
+	'public-with-anyone': 'Public space',
+};
 
 function SpaceSearchEntry({ baseInfo }: {
 	baseInfo: SpaceListInfo;
@@ -215,19 +234,6 @@ function SpaceSearchEntry({ baseInfo }: {
 	const isEmpty = onlineCharacters === 0;
 	const isFull = totalCharacters >= maxUsers;
 
-	const ICON_MAP: Record<SpacePublicSetting, string> = {
-		'locked': closedDoorLocked,
-		'private': closedDoor,
-		'public-with-admin': publicDoor,
-		'public-with-anyone': publicDoor,
-	};
-	const ICON_TITLE_MAP: Record<SpacePublicSetting, string> = {
-		'locked': 'Locked private space',
-		'private': 'Private space',
-		'public-with-admin': 'Public space',
-		'public-with-anyone': 'Public space',
-	};
-
 	return (
 		<>
 			<button
@@ -241,9 +247,9 @@ function SpaceSearchEntry({ baseInfo }: {
 			>
 				<div className='icon'>
 					<img
-						src={ ICON_MAP[baseInfo.public] }
-						title={ ICON_TITLE_MAP[baseInfo.public] }
-						alt={ ICON_TITLE_MAP[baseInfo.public] } />
+						src={ SPACE_SEARCH_PUBLIC_ICONS[baseInfo.public] }
+						title={ SPACE_SEARCH_PUBLIC_LABELS[baseInfo.public] }
+						alt={ SPACE_SEARCH_PUBLIC_LABELS[baseInfo.public] } />
 				</div>
 				<div className='icons-extra'>
 					{
@@ -274,47 +280,6 @@ function SpaceSearchEntry({ baseInfo }: {
 				hide={ () => setShow(false) }
 			/> }
 		</>
-	);
-}
-
-function SpaceDetailsDialog({ baseInfo, hide }: {
-	baseInfo: SpaceListInfo;
-	hide: () => void;
-}): ReactElement | null {
-	const accountId = useCurrentAccount()?.id;
-	const extendedInfo = useSpaceExtendedInfo(baseInfo.id);
-
-	const info = useMemo<SpaceListExtendedInfo>(() => {
-		if (extendedInfo?.result === 'success')
-			return extendedInfo.data;
-
-		return {
-			...baseInfo,
-			features: [],
-			admin: [],
-			background: '',
-			isAdmin: false,
-			isAllowed: false,
-			characters: [],
-		};
-	}, [extendedInfo, baseInfo]);
-
-	// Close if the space disappears
-	useEffect(() => {
-		if (extendedInfo?.result === 'notFound') {
-			hide();
-		}
-	}, [extendedInfo, hide]);
-
-	// Do not show anything if the space doesn't exist anymore
-	// Do not show anything if we don't have account (aka WTF?)
-	if (extendedInfo?.result === 'notFound' || accountId == null)
-		return null;
-
-	return (
-		<ModalDialog>
-			<SpaceDetails info={ info } hasFullInfo={ extendedInfo?.result === 'success' } hide={ hide } />
-		</ModalDialog>
 	);
 }
 

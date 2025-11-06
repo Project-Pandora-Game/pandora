@@ -71,7 +71,7 @@ import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
-const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
+const IsValidEntryText = ZodMatcher(SpaceDirectoryConfigSchema.shape.entryText);
 const ENTRY_TEXT_TEXTBOX_SIZE = 8;
 
 function DefaultConfig(): SpaceDirectoryConfig {

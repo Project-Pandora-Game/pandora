@@ -16,6 +16,9 @@ export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 export const SpaceIdSchema = ZodTemplateString<`s/${string}`>(z.string(), /^s\//);
 export type SpaceId = z.infer<typeof SpaceIdSchema>;
 
+export const SpaceNameSchema = z.string().min(3).max(LIMIT_SPACE_NAME_LENGTH).regex(LIMIT_SPACE_NAME_PATTERN).regex(ZodTrimedRegex);
+export type SpaceName = z.infer<typeof SpaceNameSchema>;
+
 export const SpaceFeatureSchema = z.enum([
 	// Allows characters inside to change their body
 	'allowBodyChanges',
@@ -55,11 +58,9 @@ export type SpacePublicSetting = z.infer<typeof SpacePublicSettingSchema>;
 
 export const SpaceBaseInfoSchema = z.object({
 	/** The name of the space */
-	name: z.string().min(3).max(LIMIT_SPACE_NAME_LENGTH).regex(LIMIT_SPACE_NAME_PATTERN).regex(ZodTrimedRegex),
+	name: SpaceNameSchema,
 	/** The description of the space */
 	description: z.string().max(LIMIT_SPACE_DESCRIPTION_LENGTH),
-	/** The entry text of the space, shown to players when they enter */
-	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH).catch(''),
 	/**
 	 * Whether the space is private or public (under some conditions)
 	 * @see SpacePublicSettingSchema
@@ -136,6 +137,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */
 	development: SpaceDevelopmentConfigSchema.optional(),
+	/** The entry text of the space, shown to players when they enter */
+	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH).catch(''),
 	/** The banned account ids */
 	banned: AccountIdSchema.array(),
 	/** The admin account ids */

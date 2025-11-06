@@ -21,6 +21,7 @@ import { Freeze } from '../ui/components/common/freeze.tsx';
 import { RoomScreen } from '../ui/screens/room/room.tsx';
 import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration.tsx';
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
+import { PublicSpaceSearch } from '../ui/screens/spacesSearch/publicSpaceSearch.tsx';
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
 import { authPagePathsAndComponents } from './authRoutingData.ts';
 import { useNavigatePandora } from './navigate.ts';
@@ -50,6 +51,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/space/join/:spaceId' element={ <RequiresCharacter element={ SpaceJoin } /> } />
 
 			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
+			<Route path='/spaces/public/search' element={ <RequiresLogin element={ PublicSpaceSearch } /> } />
 			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
 
 			<Route path='/wardrobe/*' element={ <RequiresCharacter element={ WardrobeRouter } /> } />

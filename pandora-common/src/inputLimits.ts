@@ -28,6 +28,9 @@ export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;
 /** The extra slots reserved for space owners */
 export const LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS = 5;
 
+/** How many public spaces can be searched at a time. */
+export const LIMIT_SPACE_SEARCH_COUNT = 100;
+
 /** The maximum length of a space's name */
 export const LIMIT_SPACE_NAME_LENGTH = 48;
 /** The pattern used for validating space's name */

@@ -5,8 +5,9 @@ import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema 
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
-import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits.ts';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, LIMIT_SPACE_SEARCH_COUNT } from '../inputLimits.ts';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
+import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../space/spaceSearch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
@@ -297,25 +298,6 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: null,
 	},
-	shardInfo: {
-		request: z.object({}),
-		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
-	},
-	listSpaces: {
-		request: z.object({}),
-		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
-	},
-	spaceGetInfo: {
-		request: z.object({
-			id: SpaceIdSchema,
-			invite: SpaceInviteIdSchema.optional(),
-		}),
-		response: ZodCast<SpaceExtendedInfoResponse>(),
-	},
-	spaceCreate: {
-		request: SpaceDirectoryConfigSchema,
-		response: ZodCast<{ result: 'ok' | 'spaceOwnershipLimitReached' | ShardError; }>(),
-	},
 	spaceEnter: {
 		request: z.object({
 			id: SpaceIdSchema,
@@ -328,6 +310,42 @@ export const ClientDirectorySchema = {
 		response: z.object({
 			result: z.enum(['ok', 'failed', 'restricted', 'inRoomDevice']),
 		}),
+	},
+	//#endregion
+
+	shardInfo: {
+		request: z.object({}),
+		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
+	},
+
+	//#region Space search
+	listSpaces: { // Get list of currently active spaces
+		request: z.object({}),
+		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
+	},
+	spaceSearch: { // Search through all public spaces
+		request: z.object({
+			args: SpaceSearchArgumentsSchema,
+			limit: z.int().positive().max(LIMIT_SPACE_SEARCH_COUNT),
+			skip: z.number().int().nonnegative().optional(),
+		}),
+		response: z.object({
+			result: SpaceSearchResultSchema,
+		}),
+	},
+	spaceGetInfo: {
+		request: z.object({
+			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
+		}),
+		response: ZodCast<SpaceExtendedInfoResponse>(),
+	},
+	//#endregion
+
+	//#region Space management
+	spaceCreate: {
+		request: SpaceDirectoryConfigSchema,
+		response: ZodCast<{ result: 'ok' | 'spaceOwnershipLimitReached' | ShardError; }>(),
 	},
 	spaceUpdate: {
 		request: SpaceDirectoryUpdateSchema,

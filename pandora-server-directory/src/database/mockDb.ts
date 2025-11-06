@@ -19,6 +19,10 @@ import {
 	SpaceDirectoryData,
 	SpaceId,
 	type ICharacterDataShard,
+	type SpaceSearchArguments,
+	type SpaceSearchResult,
+	type SpaceSearchResultEntry,
+	type SpaceSearchSort,
 } from 'pandora-common';
 import { CreateAccountData } from '../account/account.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
@@ -340,6 +344,36 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(null);
 		}
 		return Promise.resolve(cloneDeep(space));
+	}
+
+	private readonly spaceComparators: Record<SpaceSearchSort, (a: SpaceData, b: SpaceData) => number> = {
+		'a-z': (a, b) => (a.config.name.localeCompare(b.config.name)) || (a.id.localeCompare(b.id)),
+		'z-a': (a, b) => (-a.config.name.localeCompare(b.config.name)) || (-a.id.localeCompare(b.id)),
+	};
+
+	public searchSpace(args: SpaceSearchArguments, limit: number, skip: number, allowNonPublic: boolean): Promise<SpaceSearchResult> {
+		return Promise.resolve(
+			Array.from(this.spacesDb.values())
+				.filter((s) => {
+					if (!allowNonPublic && s.config.public !== 'public-with-anyone')
+						return false;
+
+					if (args.nameFilter != null && !s.config.name.toLowerCase().includes(args.nameFilter.toLowerCase()))
+						return false;
+
+					return true;
+				})
+				.sort(this.spaceComparators[args.sort])
+				.slice(skip, skip + limit)
+				.map((s): SpaceSearchResultEntry => ({
+					id: s.id,
+					owners: s.owners.slice(),
+					name: s.config.name,
+					description: s.config.description,
+					public: s.config.public,
+					maxUsers: s.config.maxUsers,
+				})),
+		);
 	}
 
 	public createSpace(data: SpaceCreationData, id?: SpaceId): Promise<SpaceData> {

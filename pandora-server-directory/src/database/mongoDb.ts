@@ -1,7 +1,7 @@
 import AsyncLock from 'async-lock';
 import { diffString } from 'json-diff';
-import { cloneDeep, isEqual, max } from 'lodash-es';
-import { Binary, CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
+import { cloneDeep, escapeRegExp, isEqual, max } from 'lodash-es';
+import { Binary, CollationOptions, Db, MongoClient, MongoServerError, type Filter, type Sort } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
@@ -40,6 +40,10 @@ import {
 	ZodTemplateString,
 	type ICharacterDataShard,
 	type RoomGeometryConfig,
+	type SpaceSearchArguments,
+	type SpaceSearchResult,
+	type SpaceSearchResultEntry,
+	type SpaceSearchSort,
 	type SpaceStateBundle,
 } from 'pandora-common';
 import * as z from 'zod';
@@ -69,7 +73,7 @@ import {
 	type DatabaseDirectMessageAccounts,
 } from './databaseStructure.ts';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
-import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection.ts';
+import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType, type ValidatedCollectionDocumentType } from './validatedCollection.ts';
 
 const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
 const logger = GetLogger('db');
@@ -601,6 +605,41 @@ export default class MongoDatabase implements PandoraDatabase {
 		})
 			.project<Pick<SpaceDirectoryData, (typeof SPACE_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, 1))
 			.toArray();
+	}
+
+	private readonly spaceSorting: Record<SpaceSearchSort, Sort> = {
+		'a-z': [['config.name', 1], ['id', 1]],
+		'z-a': [['config.name', -1], ['id', -1]],
+	};
+
+	public async searchSpace(args: SpaceSearchArguments, limit: number, skip: number, allowNonPublic: boolean): Promise<SpaceSearchResult> {
+		const filter: Filter<ValidatedCollectionDocumentType<typeof spaceCollection>> = {};
+
+		if (!allowNonPublic) {
+			filter['config.public'] = 'public-with-anyone';
+		}
+
+		if (args.nameFilter != null) {
+			filter['config.name'] = { $regex: escapeRegExp(args.nameFilter.toLowerCase()), $options: 'i' };
+		}
+
+		const result = await this._spaces.find(filter, {
+			sort: this.spaceSorting[args.sort],
+			limit,
+			skip,
+			collation: COLLATION_CASE_INSENSITIVE,
+		})
+			.project<Pick<SpaceDirectoryData, 'id' | 'owners' | 'config'>>({ id: 1, owners: 1, config: 1 })
+			.toArray();
+
+		return result.map((s): SpaceSearchResultEntry => ({
+			id: s.id,
+			owners: s.owners.slice(),
+			name: s.config.name,
+			description: s.config.description,
+			public: s.config.public,
+			maxUsers: s.config.maxUsers,
+		}));
 	}
 
 	@DbSynchronized()

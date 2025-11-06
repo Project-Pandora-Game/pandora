@@ -283,14 +283,14 @@ export default tsEslint.config(
 					'selector': 'parameter',
 					'modifiers': ['unused'],
 					'format': ['camelCase'],
-					'leadingUnderscore': 'require',
+					'leadingUnderscore': 'allow',
 				},
 				{
 					'selector': 'import',
 					'format': null,
 				},
 				{
-					'selector': 'objectLiteralProperty',
+					'selector': ['objectLiteralProperty', 'objectLiteralMethod'],
 					'format': null,
 				},
 				{
@@ -485,14 +485,14 @@ export default tsEslint.config(
 					'selector': 'parameter',
 					'modifiers': ['unused'],
 					'format': ['camelCase'],
-					'leadingUnderscore': 'require',
+					'leadingUnderscore': 'allow',
 				},
 				{
 					'selector': 'import',
 					'format': null,
 				},
 				{
-					'selector': 'objectLiteralProperty',
+					'selector': ['objectLiteralProperty', 'objectLiteralMethod'],
 					'format': null,
 				},
 				{

@@ -11,6 +11,8 @@ import type {
 	SpaceDataShardUpdate,
 	SpaceDirectoryData,
 	SpaceId,
+	SpaceSearchArguments,
+	SpaceSearchResult,
 } from 'pandora-common';
 import { ServiceInit } from 'pandora-common';
 import { ENV } from '../config.ts';
@@ -175,6 +177,14 @@ export interface PandoraDatabase extends ServerService {
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 */
 	getSpaceById(id: SpaceId, accessId: string | null): Promise<SpaceData | null>;
+
+	/**
+	 * Searches for spaces
+	 * @param args - Arguments based on which to search
+	 * @param allowNonPublic - Whether to include non-public spaces (for management), or only public spaces (for normal use)
+	 * @param limit - Limit of the number of results
+	 */
+	searchSpace(args: SpaceSearchArguments, limit: number, skip: number, allowNonPublic: boolean): Promise<SpaceSearchResult>;
 
 	/**
 	 * Creates a new space

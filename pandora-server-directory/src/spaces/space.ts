@@ -53,7 +53,7 @@ export class Space {
 			case 'public-with-admin':
 				return this.hasAdminInside(true);
 			case 'public-with-anyone':
-				return Array.from(this.characters).some((c) => c.isOnline());
+				return true;
 		}
 		AssertNever(this.config.public);
 	}
@@ -127,7 +127,6 @@ export class Space {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
-			entryText: this.config.entryText,
 			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
@@ -753,9 +752,19 @@ export class Space {
 		return invite;
 	}
 
-	/** Returns if this space is visible to the specific account when searching in space search */
+	/** Returns if this space is visible to the specific account when searching in space listing */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isValid && (this.isPublic || this.isAllowed(account));
+		if (!this.isValid)
+			return false;
+
+		// Public spaces are only shown in active space listing, if there is some character online
+		if (this.isPublic && Array.from(this.characters).some((c) => c.isOnline()))
+			return true;
+
+		if (this.isAllowed(account))
+			return true;
+
+		return false;
 	}
 
 	/** Returns if this space's extended info should be visible to the specified account */

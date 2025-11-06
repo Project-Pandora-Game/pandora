@@ -44,7 +44,7 @@
 		"immer": "10.2.0",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.17.21",
-		"mongodb": "6.20.0",
+		"mongodb": "7.0.0",
 		"nanoid": "5.1.6",
 		"pandora-common": "workspace:*",
 		"prom-client": "15.1.3",

@@ -107,6 +107,7 @@ export function EditorBuildAssetGraphicsContext<TAssetData>(
 			return new EditorImageResource(`editor://${encodeURIComponent(asset.id)}/${image}`, texture, buildTextures);
 		},
 		builtAssetData,
+		assetManager,
 	};
 }
 

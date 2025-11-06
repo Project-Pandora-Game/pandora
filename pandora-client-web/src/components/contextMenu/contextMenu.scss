@@ -20,7 +20,7 @@ $context-menu-themes: (
 	justify-content: center;
 	align-items: stretch;
 	border: 0.15em solid common.$theme-contextmenu-default-border;
-	border-radius: 0.2em;
+	border-radius: common.spacing('small');
 	padding: 0.3em;
 	gap: 0.3em;
 	user-select: none;
@@ -33,7 +33,7 @@ $context-menu-themes: (
 		align-self: center;
 	}
 
-	span, button {
+	span, .Button {
 		@include common.center-flex;
 		margin: 0;
 		padding: 0.2em 0.5em;
@@ -43,20 +43,16 @@ $context-menu-themes: (
 		}
 	}
 
-	button {
-		color: common.$theme-contextmenu-button-text;
-		background: transparent;
-		padding: 0.5em 0.8em;
+	.Button {
+		@include common.center-flex(row, nowrap);
 
-		&:hover {
-			background: common.$theme-contextmenu-button-hover-background;
-		}
+		padding: 0.5em 0.8em;
 
 		&.withIcon {
 			padding: 0.5em;
-			gap: 0.5em;
 
 			>img {
+				margin: 0;
 				width: 1.8em;
 				height: 1.8em;
 				object-fit: contain;

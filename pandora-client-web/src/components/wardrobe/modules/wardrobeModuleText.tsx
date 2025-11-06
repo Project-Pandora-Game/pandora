@@ -96,6 +96,7 @@ function WardrobeModuleConfigTextEdit({ target, item, moduleName, m, stopEdit }:
 					} }
 					disabled={ currentlyAttempting }
 					style={ { fontFamily: PANDORA_FONTS[font].cssSelector } }
+					scrollChange
 				>
 					{
 						KnownObject.entries(PANDORA_FONTS).map(([f, { name, cssSelector }]) => (
@@ -115,6 +116,7 @@ function WardrobeModuleConfigTextEdit({ target, item, moduleName, m, stopEdit }:
 						setAlign(ModuleItemDataTextAlignSchema.parse(ev.target.value));
 					} }
 					disabled={ currentlyAttempting }
+					scrollChange
 				>
 					{
 						ModuleItemDataTextAlignSchema.options.map((o) => (
@@ -172,6 +174,7 @@ export function WardrobeModuleTemplateConfigText({ template, definition, onTempl
 						}));
 					} }
 					style={ { fontFamily: PANDORA_FONTS[template.font].cssSelector } }
+					scrollChange
 				>
 					{
 						KnownObject.entries(PANDORA_FONTS).map(([f, { name, cssSelector }]) => (
@@ -192,6 +195,7 @@ export function WardrobeModuleTemplateConfigText({ template, definition, onTempl
 							d.align = ModuleItemDataTextAlignSchema.parse(ev.target.value);
 						}));
 					} }
+					scrollChange
 				>
 					{
 						ModuleItemDataTextAlignSchema.options.map((o) => (

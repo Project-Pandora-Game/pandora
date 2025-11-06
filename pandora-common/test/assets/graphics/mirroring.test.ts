@@ -50,7 +50,6 @@ function SetupTransform(bone: string,
 				condition,
 				value: value as Coordinates,
 			};
-		case 'const-rotate':
 		case 'rotate':
 			return {
 				bone,
@@ -81,11 +80,6 @@ describe('MirrorTransform()', () => {
 		['rotate', 'test_l', 100, 'test_r', -100, undefined],
 		['rotate', 'test_r', -100, 'test_l', 100, undefined],
 		['rotate', 'test_l', -100, 'test_r', 100, undefined],
-
-		['const-rotate', 'test_r', 100, 'test_l', -100, undefined],
-		['const-rotate', 'test_l', 100, 'test_r', -100, undefined],
-		['const-rotate', 'test_r', -100, 'test_l', 100, undefined],
-		['const-rotate', 'test_l', -100, 'test_r', 100, undefined],
 	])(
 		'should %p bone: %p, value: %p into bone: %p, value: %p',
 		(type, ibone, ivalue, ebone, evalue, condition: PoseCondition | undefined) => {

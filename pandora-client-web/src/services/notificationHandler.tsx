@@ -7,7 +7,6 @@ import {
 	type ClientNotificationGlobalSettings,
 	type ClientNotificationSound,
 	type ClientNotificationSoundSettings,
-	type ClientNotificationSoundVolume,
 	type ClientNotificationType,
 	type ClientNotificationTypeSetting,
 	type Satisfies,
@@ -20,35 +19,45 @@ import { toast } from 'react-toastify';
 import type * as z from 'zod';
 import audioAlert from '../audio/alert.mp3';
 import audioBell from '../audio/bell.mp3';
+import audioBell2 from '../audio/bell-2.mp3';
 import audioBing from '../audio/bing.mp3';
+import audioClick from '../audio/click.mp3';
 import audioDingDing from '../audio/ding-ding.mp3';
+import audioDing from '../audio/ding.mp3';
+import audioFaintBeep from '../audio/faint-beep.mp3';
+import audioSoftBell from '../audio/soft-bell.mp3';
+import audioTwoNote from '../audio/two-note.mp3';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { GetAccountSettings } from './accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from './clientServices.ts';
 import { useService } from './serviceProvider.tsx';
 
-export const NOTIFICATION_AUDIO_VOLUME: Readonly<Record<ClientNotificationSoundVolume, string>> = {
-	'0': '0%',
-	'25': '25%',
-	'50': '50%',
-	'75': '75%',
-	'100': '100%',
-};
-
 export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<ClientNotificationSound, string>> = {
 	'': '<None>',
 	'alert': 'Alert',
 	'bell': 'Bell',
+	'bell2': 'Bell 2',
 	'bing': 'Bing',
+	'click': 'Click',
+	'ding': 'Ding',
 	'dingding': 'Ding-Ding',
+	'faintbeep': 'Faint Beep',
+	'softbell': 'Soft Bell',
+	'twonote': 'Two-Note',
 };
 
 export const NOTIFICATION_AUDIO_SOUNDS: Readonly<Record<ClientNotificationSound, string | null>> = {
 	'': null,
 	'alert': audioAlert,
 	'bell': audioBell,
+	'bell2': audioBell2,
 	'bing': audioBing,
+	'click': audioClick,
+	'ding': audioDing,
 	'dingding': audioDingDing,
+	'faintbeep': audioFaintBeep,
+	'softbell': audioSoftBell,
+	'twonote': audioTwoNote,
 };
 
 /** Helper for creating notification data type */
@@ -170,7 +179,7 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 
 	private _playSound(sound: Immutable<ClientNotificationSoundSettings>) {
 		const soundSource = NOTIFICATION_AUDIO_SOUNDS[sound.sound];
-		const volume = Number(sound.volume) / 100;
+		const volume = sound.volume / 100;
 
 		if (!soundSource || !volume)
 			return;

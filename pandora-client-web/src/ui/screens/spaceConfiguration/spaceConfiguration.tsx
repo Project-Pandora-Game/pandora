@@ -521,7 +521,6 @@ function SpaceConfigurationGeneral({
 						className='contain-size'
 						value={ currentConfig.public }
 						onChange={ (e) => updateConfig({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
-						noScrollChange
 						disabled={ !canEdit }
 					>
 						<option value='locked'>Locked</option>

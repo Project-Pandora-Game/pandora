@@ -1,5 +1,5 @@
 import { Immutable, freeze, produce } from 'immer';
-import { clamp, isEqual } from 'lodash-es';
+import { clamp } from 'lodash-es';
 import * as z from 'zod';
 import { CalculateObjectKeysDelta } from '../../utility/deltas.ts';
 import type { Satisfies } from '../../utility/misc.ts';
@@ -117,12 +117,12 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		return base;
 
 	return {
-		bones: { ...base.bones, ...extend.bones },
-		arms: { ...base.arms, ...extend.arms },
-		leftArm: { ...base.leftArm, ...extend.leftArm },
-		rightArm: { ...base.rightArm, ...extend.rightArm },
-		armsOrder: { ...base.armsOrder, ...extend.armsOrder },
-		legs: { ...base.legs, ...extend.legs },
+		bones: (base.bones !== undefined || extend.bones !== undefined) ? { ...base.bones, ...extend.bones } : undefined,
+		arms: (base.arms !== undefined || extend.arms !== undefined) ? { ...base.arms, ...extend.arms } : undefined,
+		leftArm: (base.leftArm !== undefined || extend.leftArm !== undefined) ? { ...base.leftArm, ...extend.leftArm } : undefined,
+		rightArm: (base.rightArm !== undefined || extend.rightArm !== undefined) ? { ...base.rightArm, ...extend.rightArm } : undefined,
+		armsOrder: (base.armsOrder !== undefined || extend.armsOrder !== undefined) ? { ...base.armsOrder, ...extend.armsOrder } : undefined,
+		legs: (base.legs !== undefined || extend.legs !== undefined) ? { ...base.legs, ...extend.legs } : undefined,
 		view: extend.view ?? base.view,
 	};
 }
@@ -139,10 +139,8 @@ export function ProduceAppearancePose(
 		/** @default false */
 		missingBonesAsZero?: boolean;
 	},
-	...changes: [(PartialAppearancePose | AssetsPosePreset), ...(PartialAppearancePose | AssetsPosePreset)[]]
+	pose: Immutable<PartialAppearancePose>,
 ): Immutable<AppearancePose> {
-	const pose = changes.reduce(MergePartialAppearancePoses);
-
 	return produce(basePose, (draft) => {
 		// Update view
 		if (pose.view != null) {
@@ -150,30 +148,19 @@ export function ProduceAppearancePose(
 		}
 
 		// Update arms
-		{
-			const leftArm = { ...basePose.leftArm, ...pose.arms, ...pose.leftArm };
-			const rightArm = { ...basePose.rightArm, ...pose.arms, ...pose.rightArm };
-			const armsChanged =
-				!isEqual(basePose.leftArm, leftArm) ||
-				!isEqual(basePose.rightArm, rightArm);
-
-			if (armsChanged) {
-				draft.leftArm = freeze(leftArm, true);
-				draft.rightArm = freeze(rightArm, true);
-			}
-
-			const armsOrder = { ...basePose.armsOrder, ...pose.armsOrder };
-			if (!isEqual(basePose.armsOrder, armsOrder)) {
-				draft.armsOrder = freeze(armsOrder, true);
-			}
+		if (pose.arms != null || pose.leftArm != null) {
+			draft.leftArm = { ...basePose.leftArm, ...pose.arms, ...pose.leftArm };
+		}
+		if (pose.arms != null || pose.rightArm != null) {
+			draft.rightArm = { ...basePose.rightArm, ...pose.arms, ...pose.rightArm };
+		}
+		if (pose.armsOrder != null) {
+			draft.armsOrder = { ...basePose.armsOrder, ...pose.armsOrder };
 		}
 
 		// Update legs
-		{
-			const legs = { ...basePose.legs, ...pose.legs };
-			if (!isEqual(basePose.legs, legs)) {
-				draft.legs = freeze(legs, true);
-			}
+		if (pose.legs != null) {
+			draft.legs = { ...basePose.legs, ...pose.legs };
 		}
 
 		// Update bones

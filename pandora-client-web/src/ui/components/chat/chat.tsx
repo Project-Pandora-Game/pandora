@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import { GetCurrentAssetManager, useAssetManager } from '../../../assets/assetManager.tsx';
 import { useAutoScroll } from '../../../common/useAutoScroll.ts';
+import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu/index.ts';
@@ -282,15 +283,15 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 			return [];
 
 		return [
-			<button key='edit' onClick={ () => {
+			<Button theme='transparent' key='edit' onClick={ () => {
 				if (!setEditing(id)) {
 					setEdit(false);
 				}
 				close();
 			} }>
 				Edit
-			</button>,
-			<button key='delete' onClick={ () => {
+			</Button>,
+			<Button theme='transparent' key='delete' onClick={ () => {
 				try {
 					sender.deleteMessage(id);
 				} catch {
@@ -299,7 +300,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 				close();
 			} }>
 				Delete
-			</button>,
+			</Button>,
 			<br key='br' />,
 		];
 	}, [edit, id, close, sender, setEditing]);
@@ -307,11 +308,11 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	return (
 		<>
 			{ elements }
-			<button onClick={ () => {
+			<Button theme='transparent' onClick={ () => {
 				close();
 			} }>
 				Close
-			</button>
+			</Button>
 		</>
 	);
 }

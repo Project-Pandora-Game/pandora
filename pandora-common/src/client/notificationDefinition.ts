@@ -37,16 +37,25 @@ export type ClientNotificationTypeDefinitionDataShape = {
 	};
 }[ClientNotificationGroup];
 
-export const ClientNotificationSoundSchema = z.enum(['', 'alert', 'bell', 'bing', 'dingding']);
+export const ClientNotificationSoundSchema = z.enum(['', 'alert', 'bell', 'bell2', 'bing', 'click', 'ding', 'dingding', 'faintbeep', 'softbell', 'twonote']);
 export type ClientNotificationSound = z.infer<typeof ClientNotificationSoundSchema>;
-export const ClientNotificationSoundVolumeSchema = z.enum(['0', '25', '50', '75', '100']);
+export const ClientNotificationSoundVolumeSchema = z.preprocess((v) => {
+	// Old scheme was saving this as string 0/25/50/75/100
+	if (typeof v === 'string') {
+		const updated = Number.parseInt(v, 10);
+		if (Number.isSafeInteger(updated)) {
+			return updated;
+		}
+	}
+	return v;
+}, z.number().int().min(0).max(100));
 export type ClientNotificationSoundVolume = z.infer<typeof ClientNotificationSoundVolumeSchema>;
 
 export const ClientNotificationSoundSettingsSchema = z.object({
 	/** What sound should this notification produce. */
 	sound: ClientNotificationSoundSchema.catch(''),
-	/** What volume should this notification produce. */
-	volume: ClientNotificationSoundVolumeSchema.catch('100'),
+	/** What volume should this notification produce, in percent. */
+	volume: ClientNotificationSoundVolumeSchema.catch(100),
 });
 export type ClientNotificationSoundSettings = z.infer<typeof ClientNotificationSoundSettingsSchema>;
 

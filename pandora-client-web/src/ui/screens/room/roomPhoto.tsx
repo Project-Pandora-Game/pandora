@@ -248,7 +248,7 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 						{ result == null ? (
 							<Row alignY='center'>
 								<label htmlFor={ id + '-target' }>Photo of:</label>
-								<Select id={ id + '-target' } className='flex-1' value={ target } onChange={ (e) => setTarget(e.target.value as typeof target) }>
+								<Select id={ id + '-target' } className='flex-1' value={ target } onChange={ (e) => setTarget(e.target.value as typeof target) } scrollChange>
 									<option value='room'>Current room</option>
 									{ sortedCharacters.map((c) => (
 										<option key={ c.id } value={ c.id }>{ c.name } ({ c.id })</option>
@@ -349,7 +349,7 @@ function RoomPhotoDialogRoomControls({ show, setPhoto }: {
 		<Column>
 			<Row alignY='center'>
 				<label htmlFor={ id + '-quality' }>Quality:</label>
-				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
+				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) } scrollChange>
 					<option value='roomSize'>Based on room's size ({ roomWidth }×{ roomHeight })</option>
 					<option value='4K'>4K (3840×2160)</option>
 					<option value='1080p'>FullHD (1920×1080)</option>
@@ -437,7 +437,7 @@ function RoomPhotoDialogCharacterControls({ character, setPhoto }: {
 		<Column>
 			<Row alignY='center'>
 				<label htmlFor={ id + '-quality' }>Quality:</label>
-				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) }>
+				<Select id={ id + '-quality' } className='flex-1' value={ quality } onChange={ (e) => setQuality(e.target.value as typeof quality) } scrollChange>
 					<option value='1'>Full</option>
 					<option value='0.5'>50%</option>
 					<option value='0.25'>25%</option>

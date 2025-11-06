@@ -1,20 +1,19 @@
-import { range } from 'lodash-es';
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import * as z from 'zod';
 import { useAsyncEvent } from '../../common/useEvent.ts';
+import { NumberInput } from '../../common/userInteraction/input/numberInput.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
 import { useConfirmDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings.tsx';
-import { SelectSettingInput } from './helpers/settingsInputs.tsx';
+import { SelectAccountSettings, ToggleAccountSetting, useAccountSettingDriver } from './helpers/accountSettings.tsx';
+import { NumberSettingInput } from './helpers/settingsInputs.tsx';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -139,71 +138,46 @@ function ChatroomSettings(): ReactElement {
 }
 
 function ChatroomGraphicsRatio(): ReactElement {
-	const modifiedSettings = useModifiedAccountSettings();
-	const directory = useDirectoryConnector();
-
-	const onChange = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical', value: string) => {
-		const newValue = AccountSettingsSchema.shape[s].parse(Number.parseInt(value, 10));
-		directory.awaitResponse('changeSettings', {
-			type: 'set',
-			settings: { [s]: newValue },
-		})
-			.catch((err: unknown) => {
-				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
-				GetLogger('changeSettings').error('Failed to update settings:', err);
-			});
-	};
-
-	const onReset = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical') => {
-		directory.awaitResponse('changeSettings', {
-			type: 'reset',
-			settings: [s],
-		})
-			.catch((err: unknown) => {
-				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
-				GetLogger('changeSettings').error('Failed to update settings:', err);
-			});
-	};
+	const interfaceChatroomGraphicsRatioHorizontalDriver = useAccountSettingDriver('interfaceChatroomGraphicsRatioHorizontal');
+	const interfaceChatroomGraphicsRatioVerticalDriver = useAccountSettingDriver('interfaceChatroomGraphicsRatioVertical');
 
 	return (
 		<>
-			<SelectSettingInput<string>
-				driver={ {
-					currentValue: modifiedSettings?.interfaceChatroomGraphicsRatioHorizontal?.toString(),
-					defaultValue: ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioHorizontal.toString(),
-					onChange: (v) => onChange('interfaceChatroomGraphicsRatioHorizontal', v),
-					onReset: () => onReset('interfaceChatroomGraphicsRatioHorizontal'),
-				} }
+			<NumberSettingInput
+				driver={ interfaceChatroomGraphicsRatioHorizontalDriver }
 				label='Chatroom graphics to chat ratio (in landscape mode)'
-				stringify={
-					Object.fromEntries(
-						range(
-							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.minValue ?? 1,
-							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.maxValue ?? 9) + 1,
-						).map((v) => [v.toString(), `${v}:${10 - v}`]),
-					)
-				}
-				schema={ z.string() }
-			/>
+				min={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.minValue ?? 1 }
+				max={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.maxValue ?? 9 }
+				step={ 1 }
+				withSlider
+			>
+				<span>:</span>
+				<NumberInput
+					className='flex-grow-1 value'
+					value={ 10 - (interfaceChatroomGraphicsRatioHorizontalDriver.currentValue ?? interfaceChatroomGraphicsRatioHorizontalDriver.defaultValue) }
+					min={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1 }
+					max={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9 }
+					disabled
+				/>
+			</NumberSettingInput>
 			<SelectAccountSettings setting='interfaceChatroomChatSplitHorizontal' label='Always show chat in landscape mode (on large enough displays)' stringify={ INTERFACE_CHATROOM_CHAT_SPLIT_HORIZONTAL } />
-			<SelectSettingInput<string>
-				driver={ {
-					currentValue: modifiedSettings?.interfaceChatroomGraphicsRatioVertical?.toString(),
-					defaultValue: ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioVertical.toString(),
-					onChange: (v) => onChange('interfaceChatroomGraphicsRatioVertical', v),
-					onReset: () => onReset('interfaceChatroomGraphicsRatioVertical'),
-				} }
+			<NumberSettingInput
+				driver={ interfaceChatroomGraphicsRatioVerticalDriver }
 				label='Chatroom graphics to chat ratio (in portrait mode)'
-				stringify={
-					Object.fromEntries(
-						range(
-							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1,
-							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9) + 1,
-						).map((v) => [v.toString(), `${v}:${10 - v}`]),
-					)
-				}
-				schema={ z.string() }
-			/>
+				min={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1 }
+				max={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9 }
+				step={ 1 }
+				withSlider
+			>
+				<span>:</span>
+				<NumberInput
+					className='flex-grow-1 value'
+					value={ 10 - (interfaceChatroomGraphicsRatioVerticalDriver.currentValue ?? interfaceChatroomGraphicsRatioVerticalDriver.defaultValue) }
+					min={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1 }
+					max={ AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9 }
+					disabled
+				/>
+			</NumberSettingInput>
 			<SelectAccountSettings setting='interfaceChatroomChatSplitVertical' label='Always show chat in portrait mode (on large enough displays)' stringify={ INTERFACE_CHATROOM_CHAT_SPLIT_VERTICAL } />
 		</>
 	);
@@ -268,10 +242,13 @@ function ChatroomCharacterPosintStyle(): ReactElement {
 
 function ChatroomOfflineCharacters(): ReactElement {
 	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> => ({
-		none: 'No effect (displayed the same as online characters)',
-		icon: 'Show icon next to the character name',
-		darken: 'Darken',
-		ghost: 'Ghost (darken + semi-transparent)',
+		'normal': 'No effect (displayed the same as online characters)',
+		'icon': 'Show icon next to the character name',
+		'darken': 'Darken',
+		'ghost': 'Ghost (darken + semi-transparent)',
+		'silhouette': 'Silhouette (mostly transparent silhouette)',
+		'name-only': 'Show only character name',
+		'hidden': 'Hide both the character and the name (show only in room list)',
 	}), []);
 
 	return <SelectAccountSettings setting='interfaceChatroomOfflineCharacterFilter' label='Offline characters display effect' stringify={ SELECTION_DESCRIPTIONS } />;

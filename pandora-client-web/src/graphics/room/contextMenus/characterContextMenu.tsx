@@ -1,9 +1,11 @@
 import classNames from 'classnames';
 import { Immutable, produce } from 'immer';
-import { AssertNever, AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterRoomPositionFollow } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CharacterHideSettingSchema, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import bodyOutlineIcon from '../../../assets/icons/body-outline.svg';
+import bodyStripedIcon from '../../../assets/icons/body-striped.svg';
 import bodyIcon from '../../../assets/icons/body.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
@@ -13,6 +15,7 @@ import movementIcon from '../../../assets/icons/movement.svg';
 import profileIcon from '../../../assets/icons/profile.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import shirtIcon from '../../../assets/icons/shirt.svg';
+import textIcon from '../../../assets/icons/text.svg';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -30,15 +33,18 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatInput } from '../../../ui/components/chat/chatInput.tsx';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks.tsx';
+import { CharacterTemporaryHiding } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
+import { useCharacterDisplayStyle } from '../../common/visionFilters.tsx';
 
-type MenuType = 'main' | 'admin' | 'contacts' | 'follow';
+type MenuType = 'main' | 'admin' | 'contacts' | 'follow' | 'characterHiding';
 
 type CharacterMenuContext = {
 	isPlayerAdmin: boolean;
@@ -117,33 +123,33 @@ function AdminActionContextMenuInner(): ReactElement {
 
 	return (
 		<>
-			<button onClick={ kick } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
+			<Button theme='transparent' onClick={ kick } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Kick
-			</button>
-			<button onClick={ ban } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
+			</Button>
+			<Button theme='transparent' onClick={ ban } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Ban
-			</button>
+			</Button>
 			{ isAllowed ? (
-				<button onClick={ disallow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+				<Button theme='transparent' onClick={ disallow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
 					Disallow
-				</button>
+				</Button>
 			) : (
-				<button onClick={ allow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+				<Button theme='transparent' onClick={ allow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
 					Allow
-				</button>
+				</Button>
 			) }
 			{ isCharacterAdmin ? (
-				<button onClick={ demote } >
+				<Button theme='transparent' onClick={ demote } >
 					Demote
-				</button>
+				</Button>
 			) : (
-				<button onClick={ promote } >
+				<Button theme='transparent' onClick={ promote } >
 					Promote
-				</button>
+				</Button>
 			) }
-			<button onClick={ () => setMenu('main') } >
+			<Button theme='transparent' onClick={ () => setMenu('main') } >
 				Back
-			</button>
+			</Button>
 		</>
 	);
 }
@@ -157,10 +163,10 @@ function AdminActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button className='withIcon' onClick={ () => setMenu('admin') }>
+				<Button theme='transparent' className='withIcon' onClick={ () => setMenu('admin') }>
 					<img src={ shieldIcon } />
 					<span>Admin</span>
-				</button>
+				</Button>
 			);
 		case 'admin':
 			return <AdminActionContextMenuInner />;
@@ -186,16 +192,16 @@ function BlockMenu({ action }: { action: 'add' | 'remove'; }): ReactElement {
 
 	if (action === 'add') {
 		return (
-			<button className='withIcon' onClick={ block } >
+			<Button theme='transparent' className='withIcon' onClick={ block } >
 				<img src={ forbiddenIcon } />
 				<span>Block</span>
-			</button>
+			</Button>
 		);
 	} else if (action === 'remove') {
 		return (
-			<button onClick={ block } >
+			<Button theme='transparent' onClick={ block } >
 				Unblock
-			</button>
+			</Button>
 		);
 	}
 
@@ -217,9 +223,9 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 	}, AccountContactChangeHandleResult, { errorHandler });
 
 	return (
-		<button onClick={ request } >
+		<Button theme='transparent' onClick={ request } >
 			{ text }
-		</button>
+		</Button>
 	);
 }
 
@@ -236,9 +242,9 @@ function UnfriendRequestMenu(): ReactElement {
 	}, AccountContactChangeHandleResult, { errorHandler });
 
 	return (
-		<button onClick={ request } >
+		<Button theme='transparent' onClick={ request } >
 			Unfriend
-		</button>
+		</Button>
 	);
 }
 
@@ -249,14 +255,14 @@ function NavigateToDMMenu(): ReactElement | null {
 		return null;
 
 	return (
-		<button className='withIcon' onClick={ onClick }>
+		<Button theme='transparent' className='withIcon' onClick={ onClick }>
 			<img src={ letterIcon } />
 			<span>Direct message</span>
-		</button>
+		</Button>
 	);
 }
 
-function AccountContactActionContextMenuInner(): ReactElement | null {
+function AccountRelationshipActionContextMenuInner(): ReactElement | null {
 	const { character } = useCharacterMenuContext();
 	const rel = useAccountContact(character.data.accountId);
 
@@ -287,26 +293,116 @@ function AccountContactActionContextMenuInner(): ReactElement | null {
 	}
 }
 
-function AccountContactActionContextMenu(): ReactElement | null {
+const CHARACTER_HIDING_BUTTONS: Record<CharacterHideSetting, { text: string; icon: string; }> = {
+	'normal': {
+		text: 'Show normally (ignore other effects)',
+		icon: bodyIcon,
+	},
+	'ghost': {
+		text: 'Show as ghost',
+		icon: bodyStripedIcon,
+	},
+	'silhouette': {
+		text: 'Show only silhouette',
+		icon: bodyOutlineIcon,
+	},
+	'name-only': {
+		text: 'Show only name',
+		icon: textIcon,
+	},
+	'hidden': {
+		text: 'Hide (show in room list only)',
+		icon: forbiddenIcon,
+	},
+};
+
+function CharacterHidingMenuInner(): ReactElement | null {
+	const { character, close } = useCharacterMenuContext();
+
+	const characterHidingSettings = useObservable(CharacterTemporaryHiding);
+	const characterDisplayStyle = useCharacterDisplayStyle(character);
+
+	return (
+		<>
+			<Button theme={ (characterHidingSettings[character.id] == null) ? 'defaultActive' : 'transparent' } className='withIcon' onClick={ () => {
+				CharacterTemporaryHiding.produceImmer((d) => {
+					delete d[character.id];
+				});
+				close();
+			} }>
+				<img src={ bodyIcon } />
+				<span>Show normally</span>
+			</Button>
+			{ CharacterHideSettingSchema.options
+				// Hide forceful "normal", unless there is an overriding effect or it is currently selected
+				.filter((o) => characterHidingSettings[character.id] === o || ((o === 'normal') ? (characterDisplayStyle !== (characterHidingSettings[character.id] ?? 'normal')) : true))
+				.map((o) => (
+					<Button key={ o } theme={ characterHidingSettings[character.id] === o ? 'defaultActive' : 'transparent' } className='withIcon' onClick={ () => {
+						CharacterTemporaryHiding.produceImmer((d) => {
+							d[character.id] = o;
+						});
+						close();
+					} }>
+						<img src={ CHARACTER_HIDING_BUTTONS[o].icon } />
+						<span>{ CHARACTER_HIDING_BUTTONS[o].text }</span>
+					</Button>
+				)) }
+		</>
+	);
+}
+
+function AccountRelationshipActionContextMenu(): ReactElement | null {
 	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
-	if (character.data.accountId === currentAccount?.id)
+	if (character.data.accountId === currentAccount?.id) {
+		switch (menu) {
+			case 'main':
+				return (
+					<Button theme='transparent' className='withIcon' onClick={ () => setMenu('characterHiding') }>
+						<img src={ bodyStripedIcon } />
+						<span>Temporarily hide</span>
+					</Button>
+				);
+			case 'characterHiding':
+				return (
+					<>
+						<CharacterHidingMenuInner />
+						<Button theme='transparent' onClick={ () => setMenu('main') } >
+							Back
+						</Button>
+					</>
+				);
+		}
 		return null;
+	}
 
 	switch (menu) {
 		case 'main':
 			return (
-				<button className='withIcon' onClick={ () => setMenu('contacts') }>
+				<Button theme='transparent' className='withIcon' onClick={ () => setMenu('contacts') }>
 					<img src={ friendsIcon } />
-					<span>Contacts</span>
-				</button>
+					<span>Relationship</span>
+				</Button>
 			);
 		case 'contacts':
 			return (
 				<>
-					<AccountContactActionContextMenuInner />
-					<button onClick={ () => setMenu('main') } >
+					<AccountRelationshipActionContextMenuInner />
+					<Button theme='transparent' className='withIcon' onClick={ () => setMenu('characterHiding') }>
+						<img src={ bodyStripedIcon } />
+						<span>Temporarily hide</span>
+					</Button>
+					<Button theme='transparent' onClick={ () => setMenu('main') } >
 						Back
-					</button>
+					</Button>
+				</>
+			);
+		case 'characterHiding':
+			return (
+				<>
+					<CharacterHidingMenuInner />
+					<Button theme='transparent' onClick={ () => setMenu('contacts') } >
+						Back
+					</Button>
 				</>
 			);
 		default:
@@ -356,7 +452,8 @@ function MoveCharacterMenuItem(): ReactElement | null {
 	return (
 		<>
 			{ characterState.position.following == null || characterState.position.following.followType === 'leash' ? (
-				<button
+				<Button
+					theme='transparent'
 					className={ classNames(
 						'withIcon',
 						(canMoveCharacter === 'forbidden') ? 'text-strikethrough' : null,
@@ -375,7 +472,7 @@ function MoveCharacterMenuItem(): ReactElement | null {
 				>
 					<img src={ arrowAllIcon } />
 					<span>Move</span>
-				</button>
+				</Button>
 			) : null }
 			{ characterState?.position.type === 'normal' && characterState.position.following != null ? (
 				<span className='dim'>
@@ -398,7 +495,8 @@ function PoseCharacterMenuItem(): ReactElement | null {
 	const canPoseCharacter = useCanPoseCharacter(character);
 
 	return (
-		<button
+		<Button
+			theme='transparent'
 			className={ classNames(
 				'withIcon',
 				(canPoseCharacter === 'forbidden') ? 'text-strikethrough' : null,
@@ -417,7 +515,7 @@ function PoseCharacterMenuItem(): ReactElement | null {
 		>
 			<img src={ bodyIcon } />
 			<span>Pose</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -441,7 +539,8 @@ function FollowCharacterMenuItem(): ReactElement | null {
 		return null;
 
 	return (
-		<button
+		<Button
+			theme='transparent'
 			className={ classNames(
 				'withIcon',
 					(canMoveCharacter === 'forbidden') ? 'text-strikethrough' : null,
@@ -452,7 +551,7 @@ function FollowCharacterMenuItem(): ReactElement | null {
 		>
 			<img src={ movementIcon } />
 			<span>Lead / Follow</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -671,7 +770,8 @@ function CharacterStopFollowButton({ characterState, close }: {
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<button
+		<Button
+			theme='transparent'
 			onClick={ execute }
 			disabled={ processing }
 			className={ classNames(
@@ -681,7 +781,7 @@ function CharacterStopFollowButton({ characterState, close }: {
 		>
 			<img src={ movementIcon } />
 			<span>Stop following</span>
-		</button>
+		</Button>
 	);
 }
 
@@ -739,31 +839,31 @@ export function CharacterContextMenuContent({ character, onClose }: {
 				<hr />
 				{ menu === 'main' && (
 					<>
-						<button className='withIcon' onClick={ () => {
+						<Button theme='transparent' className='withIcon' onClick={ () => {
 							onCloseActual();
 							navigate(`/wardrobe/character/${characterData.id}`);
 						} }>
 							<img src={ shirtIcon } />
 							<span>Wardrobe</span>
-						</button>
-						<button className='withIcon' onClick={ () => {
+						</Button>
+						<Button theme='transparent' className='withIcon' onClick={ () => {
 							onCloseActual();
 							navigate(`/profiles/character/${characterData.id}`);
 						} }>
 							<img src={ profileIcon } />
 							<span>Profile</span>
-						</button>
+						</Button>
 						<PoseCharacterMenuItem />
 						<MoveCharacterMenuItem />
 						<FollowCharacterMenuItem />
 						{ characterData.id !== player.id && (
-							<button className='withIcon' onClick={ () => {
+							<Button theme='transparent' className='withIcon' onClick={ () => {
 								onClose();
 								setTarget(characterData.id);
 							} }>
 								<img src={ lipsIcon } />
 								<span>Whisper</span>
-							</button>
+							</Button>
 						) }
 						<NavigateToDMMenu />
 					</>
@@ -772,11 +872,11 @@ export function CharacterContextMenuContent({ character, onClose }: {
 					<CharacterFollowDialog />
 				) : null }
 				<AdminActionContextMenu />
-				<AccountContactActionContextMenu />
+				<AccountRelationshipActionContextMenu />
 				{ menu !== 'follow' ? (
-					<button onClick={ onCloseActual } >
+					<Button theme='transparent' onClick={ onCloseActual } >
 						Close
-					</button>
+					</Button>
 				) : null }
 			</WardrobeActionContextProvider>
 		</characterMenuContext.Provider>

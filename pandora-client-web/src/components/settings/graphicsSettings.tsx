@@ -1,14 +1,13 @@
 import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import * as z from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
-import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAutomaticResolution } from '../../services/screenResolution/screenResolutionHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { ContextHelpButton } from '../help/contextHelpButton.tsx';
-import { SelectSettingInput, ToggleSettingInput } from './helpers/settingsInputs.tsx';
+import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from './helpers/settingsInputs.tsx';
 
 export function GraphicsSettings(): ReactElement | null {
 	return (
@@ -66,6 +65,7 @@ function QualitySettings(): ReactElement {
 	}), [automaticTextureResolution]);
 
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
+	const upscalingDriver = useGraphicsSettingDriver('upscaling');
 	const currentGraphicsSettings = useGraphicsSettings();
 
 	return (
@@ -79,26 +79,28 @@ function QualitySettings(): ReactElement {
 					optionOrder={ ['auto', '1', '0.5', '0.25'] }
 					schema={ GraphicsSettingsSchema.shape.textureResolution }
 				/>
-				<SelectSettingInput<string>
-					driver={ {
-						currentValue: renderResolutionDriver.currentValue?.toString(),
-						defaultValue: renderResolutionDriver.defaultValue.toString(),
-						onChange(v) {
-							const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
-							return renderResolutionDriver.onChange(newValue);
-						},
-						onReset: renderResolutionDriver.onReset,
-					} }
+				<NumberSettingInput
+					driver={ renderResolutionDriver }
 					label='Render resolution'
-					stringify={
-						Object.fromEntries(
-							([100, 90, 80, 65, 50, 25, 0])
-								.map((v) => [v.toString(), `${v}%`]),
-						)
-					}
-					optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
-					schema={ z.string() }
-				/>
+					min={ 0 }
+					max={ 100 }
+					step={ 5 }
+					withSlider
+				>
+					<span>%</span>
+				</NumberSettingInput>
+				{ (renderResolutionDriver.currentValue ?? renderResolutionDriver.defaultValue) < 100 ? (
+					<SelectSettingInput<GraphicsUpscalingSetting>
+						driver={ upscalingDriver }
+						label='Upscaling'
+						stringify={ {
+							'smooth': 'Bilinear',
+							'crisp-edges': 'Pixelated + Crisp edges',
+							'pixelated': 'Pixelated',
+						} }
+						schema={ GraphicsUpscalingSettingSchema }
+					/>
+				) : null }
 				<Column gap='none'>
 					<ToggleSettingInput
 						driver={ useGraphicsSettingDriver('antialias') }

@@ -35,7 +35,7 @@ import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
 import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
-import { useCharacterDisplayFilters } from '../common/visionFilters.tsx';
+import { useCharacterDisplayFilters, useCharacterDisplayStyle } from '../common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -384,7 +384,8 @@ export const RoomCharacter = memo(function RoomCharacter({
 }: RoomCharacterDisplayProps): ReactElement | null {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
-	const characterFilters = useCharacterDisplayFilters(character);
+	const characterDisplayStyle = useCharacterDisplayStyle(character);
+	const characterFilters = useCharacterDisplayFilters(characterDisplayStyle);
 	const filters = useMemo(() => [...visionFilters(), ...characterFilters], [visionFilters, characterFilters]);
 
 	const [held, setHeld] = useState(false);
@@ -437,7 +438,7 @@ export const RoomCharacter = memo(function RoomCharacter({
 	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
 	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
 
-	if (roomDeviceLink != null)
+	if (roomDeviceLink != null || characterDisplayStyle === 'hidden')
 		return null;
 
 	return (
@@ -445,7 +446,6 @@ export const RoomCharacter = memo(function RoomCharacter({
 			position={ position }
 			scale={ scale }
 			zIndex={ zIndex }
-			filters={ filters }
 			sortableChildren
 			eventMode={ eventMode ?? 'auto' }
 			cursor={ cursor ?? 'default' }
@@ -459,24 +459,27 @@ export const RoomCharacter = memo(function RoomCharacter({
 			transitionDuration={ movementTransitionDuration }
 			tickerRef={ transitionTickerRef }
 		>
-			<GraphicsCharacter
-				characterState={ characterState }
-				position={ innerPosition }
-				scale={ innerScale }
-				pivot={ pivot }
-				angle={ rotationAngle }
-				useBlinking
-				movementTransitionDuration={ movementTransitionDuration }
-				debugConfig={ debugConfig }
-			>
-				{
-					!debugConfig?.characterDebugOverlay ? null : (
-						<Container zIndex={ 99999 }>
-							<RoomCharacterDebugGraphicsInner pivot={ pivot } />
-						</Container>
-					)
-				}
-			</GraphicsCharacter>
+			{ characterDisplayStyle !== 'name-only' ? (
+				<GraphicsCharacter
+					characterState={ characterState }
+					position={ innerPosition }
+					scale={ innerScale }
+					pivot={ pivot }
+					angle={ rotationAngle }
+					filters={ filters }
+					useBlinking
+					movementTransitionDuration={ movementTransitionDuration }
+					debugConfig={ debugConfig }
+				>
+					{
+						!debugConfig?.characterDebugOverlay ? null : (
+							<Container zIndex={ 99999 }>
+								<RoomCharacterDebugGraphicsInner pivot={ pivot } />
+							</Container>
+						)
+					}
+				</GraphicsCharacter>
+			) : null }
 			{
 				showName ? (
 					<RoomCharacterLabel

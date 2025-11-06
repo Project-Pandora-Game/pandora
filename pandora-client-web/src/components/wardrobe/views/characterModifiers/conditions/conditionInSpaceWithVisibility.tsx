@@ -24,7 +24,6 @@ export function ConditionInSpaceWithVisibility({ condition, setCondition, invert
 						spaceVisibility: SpacePublicSettingSchema.parse(e.target.value),
 					})
 				}
-				noScrollChange
 				disabled={ processing }
 			>
 				<option value='locked'>locked</option>

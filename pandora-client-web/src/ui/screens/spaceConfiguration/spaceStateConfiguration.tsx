@@ -431,7 +431,6 @@ function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
 									const value = ev.target.value;
 									setDirectionChange(CardinalDirectionSchema.parse(value));
 								} }
-								noScrollChange
 							>
 								{
 									CardinalDirectionSchema.options.map((d) => (

@@ -57,6 +57,7 @@ function ConditionItemWithEffectDialog({ condition, setCondition, close }: Pick<
 							const value = ev.target.value;
 							setEffect(!value ? null : EffectNameSchema.parse(value));
 						} }
+						scrollChange
 					>
 						<option value=''>- Select an effect -</option>
 						{

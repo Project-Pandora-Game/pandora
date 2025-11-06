@@ -25,8 +25,12 @@ describe('MongoDatabase extra tests', () => {
 	beforeEach(async () => {
 		server = await MongoMemoryServer.create({
 			binary: {
-				version: MONGODB_SERVER_VERSION,
+				version: MONGODB_SERVER_VERSION.version,
 				checkMD5: false,
+			},
+			instance: {
+				storageEngine: 'ephemeralForTest',
+				args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
 			},
 		});
 	});

@@ -8,13 +8,17 @@ import { useMediaQuery } from '../common/useMediaQuery.ts';
 import type { SettingDriver } from '../components/settings/helpers/settingsInputs.tsx';
 import { useObservable } from '../observable.ts';
 
+export const GraphicsUpscalingSettingSchema = z.enum(['smooth', 'crisp-edges', 'pixelated']);
+export type GraphicsUpscalingSetting = z.infer<typeof GraphicsUpscalingSettingSchema>;
+
 export const GraphicsSettingsSchema = z.object({
 	// Effects
 	effectBlinking: z.boolean(),
 	smoothMovement: z.enum(['auto', 'enabled', 'disabled']),
 	// Quality
-	renderResolution: z.number().int().min(0).max(100),
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
+	renderResolution: z.number().int().min(0).max(100),
+	upscaling: GraphicsUpscalingSettingSchema,
 	/** Non-disabled alphamasking suppresses antialias. */
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 	/** Whether to tell browser we prefer antialiasing. Requires page reload. */
@@ -27,8 +31,9 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	effectBlinking: true,
 	smoothMovement: 'auto',
 	// Quality
-	renderResolution: 100,
 	textureResolution: 'auto',
+	renderResolution: 100,
+	upscaling: 'smooth',
 	alphamaskEngine: 'disabled',
 	antialias: true,
 } as const;

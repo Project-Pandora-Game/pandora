@@ -2,12 +2,47 @@ import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash-es';
 import * as z from 'zod';
 import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits.ts';
-import { Assert } from './utility/misc.ts';
+import { Assert, AssertNever } from './utility/misc.ts';
 
 enableMapSet();
 
 export function ZodTemplateString<T extends string>(validator: z.ZodString, regex: RegExp): z.ZodType<T> & z.ZodString {
 	return validator.regex(regex) as unknown as z.ZodType<T> & z.ZodString;
+}
+
+/**
+ * Wraps a ZodLiteral schema in a transform that returns the schema's string instance instead of the parsed one. The result will seemingly not change.
+ *
+ * Although they are identical strings, they are represented by pointers to JS engine data structures.
+ * Most modern engines do string interning on source and have pointer-based string comparison fast path, so this will speed up comparison to any strings present in code.
+ * @param baseSchema The schema to wrap
+ * @returns Schema wrapped with the interning effect
+ */
+
+export function ZodWrapInternString<const T extends string>(baseSchema: z.ZodLiteral<T>): z.ZodCodec<z.ZodLiteral<T>, z.ZodLiteral<T>> {
+	// We use a "codec" here, because (unlike transform) it doesn't prevent generation of a JSON schema
+	return z.codec(
+		baseSchema,
+		baseSchema,
+		{
+			decode(value): T {
+				for (const internedValue of baseSchema.values) {
+					if (value === internedValue) {
+						return internedValue;
+					}
+				}
+				AssertNever(value as never);
+			},
+			encode(value): T {
+				for (const internedValue of baseSchema.values) {
+					if (value === internedValue) {
+						return internedValue;
+					}
+				}
+				AssertNever(value as never);
+			},
+		},
+	);
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */

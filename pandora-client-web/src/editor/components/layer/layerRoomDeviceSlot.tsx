@@ -59,7 +59,6 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 							d.slot = event.target.value;
 						});
 					} }
-					noScrollChange
 				>
 					<option value=''>- Select slot -</option>
 					{

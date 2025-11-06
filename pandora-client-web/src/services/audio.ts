@@ -21,23 +21,57 @@ export class AudioService extends Service<AudioServiceConfig> {
 	private _audioContext: AudioContext | null = null;
 
 	private _requestActivationRun(): void {
-		this.serviceDeps.userActivation.requestRunOnUserActivation(() => {
-			if (this._audioContext == null) {
-				this._audioContext = new AudioContext();
-
-				this._audioContext.addEventListener('statechange', this._onContextStateChange);
-
-				this.logger.verbose('Audio context created');
+		try {
+			if (typeof globalThis.navigator.getAutoplayPolicy === 'function') {
+				if (globalThis.navigator.getAutoplayPolicy('audiocontext') === 'allowed') {
+					// Path for Firefox with autoplay permission
+					this._createAudioContext(true);
+					return;
+				} else {
+					// Path for Firefox with no autoplay permission, as Firefox logs a warning during construction already
+					this.serviceDeps.userActivation.requestRunOnUserActivation(() => {
+						this._createAudioContext(true);
+					});
+					return;
+				}
 			}
+		} catch (err) {
+			this.logger.warning('Error while checking autoplay policy:', err);
+		}
 
-			if (this._audioContext.state !== 'running') {
+		// Path for Chromium-based browsers, no matter the permission
+		// with permission the context starts running, without it it starts suspended and needs user activation - neither case warns on creation
+		this._createAudioContext(false);
+	}
+
+	private _createAudioContext(resumeImmediately: boolean): void {
+		if (this._audioContext == null) {
+			this._audioContext = new AudioContext();
+
+			this._audioContext.addEventListener('statechange', this._onContextStateChange);
+
+			this.logger.verbose('Audio context created, state:', this._audioContext.state);
+		}
+
+		if (this._audioContext.state !== 'running') {
+			if (resumeImmediately) {
 				this._audioContext.resume().then(() => {
 					this.logger.verbose('Audio context resumed');
 				}, (err) => {
 					this.logger.error('Failed to resume audio context', err);
 				});
+			} else {
+				this.serviceDeps.userActivation.requestRunOnUserActivation(() => {
+					if (this._audioContext != null && this._audioContext.state !== 'running') {
+						this._audioContext.resume().then(() => {
+							this.logger.verbose('Audio context resumed');
+						}, (err) => {
+							this.logger.error('Failed to resume audio context', err);
+						});
+					}
+				});
 			}
-		});
+		}
 	}
 
 	private _onContextStateChange = () => {

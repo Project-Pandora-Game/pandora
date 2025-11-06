@@ -1,4 +1,5 @@
 import type { Immutable } from 'immer';
+import type { AssetManager } from '../assetManager.ts';
 import type { BoneDefinition } from '../graphics/graphics.ts';
 import type { PointTemplateSource } from '../graphics/points.ts';
 import type { AssetModuleDefinition } from '../modules.ts';
@@ -31,4 +32,5 @@ export interface GraphicsBuildContext<out TAssetData> {
 	bufferToBase64: (buffer: Uint8Array) => string;
 
 	readonly builtAssetData: TAssetData;
+	readonly assetManager: AssetManager;
 }

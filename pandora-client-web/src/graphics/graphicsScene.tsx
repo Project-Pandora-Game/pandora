@@ -7,7 +7,7 @@ import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { useDevicePixelRatio } from '../services/screenResolution/screenResolutionHooks.ts';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from './baseComponents/pixiViewport.tsx';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
-import { useGraphicsSettings } from './graphicsSettings.tsx';
+import { useGraphicsSettings, type GraphicsUpscalingSetting } from './graphicsSettings.tsx';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -29,6 +29,7 @@ function GraphicsSceneCore({
 	children,
 	div,
 	resolution,
+	upscaling,
 	viewportConfig,
 	viewportOnMove,
 	viewportRef,
@@ -42,6 +43,7 @@ function GraphicsSceneCore({
 }: ChildrenProps & GraphicsSceneProps & {
 	div: HTMLDivElement;
 	resolution: number;
+	upscaling?: GraphicsUpscalingSetting;
 }): ReactElement {
 	const appRef = useRef<Application | null>(null);
 
@@ -98,6 +100,7 @@ function GraphicsSceneCore({
 			onMount={ onMount }
 			onUnmount={ onUnmount }
 			resolution={ resolution }
+			upscaling={ upscaling }
 			backgroundColor={ backgroundColor }
 			backgroundAlpha={ backgroundAlpha }
 		>
@@ -127,7 +130,7 @@ export function GraphicsScene({
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
-	const { renderResolution } = useGraphicsSettings();
+	const { renderResolution, upscaling } = useGraphicsSettings();
 	const dpr = useDevicePixelRatio();
 
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
@@ -137,7 +140,12 @@ export function GraphicsScene({
 			<div className={ classNames({ disabled: renderResolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
 				{
 					div && renderResolution > 0 ? (
-						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ (renderResolution / 100) * dpr }>
+						<GraphicsSceneCore
+							{ ...sceneOptions }
+							div={ div }
+							resolution={ (renderResolution / 100) * dpr }
+							upscaling={ renderResolution === 100 ? undefined : upscaling }
+						>
 							{ children }
 						</GraphicsSceneCore>
 					) : null

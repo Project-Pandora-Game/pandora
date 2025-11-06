@@ -230,7 +230,6 @@ export function LayerImageSelectInput({ asset, value, update, id, className }: {
 			onChange={ (event) => {
 				update(event.target.value);
 			} }
-			noScrollChange
 		>
 			{ elements }
 		</Select>

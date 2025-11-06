@@ -1,5 +1,6 @@
+import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import { Assert, GetLogger, PointTemplateSourceSchema } from 'pandora-common';
+import { Assert, GetLogger, PointTemplateSourceSchema, type TransformDefinition } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -13,7 +14,10 @@ import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
@@ -22,6 +26,7 @@ import { useEditorCharacterState } from '../../graphics/character/appearanceEdit
 import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable.tsx';
 import { PointTemplateEditor } from '../../graphics/pointTemplateEditor.tsx';
 import { ParseTransforms, SerializeTransforms } from '../../parsing.ts';
+import { PointTransformComparsionDetail } from './pointTransformComparisonDetail.tsx';
 
 export function PointsUI(): ReactElement {
 	const [editingEnabled, setEditingEnabled] = useBrowserStorage('editor.point-edit.enable', false, z.boolean());
@@ -130,7 +135,7 @@ export function PointsHelperMathUi(): ReactElement | null {
 			{
 				(selectedPoint != null && selectedPointDefinition != null && selectedPointFinal != null) ? (
 					<Column>
-						<table className='with-border'>
+						<table className='with-border font-tabular'>
 							<thead>
 								<tr>
 									<th></th>
@@ -156,12 +161,12 @@ export function PointsHelperMathUi(): ReactElement | null {
 								</tr>
 								<tr>
 									<td>[Final] &#916;X</td>
-									<td>{ selectedPointFinal[0] - targetCoords[0] }</td>
+									<td>{ (selectedPointFinal[0] - targetCoords[0]).toFixed(2) }</td>
 									<td>{ (adjustmentFactor * (selectedPointFinal[0] - targetCoords[0])).toFixed(2) }</td>
 								</tr>
 								<tr>
 									<td>[Final] &#916;Y</td>
-									<td>{ selectedPointFinal[1] - targetCoords[1] }</td>
+									<td>{ (selectedPointFinal[1] - targetCoords[1]).toFixed(2) }</td>
 									<td>{ (adjustmentFactor * (selectedPointFinal[1] - targetCoords[1])).toFixed(2) }</td>
 								</tr>
 								<tr>
@@ -256,6 +261,15 @@ export function PointsHelperMathUi(): ReactElement | null {
 					/>
 				</Row>
 			</Column>
+			{ selectedPointDefinition != null ? (
+				<FieldsetToggle legend='Old-New transform comparison' open={ false }>
+					<Column alignX='start'>
+						<PointTransformComparsionDetail
+							point={ selectedPointDefinition }
+						/>
+					</Column>
+				</FieldsetToggle>
+			) : null }
 		</>
 	);
 }
@@ -283,7 +297,6 @@ function SelectTemplateToEdit(): ReactElement | null {
 						editor.targetTemplate.value = new PointTemplateEditor(event.target.value.substring(2), editor);
 					}
 				} }
-				noScrollChange
 			>
 				<option value='' key=''>[ None ]</option>
 				{
@@ -297,9 +310,13 @@ function SelectTemplateToEdit(): ReactElement | null {
 }
 
 function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const { pos, mirror, pointType } = useDraggablePointDefinition(point);
+	const assetManager = useAssetManager();
+	const { pos, mirror, pointType, transforms, skinning } = useDraggablePointDefinition(point);
 	const pointX = pos[0];
 	const pointY = pos[1];
+
+	const SKINNING_PRECISION = 1000;
+	let skinningRemainingWeight = 1 * SKINNING_PRECISION;
 
 	return (
 		<>
@@ -324,7 +341,9 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				/>
 			</div>
 			<div>List of transformations for this point:</div>
-			<PointTransformationsTextarea point={ point } />
+			<PointTransformationsTextarea transforms={ transforms } setTransforms={ (newTransforms) => {
+				point.setTransforms(newTransforms);
+			} } />
 			<div>
 				<label>Mirror point to the opposing character half</label>
 				<Checkbox
@@ -350,6 +369,129 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 					onChange={ (newValue) => point.setPointType(newValue) }
 				/>
 			</div>
+			<h5>Skinning</h5>
+			<Column padding='small'>
+				{ [0, 1, 2, 3].map((i) => {
+					const localWeight = skinningRemainingWeight;
+					const currentValue = (skinning != null && skinning.length > i) ? skinning[i] : undefined;
+					const currentWeight = Math.round(SKINNING_PRECISION * (currentValue?.weight ?? 0));
+
+					skinningRemainingWeight -= currentWeight;
+
+					function setWeight(newValue: number) {
+						point.modifyPoint((d) => {
+							Assert(d.skinning != null && d.skinning.length > i);
+
+							// Update weight. During this we will want to update lower priority ones to keep their ratio.
+							let preRemainingWeight = SKINNING_PRECISION;
+							for (let j = 0; j <= i; j++) {
+								preRemainingWeight -= Math.round(SKINNING_PRECISION * d.skinning[j].weight);
+							}
+
+							d.skinning[i].weight = newValue / SKINNING_PRECISION;
+
+							let postRemainingWeight = SKINNING_PRECISION;
+							for (let j = 0; j <= i; j++) {
+								postRemainingWeight -= Math.round(SKINNING_PRECISION * d.skinning[j].weight);
+							}
+
+							// If there was no remainder before, allocate all that is left now to the next property
+							if (preRemainingWeight <= 0) {
+								if (d.skinning.length > i + 1) {
+									d.skinning[i + 1].weight = Math.max(0, postRemainingWeight / SKINNING_PRECISION);
+								}
+								for (let j = i + 2; j < d.skinning.length; j++) {
+									d.skinning[j].weight = 0;
+								}
+								return;
+							}
+
+							const remainderRatio = Math.max(0, postRemainingWeight) / preRemainingWeight;
+							for (let j = i + 1; j < d.skinning.length; j++) {
+								d.skinning[j].weight = Math.round(SKINNING_PRECISION * remainderRatio * d.skinning[j].weight) / SKINNING_PRECISION;
+							}
+						});
+					}
+
+					return (
+						<Column key={ i }>
+							<SelectSettingInput<string>
+								label={ null }
+								noWrapper
+								driver={ {
+									currentValue: currentValue?.bone ?? '',
+									defaultValue: '',
+									onChange(newValue) {
+										point.modifyPoint((d) => {
+											if (!newValue) {
+												if (d.skinning != null && d.skinning.length > i) {
+													d.skinning.splice(i, 1);
+												}
+											} else {
+												if (d.skinning != null && d.skinning.length > i) {
+													d.skinning[i].bone = newValue;
+												} else {
+													d.skinning ??= [];
+													d.skinning.push({ bone: newValue, weight: 0 });
+												}
+											}
+										});
+									},
+								} }
+								disabled={ (skinning?.length ?? 0) < i }
+								schema={ z.string() }
+								stringify={ {
+									'': '[ None ]',
+									...(Object.fromEntries(assetManager.getAllBones()
+										.filter((b) => b.x !== 0 || b.y !== 0)
+										.map((b) => [b.name, GetVisibleBoneName(b.name)]),
+									)),
+								} }
+							/>
+							{ (skinning != null && skinning.length > i && currentValue != null) ? (
+								<Row alignY='center' gap='medium'>
+									<NumberInput
+										className='flex-6 zero-width'
+										rangeSlider
+										min={ 0 }
+										max={ localWeight }
+										step={ 1 }
+										disabled={ localWeight <= 0 }
+										value={ currentWeight }
+										onChange={ setWeight }
+									/>
+									<Row gap='tiny' alignY='center'>
+										<NumberInput
+											className='flex-grow-1 value'
+											value={ currentWeight }
+											onChange={ setWeight }
+											min={ 0 }
+											max={ localWeight }
+											step={ 1 }
+											disabled={ localWeight <= 0 }
+										/>
+										<span className='font-tabular'>/ { localWeight }</span>
+									</Row>
+								</Row>
+							) : null }
+						</Column>
+					);
+				}) }
+				<Column>
+					<div>None (remainder)</div>
+					<Row alignY='center' gap='medium'>
+						<meter
+							className='flex-6 monoColor'
+							min={ 0 }
+							max={ 1 }
+							value={ skinningRemainingWeight / SKINNING_PRECISION }
+						>
+							{ (skinningRemainingWeight / SKINNING_PRECISION) }
+						</meter>
+						<strong className='flex-grow-1 value font-tabular'>{ skinningRemainingWeight }</strong>
+					</Row>
+				</Column>
+			</Column>
 			<Button
 				onClick={ () => {
 					point.deletePoint();
@@ -360,9 +502,9 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 	);
 }
 
-function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
+export function PointTransformationsTextarea({ transforms, setTransforms }: { transforms: Immutable<TransformDefinition[]>; setTransforms?: (newValue: Immutable<TransformDefinition[]>) => void; }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(useDraggablePointDefinition(point).transforms), [point]);
+	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(transforms), []);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -370,11 +512,11 @@ function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): Re
 		try {
 			const result = ParseTransforms(e.target.value, assetManager.getAllBones().map((b) => b.name));
 			setError(null);
-			point.setTransforms(result);
+			setTransforms?.(result);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
-	}, [point, setValue, assetManager]);
+	}, [setTransforms, setValue, assetManager]);
 
 	return (
 		<>

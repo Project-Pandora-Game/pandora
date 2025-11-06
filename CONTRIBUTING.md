@@ -65,7 +65,7 @@ Please do not expect that every pull request will be merged if there was no prev
 
 - Be aware that we have a firm vision of how we want Pandora to work and things going against that vision will not be accepted. While we will try to work together with you to get your contribution into the game, not all contributions will get in.
 
-- Be aware that all your contributions will be licensed to Project Pandora under the Pandora's [Contributor License Agreement](./contributor-licence-agreement.md).
+- Be aware that all your contributions will be licensed to Project Pandora under the Pandora's [Contributor License Agreement](./contributor-license-agreement.md).
 
 - **Consider getting in touch with us using Discord**, especially if you are intending to write a bigger feature or you are unsure about something. We are happy to help anyone who wants to help us!
 

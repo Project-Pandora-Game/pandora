@@ -203,7 +203,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 						const characterId = CharacterIdSchema.parse(event.target.value);
 						setSelectedCharacter(characterId);
 					}
-				}>
+				} scrollChange>
 					{
 						characters.map((character) => <option key={ character.id } value={ character.id }>{ character.name } ({ character.id })</option>)
 					}

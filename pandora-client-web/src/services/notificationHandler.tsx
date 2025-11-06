@@ -19,8 +19,14 @@ import { toast } from 'react-toastify';
 import type * as z from 'zod';
 import audioAlert from '../audio/alert.mp3';
 import audioBell from '../audio/bell.mp3';
+import audioBell2 from '../audio/bell-2.mp3';
 import audioBing from '../audio/bing.mp3';
+import audioClick from '../audio/click.mp3';
 import audioDingDing from '../audio/ding-ding.mp3';
+import audioDing from '../audio/ding.mp3';
+import audioFaintBeep from '../audio/faint-beep.mp3';
+import audioSoftBell from '../audio/soft-bell.mp3';
+import audioTwoNote from '../audio/two-note.mp3';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { GetAccountSettings } from './accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from './clientServices.ts';
@@ -30,16 +36,28 @@ export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<ClientNotificationSound, 
 	'': '<None>',
 	'alert': 'Alert',
 	'bell': 'Bell',
+	'bell2': 'Bell 2',
 	'bing': 'Bing',
+	'click': 'Click',
+	'ding': 'Ding',
 	'dingding': 'Ding-Ding',
+	'faintbeep': 'Faint Beep',
+	'softbell': 'Soft Bell',
+	'twonote': 'Two-Note',
 };
 
 export const NOTIFICATION_AUDIO_SOUNDS: Readonly<Record<ClientNotificationSound, string | null>> = {
 	'': null,
 	'alert': audioAlert,
 	'bell': audioBell,
+	'bell2': audioBell2,
 	'bing': audioBing,
+	'click': audioClick,
+	'ding': audioDing,
 	'dingding': audioDingDing,
+	'faintbeep': audioFaintBeep,
+	'softbell': audioSoftBell,
+	'twonote': audioTwoNote,
 };
 
 /** Helper for creating notification data type */

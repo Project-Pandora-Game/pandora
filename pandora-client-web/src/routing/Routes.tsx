@@ -148,7 +148,7 @@ function CharacterAutoConnectState(): ReactElement {
 	}
 
 	if (shardState === ShardConnectionState.INITIAL_CONNECTION_PENDING || shardState === ShardConnectionState.CONNECTION_LOST) {
-		return <>Connecting to shard...</>;
+		return <>Connecting to Shard...</>;
 	}
 
 	if (shardState === ShardConnectionState.WAIT_FOR_DATA || gameState == null) {

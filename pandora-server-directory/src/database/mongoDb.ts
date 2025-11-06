@@ -637,7 +637,6 @@ export default class MongoDatabase implements PandoraDatabase {
 			sort: this.spaceSorting[args.sort],
 			limit,
 			skip,
-			collation: COLLATION_CASE_INSENSITIVE,
 		})
 			.project<Pick<SpaceDirectoryData, 'id' | 'owners' | 'config'>>({ id: 1, owners: 1, config: 1 })
 			.toArray();

@@ -171,7 +171,7 @@ function PublicSpaceSearchInner(): ReactElement {
 					<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 						{ searchResult.result[1].map((space) => <PublicSpaceSearchEntry key={ space.id } info={ space } />) }
 					</Column>
-					<Row alignX='center'>
+					<Row alignX='center' alignY='center'>
 						{ searchResult.page > 0 ? (
 							<Button theme='transparent' onClick={ () => {
 								search(query, limit, searchResult.page - 1);

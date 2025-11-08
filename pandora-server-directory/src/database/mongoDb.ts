@@ -25,6 +25,7 @@ import {
 	ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	RoomBundleSchema,
 	RoomGeometryConfigSchema,
+	SPACE_ACTIVITY_SCORE_DECAY,
 	SPACE_DIRECTORY_PROPERTIES,
 	SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE,
@@ -205,6 +206,16 @@ const spaceCollection = new ValidatedCollection(
 			name: 'publicSpaceSearch',
 			key: {
 				'config.name': 1,
+				'id': 1,
+			},
+			partialFilterExpression: {
+				'config.public': 'public-with-anyone',
+			},
+		},
+		{
+			name: 'publicSpaceSearchActivity',
+			key: {
+				'activity.score': -1,
 				'id': 1,
 			},
 			partialFilterExpression: {
@@ -618,6 +629,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	private readonly spaceSorting: Record<SpaceSearchSort, Sort> = {
+		'activity': [['activity.score', -1], ['id', 1]],
 		'a-z': [['config.name', 1], ['id', 1]],
 		'z-a': [['config.name', -1], ['id', -1]],
 	};
@@ -638,7 +650,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			limit,
 			skip,
 		})
-			.project<Pick<SpaceDirectoryData, 'id' | 'owners' | 'config'>>({ id: 1, owners: 1, config: 1 })
+			.project<Pick<SpaceDirectoryData, 'id' | 'owners' | 'config' | 'activity'>>({ id: 1, owners: 1, config: 1, activity: 1 })
 			.toArray();
 
 		return result.map((s): SpaceSearchResultEntry => ({
@@ -648,6 +660,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			description: s.config.description,
 			public: s.config.public,
 			maxUsers: s.config.maxUsers,
+			activityScore: s.activity.score,
 		}));
 	}
 
@@ -679,6 +692,27 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setSpaceAccessId(id: SpaceId): Promise<string | null> {
 		const result = await this._spaces.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
 		return result?.accessId ?? null;
+	}
+
+	public async spaceMassUpdateActivityScores(activityInterval: number): Promise<void> {
+		// Make sure to keep this logic in sync with `Space::updateActivityData`!
+
+		const result = await this._spaces.updateMany(
+			{ 'activity.currentIntervalEnd': { $lt: activityInterval } },
+			{
+				$mul: {
+					'activity.score': SPACE_ACTIVITY_SCORE_DECAY,
+				},
+				$set: {
+					'activity.currentIntervalScore': 0,
+					'activity.currentIntervalEnd': activityInterval,
+				},
+			},
+		);
+
+		Assert(result.acknowledged);
+
+		return Promise.resolve();
 	}
 
 	//#endregion

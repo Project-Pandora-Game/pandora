@@ -215,6 +215,12 @@ export interface PandoraDatabase extends ServerService {
 	 */
 	setSpaceAccessId(id: SpaceId): Promise<string | null>;
 
+	/**
+	 * Runs a mass update on space activity scores.
+	 * @param activityInterval The activity interval we are updating to
+	 */
+	spaceMassUpdateActivityScores(activityInterval: number): Promise<void>;
+
 	//#endregion
 
 	/**

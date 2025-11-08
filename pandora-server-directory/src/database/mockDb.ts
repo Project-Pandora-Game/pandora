@@ -12,6 +12,7 @@ import {
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
 	PASSWORD_PREHASH_SALT,
+	SPACE_ACTIVITY_SCORE_DECAY,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
@@ -347,6 +348,7 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	private readonly spaceComparators: Record<SpaceSearchSort, (a: SpaceData, b: SpaceData) => number> = {
+		'activity': (a, b) => (b.activity.score - a.activity.score) || (a.id.localeCompare(b.id)),
 		'a-z': (a, b) => (a.config.name.localeCompare(b.config.name)) || (a.id.localeCompare(b.id)),
 		'z-a': (a, b) => (-a.config.name.localeCompare(b.config.name)) || (-a.id.localeCompare(b.id)),
 	};
@@ -372,6 +374,7 @@ export class MockDatabase implements PandoraDatabase {
 					description: s.config.description,
 					public: s.config.public,
 					maxUsers: s.config.maxUsers,
+					activityScore: s.activity.score,
 				})),
 		);
 	}
@@ -414,6 +417,20 @@ export class MockDatabase implements PandoraDatabase {
 
 		space.accessId = nanoid(8);
 		return Promise.resolve(space.accessId);
+	}
+
+	public spaceMassUpdateActivityScores(activityInterval: number): Promise<void> {
+		// Make sure to keep this logic in sync with `Space::updateActivityData`!
+
+		for (const space of this.spacesDb.values()) {
+			if (space.activity.currentIntervalEnd < activityInterval) {
+				space.activity.score *= SPACE_ACTIVITY_SCORE_DECAY;
+				space.activity.currentIntervalScore = 0;
+				space.activity.currentIntervalEnd = activityInterval;
+			}
+		}
+
+		return Promise.resolve();
 	}
 
 	//#endregion

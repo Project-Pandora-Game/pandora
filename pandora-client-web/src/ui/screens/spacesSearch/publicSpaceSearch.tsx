@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { GetLogger, LIMIT_SPACE_SEARCH_COUNT, SpaceSearchArgumentsSchema, SpaceSearchSortSchema, ZodMatcher, type SpaceSearchArguments, type SpaceSearchResult, type SpaceSearchResultEntry, type SpaceSearchSort } from 'pandora-common';
+import { GetLogger, LIMIT_SPACE_SEARCH_COUNT, SPACE_ACTIVITY_SCORE_THRESHOLD, SpaceSearchArgumentsSchema, SpaceSearchSortSchema, ZodMatcher, type SpaceSearchArguments, type SpaceSearchResult, type SpaceSearchResultEntry, type SpaceSearchSort } from 'pandora-common';
 import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { Navigate } from 'react-router';
 import * as z from 'zod';
@@ -19,6 +19,7 @@ import { SPACE_SEARCH_PUBLIC_ICONS, SPACE_SEARCH_PUBLIC_LABELS } from './spacesS
 const IsValidSpaceSearchName = ZodMatcher(SpaceSearchArgumentsSchema.shape.nameFilter.unwrap());
 
 const SPACE_SEARCH_SORT_NAME: Record<SpaceSearchSort, string> = {
+	'activity': 'By recent activity',
 	'a-z': 'By name (A->Z)',
 	'z-a': 'By name (Z->A)',
 };
@@ -51,7 +52,7 @@ function PublicSpaceSearchInner(): ReactElement {
 	const isNarrowScreen = useIsNarrowScreen();
 
 	const [spaceNameFilter, setSpaceNameFilter] = useState('');
-	const [sort, sortDriver] = useStateSettingDriver<SpaceSearchSort>('a-z');
+	const [sort, sortDriver] = useStateSettingDriver<SpaceSearchSort>('activity');
 	const [limit, limitDriver] = useStateSettingDriver<number>(10);
 
 	const spaceNameFilterValid = !spaceNameFilter.trim() || IsValidSpaceSearchName(spaceNameFilter.trim());
@@ -210,7 +211,9 @@ function PublicSpaceSearchInner(): ReactElement {
 						<div>No more spaces found</div>
 					) : null }
 					<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
-						{ searchResult.result[1].map((space) => <PublicSpaceSearchEntry key={ space.id } info={ space } />) }
+						{ searchResult.result[1].map((space) => (
+							<PublicSpaceSearchEntry key={ space.id } info={ space } sortedByActivity={ searchResult.originalQuery.sort === 'activity' } />
+						)) }
 					</Column>
 				</>
 			) : (
@@ -220,8 +223,9 @@ function PublicSpaceSearchInner(): ReactElement {
 	);
 }
 
-function PublicSpaceSearchEntry({ info }: {
+function PublicSpaceSearchEntry({ info, sortedByActivity }: {
 	info: SpaceSearchResultEntry;
+	sortedByActivity: boolean;
 }): ReactElement {
 
 	const [show, setShow] = useState(false);
@@ -238,6 +242,7 @@ function PublicSpaceSearchEntry({ info }: {
 				className={ classNames(
 					'spacesSearchListEntry',
 					show ? 'selected' : null,
+					(sortedByActivity && info.activityScore < SPACE_ACTIVITY_SCORE_THRESHOLD) ? 'empty' : null,
 				) }
 				onClick={ () => setShow(true) }
 			>

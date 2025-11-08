@@ -6,6 +6,7 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	ICharacterData,
+	SPACE_ACTIVITY_DATA_DEFAULT,
 	SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	SpaceData,
 	SpaceDirectoryConfig,
@@ -49,6 +50,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 		spaceState: CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
 		invites: [],
 		ownerInvites: [],
+		activity: CloneDeepMutable(SPACE_ACTIVITY_DATA_DEFAULT),
 		...data,
 	};
 }

@@ -4,7 +4,7 @@ import { LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimit
 import { SpaceBaseInfoSchema, SpaceIdSchema, SpacePublicSettingSchema } from './space.ts';
 
 /** The ordering for how should spaces be returned */
-export const SpaceSearchSortSchema = z.enum(['a-z', 'z-a']);
+export const SpaceSearchSortSchema = z.enum(['activity', 'a-z', 'z-a']);
 /** The ordering for how should spaces be returned */
 export type SpaceSearchSort = z.infer<typeof SpaceSearchSortSchema>;
 
@@ -35,6 +35,12 @@ export const SpaceSearchResultEntrySchema = z.object({
 	maxUsers: SpaceBaseInfoSchema.shape.maxUsers,
 	/** List of the space's owners */
 	owners: AccountIdSchema.array(),
+	/**
+	 * The activity score - how much this space was active recently.
+	 * It should be assumed that besides this number being finite, there is no meaning that can be gained from this.
+	 * The heuristic behind this number can change over time.
+	 */
+	activityScore: z.number(),
 });
 export type SpaceSearchResultEntry = z.infer<typeof SpaceSearchResultEntrySchema>;
 

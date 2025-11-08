@@ -1,6 +1,6 @@
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument, type SpaceDirectoryData } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -17,6 +17,7 @@ export class Space {
 	private readonly _owners: Set<AccountId>;
 	private readonly _ownerInvites: Set<AccountId>;
 	private _invites: SpaceInvite[];
+	private _activity: SpaceActivitySavedData;
 	private _deletionPending = false;
 
 	public get isValid(): boolean {
@@ -57,12 +58,13 @@ export class Space {
 
 	private readonly logger: Logger;
 
-	constructor({ id, config, owners, ownerInvites, accessId, invites }: SpaceDirectoryData) {
+	constructor({ id, config, owners, ownerInvites, accessId, invites, activity }: SpaceDirectoryData) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
 		this._ownerInvites = new Set(ownerInvites);
 		this._invites = invites;
+		this._activity = activity;
 		this.accessId = accessId;
 		this.logger = GetLogger('Space', `[Space ${this.id}]`);
 
@@ -884,6 +886,7 @@ export class Space {
 			});
 		}
 
+		this.updateActivityData();
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
@@ -917,6 +920,9 @@ export class Space {
 		Assert(this.trackingCharacters.has(character));
 
 		await character.baseInfo.updateDirectoryData({ currentSpace: null });
+
+		// Update space activity right before removal, so this character still counts as active at the last moment
+		this.updateActivityData();
 
 		this.logger.debug(`Character ${character.baseInfo.id} removed (${reason})`);
 		this.characters.delete(character);
@@ -1194,5 +1200,41 @@ export class Space {
 		);
 		this.pendingMessages.push(...processedMessages);
 		this._assignedShard?.update('messages').catch(() => { /* NOOP */ });
+	}
+
+	public updateActivityData(interval?: number, forceUpdate: boolean = false): void {
+		interval ??= SpaceActivityGetNextInterval(Date.now());
+
+		let changed = false;
+		// Make sure to keep this logic in sync with `PandoraDatabase::spaceMassUpdateActivityScores`!
+		if (this._activity.currentIntervalEnd < interval) {
+			this._activity.score *= SPACE_ACTIVITY_SCORE_DECAY;
+			this._activity.currentIntervalScore = 0;
+			this._activity.currentIntervalEnd = interval;
+			changed = true;
+		}
+
+		const activeAccounts = new Set(Array.from(this.characters).filter((c) => c.isOnline()).map((c) => c.baseInfo.account.id)).size;
+		if (activeAccounts > 0) {
+			this._activity.lastActive = Date.now();
+		}
+
+		if (activeAccounts > this._activity.currentIntervalScore) {
+			this._activity.score += (activeAccounts - this._activity.currentIntervalScore);
+			this._activity.currentIntervalScore = activeAccounts;
+			changed = true;
+		}
+
+		if (changed || forceUpdate) {
+			this._syncActivityData()
+				.catch((err) => {
+					this.logger.error('Error syncing activity data:', err);
+				});
+		}
+	}
+
+	@AsyncSynchronized('object')
+	private async _syncActivityData(): Promise<void> {
+		await GetDatabase().updateSpace(this.id, { activity: cloneDeep(this._activity) }, null);
 	}
 }

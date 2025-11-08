@@ -43,9 +43,6 @@ export class Space {
 	}
 
 	public get isPublic(): boolean {
-		if (this._assignedShard?.type !== 'stable')
-			return false;
-
 		switch (this.config.public) {
 			case 'locked':
 			case 'private':

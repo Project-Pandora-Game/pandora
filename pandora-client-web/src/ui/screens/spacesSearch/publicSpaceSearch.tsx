@@ -147,35 +147,21 @@ function PublicSpaceSearchInner(): ReactElement {
 					</Row>
 				</Column>
 			</fieldset>
-			{ processing ? (
-				<div>Loading...</div>
-			) : (searchResult == null || searchResult.originalQuery !== query || searchResult.limit !== limit) ? (
+			{ (searchResult == null || searchResult.originalQuery !== query || searchResult.limit !== limit) ? (
 				null
 			) : (!searchResult.result[0]) ? (
 				<Column padding='medium' className='error-box'>{ searchResult.result[1] }</Column>
 			) : (searchResult.result[1].length > 0 || searchResult.page > 0) ? (
 				<>
-					<Row>
-						<Button
-							onClick={ () => {
-								search(query, limit, searchResult.page);
-							} }
-							slim
-						>
-							Refresh
-						</Button>
-					</Row>
-					{ searchResult.result[1].length === 0 ? (
-						<div>No more spaces found</div>
-					) : null }
-					<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
-						{ searchResult.result[1].map((space) => <PublicSpaceSearchEntry key={ space.id } info={ space } />) }
-					</Column>
 					<Row alignX='center' alignY='center'>
 						{ searchResult.page > 0 ? (
-							<Button theme='transparent' onClick={ () => {
-								search(query, limit, searchResult.page - 1);
-							} }>
+							<Button
+								theme='transparent'
+								onClick={ () => {
+									search(query, limit, searchResult.page - 1);
+								} }
+								disabled={ processing }
+							>
 								«
 							</Button>
 						) : null }
@@ -186,6 +172,7 @@ function PublicSpaceSearchInner(): ReactElement {
 									onClick={ () => {
 										search(query, limit, 0);
 									} }
+									disabled={ processing }
 								>
 									1
 								</Button>
@@ -199,22 +186,32 @@ function PublicSpaceSearchInner(): ReactElement {
 								<Button
 									key={ p }
 									theme={ p === searchResult.page ? 'defaultActive' : 'transparent' }
-									disabled={ p === searchResult.page }
 									onClick={ () => {
 										search(query, limit, p);
 									} }
+									disabled={ processing }
 								>
 									{ p + 1 }
 								</Button>
 							)) }
 						{ (searchResult.result[1].length === searchResult.limit) ? (
-							<Button theme='transparent' onClick={ () => {
-								search(query, limit, searchResult.page + 1);
-							} }>
+							<Button
+								theme='transparent'
+								onClick={ () => {
+									search(query, limit, searchResult.page + 1);
+								} }
+								disabled={ processing }
+							>
 								»
 							</Button>
 						) : null }
 					</Row>
+					{ searchResult.result[1].length === 0 ? (
+						<div>No more spaces found</div>
+					) : null }
+					<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
+						{ searchResult.result[1].map((space) => <PublicSpaceSearchEntry key={ space.id } info={ space } />) }
+					</Column>
 				</>
 			) : (
 				<div>No Space found</div>

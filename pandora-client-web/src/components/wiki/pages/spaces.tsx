@@ -112,19 +112,25 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>All space settings such as name, description, admin and ban lists will be persistent.</li>
 				<li>All items in the rooms of the space will stay as and where they are.</li>
-				<li>If characters will disconnect or log off inside a space, they will stay inside the current room, until they are removed from it manually or automatically.</li>
+				<li>If characters will disconnect or log off inside a space, they will stay inside the current room, until they are removed from it manually or automatically (e.g. through a space's offline character management configuration).</li>
 			</ul>
 
 			<h4 id='SP_Space_visibility'>Space visibility</h4>
 			<p>
 				Spaces in Pandora can be public or private, which affects who can see them.
 				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
-				Note, that the "Public" setting means that it is only public while anyone is online inside the space. Offline characters inside do not count.
+				Note, that the "Public" setting means that it is only publicly listed while anyone is online inside the space. Offline characters inside do not count.
 				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
-				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces and join them.
-				Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
-				The "Public while an admin is inside" setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.<br />
-				<br />
+				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces in their main list of spaces and join them.
+				Despite that, everyone inside a public space can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).
+			</p>
+			<p>
+				There is however a button at the end of the spaces search list that lets you search for and join public spaces with the visibility "Public" - also currently unlisted ones.<br />
+				This search feature cannot find public spaces set to "Public while an admin is inside" visibility, though.
+				The "Public while an admin is inside" setting is therefore useful for making sure your space does not diverge from its intended purpose
+				and cannot be used by the general public while there is no owner/admin inside, aside from the characters already inside.
+			</p>
+			<p>
 				Spaces can also be locked, which behaves similar to a private space, but prevents anyone except owners and admins from entering the space (leaving the space isn't limited). This also asks owners and admins for confirmation before entering.
 				"Allowed users" can still see locked spaces, but not who is inside them and cannot enter them.
 				"Join-me" invitations work the same as for private spaces, but "Space-bound" invitations are blocked.
@@ -230,7 +236,7 @@ export function WikiSpaces(): ReactElement {
 					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
 					This currently cannot be changed later on.
 				</li>
-				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add owners.</li>
+				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add or remove owners.</li>
 			</ul>
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>

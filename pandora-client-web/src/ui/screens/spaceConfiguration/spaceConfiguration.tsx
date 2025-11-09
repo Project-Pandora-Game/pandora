@@ -507,6 +507,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
+								<li>The "Search empty public spaces" feature does not list this space.</li>
 							</ul>
 							<h3>Public</h3>
 							<ul>
@@ -514,6 +515,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
+								<li>The "Search empty public spaces" feature lists this space and it can be joined any time by anyone.</li>
 							</ul>
 						</ContextHelpButton>
 					</label>
@@ -762,7 +764,15 @@ function SpaceConfigurationRights({
 				</div>
 			</fieldset>
 			<fieldset>
-				<legend>Offline character management</legend>
+				<legend>
+					Offline character management
+					<ContextHelpButton>
+						<p>
+							This setting allows you to configure a time after which offline characters are removed from your space.<br />
+							It is recommended to set this to something like 5 minutes for a public space and to include characters in room items.
+						</p>
+					</ContextHelpButton>
+				</legend>
 				<Column>
 					<Row>
 						<Checkbox
@@ -1073,7 +1083,30 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 
 	return (
 		<fieldset>
-			<legend>Space invites management</legend>
+			<legend>
+				Space invites management
+				<ContextHelpButton>
+					<p>
+						This section allows you to manage all "space-bound" invite links created for this space.
+					</p>
+					<p>
+						They are mainly useful to allow limited access to this space while it is private, but are mostly not the tool of choice.
+						Let's summarize how to best manage access to your space while it is private:
+					</p>
+					<ul>
+						<li>If you want a user and all their characters to have permanent access to your space, add them to the list of Allowed users instead of creating a permanent invite here.</li>
+						<li>If you want to quickly invite another character for a single time, use the "/invite" command in a direct message to them.</li>
+						<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character in this section.</li>
+					</ul>
+					<p>
+						For more info on how these options work in detail, please check the section "Space invites" in the "Spaces" tab of the wiki.
+					</p>
+					<p>
+						The permanent public invite link can be used by you or shared with others to directly join this space (or to use it as a browser bookmark).
+						Regular access rules apply, so if the space for instance is private, this link only works for accounts that are an Admin or an Allowed user.
+					</p>
+				</ContextHelpButton>
+			</legend>
 			<Column gap='large'>
 				<Column gap='medium'>
 					<div onClick={ copyPublic } className='permanentInvite'>

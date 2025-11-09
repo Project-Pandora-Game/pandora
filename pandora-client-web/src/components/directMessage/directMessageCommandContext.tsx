@@ -24,7 +24,7 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 		key: ['invite'],
 		usage: '',
 		description: 'Creates an invite link to your current space',
-		longDescription: 'Creates an invite link to your current space, this invite is limited to the account and has a single use.',
+		longDescription: 'Creates an invite link to your current space. This invite is limited to the account, is only valid for 120 mins, and has a single use.',
 		handler: CreateDMCommand()
 			.handler(async ({ directoryConnector, gameState, chat, displayError, sendMessage }) => {
 				if (gameState?.currentSpace.value.id == null) {

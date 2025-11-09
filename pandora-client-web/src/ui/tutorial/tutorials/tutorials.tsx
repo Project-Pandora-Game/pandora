@@ -140,7 +140,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 									If you are already familiar with the club or if you prefer exploring it completely by yourself,
 									you can quit a tutorial at any time by clicking the '×' in the corner.<br />
 									<br />
-									I recommend going through the tutorials at your own pace, as it will likely give you a smoother experience.
+									That said, I strongly recommend going through all of the tutorials over time. But please do that at your own pace. No need to do all of them immediately.
 								</p>
 							</Column>
 							<Row alignX='center' className='maid-container'>
@@ -364,7 +364,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 					text: (
 						<>
 							These are all the tutorials we currently have.<br />
-							After you finish this tutorial we strongly recommend following up with the next one: "Pandora Introduction".
+							After you finish this tutorial we strongly recommend following up with at least the the next, very essential one as well: "Pandora Introduction".
 						</>
 					),
 					conditions: [{ type: 'next' }],

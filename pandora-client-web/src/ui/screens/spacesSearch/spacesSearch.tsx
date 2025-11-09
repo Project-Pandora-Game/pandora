@@ -91,13 +91,15 @@ export function SpacesSearch(): ReactElement {
 				</Row>
 			</Row>
 			{ !list ? <div className='loading'>Loading...</div> : <SpaceSearchList list={ list } /> }
-			<Column alignX='start'>
-				<div>Didn't find a space you were looking for?</div>
-				<Button onClick={ () => {
-					navigate('/spaces/public/search');
-				} }>
-					Search empty public spaces
-				</Button>
+			<Column padding='large' alignX='start'>
+				<div>Didn't find the space you were looking for?</div>
+				<Row padding='medium' alignY='center'>
+					<Button onClick={ () => {
+						navigate('/spaces/public/search');
+					} }>
+						Search empty public spaces
+					</Button>
+				</Row>
 			</Column>
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }

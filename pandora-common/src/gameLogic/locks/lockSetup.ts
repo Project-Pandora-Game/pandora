@@ -25,7 +25,7 @@ export interface LockSetup {
 	};
 	/**
 	 * Affects how character can interact with locks on items they are wearing:
-	 * - `false` - Character can freely interact the the lock
+	 * - `false` - Character can freely interact with the lock
 	 * - `'locked'` - Character cannot interact with the lock if it is locked
 	 * - `'always'` - Character cannot interact with the lock
 	 * @default false

@@ -364,7 +364,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 					text: (
 						<>
 							These are all the tutorials we currently have.<br />
-							After you finish this tutorial we strongly recommend following up with at least the the next, very essential one as well: "Pandora Introduction".
+							After you finish this tutorial we strongly recommend following up directly with at least the next, very essential one as well: "Pandora Introduction".
 						</>
 					),
 					conditions: [{ type: 'next' }],

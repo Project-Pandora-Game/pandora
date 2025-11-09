@@ -78,7 +78,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							On the the right (or bottom) you can see your online status next to the account you are currently logged into.<br />
+							On the right (or bottom) you can see your online status next to the account you are currently logged into.<br />
 							While Pandora does not forbid the creation of multiple accounts, you cannot log into multiple accounts at the same time.<br />
 							Clicking on the account name opens a drop-down menu that lets you select your user availability status inside Pandora. Your status is shared with other users.
 							Each state is explained in more detail in Pandora's wiki.

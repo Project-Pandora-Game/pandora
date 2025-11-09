@@ -15,6 +15,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import { SPACE_SEARCH_PUBLIC_ICONS, SPACE_SEARCH_PUBLIC_LABELS } from './spacesSearch.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 
 const IsValidSpaceSearchName = ZodMatcher(SpaceSearchArgumentsSchema.shape.nameFilter.unwrap());
 
@@ -107,7 +108,19 @@ function PublicSpaceSearchInner(): ReactElement {
 					◄ Back
 				</Button>
 			</Row>
-			<h2>Public space search</h2>
+			<h2>
+				Public space search
+				<ContextHelpButton>
+					<p>
+						This view lets you search for a specific public space or explore unlisted empty public spaces,<br />
+						not counting offline characters inside. You an also enter found spaces this way.
+					</p>
+					<p>
+						Note that you can only find unlisted spaces with the visibility setting "Public", but not spaces<br />
+						with the visibility "Public while an admin is inside".
+					</p>
+				</ContextHelpButton>
+			</h2>
 			<fieldset>
 				<legend>Search settings</legend>
 				<Column padding='small'>

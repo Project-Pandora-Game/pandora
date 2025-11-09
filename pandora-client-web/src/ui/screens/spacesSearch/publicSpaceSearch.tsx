@@ -8,14 +8,15 @@ import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput, useStateSettingDriver, useValueMapDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import { SPACE_SEARCH_PUBLIC_ICONS, SPACE_SEARCH_PUBLIC_LABELS } from './spacesSearch.tsx';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 
 const IsValidSpaceSearchName = ZodMatcher(SpaceSearchArgumentsSchema.shape.nameFilter.unwrap());
 
@@ -99,28 +100,29 @@ function PublicSpaceSearchInner(): ReactElement {
 
 	return (
 		<Column padding='medium'>
-			<Row padding='medium' wrap alignX='space-between'>
+			<GridContainer padding='medium' templateColumns='minmax(max-content, 1fr) auto minmax(max-content, 1fr)' alignItemsX='center' alignItemsY='center'>
 				<Button
+					className='justify-self-start'
 					onClick={ () => {
 						navigate('/spaces/search');
 					} }
 				>
 					◄ Back
 				</Button>
-			</Row>
-			<h2>
-				Public space search
-				<ContextHelpButton>
-					<p>
-						This view lets you search for a specific public space or explore unlisted empty public spaces,<br />
-						not counting offline characters inside. You an also enter found spaces this way.
-					</p>
-					<p>
-						Note that you can only find unlisted spaces with the visibility setting "Public", but not spaces<br />
-						with the visibility "Public while an admin is inside".
-					</p>
-				</ContextHelpButton>
-			</h2>
+				<h2>
+					Public space search
+					<ContextHelpButton>
+						<p>
+							This view lets you search for a specific public space or explore unlisted public spaces,<br />
+							even if there are no online characters inside.
+						</p>
+						<p>
+							Note that you can only find unlisted spaces with the visibility setting "Public", but not spaces<br />
+							with the visibility "Public while an admin is inside".
+						</p>
+					</ContextHelpButton>
+				</h2>
+			</GridContainer>
 			<fieldset>
 				<legend>Search settings</legend>
 				<Column padding='small'>

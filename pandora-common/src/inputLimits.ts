@@ -1,3 +1,5 @@
+import { TimeSpanMs } from './utility/formatting.ts';
+
 /* TODO list of things to potentially limit *
 - AccountCryptoKeySchema limits (or more thorough validation)
 - Space admin list
@@ -102,6 +104,8 @@ export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 50;
 /** The maximum amount of invites a space can have */
 export const LIMIT_SPACE_BOUND_INVITES = 20;
 export const LIMIT_JOIN_ME_INVITES = 10;
+/** The maximum validity (in ms) until a "join me" invite expires */
+export const LIMIT_JOIN_ME_INVITE_MAX_VALIDITY = TimeSpanMs(2, 'hours');
 
 /** The maximum number of character modifier instances on a single character */
 export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;

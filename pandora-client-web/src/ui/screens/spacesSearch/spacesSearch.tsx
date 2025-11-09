@@ -15,6 +15,7 @@ import plusIcon from '../../../assets/icons/plus.svg';
 import publicDoor from '../../../assets/icons/public-door.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -32,7 +33,7 @@ const TIPS: readonly string[] = [
 	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
 	`Your character can turn around for everyone in a room using the "Pose" tab or with "/turn" or "/t".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
-	`If you write emotes with "/me", you may want to change the command hint display in the interface settings.`,
+	`If you write emotes with "/me", a change of "Command hint behavior" in the interface settings may help.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
@@ -72,35 +73,43 @@ export function SpacesSearch(): ReactElement {
 
 	return (
 		<Column padding='medium'>
-			<Row padding='medium' wrap alignX='space-between'>
+			<GridContainer padding='medium' templateColumns='minmax(max-content, 1fr) auto minmax(auto, 1fr)' alignItemsX='center' alignItemsY='center'>
 				<Button
+					className='justify-self-start'
 					onClick={ () => {
 						navigate('/');
 					} }
 				>
 					◄ Back
 				</Button>
+				<h2 className='text-align-center'>Spaces search</h2>
+				<GridContainer className='justify-self-end text-align-end' gap='small' templateColumns='auto auto' templateRows='auto-flow' alignItemsX='end' alignItemsY='center'>
+					<span>Accounts online:</span><span>{ directoryStatus.onlineAccounts }</span>
+					<span>Characters online:</span><span>{ directoryStatus.onlineCharacters }</span>
+				</GridContainer>
+			</GridContainer>
+			<Row wrap alignX='end'>
 				<button className='infoBox' onClick={ () => setShowTips(true) } >
 					<span className='icon'>🛈</span> Tip: { TIPS[index] }
 				</button>
 			</Row>
-			<Row wrap alignX='space-between'>
-				<h2>Spaces search</h2>
-				<Row padding='medium' alignY='center'>
-					Accounts online: { directoryStatus.onlineAccounts } / Characters online: { directoryStatus.onlineCharacters }
-				</Row>
-			</Row>
-			{ !list ? <div className='loading'>Loading...</div> : <SpaceSearchList list={ list } /> }
-			<Column padding='large' alignX='start'>
-				<div>Didn't find the space you were looking for?</div>
-				<Row padding='medium' alignY='center'>
-					<Button onClick={ () => {
-						navigate('/spaces/public/search');
-					} }>
-						Search empty public spaces
-					</Button>
-				</Row>
-			</Column>
+			{ !list ? (
+				<div className='loading'>Loading...</div>
+			) : (
+				<>
+					<SpaceSearchList list={ list } />
+					<Column padding='large' alignX='start'>
+						<div>Didn't find the space you were looking for?</div>
+						<Row padding='medium' alignY='center'>
+							<Button onClick={ () => {
+								navigate('/spaces/public/search');
+							} }>
+								Search empty public spaces
+							</Button>
+						</Row>
+					</Column>
+				</>
+			) }
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }

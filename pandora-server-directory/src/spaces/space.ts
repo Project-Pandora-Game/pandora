@@ -1,6 +1,6 @@
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -714,7 +714,7 @@ export class Space {
 					this._invites = this._invites.filter((i) => i.type !== 'joinMe' || i.createdBy.accountId !== account.id || dropCount-- <= 0);
 
 				data.maxUses = 1;
-				data.expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(2, 'hours'));
+				data.expires = clamp(data.expires ?? Infinity, now, now + LIMIT_JOIN_ME_INVITE_MAX_VALIDITY);
 				break;
 			}
 			case 'spaceBound':
@@ -724,7 +724,7 @@ export class Space {
 					return 'tooManyInvites';
 
 				if (data.expires)
-					data.expires = Math.max(data.expires, now + TimeSpanMs(10, 'minutes'));
+					data.expires = Math.max(data.expires, now);
 
 				break;
 			default:

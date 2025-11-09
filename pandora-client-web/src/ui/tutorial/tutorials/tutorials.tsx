@@ -140,7 +140,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 									If you are already familiar with the club or if you prefer exploring it completely by yourself,
 									you can quit a tutorial at any time by clicking the '×' in the corner.<br />
 									<br />
-									That said, I strongly recommend going through all of the tutorials over time. But please do that at your own pace. No need to do all of them immediately.
+									That said, I strongly recommend going through all of the tutorials over time, as they explain the core mechanics of Pandora.
 								</p>
 							</Column>
 							<Row alignX='center' className='maid-container'>

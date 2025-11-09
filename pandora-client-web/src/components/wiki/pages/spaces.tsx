@@ -1,4 +1,4 @@
-import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
+import { FormatTimeInterval, LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
 import { Link } from 'react-router';
 
@@ -121,13 +121,14 @@ export function WikiSpaces(): ReactElement {
 				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
 				Note, that the "Public" setting means that it is only publicly listed while anyone is online inside the space. Offline characters inside do not count.
 				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
-				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces in their main list of spaces and join them.
+				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces in their list of spaces and join them.
 				Despite that, everyone inside a public space can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).
 			</p>
 			<p>
-				There is however a button at the end of the spaces search list that lets you search for and join public spaces with the visibility "Public" - also currently unlisted ones.<br />
-				This search feature cannot find public spaces set to "Public while an admin is inside" visibility, though.
-				The "Public while an admin is inside" setting is therefore useful for making sure your space does not diverge from its intended purpose
+				While empty spaces with the visibility "Public" are not visible in the space list (except to their Admins and Allowed users),
+				they can still be found using the "Search empty public spaces" option in the space list.<br />
+				Note, that spaces using "Public while an admin is inside" visibility cannot be found this way.
+				This makes the "Public while an admin is inside" setting useful for making sure your space does not diverge from its intended purpose
 				and cannot be used by the general public while there is no owner/admin inside, aside from the characters already inside.
 			</p>
 			<p>
@@ -192,7 +193,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>You can send a "join-me" invite by using the "/invite" command in the direct message input field.</li>
-				<li>These invites can be used only once and expire 120 minutes after they were created and sent.</li>
+				<li>These invites can be used only once and expire { FormatTimeInterval(LIMIT_JOIN_ME_INVITE_MAX_VALIDITY) } after they were created and sent.</li>
 				<li>"Join-me" invites are bound to the user account they are sent to and cannot be used by someone else.</li>
 				<li>The invite link only works while the character that created it is still online and inside the space the invite is for.</li>
 				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple and quick to use.</li>
@@ -236,7 +237,7 @@ export function WikiSpaces(): ReactElement {
 					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
 					This currently cannot be changed later on.
 				</li>
-				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add or remove owners.</li>
+				<li>Admins have mostly the same powers as owners — they can add other admins or take admin rights away from other admins. But admins cannot add owners.</li>
 			</ul>
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>

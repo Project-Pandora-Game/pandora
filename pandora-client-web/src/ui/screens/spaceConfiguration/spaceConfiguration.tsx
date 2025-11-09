@@ -31,7 +31,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { RenderAppearanceActionProblem } from '../../../assets/appearanceValidation.tsx';
@@ -769,7 +769,7 @@ function SpaceConfigurationRights({
 					<ContextHelpButton>
 						<p>
 							This setting allows you to configure a time after which offline characters are removed from your space.<br />
-							It is recommended to set this to something like 5 minutes for a public space and to include characters in room items.
+							For public spaces it is recommended to set this to around 5 minutes and to include characters in room items.
 						</p>
 					</ContextHelpButton>
 				</legend>
@@ -1087,10 +1087,10 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 				Space invites management
 				<ContextHelpButton>
 					<p>
-						This section allows you to manage all "space-bound" invite links created for this space.
+						This section allows you to manage all invite links created for this space and to create new "space-bound" invites.
 					</p>
 					<p>
-						They are mainly useful to allow limited access to this space while it is private, but are mostly not the tool of choice.
+						"Space-bound" invites are mainly useful to allow limited access to this space while it is private, but you are not sure ahead of time whom you want to allow access.
 						Let's summarize how to best manage access to your space while it is private:
 					</p>
 					<ul>
@@ -1099,10 +1099,10 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 						<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character in this section.</li>
 					</ul>
 					<p>
-						For more info on how these options work in detail, please check the section "Space invites" in the "Spaces" tab of the wiki.
+						For more info on how these options work in detail, please check the section <Link to='/wiki/spaces#SP_Space_invites'>"Space invites"</Link> in the "Spaces" tab of the wiki.
 					</p>
 					<p>
-						The permanent public invite link can be used by you or shared with others to directly join this space (or to use it as a browser bookmark).
+						The "permanent public invite link" can be used by you or shared with others to directly join this space (or to use it as a browser bookmark).
 						Regular access rules apply, so if the space for instance is private, this link only works for accounts that are an Admin or an Allowed user.
 					</p>
 				</ContextHelpButton>

@@ -1,4 +1,4 @@
-import { CommandBuilder, CreateCommand, ICommandExecutionContext, IEmpty } from 'pandora-common';
+import { CommandBuilder, CreateCommand, FormatTimeInterval, ICommandExecutionContext, IEmpty, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY } from 'pandora-common';
 import type { useNavigate } from 'react-router';
 import type { DirectoryConnector } from '../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../networking/shardConnector.ts';
@@ -24,7 +24,7 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 		key: ['invite'],
 		usage: '',
 		description: 'Creates an invite link to your current space',
-		longDescription: 'Creates an invite link to your current space. This invite is limited to the account, is only valid for 120 mins, and has a single use.',
+		longDescription: `Creates an invite link to your current space. This invite is limited to the account, is only valid for ${ FormatTimeInterval(LIMIT_JOIN_ME_INVITE_MAX_VALIDITY) }, and has a single use.`,
 		handler: CreateDMCommand()
 			.handler(async ({ directoryConnector, gameState, chat, displayError, sendMessage }) => {
 				if (gameState?.currentSpace.value.id == null) {

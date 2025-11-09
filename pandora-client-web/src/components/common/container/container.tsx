@@ -4,7 +4,7 @@ import { CommonProps } from '../../../common/reactTypes.ts';
 import { ScssOverflow, ScssSpacing } from '../../../styles/constants.ts';
 import './container.scss';
 
-export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style'> {
+export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style' | 'inert'> {
 	// Flex properties
 
 	/** Default: row */
@@ -31,10 +31,6 @@ export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<H
 	padding?: Exclude<ScssSpacing, 'none'>;
 	/** Defaults to `medium` */
 	gap?: ScssSpacing;
-
-	// Global properties
-	/** @see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/inert */
-	inert?: boolean;
 }
 
 export function DivContainer({
@@ -51,7 +47,6 @@ export function DivContainer({
 	overflowY,
 	padding,
 	gap = 'medium',
-	inert,
 	...props
 }: DivContainerProps): ReactElement {
 	return (
@@ -72,7 +67,6 @@ export function DivContainer({
 				`gap-${gap}`,
 				className,
 			) }
-			inert={ inert }
 		>
 			{ children }
 		</div>

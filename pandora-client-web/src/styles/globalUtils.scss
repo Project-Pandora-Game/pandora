@@ -92,6 +92,24 @@
 
 //#endregion
 
+//#region Self-alignment
+
+@each $type in (start, end, center, stretch) {
+	.align-self-#{$type} {
+		align-self: $type;
+	}
+	.justify-self-#{$type} {
+		justify-self: $type;
+	}
+}
+@each $type in (start, end, center, justify) {
+	.text-align-#{$type} {
+		text-align: $type;
+	}
+}
+
+//#endregion
+
 //#region Overflow
 
 @each $type in (visible, hidden, clip, auto, scroll) {

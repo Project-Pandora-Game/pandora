@@ -27,15 +27,15 @@ import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import './spacesSearch.scss';
 
 const TIPS: readonly string[] = [
-	`You can move your character inside a room by dragging the character name below her.`,
+	`You can move your character inside a room by dragging the character name below.`,
 	`Careful! Your spaces are set to private as default when you first create them.`,
 	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
-	`Your character can turn around for everyone in a room using the "Pose" tab or with "/turn".`,
+	`Your character can turn around for everyone in a room using the "Pose" tab or with "/turn" or "/t".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
+	`If you write emotes with "/me", you may want to change the command hint display in the interface settings.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
-	`The character context menu can still be opened from a room item's menu while a character is inside.`,
 	`You can start typing a chat message at any time, even without clicking into the text input field first.`,
 	`Setting the render resolution in the graphics settings to 0% lets you use the chat without graphics.`,
 	`Cannot move a character because the name is covered? Enter move mode in the "Room"-tab's character menu.`,

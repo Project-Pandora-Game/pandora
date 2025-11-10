@@ -248,20 +248,6 @@ function UnfriendRequestMenu(): ReactElement {
 	);
 }
 
-function NavigateToDMMenu(): ReactElement | null {
-	const { currentAccount, character } = useCharacterMenuContext();
-	const onClick = useGoToDM(character.data.accountId);
-	if (character.data.accountId === currentAccount?.id)
-		return null;
-
-	return (
-		<Button theme='transparent' className='withIcon' onClick={ onClick }>
-			<img src={ letterIcon } />
-			<span>Direct message</span>
-		</Button>
-	);
-}
-
 function AccountRelationshipActionContextMenuInner(): ReactElement | null {
 	const { character } = useCharacterMenuContext();
 	const rel = useAccountContact(character.data.accountId);
@@ -353,6 +339,7 @@ function CharacterHidingMenuInner(): ReactElement | null {
 
 function AccountRelationshipActionContextMenu(): ReactElement | null {
 	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
+	const onClick = useGoToDM(character.data.accountId);
 	if (character.data.accountId === currentAccount?.id) {
 		switch (menu) {
 			case 'main':
@@ -387,6 +374,10 @@ function AccountRelationshipActionContextMenu(): ReactElement | null {
 			return (
 				<>
 					<AccountRelationshipActionContextMenuInner />
+					<Button theme='transparent' className='withIcon' onClick={ onClick }>
+						<img src={ letterIcon } />
+						<span>Direct message</span>
+					</Button>
 					<Button theme='transparent' className='withIcon' onClick={ () => setMenu('characterHiding') }>
 						<img src={ bodyStripedIcon } />
 						<span>Temporarily hide</span>
@@ -865,7 +856,6 @@ export function CharacterContextMenuContent({ character, onClose }: {
 								<span>Whisper</span>
 							</Button>
 						) }
-						<NavigateToDMMenu />
 					</>
 				) }
 				{ menu === 'follow' ? (

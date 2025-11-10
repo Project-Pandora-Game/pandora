@@ -99,12 +99,12 @@ export function SpacesSearch(): ReactElement {
 				<>
 					<SpaceSearchList list={ list } />
 					<Column padding='large' alignX='start'>
-						<div>Didn't find the space you were looking for?</div>
+						<div>Want to find or explore public spaces not in use?</div>
 						<Row padding='medium' alignY='center'>
 							<Button onClick={ () => {
 								navigate('/spaces/public/search');
 							} }>
-								Search empty public spaces
+								Search public spaces
 							</Button>
 						</Row>
 					</Column>
@@ -203,7 +203,7 @@ function SpaceSearchList({ list }: {
 				<h3>Found spaces ({ otherSpaces.length })</h3>
 				{
 					otherSpaces.length === 0 ? (
-						<p>No space found</p>
+						<p>No publicly listed space with online users found</p>
 					) : (
 						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }

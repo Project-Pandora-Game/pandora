@@ -507,7 +507,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
-								<li>The "Search empty public spaces" feature does not list this space.</li>
+								<li>The "Public space search" feature does not list this space.</li>
 							</ul>
 							<h3>Public</h3>
 							<ul>
@@ -515,7 +515,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
-								<li>The "Search empty public spaces" feature lists this space and it can be joined any time by anyone.</li>
+								<li>The "Public space search" feature lists this space and it can be joined any time by anyone.</li>
 							</ul>
 						</ContextHelpButton>
 					</label>

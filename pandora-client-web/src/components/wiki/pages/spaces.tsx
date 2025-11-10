@@ -126,7 +126,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<p>
 				While empty spaces with the visibility "Public" are not visible in the space list (except to their Admins and Allowed users),
-				they can still be found using the "Search empty public spaces" option in the space list.<br />
+				they can still be found using the "Public space search" option in the space list.<br />
 				Note, that spaces using "Public while an admin is inside" visibility cannot be found this way.
 				This makes the "Public while an admin is inside" setting useful for making sure your space does not diverge from its intended purpose
 				and cannot be used by the general public while there is no owner/admin inside, aside from the characters already inside.

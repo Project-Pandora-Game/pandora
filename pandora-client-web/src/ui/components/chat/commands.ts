@@ -1,5 +1,5 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus, type IClientDirectoryNormalResult } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
 import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
@@ -93,6 +93,13 @@ function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean =
 	];
 }
 
+export const SPACE_ADMIN_ACTION_FAIL_REASONS: Record<Exclude<IClientDirectoryNormalResult['spaceAdminAction']['result'], 'ok'>, string> = {
+	failed: 'Error performing action, try again later.',
+	noAccess: 'You must be an Admin or an Owner to do this.',
+	notInPublicSpace: 'This action cannot be done inside personal space.',
+	targetNotAllowed: 'You cannot affect this account/character in this way right now.',
+};
+
 function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand<ICommandExecutionContextClient> {
 	return {
 		key: [action],
@@ -102,19 +109,28 @@ function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminActi
 		handler: CreateClientCommand()
 			// TODO make this accept multiple targets and accountIds
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
-			.handler(({ gameState, directoryConnector, accountManager }, { target }) => {
-				if (!IsSpaceAdmin(gameState.currentSpace.value.config, accountManager.currentAccount.value))
-					return;
+			.handler(async ({ gameState, directoryConnector, accountManager }, { target }) => {
+				if (!IsSpaceAdmin(gameState.currentSpace.value.config, accountManager.currentAccount.value)) {
+					toast('You must be an Admin or an Owner to do this.', TOAST_OPTIONS_WARNING);
+					return false;
+				}
 
 				if (['kick', 'ban'].includes(action) && IsSpaceAdmin(gameState.currentSpace.value.config, { id: target.data.accountId })) {
 					toast('You cannot kick or ban an admin.', TOAST_OPTIONS_WARNING);
-					return;
+					return false;
 				}
 
-				directoryConnector.sendMessage('spaceAdminAction', {
+				const result = await directoryConnector.awaitResponse('spaceAdminAction', {
 					action,
 					targets: [target.data.accountId],
 				});
+
+				if (result.result !== 'ok') {
+					toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+					return false;
+				}
+
+				return true;
 			}),
 	};
 }

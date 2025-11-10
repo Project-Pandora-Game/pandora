@@ -546,6 +546,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
+		// Admins and allowed accounts lists have limits on what accounts can be included
+		const friends = await connection.account.contacts.getFriendsIds();
+		for (const a of [...spaceConfig.admin, ...spaceConfig.allow]) {
+			if (!friends.has(a)) {
+				return { result: 'accountListNotAllowed' };
+			}
+		}
+
 		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
 
 		if (typeof space === 'string') {
@@ -601,15 +609,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		if (!connection.character.space) {
-			return;
+			return { result: 'notInPublicSpace' };
 		}
 
 		if (!connection.character.space.isAdmin(connection.account)) {
 			logger.verbose(`${connection.id} failed to perform admin action: not a space admin`);
-			return;
+			return { result: 'noAccess' };
 		}
 
-		await connection.character.space.adminAction(connection.character.baseInfo, action, targets);
+		const result = await connection.character.space.adminAction(connection.character.baseInfo, action, targets);
+
+		return { result };
 	}
 
 	private async handleSpaceLeave(_: IClientDirectoryArgument['spaceLeave'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceLeave'] {

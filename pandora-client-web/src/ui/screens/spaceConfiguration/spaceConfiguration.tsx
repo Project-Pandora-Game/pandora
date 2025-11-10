@@ -43,6 +43,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
@@ -51,7 +52,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
@@ -174,11 +175,17 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			);
 			const result = await directoryConnector.awaitResponse('spaceCreate', validatedConfig.data);
 			if (result.result !== 'ok') {
-				// TODO: Translate error codes to nicer texts
+				const FAIL_REASONS: Record<typeof result.result, string> = {
+					failed: 'Error performing action, try again later',
+					noShardFound: 'No Shard is available to process your request, try again later',
+					spaceOwnershipLimitReached: 'You have reached the limit of how many spaces you can own',
+					accountListNotAllowed: 'Some of the accounts listed in the "Rights management" tab cannot be added',
+				};
+
 				setCommitProcess(
 					<Column>
 						<div>❌ Failed to create space:</div>
-						<code>{ result.result }</code>
+						<div>{ FAIL_REASONS[result.result] }</div>
 					</Column>,
 				);
 				return;
@@ -248,12 +255,18 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 
 				const result = await directoryConnector.awaitResponse('spaceUpdate', modifiedData);
 				if (result.result !== 'ok') {
-					// TODO: Translate error codes to nicer texts
+					const FAIL_REASONS: Record<typeof result.result, string> = {
+						failed: 'Error performing action, try again later',
+						noAccess: 'You must be an Admin or an Owner to do this',
+						notInPublicSpace: 'This action cannot be done inside personal space',
+						targetNotAllowed: 'Some of the changes are invalid (affecting some accounts/characters is limited)',
+					};
+
 					setCommitProcess(
 						<Column>
 							{ shouldUpdateSpaceSettings ? <div>✅ Updated logic settings</div> : null }
 							<div>❌ Failed to update directory settings:</div>
-							<code>{ result.result }</code>
+							<div>{ FAIL_REASONS[result.result] }</div>
 						</Column>,
 					);
 					return;
@@ -363,7 +376,10 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				creation ? (
 					<Column padding='medium' alignX='center'>
 						<Button className='creationButton'
-							onClick={ commit }
+							onClick={ () => {
+								setShowCommitDialog(true);
+								commit();
+							} }
 							disabled={ processingCommit }
 						>
 							Create space
@@ -636,6 +652,8 @@ function SpaceConfigurationRights({
 }: SpaceConfigurationTabProps): ReactElement {
 	const idPrefix = useId();
 	const directoryConnector = useDirectoryConnector();
+	const currentSpaceCharacters = useSpaceCharacters();
+	const friends = useAccountContacts('friend');
 
 	const accountId = currentAccount.id;
 	const owners: readonly AccountId[] = useMemo(() => (
@@ -658,6 +676,46 @@ function SpaceConfigurationRights({
 			{ reason: 'Already banned', list: currentConfig.banned },
 		],
 	}), [owners, currentConfig.admin, currentConfig.banned]);
+
+	const invalidAdminPermsWarning = useMemo(() => {
+		const result: ReactNode[] = [];
+
+		for (const a of currentConfig.admin) {
+			if (
+				!currentSpaceInfo?.config.admin.includes(a) && // Ignore existing admins
+				!currentSpaceInfo?.config.allow.includes(a) && // Allow promote from allow-listed
+				!currentSpaceCharacters.some((c) => c.data.accountId === a) && // Allow if present in the space
+				!friends.some((f) => f.id === a) // Allow contacts
+			) {
+				result.push(<span className='error' key={ a }>Cannot be added as account is not present in the space nor a contact: { a }</span>);
+			}
+		}
+
+		if (result.length === 0)
+			return null;
+
+		return result;
+	}, [currentConfig, currentSpaceInfo, currentSpaceCharacters, friends]);
+
+	const invalidAllowedPermsWarning = useMemo(() => {
+		const result: ReactNode[] = [];
+
+		for (const a of currentConfig.allow) {
+			if (
+				!currentSpaceInfo?.config.allow.includes(a) && // Ignore existing allow-listed
+				!currentSpaceInfo?.config.admin.includes(a) && // Allow demote from admin
+				!currentSpaceCharacters.some((c) => c.data.accountId === a) && // Allow if present in the space
+				!friends.some((f) => f.id === a) // Allow contacts
+			) {
+				result.push(<span className='error' key={ a }>Cannot be added as account is not present in the space nor a contact: { a }</span>);
+			}
+		}
+
+		if (result.length === 0)
+			return null;
+
+		return result;
+	}, [currentConfig, currentSpaceInfo, currentSpaceCharacters, friends]);
 
 	return (
 		<>
@@ -725,6 +783,7 @@ function SpaceConfigurationRights({
 						onChange={ canEdit ? ((admin) => updateConfig({ admin: admin.slice() })) : undefined }
 						allowSelf
 					/>
+					{ invalidAdminPermsWarning != null ? (<Column gap='none'>{ invalidAdminPermsWarning }</Column>) : null }
 				</div>
 			</fieldset>
 			<fieldset>
@@ -761,6 +820,7 @@ function SpaceConfigurationRights({
 						allowSelf
 					/>
 					<NumberListWarning values={ currentConfig.allow } invalid={ invalidAllow } />
+					{ invalidAllowedPermsWarning != null ? (<Column gap='none'>{ invalidAllowedPermsWarning }</Column>) : null }
 				</div>
 			</fieldset>
 			<fieldset>
@@ -903,17 +963,25 @@ function SpaceConfigurationRoom({
 
 	if (creation || currentSpaceState == null) {
 		return (
-			<strong>Room configuration can only be changed from inside the space</strong>
+			<div className='tab-wrapper'>
+				<Column className='flex-1' alignX='center'>
+					<Column className='flex-grow-1' alignY='center' padding='large' gap='large'>
+						<strong>Room configuration can only be changed from inside the space</strong>
+					</Column>
+				</Column>
+			</div>
 		);
 	}
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<Column className='fill contain-size' overflowY='auto'>
-				<SpaceStateConfigurationUi
-					globalState={ currentSpaceState }
-				/>
-			</Column>
+			<div className='tab-wrapper'>
+				<Column className='fill contain-size' overflowY='auto'>
+					<SpaceStateConfigurationUi
+						globalState={ currentSpaceState }
+					/>
+				</Column>
+			</div>
 		</WardrobeActionContextProvider>
 	);
 }

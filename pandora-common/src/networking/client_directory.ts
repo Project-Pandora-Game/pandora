@@ -13,7 +13,8 @@ import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSh
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
-type ShardError = 'noShardFound' | 'failed';
+export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
+type ShardError = z.infer<typeof ShardErrorSchema>;
 
 export const ClientDirectoryAuthMessageSchema = z.object({
 	username: UserNameSchema,
@@ -345,18 +346,41 @@ export const ClientDirectorySchema = {
 	//#region Space management
 	spaceCreate: {
 		request: SpaceDirectoryConfigSchema,
-		response: ZodCast<{ result: 'ok' | 'spaceOwnershipLimitReached' | ShardError; }>(),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'spaceOwnershipLimitReached',
+				'accountListNotAllowed', // Some accounts cannot be included in some lists upon space creation
+			])
+				.or(ShardErrorSchema),
+		}),
 	},
 	spaceUpdate: {
 		request: SpaceDirectoryUpdateSchema,
-		response: ZodCast<{ result: 'ok' | 'notInPublicSpace' | 'noAccess'; }>(),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notInPublicSpace', // Must be in a public space (not personal space) to do this
+				'noAccess', // Must be an admin
+				'targetNotAllowed', // Changes affecting specific accounts can be limited
+			]),
+		}),
 	},
 	spaceAdminAction: {
 		request: z.object({
 			action: z.enum(['kick', 'ban', 'unban', 'allow', 'disallow', 'promote', 'demote']),
 			targets: z.array(AccountIdSchema),
 		}),
-		response: null,
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notInPublicSpace', // Must be in a public space (not personal space) to do this
+				'noAccess', // Must be an admin
+				'targetNotAllowed', // Changes affecting specific accounts can be limited
+			]),
+		}),
 	},
 	spaceOwnership: {
 		request: z.discriminatedUnion('action', [

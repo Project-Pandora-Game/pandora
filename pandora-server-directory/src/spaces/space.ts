@@ -309,11 +309,37 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok'> {
-		// Ignore if space is invalidated
-		if (!this.isValid) {
-			return 'ok';
+	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok' | 'failed' | 'targetNotAllowed'> {
+		// Bail out if space is invalidated
+		if (!this.isValid)
+			return 'failed';
+
+		// If there is a source, there are additional requirements
+		if (source != null) {
+			// Admins and allowed users cannot be added unless in the space already, or in their contacts
+			if (changes.admin || changes.allow) {
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (changes.admin && changes.admin.some((a) => (
+					!this.config.admin.includes(a) && // Ignore existing admins
+					!this.config.allow.includes(a) && // Allow promote from allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
+				if (changes.allow && changes.allow.some((a) => (
+					!this.config.allow.includes(a) && // Ignore existing allow-listed
+					!this.config.admin.includes(a) && // Allow demote from admin
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+			}
 		}
+
 		if (changes.name) {
 			this.config.name = changes.name;
 		}
@@ -418,11 +444,11 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async adminAction(source: CharacterInfo, action: IClientDirectoryArgument['spaceAdminAction']['action'], targets: number[]): Promise<void> {
+	public async adminAction(source: CharacterInfo, action: IClientDirectoryArgument['spaceAdminAction']['action'], targets: number[]): Promise<'ok' | 'failed' | 'targetNotAllowed'> {
 		// Ignore if the space is invalidated
-		if (!this.isValid) {
-			return;
-		}
+		if (!this.isValid)
+			return 'failed';
+
 		targets = uniq(targets);
 		let updated = false;
 		switch (action) {
@@ -459,6 +485,17 @@ export class Space {
 			}
 			case 'allow': {
 				targets = this._cleanupAllowList(targets);
+				// Allow-listed users cannot be added unless in the space already, or in their contacts
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (targets.some((a) => (
+					!this.config.allow.includes(a) && // Ignore existing allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
 				const oldSize = this.config.allow.length;
 				this.config.allow = uniq([...this.config.allow, ...targets]);
 				updated = oldSize !== this.config.allow.length;
@@ -477,6 +514,18 @@ export class Space {
 				break;
 			}
 			case 'promote': {
+				// Admins cannot be added unless in the space already, or in their contacts
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (targets.some((a) => (
+					!this.config.admin.includes(a) && // Ignore existing admins
+					!this.config.allow.includes(a) && // Allow promote from allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
 				const oldSize = this.config.admin.length;
 				this.config.admin = uniq([...this.config.admin, ...targets]);
 				updated = oldSize !== this.config.admin.length;
@@ -497,6 +546,7 @@ export class Space {
 			default:
 				AssertNever(action);
 		}
+
 		if (updated) {
 			ConnectionManagerClient.onSpaceListChange();
 			await Promise.all([
@@ -504,6 +554,8 @@ export class Space {
 				GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
 			]);
 		}
+
+		return 'ok';
 	}
 
 	@AsyncSynchronized('object')

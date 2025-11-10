@@ -38,6 +38,7 @@ import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentT
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatInput } from '../../../ui/components/chat/chatInput.tsx';
+import { SPACE_ADMIN_ACTION_FAIL_REASONS } from '../../../ui/components/chat/commands.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks.tsx';
 import { CharacterTemporaryHiding } from '../../../ui/screens/room/roomState.ts';
@@ -71,83 +72,119 @@ function AdminActionContextMenuInner(): ReactElement {
 	const isAllowed = spaceInfo.allow.includes(character.data.accountId);
 	const connector = useDirectoryConnector();
 
-	const kick = useCallback(() => {
+	const [kick, kickProcessing] = useAsyncEvent(async () => {
 		if (isCharacterAdmin) {
 			toast('Admins cannot be kicked', TOAST_OPTIONS_WARNING);
 			return;
 		}
 
-		connector.sendMessage('spaceAdminAction', { action: 'kick', targets: [character.data.accountId] });
-		close();
-	}, [isCharacterAdmin, character, connector, close]);
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'kick', targets: [character.data.accountId] });
 
-	const ban = useCallback(() => {
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		close();
+	}, null);
+
+	const [ban, banProcessing] = useAsyncEvent(async () => {
 		if (isCharacterAdmin) {
 			toast('Admins cannot be banned', TOAST_OPTIONS_WARNING);
 			return;
 		}
 
-		connector.sendMessage('spaceAdminAction', { action: 'ban', targets: [character.data.accountId] });
-		close();
-	}, [isCharacterAdmin, character, connector, close]);
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'ban', targets: [character.data.accountId] });
 
-	const allow = useCallback(() => {
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		close();
+	}, null);
+
+	const [allow, allowProcessing] = useAsyncEvent(async () => {
 		if (isCharacterAdmin) {
 			toast('Admins cannot be allowed', TOAST_OPTIONS_WARNING);
 			return;
 		}
 
-		connector.sendMessage('spaceAdminAction', { action: 'allow', targets: [character.data.accountId] });
-		close();
-	}, [isCharacterAdmin, character, connector, close]);
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'allow', targets: [character.data.accountId] });
 
-	const disallow = useCallback(() => {
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		close();
+	}, null);
+
+	const [disallow, disallowProcessing] = useAsyncEvent(async () => {
 		if (isCharacterAdmin) {
 			toast('Admins cannot be disallowed', TOAST_OPTIONS_WARNING);
 			return;
 		}
 
-		connector.sendMessage('spaceAdminAction', { action: 'disallow', targets: [character.data.accountId] });
-		close();
-	}, [isCharacterAdmin, character, connector, close]);
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'disallow', targets: [character.data.accountId] });
 
-	const promote = useCallback(() => {
-		connector.sendMessage('spaceAdminAction', { action: 'promote', targets: [character.data.accountId] });
-		close();
-	}, [character, connector, close]);
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
 
-	const demote = useCallback(() => {
-		connector.sendMessage('spaceAdminAction', { action: 'demote', targets: [character.data.accountId] });
 		close();
-	}, [character, connector, close]);
+	}, null);
+
+	const [promote, promoteProcessing] = useAsyncEvent(async () => {
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'promote', targets: [character.data.accountId] });
+
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		close();
+	}, null);
+
+	const [demote, demoteProcessing] = useAsyncEvent(async () => {
+		const result = await connector.awaitResponse('spaceAdminAction', { action: 'demote', targets: [character.data.accountId] });
+
+		if (result.result !== 'ok') {
+			toast(SPACE_ADMIN_ACTION_FAIL_REASONS[result.result], TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		close();
+	}, null);
 
 	return (
 		<>
-			<Button theme='transparent' onClick={ kick } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
+			<Button theme='transparent' onClick={ kick } disabled={ kickProcessing } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Kick
 			</Button>
-			<Button theme='transparent' onClick={ ban } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
+			<Button theme='transparent' onClick={ ban } disabled={ banProcessing } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Ban
 			</Button>
 			{ isAllowed ? (
-				<Button theme='transparent' onClick={ disallow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+				<Button theme='transparent' onClick={ disallow } disabled={ disallowProcessing } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
 					Disallow
 				</Button>
 			) : (
-				<Button theme='transparent' onClick={ allow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+				<Button theme='transparent' onClick={ allow } disabled={ allowProcessing } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
 					Allow
 				</Button>
 			) }
 			{ isCharacterAdmin ? (
-				<Button theme='transparent' onClick={ demote } >
+				<Button theme='transparent' onClick={ demote } disabled={ demoteProcessing }>
 					Demote
 				</Button>
 			) : (
-				<Button theme='transparent' onClick={ promote } >
+				<Button theme='transparent' onClick={ promote } disabled={ promoteProcessing }>
 					Promote
 				</Button>
 			) }
-			<Button theme='transparent' onClick={ () => setMenu('main') } >
+			<Button theme='transparent' onClick={ () => setMenu('main') }>
 				Back
 			</Button>
 		</>

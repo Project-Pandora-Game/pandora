@@ -1,4 +1,4 @@
-import { SpaceIdSchema } from 'pandora-common';
+import { SpaceIdSchema, SpaceInviteIdSchema } from 'pandora-common';
 import type { ReactElement } from 'react';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
 import { SpaceInviteEmbed } from '../../screens/spaceJoin/inviteEmbed.tsx';
@@ -24,7 +24,9 @@ export function RenderedLink({ url, index }: { url: URL; index: number; }): Reac
 					spaceId = 's/' + spaceId;
 				}
 				const parsedSpaceId = SpaceIdSchema.safeParse(spaceId);
-				if (!parsedSpaceId.success)
+				const parsedInvite = SpaceInviteIdSchema.optional().safeParse(invite);
+
+				if (!parsedSpaceId.success || !parsedInvite.success)
 					break;
 
 				return (
@@ -32,7 +34,7 @@ export function RenderedLink({ url, index }: { url: URL; index: number; }): Reac
 						<ExternalLink href={ url.href }>
 							{ url.href }
 						</ExternalLink>
-						<SpaceInviteEmbed key={ index } spaceId={ parsedSpaceId.data } invite={ invite } />
+						<SpaceInviteEmbed key={ index } spaceId={ parsedSpaceId.data } invite={ parsedInvite.data } />
 					</>
 				);
 			}

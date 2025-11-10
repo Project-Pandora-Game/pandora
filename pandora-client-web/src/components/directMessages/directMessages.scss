@@ -58,14 +58,14 @@
 	>.direct-message, >.chatArea {
 		flex: 1;
 
-		.error {
+		> .error {
 			color: common.$theme-dms-chat-error;
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
 		}
 
-		.loading {
+		> .loading {
 			color: common.$theme-dms-chat-loading;
 			font-weight: bold;
 			text-align: center;

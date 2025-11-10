@@ -1,25 +1,138 @@
 @use '../../../styles/common';
 
-.spaceInvite {
+.SpaceInviteEmbedText {
 	display: block flex;
 	flex-flow: row;
 	width: calc(100% - 1em);
 	margin: 0.5em;
 	padding: 0.75em;
-	background: common.$theme-chat-embed-normal-background;
-	color: common.$theme-chat-embed-normal-text;
+	background: common.$theme-chat-embed-background;
+	color: common.$theme-chat-embed-text;
 	font-weight: bold;
 	border: 0.25em solid transparent;
+	border-radius: common.spacing('small');
 
-	&.active {
-		&:hover {
-			cursor: pointer;
-			background: common.$theme-chat-embed-hover-background;
-			color: common.$theme-chat-embed-hover-text;
+	&.error {
+		background: common.$theme-error-background;
+		color: common.$theme-error-text;
+	}
+}
+
+.SpaceInviteEmbed {
+	display: grid;
+	width: calc(100% - 1em);
+	margin: 0.5em;
+	align-items: center;
+	background: common.$theme-normal-background;
+	color: common.$theme-normal-text;
+	border: 0.25em solid transparent;
+	border-radius: common.spacing('small');
+	padding: 0.25em;
+	overflow: hidden;
+
+	grid-template:
+		"icon extraIcons name" 1.75em
+		"icon extraIcons description" 1.75em
+		/ 2.8em 2em 1fr;
+
+	&.selected {
+		background: common.$theme-active-background;
+		color: common.$theme-active-text;
+		.entry .offlineCount {
+			color: common.$theme-active-text-dim;
+		}
+	}
+
+	&:hover:not(.selected) {
+		color: common.$theme-hover-text;
+		background: common.$theme-hover-background;
+
+		.entry .offlineCount {
+			color: common.$theme-hover-text-dim;
+		}
+	}
+
+	&:focus-visible {
+		border-color: common.$theme-spacesearch-entry-visiblefocus-outline;
+	}
+
+	&.empty {
+		&:not(:hover):not(.selected) {
+			color: common.$theme-normal-text-dim;
+
+			.entry .offlineCount {
+				color: common.$theme-normal-text-dim;
+			}
 		}
 
-		&:focus-visible {
-			border-color: common.$theme-chat-embed-visiblefocus-outline;
+		.entry {
+			font-style: italic;
 		}
+	}
+
+	&.full .userCount {
+		background: common.$theme-spacesearch-entry-spacefull-highlight;
+		border-radius: 0.5em;
+	}
+
+	.icon {
+		grid-area: icon;
+		height: 80%;
+		aspect-ratio: 1;
+		object-fit: contain;
+	}
+
+	.icons-extra {
+		grid-area: extraIcons;
+		height: 80%;
+		display: flex;
+		flex-flow: column;
+		justify-content: flex-start;
+
+		img {
+			width: 1.5em;
+			height: 1.5em;
+		}
+	}
+
+	.entry {
+		display: flex;
+		grid-area: name;
+		padding: 0.5em;
+		gap: 0.5em;
+		vertical-align: middle;
+		background: transparent;
+		white-space: nowrap;
+		overflow: hidden;
+
+		.name {
+			text-overflow: ellipsis;
+			flex-shrink: 1;
+			overflow: hidden;
+		}
+
+		.offlineCount {
+			color: common.$theme-normal-text-dim;
+			transition: all 150ms linear;
+		}
+	}
+
+	.description-preview {
+		grid-area: description;
+		padding: 0.5em;
+		text-align: left;
+		vertical-align: middle;
+		background: transparent;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.userCountWrapper {
+		font-style: normal;
+	}
+
+	.userCount {
+		padding: 0 0.25em;
 	}
 }

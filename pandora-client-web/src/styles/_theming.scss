@@ -42,6 +42,10 @@ $theme-active-background: color-mix(in srgb, #444, $theme-accent-color 65%);
 $theme-active-text: #eee;
 $theme-active-text-dim: #aaa;
 
+// Element with error text that isn't that important (not full error box)
+$theme-error-background: $theme-normal-background;
+$theme-error-text: $themecolor-error;
+
 // Buttons
 $theme-button: (
 	default: (
@@ -252,11 +256,8 @@ $theme-chat-actionLogEntry-text: #fff;
 $theme-chat-editedMessage-background: #444;
 $theme-chat-editedMessage-notch: #09f;
 
-$theme-chat-embed-normal-background: #222;
-$theme-chat-embed-normal-text: #fff;
-$theme-chat-embed-hover-background: #181818;
-$theme-chat-embed-hover-text: #fff;
-$theme-chat-embed-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+$theme-chat-embed-background: $theme-normal-background;
+$theme-chat-embed-text: $theme-normal-text;
 
 $theme-chat-input-normal-background: $theme-input-normal-background;
 $theme-chat-input-focused-background: $theme-input-focused-background;

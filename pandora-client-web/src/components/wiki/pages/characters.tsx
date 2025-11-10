@@ -135,9 +135,9 @@ export function WikiCharacters(): ReactElement {
 				You can open a context-specific character menu by clicking on the name below a character inside the room.
 				While characters are inside a <Link to='/wiki/items#IT_Room-level_items'>room-level item</Link>, you can alternatively open the context menu
 				by opening the room item's context menu, opening the slot the character is inside, and then clicking on the character name.
-				Finally, you can open the context menu by pressing on a character's name in the "Room" tab. This is useful if the name in the room scene got hidden by something.<br />
+				Finally, you can open the context menu by pressing on a character's name in the "Room" tab. This is useful if the name in the room scene is covered by something.<br />
 				The character context menu has different features depending on whom it is opened on. When an option on another character is crossed out,
-				it is not possible to do right now, for instance because you are lacking a permission.
+				it is not possible to do right now, for instance because you are lacking a permission. Clicking such option will display the reason.
 			</p>
 			<ul>
 				<li>You can use it to quickly open your or another character's profile or wardrobe.</li>
@@ -158,8 +158,8 @@ export function WikiCharacters(): ReactElement {
 				There also is a button in the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link>.
 			</p>
 			<ul>
-				<li>The "Item Limits" tab lets you configure <Link to='/wiki/items#IT_Item_preferences_and_limits'>limit and preferences</Link> of items for your character.</li>
-				<li>The "Randomization"-tab lets you change to a randomized appearance.</li>
+				<li>The "Item Limits" tab lets you configure <Link to='/wiki/items#IT_Item_preferences_and_limits'>limits and preferences</Link> of items for your character.</li>
+				<li>The "Randomization"-tab lets you change to a randomized appearance (this tab is only available in your Personal Space).</li>
 				<li>The effects & modifiers tab lists all effect currently applied to this character and allows management of <Link to='#CH_Character_modifiers'>character modifiers</Link>.</li>
 				<li>The "Body"-tab allows you to change your character's body parts and body shape, but only if the space you are in allows that.</li>
 				<li>

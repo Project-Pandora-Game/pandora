@@ -339,7 +339,8 @@ function CharacterHidingMenuInner(): ReactElement | null {
 
 function AccountRelationshipActionContextMenu(): ReactElement | null {
 	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
-	const onClick = useGoToDM(character.data.accountId);
+	const goToDm = useGoToDM(character.data.accountId);
+
 	if (character.data.accountId === currentAccount?.id) {
 		switch (menu) {
 			case 'main':
@@ -374,7 +375,7 @@ function AccountRelationshipActionContextMenu(): ReactElement | null {
 			return (
 				<>
 					<AccountRelationshipActionContextMenuInner />
-					<Button theme='transparent' className='withIcon' onClick={ onClick }>
+					<Button theme='transparent' className='withIcon' onClick={ goToDm }>
 						<img src={ letterIcon } />
 						<span>Direct message</span>
 					</Button>

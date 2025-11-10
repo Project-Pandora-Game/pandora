@@ -36,6 +36,7 @@ const TIPS: readonly string[] = [
 	`If you write emotes with "/me", a change of "Command hint behavior" in the interface settings may help.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
+	`To quickly invite a character to your current space, use the "/invite" command in a DM to them.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
 	`You can start typing a chat message at any time, even without clicking into the text input field first.`,
 	`Setting the render resolution in the graphics settings to 0% lets you use the chat without graphics.`,
@@ -98,7 +99,7 @@ export function SpacesSearch(): ReactElement {
 			) : (
 				<>
 					<SpaceSearchList list={ list } />
-					<Column padding='large' alignX='start'>
+					<Column padding='large' gap='small' alignX='start'>
 						<div>Want to find or explore public spaces not in use?</div>
 						<Row padding='medium' alignY='center'>
 							<Button onClick={ () => {

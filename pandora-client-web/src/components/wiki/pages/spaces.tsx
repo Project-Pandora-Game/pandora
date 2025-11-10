@@ -169,7 +169,7 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>If you want a user and all their characters to have permanent access to your space, add them to the list of Allowed users.</li>
 				<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character.</li>
-				<li>If you want to invite another character for one time, send a direct message to them using the "/invite" command.</li>
+				<li>If you want to quickly invite another character for a single time, use the "/invite" command in a direct message to them.</li>
 			</ul>
 
 			<h4 id='SP_Space_invites'>Space invites</h4>

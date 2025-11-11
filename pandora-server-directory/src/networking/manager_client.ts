@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Promisable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
 import * as z from 'zod';
@@ -1181,7 +1181,7 @@ async function TestCaptcha(token?: string): Promise<boolean> {
  * @template TParams - The type of the parameters passed to the original function.
  * @template TReturn - The type of the return value of the original function.
  */
-function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
+function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn: (...args: TParams) => Promisable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
 	return async (...args: TParams): Promise<Awaited<TReturn>> => {
 		const before = Date.now();
 		let result: [true, Awaited<TReturn>] | [false, unknown];

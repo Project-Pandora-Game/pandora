@@ -15,7 +15,7 @@ import type { AppearanceItems } from './items.ts';
 
 import type { IChatMessageActionItem } from '../../chat/index.ts';
 import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
-import { Assert, MemoizeNoArg, type Writeable } from '../../utility/misc.ts';
+import { Assert, MemoizeNoArg, type Writable } from '../../utility/misc.ts';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -128,7 +128,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			return undefined;
 
 		let hasKey = false;
-		const result: Writeable<ItemColorBundle> = {};
+		const result: Writable<ItemColorBundle> = {};
 		for (const [key, value] of Object.entries(this.color)) {
 			const def = colorization[key];
 			if (!def || def.name == null)
@@ -297,7 +297,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		if (!overrides)
 			return this;
 
-		const result: Writeable<ItemColorBundle> = {};
+		const result: Writable<ItemColorBundle> = {};
 		for (const [key, value] of Object.entries(this.color)) {
 			const def = colorization[key];
 			if (!def || def.name == null)
@@ -321,14 +321,14 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		if (Array.isArray(color)) {
 			// Migrate old color storage format (2024/01)
 			const keys = Object.keys(colorization);
-			const fixup: Writeable<ItemColorBundle> = {};
+			const fixup: Writable<ItemColorBundle> = {};
 			color.forEach((value, index) => {
 				if (index < keys.length)
 					fixup[keys[index]] = value;
 			});
 			color = fixup;
 		}
-		const result: Writeable<ItemColorBundle> = {};
+		const result: Writable<ItemColorBundle> = {};
 		for (const [key, value] of Object.entries(colorization)) {
 			if (value.name == null)
 				continue;

@@ -1,7 +1,6 @@
 import AsyncLock, { AsyncLockOptions } from 'async-lock';
 import { castDraft, Draft } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import type { SetRequired } from 'type-fest';
 
 /** Checks if the two types are equal */
 export type Equals<X, Y> =
@@ -27,11 +26,16 @@ export type BoolSelect<T extends boolean, TrueType, FalseType> = T extends true 
 /** Returns all keys which have values matching V */
 export type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
 
-export type Awaitable<T> = T | PromiseLike<T>;
+export type Promisable<T> = T | PromiseLike<T>;
 
-export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+export type Writable<T> = { -readonly [P in keyof T]: T[P] };
 
 export type Nullable<T> = T | null | undefined;
+
+/** Extract the keys from a type where the value type of the key extends the given `Condition` */
+export type ConditionalKeys<Base, Condition> = {
+	[Key in keyof Base]-?: Base[Key] extends Condition ? Key : never;
+}[keyof Base];
 
 /**
  * Describes the allowed return value from a class `accessor` field decorator.
@@ -472,7 +476,10 @@ export class KnownObject {
  * @param keys - Record containing `true` for each required property
  * @returns - `true` if all required properties are not nullish, `false` otherwise
  */
-export function CheckPropertiesNotNullable<TObject extends object, TKeys extends (keyof TObject & string)>(object: Partial<TObject>, keys: Record<TKeys, true>): object is TObject & (SetRequired<TObject, TKeys>) {
+export function CheckPropertiesNotNullable<TObject extends object>(
+	object: Partial<TObject>,
+	keys: Record<keyof TObject, true>,
+): object is TObject {
 	for (const key of KnownObject.keys(keys)) {
 		Assert(keys[key] === true);
 		if (object[key] == null)

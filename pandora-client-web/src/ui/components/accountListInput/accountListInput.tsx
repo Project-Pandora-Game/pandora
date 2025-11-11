@@ -1,9 +1,8 @@
 import classNames from 'classnames';
-import { CompareAccountIds, GetLogger, type AccountId } from 'pandora-common';
+import { CompareAccountIds, GetLogger, type AccountId, type Promisable } from 'pandora-common';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';

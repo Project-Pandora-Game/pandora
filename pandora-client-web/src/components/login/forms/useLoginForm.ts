@@ -1,7 +1,6 @@
-import { AssertNever, GetLogger, IsString, IsUsername } from 'pandora-common';
+import { AssertNever, GetLogger, IsString, IsUsername, type Promisable } from 'pandora-common';
 import { FormEvent, useState } from 'react';
 import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
-import type { Promisable } from 'type-fest';
 import { useLogin } from '../../../networking/account_manager.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAuthFormData } from '../authFormDataProvider.tsx';

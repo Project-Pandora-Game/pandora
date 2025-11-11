@@ -1,15 +1,15 @@
 import { freeze } from 'immer';
-import { Assert, type Satisfies } from 'pandora-common';
+import { Assert, type ConditionalKeys, type Satisfies } from 'pandora-common';
 import { type ColorSource, type Container, type EventEmitter, type PointData } from 'pixi.js';
 import type React from 'react';
 import type { ReactNode } from 'react';
-import type { ConditionalKeys, ReadonlyKeysOf } from 'type-fest';
+import type { ReadonlyKeysOf } from 'type-fest';
 
 // This file extensively does type trickery - attempting to concentrate all type tricks to this file,
 // in hopes that usage outside will be fully type-safe
 /* eslint-disable @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any */
 
-/** Writeable non-function props of the component */
+/** Writable non-function props of the component */
 type DisplayObjectAllProps<Component extends Container> = Omit<Component, ConditionalKeys<Component, Function> | ReadonlyKeysOf<Component>>;
 
 /** List of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */

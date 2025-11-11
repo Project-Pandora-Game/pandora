@@ -1,7 +1,6 @@
-import type { Promisable } from 'type-fest';
 import type { ChatCharacterFullStatus } from '../chat/chat.ts';
 import type { IEmpty } from '../networking/index.ts';
-import { Assert } from '../utility/misc.ts';
+import { Assert, type Promisable } from '../utility/misc.ts';
 import type { CommandForkDescriptor } from './builder.ts';
 import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers.ts';
 

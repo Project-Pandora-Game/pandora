@@ -16,10 +16,10 @@ import {
 	type IClientShardNormalResult,
 	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
+	type Promisable,
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';
 import deleteIcon from '../../../../assets/icons/delete.svg';
 import exportIcon from '../../../../assets/icons/export.svg';

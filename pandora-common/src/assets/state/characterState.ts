@@ -1,11 +1,10 @@
 import { Immutable, freeze } from 'immer';
 import { clamp, cloneDeep, isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
-import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg, MemoizeSingleObjectArg } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg, MemoizeSingleObjectArg, type Writable } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';

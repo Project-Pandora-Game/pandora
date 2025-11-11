@@ -1,9 +1,8 @@
 import classNames from 'classnames';
-import { CharacterIdSchema, CompareCharacterIds, GetLogger, type CharacterId } from 'pandora-common';
+import { CharacterIdSchema, CompareCharacterIds, GetLogger, type CharacterId, type Promisable } from 'pandora-common';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';

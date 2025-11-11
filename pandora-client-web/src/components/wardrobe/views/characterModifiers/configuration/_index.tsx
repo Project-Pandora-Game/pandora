@@ -1,6 +1,5 @@
-import { AssertNever, type ModifierConfigurationEntryDefinition } from 'pandora-common';
+import { AssertNever, type ModifierConfigurationEntryDefinition, type Promisable } from 'pandora-common';
 import { type ReactElement } from 'react';
-import type { Promisable } from 'type-fest';
 import { WardrobeCharacterModifierConfigCharacterList } from './characterList.tsx';
 import { WardrobeCharacterModifierConfigNumber } from './number.tsx';
 import { WardrobeCharacterModifierConfigString } from './string.tsx';

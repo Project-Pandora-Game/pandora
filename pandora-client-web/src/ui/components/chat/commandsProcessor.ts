@@ -10,8 +10,8 @@ import {
 	type CharacterSettings,
 	type ChatCharacterFullStatus,
 	type CommandAutocompleteOption,
+	type Promisable,
 } from 'pandora-common';
-import type { Promisable } from 'type-fest';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';

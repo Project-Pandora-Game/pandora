@@ -1,9 +1,8 @@
 import { freeze, produce, type Draft, type Immutable } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
-import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, type Writable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
 import { RoomIdSchema } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';

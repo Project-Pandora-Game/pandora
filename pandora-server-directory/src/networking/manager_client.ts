@@ -132,6 +132,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceLeave: this.handleSpaceLeave.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
+			spaceDropRole: this.handleSpaceDropRole.bind(this),
 			spaceOwnership: this.handleSpaceOwnership.bind(this),
 			spaceInvite: this.handleSpaceInvite.bind(this),
 
@@ -628,6 +629,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const result = await connection.character.leaveSpace();
 
+		return { result };
+	}
+
+	private async handleSpaceDropRole({ space: spaceId, role }: IClientDirectoryArgument['spaceDropRole'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceDropRole'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = connection.account;
+		const space = await SpaceManager.loadSpace(spaceId);
+
+		if (space == null) {
+			logger.verbose(`${connection.id} failed drop role on space '${spaceId}': Space not found`);
+			return { result: 'notFound' };
+		}
+
+		const result = await space.dropSelfRole(account.id, role);
 		return { result };
 	}
 

@@ -199,7 +199,7 @@ function SpaceSearchList({ list }: {
 					}
 				</Column>
 			</div>
-			<hr />
+			<hr className='fill-x' />
 			<div>
 				<h3>Found spaces ({ otherSpaces.length })</h3>
 				{

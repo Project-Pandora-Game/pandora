@@ -183,6 +183,41 @@ export class Space {
 		return this.config;
 	}
 
+	@AsyncSynchronized('object')
+	public async dropSelfRole(accountId: AccountId, role: 'admin' | 'allowlisted'): Promise<'ok' | 'failed' | 'notFound'> {
+		// Bail out if space is invalidated
+		if (!this.isValid)
+			return 'failed';
+
+		if (role === 'admin') {
+			if (!this.config.admin.includes(accountId))
+				return 'ok';
+
+			this.config.admin = this.config.admin.filter((a) => a !== accountId);
+		} else if (role === 'allowlisted') {
+			if (!this.config.allow.includes(accountId))
+				return 'ok';
+
+			this.config.allow = this.config.allow.filter((a) => a !== accountId);
+		} else {
+			AssertNever(role);
+		}
+
+		this._cleanupLists();
+		await this._removeBannedCharacters(null);
+
+		await Promise.all([
+			this._assignedShard?.update('spaces'),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+				ownerInvites: Array.from(this._ownerInvites),
+			}, null),
+		]);
+
+		ConnectionManagerClient.onSpaceListChange();
+		return 'ok';
+	}
+
 	// TODO: This might be better synchronized, but we need to avoid deadlock if the space gets deleted during this
 	public async removeOwner(accountId: AccountId): Promise<'ok' | 'notAnOwner'> {
 		// Ignore if space is invalidated
@@ -206,10 +241,14 @@ export class Space {
 		} else {
 			this.logger.info(`Removed owner ${accountId}`);
 			// Space with remaining owners only propagates the change to shard and clients
-			await this._assignedShard?.update('spaces');
+			await Promise.all([
+				this._assignedShard?.update('spaces'),
+				GetDatabase().updateSpace(this.id, {
+					owners: Array.from(this._owners),
+					config: cloneDeep(this.config),
+				}, null),
+			]);
 			// TODO: Make an announcement of the change
-
-			await GetDatabase().updateSpace(this.id, { owners: Array.from(this._owners) }, null);
 
 			ConnectionManagerClient.onSpaceListChange();
 		}

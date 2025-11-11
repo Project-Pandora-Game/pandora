@@ -382,6 +382,19 @@ export const ClientDirectorySchema = {
 			]),
 		}),
 	},
+	spaceDropRole: { // Stop being an admin or allow-listed account of any space
+		request: z.object({
+			space: SpaceIdSchema,
+			role: z.enum(['admin', 'allowlisted']),
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok', // Removed or we don't have the role in the first place
+				'failed', // Generic failure
+				'notFound', // Space not found
+			]),
+		}),
+	},
 	spaceOwnership: {
 		request: z.discriminatedUnion('action', [
 			z.object({

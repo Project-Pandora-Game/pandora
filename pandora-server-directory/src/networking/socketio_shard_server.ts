@@ -1,7 +1,6 @@
 import type { Server as HttpServer, IncomingMessage } from 'http';
-import { GetLogger, HTTP_SOCKET_IO_SHARD_PATH, IDirectoryShard, IIncomingConnection } from 'pandora-common';
-import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers.js';
-import { IServerSocket } from 'pandora-common/dist/networking/room.js';
+import { GetLogger, HTTP_SOCKET_IO_SHARD_PATH, IDirectoryShard, IIncomingConnection, type IServerSocket } from 'pandora-common';
+import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/networking/helpers';
 import type { Socket } from 'socket.io';
 import { ShardTokenStore } from '../shard/shardTokenStore.ts';
 import { ShardConnection } from './connection_shard.ts';

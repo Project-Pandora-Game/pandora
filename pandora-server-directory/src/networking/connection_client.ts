@@ -1,5 +1,5 @@
 import { Assert, ClientDirectorySchema, DirectoryClientSchema, GetLogger, IClientDirectory, IDirectoryClient, IncomingConnection, IncomingSocket, IServerSocket, type TypedEventEmitterEvents } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../account/account.ts';
 import { AccountToken } from '../account/accountSecure.ts';
 import type { Character } from '../account/character.ts';

@@ -5,8 +5,8 @@ import {
 	Assert,
 	AssertNever,
 	BadMessageError,
-	CardGameGame,
 	CardArraysToString,
+	CardGameGame,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
 	CharacterModifierActionCheckAdd,
@@ -35,7 +35,7 @@ import {
 	type CharacterRestrictionsManager,
 	type GameLogicModifierInstanceServer,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { Character } from '../character/character.ts';
 import { CharacterManager } from '../character/characterManager.ts';
@@ -485,7 +485,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									const players = space.cardGame.getPlayerIds().filter((p) =>
 										p !== space.cardGame?.getDealerId() && p !== character.id)
 										.map((p) => space.getCharacterById(p)?.name)
-										.filter((name): name is string => !! name);
+										.filter((name): name is string => !!name);
 									space.handleActionMessage({
 										id: 'gamblingCardGameJoined',
 										rooms: null,

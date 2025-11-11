@@ -5,7 +5,7 @@ import {
 	type AppearanceAction,
 	type ItemPath,
 } from 'pandora-common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
+import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';

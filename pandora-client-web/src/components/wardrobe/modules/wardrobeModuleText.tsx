@@ -7,7 +7,7 @@ import {
 	PandoraFontTypeSchema,
 	type AppearanceAction,
 } from 'pandora-common';
-import { ItemModuleText, ModuleItemDataTextAlignSchema } from 'pandora-common/dist/assets/modules/text.js';
+import { ItemModuleText, ModuleItemDataTextAlignSchema } from 'pandora-common/assets/modules/text';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Select } from '../../../common/userInteraction/select/select.tsx';

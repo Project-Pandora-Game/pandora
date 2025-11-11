@@ -22,7 +22,7 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/networking/helpers';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext.ts';

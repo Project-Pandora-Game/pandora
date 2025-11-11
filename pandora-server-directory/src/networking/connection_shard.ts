@@ -1,5 +1,5 @@
 import { DirectoryShardSchema, GetLogger, IDirectoryShard, IncomingConnection, IncomingSocket, IServerSocket, IShardDirectory, ShardDirectorySchema } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Shard } from '../shard/shard.ts';
 import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
 import { ConnectionType, IConnectionShard } from './common.ts';

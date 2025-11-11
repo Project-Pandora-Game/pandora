@@ -16,7 +16,7 @@ import {
 	ShardFeature,
 	SpaceIdSchema,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager.ts';

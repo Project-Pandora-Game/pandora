@@ -1,5 +1,5 @@
 import { BadMessageError, GetLogger, IMessageHandler, IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult, MessageHandler, PANDORA_VERSION_DATABASE } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ShardManager } from '../shard/shardManager.ts';

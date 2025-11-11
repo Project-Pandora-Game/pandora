@@ -95,7 +95,6 @@ export default tsEslint.config(
 			'import/no-cycle': 'warn',
 			'import/no-internal-modules': ['error', {
 				forbid: [
-					'pandora-common/src/**',
 					'zod/**',
 				],
 			}],

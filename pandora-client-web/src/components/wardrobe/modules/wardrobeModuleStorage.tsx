@@ -3,7 +3,7 @@ import {
 	AppearanceActionProcessingContext,
 	ItemInteractionType,
 } from 'pandora-common';
-import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage.js';
+import { ItemModuleStorage } from 'pandora-common/assets/modules/storage';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Row } from '../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';

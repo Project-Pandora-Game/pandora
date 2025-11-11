@@ -1,6 +1,6 @@
 import { capitalize } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus, type IClientDirectoryNormalResult } from 'pandora-common';
-import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
+import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
 import { toast } from 'react-toastify';
 import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';

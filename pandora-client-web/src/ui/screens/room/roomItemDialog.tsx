@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { SplitContainerPath } from 'pandora-common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
-import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
+import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
+import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import pinOutlineIcon from '../../../assets/icons/pin-outline.svg';

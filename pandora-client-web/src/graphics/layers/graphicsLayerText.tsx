@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphicsLayerText } from 'pandora-common';
-import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
+import { ItemModuleText } from 'pandora-common/assets/modules/text';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
 import { Container } from '../baseComponents/container.ts';

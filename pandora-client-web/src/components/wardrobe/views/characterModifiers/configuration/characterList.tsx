@@ -1,6 +1,6 @@
 import { uniq } from 'lodash-es';
 import { CompareCharacterIds, LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT, type CharacterId, type ModifierConfigurationEntryDefinition, type Promisable } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/gameLogic/characterModifiers/helpers/configurationBuilder';
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import { CharacterListInput } from '../../../../../ui/components/characterListInput/characterListInput.tsx';

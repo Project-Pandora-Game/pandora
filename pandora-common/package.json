@@ -8,8 +8,33 @@
 		"node": ">=22.x"
 	},
 	"type": "module",
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./assets/modules/*": {
+			"types": "./dist/assets/modules/*.d.ts",
+			"default": "./dist/assets/modules/*.js"
+		},
+		"./networking/helpers": {
+			"types": "./dist/networking/helpers.d.ts",
+			"default": "./dist/networking/helpers.js"
+		},
+		"./gameLogic/characterModifiers/helpers/*": {
+			"types": "./dist/gameLogic/characterModifiers/helpers/*.d.ts",
+			"default": "./dist/gameLogic/characterModifiers/helpers/*.js"
+		},
+		"./utility": {
+			"types": "./dist/utility/index.d.ts",
+			"default": "./dist/utility/index.js"
+		},
+		"./environment": {
+			"types": "./dist/environment.d.ts",
+			"default": "./dist/environment.js"
+		},
+		"./tsconfig.base.json": "./tsconfig.base.json"
+	},
 	"files": [
 		"/dist/**/*",
 		"tsconfig.base.json"

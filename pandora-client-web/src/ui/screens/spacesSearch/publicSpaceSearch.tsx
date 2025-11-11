@@ -125,43 +125,46 @@ function PublicSpaceSearchInner(): ReactElement {
 			</GridContainer>
 			<fieldset>
 				<legend>Search settings</legend>
-				<Column padding='small'>
-					<Column gap='small'>
-						<label>Space name filter</label>
-						<TextInput
-							autoComplete='none'
-							value={ spaceNameFilter }
-							onChange={ setSpaceNameFilter }
+				<form onSubmit={ (ev) => {
+					ev.preventDefault();
+					search(query, limit, 0);
+				} }>
+					<Column padding='small'>
+						<Column gap='small'>
+							<label>Space name filter</label>
+							<TextInput
+								autoComplete='none'
+								value={ spaceNameFilter }
+								onChange={ setSpaceNameFilter }
+								disabled={ processing }
+							/>
+							{ !spaceNameFilterValid ? (<div className='error-box'>Invalid name</div>) : null }
+						</Column>
+						<SelectSettingInput
+							driver={ sortDriver }
+							label='Sort results'
+							stringify={ SPACE_SEARCH_SORT_NAME }
+							schema={ SpaceSearchSortSchema }
 							disabled={ processing }
 						/>
-						{ !spaceNameFilterValid ? (<div className='error-box'>Invalid name</div>) : null }
+						<SelectSettingInput
+							driver={ useValueMapDriver(limitDriver, (v) => v.toString(10), (v) => Number.parseInt(v, 10)) }
+							label='Results per page'
+							stringify={ useMemo(() => Object.fromEntries(SPACE_SEARCH_COUNT_OPTIONS.map((v) => [v.toString(10), v.toString(10)])), []) }
+							optionOrder={ useMemo(() => SPACE_SEARCH_COUNT_OPTIONS.map((v) => v.toString(10)), []) }
+							schema={ useMemo(() => z.enum(SPACE_SEARCH_COUNT_OPTIONS.map((v) => v.toString(10))), []) }
+							disabled={ processing }
+						/>
+						<Row>
+							<Button
+								type='submit'
+								disabled={ processing || !spaceNameFilterValid }
+							>
+								Search
+							</Button>
+						</Row>
 					</Column>
-					<SelectSettingInput
-						driver={ sortDriver }
-						label='Sort results'
-						stringify={ SPACE_SEARCH_SORT_NAME }
-						schema={ SpaceSearchSortSchema }
-						disabled={ processing }
-					/>
-					<SelectSettingInput
-						driver={ useValueMapDriver(limitDriver, (v) => v.toString(10), (v) => Number.parseInt(v, 10)) }
-						label='Results per page'
-						stringify={ useMemo(() => Object.fromEntries(SPACE_SEARCH_COUNT_OPTIONS.map((v) => [v.toString(10), v.toString(10)])), []) }
-						optionOrder={ useMemo(() => SPACE_SEARCH_COUNT_OPTIONS.map((v) => v.toString(10)), []) }
-						schema={ useMemo(() => z.enum(SPACE_SEARCH_COUNT_OPTIONS.map((v) => v.toString(10))), []) }
-						disabled={ processing }
-					/>
-					<Row>
-						<Button
-							onClick={ () => {
-								search(query, limit, 0);
-							} }
-							disabled={ processing || !spaceNameFilterValid }
-						>
-							Search
-						</Button>
-					</Row>
-				</Column>
+				</form>
 			</fieldset>
 			{ (searchResult == null || searchResult.originalQuery !== query || searchResult.limit !== limit) ? (
 				null

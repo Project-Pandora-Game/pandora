@@ -1,4 +1,5 @@
 import AsyncLock from 'async-lock';
+import { produce, type Immutable } from 'immer';
 import { diffString } from 'json-diff';
 import { cloneDeep, escapeRegExp, isEqual, max } from 'lodash-es';
 import { Binary, CollationOptions, Db, MongoClient, MongoServerError, type Filter, type Sort } from 'mongodb';
@@ -21,6 +22,7 @@ import {
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
+	PANDORA_VERSION_DATABASE,
 	ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	RoomBundleSchema,
@@ -67,11 +69,13 @@ import {
 	DatabaseConfigType,
 	DatabaseDirectMessageAccountsSchema,
 	DatabaseDirectMessageInfo,
+	DatabaseVersionConfigSchema,
 	DirectMessageAccounts,
 	type DatabaseCharacterSelfInfo,
 	type DatabaseConfigCreationCounters,
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
+	type DatabaseVersionConfig,
 } from './databaseStructure.ts';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
 import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType, type ValidatedCollectionDocumentType } from './validatedCollection.ts';
@@ -296,11 +300,10 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._db = this._client.db(DATABASE_NAME);
 
 		let migration: DbAutomaticMigration | undefined;
-		if (!inMemory || dbPath) {
-
+		{
 			const requireFullMigration = await this.doManualMigrations();
 
-			if (DATABASE_MIGRATION !== 'disable' || requireFullMigration) {
+			if (requireFullMigration || DATABASE_MIGRATION !== 'auto') {
 				migration = {
 					dryRun: DATABASE_MIGRATION === 'dry-run',
 					log: logger.prefixMessages('Migration:'),
@@ -309,7 +312,7 @@ export default class MongoDatabase implements PandoraDatabase {
 					totalCount: 0,
 					changeCount: 0,
 				};
-				migration.log.alert(`Running database migration!${migration.dryRun ? ' (dry run)' : ''}`);
+				migration.log.alert(`Running automatic database migration!${migration.dryRun ? ' (dry run)' : ''}`);
 			}
 		}
 
@@ -339,6 +342,11 @@ export default class MongoDatabase implements PandoraDatabase {
 			}
 			const endTime = Date.now();
 			migration.log.alert(`Database migration completed in ${endTime - migration.startTime}ms, processed ${migration.totalCount} documents, updated ${migration.changeCount} documents${migration.dryRun ? ' (dry run)' : ''}`);
+
+			if (migration.dryRun) {
+				migration.log.alert('Exitting after dry run');
+				throw new Error('Abort: Only dry run was requested');
+			}
 		}
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
@@ -863,395 +871,361 @@ export default class MongoDatabase implements PandoraDatabase {
 	 */
 	private async doManualMigrations(): Promise<boolean> {
 		let requireFullMigration = false;
-		// Add manual migrations here
 
-		//#region Migrate character self info from accounts to characters (03/2024)
-		const charactersToMigrate = new Map<CharacterId, { account: AccountId; character: DatabaseCharacterSelfInfo; }>();
+		const MINIMUM_SUPPORTED_DATABASE_VERSION: number = 0;
+		const PREVIOUS_VERSION_COMMIT = '[none yet]';
 
-		// Gather data about characters
-		await accountCollection.doManualMigration(this._client, this._db, {
-			oldSchema: DatabaseAccountWithSecureSchema.extend({
-				characters: DatabaseCharacterSelfInfoSchema
-					.omit({ currentSpace: true })
-					.and(z.object({ currentRoom: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().optional() }))
-					.array()
-					.optional(),
-			}),
-			migrate: async ({ oldStream }) => {
-				for await (const account of oldStream) {
-					if (Array.isArray(account?.characters)) {
-						requireFullMigration = true;
+		let originalVersionData: Immutable<DatabaseVersionConfig>;
+		const rawConfigCollection = this._db.collection(configCollection.name);
+		if ((await this._db.listCollections().toArray()).length === 0) {
+			// Freshly initialized database
+			originalVersionData = {
+				type: 'version',
+				data: {
+					database: 0,
+				},
+			};
+			logger.info('Initializing database for the first time');
+		} else {
+			const databaseVersionData = DatabaseVersionConfigSchema.nullable().safeParse(await rawConfigCollection.findOne({ type: 'version' }));
+			if (!databaseVersionData.success) {
+				logger.fatal(`Failed to parse database version info:`, z.prettifyError(databaseVersionData.error));
+				throw new Error('Failed to parse database version info');
+			}
 
-						for (const character of account.characters) {
-							Assert(!charactersToMigrate.has(character.id));
+			if (databaseVersionData.data == null) {
+				// No version data - database is pre-versioning
+				originalVersionData = {
+					type: 'version',
+					data: {
+						database: 0,
+					},
+				};
+			} else {
+				originalVersionData = databaseVersionData.data;
+			}
 
-							charactersToMigrate.set(character.id, {
-								account: account.id,
-								character: {
-									id: character.id,
-									name: character.name,
-									currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
-									inCreation: character.inCreation,
-								},
-							});
-						}
-					}
-				}
-			},
-		});
+			if (originalVersionData.data.database < MINIMUM_SUPPORTED_DATABASE_VERSION) {
+				logger.fatal(`Failed to migrate database data: Database has version ${originalVersionData.data.database}, but minimum supported is ${MINIMUM_SUPPORTED_DATABASE_VERSION}\n` +
+					`\tTo load Pandora either wipe your local development data, or checkout earlier version to complete migration of old data.\n` +
+					`\tThe last commit that supports the previous version is: ${PREVIOUS_VERSION_COMMIT}\n` +
+					((originalVersionData.data.database < MINIMUM_SUPPORTED_DATABASE_VERSION - 1) ? `\tNote: Your data appears to be very old. After checking out the above-mentioned commit, you might get the same message with a different commit to checkout first.` : ''),
+				);
+				throw new Error('Database has incompatible data');
+			}
 
-		// Apply the data to the characters
-		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDataSchema
-				.pick({ accountId: true, name: true, inCreation: true })
-				.and(z.object({
-					id: z.union([CharacterIdSchema, z.number().int()]),
-				})),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const character of oldStream) {
-					if (character == null)
-						continue;
+			if (originalVersionData.data.database !== PANDORA_VERSION_DATABASE) {
+				logger.alert(`Running database migration, version ${originalVersionData.data.database} → ${PANDORA_VERSION_DATABASE}`);
 
-					const migrationInfo = charactersToMigrate.get(CharacterIdToStringId(character.id));
-					if (migrationInfo == null)
-						continue;
-
-					Assert(character.accountId === migrationInfo.account);
-					Assert(CharacterIdToStringId(character.id) === migrationInfo.character.id);
-					Assert(character.name === migrationInfo.character.name);
-					Assert(character.inCreation === migrationInfo.character.inCreation);
-
-					migrationLogger.verbose(`Migrating character ${migrationInfo.account}/${migrationInfo.character.id}`);
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: character.id },
-						{
-							$set: {
-								currentSpace: migrationInfo.character.currentSpace,
-							},
-						},
-					);
-					Assert(matchedCount === 1);
-
-					charactersToMigrate.delete(migrationInfo.character.id);
-				}
-			},
-		});
-
-		Assert(charactersToMigrate.size === 0, 'Accounts reference unknown characters');
-		// The character array from the account will be deleted during automatic migration
-
-		//#endregion
-
-		//#region Generate explicit registration/character creation counters (04/2024)
-
-		await configCollection.doManualMigration(this._client, this._db, {
-			oldSchema: DatabaseConfigSchema,
-			migrate: async ({ oldCollection, migrationLogger }) => {
-				const existingCounters = await oldCollection.findOne({ type: 'creationCounters' });
-				if (existingCounters == null) {
-
-					let nextAccountId: number;
-					let nextCharacterId: number;
-
-					const maxAccount = await (await accountCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
-
-					if (maxAccount.length > 0) {
-						Assert(typeof maxAccount[0].id === 'number');
-						nextAccountId = maxAccount[0].id + 1;
-					} else {
-						nextAccountId = 1;
-					}
-
-					const maxCharacter = await (await characterCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
-
-					if (maxCharacter.length > 0) {
-						// Downcast to unknown as we are dealing with old, non-migrated data
-						const id: unknown = maxCharacter[0].id;
-						Assert(typeof id === 'number');
-						nextCharacterId = id + 1;
-					} else {
-						nextCharacterId = 1;
-					}
-
-					this._creationCounters = {
-						nextAccountId,
-						nextCharacterId,
-					};
-
-					await oldCollection.insertOne({
-						type: 'creationCounters',
-						data: this._creationCounters,
-					});
-
-					migrationLogger.alert(`Generated creation counters: nextAccountId=${nextAccountId}, nextCharacterId=${nextCharacterId}`);
-				}
-			},
-		});
-
-		//#endregion
-
-		//#region Character Id migration (04/2024)
-
-		// Go through all characters and replace numeric ids where needed by string ids
-		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: z.object({
-				id: z.union([CharacterIdSchema, z.number().int()]),
-			}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const character of oldStream) {
-					if (character == null)
-						continue;
-
-					if (typeof character.id === 'string')
-						continue;
-
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating character id for ${character.id} -> ${CharacterIdToStringId(character.id)}`);
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: character.id },
-						{
-							$set: {
-								id: CharacterIdToStringId(character.id),
-							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
-		//#endregion
-
-		//#region Rename spaces collection from old rooms collection (04/2024)
-
-		try {
-			await this._db.renameCollection('chatrooms', SPACES_COLLECTION_NAME, { dropTarget: false });
-
-			logger.info('Migrated old chatrooms collection to a new name');
-		} catch (error) {
-			if (!(error instanceof MongoServerError) || error.codeName !== 'NamespaceNotFound') {
-				throw error;
+				// Prevent any online shard from touching data that is being migrated
+				const spaceResult = await this._db.collection(spaceCollection.name).updateMany({}, {
+					$set: { accessId: '' },
+				});
+				Assert(spaceResult.acknowledged);
+				const characterResult = await this._db.collection(characterCollection.name).updateMany({}, {
+					$set: { accessId: '' },
+				});
+				Assert(characterResult.acknowledged);
 			}
 		}
 
+		if (originalVersionData.data.database > PANDORA_VERSION_DATABASE) {
+			logger.fatal(`Refusing the load database: Database has version ${originalVersionData.data.database}, which is newer than current version of Pandora (${PANDORA_VERSION_DATABASE})\n` +
+				'\tContinuing could lead to unexpected loss of data.\n' +
+				`\tIf you want to load older version temporarily for testing only, without saving any data, set the following in the Directory config (.env file):\n` +
+				`\t\tDATABASE_TYPE="mongodb-in-memory"`,
+			);
+			throw new Error('Database has incompatible version');
+		}
+
+		// Add manual migrations here
+
+		//#region Migrate character self info from accounts to characters (03/2024)
+		if (originalVersionData.data.database < 1) {
+			const charactersToMigrate = new Map<CharacterId, { account: AccountId; character: DatabaseCharacterSelfInfo; }>();
+
+			// Gather data about characters
+			await accountCollection.doManualMigration(this._client, this._db, {
+				oldSchema: DatabaseAccountWithSecureSchema.extend({
+					characters: DatabaseCharacterSelfInfoSchema
+						.omit({ currentSpace: true })
+						.and(z.object({ currentRoom: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().optional() }))
+						.array()
+						.optional(),
+				}),
+				migrate: async ({ oldStream }) => {
+					for await (const account of oldStream) {
+						if (Array.isArray(account?.characters)) {
+							requireFullMigration = true;
+
+							for (const character of account.characters) {
+								Assert(!charactersToMigrate.has(character.id));
+
+								charactersToMigrate.set(character.id, {
+									account: account.id,
+									character: {
+										id: character.id,
+										name: character.name,
+										currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
+										inCreation: character.inCreation,
+									},
+								});
+							}
+						}
+					}
+				},
+			});
+
+			// Apply the data to the characters
+			await characterCollection.doManualMigration(this._client, this._db, {
+				oldSchema: CharacterDataSchema
+					.pick({ accountId: true, name: true, inCreation: true })
+					.and(z.object({
+						id: z.union([CharacterIdSchema, z.number().int()]),
+					})),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const character of oldStream) {
+						if (character == null)
+							continue;
+
+						const migrationInfo = charactersToMigrate.get(CharacterIdToStringId(character.id));
+						if (migrationInfo == null)
+							continue;
+
+						Assert(character.accountId === migrationInfo.account);
+						Assert(CharacterIdToStringId(character.id) === migrationInfo.character.id);
+						Assert(character.name === migrationInfo.character.name);
+						Assert(character.inCreation === migrationInfo.character.inCreation);
+
+						migrationLogger.verbose(`Migrating character ${migrationInfo.account}/${migrationInfo.character.id}`);
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: character.id },
+							{
+								$set: {
+									currentSpace: migrationInfo.character.currentSpace,
+								},
+							},
+						);
+						Assert(matchedCount === 1);
+
+						charactersToMigrate.delete(migrationInfo.character.id);
+					}
+				},
+			});
+
+			Assert(charactersToMigrate.size === 0, 'Accounts reference unknown characters');
+			// The character array from the account will be deleted during automatic migration
+		}
+		//#endregion
+
+		//#region Generate explicit registration/character creation counters (04/2024)
+		if (originalVersionData.data.database < 1) {
+			await configCollection.doManualMigration(this._client, this._db, {
+				oldSchema: DatabaseConfigSchema,
+				migrate: async ({ oldCollection, migrationLogger }) => {
+					const existingCounters = await oldCollection.findOne({ type: 'creationCounters' });
+					if (existingCounters == null) {
+
+						let nextAccountId: number;
+						let nextCharacterId: number;
+
+						const maxAccount = await (await accountCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+						if (maxAccount.length > 0) {
+							Assert(typeof maxAccount[0].id === 'number');
+							nextAccountId = maxAccount[0].id + 1;
+						} else {
+							nextAccountId = 1;
+						}
+
+						const maxCharacter = await (await characterCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+						if (maxCharacter.length > 0) {
+							// Downcast to unknown as we are dealing with old, non-migrated data
+							const id: unknown = maxCharacter[0].id;
+							Assert(typeof id === 'number');
+							nextCharacterId = id + 1;
+						} else {
+							nextCharacterId = 1;
+						}
+
+						this._creationCounters = {
+							nextAccountId,
+							nextCharacterId,
+						};
+
+						await oldCollection.insertOne({
+							type: 'creationCounters',
+							data: this._creationCounters,
+						});
+
+						migrationLogger.alert(`Generated creation counters: nextAccountId=${nextAccountId}, nextCharacterId=${nextCharacterId}`);
+					}
+				},
+			});
+		}
+		//#endregion
+
+		//#region Character Id migration (04/2024)
+		if (originalVersionData.data.database < 1) {
+			// Go through all characters and replace numeric ids where needed by string ids
+			await characterCollection.doManualMigration(this._client, this._db, {
+				oldSchema: z.object({
+					id: z.union([CharacterIdSchema, z.number().int()]),
+				}),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const character of oldStream) {
+						if (character == null)
+							continue;
+
+						if (typeof character.id === 'string')
+							continue;
+
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating character id for ${character.id} -> ${CharacterIdToStringId(character.id)}`);
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: character.id },
+							{
+								$set: {
+									id: CharacterIdToStringId(character.id),
+								},
+							},
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
+		}
+		//#endregion
+
+		//#region Rename spaces collection from old rooms collection (04/2024)
+		if (originalVersionData.data.database < 1) {
+			try {
+				await this._db.renameCollection('chatrooms', SPACES_COLLECTION_NAME, { dropTarget: false });
+
+				logger.info('Migrated old chatrooms collection to a new name');
+			} catch (error) {
+				if (!(error instanceof MongoServerError) || error.codeName !== 'NamespaceNotFound') {
+					throw error;
+				}
+			}
+		}
 		//#endregion
 
 		//#region Change space id format from `r/abc` to `s/abc` (04/2024)
+		if (originalVersionData.data.database < 1) {
+			await spaceCollection.doManualMigration(this._client, this._db, {
+				oldSchema: z.object({
+					id: z.union([SpaceIdSchema, OldSpaceIdSchema]),
+				}),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const space of oldStream) {
+						if (space == null)
+							continue;
 
-		await spaceCollection.doManualMigration(this._client, this._db, {
-			oldSchema: z.object({
-				id: z.union([SpaceIdSchema, OldSpaceIdSchema]),
-			}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const space of oldStream) {
-					if (space == null)
-						continue;
+						if (space.id.startsWith('s/'))
+							continue;
 
-					if (space.id.startsWith('s/'))
-						continue;
+						const newId: SpaceId = UpdateSpaceId(space.id);
 
-					const newId: SpaceId = UpdateSpaceId(space.id);
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating space id for ${space.id} -> ${newId}`);
 
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating space id for ${space.id} -> ${newId}`);
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: space.id },
-						{
-							$set: {
-								id: newId,
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: space.id },
+							{
+								$set: {
+									id: newId,
+								},
 							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
 
-		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDataSchema
-				.pick({ id: true })
-				.and(z.object({
-					currentSpace: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().default(null),
-				})),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const character of oldStream) {
-					if (character == null)
-						continue;
+			await characterCollection.doManualMigration(this._client, this._db, {
+				oldSchema: CharacterDataSchema
+					.pick({ id: true })
+					.and(z.object({
+						currentSpace: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().default(null),
+					})),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const character of oldStream) {
+						if (character == null)
+							continue;
 
-					if (character.currentSpace == null || character.currentSpace.startsWith('s/'))
-						continue;
+						if (character.currentSpace == null || character.currentSpace.startsWith('s/'))
+							continue;
 
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating character ${character.id} current space id`);
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating character ${character.id} current space id`);
 
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: character.id },
-						{
-							$set: {
-								currentSpace: UpdateSpaceId(character.currentSpace),
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: character.id },
+							{
+								$set: {
+									currentSpace: UpdateSpaceId(character.currentSpace),
+								},
 							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
+		}
 		//#endregion
 
 		//#region Move space background configuration and character position data (04/2025)
-
-		await spaceCollection.doManualMigration(this._client, this._db, {
-			oldSchema: SpaceDataSchema.pick({ id: true }).extend({
-				config: SpaceDirectoryConfigSchema.extend({
-					/** The ID of the background or custom data */
-					background: z.union([z.string(), z.object({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
-				}),
-				inventory: RoomBundleSchema.partial().optional(),
-			}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const space of oldStream) {
-					if (space == null || space.inventory == null || space.config.background == null)
-						continue;
-
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating space background for ${space.id}`);
-
-					const newBackground: RoomGeometryConfig = space.inventory.roomGeometry ?? (
-						typeof space.config.background === 'string' ? {
-							type: 'premade',
-							id: space.config.background,
-						} : {
-							type: 'plain',
-							image: space.config.background.image,
-						}
-					);
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: space.id },
-						{
-							$unset: {
-								'config.background': true,
-							},
-							$set: {
-								'inventory.roomGeometry': newBackground,
-							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
-		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true }).extend({
-				roomId: SpaceIdSchema.nullable().catch(null).optional(),
-				position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
-				personalRoom: z.object({
-					inventory: z.object({
-						items: AppearanceItemsBundleSchema,
-						roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+		if (originalVersionData.data.database < 1) {
+			await spaceCollection.doManualMigration(this._client, this._db, {
+				oldSchema: SpaceDataSchema.pick({ id: true }).extend({
+					config: SpaceDirectoryConfigSchema.extend({
+						/** The ID of the background or custom data */
+						background: z.union([z.string(), z.object({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
 					}),
-				}).optional(),
-			}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const character of oldStream) {
-					if (character == null || character.position == null)
-						continue;
-
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating character position for ${character.id}`);
-
-					const newAppearance = CloneDeepMutable(character.appearance);
-					if (newAppearance != null) {
-						newAppearance.position = {
-							type: 'normal',
-							room: 'room:default',
-							position: character.position,
-						};
-						newAppearance.space = character.roomId ?? null;
-					}
-
-					const newPersonalRoom = CloneDeepMutable(character.personalRoom);
-					if (newPersonalRoom != null) {
-						newPersonalRoom.inventory.roomGeometry = { type: 'defaultPersonalSpace' };
-					}
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: character.id },
-						{
-							$unset: {
-								roomId: true,
-								position: true,
-							},
-							$set: {
-								appearance: newAppearance,
-								personalRoom: newPersonalRoom,
-							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
-		//#endregion
-
-		//#region Multiple rooms per space (07/2025)
-
-		await spaceCollection.doManualMigration(this._client, this._db, {
-			oldSchema: SpaceDataSchema
-				.pick({ id: true, spaceState: true })
-				.partial({ spaceState: true })
-				.extend({
-					inventory: z.object({
-						items: AppearanceItemsBundleSchema,
-						roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
-					}).optional(),
+					inventory: RoomBundleSchema.partial().optional(),
 				}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const space of oldStream) {
-					if (space == null || space.inventory == null || space.spaceState != null)
-						continue;
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const space of oldStream) {
+						if (space == null || space.inventory == null || space.config.background == null)
+							continue;
 
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating space ${space.id} for multiple rooms`);
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating space background for ${space.id}`);
 
-					const newSpaceState: SpaceStateBundle = {
-						...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
-						rooms: [
+						const newBackground: RoomGeometryConfig = space.inventory.roomGeometry ?? (
+							typeof space.config.background === 'string' ? {
+								type: 'premade',
+								id: space.config.background,
+							} : {
+								type: 'plain',
+								image: space.config.background.image,
+							}
+						);
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: space.id },
 							{
-								...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE),
-								items: space.inventory.items,
-								roomGeometry: space.inventory.roomGeometry,
+								$unset: {
+									'config.background': true,
+								},
+								$set: {
+									'inventory.roomGeometry': newBackground,
+								},
 							},
-						],
-					};
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
 
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: space.id },
-						{
-							$unset: {
-								inventory: true,
-							},
-							$set: {
-								spaceState: newSpaceState,
-							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
-		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDatabaseDataSchema
-				.pick({ id: true, personalSpace: true })
-				.partial({ personalSpace: true })
-				.extend({
+			await characterCollection.doManualMigration(this._client, this._db, {
+				oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true }).extend({
+					roomId: SpaceIdSchema.nullable().catch(null).optional(),
+					position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
 					personalRoom: z.object({
 						inventory: z.object({
 							items: AppearanceItemsBundleSchema,
@@ -1259,82 +1233,200 @@ export default class MongoDatabase implements PandoraDatabase {
 						}),
 					}).optional(),
 				}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const character of oldStream) {
-					if (character == null || character.personalRoom == null || character.personalSpace != null)
-						continue;
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const character of oldStream) {
+						if (character == null || character.position == null)
+							continue;
 
-					requireFullMigration = true;
-					migrationLogger.verbose(`Migrating character ${character.id} space for multiple rooms`);
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating character position for ${character.id}`);
 
-					const newSpaceState: SpaceStateBundle = {
-						...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE),
-						rooms: [
+						const newAppearance = CloneDeepMutable(character.appearance);
+						if (newAppearance != null) {
+							newAppearance.position = {
+								type: 'normal',
+								room: 'room:default',
+								position: character.position,
+							};
+							newAppearance.space = character.roomId ?? null;
+						}
+
+						const newPersonalRoom = CloneDeepMutable(character.personalRoom);
+						if (newPersonalRoom != null) {
+							newPersonalRoom.inventory.roomGeometry = { type: 'defaultPersonalSpace' };
+						}
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: character.id },
 							{
-								...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE),
-								items: character.personalRoom.inventory.items,
-								roomGeometry: character.personalRoom.inventory.roomGeometry,
+								$unset: {
+									roomId: true,
+									position: true,
+								},
+								$set: {
+									appearance: newAppearance,
+									personalRoom: newPersonalRoom,
+								},
 							},
-						],
-					};
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
+		}
+		//#endregion
 
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: character.id },
-						{
-							$unset: {
-								personalRoom: true,
-							},
-							$set: {
-								personalSpace: {
+		//#region Multiple rooms per space (07/2025)
+		if (originalVersionData.data.database < 1) {
+			await spaceCollection.doManualMigration(this._client, this._db, {
+				oldSchema: SpaceDataSchema
+					.pick({ id: true, spaceState: true })
+					.partial({ spaceState: true })
+					.extend({
+						inventory: z.object({
+							items: AppearanceItemsBundleSchema,
+							roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+						}).optional(),
+					}),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const space of oldStream) {
+						if (space == null || space.inventory == null || space.spaceState != null)
+							continue;
+
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating space ${space.id} for multiple rooms`);
+
+						const newSpaceState: SpaceStateBundle = {
+							...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE),
+							rooms: [
+								{
+									...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE),
+									items: space.inventory.items,
+									roomGeometry: space.inventory.roomGeometry,
+								},
+							],
+						};
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: space.id },
+							{
+								$unset: {
+									inventory: true,
+								},
+								$set: {
 									spaceState: newSpaceState,
 								},
 							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
 
+			await characterCollection.doManualMigration(this._client, this._db, {
+				oldSchema: CharacterDatabaseDataSchema
+					.pick({ id: true, personalSpace: true })
+					.partial({ personalSpace: true })
+					.extend({
+						personalRoom: z.object({
+							inventory: z.object({
+								items: AppearanceItemsBundleSchema,
+								roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
+							}),
+						}).optional(),
+					}),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const character of oldStream) {
+						if (character == null || character.personalRoom == null || character.personalSpace != null)
+							continue;
+
+						requireFullMigration = true;
+						migrationLogger.verbose(`Migrating character ${character.id} space for multiple rooms`);
+
+						const newSpaceState: SpaceStateBundle = {
+							...CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE),
+							rooms: [
+								{
+									...CloneDeepMutable(ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE),
+									items: character.personalRoom.inventory.items,
+									roomGeometry: character.personalRoom.inventory.roomGeometry,
+								},
+							],
+						};
+
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: character.id },
+							{
+								$unset: {
+									personalRoom: true,
+								},
+								$set: {
+									personalSpace: {
+										spaceState: newSpaceState,
+									},
+								},
+							},
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
+		}
 		//#endregion
 
 		//#region Backfill account `lastLogin` data (10/2025)
+		if (originalVersionData.data.database < 1) {
+			await accountCollection.doManualMigration(this._client, this._db, {
+				oldSchema: DatabaseAccountWithSecureSchema.pick({
+					id: true,
+					created: true,
+					lastLogin: true,
+					secure: true,
+				}),
+				migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+					for await (const account of oldStream) {
+						if (account == null || !account.secure.activated || account.lastLogin !== undefined)
+							continue;
 
-		await accountCollection.doManualMigration(this._client, this._db, {
-			oldSchema: DatabaseAccountWithSecureSchema.pick({
-				id: true,
-				created: true,
-				lastLogin: true,
-				secure: true,
-			}),
-			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
-				for await (const account of oldStream) {
-					if (account == null || !account.secure.activated || account.lastLogin !== undefined)
-						continue;
+						const lastLogin = max(
+							account.secure.tokens
+								.filter((token) => token.reason === AccountTokenReason.LOGIN)
+								.map((token) => token.expires - ENV.LOGIN_TOKEN_EXPIRATION),
+						) ?? account.created;
 
-					const lastLogin = max(
-						account.secure.tokens
-							.filter((token) => token.reason === AccountTokenReason.LOGIN)
-							.map((token) => token.expires - ENV.LOGIN_TOKEN_EXPIRATION),
-					) ?? account.created;
+						requireFullMigration = true;
+						migrationLogger.verbose(`Calculated last login for account ${account.id}`);
 
-					requireFullMigration = true;
-					migrationLogger.verbose(`Calculated last login for account ${account.id}`);
-
-					const { matchedCount } = await oldCollection.updateOne(
-						{ id: account.id },
-						{
-							$set: {
-								lastLogin,
+						const { matchedCount } = await oldCollection.updateOne(
+							{ id: account.id },
+							{
+								$set: {
+									lastLogin,
+								},
 							},
-						},
-					);
-					Assert(matchedCount === 1);
-				}
-			},
-		});
-
+						);
+						Assert(matchedCount === 1);
+					}
+				},
+			});
+		}
 		//#endregion
+
+		if (originalVersionData.data.database !== PANDORA_VERSION_DATABASE) {
+			requireFullMigration = true;
+			const newVersionData = produce(originalVersionData, (d) => {
+				d.data.database = PANDORA_VERSION_DATABASE;
+			});
+			const { acknowledged } = await rawConfigCollection.updateOne(
+				{ type: newVersionData.type },
+				{
+					$set: { data: newVersionData.data },
+					$setOnInsert: { type: newVersionData.type },
+				},
+				{ upsert: true },
+			);
+			Assert(acknowledged, 'Updating database version failed');
+		}
 
 		return requireFullMigration;
 	}

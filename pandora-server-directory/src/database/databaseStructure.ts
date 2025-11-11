@@ -180,6 +180,14 @@ export const DatabaseConfigCreationCountersSchema = z.object({
 });
 export type DatabaseConfigCreationCounters = z.infer<typeof DatabaseConfigCreationCountersSchema>;
 
+export const DatabaseVersionConfigSchema = z.object({
+	type: z.literal('version'),
+	data: z.object({
+		database: z.number().int().nonnegative(),
+	}),
+});
+export type DatabaseVersionConfig = z.infer<typeof DatabaseVersionConfigSchema>;
+
 export const DatabaseConfigSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('creationCounters'),
@@ -197,6 +205,7 @@ export const DatabaseConfigSchema = z.discriminatedUnion('type', [
 		type: z.literal('betaRegistrations'),
 		data: DatabaseBetaRegistrationSchema.array(),
 	}),
+	DatabaseVersionConfigSchema,
 ]);
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
 

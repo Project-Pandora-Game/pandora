@@ -1,4 +1,4 @@
-import { BadMessageError, IMessageHandler, IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult, MessageHandler } from 'pandora-common';
+import { BadMessageError, GetLogger, IMessageHandler, IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult, MessageHandler, PANDORA_VERSION_DATABASE } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -10,6 +10,8 @@ const messagesMetric = new promClient.Counter({
 	help: 'Count of received messages from shards',
 	labelNames: ['messageType'],
 });
+
+const logger = GetLogger('ConnectionManager-Shard');
 
 export const ConnectionManagerShard = new class ConnectionManagerShard implements IMessageHandler<IShardDirectory, IConnectionShard> {
 	private readonly messageHandler: MessageHandler<IShardDirectory, IConnectionShard>;
@@ -52,6 +54,13 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (connection.shard)
 			throw new BadMessageError();
 
+		if (args.databaseVersion !== PANDORA_VERSION_DATABASE) {
+			logger.warning(`Shard '${connection.getTokenInfo().id}' attempted to register with unsupported database version (${args.databaseVersion} vs ${PANDORA_VERSION_DATABASE}), rejecting.`);
+			// This responds "Rejected" without further warnings
+			// eslint-disable-next-line @typescript-eslint/only-throw-error
+			throw false;
+		}
+
 		const shard = ShardManager.getOrCreateShard(connection.getTokenInfo());
 
 		const result = await (shard.registered ? shard.handleReconnect(args, connection) : shard.register(args, connection));
@@ -59,10 +68,12 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		return result;
 	}
 
-	private handleShardRequestStop(_args: IShardDirectoryArgument['shardRequestStop'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRequestStop'] {
+	private async handleShardRequestStop(_args: IShardDirectoryArgument['shardRequestStop'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRequestStop'] {
 		const shard = connection.shard;
-		if (!shard)
-			throw new BadMessageError();
+		if (!shard) {
+			await connection.awaitResponse('stop', {});
+			return;
+		}
 
 		return shard.stop();
 	}

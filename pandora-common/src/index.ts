@@ -17,3 +17,4 @@ export * from './services/index.ts';
 export * from './space/index.ts';
 export * from './utility/index.ts';
 export * from './validation.ts';
+export * from './version.ts';

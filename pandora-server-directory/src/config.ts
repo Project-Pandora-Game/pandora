@@ -72,8 +72,12 @@ export const EnvParser = CreateEnvParser({
 	DATABASE_URL: z.string().default('mongodb://localhost:27017'),
 	/** Name of the db to connect to */
 	DATABASE_NAME: z.string().default('pandora-test'),
-	/** Database migration strategy. Anything but `disable` is costly, but generally offers higher development comfort and avoids weird issues. */
-	DATABASE_MIGRATION: z.enum(['disable', 'dry-run', 'migrate']).default('migrate'),
+	/** Database migration strategy:
+	 * - `auto` will only migrate if major version change happened
+	 * - `dry-run` will run automatic migrations without applying them and then exit
+	 * - `migrate` will run automatic migrations, no matter the database version [recommended for development]
+	 */
+	DATABASE_MIGRATION: z.enum(['auto', 'dry-run', 'migrate']).default('migrate'),
 
 	//#endregion
 

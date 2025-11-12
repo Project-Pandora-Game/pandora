@@ -42,6 +42,8 @@ export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 export const LIMIT_ROOM_NAME_LENGTH = 48;
 /** The pattern used for validating room name */
 export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]*$/;
+/** The maximum length of a room's description */
+export const LIMIT_ROOM_DESCRIPTION_LENGTH = 1_000;
 
 /** The maximum number of items a room can store */
 export const LIMIT_ITEM_ROOM_INVENTORY = 150;

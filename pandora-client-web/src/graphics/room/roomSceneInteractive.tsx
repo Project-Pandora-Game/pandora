@@ -12,6 +12,8 @@ import {
 	ItemRoomDevice,
 	RectangleSchema,
 	RoomBackgroundData,
+	RoomDescriptionSchema,
+	RoomIdSchema,
 	SpaceClientInfo,
 	SpaceIdSchema,
 	type AssetFrameworkCharacterState,
@@ -26,11 +28,14 @@ import * as zod from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { Button } from '../../components/common/button/button.tsx';
+import { Column } from '../../components/common/container/container.tsx';
 import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
 import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
 import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
+import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
@@ -400,6 +405,9 @@ export function RoomSceneInteractive({ className }: {
 			onPointerDown={ onPointerDown }
 			onDoubleClick={ onDoubleClick }
 			sceneOptions={ sceneOptions }
+			divChildren={
+				<RoomSceneDescriptionOverlay room={ roomState } globalState={ globalState } />
+			}
 		>
 			<RoomGraphicsInteractive
 				room={ roomState }
@@ -410,5 +418,74 @@ export function RoomSceneInteractive({ className }: {
 				debugConfig={ debugConfig }
 			/>
 		</GraphicsScene>
+	);
+}
+
+const RoomDescriptionHidden = BrowserStorage.createSession('room.viewport.hidden-room-descriptions', {}, zod.record(RoomIdSchema, RoomDescriptionSchema));
+
+function RoomSceneDescriptionOverlay({ room, globalState }: {
+	room: AssetFrameworkRoomState;
+	globalState: AssetFrameworkGlobalState;
+}): ReactElement | null {
+	const roomDescriptionHidden = useObservable(RoomDescriptionHidden);
+
+	const open = useMemo(() => {
+		if (Object.entries(roomDescriptionHidden).some(([roomId, roomDescription]) => !globalState.space.rooms.some((r) => r.id === roomId && r.description === roomDescription))) {
+			RoomDescriptionHidden.produceImmer((d) => {
+				for (const [roomId, roomDescription] of Object.entries(d)) {
+					if (!globalState.space.rooms.some((r) => r.id === roomId && r.description === roomDescription)) {
+						delete d[roomId as keyof typeof d];
+					}
+				}
+			});
+		}
+
+		return !!room.description && !(Object.hasOwn(roomDescriptionHidden, room.id) && roomDescriptionHidden[room.id] === room.description);
+	}, [globalState.space.rooms, room.description, room.id, roomDescriptionHidden]);
+
+	// Do not display if the room has no name nor description
+	if (!room.name && !room.description)
+		return null;
+
+	// Do not display in single-room spaces, if the room has no description
+	if (globalState.space.rooms.length === 1 && !room.description)
+		return null;
+
+	return (
+		<Column className='RoomSceneDescriptionOverlayContainer' alignX='center' padding='medium'>
+			<Button
+				key={ room.id }
+				className={ open ? 'RoomSceneDescriptionOverlay slim open' : 'RoomSceneDescriptionOverlay slim closed normalDisabled' }
+				theme='semiTransparent'
+				onPointerDown={ (ev) => {
+					ev.stopPropagation();
+				} }
+				onPointerUp={ (ev) => {
+					ev.stopPropagation();
+				} }
+				onDoubleClick={ (ev) => {
+					ev.stopPropagation();
+				} }
+				onClick={ (ev) => {
+					ev.stopPropagation();
+
+					RoomDescriptionHidden.produceImmer((d) => {
+						if (open) {
+							d[room.id] = room.description;
+						} else {
+							delete d[room.id];
+						}
+					});
+				} }
+				disabled={ !open && !room.description }
+			>
+				<div className='name'>{ room.displayName }</div>
+				{ room.description ? (
+					<div className='description'>
+						{ room.description }
+					</div>
+				) : null }
+			</Button>
+		</Column>
 	);
 }

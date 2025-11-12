@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement } from 'react';
 import './button.scss';
 
-export type ButtonTheme = 'default' | 'defaultActive' | 'danger' | 'transparent';
+export type ButtonTheme = 'default' | 'defaultActive' | 'danger' | 'transparent' | 'semiTransparent';
 
 export interface ButtonProps extends Omit<DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'> {
 	theme?: ButtonTheme;

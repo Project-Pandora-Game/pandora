@@ -18,6 +18,7 @@ import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { RoomCharacter } from './roomCharacter.tsx';
 import { RoomDevice } from './roomDevice.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
+import './roomScene.scss';
 
 export interface RoomGraphicsProps {
 	room: AssetFrameworkRoomState;

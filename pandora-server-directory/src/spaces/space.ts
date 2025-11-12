@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
@@ -37,6 +38,10 @@ export class Space {
 
 	public get ownerInvites(): ReadonlySet<AccountId> {
 		return this._ownerInvites;
+	}
+
+	public get invites(): Immutable<SpaceInvite[]> {
+		return this._invites;
 	}
 
 	public get owners(): ReadonlySet<AccountId> {
@@ -764,6 +769,8 @@ export class Space {
 	}
 
 	public getInvites(source: Character): SpaceInvite[] {
+		this._cleanupInvites();
+
 		if (this.isAdmin(source.baseInfo.account))
 			return cloneDeep(this._invites);
 

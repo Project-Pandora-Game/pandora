@@ -444,6 +444,10 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'requireAdmin' | 'tooManyInvites' | 'invalidData' | 'notFound'; } | {
 			result: 'list';
 			invites: SpaceInvite[];
+			/** If this is set, there are some valid invites that were not returned due to missing permissions.
+			 * @default false
+			 */
+			someHidden?: boolean;
 		} | {
 			result: 'created';
 			invite: SpaceInvite;

@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Promisable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import * as z from 'zod';
@@ -685,11 +685,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		switch (req.action) {
-			case 'list':
+			case 'list': {
+				const invites = connection.character.space.getInvites(connection.character);
 				return {
 					result: 'list',
-					invites: connection.character.space.getInvites(connection.character),
+					invites,
+					someHidden: (invites.length !== connection.character.space.invites.length) ? true : undefined,
 				};
+			}
 			case 'delete': {
 				const result = await connection.character.space.deleteInvite(connection.character, req.id);
 				return {

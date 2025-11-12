@@ -1122,7 +1122,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 
 function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
+	const [invites, setInvites] = useState<{ invites: readonly SpaceInvite[]; someHidden: boolean; }>({ invites: [], someHidden: false });
 	const [showCreation, setShowCreation] = useState(false);
 
 	const [update] = useAsyncEvent(
@@ -1131,7 +1131,10 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 		},
 		(resp) => {
 			if (resp?.result === 'list') {
-				setInvites(resp.invites);
+				setInvites({
+					invites: resp.invites,
+					someHidden: resp.someHidden ?? false,
+				});
 			}
 		},
 	);
@@ -1146,8 +1149,6 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 	useEffect(() => {
 		update();
 	}, [update]);
-
-	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
 		<fieldset>
@@ -1197,21 +1198,26 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 					</thead>
 					<tbody>
 						{
-							invites.map((invite) => (
+							invites.invites.map((invite) => (
 								<SpaceInviteRow key={ invite.id } spaceId={ spaceId } invite={ invite } directoryConnector={ directoryConnector } update={ update } />
 							))
 						}
 					</tbody>
 				</table>
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } isPlayerAdmin={ isPlayerAdmin } /> }
+				{ invites.someHidden ? (
+					<Row alignX='center'>
+						<div className='warning-box'>This space has invites you cannot see</div>
+					</Row>
+				) : null }
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } onChange={ update } isPlayerAdmin={ isPlayerAdmin } /> }
 			</Column>
 		</fieldset>
 	);
 }
 
-function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; isPlayerAdmin: boolean; }): ReactElement {
+function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDialog: () => void; onChange: () => void; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [allowAccount, setAllowAccount] = useState(false);
+	const [allowAccount, setAllowAccount] = useState(!isPlayerAdmin);
 	const [account, setAccount] = useState(0);
 	const [allowCharacter, setAllowCharacter] = useState(false);
 	const [character, setCharacter] = useState(0);
@@ -1243,7 +1249,7 @@ function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeD
 				return;
 			}
 
-			addInvite(resp.invite);
+			onChange();
 			closeDialog();
 		},
 	);

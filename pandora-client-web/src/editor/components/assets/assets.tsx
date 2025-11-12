@@ -3,6 +3,7 @@ import { Assert, AssertNotNullable, Asset, AssetId, EMPTY_ARRAY, GetLogger, Item
 import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -402,10 +403,10 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 		Assert(view.categories.some((c) => c.name === category));
 
 		const resultId: AssetId = `a/${category}/${id}`;
-		Assert(!assetManager.getAssetById(resultId));
+		Assert(!GetCurrentAssetManager().getAssetById(resultId));
 
 		await AssetManagerEditor.createNewAsset(category, id, name, bodypart);
-		const resultAsset = assetManager.getAssetById(resultId);
+		const resultAsset = GetCurrentAssetManager().getAssetById(resultId);
 		AssertNotNullable(resultAsset);
 		editor.startEditAsset(resultAsset);
 

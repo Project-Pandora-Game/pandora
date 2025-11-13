@@ -477,7 +477,31 @@ export function WardrobePoseGui({ character, characterState }: {
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
-	const actualPoseDiffers = !isEqual(characterState.requestedPose, characterState.actualPose);
+	const actualPosePreset = useMemo((): PartialAppearancePose => {
+		const bones: Record<string, number> = {};
+		for (const bone of characterState.assetManager.getAllBones()) {
+			if (bone.type === 'pose') {
+				bones[bone.name] = characterState.getActualPoseBoneValue(bone.name);
+			}
+		}
+		return {
+			...characterState.actualPose,
+			bones,
+		};
+	}, [characterState]);
+	const actualPoseDiffers = useMemo(() => {
+		return !isEqual(
+			characterState.requestedPose,
+			ProduceAppearancePose(
+				characterState.requestedPose,
+				{
+					assetManager,
+					boneTypeFilter: 'pose',
+				},
+				actualPosePreset,
+			),
+		);
+	}, [actualPosePreset, assetManager, characterState.requestedPose]);
 
 	return (
 		<div className='inventoryView'>
@@ -551,7 +575,7 @@ export function WardrobePoseGui({ character, characterState }: {
 						<Button
 							slim
 							onClick={ () => {
-								setPose(CloneDeepMutable(characterState.actualPose));
+								setPose(CloneDeepMutable(actualPosePreset));
 							} }
 						>
 							Stay in it

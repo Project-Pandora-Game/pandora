@@ -131,7 +131,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 				}
 				<Row>
 					<Column className='flex-1'>
-						<Row alignY='center'>
+						<Row alignY='center' data-tutorial-id='roomName'>
 							<label htmlFor={ id + ':room-name' }>Room name</label>
 							<TextInput
 								id={ id + ':room-name' }
@@ -143,14 +143,16 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 						{ nameValueError ? (
 							<FormError error={ nameValueError } />
 						) : null }
-						<label htmlFor={ id + ':room-description' }>Description ({ (description ?? roomState.description).length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters):</label>
-						<TextAreaInput
-							id={ id + ':room-description' }
-							value={ description ?? roomState.description }
-							rows={ 10 }
-							maxLength={ LIMIT_ROOM_DESCRIPTION_LENGTH }
-							onChange={ setDescription }
-						/>
+						<Column gap='small' data-tutorial-id='roomDescription'>
+							<label htmlFor={ id + ':room-description' }>Description ({ (description ?? roomState.description).length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters):</label>
+							<TextAreaInput
+								id={ id + ':room-description' }
+								value={ description ?? roomState.description }
+								rows={ 10 }
+								maxLength={ LIMIT_ROOM_DESCRIPTION_LENGTH }
+								onChange={ setDescription }
+							/>
+						</Column>
 						{ descriptionValueError ? (
 							<FormError error={ descriptionValueError } />
 						) : null }

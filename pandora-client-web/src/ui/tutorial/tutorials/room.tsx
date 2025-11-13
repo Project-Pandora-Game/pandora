@@ -207,11 +207,6 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								The room view shows the room's background, any characters currently visible inside, and any room devices/items deployed in the room (if the room has any).<br />
 							</p>
 							<p>
-								While not in your personal space, the room's name is displayed near the top. Clicking on it expands
-								the overlay to show the room's description, if there is one set. When you enter a room with a new description for the first time after entering a space,
-								the overlay will automatically expand to show it. Pressing on the text will collapse the overlay again.
-							</p>
-							<p>
 								<i>
 									Note: The room background, which is either a static image or consists of walls & ceiling & floor, cannot be interacted with.
 									Later, you will learn about items placeable into the room that can be interacted with. Those can be identified by a blue icon below them.

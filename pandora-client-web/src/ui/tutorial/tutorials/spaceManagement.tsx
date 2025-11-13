@@ -456,8 +456,18 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [{
-						query: '.roomConfiguration .div-container.direction-row.align-center.gap-medium',
-						filter: (e) => e.innerText.includes('Room name'),
+						query: '.roomConfiguration [data-tutorial-id="roomName"]',
+					}],
+				},
+				{
+					text: (
+						<p>
+							Optionally, you can add a description that will be shown when a character enters this room.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.roomConfiguration [data-tutorial-id="roomDescription"]',
 					}],
 				},
 			],
@@ -630,7 +640,8 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					conditions: [{ type: 'next' }],
 					highlight: [
 						{
-							query: '.roomConfiguration .div-container.direction-column.gap-medium.flex-1',
+							query: '.roomConfiguration div:has(> div > label)',
+							filter: (e) => e.innerText.includes('Room position'),
 						},
 					],
 				},
@@ -740,9 +751,9 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							</p>
 							<p>
 								Lastly, you can configure if the orientation of the character using the path should change.
-								This can for instance be useful to ensure the character appears in the next room facing in
+								This can, for instance, be useful to ensure the character appears in the next room facing in
 								the most likely direction, no matter if they approached the pathway in the previous room facing
-								forward or backward. This is a tool that will make sense over time.
+								forward or backward.
 							</p>
 							<p>
 								Note: Sometimes, in very large rooms, the path squares can be hard to identify.

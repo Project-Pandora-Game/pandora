@@ -75,7 +75,8 @@ const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
 const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, ReadonlyAppearanceLimitTree>();
 function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
 	const assetManager = characterState.assetManager;
-	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
+	// Always specifying extends allows us to strip any non-pose properties
+	const mergedPose = MergePartialAppearancePoses(pose, pose.optional ?? {});
 	// Cache the limits calculation as we have many buttons that can reuse this
 	let limits: ReadonlyAppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
 	if (limits === undefined) {

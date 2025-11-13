@@ -12,7 +12,7 @@ import { BoneType } from '../graphics/index.ts';
 import type { RoomId } from '../index.ts';
 import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
-import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
+import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
@@ -284,13 +284,6 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		);
 
 		return this.produceWithRequestedPose(resultPose);
-	}
-
-	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState {
-		if (preset.optional != null)
-			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
-
-		return this.produceWithPose(preset, 'pose');
 	}
 
 	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;

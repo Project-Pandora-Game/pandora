@@ -23,6 +23,7 @@ import { DirectMessages } from '../directMessages/directMessages.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { AccountContactChangeHandleResult, useAccountContacts, useFriendStatus } from './accountContactContext.ts';
 import './accountContacts.scss';
+import { useSpacesList } from '../../common/useSpaceList.ts';
 
 export function AccountContacts() {
 	const navigate = useNavigatePandora();
@@ -271,6 +272,7 @@ function FriendRow({
 	const confirm = useConfirmDialog();
 	const navigate = useNavigatePandora();
 	const location = useLocation();
+	const spaceInfoMap = new Map((useSpacesList() ?? []).map((s) => [s.id, { ...s }]));
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
 		if (await confirm('Confirm removal', `Are you sure you want to remove ${displayName} from your contacts list?`)) {
@@ -312,7 +314,7 @@ function FriendRow({
 					</span>
 				</Row>
 			</td>
-			<td>{ characters?.map((c) => c.name).join(', ') }</td>
+			<td>{ characters?.map((c) => `${c.name} (${c.space ? spaceInfoMap.get(c.space)?.name ?? 'Unknown' : 'Private Space'})`).join(', ') }</td>
 			<td>{ new Date(time).toLocaleDateString() }</td>
 			<td>
 				<DivContainer direction='row' gap='small'>

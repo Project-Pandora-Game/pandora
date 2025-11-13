@@ -19,7 +19,7 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/networking/helpers';
 import { Socket } from 'socket.io-client';
 import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';

@@ -11,10 +11,11 @@ import {
 	type CharacterRoomPosition,
 	type CommandForkDescriptor,
 	type Coordinates,
+	type Promisable,
 	type RoomId,
+	type Writable,
 } from 'pandora-common';
 import { toast } from 'react-toastify';
-import type { Promisable, Writable } from 'type-fest';
 import type { PlayerCharacter } from '../../../../character/player.ts';
 import type { GameState } from '../../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';

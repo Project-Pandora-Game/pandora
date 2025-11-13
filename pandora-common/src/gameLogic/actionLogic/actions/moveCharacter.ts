@@ -2,7 +2,7 @@ import { isEqual, uniq } from 'lodash-es';
 import * as z from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
 import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
-import { AssertNever } from '../../../utility/misc.ts';
+import { Assert, AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -12,6 +12,12 @@ export const AppearanceActionMoveCharacter = z.object({
 	target: CharacterSelectorSchema,
 	/** Where to move the character */
 	moveTo: CharacterSpacePositionSchema,
+	/**
+	 * If this flag is set, the moved character will not have automatic pose changes (e.g. turning around when changing rooms) applied to it.
+	 * Note, that these changes will still affect automatically moved characters (those following the moved one).
+	 * @default false
+	 */
+	noPoseChange: z.boolean().optional(),
 });
 
 /** Moves a character within a space or a room in a space. */
@@ -56,15 +62,29 @@ export function ActionMoveCharacter({
 		const room = processingContext.manipulator.currentState.space.getRoom(action.moveTo.room);
 		if (room == null)
 			return processingContext.invalid();
-		// And be reachable from both starting point and for current player (ignored for admins)
-		// TODO: Maybe consider setting for this?
-		if (!player.hasSpaceRole('admin')) {
-			if (originalRoom.id !== room.id && !player.canUseRoomLink(originalRoom.getLinkToRoom(room))) {
+		// Additional changes when changing rooms
+		if (originalRoom.id !== room.id) {
+			const link = originalRoom.getLinkToRoom(room);
+			// And be reachable from both starting point and for current player (ignored for admins)
+			// TODO: Maybe consider setting for this?
+			if (!player.hasSpaceRole('admin') && !player.canUseRoomLink(originalRoom.getLinkToRoom(room))) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
-			if (playerRoom.id !== room.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(room))) {
-				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
+			// If changing room, character can be turned around
+			if (action.noPoseChange !== true && link != null && link.targetView !== 'keep') {
+				if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
+					Assert(link.targetView !== 'keep');
+					return character.produceWithPose({
+						view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
+							link.targetView,
+					}, 'pose');
+				})) {
+					return processingContext.invalid();
+				}
 			}
+		}
+		if (!player.hasSpaceRole('admin') && playerRoom.id !== room.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(room))) {
+			processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 		}
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!spaceContext.features.includes('development')) {

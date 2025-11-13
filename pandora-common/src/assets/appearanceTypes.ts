@@ -3,7 +3,7 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager.ts';
 import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoom } from '../chat/index.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/index.ts';
-import { LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../inputLimits.ts';
+import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../inputLimits.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
 import { ZodTemplateString, ZodTruncate } from '../validation.ts';
 import { ItemIdSchema, type Item } from './item/base.ts';
@@ -16,6 +16,9 @@ export type RoomId = z.infer<typeof RoomIdSchema>;
 
 export const RoomNameSchema = z.string().regex(LIMIT_ROOM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ROOM_NAME_LENGTH));
 export type RoomName = z.infer<typeof RoomNameSchema>;
+
+export const RoomDescriptionSchema = z.string().transform(ZodTruncate(LIMIT_ROOM_DESCRIPTION_LENGTH));
+export type RoomDescription = z.infer<typeof RoomDescriptionSchema>;
 
 export const ItemContainerPathSchema = z.array(
 	z.object({

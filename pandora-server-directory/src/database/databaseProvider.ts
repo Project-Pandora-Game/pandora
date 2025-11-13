@@ -11,6 +11,8 @@ import type {
 	SpaceDataShardUpdate,
 	SpaceDirectoryData,
 	SpaceId,
+	SpaceSearchArguments,
+	SpaceSearchResult,
 } from 'pandora-common';
 import { ServiceInit } from 'pandora-common';
 import { ENV } from '../config.ts';
@@ -177,6 +179,14 @@ export interface PandoraDatabase extends ServerService {
 	getSpaceById(id: SpaceId, accessId: string | null): Promise<SpaceData | null>;
 
 	/**
+	 * Searches for spaces
+	 * @param args - Arguments based on which to search
+	 * @param allowNonPublic - Whether to include non-public spaces (for management), or only public spaces (for normal use)
+	 * @param limit - Limit of the number of results
+	 */
+	searchSpace(args: SpaceSearchArguments, limit: number, skip: number, allowNonPublic: boolean): Promise<SpaceSearchResult>;
+
+	/**
 	 * Creates a new space
 	 * @param config - Config for the new space
 	 * @param id - Id of the space (randomly generated if not set)
@@ -204,6 +214,12 @@ export interface PandoraDatabase extends ServerService {
 	 * @return - New access id
 	 */
 	setSpaceAccessId(id: SpaceId): Promise<string | null>;
+
+	/**
+	 * Runs a mass update on space activity scores.
+	 * @param activityInterval The activity interval we are updating to
+	 */
+	spaceMassUpdateActivityScores(activityInterval: number): Promise<void>;
 
 	//#endregion
 

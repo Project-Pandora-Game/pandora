@@ -215,7 +215,7 @@ function SlotPositionUI({ characterPosition, update }: {
 						</p>
 						<p>
 							This setting is useful when room device has multiple slots and you want to simulate displaying them at different distances from camera.
-							If the device only has a single slot or the the characters should be shown at the same depth,
+							If the device only has a single slot or the characters should be shown at the same depth,
 							it is recommended to leave this value at 1 and instead modify rest of the graphics to match the character.
 						</p>
 					</ContextHelpButton>

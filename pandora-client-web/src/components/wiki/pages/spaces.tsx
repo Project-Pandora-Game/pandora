@@ -1,4 +1,4 @@
-import { LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
+import { FormatTimeInterval, LIMIT_ITEM_ROOM_INVENTORY, LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_ROOM_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
 import { Link } from 'react-router';
 
@@ -43,7 +43,10 @@ export function WikiSpaces(): ReactElement {
 				The room view in Pandora consists of the room canvas and the four tabs that show the chat per default.<br />
 				In a landscape view the tab is on the right side and it is on the bottom in a portrait view.
 				In the Pandora settings (cog-button on the top bar) under the "Interface"-tab and inside the "Room UI" box,
-				you can customize the ratio between the space that the room and the tabs area use for both landscape or portrait views.
+				you can customize the ratio between the space that the room and the tabs area use for both landscape or portrait views.<br />
+				In spaces with multiple rooms, the current room's name and description (if it has one) will be shown at the top of the room view.
+				For rooms with descriptions, you can click the description to collapse it. This will reset under certain conditions,
+				e.g. closing the browser tab, or when the room's description changes.
 			</p>
 			<ul>
 				<li>You can zoom the room canvas with the mouse wheel or a pinch-to-zoom gesture.</li>
@@ -76,6 +79,7 @@ export function WikiSpaces(): ReactElement {
 					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
 					"Room" tab, or by using the '/moveto' command.
 				</li>
+				<li>Using a path can turn your character around if the path was configured in such a way.</li>
 				<li>
 					A path is not shown if there is no neighboring room in the cardinal direction this path leads to, if the path is disabled (e.g. representing a wall between two rooms), or
 					if the path is usage restricted based on roles, such as "Admin" or "Allowed user", defined in the space configuration's rights management tab.
@@ -112,19 +116,26 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>All space settings such as name, description, admin and ban lists will be persistent.</li>
 				<li>All items in the rooms of the space will stay as and where they are.</li>
-				<li>If characters will disconnect or log off inside a space, they will stay inside the current room, until they are removed from it manually or automatically.</li>
+				<li>If characters will disconnect or log off inside a space, they will stay inside the current room, until they are removed from it manually or automatically (e.g. through a space's offline character management configuration).</li>
 			</ul>
 
 			<h4 id='SP_Space_visibility'>Space visibility</h4>
 			<p>
 				Spaces in Pandora can be public or private, which affects who can see them.
 				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
-				Note, that the "Public" setting means that it is only public while anyone is online inside the space. Offline characters inside do not count.
+				Note, that the "Public" setting means that it is only publicly listed while anyone is online inside the space. Offline characters inside do not count.
 				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
-				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces and join them.
-				Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
-				The "Public while an admin is inside" setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.<br />
-				<br />
+				Even then, owners and admins of that space as well as users whose account is on the "Allowed users" list of the space can still see these unlisted public spaces in their list of spaces and join them.
+				Despite that, everyone inside a public space can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).
+			</p>
+			<p>
+				While empty spaces with the visibility "Public" are not visible in the space list (except to their Admins and Allowed users),
+				they can still be found using the "Public space search" option in the space list.<br />
+				Note, that spaces using "Public while an admin is inside" visibility cannot be found this way.
+				This makes the "Public while an admin is inside" setting useful for making sure your space does not diverge from its intended purpose
+				and cannot be used by the general public while there is no owner/admin inside, aside from the characters already inside.
+			</p>
+			<p>
 				Spaces can also be locked, which behaves similar to a private space, but prevents anyone except owners and admins from entering the space (leaving the space isn't limited). This also asks owners and admins for confirmation before entering.
 				"Allowed users" can still see locked spaces, but not who is inside them and cannot enter them.
 				"Join-me" invitations work the same as for private spaces, but "Space-bound" invitations are blocked.
@@ -162,7 +173,7 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>If you want a user and all their characters to have permanent access to your space, add them to the list of Allowed users.</li>
 				<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character.</li>
-				<li>If you want to invite another character for one time, send a direct message to them using the "/invite" command.</li>
+				<li>If you want to quickly invite another character for a single time, use the "/invite" command in a direct message to them.</li>
 			</ul>
 
 			<h4 id='SP_Space_invites'>Space invites</h4>
@@ -186,7 +197,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>You can send a "join-me" invite by using the "/invite" command in the direct message input field.</li>
-				<li>These invites can be used only once and expire 120 minutes after they were created and sent.</li>
+				<li>These invites can be used only once and expire { FormatTimeInterval(LIMIT_JOIN_ME_INVITE_MAX_VALIDITY) } after they were created and sent.</li>
 				<li>"Join-me" invites are bound to the user account they are sent to and cannot be used by someone else.</li>
 				<li>The invite link only works while the character that created it is still online and inside the space the invite is for.</li>
 				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple and quick to use.</li>
@@ -230,7 +241,7 @@ export function WikiSpaces(): ReactElement {
 					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> when inside this space.
 					This currently cannot be changed later on.
 				</li>
-				<li>Admins have mostly the same powers as owners, so they can add other admins or take admin rights away from other admins. But admins cannot add owners.</li>
+				<li>Admins have mostly the same powers as owners — they can add other admins or take admin rights away from other admins. But admins cannot add owners.</li>
 			</ul>
 
 			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>

@@ -15,7 +15,7 @@ import {
 	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
-import React, { useMemo, type ReactElement, type ReactNode } from 'react';
+import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -179,7 +179,34 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		}
 	}, [stored, save]);
 
-	const [edit, setEdit] = React.useState<AssetFrameworkPosePresetWithId | null>(null);
+	const [edit, setEditRaw] = React.useState<AssetFrameworkPosePresetWithId | null>(null);
+
+	const setEdit = useCallback((preset: AssetFrameworkPosePresetWithId | null) => {
+		if (preset == null) {
+			setEditRaw(preset);
+		} else {
+			setEditRaw(produce(preset, (d) => {
+				if (d.pose.bones !== undefined && Object.keys(d.pose.bones).length === 0) {
+					delete d.pose.bones;
+				}
+				if (d.pose.arms !== undefined && Object.keys(d.pose.arms).length === 0) {
+					delete d.pose.arms;
+				}
+				if (d.pose.leftArm !== undefined && Object.keys(d.pose.leftArm).length === 0) {
+					delete d.pose.leftArm;
+				}
+				if (d.pose.rightArm !== undefined && Object.keys(d.pose.rightArm).length === 0) {
+					delete d.pose.rightArm;
+				}
+				if (d.pose.armsOrder !== undefined && Object.keys(d.pose.armsOrder).length === 0) {
+					delete d.pose.armsOrder;
+				}
+				if (d.pose.legs !== undefined && Object.keys(d.pose.legs).length === 0) {
+					delete d.pose.legs;
+				}
+			}));
+		}
+	}, []);
 
 	const context = React.useMemo((): PosePresetContextType => ({
 		presets: stored,
@@ -264,17 +291,27 @@ function PosePresetEditing(): ReactNode {
 }
 
 function PosePresetCreateButton(): ReactNode {
-	const { edit, setEdit } = usePosePresetContext();
+	const { characterState, edit, setEdit } = usePosePresetContext();
 	const onClick = React.useCallback(() => {
 		if (edit != null) {
 			return;
 		}
+
+		const bones: Record<string, number> = {};
+		for (const bone of characterState.assetManager.getAllBones()) {
+			if (bone.type === 'pose') {
+				bones[bone.name] = characterState.getActualPoseBoneValue(bone.name);
+			}
+		}
 		setEdit({
 			id: nanoid(),
 			name: 'New pose',
-			pose: {},
+			pose: {
+				...characterState.actualPose,
+				bones,
+			},
 		});
-	}, [edit, setEdit]);
+	}, [characterState, edit, setEdit]);
 
 	return (
 		<Button onClick={ onClick } disabled={ edit != null } slim>
@@ -285,10 +322,9 @@ function PosePresetCreateButton(): ReactNode {
 }
 
 function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPosePresetWithId; close: () => void; }): ReactNode {
-	const { characterState, update, presets } = usePosePresetContext();
+	const { characterState, update, presets, setEdit } = usePosePresetContext();
 	const assetManager = characterState.assetManager;
 	const allBones = React.useMemo(() => assetManager.getAllBones(), [assetManager]);
-	const { setEdit } = usePosePresetContext();
 	const onNameChange = React.useCallback((newValue: string) => {
 		setEdit({ ...preset, name: newValue });
 	}, [preset, setEdit]);
@@ -403,7 +439,7 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				<Row alignX='space-between'>
 					<Button onClick={ close }>Cancel</Button>
 					<Button onClick={ onExport }>Export</Button>
-					<Button onClick={ onSave }>Save</Button>
+					<Button onClick={ onSave } disabled={ Object.keys(preset.pose).length === 0 }>Save</Button>
 				</Row>
 			</Column>
 			{ exported == null ? null : (
@@ -655,7 +691,7 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 }
 
 function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
-	const { reorder, remove, setEdit } = usePosePresetContext();
+	const { reorder, remove, edit, setEdit } = usePosePresetContext();
 
 	const onMoveUp = React.useCallback(() => reorder(preset.id, -1), [reorder, preset.id]);
 	const onMoveDown = React.useCallback(() => reorder(preset.id, 1), [reorder, preset.id]);
@@ -684,7 +720,7 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 						<img src={ triangleDown } alt='Move down' />
 						<span>&nbsp;Move down</span>
 					</Button>
-					<Button onClick={ onEdit } slim>
+					<Button theme={ edit?.id === preset.id ? 'defaultActive' : 'default' } onClick={ onEdit } disabled={ edit != null } slim>
 						<img src={ editIcon } alt='Edit action' />
 						<span>&nbsp;Edit</span>
 					</Button>

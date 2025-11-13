@@ -76,6 +76,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	legs?: Partial<AppearanceLegsPose>;
 	view?: CharacterView;
 };
+type __satisfies__PartialAppearancePoseFromFullPose = Satisfies<AppearancePose, PartialAppearancePose<string>>;
 
 export const PartialAppearancePoseSchema = z.object({
 	bones: z.partialRecord(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).optional().catch(undefined),

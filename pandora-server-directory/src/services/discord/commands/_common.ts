@@ -1,5 +1,5 @@
-import { SlashCommandBuilder, CommandInteraction, GuildMember, type ButtonInteraction } from 'discord.js';
-import type { Promisable } from 'type-fest';
+import { CommandInteraction, GuildMember, SlashCommandBuilder, type ButtonInteraction } from 'discord.js';
+import type { Promisable } from 'pandora-common';
 
 export function GetInteractionMember(interaction: CommandInteraction | ButtonInteraction): GuildMember | null {
 	if (interaction.member instanceof GuildMember) {

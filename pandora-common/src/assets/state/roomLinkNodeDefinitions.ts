@@ -2,6 +2,7 @@ import { freeze, type Immutable } from 'immer';
 import * as z from 'zod';
 import { SpaceRoleSchema } from '../../space/spaceRoles.ts';
 import type { CardinalDirection } from '../graphics/common.ts';
+import { CharacterViewSchema } from '../graphics/conditions.ts';
 
 /*
 Room link nodes describe where inside the room, the room links to another room.
@@ -25,8 +26,18 @@ export const RoomLinkNodeConfigSchema = z.object({
 	/**
 	 * Minimum space role required to use this room link node.
 	 * @note This property is not saved in room templates and if used as part of it, has no effect.
+	 * @default 'everyone'
 	 */
 	useMinimumRole: SpaceRoleSchema.optional().catch(undefined),
+	/**
+	 * What view the target should get when walking through this link. Possible values:
+	 * - Specific view
+	 * - `turn-around` - invert the view
+	 * - `keep` - no change
+	 * @note This property is not saved in room templates and if used as part of it, has no effect.
+	 * @default 'keep'
+	 */
+	targetView: CharacterViewSchema.or(z.enum(['turn-around', 'keep'])).optional().catch(undefined),
 });
 /** A config for a single room link node */
 export type RoomLinkNodeConfig = z.infer<typeof RoomLinkNodeConfigSchema>;
@@ -60,6 +71,7 @@ export const DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG = freeze<RoomNeighborLinkNodesCon
 export type RoomLinkNodeData = Omit<RoomLinkNodeConfig, 'position'> & {
 	direction: CardinalDirection;
 	internalDirection: keyof RoomNeighborLinkNodesConfig;
+	targetView: RoomLinkNodeConfig['targetView'] & {};
 	position: Immutable<NonNullable<RoomLinkNodeConfig['position']>>;
 };
 

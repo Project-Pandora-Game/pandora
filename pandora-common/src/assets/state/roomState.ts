@@ -1,13 +1,12 @@
 import { freeze, Immutable, produce } from 'immer';
 import { isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import * as z from 'zod';
 import { GameLogicRoomSettingsSchema, type GameLogicRoomSettings } from '../../gameLogic/spaceSettings/roomSettings.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
-import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg, type Writable } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
-import { RoomIdSchema, RoomNameSchema, type RoomId } from '../appearanceTypes.ts';
+import { RoomDescriptionSchema, RoomIdSchema, RoomNameSchema, type RoomDescription, type RoomId, type RoomName } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { CardinalDirectionSchema, IntegerCoordinatesSchema, type CardinalDirection, type Coordinates } from '../graphics/common.ts';
@@ -25,6 +24,7 @@ import { ResolveRoomNeighborLinkData, SpaceRoomLayoutUnitVectorToCardinalDirecti
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
 	name: RoomNameSchema.catch(''),
+	description: RoomDescriptionSchema.catch(''),
 	items: AppearanceItemsBundleSchema,
 	position: IntegerCoordinatesSchema.catch({ x: 0, y: 0 }),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
@@ -50,6 +50,7 @@ export type RoomTemplateItemTemplate = z.infer<typeof RoomTemplateItemTemplateSc
 
 export const RoomTemplateSchema = z.object({
 	name: RoomNameSchema.catch(''),
+	description: RoomDescriptionSchema.catch(''),
 	items: ZodArrayWithInvalidDrop(RoomTemplateItemTemplateSchema, z.unknown()).catch(() => []),
 	roomGeometry: RoomGeometryConfigSchema.catch({ type: 'defaultPublicSpace' }),
 	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.catch(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
@@ -59,6 +60,7 @@ export type RoomTemplate = z.infer<typeof RoomTemplateSchema>;
 export const RoomClientDeltaBundleSchema = z.object({
 	id: RoomIdSchema,
 	name: RoomNameSchema.optional(),
+	description: RoomDescriptionSchema.optional(),
 	items: AppearanceItemsDeltaBundleSchema.optional(),
 	position: IntegerCoordinatesSchema.optional(),
 	roomGeometry: RoomGeometryConfigSchema.optional(),
@@ -71,6 +73,7 @@ export type RoomClientDeltaBundle = z.infer<typeof RoomClientDeltaBundleSchema>;
 export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
 	id: 'room:default',
 	name: 'Unnamed room',
+	description: '',
 	items: [],
 	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPublicSpace' },
@@ -82,6 +85,7 @@ export const ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE = freeze<Immutable<RoomBundle>>({
 export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>({
 	id: 'room:default',
 	name: 'My personal room',
+	description: '',
 	items: [],
 	position: { x: 0, y: 0 },
 	roomGeometry: { type: 'defaultPersonalSpace' },
@@ -93,7 +97,8 @@ export const ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE = freeze<Immutable<RoomBundle>>(
 type AssetFrameworkRoomStateProps = {
 	readonly assetManager: AssetManager;
 	readonly id: RoomId;
-	readonly name: string;
+	readonly name: RoomName;
+	readonly description: RoomDescription;
 	readonly items: AppearanceItems;
 	readonly position: Immutable<Coordinates>;
 	readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
@@ -112,7 +117,8 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 	public readonly assetManager: AssetManager;
 
-	public readonly name: string;
+	public readonly name: RoomName;
+	public readonly description: RoomDescription;
 	public readonly items: AppearanceItems;
 	public readonly position: Immutable<Coordinates>;
 	public readonly roomGeometryConfig: Immutable<RoomGeometryConfig>;
@@ -133,6 +139,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		this.id = override?.id ?? props.id;
 		this.assetManager = override?.assetManager ?? props.assetManager;
 		this.name = override?.name ?? props.name;
+		this.description = override?.description ?? props.description;
 		this.items = override?.items ?? props.items;
 		this.position = override?.position ?? props.position;
 		this.roomGeometryConfig = override?.roomGeometryConfig ?? props.roomGeometryConfig;
@@ -210,6 +217,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	}): RoomTemplate {
 		return {
 			name: this.name,
+			description: this.description,
 			items: this.items
 				.filter((i) => includeAllItems || i.isType('roomDevice'))
 				.map((i) => {
@@ -222,9 +230,13 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			roomLinkNodes: CloneDeepMutable(produce(this.roomLinkNodes, (d) => {
 				delete d.left.useMinimumRole;
+				delete d.left.targetView;
 				delete d.right.useMinimumRole;
+				delete d.right.targetView;
 				delete d.near.useMinimumRole;
+				delete d.near.targetView;
 				delete d.far.useMinimumRole;
+				delete d.far.targetView;
 			})),
 		};
 	}
@@ -233,6 +245,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		return {
 			id: this.id,
 			name: this.name,
+			description: this.description,
 			items: this.items.map((item) => item.exportToBundle({})),
 			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
@@ -247,6 +260,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		return {
 			id: this.id,
 			name: this.name,
+			description: this.description,
 			items: this.items.map((item) => item.exportToBundle(options)),
 			position: CloneDeepMutable(this.position),
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
@@ -267,6 +281,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		if (this.name !== originalState.name) {
 			result.name = this.name;
+		}
+		if (this.description !== originalState.description) {
+			result.description = this.description;
 		}
 		if (this.items !== originalState.items) {
 			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
@@ -296,6 +313,10 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		if (bundle.name !== undefined) {
 			update.name = bundle.name;
+		}
+
+		if (bundle.description !== undefined) {
+			update.description = bundle.description;
 		}
 
 		if (bundle.items !== undefined) {
@@ -331,8 +352,12 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		return resultState;
 	}
 
-	public withName(name: string): AssetFrameworkRoomState {
+	public withName(name: RoomName): AssetFrameworkRoomState {
 		return new AssetFrameworkRoomState(this, { name });
+	}
+
+	public withDescription(description: RoomDescription): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, { description });
 	}
 
 	public withPosition(position: Immutable<Coordinates>): AssetFrameworkRoomState {
@@ -417,15 +442,20 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			id,
 			assetManager,
 			name: template.name,
+			description: template.description,
 			items: newItems,
 			position: CloneDeepMutable(position),
 			roomGeometryConfig,
 			roomBackground,
 			roomLinkNodes: produce(CloneDeepMutable(template.roomLinkNodes), (d) => {
 				delete d.left.useMinimumRole;
+				delete d.left.targetView;
 				delete d.right.useMinimumRole;
+				delete d.right.targetView;
 				delete d.near.useMinimumRole;
+				delete d.near.targetView;
 				delete d.far.useMinimumRole;
+				delete d.far.targetView;
 			}),
 			direction,
 			settings: freeze(CloneDeepMutable(settings), true),
@@ -474,6 +504,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			id: parsed.id,
 			assetManager,
 			name: parsed.name,
+			description: parsed.description,
 			items: newItems,
 			position: freeze(parsed.position, true),
 			roomGeometryConfig,

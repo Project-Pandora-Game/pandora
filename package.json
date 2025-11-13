@@ -37,6 +37,7 @@
 		"lint": "pnpm -r --no-bail --parallel run lint",
 		"lint:root": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
+		"type-check": "pnpm -r --no-bail --parallel run '/type-check:.*/'",
 		"type-check:test": "pnpm -r --no-bail --parallel run '/type-check:test.*/'",
 		"test": "pnpm -r --no-bail --parallel run test",
 		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e && pnpm run -C pandora-tests coverage:report",

@@ -1,9 +1,8 @@
 /* eslint-disable react/forbid-elements */
 import { Immutable } from 'immer';
-import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-common';
-import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects.js';
-import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common.js';
-import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed.js';
+import { AssetDefinition, AssetModuleDefinition, EFFECTS_DEFAULT, ModuleType, type EffectsDefinition } from 'pandora-common';
+import { IModuleConfigCommon } from 'pandora-common/assets/modules/common';
+import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/assets/modules/typed';
 import { ReactElement, useId, useMemo } from 'react';
 import { Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';

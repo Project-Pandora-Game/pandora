@@ -44,6 +44,7 @@ export function ResolveRoomNeighborLinkData(linkConfig: Immutable<RoomNeighborLi
 			internalDirection: d,
 			disabled: config.disabled,
 			useMinimumRole: config.useMinimumRole,
+			targetView: config.targetView ?? 'keep',
 			position: FixRoomPosition(position, background),
 		};
 

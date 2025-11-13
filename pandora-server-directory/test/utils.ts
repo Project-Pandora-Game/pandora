@@ -1,6 +1,6 @@
 import { expect, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
-import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, ShardFeature } from 'pandora-common';
+import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, PANDORA_VERSION_DATABASE, ShardFeature } from 'pandora-common';
 import { Account, CreateAccountData } from '../src/account/account.ts';
 import { accountManager } from '../src/account/accountManager.ts';
 import { CharacterInfo } from '../src/account/character.ts';
@@ -129,6 +129,7 @@ export async function TestMockShard({
 			publicURL: `http://${shard.id}.shard.pandora.localhost`,
 			features,
 			version,
+			databaseVersion: PANDORA_VERSION_DATABASE,
 			characters: [],
 			disconnectCharacters: [],
 			spaces: [],

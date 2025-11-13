@@ -8,7 +8,7 @@ import {
 	ColorGroupResult,
 	Item,
 	ItemPath,
-	Writeable,
+	Writable,
 } from 'pandora-common';
 import { ReactElement, useMemo } from 'react';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
@@ -90,7 +90,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 				throttle={ LIVE_UPDATE_THROTTLE }
 				disabled={ disabled || !!overrideGroup }
 				onChange={ (color) => {
-					const newColor = cloneDeep<Writeable<typeof bundle>>(bundle);
+					const newColor = cloneDeep<Writable<typeof bundle>>(bundle);
 					newColor[colorKey] = color;
 					execute({
 						...action,

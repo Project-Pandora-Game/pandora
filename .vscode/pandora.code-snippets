@@ -1,0 +1,11 @@
+{
+	"Zod schema": {
+		"scope": "typescript,typescriptreact",
+		"prefix": "schema",
+		"body": [
+			"export const ${1}Schema = $2;",
+			"export type ${1} = z.infer<typeof ${1}Schema>;"
+		],
+		"description": "Zod schema, including inferred type"
+	}
+}

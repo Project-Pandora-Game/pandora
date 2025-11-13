@@ -29,6 +29,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from '../spaceConfiguration/spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from '../spaceConfiguration/spaceOwnershipRemoval.tsx';
+import { SpaceRoleDropButton } from '../spaceConfiguration/spaceRoleDrop.tsx';
 import './spacesSearch.scss';
 
 const SpaceJoinProgress = new PersistentToast();
@@ -228,7 +229,13 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 						</Button>
 					)
 				}
-				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
+				{ userIsOwner ? (
+					<SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } />
+				) : info.isAdmin ? (
+					<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='admin' />
+				) : info.isAllowed ? (
+					<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='allowlisted' />
+				) : null }
 				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
 					<Button
 						disabled={ processing }

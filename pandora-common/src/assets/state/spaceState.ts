@@ -1,13 +1,12 @@
 import { freeze, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import * as z from 'zod';
 import { GAME_LOGIC_ROOM_SETTINGS_DEFAULT, GameLogicRoomSettingsSchema, type GameLogicRoomSettings } from '../../gameLogic/spaceSettings/roomSettings.ts';
 import { GAME_LOGIC_SPACE_SETTINGS_DEFAULT, GameLogicSpaceSettingsSchema, type GameLogicSpaceSettings } from '../../gameLogic/spaceSettings/spaceSettings.ts';
 import { LIMIT_ITEM_SPACE_ITEMS_TOTAL, LIMIT_SPACE_ROOM_COUNT } from '../../inputLimits.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/space.ts';
-import { Assert, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, CloneDeepMutable, MemoizeNoArg, type Writable } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { RoomIdSchema, type RoomId } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';

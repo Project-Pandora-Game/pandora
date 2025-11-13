@@ -1,6 +1,7 @@
+import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument, type SpaceDirectoryData } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -17,6 +18,7 @@ export class Space {
 	private readonly _owners: Set<AccountId>;
 	private readonly _ownerInvites: Set<AccountId>;
 	private _invites: SpaceInvite[];
+	private _activity: SpaceActivitySavedData;
 	private _deletionPending = false;
 
 	public get isValid(): boolean {
@@ -38,14 +40,15 @@ export class Space {
 		return this._ownerInvites;
 	}
 
+	public get invites(): Immutable<SpaceInvite[]> {
+		return this._invites;
+	}
+
 	public get owners(): ReadonlySet<AccountId> {
 		return this._owners;
 	}
 
 	public get isPublic(): boolean {
-		if (this._assignedShard?.type !== 'stable')
-			return false;
-
 		switch (this.config.public) {
 			case 'locked':
 			case 'private':
@@ -53,19 +56,20 @@ export class Space {
 			case 'public-with-admin':
 				return this.hasAdminInside(true);
 			case 'public-with-anyone':
-				return Array.from(this.characters).some((c) => c.isOnline());
+				return true;
 		}
 		AssertNever(this.config.public);
 	}
 
 	private readonly logger: Logger;
 
-	constructor({ id, config, owners, ownerInvites, accessId, invites }: SpaceDirectoryData) {
+	constructor({ id, config, owners, ownerInvites, accessId, invites, activity }: SpaceDirectoryData) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
 		this._ownerInvites = new Set(ownerInvites);
 		this._invites = invites;
+		this._activity = activity;
 		this.accessId = accessId;
 		this.logger = GetLogger('Space', `[Space ${this.id}]`);
 
@@ -127,7 +131,6 @@ export class Space {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
-			entryText: this.config.entryText,
 			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
@@ -185,6 +188,41 @@ export class Space {
 		return this.config;
 	}
 
+	@AsyncSynchronized('object')
+	public async dropSelfRole(accountId: AccountId, role: 'admin' | 'allowlisted'): Promise<'ok' | 'failed' | 'notFound'> {
+		// Bail out if space is invalidated
+		if (!this.isValid)
+			return 'failed';
+
+		if (role === 'admin') {
+			if (!this.config.admin.includes(accountId))
+				return 'ok';
+
+			this.config.admin = this.config.admin.filter((a) => a !== accountId);
+		} else if (role === 'allowlisted') {
+			if (!this.config.allow.includes(accountId))
+				return 'ok';
+
+			this.config.allow = this.config.allow.filter((a) => a !== accountId);
+		} else {
+			AssertNever(role);
+		}
+
+		this._cleanupLists();
+		await this._removeBannedCharacters(null);
+
+		await Promise.all([
+			this._assignedShard?.update('spaces'),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+				ownerInvites: Array.from(this._ownerInvites),
+			}, null),
+		]);
+
+		ConnectionManagerClient.onSpaceListChange();
+		return 'ok';
+	}
+
 	// TODO: This might be better synchronized, but we need to avoid deadlock if the space gets deleted during this
 	public async removeOwner(accountId: AccountId): Promise<'ok' | 'notAnOwner'> {
 		// Ignore if space is invalidated
@@ -208,10 +246,14 @@ export class Space {
 		} else {
 			this.logger.info(`Removed owner ${accountId}`);
 			// Space with remaining owners only propagates the change to shard and clients
-			await this._assignedShard?.update('spaces');
+			await Promise.all([
+				this._assignedShard?.update('spaces'),
+				GetDatabase().updateSpace(this.id, {
+					owners: Array.from(this._owners),
+					config: cloneDeep(this.config),
+				}, null),
+			]);
 			// TODO: Make an announcement of the change
-
-			await GetDatabase().updateSpace(this.id, { owners: Array.from(this._owners) }, null);
 
 			ConnectionManagerClient.onSpaceListChange();
 		}
@@ -311,11 +353,37 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok'> {
-		// Ignore if space is invalidated
-		if (!this.isValid) {
-			return 'ok';
+	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok' | 'failed' | 'targetNotAllowed'> {
+		// Bail out if space is invalidated
+		if (!this.isValid)
+			return 'failed';
+
+		// If there is a source, there are additional requirements
+		if (source != null) {
+			// Admins and allowed users cannot be added unless in the space already, or in their contacts
+			if (changes.admin || changes.allow) {
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (changes.admin && changes.admin.some((a) => (
+					!this.config.admin.includes(a) && // Ignore existing admins
+					!this.config.allow.includes(a) && // Allow promote from allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
+				if (changes.allow && changes.allow.some((a) => (
+					!this.config.allow.includes(a) && // Ignore existing allow-listed
+					!this.config.admin.includes(a) && // Allow demote from admin
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+			}
 		}
+
 		if (changes.name) {
 			this.config.name = changes.name;
 		}
@@ -420,11 +488,11 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async adminAction(source: CharacterInfo, action: IClientDirectoryArgument['spaceAdminAction']['action'], targets: number[]): Promise<void> {
+	public async adminAction(source: CharacterInfo, action: IClientDirectoryArgument['spaceAdminAction']['action'], targets: number[]): Promise<'ok' | 'failed' | 'targetNotAllowed'> {
 		// Ignore if the space is invalidated
-		if (!this.isValid) {
-			return;
-		}
+		if (!this.isValid)
+			return 'failed';
+
 		targets = uniq(targets);
 		let updated = false;
 		switch (action) {
@@ -461,6 +529,17 @@ export class Space {
 			}
 			case 'allow': {
 				targets = this._cleanupAllowList(targets);
+				// Allow-listed users cannot be added unless in the space already, or in their contacts
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (targets.some((a) => (
+					!this.config.allow.includes(a) && // Ignore existing allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
 				const oldSize = this.config.allow.length;
 				this.config.allow = uniq([...this.config.allow, ...targets]);
 				updated = oldSize !== this.config.allow.length;
@@ -479,6 +558,18 @@ export class Space {
 				break;
 			}
 			case 'promote': {
+				// Admins cannot be added unless in the space already, or in their contacts
+				const friends = await source.account.contacts.getFriendsIds();
+
+				if (targets.some((a) => (
+					!this.config.admin.includes(a) && // Ignore existing admins
+					!this.config.allow.includes(a) && // Allow promote from allow-listed
+					!Array.from(this.characters).some((c) => c.baseInfo.account.id === a) && // Allow if present in the space
+					!friends.has(a) // Allow contacts
+				))) {
+					return 'targetNotAllowed';
+				}
+
 				const oldSize = this.config.admin.length;
 				this.config.admin = uniq([...this.config.admin, ...targets]);
 				updated = oldSize !== this.config.admin.length;
@@ -499,6 +590,7 @@ export class Space {
 			default:
 				AssertNever(action);
 		}
+
 		if (updated) {
 			ConnectionManagerClient.onSpaceListChange();
 			await Promise.all([
@@ -506,6 +598,8 @@ export class Space {
 				GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
 			]);
 		}
+
+		return 'ok';
 	}
 
 	@AsyncSynchronized('object')
@@ -675,6 +769,8 @@ export class Space {
 	}
 
 	public getInvites(source: Character): SpaceInvite[] {
+		this._cleanupInvites();
+
 		if (this.isAdmin(source.baseInfo.account))
 			return cloneDeep(this._invites);
 
@@ -716,7 +812,7 @@ export class Space {
 					this._invites = this._invites.filter((i) => i.type !== 'joinMe' || i.createdBy.accountId !== account.id || dropCount-- <= 0);
 
 				data.maxUses = 1;
-				data.expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(2, 'hours'));
+				data.expires = clamp(data.expires ?? Infinity, now, now + LIMIT_JOIN_ME_INVITE_MAX_VALIDITY);
 				break;
 			}
 			case 'spaceBound':
@@ -726,7 +822,7 @@ export class Space {
 					return 'tooManyInvites';
 
 				if (data.expires)
-					data.expires = Math.max(data.expires, now + TimeSpanMs(10, 'minutes'));
+					data.expires = Math.max(data.expires, now);
 
 				break;
 			default:
@@ -753,9 +849,19 @@ export class Space {
 		return invite;
 	}
 
-	/** Returns if this space is visible to the specific account when searching in space search */
+	/** Returns if this space is visible to the specific account when searching in space listing */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isValid && (this.isPublic || this.isAllowed(account));
+		if (!this.isValid)
+			return false;
+
+		// Public spaces are only shown in active space listing, if there is some character online
+		if (this.isPublic && Array.from(this.characters).some((c) => c.isOnline()))
+			return true;
+
+		if (this.isAllowed(account))
+			return true;
+
+		return false;
 	}
 
 	/** Returns if this space's extended info should be visible to the specified account */
@@ -878,6 +984,7 @@ export class Space {
 			});
 		}
 
+		this.updateActivityData();
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
@@ -911,6 +1018,9 @@ export class Space {
 		Assert(this.trackingCharacters.has(character));
 
 		await character.baseInfo.updateDirectoryData({ currentSpace: null });
+
+		// Update space activity right before removal, so this character still counts as active at the last moment
+		this.updateActivityData();
 
 		this.logger.debug(`Character ${character.baseInfo.id} removed (${reason})`);
 		this.characters.delete(character);
@@ -1188,5 +1298,41 @@ export class Space {
 		);
 		this.pendingMessages.push(...processedMessages);
 		this._assignedShard?.update('messages').catch(() => { /* NOOP */ });
+	}
+
+	public updateActivityData(interval?: number, forceUpdate: boolean = false): void {
+		interval ??= SpaceActivityGetNextInterval(Date.now());
+
+		let changed = false;
+		// Make sure to keep this logic in sync with `PandoraDatabase::spaceMassUpdateActivityScores`!
+		if (this._activity.currentIntervalEnd < interval) {
+			this._activity.score *= SPACE_ACTIVITY_SCORE_DECAY;
+			this._activity.currentIntervalScore = 0;
+			this._activity.currentIntervalEnd = interval;
+			changed = true;
+		}
+
+		const activeAccounts = new Set(Array.from(this.characters).filter((c) => c.isOnline()).map((c) => c.baseInfo.account.id)).size;
+		if (activeAccounts > 0) {
+			this._activity.lastActive = Date.now();
+		}
+
+		if (activeAccounts > this._activity.currentIntervalScore) {
+			this._activity.score += (activeAccounts - this._activity.currentIntervalScore);
+			this._activity.currentIntervalScore = activeAccounts;
+			changed = true;
+		}
+
+		if (changed || forceUpdate) {
+			this._syncActivityData()
+				.catch((err) => {
+					this.logger.error('Error syncing activity data:', err);
+				});
+		}
+	}
+
+	@AsyncSynchronized('object')
+	private async _syncActivityData(): Promise<void> {
+		await GetDatabase().updateSpace(this.id, { activity: cloneDeep(this._activity) }, null);
 	}
 }

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import type { Awaitable, KeysMatching } from '../utility/misc.ts';
+import type { Promisable, KeysMatching } from '../utility/misc.ts';
 
 /** The base type for how (one-way) socket interface definition should look like */
 export type SocketInterfaceDefinition = {
@@ -31,7 +31,7 @@ export type SocketInterfaceResponse<T extends SocketInterfaceDefinition> = {
 
 /** Defines the SocketInterface response (possibly wrapped in promise) */
 export type SocketInterfaceHandlerResult<T extends SocketInterfaceDefinition> = {
-	[K in keyof T]: Awaitable<SocketInterfaceResponse<T>[K]>;
+	[K in keyof T]: Promisable<SocketInterfaceResponse<T>[K]>;
 };
 
 /** Defines the SocketInterface response (promise - for async function) */

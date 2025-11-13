@@ -8,8 +8,8 @@ import {
 	type ActionRoomSelector,
 	type ActionTargetSelector,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
+import { IItemModule } from 'pandora-common/assets/modules/common';
+import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import diskIcon from '../../assets/icons/disk.svg';

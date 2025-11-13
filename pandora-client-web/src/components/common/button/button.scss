@@ -38,6 +38,16 @@
 				img, canvas {
 					filter: map.get($theme-data, "disabled-icon-filter");
 				}
+
+				.normalDisabled {
+					background: map.get($theme-data, "background");
+					border-color: map.get($theme-data, "border");
+					color: map.get($theme-data, "color");
+
+					img, canvas {
+						filter: map.get($theme-data, "icon-filter")
+					}
+				}
 			}
 
 			img, canvas {

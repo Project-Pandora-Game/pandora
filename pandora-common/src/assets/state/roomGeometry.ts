@@ -1,9 +1,8 @@
 import { freeze, produce, type Draft, type Immutable } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import * as z from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
-import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, type Writable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
 import { RoomIdSchema } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -311,6 +310,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					delete d.following;
 				}));
 			} else {
+				const originalRoom = globalState.space.getRoom(character.position.room);
 				const targetCharacterRoom = globalState.space.getRoom(followTarget.position.room);
 				Assert(targetCharacterRoom != null);
 
@@ -351,6 +351,17 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					}
 				} else {
 					AssertNever(following);
+				}
+
+				// If changing room, character can be turned around
+				if (originalRoom?.id !== targetCharacterRoom.id) {
+					const link = originalRoom?.getLinkToRoom(targetCharacterRoom);
+					if (link != null && link.targetView !== 'keep') {
+						character = character.produceWithPose({
+							view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
+								link.targetView,
+						}, 'pose');
+					}
 				}
 			}
 		}

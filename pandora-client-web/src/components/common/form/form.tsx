@@ -1,10 +1,9 @@
 import classNames from 'classnames';
 import { capitalize } from 'lodash-es';
-import { GetLogger } from 'pandora-common';
+import { GetLogger, type Promisable } from 'pandora-common';
 import { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
 import { FieldError } from 'react-hook-form';
 import { Link, type LinkProps } from 'react-router';
-import type { Promisable } from 'type-fest';
 import * as z from 'zod';
 import { CommonProps } from '../../../common/reactTypes.ts';
 import './form.scss';

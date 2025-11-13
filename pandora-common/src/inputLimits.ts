@@ -1,3 +1,5 @@
+import { TimeSpanMs } from './utility/formatting.ts';
+
 /* TODO list of things to potentially limit *
 - AccountCryptoKeySchema limits (or more thorough validation)
 - Space admin list
@@ -28,6 +30,9 @@ export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;
 /** The extra slots reserved for space owners */
 export const LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS = 5;
 
+/** How many public spaces can be searched at a time. */
+export const LIMIT_SPACE_SEARCH_COUNT = 100;
+
 /** The maximum length of a space's name */
 export const LIMIT_SPACE_NAME_LENGTH = 48;
 /** The pattern used for validating space's name */
@@ -37,6 +42,8 @@ export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 export const LIMIT_ROOM_NAME_LENGTH = 48;
 /** The pattern used for validating room name */
 export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]*$/;
+/** The maximum length of a room's description */
+export const LIMIT_ROOM_DESCRIPTION_LENGTH = 1_000;
 
 /** The maximum number of items a room can store */
 export const LIMIT_ITEM_ROOM_INVENTORY = 150;
@@ -99,6 +106,8 @@ export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 50;
 /** The maximum amount of invites a space can have */
 export const LIMIT_SPACE_BOUND_INVITES = 20;
 export const LIMIT_JOIN_ME_INVITES = 10;
+/** The maximum validity (in ms) until a "join me" invite expires */
+export const LIMIT_JOIN_ME_INVITE_MAX_VALIDITY = TimeSpanMs(2, 'hours');
 
 /** The maximum number of character modifier instances on a single character */
 export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;

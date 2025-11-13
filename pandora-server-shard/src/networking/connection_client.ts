@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'http';
 import { Assert, AssertNotNullable, CharacterId, ClientShardSchema, GetLogger, IClientShard, IncomingConnection, IncomingSocket, IServerSocket, IShardClient, ShardClientSchema } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { assetManager } from '../assets/assetManager.ts';
 import { Character } from '../character/character.ts';
 import { CharacterManager } from '../character/characterManager.ts';

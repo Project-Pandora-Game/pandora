@@ -1,9 +1,8 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
+import { AssertNever, GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, type Promisable } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent.ts';

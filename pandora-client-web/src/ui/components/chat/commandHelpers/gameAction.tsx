@@ -1,6 +1,5 @@
-import { AppearanceActionProcessingContext, ApplyAction, AssertNever, GetLogger, type AppearanceAction } from 'pandora-common';
+import { AppearanceActionProcessingContext, ApplyAction, AssertNever, GetLogger, type AppearanceAction, type Promisable } from 'pandora-common';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import { RenderAppearanceActionProblem } from '../../../../assets/appearanceValidation.tsx';
 import { Column } from '../../../../components/common/container/container.tsx';
 import { OpenConfirmDialog } from '../../../../components/dialog/dialog.tsx';

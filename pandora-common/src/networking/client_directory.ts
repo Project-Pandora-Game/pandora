@@ -5,14 +5,16 @@ import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema 
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
-import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits.ts';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, LIMIT_SPACE_SEARCH_COUNT } from '../inputLimits.ts';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
+import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../space/spaceSearch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
-type ShardError = 'noShardFound' | 'failed';
+export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
+type ShardError = z.infer<typeof ShardErrorSchema>;
 
 export const ClientDirectoryAuthMessageSchema = z.object({
 	username: UserNameSchema,
@@ -297,25 +299,6 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: null,
 	},
-	shardInfo: {
-		request: z.object({}),
-		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
-	},
-	listSpaces: {
-		request: z.object({}),
-		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
-	},
-	spaceGetInfo: {
-		request: z.object({
-			id: SpaceIdSchema,
-			invite: SpaceInviteIdSchema.optional(),
-		}),
-		response: ZodCast<SpaceExtendedInfoResponse>(),
-	},
-	spaceCreate: {
-		request: SpaceDirectoryConfigSchema,
-		response: ZodCast<{ result: 'ok' | 'spaceOwnershipLimitReached' | ShardError; }>(),
-	},
 	spaceEnter: {
 		request: z.object({
 			id: SpaceIdSchema,
@@ -329,16 +312,88 @@ export const ClientDirectorySchema = {
 			result: z.enum(['ok', 'failed', 'restricted', 'inRoomDevice']),
 		}),
 	},
+	//#endregion
+
+	shardInfo: {
+		request: z.object({}),
+		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
+	},
+
+	//#region Space search
+	listSpaces: { // Get list of currently active spaces
+		request: z.object({}),
+		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
+	},
+	spaceSearch: { // Search through all public spaces
+		request: z.object({
+			args: SpaceSearchArgumentsSchema,
+			limit: z.int().positive().max(LIMIT_SPACE_SEARCH_COUNT),
+			skip: z.number().int().nonnegative().optional(),
+		}),
+		response: z.object({
+			result: SpaceSearchResultSchema,
+		}),
+	},
+	spaceGetInfo: {
+		request: z.object({
+			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
+		}),
+		response: ZodCast<SpaceExtendedInfoResponse>(),
+	},
+	//#endregion
+
+	//#region Space management
+	spaceCreate: {
+		request: SpaceDirectoryConfigSchema,
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'spaceOwnershipLimitReached',
+				'accountListNotAllowed', // Some accounts cannot be included in some lists upon space creation
+			])
+				.or(ShardErrorSchema),
+		}),
+	},
 	spaceUpdate: {
 		request: SpaceDirectoryUpdateSchema,
-		response: ZodCast<{ result: 'ok' | 'notInPublicSpace' | 'noAccess'; }>(),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notInPublicSpace', // Must be in a public space (not personal space) to do this
+				'noAccess', // Must be an admin
+				'targetNotAllowed', // Changes affecting specific accounts can be limited
+			]),
+		}),
 	},
 	spaceAdminAction: {
 		request: z.object({
 			action: z.enum(['kick', 'ban', 'unban', 'allow', 'disallow', 'promote', 'demote']),
 			targets: z.array(AccountIdSchema),
 		}),
-		response: null,
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notInPublicSpace', // Must be in a public space (not personal space) to do this
+				'noAccess', // Must be an admin
+				'targetNotAllowed', // Changes affecting specific accounts can be limited
+			]),
+		}),
+	},
+	spaceDropRole: { // Stop being an admin or allow-listed account of any space
+		request: z.object({
+			space: SpaceIdSchema,
+			role: z.enum(['admin', 'allowlisted']),
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok', // Removed or we don't have the role in the first place
+				'failed', // Generic failure
+				'notFound', // Space not found
+			]),
+		}),
 	},
 	spaceOwnership: {
 		request: z.discriminatedUnion('action', [
@@ -389,6 +444,10 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'requireAdmin' | 'tooManyInvites' | 'invalidData' | 'notFound'; } | {
 			result: 'list';
 			invites: SpaceInvite[];
+			/** If this is set, there are some valid invites that were not returned due to missing permissions.
+			 * @default false
+			 */
+			someHidden?: boolean;
 		} | {
 			result: 'created';
 			invite: SpaceInvite;

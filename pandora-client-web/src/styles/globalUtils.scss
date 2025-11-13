@@ -77,6 +77,12 @@
 	max-width: 100%;
 	max-height: 100%;
 }
+.fit-x {
+	max-width: 100%;
+}
+.fit-y {
+	max-height: 100%;
+}
 
 .zero-width {
 	width: 0;
@@ -88,6 +94,24 @@
 
 .margin-none {
 	margin: 0;
+}
+
+//#endregion
+
+//#region Self-alignment
+
+@each $type in (start, end, center, stretch) {
+	.align-self-#{$type} {
+		align-self: $type;
+	}
+	.justify-self-#{$type} {
+		justify-self: $type;
+	}
+}
+@each $type in (start, end, center, justify) {
+	.text-align-#{$type} {
+		text-align: $type;
+	}
 }
 
 //#endregion

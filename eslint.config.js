@@ -95,7 +95,6 @@ export default tsEslint.config(
 			'import/no-cycle': 'warn',
 			'import/no-internal-modules': ['error', {
 				forbid: [
-					'pandora-common/src/**',
 					'zod/**',
 				],
 			}],
@@ -283,14 +282,14 @@ export default tsEslint.config(
 					'selector': 'parameter',
 					'modifiers': ['unused'],
 					'format': ['camelCase'],
-					'leadingUnderscore': 'require',
+					'leadingUnderscore': 'allow',
 				},
 				{
 					'selector': 'import',
 					'format': null,
 				},
 				{
-					'selector': 'objectLiteralProperty',
+					'selector': ['objectLiteralProperty', 'objectLiteralMethod'],
 					'format': null,
 				},
 				{
@@ -485,14 +484,14 @@ export default tsEslint.config(
 					'selector': 'parameter',
 					'modifiers': ['unused'],
 					'format': ['camelCase'],
-					'leadingUnderscore': 'require',
+					'leadingUnderscore': 'allow',
 				},
 				{
 					'selector': 'import',
 					'format': null,
 				},
 				{
-					'selector': 'objectLiteralProperty',
+					'selector': ['objectLiteralProperty', 'objectLiteralMethod'],
 					'format': null,
 				},
 				{

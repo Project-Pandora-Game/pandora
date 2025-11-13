@@ -17,8 +17,8 @@ import {
 	LIMIT_ITEM_ROOM_INVENTORY,
 	SplitContainerPath,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
+import { IItemModule } from 'pandora-common/assets/modules/common';
+import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import React, { ReactElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import storageIcon from '../../../assets/icons/storage.svg';

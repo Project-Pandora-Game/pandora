@@ -57,6 +57,8 @@ export class EditorAssetGraphicsManagerClass {
 	constructor() {
 		this.editedPointTemplates.subscribe(() => {
 			this._reloadRuntimeGraphicsManager();
+			// We need to rebuild _all_ assets, as optimizations might be affected
+			this.rebuildAllAssets();
 		});
 		this.editedAssetGraphics.subscribe(() => {
 			this._onBuiltTexturesChanged();
@@ -185,7 +187,10 @@ export class EditorAssetGraphicsManagerClass {
 		// Regenerate all edited assets to make sure multi-graphics assets (room device slots) were purged
 		this._editedGraphicsBuildCache.clear();
 		this._reloadRuntimeGraphicsManager();
+		this.rebuildAllAssets();
+	}
 
+	public rebuildAllAssets(): void {
 		for (const editedAsset of Array.from(this._editedAssetGraphics.value.values())) {
 			this._onAssetDefinitionChanged(editedAsset)
 				.catch((err) => {

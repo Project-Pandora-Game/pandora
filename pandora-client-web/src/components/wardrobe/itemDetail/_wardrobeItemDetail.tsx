@@ -10,7 +10,7 @@ import {
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
+import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';

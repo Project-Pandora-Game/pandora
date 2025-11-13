@@ -1,8 +1,7 @@
-import { AccountIdSchema, Assert, GetLogger, type AccountId, type ICharacterRoomData } from 'pandora-common';
+import { AccountIdSchema, Assert, GetLogger, type AccountId, type ICharacterRoomData, type Promisable } from 'pandora-common';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import { useCharacterDataMultiple } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';

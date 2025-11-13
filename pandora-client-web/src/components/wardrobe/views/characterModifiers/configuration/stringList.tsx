@@ -1,10 +1,9 @@
 import { uniq } from 'lodash-es';
-import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
+import { GetLogger, type ModifierConfigurationEntryDefinition, type Promisable } from 'pandora-common';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/gameLogic/characterModifiers/helpers/configurationBuilder';
 import type { ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import * as z from 'zod';
 import crossIcon from '../../../../../assets/icons/cross.svg';
 import { useAsyncEvent } from '../../../../../common/useEvent';

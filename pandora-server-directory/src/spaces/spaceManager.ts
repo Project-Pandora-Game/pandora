@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import promClient from 'prom-client';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
@@ -36,6 +36,8 @@ const inUseSpacesMetric = new promClient.Gauge({
 /** Class that stores all currently or recently used spaces, removing them when needed */
 export const SpaceManager = new class SpaceManagerClass implements ServerService {
 	private readonly loadedSpaces: Map<SpaceId, Space> = new Map();
+	/** The time of the next activity measurement interval for spaces starts */
+	private _nextActivityInterval: number = 0;
 
 	/** Init the manager */
 	public init(): void {
@@ -59,12 +61,30 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
 	private tick(): void {
 		const now = Date.now();
+		const activityInterval = SpaceActivityGetNextInterval(now);
+
+		if (activityInterval > this._nextActivityInterval) {
+			const previousInterval = this._nextActivityInterval;
+			// Fire off background activity interval mass update
+			// This doesn't need to be synchronized at all with space's `updateActivityData`,
+			// as no matter the order they get actually applied, the result should be the same.
+			// (if `updateActivityData` goes first, the space is skipped by DB, if DB task goes first, it gets overwritten by `updateActivityData`)
+			this._nextActivityInterval = activityInterval;
+			GetDatabase().spaceMassUpdateActivityScores(activityInterval)
+				.catch((err) => {
+					logger.error('Error running space mass update of activity scores:', err);
+					// Reset the next interval, so next tick retries this
+					this._nextActivityInterval = previousInterval;
+				});
+		}
+
 		let inUseCount = 0;
 		// Go through spaces and prune old, inactive ones ones
 		for (const space of Array.from(this.loadedSpaces.values())) {
 			if (space.isInUse()) {
 				inUseCount++;
 				space.touch();
+				space.updateActivityData(activityInterval);
 			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now) {
 				this._unloadSpace(space);
 			}
@@ -93,6 +113,10 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			}
 		}
 		return Array.from(result);
+	}
+
+	public async listPublicSpaces(args: SpaceSearchArguments, limit: number, skip: number): Promise<SpaceSearchResult> {
+		return await GetDatabase().searchSpace(args, limit, skip, false);
 	}
 
 	/** Returns a list of spaces currently in memory */
@@ -249,6 +273,9 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			}
 		}
 
+		// Request the space to update its activity
+		space.updateActivityData();
+
 		logger.debug(`Loaded space ${space.id}`);
 		return space;
 	}
@@ -263,6 +290,9 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			character.baseInfo.trackedSpaceUnload(space);
 		}
 		Assert(space.trackingCharacters.size === 0);
+
+		// Save last active time of the space
+		space.updateActivityData(undefined, true);
 
 		Assert(this.loadedSpaces.get(space.id) === space);
 		this.loadedSpaces.delete(space.id);

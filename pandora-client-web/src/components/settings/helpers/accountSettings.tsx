@@ -1,8 +1,7 @@
 import type { Immutable } from 'immer';
-import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, GetLogger, type AccountSettings } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, GetLogger, type AccountSettings, type ConditionalKeys } from 'pandora-common';
 import { useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import type { ConditionalKeys } from 'type-fest';
 import type { ZodType } from 'zod';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';

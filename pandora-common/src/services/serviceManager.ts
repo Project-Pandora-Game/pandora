@@ -97,7 +97,7 @@ export class ServiceManager<TServices extends BaseServicesDefinition, TExternalD
 		Object.assign(allDeps, this._externalDependencies);
 		Object.assign(allDeps, this._services);
 		const dependencies: Partial<ServiceConfigFixup['dependencies']> = pick(allDeps, KnownObject.keys(provider.dependencies));
-		if (!CheckPropertiesNotNullable<ServiceConfigFixup['dependencies'], keyof ServiceConfigFixupDependencies<TServices, TConfig>['dependencies']>(dependencies, provider.dependencies)) {
+		if (!CheckPropertiesNotNullable<ServiceConfigFixup['dependencies']>(dependencies, provider.dependencies)) {
 			const missingDependency = KnownObject.keys(provider.dependencies).find((k) => this._services[k] == null);
 			throw new Error(`Dependencies are not satisfied. Missing dependency: ${missingDependency}`);
 		}

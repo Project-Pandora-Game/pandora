@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
+import { RoomDescriptionSchema, RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
 import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodeDefinitions.ts';
 import { AssertNever } from '../../../utility/misc.ts';
@@ -11,6 +11,7 @@ export const AppearanceActionRoomConfigure = z.object({
 	type: z.literal('roomConfigure'),
 	roomId: RoomIdSchema,
 	name: RoomNameSchema.optional(),
+	description: RoomDescriptionSchema.optional(),
 	/** Room geometry to set */
 	roomGeometry: RoomGeometryConfigSchema.optional(),
 	roomLinkNodes: RoomNeighborLinkNodesConfigSchema.partial().optional(),
@@ -25,6 +26,7 @@ export function ActionRoomConfigure({
 	const {
 		roomId,
 		name,
+		description,
 		roomGeometry,
 		roomLinkNodes,
 		settings,
@@ -34,6 +36,13 @@ export function ActionRoomConfigure({
 		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
 
 		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withName(name)))
+			return processingContext.invalid();
+	}
+
+	if (description != null) {
+		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveSpaceSettings().roomChangeMinimumRole);
+
+		if (!processingContext.manipulator.produceRoomState(roomId, (r) => r.withDescription(description)))
 			return processingContext.invalid();
 	}
 

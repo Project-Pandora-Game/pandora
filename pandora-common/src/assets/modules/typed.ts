@@ -26,7 +26,7 @@ export interface IModuleTypedOption<TProperties> {
 
 	/** Variant will store the time it was selected */
 	storeTime?: true;
-	/** Variant will store the the character that selected it */
+	/** Variant will store the character that selected it */
 	storeCharacter?: true;
 
 	/**

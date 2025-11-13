@@ -3,7 +3,7 @@ import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import type { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
+import type { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
 import { ReactElement, useMemo } from 'react';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Column, Row } from '../../common/container/container.tsx';

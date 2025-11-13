@@ -31,6 +31,9 @@ export interface DbManualMigration<TNew extends Document, TOld extends Document>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ValidatedCollectionType<T extends ValidatedCollection<any>> = T extends ValidatedCollection<infer U> ? Collection<U> : never;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ValidatedCollectionDocumentType<T extends ValidatedCollection<any>> = T extends ValidatedCollection<infer U> ? U : never;
+
 export class ValidatedCollection<T extends Document> {
 	public readonly logger: Logger;
 	public readonly name: string;

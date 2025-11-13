@@ -1,9 +1,8 @@
 import { produce, type Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import { CharacterModifierTemplateSchema, EvaluateCharacterModifierCondition, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT, type CharacterModifierCondition, type CharacterModifierConditionChain, type CharacterModifierConditionRecord } from 'pandora-common';
+import { CharacterModifierTemplateSchema, EvaluateCharacterModifierCondition, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT, type CharacterModifierCondition, type CharacterModifierConditionChain, type CharacterModifierConditionRecord, type Promisable } from 'pandora-common';
 import { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import importIcon from '../../../../../assets/icons/import.svg';
 import type { Character } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';

@@ -1,11 +1,10 @@
 import { Immutable, freeze } from 'immer';
 import { clamp, cloneDeep, isEqual } from 'lodash-es';
-import type { Writable } from 'type-fest';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
-import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg, MemoizeSingleObjectArg } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, MemoizeNoArg, MemoizeSingleObjectArg, type Writable } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
@@ -13,7 +12,7 @@ import { BoneType } from '../graphics/index.ts';
 import type { RoomId } from '../index.ts';
 import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
-import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
+import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
 import { GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
@@ -285,13 +284,6 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		);
 
 		return this.produceWithRequestedPose(resultPose);
-	}
-
-	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState {
-		if (preset.optional != null)
-			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
-
-		return this.produceWithPose(preset, 'pose');
 	}
 
 	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;

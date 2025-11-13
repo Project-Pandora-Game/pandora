@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import * as z from 'zod';
 import type { Account } from '../account/account.ts';
@@ -125,12 +125,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			shardInfo: this.handleShardInfo.bind(this),
 			listSpaces: this.handleListSpaces.bind(this),
+			spaceSearch: this.handleSpaceSearch.bind(this),
 			spaceGetInfo: this.handleSpaceGetInfo.bind(this),
 			spaceCreate: this.handleSpaceCreate.bind(this),
 			spaceEnter: this.handleSpaceEnter.bind(this),
 			spaceLeave: this.handleSpaceLeave.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
+			spaceDropRole: this.handleSpaceDropRole.bind(this),
 			spaceOwnership: this.handleSpaceOwnership.bind(this),
 			spaceInvite: this.handleSpaceInvite.bind(this),
 
@@ -480,9 +482,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const accountFriends = await account.contacts.getFriendsIds();
 
 		const spaces = (await SpaceManager.listSpacesVisibleTo(account))
-			.map((r) => r.getListInfo(account, accountFriends));
+			.map((s) => s.getListInfo(account, accountFriends));
 
 		return { spaces };
+	}
+
+	private async handleSpaceSearch({ args, limit, skip }: IClientDirectoryArgument['spaceSearch'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSearch'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			result: await SpaceManager.listPublicSpaces(args, limit, skip ?? 0),
+		};
 	}
 
 	private async handleSpaceGetInfo({ id, invite }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
@@ -534,6 +545,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return {
 				result: 'failed',
 			};
+		}
+
+		// Admins and allowed accounts lists have limits on what accounts can be included
+		const friends = await connection.account.contacts.getFriendsIds();
+		for (const a of [...spaceConfig.admin, ...spaceConfig.allow]) {
+			if (!friends.has(a)) {
+				return { result: 'accountListNotAllowed' };
+			}
 		}
 
 		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
@@ -591,15 +610,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		if (!connection.character.space) {
-			return;
+			return { result: 'notInPublicSpace' };
 		}
 
 		if (!connection.character.space.isAdmin(connection.account)) {
 			logger.verbose(`${connection.id} failed to perform admin action: not a space admin`);
-			return;
+			return { result: 'noAccess' };
 		}
 
-		await connection.character.space.adminAction(connection.character.baseInfo, action, targets);
+		const result = await connection.character.space.adminAction(connection.character.baseInfo, action, targets);
+
+		return { result };
 	}
 
 	private async handleSpaceLeave(_: IClientDirectoryArgument['spaceLeave'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceLeave'] {
@@ -608,6 +629,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const result = await connection.character.leaveSpace();
 
+		return { result };
+	}
+
+	private async handleSpaceDropRole({ space: spaceId, role }: IClientDirectoryArgument['spaceDropRole'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceDropRole'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = connection.account;
+		const space = await SpaceManager.loadSpace(spaceId);
+
+		if (space == null) {
+			logger.verbose(`${connection.id} failed drop role on space '${spaceId}': Space not found`);
+			return { result: 'notFound' };
+		}
+
+		const result = await space.dropSelfRole(account.id, role);
 		return { result };
 	}
 
@@ -648,11 +685,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		switch (req.action) {
-			case 'list':
+			case 'list': {
+				const invites = connection.character.space.getInvites(connection.character);
 				return {
 					result: 'list',
-					invites: connection.character.space.getInvites(connection.character),
+					invites,
+					someHidden: (invites.length !== connection.character.space.invites.length) ? true : undefined,
 				};
+			}
 			case 'delete': {
 				const result = await connection.character.space.deleteInvite(connection.character, req.id);
 				return {
@@ -1161,7 +1201,7 @@ async function TestCaptcha(token?: string): Promise<boolean> {
  * @template TParams - The type of the parameters passed to the original function.
  * @template TReturn - The type of the return value of the original function.
  */
-function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
+function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn: (...args: TParams) => Promisable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
 	return async (...args: TParams): Promise<Awaited<TReturn>> => {
 		const before = Date.now();
 		let result: [true, Awaited<TReturn>] | [false, unknown];

@@ -14,6 +14,7 @@ export const ShardDirectorySchema = {
 			publicURL: z.string(),
 			features: z.array(ShardFeatureSchema),
 			version: z.string(),
+			databaseVersion: z.number().int().nonnegative(),
 			characters: z.array(ShardCharacterDefinitionSchema),
 			disconnectCharacters: z.array(CharacterIdSchema),
 			spaces: z.array(ShardSpaceDefinitionSchema.pick({ id: true, accessId: true })),

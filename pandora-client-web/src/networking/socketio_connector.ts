@@ -5,7 +5,7 @@ import {
 	type IMessageHandler,
 	type Logger,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceDefinition } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceDefinition } from 'pandora-common/networking/helpers';
 import { Socket, connect } from 'socket.io-client';
 
 export interface Connector<OutboundT extends SocketInterfaceDefinition> extends IConnectionBase<OutboundT> {

@@ -456,8 +456,18 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [{
-						query: '.roomConfiguration .div-container.direction-row.align-center.gap-medium',
-						filter: (e) => e.innerText.includes('Room name'),
+						query: '.roomConfiguration [data-tutorial-id="roomName"]',
+					}],
+				},
+				{
+					text: (
+						<p>
+							Optionally, you can add a description that will be shown when a character enters this room.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.roomConfiguration [data-tutorial-id="roomDescription"]',
 					}],
 				},
 			],
@@ -630,7 +640,8 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					conditions: [{ type: 'next' }],
 					highlight: [
 						{
-							query: '.roomConfiguration .div-container.direction-column.gap-medium.flex-1',
+							query: '.roomConfiguration div:has(> div > label)',
+							filter: (e) => e.innerText.includes('Room position'),
 						},
 					],
 				},
@@ -737,6 +748,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								defined in the space configuration's rights management tab.<br />
 								That said, limiting a path's usage in your personal space makes not much sense,
 								as you will always be its owner and no other character can enter it.
+							</p>
+							<p>
+								Lastly, you can configure if the orientation of the character using the path should change.
+								This can, for instance, be useful to ensure the character appears in the next room facing in
+								the most likely direction, no matter if they approached the pathway in the previous room facing
+								forward or backward.
 							</p>
 							<p>
 								Note: Sometimes, in very large rooms, the path squares can be hard to identify.
@@ -1108,13 +1125,19 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 			steps: [
 				{
 					text: (
-						<p>
-							Note that if you make another user's account admin in your space, they can also manage
-							the space in all the ways described in this tutorial (unless the space configuration was
-							changed from the default), including adding more admins or
-							deleting them. But they cannot remove you or any other owners. Space owners always
-							have admin rights implicitly.
-						</p>
+						<>
+							<p>
+								Note that if you make another user's account admin in your space, they can also manage
+								the space in all the ways described in this tutorial (unless the space configuration was
+								changed from the default), including adding more admins or
+								deleting them. But they cannot remove you or any other owners. Space owners always
+								have admin rights implicitly.
+							</p>
+							<p>
+								A final hint about handling space access: If you want to quickly invite another character to your public, private,
+								or locked space for a single time, using the "/invite" command in a direct message to that user is the best way to do that.
+							</p>
+						</>
 					),
 					conditions: [{ type: 'next' }],
 				},

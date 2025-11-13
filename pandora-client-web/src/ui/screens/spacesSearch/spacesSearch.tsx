@@ -3,7 +3,6 @@ import { noop } from 'lodash-es';
 import {
 	AssertNotNullable,
 	EMPTY,
-	SpaceListExtendedInfo,
 	SpaceListInfo,
 	type SpacePublicSetting,
 } from 'pandora-common';
@@ -16,6 +15,7 @@ import plusIcon from '../../../assets/icons/plus.svg';
 import publicDoor from '../../../assets/icons/public-door.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -24,20 +24,20 @@ import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
-import { SpaceDetails } from './spaceDetails.tsx';
+import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import './spacesSearch.scss';
-import { useSpaceExtendedInfo } from './useSpaceExtendedInfo.tsx';
 
 const TIPS: readonly string[] = [
-	`You can move your character inside a room by dragging the character name below her.`,
+	`You can move your character inside a room by dragging the character name below.`,
 	`Careful! Your spaces are set to private as default when you first create them.`,
 	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
-	`Your character can turn around for everyone in a room using the "Pose" tab or with "/turn".`,
+	`Your character can turn around for everyone in a room using the "Pose" tab or with "/turn" or "/t".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
+	`If you write emotes with "/me", a change of "Command hint behavior" in the interface settings may help.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
+	`To quickly invite a character to your current space, use the "/invite" command in a DM to them.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
-	`The character context menu can still be opened from a room item's menu while a character is inside.`,
 	`You can start typing a chat message at any time, even without clicking into the text input field first.`,
 	`Setting the render resolution in the graphics settings to 0% lets you use the chat without graphics.`,
 	`Cannot move a character because the name is covered? Enter move mode in the "Room"-tab's character menu.`,
@@ -74,25 +74,43 @@ export function SpacesSearch(): ReactElement {
 
 	return (
 		<Column padding='medium'>
-			<Row padding='medium' wrap alignX='space-between'>
+			<GridContainer padding='medium' templateColumns='minmax(max-content, 1fr) auto minmax(auto, 1fr)' alignItemsX='center' alignItemsY='center'>
 				<Button
+					className='justify-self-start'
 					onClick={ () => {
 						navigate('/');
 					} }
 				>
 					◄ Back
 				</Button>
+				<h2 className='text-align-center'>Spaces search</h2>
+				<GridContainer className='justify-self-end text-align-end' gap='small' templateColumns='auto auto' templateRows='auto-flow' alignItemsX='end' alignItemsY='center'>
+					<span>Accounts online:</span><span>{ directoryStatus.onlineAccounts }</span>
+					<span>Characters online:</span><span>{ directoryStatus.onlineCharacters }</span>
+				</GridContainer>
+			</GridContainer>
+			<Row wrap alignX='end'>
 				<button className='infoBox' onClick={ () => setShowTips(true) } >
 					<span className='icon'>🛈</span> Tip: { TIPS[index] }
 				</button>
 			</Row>
-			<Row wrap alignX='space-between'>
-				<h2>Spaces search</h2>
-				<Row padding='medium' alignY='center'>
-					Accounts online: { directoryStatus.onlineAccounts } / Characters online: { directoryStatus.onlineCharacters }
-				</Row>
-			</Row>
-			{ !list ? <div className='loading'>Loading...</div> : <SpaceSearchList list={ list } /> }
+			{ !list ? (
+				<div className='loading'>Loading...</div>
+			) : (
+				<>
+					<SpaceSearchList list={ list } />
+					<Column padding='large' gap='small' alignX='start'>
+						<div>Want to find or explore public spaces not in use?</div>
+						<Row padding='medium' alignY='center'>
+							<Button onClick={ () => {
+								navigate('/spaces/public/search');
+							} }>
+								Search public spaces
+							</Button>
+						</Row>
+					</Column>
+				</>
+			) }
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }
@@ -181,12 +199,12 @@ function SpaceSearchList({ list }: {
 					}
 				</Column>
 			</div>
-			<hr />
+			<hr className='fill-x' />
 			<div>
 				<h3>Found spaces ({ otherSpaces.length })</h3>
 				{
 					otherSpaces.length === 0 ? (
-						<p>No space matches your filter criteria</p>
+						<p>No publicly listed space with online users found</p>
 					) : (
 						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
@@ -197,6 +215,19 @@ function SpaceSearchList({ list }: {
 		</>
 	);
 }
+
+export const SPACE_SEARCH_PUBLIC_ICONS: Record<SpacePublicSetting, string> = {
+	'locked': closedDoorLocked,
+	'private': closedDoor,
+	'public-with-admin': publicDoor,
+	'public-with-anyone': publicDoor,
+};
+export const SPACE_SEARCH_PUBLIC_LABELS: Record<SpacePublicSetting, string> = {
+	'locked': 'Locked private space',
+	'private': 'Private space',
+	'public-with-admin': 'Public space',
+	'public-with-anyone': 'Public space',
+};
 
 function SpaceSearchEntry({ baseInfo }: {
 	baseInfo: SpaceListInfo;
@@ -215,19 +246,6 @@ function SpaceSearchEntry({ baseInfo }: {
 	const isEmpty = onlineCharacters === 0;
 	const isFull = totalCharacters >= maxUsers;
 
-	const ICON_MAP: Record<SpacePublicSetting, string> = {
-		'locked': closedDoorLocked,
-		'private': closedDoor,
-		'public-with-admin': publicDoor,
-		'public-with-anyone': publicDoor,
-	};
-	const ICON_TITLE_MAP: Record<SpacePublicSetting, string> = {
-		'locked': 'Locked private space',
-		'private': 'Private space',
-		'public-with-admin': 'Public space',
-		'public-with-anyone': 'Public space',
-	};
-
 	return (
 		<>
 			<button
@@ -241,9 +259,9 @@ function SpaceSearchEntry({ baseInfo }: {
 			>
 				<div className='icon'>
 					<img
-						src={ ICON_MAP[baseInfo.public] }
-						title={ ICON_TITLE_MAP[baseInfo.public] }
-						alt={ ICON_TITLE_MAP[baseInfo.public] } />
+						src={ SPACE_SEARCH_PUBLIC_ICONS[baseInfo.public] }
+						title={ SPACE_SEARCH_PUBLIC_LABELS[baseInfo.public] }
+						alt={ SPACE_SEARCH_PUBLIC_LABELS[baseInfo.public] } />
 				</div>
 				<div className='icons-extra'>
 					{
@@ -274,47 +292,6 @@ function SpaceSearchEntry({ baseInfo }: {
 				hide={ () => setShow(false) }
 			/> }
 		</>
-	);
-}
-
-function SpaceDetailsDialog({ baseInfo, hide }: {
-	baseInfo: SpaceListInfo;
-	hide: () => void;
-}): ReactElement | null {
-	const accountId = useCurrentAccount()?.id;
-	const extendedInfo = useSpaceExtendedInfo(baseInfo.id);
-
-	const info = useMemo<SpaceListExtendedInfo>(() => {
-		if (extendedInfo?.result === 'success')
-			return extendedInfo.data;
-
-		return {
-			...baseInfo,
-			features: [],
-			admin: [],
-			background: '',
-			isAdmin: false,
-			isAllowed: false,
-			characters: [],
-		};
-	}, [extendedInfo, baseInfo]);
-
-	// Close if the space disappears
-	useEffect(() => {
-		if (extendedInfo?.result === 'notFound') {
-			hide();
-		}
-	}, [extendedInfo, hide]);
-
-	// Do not show anything if the space doesn't exist anymore
-	// Do not show anything if we don't have account (aka WTF?)
-	if (extendedInfo?.result === 'notFound' || accountId == null)
-		return null;
-
-	return (
-		<ModalDialog>
-			<SpaceDetails info={ info } hasFullInfo={ extendedInfo?.result === 'success' } hide={ hide } />
-		</ModalDialog>
 	);
 }
 

@@ -11,11 +11,12 @@ import {
 	IDirectoryShardUpdate,
 	IShardDirectory,
 	MessageHandler,
+	PANDORA_VERSION_DATABASE,
 	ShardDirectorySchema,
 	ShardFeature,
 	SpaceIdSchema,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager.ts';
@@ -293,6 +294,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features,
 			version: APP_VERSION,
+			databaseVersion: PANDORA_VERSION_DATABASE,
 			characters: CharacterManager.listCharacters(),
 			disconnectCharacters: CharacterManager.listInvalidCharacters(),
 			spaces: SpaceManager.listSpaces(),

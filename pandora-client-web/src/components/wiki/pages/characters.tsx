@@ -133,18 +133,22 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_context_menu'>Character context menu</h4>
 			<p>
 				You can open a context-specific character menu by clicking on the name below a character inside the room.
-				While characters are inside a <Link to='/wiki/items#IT_Room-level_items'>room-level item</Link>, their name
-				is not visible currently. You can still open the context menu by opening the room item's context
-				menu, opening the slot the character is inside, and then clicking on the character name.<br />
-				The character context menu has different features depending on whom it is opened on.
+				While characters are inside a <Link to='/wiki/items#IT_Room-level_items'>room-level item</Link>, you can alternatively open the context menu
+				by opening the room item's context menu, opening the slot the character is inside, and then clicking on the character name.
+				Finally, you can open the context menu by pressing on a character's name in the "Room" tab. This is useful if the name in the room scene is covered by something.<br />
+				The character context menu has different features depending on whom it is opened on. When an option on another character is crossed out,
+				it is not possible to do right now, for instance because you are lacking a permission. Clicking such option will display the reason.
 			</p>
 			<ul>
 				<li>You can use it to quickly open your or another character's profile or wardrobe.</li>
-				<li>You can directly write the user behind another character a direct message, even while the character is offline.</li>
+				<li>You can use it to enter move or pose mode on your or another character.</li>
+				<li>You can select "Lead / Follow" on other characters to activate a special <Link to='#CH_Character_movement'>move mode</Link> where one character moves with the other one.</li>
 				<li>There is an "Admin" sub-menu when you are an owner or admin in a space.</li>
 				<li>
-					The "Contacts" sub-menu lets you block another account or request adding the account to your contact list to see their online status and to
-					see what characters another account is currently using. The other user is notified of your request to add them and can accept or decline.
+					The "Relationship" sub-menu lets you block another account or request adding the account to your contact list to see their online status and to
+					see what characters another account is currently using. The other user is notified of your request to add them and can accept or decline.<br />
+					This menu also contains a quick link to start writing the user behind another character a direct message, even while the character is offline.<br />
+					Lastly, it allows you to temporarily hide another character for yourself only, for instance if they are obstructing your view (you can also hide your own characters for yourself).
 				</li>
 			</ul>
 
@@ -154,7 +158,9 @@ export function WikiCharacters(): ReactElement {
 				There also is a button in the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link>.
 			</p>
 			<ul>
-				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
+				<li>The "Item Limits" tab lets you configure <Link to='/wiki/items#IT_Item_preferences_and_limits'>limits and preferences</Link> of items for your character.</li>
+				<li>The "Randomization"-tab lets you change to a randomized appearance (this tab is only available in your Personal Space).</li>
+				<li>The effects & modifiers tab lists all effect currently applied to this character and allows management of <Link to='#CH_Character_modifiers'>character modifiers</Link>.</li>
 				<li>The "Body"-tab allows you to change your character's body parts and body shape, but only if the space you are in allows that.</li>
 				<li>
 					The "Items"-tab lists all items held or worn by your character on the left side and shows

@@ -388,6 +388,7 @@ export class Character {
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.contacts.updateStatus();
 			if (this.space != null) {
+				this.space.updateActivityData();
 				ConnectionManagerClient.onSpaceListChange();
 			}
 		}
@@ -449,6 +450,11 @@ export class Character {
 		// Mark the character as offline
 		const isChange = this._connectSecret != null;
 		if (isChange) {
+			if (this.space != null) {
+				// Update space activity right before going offline, so this character still counts as active at the last moment
+				this.space.updateActivityData();
+			}
+
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.contacts.updateStatus();
@@ -703,6 +709,11 @@ export class Character {
 		// Mark the character as offline
 		const isChange = this._connectSecret != null;
 		if (isChange) {
+			if (this.space != null) {
+				// Update space activity right before going offline, so this character still counts as active at the last moment
+				this.space.updateActivityData();
+			}
+
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.contacts.updateStatus();

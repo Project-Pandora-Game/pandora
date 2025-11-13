@@ -1,9 +1,8 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus, type Promisable } from 'pandora-common';
 import React, { createContext, ForwardedRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
-import type { Promisable } from 'type-fest';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
 import settingsIcon from '../../../assets/icons/setting.svg';

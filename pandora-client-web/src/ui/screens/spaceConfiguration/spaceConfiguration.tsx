@@ -31,7 +31,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { RenderAppearanceActionProblem } from '../../../assets/appearanceValidation.tsx';
@@ -43,6 +43,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
@@ -51,7 +52,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
@@ -71,7 +72,7 @@ import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
-const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
+const IsValidEntryText = ZodMatcher(SpaceDirectoryConfigSchema.shape.entryText);
 const ENTRY_TEXT_TEXTBOX_SIZE = 8;
 
 function DefaultConfig(): SpaceDirectoryConfig {
@@ -174,11 +175,17 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			);
 			const result = await directoryConnector.awaitResponse('spaceCreate', validatedConfig.data);
 			if (result.result !== 'ok') {
-				// TODO: Translate error codes to nicer texts
+				const FAIL_REASONS: Record<typeof result.result, string> = {
+					failed: 'Error performing action, try again later',
+					noShardFound: 'No Shard is available to process your request, try again later',
+					spaceOwnershipLimitReached: 'You have reached the limit of how many spaces you can own',
+					accountListNotAllowed: 'Some of the accounts listed in the "Rights management" tab cannot be added',
+				};
+
 				setCommitProcess(
 					<Column>
 						<div>❌ Failed to create space:</div>
-						<code>{ result.result }</code>
+						<div>{ FAIL_REASONS[result.result] }</div>
 					</Column>,
 				);
 				return;
@@ -248,12 +255,18 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 
 				const result = await directoryConnector.awaitResponse('spaceUpdate', modifiedData);
 				if (result.result !== 'ok') {
-					// TODO: Translate error codes to nicer texts
+					const FAIL_REASONS: Record<typeof result.result, string> = {
+						failed: 'Error performing action, try again later',
+						noAccess: 'You must be an Admin or an Owner to do this',
+						notInPublicSpace: 'This action cannot be done inside personal space',
+						targetNotAllowed: 'Some of the changes are invalid (affecting some accounts/characters is limited)',
+					};
+
 					setCommitProcess(
 						<Column>
 							{ shouldUpdateSpaceSettings ? <div>✅ Updated logic settings</div> : null }
 							<div>❌ Failed to update directory settings:</div>
-							<code>{ result.result }</code>
+							<div>{ FAIL_REASONS[result.result] }</div>
 						</Column>,
 					);
 					return;
@@ -363,7 +376,10 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				creation ? (
 					<Column padding='medium' alignX='center'>
 						<Button className='creationButton'
-							onClick={ commit }
+							onClick={ () => {
+								setShowCommitDialog(true);
+								commit();
+							} }
 							disabled={ processingCommit }
 						>
 							Create space
@@ -507,6 +523,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
+								<li>The "Public space search" feature does not list this space.</li>
 							</ul>
 							<h3>Public</h3>
 							<ul>
@@ -514,6 +531,7 @@ function SpaceConfigurationGeneral({
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
+								<li>The "Public space search" feature lists this space and it can be joined any time by anyone.</li>
 							</ul>
 						</ContextHelpButton>
 					</label>
@@ -634,6 +652,8 @@ function SpaceConfigurationRights({
 }: SpaceConfigurationTabProps): ReactElement {
 	const idPrefix = useId();
 	const directoryConnector = useDirectoryConnector();
+	const currentSpaceCharacters = useSpaceCharacters();
+	const friends = useAccountContacts('friend');
 
 	const accountId = currentAccount.id;
 	const owners: readonly AccountId[] = useMemo(() => (
@@ -656,6 +676,46 @@ function SpaceConfigurationRights({
 			{ reason: 'Already banned', list: currentConfig.banned },
 		],
 	}), [owners, currentConfig.admin, currentConfig.banned]);
+
+	const invalidAdminPermsWarning = useMemo(() => {
+		const result: ReactNode[] = [];
+
+		for (const a of currentConfig.admin) {
+			if (
+				!currentSpaceInfo?.config.admin.includes(a) && // Ignore existing admins
+				!currentSpaceInfo?.config.allow.includes(a) && // Allow promote from allow-listed
+				!currentSpaceCharacters.some((c) => c.data.accountId === a) && // Allow if present in the space
+				!friends.some((f) => f.id === a) // Allow contacts
+			) {
+				result.push(<span className='error' key={ a }>Cannot be added as account is not present in the space nor a contact: { a }</span>);
+			}
+		}
+
+		if (result.length === 0)
+			return null;
+
+		return result;
+	}, [currentConfig, currentSpaceInfo, currentSpaceCharacters, friends]);
+
+	const invalidAllowedPermsWarning = useMemo(() => {
+		const result: ReactNode[] = [];
+
+		for (const a of currentConfig.allow) {
+			if (
+				!currentSpaceInfo?.config.allow.includes(a) && // Ignore existing allow-listed
+				!currentSpaceInfo?.config.admin.includes(a) && // Allow demote from admin
+				!currentSpaceCharacters.some((c) => c.data.accountId === a) && // Allow if present in the space
+				!friends.some((f) => f.id === a) // Allow contacts
+			) {
+				result.push(<span className='error' key={ a }>Cannot be added as account is not present in the space nor a contact: { a }</span>);
+			}
+		}
+
+		if (result.length === 0)
+			return null;
+
+		return result;
+	}, [currentConfig, currentSpaceInfo, currentSpaceCharacters, friends]);
 
 	return (
 		<>
@@ -723,6 +783,7 @@ function SpaceConfigurationRights({
 						onChange={ canEdit ? ((admin) => updateConfig({ admin: admin.slice() })) : undefined }
 						allowSelf
 					/>
+					{ invalidAdminPermsWarning != null ? (<Column gap='none'>{ invalidAdminPermsWarning }</Column>) : null }
 				</div>
 			</fieldset>
 			<fieldset>
@@ -759,10 +820,19 @@ function SpaceConfigurationRights({
 						allowSelf
 					/>
 					<NumberListWarning values={ currentConfig.allow } invalid={ invalidAllow } />
+					{ invalidAllowedPermsWarning != null ? (<Column gap='none'>{ invalidAllowedPermsWarning }</Column>) : null }
 				</div>
 			</fieldset>
 			<fieldset>
-				<legend>Offline character management</legend>
+				<legend>
+					Offline character management
+					<ContextHelpButton>
+						<p>
+							This setting allows you to configure a time after which offline characters are removed from your space.<br />
+							For public spaces it is recommended to set this to around 5 minutes and to include characters in room items.
+						</p>
+					</ContextHelpButton>
+				</legend>
 				<Column>
 					<Row>
 						<Checkbox
@@ -893,17 +963,25 @@ function SpaceConfigurationRoom({
 
 	if (creation || currentSpaceState == null) {
 		return (
-			<strong>Room configuration can only be changed from inside the space</strong>
+			<div className='tab-wrapper'>
+				<Column className='flex-1' alignX='center'>
+					<Column className='flex-grow-1' alignY='center' padding='large' gap='large'>
+						<strong>Room configuration can only be changed from inside the space</strong>
+					</Column>
+				</Column>
+			</div>
 		);
 	}
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<Column className='fill contain-size' overflowY='auto'>
-				<SpaceStateConfigurationUi
-					globalState={ currentSpaceState }
-				/>
-			</Column>
+			<div className='tab-wrapper'>
+				<Column className='fill contain-size' overflowY='auto'>
+					<SpaceStateConfigurationUi
+						globalState={ currentSpaceState }
+					/>
+				</Column>
+			</div>
 		</WardrobeActionContextProvider>
 	);
 }
@@ -1044,7 +1122,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 
 function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
+	const [invites, setInvites] = useState<{ invites: readonly SpaceInvite[]; someHidden: boolean; }>({ invites: [], someHidden: false });
 	const [showCreation, setShowCreation] = useState(false);
 
 	const [update] = useAsyncEvent(
@@ -1053,7 +1131,10 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 		},
 		(resp) => {
 			if (resp?.result === 'list') {
-				setInvites(resp.invites);
+				setInvites({
+					invites: resp.invites,
+					someHidden: resp.someHidden ?? false,
+				});
 			}
 		},
 	);
@@ -1069,11 +1150,32 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 		update();
 	}, [update]);
 
-	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
-
 	return (
 		<fieldset>
-			<legend>Space invites management</legend>
+			<legend>
+				Space invites management
+				<ContextHelpButton>
+					<p>
+						This section allows you to manage all invite links created for this space and to create new "space-bound" invites.
+					</p>
+					<p>
+						"Space-bound" invites are mainly useful to allow limited access to this space while it is private, but you are not sure ahead of time whom you want to allow access.
+						Let's summarize how to best manage access to your space while it is private:
+					</p>
+					<ul>
+						<li>If you want a user and all their characters to have permanent access to your space, add them to the list of Allowed users instead of creating a permanent invite here.</li>
+						<li>If you want to quickly invite another character for a single time, use the "/invite" command in a direct message to them.</li>
+						<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character in this section.</li>
+					</ul>
+					<p>
+						For more info on how these options work in detail, please check the section <Link to='/wiki/spaces#SP_Space_invites'>"Space invites"</Link> in the "Spaces" tab of the wiki.
+					</p>
+					<p>
+						The "permanent public invite link" can be used by you or shared with others to directly join this space (or to use it as a browser bookmark).
+						Regular access rules apply, so if the space for instance is private, this link only works for accounts that are an Admin or an Allowed user.
+					</p>
+				</ContextHelpButton>
+			</legend>
 			<Column gap='large'>
 				<Column gap='medium'>
 					<div onClick={ copyPublic } className='permanentInvite'>
@@ -1096,21 +1198,26 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 					</thead>
 					<tbody>
 						{
-							invites.map((invite) => (
+							invites.invites.map((invite) => (
 								<SpaceInviteRow key={ invite.id } spaceId={ spaceId } invite={ invite } directoryConnector={ directoryConnector } update={ update } />
 							))
 						}
 					</tbody>
 				</table>
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } isPlayerAdmin={ isPlayerAdmin } /> }
+				{ invites.someHidden ? (
+					<Row alignX='center'>
+						<div className='warning-box'>This space has invites you cannot see</div>
+					</Row>
+				) : null }
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } onChange={ update } isPlayerAdmin={ isPlayerAdmin } /> }
 			</Column>
 		</fieldset>
 	);
 }
 
-function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; isPlayerAdmin: boolean; }): ReactElement {
+function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDialog: () => void; onChange: () => void; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [allowAccount, setAllowAccount] = useState(false);
+	const [allowAccount, setAllowAccount] = useState(!isPlayerAdmin);
 	const [account, setAccount] = useState(0);
 	const [allowCharacter, setAllowCharacter] = useState(false);
 	const [character, setCharacter] = useState(0);
@@ -1142,7 +1249,7 @@ function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeD
 				return;
 			}
 
-			addInvite(resp.invite);
+			onChange();
 			closeDialog();
 		},
 	);

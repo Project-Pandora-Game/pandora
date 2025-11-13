@@ -1,4 +1,4 @@
-import { AssetsDefinitionFile } from 'pandora-common/dist/assets/definitions';
+import type { AssetsDefinitionFile } from 'pandora-common';
 import { AssetManagerClient, GetCurrentAssetManager, LoadAssetDefinitions, UpdateAssetManager } from '../../src/assets/assetManager.tsx';
 
 describe('GetCurrentAssetManager()', () => {

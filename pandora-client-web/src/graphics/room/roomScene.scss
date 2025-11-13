@@ -1,0 +1,58 @@
+@use '../../styles/common';
+
+.RoomSceneDescriptionOverlayContainer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 1;
+	contain: size;
+}
+
+$transition-fn: 100ms;
+
+.RoomSceneDescriptionOverlay {
+	flex-flow: column;
+	gap: 0 !important;
+	pointer-events: auto;
+	max-width: 90%;
+	max-height: 90%;
+
+	.name {
+		padding: common.spacing('medium');
+
+		transition: padding $transition-fn linear;
+	}
+
+	.description {
+		padding: common.spacing('medium');
+
+		white-space: pre-wrap;
+		overflow-y: auto;
+		overflow-x: hidden;
+		min-height: 0;
+		min-width: 0;
+		width: fit-content;
+		max-width: 100%;
+
+		transition: width $transition-fn $transition-fn linear, height $transition-fn 2*$transition-fn linear, padding $transition-fn 2*$transition-fn linear;
+	}
+
+	&.closed {
+		border-radius: 1em;
+
+		.name {
+			padding: common.spacing('small');
+
+			transition: padding $transition-fn 2*$transition-fn linear;
+		}
+
+		.description {
+			width: 0;
+			height: 0;
+			padding: 0;
+			overflow: hidden;
+
+			transition: width $transition-fn $transition-fn linear, height $transition-fn linear, padding $transition-fn linear;
+		}
+	}
+}

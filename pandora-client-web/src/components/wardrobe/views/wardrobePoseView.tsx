@@ -75,7 +75,8 @@ const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
 const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, ReadonlyAppearanceLimitTree>();
 function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
 	const assetManager = characterState.assetManager;
-	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
+	// Always specifying extends allows us to strip any non-pose properties
+	const mergedPose = MergePartialAppearancePoses(pose, pose.optional ?? {});
 	// Cache the limits calculation as we have many buttons that can reuse this
 	let limits: ReadonlyAppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
 	if (limits === undefined) {
@@ -477,7 +478,31 @@ export function WardrobePoseGui({ character, characterState }: {
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
-	const actualPoseDiffers = !isEqual(characterState.requestedPose, characterState.actualPose);
+	const actualPosePreset = useMemo((): PartialAppearancePose => {
+		const bones: Record<string, number> = {};
+		for (const bone of characterState.assetManager.getAllBones()) {
+			if (bone.type === 'pose') {
+				bones[bone.name] = characterState.getActualPoseBoneValue(bone.name);
+			}
+		}
+		return {
+			...characterState.actualPose,
+			bones,
+		};
+	}, [characterState]);
+	const actualPoseDiffers = useMemo(() => {
+		return !isEqual(
+			characterState.requestedPose,
+			ProduceAppearancePose(
+				characterState.requestedPose,
+				{
+					assetManager,
+					boneTypeFilter: 'pose',
+				},
+				actualPosePreset,
+			),
+		);
+	}, [actualPosePreset, assetManager, characterState.requestedPose]);
 
 	return (
 		<div className='inventoryView'>
@@ -551,7 +576,7 @@ export function WardrobePoseGui({ character, characterState }: {
 						<Button
 							slim
 							onClick={ () => {
-								setPose(CloneDeepMutable(characterState.actualPose));
+								setPose(CloneDeepMutable(actualPosePreset));
 							} }
 						>
 							Stay in it

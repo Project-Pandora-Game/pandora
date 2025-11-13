@@ -1,5 +1,5 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
-import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
+import React, { useCallback, useId, useMemo, useState, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { OptionalKeysOf } from 'type-fest';
 import type { ZodType } from 'zod';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -84,6 +84,22 @@ export function useValueMapDriver<const TIn, const TOut>(
 		},
 		onReset: parentDriver.onReset,
 	}), [parentDriver, forwardMapping, backwardMapping]);
+}
+
+export function useStateSettingDriver<S>(initialState: S): [value: S, driver: SettingDriver<S>] {
+	const [value, setValue] = useState<S>(initialState);
+
+	return [
+		value,
+		useMemo((): SettingDriver<S> => ({
+			currentValue: value,
+			defaultValue: initialState,
+			onChange: setValue,
+			onReset() {
+				setValue(initialState);
+			},
+		}), [initialState, value]),
+	];
 }
 
 function InvertBoolean(v: boolean): boolean {

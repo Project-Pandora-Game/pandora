@@ -11,6 +11,7 @@ import {
 	LegSideOrderSchema,
 	LegsPoseSchema,
 	type PartialAppearancePose,
+	type Promisable,
 	type Satisfies,
 } from 'pandora-common';
 import type { PlayerCharacter } from '../../../../character/player.ts';
@@ -19,7 +20,6 @@ import { GetVisibleBoneName } from '../../../../components/wardrobe/wardrobeUtil
 import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
-import type { Promisable } from 'type-fest';
 
 export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> = {
 	key: ['posemanual', 'pm'],

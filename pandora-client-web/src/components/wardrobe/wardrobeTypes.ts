@@ -14,7 +14,7 @@ import {
 	type ActionRoomSelector,
 	type RoomId,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
+import { IItemModule } from 'pandora-common/assets/modules/common';
 import { ReactElement } from 'react';
 import * as z from 'zod';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';

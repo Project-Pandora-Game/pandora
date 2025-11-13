@@ -43,7 +43,11 @@ export function WikiSpaces(): ReactElement {
 				The room view in Pandora consists of the room canvas and the four tabs that show the chat per default.<br />
 				In a landscape view the tab is on the right side and it is on the bottom in a portrait view.
 				In the Pandora settings (cog-button on the top bar) under the "Interface"-tab and inside the "Room UI" box,
-				you can customize the ratio between the space that the room and the tabs area use for both landscape or portrait views.
+				you can customize the ratio between the space that the room and the tabs area use for both landscape or portrait views.<br />
+				While not in your personal space, the top of the room canvas shows the current room's name. Clicking on it expands
+				the overlay to show the room's description, if there is one.
+				When you enter a room with a new description for the first time after entering a space, the overlay will
+				automatically expand to conveniently show it. This will reset under certain conditions, e.g. closing the browser tab.
 			</p>
 			<ul>
 				<li>You can zoom the room canvas with the mouse wheel or a pinch-to-zoom gesture.</li>
@@ -76,6 +80,7 @@ export function WikiSpaces(): ReactElement {
 					Users can move between neighboring rooms with an active path in three ways: By using the path squares on the ground, by clicking on the room in the map under the
 					"Room" tab, or by using the '/moveto' command.
 				</li>
+				<li>Using a path can turn your character around if the path was configured in such a way by the room designer.</li>
 				<li>
 					A path is not shown if there is no neighboring room in the cardinal direction this path leads to, if the path is disabled (e.g. representing a wall between two rooms), or
 					if the path is usage restricted based on roles, such as "Admin" or "Allowed user", defined in the space configuration's rights management tab.

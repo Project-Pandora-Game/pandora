@@ -739,6 +739,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								as you will always be its owner and no other character can enter it.
 							</p>
 							<p>
+								Lastly, you can configure if the orientation of the character using the path should change.
+								This can for instance be useful to ensure the character appears in the next room facing in
+								the most likely direction, no matter if they approached the pathway in the previous room facing
+								forward or backward. This is a tool that will make sense over time.
+							</p>
+							<p>
 								Note: Sometimes, in very large rooms, the path squares can be hard to identify.
 								As a reminder, users can also move by clicking on rooms directly in the minimap of
 								the "Room" tab or by using the <code>/moveto</code> (<code>/mt</code> for short) command.

@@ -230,9 +230,13 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomGeometry: CloneDeepMutable(this.roomGeometryConfig),
 			roomLinkNodes: CloneDeepMutable(produce(this.roomLinkNodes, (d) => {
 				delete d.left.useMinimumRole;
+				delete d.left.targetView;
 				delete d.right.useMinimumRole;
+				delete d.right.targetView;
 				delete d.near.useMinimumRole;
+				delete d.near.targetView;
 				delete d.far.useMinimumRole;
+				delete d.far.targetView;
 			})),
 		};
 	}
@@ -445,9 +449,13 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			roomBackground,
 			roomLinkNodes: produce(CloneDeepMutable(template.roomLinkNodes), (d) => {
 				delete d.left.useMinimumRole;
+				delete d.left.targetView;
 				delete d.right.useMinimumRole;
+				delete d.right.targetView;
 				delete d.near.useMinimumRole;
+				delete d.near.targetView;
 				delete d.far.useMinimumRole;
+				delete d.far.targetView;
 			}),
 			direction,
 			settings: freeze(CloneDeepMutable(settings), true),

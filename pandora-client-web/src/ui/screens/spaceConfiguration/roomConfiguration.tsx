@@ -11,6 +11,7 @@ import {
 	ParseNotNullable,
 	RoomDescriptionSchema,
 	RoomLinkNodeConfig,
+	RoomLinkNodeConfigSchema,
 	RoomNameSchema,
 	RoomTemplateSchema,
 	type AssetFrameworkGlobalState,
@@ -32,6 +33,8 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
@@ -62,7 +65,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 	const [directionChange, setDirectionChange] = useState<CardinalDirection | null>(null);
 
 	return (
-		<fieldset className='roomConfiguration'>
+		<fieldset className='roomConfiguration fit-x'>
 			<legend>Room "{ roomState.name || roomState.id }"</legend>
 			{ showBackgrounds && <BackgroundSelectDialog
 				hide={ () => setShowBackgrounds(false) }
@@ -237,23 +240,37 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 				</Row>
 				<fieldset>
 					<legend>Paths to other rooms</legend>
-					<table>
-						<thead>
-							<tr>
-								<th>Direction</th>
-								<th>Enabled</th>
-								<th>Position</th>
-								<th>Can be used by</th>
-								<th></th>
-							</tr>
-						</thead>
-						<tbody>
-							<RoomConfigurationRoomLink direction='far' roomState={ roomState } />
-							<RoomConfigurationRoomLink direction='right' roomState={ roomState } />
-							<RoomConfigurationRoomLink direction='near' roomState={ roomState } />
-							<RoomConfigurationRoomLink direction='left' roomState={ roomState } />
-						</tbody>
-					</table>
+					<Column overflowX='auto'>
+						<table>
+							<thead>
+								<tr>
+									<th>Direction</th>
+									<th>Enabled</th>
+									<th>Position</th>
+									<th>Can be used by</th>
+									<th>
+										<Row alignX='center' alignY='center'>
+											<span>Character view</span>
+											<ContextHelpButton>
+												<p>
+													If set to anything other than "Keep", any character walking through this path will either turn around,
+													or have their view set to this value.<br />
+													This is particularly useful when connecting rooms with different orientation.
+												</p>
+											</ContextHelpButton>
+										</Row>
+									</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								<RoomConfigurationRoomLink direction='far' roomState={ roomState } />
+								<RoomConfigurationRoomLink direction='right' roomState={ roomState } />
+								<RoomConfigurationRoomLink direction='near' roomState={ roomState } />
+								<RoomConfigurationRoomLink direction='left' roomState={ roomState } />
+							</tbody>
+						</table>
+					</Column>
 				</fieldset>
 			</Column>
 		</fieldset>
@@ -388,6 +405,33 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 					label={ null }
 					noWrapper
 					cumulative
+				/>
+			</td>
+			<td>
+				<SelectSettingInput<RoomLinkNodeConfig['targetView'] & {}>
+					driver={ {
+						currentValue: (changedConfig ?? config).targetView,
+						defaultValue: 'keep',
+						onChange(newValue) {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								d.targetView = newValue;
+							}));
+						},
+						onReset() {
+							setChangedConfig((v) => produce(v ?? config, (d) => {
+								delete d.targetView;
+							}));
+						},
+					} }
+					label={ null }
+					noWrapper
+					schema={ RoomLinkNodeConfigSchema.shape.targetView.unwrap().unwrap() }
+					stringify={ {
+						'keep': 'Keep',
+						'turn-around': 'Turn around',
+						'front': 'Turn forward',
+						'back': 'Turn backward',
+					} }
 				/>
 			</td>
 			<td>

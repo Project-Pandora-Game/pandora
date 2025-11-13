@@ -126,7 +126,7 @@ export function SpaceStateConfigurationUi({
 				) : null }
 			</Row>
 			<hr className='fill-x' />
-			<Column className='fill-x flex-1 contain-size' alignX='center'>
+			<Column className='fill-x fit-x flex-1' alignX='center' padding='medium'>
 				{
 					selectedRoomState != null ? (
 						<RoomConfiguration

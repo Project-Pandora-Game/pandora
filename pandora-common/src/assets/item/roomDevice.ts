@@ -16,6 +16,7 @@ import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.t
 import { MemoizeNoArg } from '../../utility/misc.ts';
 import { ItemModuleAction, LoadItemModule } from '../modules.ts';
 import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from '../roomDeviceProperties.ts';
+import { QueryStateFlagCombinations, StateFlagCombinationRoomDevicePropertiesGetter } from '../stateFlags.ts';
 
 import type { AppearanceActionProcessingContext } from '../../gameLogic/index.ts';
 import { ItemBase, ItemBaseProps } from './_internal.ts';
@@ -308,6 +309,19 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		const propertyParts: Immutable<AssetProperties>[] = [
 			...Array.from(this.modules.values()).flatMap((m) => m.getProperties()),
 		];
+
+		const flags = new Set<string>();
+		for (const part of propertyParts) {
+			if (part.stateFlags?.provides !== undefined) {
+				for (const flag of part.stateFlags.provides) {
+					flags.add(flag);
+				}
+			}
+		}
+		const { stateFlagCombinations } = this.asset.definition;
+		if (stateFlagCombinations !== undefined) {
+			propertyParts.push(...QueryStateFlagCombinations<RoomDeviceProperties>(stateFlagCombinations, flags, StateFlagCombinationRoomDevicePropertiesGetter));
+		}
 
 		return propertyParts;
 	}

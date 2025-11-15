@@ -2,12 +2,14 @@ import type { Immutable } from 'immer';
 import type { AssetDefinitionExtraArgs } from './definitions.ts';
 import type { AssetProperties } from './properties.ts';
 
+export type RoomDeviceSlotProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = Omit<AssetProperties<A>, 'stateFlags' | 'blockAddRemove' | 'blockModules'>;
+
 export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/**
 	 * Properties for individual slots.
 	 * @default {}
 	 */
-	slotProperties?: Partial<Record<string, AssetProperties<A>>>;
+	slotProperties?: Partial<Record<string, RoomDeviceSlotProperties<A>>>;
 
 	/**
 	 * Flags allowing to limit which item's state combinations are valid.

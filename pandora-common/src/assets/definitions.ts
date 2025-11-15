@@ -9,9 +9,10 @@ import type { AssetId } from './base.ts';
 import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegSideOrder, LegsPose } from './graphics/index.ts';
 import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
-import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
+import type { RoomDeviceProperties, RoomDeviceSlotProperties } from './roomDeviceProperties.ts';
 import type { AssetsPosePreset, AssetsPosePresets, PartialAppearancePose } from './state/characterStatePose.ts';
 import type { RoomBackgroundData } from './state/roomGeometry.ts';
+import type { AssetStateFlagCombination } from './stateFlags.ts';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another
@@ -194,6 +195,12 @@ export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
+
+	/**
+	 * Advanced feature that allows applying additional properties when _all_ state flags of an option are satisfied.
+	 * This allows creating more complex "AND" or "OR" condition chains for the asset.
+	 */
+	stateFlagCombinations?: AssetStateFlagCombination<AssetProperties<A>>[];
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
@@ -250,6 +257,12 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
+
+	/**
+	 * Advanced feature that allows applying additional properties when _all_ state flags of an option are satisfied.
+	 * This allows creating more complex "AND" or "OR" condition chains for the asset.
+	 */
+	stateFlagCombinations?: AssetStateFlagCombination<AssetProperties<A>>[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -278,6 +291,11 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	slots: Record<string, RoomDeviceSlot<A>>;
 	/** Modules this device has */
 	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>, RoomDeviceModuleStaticData>>;
+	/**
+	 * Advanced feature that allows applying additional properties when _all_ state flags of an option are satisfied.
+	 * This allows creating more complex "AND" or "OR" condition chains for the asset.
+	 */
+	stateFlagCombinations?: AssetStateFlagCombination<RoomDeviceProperties<A>>[];
 	/** Attributes that are used strictly for filtering, no effect on character */
 	staticAttributes?: (A['attributes'])[];
 	/**
@@ -312,7 +330,7 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	};
 }
 
-export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
+export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends RoomDeviceSlotProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
 	/** Extra pose presets available when wearing this asset, extends device's pose presets */
 	posePresets?: AssetsPosePreset<A['bones']>[];
 	/**

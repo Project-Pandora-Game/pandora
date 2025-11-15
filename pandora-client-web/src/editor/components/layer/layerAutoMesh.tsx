@@ -86,6 +86,17 @@ function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsWornLayer
 					} }
 				/>
 				Layer has normal map
+				<ContextHelpButton>
+					<p>
+						You only need to tick this, if your asset has normal maps.<br />
+						Your asset does not need to have normal maps.
+					</p>
+					<p>
+						A normal map is an image based information about the surface structure of a texture.<br />
+						It can improve lighting and shading of an asset. If you modeled your asset in 3D, you are likely<br />
+						able to export additional images containing normal maps from it for usage in Pandora.
+					</p>
+				</ContextHelpButton>
 			</label>
 			{
 				normalMap != null ? (
@@ -1227,8 +1238,15 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 			<Column>
 				<h2>Automatically fill images based on name</h2>
 				<span className='contain-inline-size'>
-					This will take names of the layers below and ids of each variable and join them using '_' to try finding matching image.
-					Any wrongly-formatted combination will be reset, otherwise the setting bellow is followed.
+					<p>
+						This will take names of the layers below and the ids of each variable and join them using '_' to try finding matching images.
+					</p>
+					<p>
+						To make it work, the file names of your images should start with the layer name as a prefix, followed by the module values, separated by an underscore.<br />
+						If your layer for instance is "ring" and has a module based on material and based on front/back view, a file name could be
+						"ring_rubber_back.png"
+					</p>
+					Any wrongly-formatted combination will be reset, otherwise the setting below is followed.
 				</span>
 				<label>
 					<Checkbox

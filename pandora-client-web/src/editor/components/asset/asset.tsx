@@ -175,7 +175,7 @@ function AddWornLayerUiDialog({ close, layerContainer }: { close: () => void; la
 					editor.targetLayer.value = layerContainer.addLayer('autoMesh');
 					close();
 				} }>
-					Add automatic image layer
+					Add automatic image layer ("automesh")
 				</Button>
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('mesh');

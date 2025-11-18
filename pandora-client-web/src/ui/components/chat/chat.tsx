@@ -14,7 +14,7 @@ import React, {
 import { GetCurrentAssetManager, useAssetManager } from '../../../assets/assetManager.tsx';
 import { useAutoScroll } from '../../../common/useAutoScroll.ts';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu/index.ts';
 import { useChatMessages, useChatMessageSender, useGameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -23,7 +23,7 @@ import { useShardConnector } from '../../../components/gameContext/shardConnecto
 import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
-import { ActionLogDisplayEntriesContext, ActionLogEntry } from './actionLogEntry.tsx';
+import { ActionLogEntry } from './actionLogEntry.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatActionLogDisabled, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
@@ -38,12 +38,15 @@ export function Chat(): ReactElement | null {
 	const actionLogDisabled = useChatActionLogDisabled();
 	const focusMode = focusModeForced ?? focusModeSetting;
 	const actionLogSetting = useObservable(ChatActionLog);
+	const displayActionLogMessages = actionLogSetting && !actionLogDisabled;
 
 	const shardConnector = useShardConnector();
-	const { interfaceChatroomChatFontSize } = useAccountSettings();
+	const { interfaceChatroomChatFontSize, chatMaxShownMessages } = useAccountSettings();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages, injectedMessages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
+
+	const [showAllMessages, setShowAllMessages] = useState(false);
 
 	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
 		return (
@@ -62,7 +65,7 @@ export function Chat(): ReactElement | null {
 
 	// Combine normal and injected messages
 	const finalMessages = useMemo((): readonly ReactElement[] => {
-		const result = new Array<ReactElement>(messages.length + injectedMessages.length);
+		let result = new Array<ReactElement>(messages.length + injectedMessages.length);
 		let t = 0;
 		let messagesIndex = 0;
 		let injectedMessagesIndex = 0;
@@ -74,6 +77,11 @@ export function Chat(): ReactElement | null {
 				result[t++] = injectedMessage.element;
 				injectedMessagesIndex++;
 			} else {
+				messagesIndex++;
+
+				if (normalMessage.type === 'actionLog' && !displayActionLogMessages)
+					continue;
+
 				result[t++] = (
 					<Message
 						key={ normalMessage.time }
@@ -81,11 +89,14 @@ export function Chat(): ReactElement | null {
 						playerId={ playerId }
 					/>
 				);
-				messagesIndex++;
 			}
 		}
 		while (messagesIndex < messages.length) {
 			const normalMessage = messages[messagesIndex++];
+
+			if (normalMessage.type === 'actionLog' && !displayActionLogMessages)
+				continue;
+
 			result[t++] = (
 				<Message
 					key={ normalMessage.time }
@@ -98,8 +109,50 @@ export function Chat(): ReactElement | null {
 			result[t++] = injectedMessages[injectedMessagesIndex++].element;
 		}
 
+		if (chatMaxShownMessages != null && t > chatMaxShownMessages && !showAllMessages) {
+			result = result.slice(t - chatMaxShownMessages, t);
+			result.unshift(
+				<Row alignX='center' padding='small'>
+					<div className='warning-box'>
+						<Row alignY='center'>
+							<span>Older messages ({ t - chatMaxShownMessages }) are hidden for performance reasons</span>
+							<Button
+								className='not-selectable'
+								onClick={ () => {
+									setShowAllMessages(true);
+								} }
+							>
+								Show all messages
+							</Button>
+						</Row>
+					</div>
+				</Row>,
+			);
+		} else {
+			result = result.slice(0, t);
+		}
+
+		if (showAllMessages) {
+			result.push(
+				<Row alignX='center' padding='small'>
+					<div className='warning-box not-selectable'>
+						<Row alignY='center'>
+							<span>Showing complete chat history</span>
+							<Button
+								onClick={ () => {
+									setShowAllMessages(false);
+								} }
+							>
+								Hide older messages
+							</Button>
+						</Row>
+					</div>
+				</Row>,
+			);
+		}
+
 		return result;
-	}, [messages, injectedMessages, playerId]);
+	}, [messages, injectedMessages, chatMaxShownMessages, displayActionLogMessages, playerId, showAllMessages]);
 
 	const resizeObserver = useMemo(() => new ResizeObserver(() => scroll(false, 'instant')), [scroll]);
 	const messagesDivHandler = useCallback((div: HTMLDivElement | null) => {
@@ -135,17 +188,15 @@ export function Chat(): ReactElement | null {
 					focusMode ? 'hideDimmed' : null,
 				) }
 			>
-				<ActionLogDisplayEntriesContext.Provider value={ actionLogSetting && !actionLogDisabled }>
-					<Scrollable
-						ref={ messagesDivHandler }
-						className='fill'
-						tabIndex={ 1 }
-					>
-						<Column gap='none' className='messagesContainer'>
-							{ finalMessages }
-						</Column>
-					</Scrollable>
-				</ActionLogDisplayEntriesContext.Provider>
+				<Scrollable
+					ref={ messagesDivHandler }
+					className='fill'
+					tabIndex={ 1 }
+				>
+					<Column gap='none' className='messagesContainer'>
+						{ finalMessages }
+					</Column>
+				</Scrollable>
 				<ChatAutoCompleteHint />
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
@@ -171,8 +222,6 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 		return null;
 	}
 	return <DisplayUserMessage message={ message } playerId={ playerId } />;
-}, (prev, next) => {
-	return prev.message === next.message && prev.playerId === next.playerId;
 });
 
 export function RenderChatMessageToString(message: IChatMessageProcessed, accountSettings: Immutable<AccountSettings>): string {

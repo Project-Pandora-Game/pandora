@@ -134,6 +134,11 @@ export const AccountSettingsSchema = z.object({
 	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
 	 */
 	chatCommandHintBehavior: z.enum(['always-show', 'on-tab']),
+	/**
+	 * How many most recent messages to show in chat at the same time, for performance reason.
+	 * Setting this to `null` disables the limit.
+	 */
+	chatMaxShownMessages: z.int().positive().nullable(),
 	notificationGlobalSettings: ClientNotificationGlobalSettingsSchema,
 	notificationTypeSettings: NotificationTypesSettingsSchema,
 	/**
@@ -171,6 +176,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom',
 	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
+	chatMaxShownMessages: 100,
 	notificationGlobalSettings: {
 		sound: {
 			sound: '',

@@ -25,6 +25,7 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
@@ -88,7 +89,7 @@ function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsWornLayer
 				Layer has normal map
 				<ContextHelpButton>
 					<p>
-						You only need to tick this, if your asset has normal maps.<br />
+						You only need to tick this, if your asset has <ExternalLink href='https://en.wikipedia.org/wiki/Normal_mapping'>normal maps</ExternalLink>.<br />
 						Your asset does not need to have normal maps.
 					</p>
 					<p>

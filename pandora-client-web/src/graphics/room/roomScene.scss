@@ -16,6 +16,7 @@ $transition-fn: 100ms;
 	pointer-events: auto;
 	max-width: 90%;
 	max-height: 90%;
+	transform: 200ms ease-in-out;
 
 	.name {
 		padding: common.spacing('medium');
@@ -53,6 +54,10 @@ $transition-fn: 100ms;
 			overflow: hidden;
 
 			transition: width $transition-fn $transition-fn linear, height $transition-fn linear, padding $transition-fn linear;
+		}
+
+		&.hideName {
+			transform: translateY(-100%) translateY(- common.spacing('medium'));
 		}
 	}
 }

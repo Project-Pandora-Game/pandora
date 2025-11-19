@@ -94,10 +94,10 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.14.1)
+        version: 6.0.3(pixi.js@8.14.2)
       pixi.js:
-        specifier: 8.14.1
-        version: 8.14.1
+        specifier: 8.14.2
+        version: 8.14.2
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -193,8 +193,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0(typescript@5.9.3)(webpack@5.102.1)
       html-webpack-plugin:
-        specifier: 5.6.4
-        version: 5.6.4(webpack@5.102.1)
+        specifier: 5.6.5
+        version: 5.6.5(webpack@5.102.1)
       jest:
         specifier: 30.2.0
         version: 30.2.0(@types/node@22.19.1)
@@ -3889,8 +3889,8 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
 
-  html-webpack-plugin@5.6.4:
-    resolution: {integrity: sha512-V/PZeWsqhfpE27nKeX9EO2sbR+D17A+tLf6qU+ht66jdUsN0QLKJN27Z+1+gHrVMKgndBahes0PU6rRihDgHTw==}
+  html-webpack-plugin@5.6.5:
+    resolution: {integrity: sha512-4xynFbKNNk+WlzXeQQ+6YYsH2g7mpfPszQZUi3ovKlj+pDmngQ7vRXjrrmGROabmKwyQkcgcX5hqfOwHbFmK5g==}
     engines: {node: '>=10.13.0'}
     peerDependencies:
       '@rspack/core': 0.x || 1.x
@@ -5123,8 +5123,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.14.1:
-    resolution: {integrity: sha512-cwiY5VdzpbjoxW/n378bHBaPbZF8e81rYS36rfgUOSHyqLJ7AvC/YYUVfybnjJrT8/zVJ/gBIEpVSmt+A+FC6Q==}
+  pixi.js@8.14.2:
+    resolution: {integrity: sha512-UjZ2OQ/dU0hDJOKQvUGu8j131cd7uBOkIAmzgLmLB5wegKy+DpeQqagfARSfo85E7Hb8GUJ2n+p58V/prETRrA==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -11059,13 +11059,13 @@ snapshots:
       relateurl: 0.2.7
       terser: 5.39.0
 
-  html-webpack-plugin@5.6.4(webpack@5.102.1):
+  html-webpack-plugin@5.6.5(webpack@5.102.1):
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
       lodash: 4.17.21
       pretty-error: 4.0.0
-      tapable: 2.2.1
+      tapable: 2.3.0
     optionalDependencies:
       webpack: 5.102.1(webpack-cli@6.0.1)
 
@@ -12471,11 +12471,11 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-viewport@6.0.3(pixi.js@8.14.1):
+  pixi-viewport@6.0.3(pixi.js@8.14.2):
     dependencies:
-      pixi.js: 8.14.1
+      pixi.js: 8.14.2
 
-  pixi.js@8.14.1:
+  pixi.js@8.14.2:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12

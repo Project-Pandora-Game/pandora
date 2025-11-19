@@ -22,6 +22,7 @@ import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/ac
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -511,8 +512,13 @@ function DisplayRooms({ playerState, characters, globalState }: {
 							return 0;
 						});
 
+						const emptyRooms: ReactElement[] = [];
+
 						for (const room of sortedRooms) {
-							result.push(
+							const isEmpty = !Array.from(globalState.characters.values())
+								.some((c) => c.currentRoom === room.id);
+
+							(isEmpty ? emptyRooms : result).push(
 								<fieldset key={ room.id } className='room'>
 									<legend><span>{ room.name || room.id }</span></legend>
 									{
@@ -555,6 +561,18 @@ function DisplayRooms({ playerState, characters, globalState }: {
 								</fieldset>,
 							);
 						}
+
+						result.push(
+							<FieldsetToggle legend='Empty rooms' persistent='rooms.empty-rooms' open={ false }>
+								<Column gap='small'>
+									{ emptyRooms.length > 0 ? (
+										emptyRooms
+									) : (
+										<i>There are currently no empty rooms in this space</i>
+									) }
+								</Column>
+							</FieldsetToggle>,
+						);
 					}
 
 					const missedCharacters = sortedCharacters.filter((c) => !seenCharacters.has(c));

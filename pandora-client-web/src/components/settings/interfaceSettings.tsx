@@ -1,7 +1,8 @@
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
-import { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../common/useEvent.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../common/userInteraction/input/numberInput.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
@@ -131,6 +132,7 @@ function ChatroomSettings(): ReactElement {
 				<ChatroomGraphicsRatio />
 				<ChatroomChatFontSize />
 				<ChatroomChatCommandHintBehavior />
+				<ChatroomChatMaxShownMessages />
 				<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
 			</Column>
 		</fieldset>
@@ -202,6 +204,51 @@ function ChatroomChatCommandHintBehavior(): ReactElement {
 	}), []);
 
 	return <SelectAccountSettings setting='chatCommandHintBehavior' label='Command hint behavior' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function ChatroomChatMaxShownMessages(): ReactElement {
+	const id = useId();
+	const driver = useAccountSettingDriver('chatMaxShownMessages');
+	const currentValue = driver.currentValue !== undefined ? driver.currentValue : driver.defaultValue;
+	const DEFAULT_NUMBER_VALUE = ACCOUNT_SETTINGS_DEFAULT.chatMaxShownMessages ?? 1000;
+
+	return (
+		<Column gap='small'>
+			<label htmlFor={ id }>Limit number of displayed chat messages</label>
+			<Row alignY='center'>
+				<Checkbox
+					checked={ currentValue != null }
+					onChange={ (newValue) => {
+						driver.onChange(newValue ? DEFAULT_NUMBER_VALUE : null);
+					} }
+				/>
+				<NumberInput
+					id={ id }
+					className='flex-1'
+					disabled={ currentValue == null }
+					min={ 1 }
+					step={ 1 }
+					value={ currentValue ?? DEFAULT_NUMBER_VALUE }
+					onChange={ (newValue) => {
+						driver.onChange(newValue);
+					} }
+				/>
+				<Button
+					className='slim'
+					onClick={ () => {
+						if (driver.onReset != null) {
+							driver.onReset();
+						} else {
+							driver.onChange(driver.defaultValue);
+						}
+					} }
+					disabled={ driver.currentValue === undefined }
+				>
+					↺
+				</Button>
+			</Row>
+		</Column>
+	);
 }
 
 function RoomGraphicsSettings(): ReactElement {

@@ -175,19 +175,24 @@ function AddWornLayerUiDialog({ close, layerContainer }: { close: () => void; la
 					editor.targetLayer.value = layerContainer.addLayer('autoMesh');
 					close();
 				} }>
-					Add automatic image layer
-				</Button>
-				<Button onClick={ () => {
-					editor.targetLayer.value = layerContainer.addLayer('mesh');
-					close();
-				} }>
-					Add image layer
+					Add automatic image layer ("automesh")
 				</Button>
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('text');
 					close();
 				} }>
 					Add text layer
+				</Button>
+				<hr className='fill-x' />
+				<Column alignX='center' gap='none'>
+					<span>Advanced layer types</span>
+					<span>(not recommended for most assets)</span>
+				</Column>
+				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('mesh');
+					close();
+				} }>
+					Add image layer
 				</Button>
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('alphaImageMesh');
@@ -230,6 +235,11 @@ function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => vo
 				} }>
 					Add text layer
 				</Button>
+				<hr className='fill-x' />
+				<Column alignX='center' gap='none'>
+					<span>Advanced layer types</span>
+					<span>(not recommended for most assets)</span>
+				</Column>
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('mesh');
 					close();

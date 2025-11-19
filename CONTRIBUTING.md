@@ -1,5 +1,3 @@
-![GitHub CI Status](https://img.shields.io/github/actions/workflow/status/Project-Pandora-Game/pandora/ci.yml?logo=github&label=CI)
-
 # How to contribute to Project Pandora
 
 ### Consider using our Discord server to contact us first
@@ -73,7 +71,7 @@ Please do not expect that every pull request will be merged if there was no prev
 
 - Feel free to ask any question on our Discord where there are many active developers or even players who are likely to answer your questions. Do **not** open an issue for questions!
 
-- Also see the [Documentation repository](https://github.com/Project-Pandora-Game/Documentation). It is not complete by far, but it does have reasons for many core decisions that were made or considered.
+- Also see the [Documentation repository](https://github.com/Project-Pandora-Game/pandora-documentation). It is not complete by far, but it does have reasons for many core decisions that were made or considered.
   It also contains guides regarding asset creation.
 
 # Thank you!

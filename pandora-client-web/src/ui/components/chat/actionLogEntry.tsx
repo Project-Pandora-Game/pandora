@@ -1,18 +1,12 @@
 import { AssertNever, type ChatMessageActionLogGameLogicAction } from 'pandora-common';
-import { createContext, useContext, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import type { ChatActionLogMessageProcessed } from './chatMessages.tsx';
 import { DescribeGameLogicAction } from './chatMessagesDescriptions.tsx';
 
-export const ActionLogDisplayEntriesContext = createContext(false);
-
 export function ActionLogEntry({ entry }: {
 	entry: ChatActionLogMessageProcessed;
 }): ReactElement | null {
-	const display = useContext(ActionLogDisplayEntriesContext);
-	if (!display)
-		return null;
-
 	const time = new Date(entry.time);
 
 	return (

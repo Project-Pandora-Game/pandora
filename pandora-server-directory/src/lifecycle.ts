@@ -28,6 +28,10 @@ function DestroyService(service: ServerService): Promise<void> | void {
 	return service.onDestroy?.();
 }
 
+export function IsStopping(): boolean {
+	return stopping !== undefined;
+}
+
 async function StopGracefully(): Promise<void> {
 	// Stop listening for IPC
 	process.off('message', IPCMessageListener);

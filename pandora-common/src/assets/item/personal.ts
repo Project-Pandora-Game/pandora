@@ -12,6 +12,7 @@ import type { AppearanceItems } from './items.ts';
 
 import { MemoizeNoArg } from '../../utility/misc.ts';
 import { ItemModuleAction, LoadItemModule } from '../modules.ts';
+import { QueryStateFlagCombinations, StateFlagCombinationAssetPropertiesGetter } from '../stateFlags.ts';
 
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
@@ -228,9 +229,24 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 
 	@MemoizeNoArg
 	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
-		return [
+		const propertyParts: Immutable<AssetProperties>[] = [
 			...super.getPropertiesParts(),
 			...Array.from(this.modules.values()).flatMap((m) => m.getProperties()),
 		];
+
+		const flags = new Set<string>();
+		for (const part of propertyParts) {
+			if (part.stateFlags?.provides !== undefined) {
+				for (const flag of part.stateFlags.provides) {
+					flags.add(flag);
+				}
+			}
+		}
+		const { stateFlagCombinations } = this.asset.definition;
+		if (stateFlagCombinations !== undefined) {
+			propertyParts.push(...QueryStateFlagCombinations<AssetProperties>(stateFlagCombinations, flags, StateFlagCombinationAssetPropertiesGetter));
+		}
+
+		return propertyParts;
 	}
 }

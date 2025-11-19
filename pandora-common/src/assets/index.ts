@@ -18,4 +18,5 @@ export * from './roomDeviceProperties.ts';
 export * from './roomInventory.ts';
 export * from './roomValidation.ts';
 export * from './state/_index.ts';
+export * from './stateFlags.ts';
 export * from './validation.ts';

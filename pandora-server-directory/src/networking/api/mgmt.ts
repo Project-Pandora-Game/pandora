@@ -4,16 +4,17 @@ import type { ActorIdentity } from '../../account/actorIdentity.ts';
 import { AUDIT_LOG } from '../../logging.ts';
 import { ConnectionManagerClient } from '../manager_client.ts';
 import { GetApiRequestActor } from './_utils.ts';
+import { PandoraApiManagementTestForceloadSpaces } from './mgmt/test/forceload_spaces.ts';
+
+export type PandoraApiManagementLocals = {
+	actor: ActorIdentity;
+};
 
 export function PandoraApiManagement(): Router {
 	const auditLog = AUDIT_LOG.prefixMessages('[PandoraApiManagement]');
 	const router = Router();
 
-	type Locals = {
-		actor: ActorIdentity;
-	};
-
-	router.use<unknown, unknown, unknown, unknown, Partial<Locals>>(async function (req, res, next) {
+	router.use<unknown, unknown, unknown, unknown, Partial<PandoraApiManagementLocals>>(async function (req, res, next) {
 		const actor = await GetApiRequestActor(req);
 		if (actor == null) {
 			res.sendStatus(401);
@@ -30,7 +31,7 @@ export function PandoraApiManagement(): Router {
 	});
 
 	router.route('/announcement')
-		.put<unknown, unknown, unknown, unknown, Partial<Locals>>(
+		.put<unknown, unknown, unknown, unknown, Partial<PandoraApiManagementLocals>>(
 			express.json(),
 			(req, res) => {
 				const actor = ParseNotNullable(res.locals.actor);
@@ -47,7 +48,7 @@ export function PandoraApiManagement(): Router {
 				res.sendStatus(204);
 			},
 		)
-		.delete<unknown, unknown, unknown, unknown, Partial<Locals>>((_req, res) => {
+		.delete<unknown, unknown, unknown, unknown, Partial<PandoraApiManagementLocals>>((_req, res) => {
 			const actor = ParseNotNullable(res.locals.actor);
 
 			auditLog.info(`${actor.username} (${actor.id}) cleared announcement`);
@@ -55,6 +56,8 @@ export function PandoraApiManagement(): Router {
 			ConnectionManagerClient.setAnnouncement(null);
 			res.sendStatus(204);
 		});
+
+	PandoraApiManagementTestForceloadSpaces(router);
 
 	return router;
 }

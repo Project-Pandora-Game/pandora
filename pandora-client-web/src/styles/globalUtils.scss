@@ -208,6 +208,10 @@
 
 //#region Misc
 
+.not-selectable {
+	user-select: none;
+}
+
 .selectable {
 	user-select: text;
 }

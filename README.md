@@ -1,103 +1,35 @@
+# Project Pandora roleplaying platform
 
-# The Pandora Game Project
 <img
-    style="display: block;margin: auto;width: 30%;"
+    style="display: block; margin: auto; width: 30%;"
     src="https://avatars.githubusercontent.com/u/88410864?s=200&v=4"
     alt="Pandora Logo">
 </img>
-<div style="text-align: center;">An open-source 2D web-based game in the making.</div>
+<div style="text-align: center;">An open-source 2.5D web-based roleplaying platform.</div>
 
-## Getting Started
+# This repository
 
-### Prerequisites
+![GitHub CI Status](https://img.shields.io/github/actions/workflow/status/Project-Pandora-Game/pandora/ci.yml?logo=github&label=CI)
 
-Required software:
- - Node.js v20+
- - Either corepack enabled (recommended) or manually installed pnpm
- - Git
- - Visual Studio Code (recommended)
+This repository contains code of the servers, the client, and common libraries.
+It is intended to be used together with the [pandora-assets](https://github.com/Project-Pandora-Game/pandora-assets) repository, but in theory you can swap out the assets for completely different set based on these.
 
-For more detailed steps you can follow [Pandora asset creation tutorial: Development tools installation](https://github.com/Project-Pandora-Game/Documentation/blob/master/asset_creation/Asset_creation_tutorial.md#development-tools-installation)
+# Documentation
 
-### Client connecting to official servers
+Documentation is stored in a separate [pandora-documentation](https://github.com/Project-Pandora-Game/pandora-documentation) repository common to all our repositories.
 
-If you don't want to run your own [Server](#server-directory) & [Shard](#server-shard) alongside the client, you can connect directly to the official server by editing the [`pandora-client-web/.env`](./pandora-client-web/.env) (not the `.template`!) file, replacing
-```
-DIRECTORY_ADDRESS="http://127.0.0.1:25560"
-```
-With:
-```
-DIRECTORY_ADDRESS="https://project-pandora.com"
-```
+For instructions on getting a working local copy for development see the [Getting started](https://github.com/Project-Pandora-Game/pandora-documentation/blob/master/Getting_started.md) guide in the documentation repository.
 
-And then skip to the step 4 of the "Initial setup" section, selecting "Run Client" instead of "Local Pandora Stack".
 
-## Local Dev Server
+# Repository structure
 
-### Initial setup
+This repository contains the following projects:
+- [`pandora-common`](pandora-common) - Shared library for all other projects.
+- [`pandora-server-directory`](pandora-server-directory) - The "Directory" server, containing all account-focused, synchronization, and shard assignment logic. Currently designed to be single instance.
+- [`pandora-server-shard`](pandora-server-shard) - The "Shard" server, containing all character and space focused logic. Designed to be horizontally scalable by an active Space being assigned to a single shard at a time.
+- [`pandora-client-web`](pandora-client-web) - The web client for the platform, including both the standard client, the management tools, and the "Editor" for supporting asset creation.
+- [`pandora-tests`](pandora-tests) - Set of End-To-End tests for Project Pandora.
 
-These steps need to only be done once to setup Pandora stack locally:
+# Contribution
 
-1. Clone the [pandora-assets](https://github.com/Project-Pandora-Game/pandora-assets) repository to the same directory you cloned this repository into.
-
-2. Build the assets by opening `pandora-assets` in VSCode, waiting for setup to finish, then pressing Ctrl+Shift+B. __Alternatively__ you can build them by running following command in the `pandora-assets` folder:
-```
-git submodule update --init; pnpm i; pnpm build
-```
-
-3. After doing that, your folder structure should look like this (note the `out` folder in `pandora-assets`):
-```
-(Your Pandora project folder)
-├── pandora
-│   ├── pandora-client-web
-│   ├── pandora-common
-│   ├── pandora-server-directory
-│   └── pandora-server-shard
-└── pandora-assets
-    ├── out
-    └── src
-```
-
-4. Open the `pandora` folder with VSCode, select "trust" and wait for setup to finish. __Alternatively__ you can run the following command in the `pandora` folder:
-```
-pnpm i
-```
-
-### Actually running the project
-
-If you are using VSCode and the setup finished, simply press F5 and wait for all 4 components to start.
-
-If want to start Pandora in console, then run following command in the `pandora` folder and then navigate to [http://localhost:6969](http://localhost:6969/):
-```
-pnpm dev
-```
-
-Congratulations, you've ran the entire pandora stack locally.
-
-### Common problems
-
-#### __Database fails to start__
-
-You are most likely missing C++ redistributables required by MongoDB on your computer and no other application required them yet.
-Download and install them from [here](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
-
-## Specifications
-
-Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.
-
-### Project structure
-Individual components and their repository:
-  * [`Documentation`](https://github.com/Project-Pandora-Game/Documentation)
-  * Assets ([`pandora-assets`](https://github.com/Project-Pandora-Game/pandora-assets))
-  * Common ([`pandora-common`](./pandora-common/)) - shard library for all components.
-  * Directory server ([`pandora-server-directory`](./pandora-server-directory/))
-  * Shard server ([`pandora-server-shard`](./pandora-server-shard/))
-  * Web Client ([`pandora-client-web`](./pandora-client-web/))
-
-### Standards
-* Code styles:
-    * Not part of this document, enforced by linting; TODO: Writeup.
-* Review process:
-    * No direct pushes to master.
-    * 2 Approving reviews required (can be blocked by anyone, requires resolving).
-    * Preferred reviews by peers (code things by coders, assets by asset makers).
+If you are interesting in contributing to the project, please see the [`CONTRIBUTING`](CONTRIBUTING.md) file.

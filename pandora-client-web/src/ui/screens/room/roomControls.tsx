@@ -39,6 +39,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
+import { SPACE_ROLE_TEXT_CUMULATIVE } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
@@ -272,7 +273,7 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
@@ -280,7 +281,7 @@ function DeviceOverlaySelector(): ReactElement {
 	const onRoomConstructionModeChange = () => {
 		DeviceOverlayState.value = {
 			...DeviceOverlayState.value,
-			roomConstructionMode: !roomConstructionMode && isPlayerAdmin && canUseHands,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
 		};
 	};
 
@@ -291,14 +292,20 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } disabled={ !isPlayerAdmin || !canUseHands }>
+				<Button onClick={ onRoomConstructionModeChange } disabled={ !canModifyRoom || !canUseHands }>
 					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{
-					!isPlayerAdmin ? (
-						<span className='error'>
-							You must be an admin to use this feature
-						</span>
+					!canModifyRoom ? (
+						modifyRequiredRole !== 'none' ? (
+							<span className='error'>
+								Only { SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole] } can use this feature
+							</span>
+						) : (
+							<span className='error'>
+								This room cannot be modified by anyone
+							</span>
+						)
 					) : !canUseHands ? (
 						<span className='error'>
 							You must be able to use your hands to use this feature

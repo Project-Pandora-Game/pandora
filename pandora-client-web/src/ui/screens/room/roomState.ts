@@ -1,4 +1,4 @@
-import { CharacterHideSettingSchema, CharacterIdSchema, SpaceIdSchema } from 'pandora-common';
+import { CharacterHideSettingSchema, CharacterIdSchema, SpaceIdSchema, SpaceRoleOrNoneSchema } from 'pandora-common';
 import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { useObservable } from '../../../observable.ts';
@@ -11,7 +11,8 @@ export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'alwa
 export const DeviceOverlayStateSchema = z.object({
 	roomConstructionMode: z.boolean(),
 	spaceId: SpaceIdSchema.nullish(),
-	isPlayerAdmin: z.boolean(),
+	canModifyRoom: z.boolean(),
+	modifyRequiredRole: SpaceRoleOrNoneSchema,
 	canUseHands: z.boolean(),
 });
 
@@ -19,7 +20,8 @@ export const DeviceOverlaySetting = BrowserStorage.create('device-overlay-toggle
 export const DeviceOverlayState = BrowserStorage.createSession('device-overlay-state', {
 	roomConstructionMode: false,
 	spaceId: undefined,
-	isPlayerAdmin: false,
+	canModifyRoom: false,
+	modifyRequiredRole: 'admin',
 	canUseHands: false,
 }, DeviceOverlayStateSchema);
 

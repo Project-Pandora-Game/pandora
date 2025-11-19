@@ -22,6 +22,7 @@ import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/ac
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -39,6 +40,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
+import { SPACE_ROLE_TEXT_CUMULATIVE } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
@@ -272,7 +274,7 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
@@ -280,7 +282,7 @@ function DeviceOverlaySelector(): ReactElement {
 	const onRoomConstructionModeChange = () => {
 		DeviceOverlayState.value = {
 			...DeviceOverlayState.value,
-			roomConstructionMode: !roomConstructionMode && isPlayerAdmin && canUseHands,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
 		};
 	};
 
@@ -291,14 +293,20 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } disabled={ !isPlayerAdmin || !canUseHands }>
+				<Button onClick={ onRoomConstructionModeChange } disabled={ !canModifyRoom || !canUseHands }>
 					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{
-					!isPlayerAdmin ? (
-						<span className='error'>
-							You must be an admin to use this feature
-						</span>
+					!canModifyRoom ? (
+						modifyRequiredRole !== 'none' ? (
+							<span className='error'>
+								Only { SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole] } can use this feature
+							</span>
+						) : (
+							<span className='error'>
+								This room cannot be modified by anyone
+							</span>
+						)
 					) : !canUseHands ? (
 						<span className='error'>
 							You must be able to use your hands to use this feature
@@ -504,8 +512,13 @@ function DisplayRooms({ playerState, characters, globalState }: {
 							return 0;
 						});
 
+						const emptyRooms: ReactElement[] = [];
+
 						for (const room of sortedRooms) {
-							result.push(
+							const isEmpty = !Array.from(globalState.characters.values())
+								.some((c) => c.currentRoom === room.id);
+
+							(isEmpty ? emptyRooms : result).push(
 								<fieldset key={ room.id } className='room'>
 									<legend><span>{ room.name || room.id }</span></legend>
 									{
@@ -548,6 +561,18 @@ function DisplayRooms({ playerState, characters, globalState }: {
 								</fieldset>,
 							);
 						}
+
+						result.push(
+							<FieldsetToggle legend='Empty rooms' persistent='rooms.empty-rooms' open={ false }>
+								<Column gap='small'>
+									{ emptyRooms.length > 0 ? (
+										emptyRooms
+									) : (
+										<i>There are currently no empty rooms in this space</i>
+									) }
+								</Column>
+							</FieldsetToggle>,
+						);
 					}
 
 					const missedCharacters = sortedCharacters.filter((c) => !seenCharacters.has(c));

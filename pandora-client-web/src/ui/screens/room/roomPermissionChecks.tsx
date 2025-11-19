@@ -5,12 +5,11 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character.ts';
-import { IsSpaceAdmin, useActionSpaceContext, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useActionSpaceContext, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { DeviceOverlayState } from './roomState.ts';
 
@@ -22,12 +21,15 @@ import { DeviceOverlayState } from './roomState.ts';
  */
 export function RoomConstructionModeCheckProvider(): null {
 	const value = useObservable(DeviceOverlayState);
-	const currentAccount = useCurrentAccount();
 	const spaceInfo = useSpaceInfo();
-	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
 	const { player, globalState } = usePlayerState();
+	const playerRestrictionManager = usePlayerRestrictionManager();
 	const spaceContext = useActionSpaceContext();
 	const canUseHands = useCharacterRestrictionManager(player, globalState, spaceContext).canUseHands();
+
+	// To manipulate room devices, player must have appropriate role
+	const roomSettings = globalState.space.getEffectiveRoomSettings(playerRestrictionManager.appearance.getCurrentRoom()?.id ?? null);
+	const canModifyRoom = playerRestrictionManager.hasSpaceRole(roomSettings.roomDeviceDeploymentMinimumRole);
 
 	useEffect(() => {
 		let nextValue = DeviceOverlayState.value;
@@ -38,11 +40,17 @@ export function RoomConstructionModeCheckProvider(): null {
 				spaceId: spaceInfo.id,
 			};
 		}
-		if (isPlayerAdmin !== value.isPlayerAdmin) {
+		if (canModifyRoom !== value.canModifyRoom) {
 			nextValue = {
 				...nextValue,
-				roomConstructionMode: nextValue.roomConstructionMode && isPlayerAdmin,
-				isPlayerAdmin,
+				roomConstructionMode: nextValue.roomConstructionMode && canModifyRoom,
+				canModifyRoom,
+			};
+		}
+		if (roomSettings.roomDeviceDeploymentMinimumRole !== value.modifyRequiredRole) {
+			nextValue = {
+				...nextValue,
+				modifyRequiredRole: roomSettings.roomDeviceDeploymentMinimumRole,
 			};
 		}
 		if (canUseHands !== value.canUseHands) {
@@ -53,7 +61,7 @@ export function RoomConstructionModeCheckProvider(): null {
 			};
 		}
 		DeviceOverlayState.value = nextValue;
-	}, [value, spaceInfo.id, isPlayerAdmin, canUseHands]);
+	}, [value, spaceInfo.id, canModifyRoom, canUseHands, roomSettings.roomDeviceDeploymentMinimumRole]);
 
 	return null;
 }

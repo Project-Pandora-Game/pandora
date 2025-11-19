@@ -23,7 +23,7 @@ import {
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as zod from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character } from '../../character/character.ts';
@@ -33,7 +33,7 @@ import { Column } from '../../components/common/container/container.tsx';
 import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
-import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
+import { usePlayer, usePlayerRestrictionManager } from '../../components/gameContext/playerContextProvider.tsx';
 import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
@@ -51,6 +51,7 @@ import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharac
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -421,27 +422,57 @@ export function RoomSceneInteractive({ className }: {
 	);
 }
 
-const RoomDescriptionHidden = BrowserStorage.createSession('room.viewport.hidden-room-descriptions', {}, zod.record(RoomIdSchema, RoomDescriptionSchema));
+const RoomDescriptionHidden = BrowserStorage.createSession('room.viewport.hidden-room-descriptions', {}, zod.record(RoomIdSchema, zod.object({ description: RoomDescriptionSchema, hide: zod.boolean() })));
 
 function RoomSceneDescriptionOverlay({ room, globalState }: {
 	room: AssetFrameworkRoomState;
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const roomDescriptionHidden = useObservable(RoomDescriptionHidden);
+	const playerRestrictionManager = usePlayerRestrictionManager();
+	const { interfaceChatroomHideRoomDescriptionsRole } = useAccountSettings();
 
 	const open = useMemo(() => {
-		if (Object.entries(roomDescriptionHidden).some(([roomId, roomDescription]) => !globalState.space.rooms.some((r) => r.id === roomId && r.description === roomDescription))) {
+		// Remove closed entries where description changed
+		if (Object.entries(roomDescriptionHidden).some(([roomId, hidingData]) => !globalState.space.rooms.some((r) => r.id === roomId && (r.description === hidingData.description || !hidingData.hide)))) {
 			RoomDescriptionHidden.produceImmer((d) => {
-				for (const [roomId, roomDescription] of Object.entries(d)) {
-					if (!globalState.space.rooms.some((r) => r.id === roomId && r.description === roomDescription)) {
+				for (const [roomId, hidingData] of Object.entries(d)) {
+					if (!hidingData.hide)
+						continue;
+
+					if (!globalState.space.rooms.some((r) => r.id === roomId && r.description === hidingData.description)) {
 						delete d[roomId as keyof typeof d];
 					}
 				}
 			});
 		}
 
-		return !!room.description && !(Object.hasOwn(roomDescriptionHidden, room.id) && roomDescriptionHidden[room.id] === room.description);
-	}, [globalState.space.rooms, room.description, room.id, roomDescriptionHidden]);
+		const data = (Object.hasOwn(roomDescriptionHidden, room.id) && roomDescriptionHidden[room.id]?.description === room.description) ? roomDescriptionHidden[room.id] : undefined;
+
+		return !!room.description && !(data?.hide ?? playerRestrictionManager.hasSpaceRole(interfaceChatroomHideRoomDescriptionsRole));
+	}, [globalState.space.rooms, interfaceChatroomHideRoomDescriptionsRole, playerRestrictionManager, room.description, room.id, roomDescriptionHidden]);
+
+	const [hideName, setHideName] = useState(false);
+
+	useEffect(() => {
+		setHideName(false);
+
+		let timeout: number | undefined;
+		if (!open) {
+			timeout = setTimeout(() => {
+				if (timeout !== undefined) {
+					setHideName(true);
+				}
+			}, 10_000);
+		}
+
+		return () => {
+			if (timeout !== undefined) {
+				clearTimeout(timeout);
+				timeout = undefined;
+			}
+		};
+	}, [open, room.id, room.description]);
 
 	// Do not display if the room has no name nor description
 	if (!room.name && !room.description)
@@ -455,7 +486,7 @@ function RoomSceneDescriptionOverlay({ room, globalState }: {
 		<Column className='RoomSceneDescriptionOverlayContainer' alignX='center' padding='medium'>
 			<Button
 				key={ room.id }
-				className={ open ? 'RoomSceneDescriptionOverlay slim open' : 'RoomSceneDescriptionOverlay slim closed normalDisabled' }
+				className={ `RoomSceneDescriptionOverlay slim ${open ? 'open' : 'closed'} ${ (!open && hideName) ? 'hideName ' : '' }normalDisabled` }
 				theme='semiTransparent'
 				onPointerDown={ (ev) => {
 					ev.stopPropagation();
@@ -470,14 +501,14 @@ function RoomSceneDescriptionOverlay({ room, globalState }: {
 					ev.stopPropagation();
 
 					RoomDescriptionHidden.produceImmer((d) => {
-						if (open) {
-							d[room.id] = room.description;
-						} else {
-							delete d[room.id];
-						}
+						d[room.id] = {
+							description: room.description,
+							hide: open,
+						};
 					});
 				} }
 				disabled={ !open && !room.description }
+				inert={ !open && hideName }
 			>
 				<div className='name'>{ room.displayName }</div>
 				{ room.description ? (

@@ -7,6 +7,7 @@ import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
 import { AccountRoleSchema } from './accountRoles.ts';
 import { AccountOnlineStatusSchema } from './contacts.ts';
 import { TutorialIdSchema } from './tutorials.ts';
+import { SpaceRoleOrNoneSchema } from '../space/spaceRoles.ts';
 
 //#region Settings declarations
 
@@ -121,6 +122,8 @@ export const AccountSettingsSchema = z.object({
 	interfaceChatroomCharacterAwayStatusIconDisplay: z.boolean(),
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
+	/** Hides room descriptions by default for spaces where the player is at least this role. */
+	interfaceChatroomHideRoomDescriptionsRole: SpaceRoleOrNoneSchema,
 	/**
 	 * What style of posing elements should be displayed.
 	 * - `inverse` - Only inverse kinematics helpers should be shown
@@ -174,6 +177,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomCharacterAwayStatusIconDisplay: true,
 	interfaceChatroomItemDisplayNameType: 'custom',
+	interfaceChatroomHideRoomDescriptionsRole: 'admin',
 	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
 	chatMaxShownMessages: 100,

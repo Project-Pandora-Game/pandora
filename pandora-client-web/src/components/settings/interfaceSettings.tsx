@@ -130,6 +130,7 @@ function ChatroomSettings(): ReactElement {
 			<legend>Chatroom UI</legend>
 			<Column gap='large'>
 				<ChatroomGraphicsRatio />
+				<InterfaceChatroomHideRoomDescriptionsRole />
 				<ChatroomChatFontSize />
 				<ChatroomChatCommandHintBehavior />
 				<ChatroomChatMaxShownMessages />
@@ -182,6 +183,24 @@ function ChatroomGraphicsRatio(): ReactElement {
 			</NumberSettingInput>
 			<SelectAccountSettings setting='interfaceChatroomChatSplitVertical' label='Always show chat in portrait mode (on large enough displays)' stringify={ INTERFACE_CHATROOM_CHAT_SPLIT_VERTICAL } />
 		</>
+	);
+}
+
+function InterfaceChatroomHideRoomDescriptionsRole(): ReactElement {
+	const STRINGS = useMemo((): Record<AccountSettings['interfaceChatroomHideRoomDescriptionsRole'], string> => ({
+		none: '[ Never hide ]',
+		owner: 'Owner',
+		admin: 'Owner or Admin',
+		allowlisted: 'Owner, Admin, or Allowed user',
+		everyone: '[ Always hide ]',
+	}), []);
+
+	return (
+		<SelectAccountSettings
+			setting='interfaceChatroomHideRoomDescriptionsRole'
+			label='Hide room descriptions by default in spaces where you are'
+			stringify={ STRINGS }
+		/>
 	);
 }
 

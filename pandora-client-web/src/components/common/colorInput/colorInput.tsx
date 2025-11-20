@@ -471,7 +471,7 @@ export class Color {
 	/* eslint-enable no-bitwise */
 
 	public static toHexPart(value: number) {
-		value = clamp(value, 0, 255);
+		value = clamp(Math.round(value), 0, 255);
 		return value.toString(16).padStart(2, '0').substring(0, 2).toUpperCase();
 	}
 }

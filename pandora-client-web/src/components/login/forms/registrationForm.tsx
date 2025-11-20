@@ -1,7 +1,7 @@
 import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
@@ -45,6 +45,9 @@ export function RegistrationForm(): ReactElement {
 }
 
 function RegistrationFormInner(): ReactElement {
+	const { search } = useLocation();
+	const prefillBetaKey = new URLSearchParams(search).get('betaKey') ?? '';
+
 	const directoryConnector = useDirectoryConnector();
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const directoryRegister = useDirectoryRegister();
@@ -228,6 +231,7 @@ function RegistrationFormInner(): ReactElement {
 						id='registration-beta-key'
 						autoComplete='off'
 						register={ register }
+						defaultValue={ prefillBetaKey }
 						name='betaKey'
 						options={ {
 							required: 'Beta key is required',

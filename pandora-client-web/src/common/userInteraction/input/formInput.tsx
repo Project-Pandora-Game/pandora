@@ -10,6 +10,7 @@ const FORWARDED_PROPS = [
 	'readOnly',
 	'autoFocus',
 	'type',
+	'defaultValue',
 	// Presentation
 	'aria-haspopup',
 	'autoCapitalize',

@@ -302,6 +302,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result };
 		}
 
+		if (BETA_KEY_ENABLED) {
+			AUDIT_LOG.info(`Registered account id=${result.id} username="${username}" betaKey="${betaKey}"`);
+		}
+
 		return { result: 'ok' };
 	}
 

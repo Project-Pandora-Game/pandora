@@ -169,8 +169,6 @@ export const DatabaseBetaRegistrationSchema = z.object({
 	registeredAt: z.number(),
 	/** Assigned beta key (if any) */
 	assignedKey: z.string().nullable(),
-	/** If the invitation succeeded. If set this person is no longer just a candidate. */
-	invited: z.literal(true).optional(),
 });
 export type DatabaseBetaRegistration = z.infer<typeof DatabaseBetaRegistrationSchema>;
 

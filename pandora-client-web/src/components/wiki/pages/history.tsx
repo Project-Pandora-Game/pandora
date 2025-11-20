@@ -22,7 +22,8 @@ export function WikiHistory(): ReactElement {
 				The first half year was focused on looking for suitable technologies, asset basis, and architecture planning.
 				Progress was slow but steady, as making such a platform is a huge amount of work and requires careful planning and discussions.
 				Moreover, it is merely a hobby for everyone, spending some free time here and there besides the actual day-time work, friends & family, etc.<br />
-				Since April 2024, Pandora is in a closed beta phase and is available to an audience beyond the initial group of founders.
+				Since April 2024, Pandora was in a closed beta phase and is available to an audience beyond the initial group of founders.<br />
+				Since November 2025, Pandora is in an open beta phase, allowing anyone to get a beta key freely.
 			</p>
 
 			<h4>Does Pandora want to replace BC?</h4>

@@ -44,15 +44,10 @@ export const RoomDeviceDeploymentSchema = RoomDeviceDeploymentPositionSchema.ext
 });
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
 
-export const RoomDeviceDeploymentChangeSchema = z.discriminatedUnion('deployed', [
-	z.object({
-		deployed: z.literal(false),
-	}),
-	z.object({
-		deployed: z.literal(true),
-		position: RoomDeviceDeploymentPositionSchema.optional(),
-	}),
-]);
+export const RoomDeviceDeploymentChangeSchema = z.object({
+	deployed: z.boolean(),
+	position: RoomDeviceDeploymentPositionSchema.optional(),
+});
 export type RoomDeviceDeploymentChange = z.infer<typeof RoomDeviceDeploymentChangeSchema>;
 
 export const RoomDeviceBundleSchema = z.object({
@@ -201,32 +196,27 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeDeployment(newDeployment: RoomDeviceDeploymentChange): ItemRoomDevice {
-		if (!newDeployment.deployed) {
-			if (!this.isDeployed())
-				return this;
-
-			return this.withProps({
-				deployment: {
-					...this.deployment,
-					deployed: false,
-				},
-				slotOccupancy: new Map(),
-			});
-		}
 		if (newDeployment.position != null) {
 			return this.withProps({
 				deployment: {
-					...newDeployment.position,
-					deployed: true,
+					x: newDeployment.position.x,
+					y: newDeployment.position.y,
+					yOffset: newDeployment.position.yOffset,
+					deployed: newDeployment.deployed,
 				},
+				slotOccupancy: newDeployment.deployed ? this.slotOccupancy : new Map(),
+			});
+		} else if (newDeployment.deployed !== this.deployment.deployed) {
+			return this.withProps({
+				deployment: {
+					...this.deployment,
+					deployed: newDeployment.deployed,
+				},
+				slotOccupancy: newDeployment.deployed ? this.slotOccupancy : new Map(),
 			});
 		}
-		return this.withProps({
-			deployment: {
-				...this.deployment,
-				deployed: true,
-			},
-		});
+
+		return this;
 	}
 
 	public changeSlotOccupancy(slot: string, character: CharacterId | null): ItemRoomDevice | null {

@@ -410,9 +410,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 			// Load asset and skip if unknown
 			let item = assetManager.createItemFromTemplate(itemTemplate, creator);
 			if (item != null) {
-				if (item.isType('roomDevice') && itemTemplate.roomDeviceDeployment != null && itemTemplate.roomDeviceDeployment.deployed) {
+				if (item.isType('roomDevice') && itemTemplate.roomDeviceDeployment != null) {
 					item = item.changeDeployment({
-						deployed: true,
+						deployed: itemTemplate.roomDeviceDeployment.deployed,
 						position: {
 							x: itemTemplate.roomDeviceDeployment.x,
 							y: itemTemplate.roomDeviceDeployment.y,

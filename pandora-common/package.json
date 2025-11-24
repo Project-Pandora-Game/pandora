@@ -62,7 +62,7 @@
 		"immer": "10.2.0",
 		"lodash-es": "4.17.21",
 		"nanoid": "5.1.6",
-		"zod": "4.1.12"
+		"zod": "4.1.13"
 	},
 	"devDependencies": {
 		"@jest/globals": "30.2.0",

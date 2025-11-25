@@ -21,7 +21,6 @@ export interface PixiViewportProps extends ChildrenProps {
 	height: number;
 	worldWidth: number;
 	worldHeight: number;
-	sortableChildren?: boolean;
 	setup?: PixiViewportSetupCallback;
 	onMove?: (viewport: Viewport) => void;
 }
@@ -34,7 +33,6 @@ const PixiViewportComponent = RegisterPixiComponent<Viewport, never, ContainerEv
 			height,
 			worldWidth,
 			worldHeight,
-			sortableChildren,
 			setup,
 		} = props;
 
@@ -46,8 +44,6 @@ const PixiViewportComponent = RegisterPixiComponent<Viewport, never, ContainerEv
 			worldHeight,
 			noTicker: true,
 		});
-
-		viewport.sortableChildren = sortableChildren === true;
 
 		setup?.(viewport, {
 			width,
@@ -73,15 +69,12 @@ const PixiViewportComponent = RegisterPixiComponent<Viewport, never, ContainerEv
 			height,
 			worldWidth,
 			worldHeight,
-			sortableChildren,
 			setup,
 		} = newProps;
 
 		if (app !== oldApp) {
 			viewport.options.events = app.renderer.events;
 		}
-
-		viewport.sortableChildren = sortableChildren === true;
 
 		if (
 			width !== oldWidth ||

@@ -193,24 +193,24 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
-			<GraphicsCharacter
-				position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
-				pivot={ pivot }
-				characterState={ characterState }
-				layerFilter={ layerFilter }
-				filters={ filters }
-				useBlinking
-				movementTransitionDuration={ movementTransitionDuration }
-			/>
-			{
-				roomBackground ? (
-					<WardrobeRoomBackground
-						characterState={ characterState }
-						roomBackground={ roomBackground }
-						projectionResolver={ projectionResolver }
-					/>
-				) : null
-			}
+			{ roomBackground ? (
+				<WardrobeRoomBackground
+					characterState={ characterState }
+					roomBackground={ roomBackground }
+					projectionResolver={ projectionResolver }
+				/>
+			) : null }
+			<Container>
+				<GraphicsCharacter
+					position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
+					pivot={ pivot }
+					characterState={ characterState }
+					layerFilter={ layerFilter }
+					filters={ filters }
+					useBlinking
+					movementTransitionDuration={ movementTransitionDuration }
+				/>
+			</Container>
 		</GraphicsScene>
 	);
 }
@@ -233,7 +233,6 @@ function WardrobeRoomBackground({
 		<Container
 			x={ pivot.x - position.x * inverseScale }
 			y={ pivot.y + yOffset - position.y * inverseScale }
-			zIndex={ -1000 }
 			scale={ inverseScale }
 		>
 			<GraphicsBackground

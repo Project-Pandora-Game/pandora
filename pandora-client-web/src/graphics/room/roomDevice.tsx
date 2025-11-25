@@ -467,7 +467,6 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 			key={ character.id }
 			position={ { x, y } }
 			scale={ { x: scale, y: scale } }
-			sortableChildren
 			cursor='pointer'
 			eventMode='static'
 			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }

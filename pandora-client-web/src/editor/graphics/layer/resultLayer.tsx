@@ -16,7 +16,7 @@ import { DotGraphics } from '../../../graphics/utility/dotGraphics.tsx';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorUseTextureGetterOverride } from './editorLayer.tsx';
+import { EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
 export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
@@ -145,33 +145,24 @@ export function EditorGraphicsResultLayerMesh({
 					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
-			{
-				!showHelpers ? null : (
+			{ showHelpers ? (
+				<Container>
 					<Graphics
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 						draw={ drawWireFrame }
 					/>
-				)
-			}
-			{
-				!showHelpers ? null : (
-					<Container
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-					>
-						{ displayPoints.map((p, i) => (
-							<DotGraphics key={ i }
-								tint={
-									(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
-									0xffff00 : 0xffffff
-								}
-								size={ 7 }
-								position={ p }
-								alpha={ 0.5 }
-							/>
-						)) }
-					</Container>
-				)
-			}
+					{ displayPoints.map((p, i) => (
+						<DotGraphics key={ i }
+							tint={
+								(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
+								0xffff00 : 0xffffff
+							}
+							size={ 7 }
+							position={ p }
+							alpha={ 0.5 }
+						/>
+					)) }
+				</Container>
+			) : null }
 		</>
 	);
 }
@@ -239,33 +230,24 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
-			{
-				!showHelpers ? null : (
+			{ showHelpers ? (
+				<Container>
 					<Graphics
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 						draw={ drawWireFrame }
 					/>
-				)
-			}
-			{
-				!showHelpers ? null : (
-					<Container
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-					>
-						{ displayPoints.map((p, i) => (
-							<DotGraphics key={ i }
-								tint={
-									(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
-									0xffff00 : 0xffffff
-								}
-								size={ 7 }
-								position={ p }
-								alpha={ 0.5 }
-							/>
-						)) }
-					</Container>
-				)
-			}
+					{ displayPoints.map((p, i) => (
+						<DotGraphics key={ i }
+							tint={
+								(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
+								0xffff00 : 0xffffff
+							}
+							size={ 7 }
+							position={ p }
+							alpha={ 0.5 }
+						/>
+					)) }
+				</Container>
+			) : null }
 		</>
 	);
 }
@@ -305,16 +287,13 @@ function EditorGraphicsResultLayerText({
 					poseEvaluator={ poseEvaluator }
 				/>
 			</EditorUseTextureGetterOverride>
-			{
-				!showHelpers ? null : (
-					<Graphics
-						position={ position }
-						angle={ (layer.followBone != null ? poseEvaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
-						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-						draw={ drawWireFrame }
-					/>
-				)
-			}
+			{ showHelpers ? (
+				<Graphics
+					position={ position }
+					angle={ (layer.followBone != null ? poseEvaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
+					draw={ drawWireFrame }
+				/>
+			) : null }
 		</>
 	);
 }

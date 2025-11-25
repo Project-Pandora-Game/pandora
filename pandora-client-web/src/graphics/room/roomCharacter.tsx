@@ -446,7 +446,6 @@ export const RoomCharacter = memo(function RoomCharacter({
 			position={ position }
 			scale={ scale }
 			zIndex={ zIndex }
-			sortableChildren
 			eventMode={ eventMode ?? 'auto' }
 			cursor={ cursor ?? 'default' }
 			hitArea={ hitArea ?? null }
@@ -480,22 +479,18 @@ export const RoomCharacter = memo(function RoomCharacter({
 					}
 				</GraphicsCharacter>
 			) : null }
-			{
-				showName ? (
-					<RoomCharacterLabel
-						position={ { x: labelX, y: labelY } }
-						character={ character }
-						theme={ held ? 'active' : hover ? 'hover' : 'normal' }
-					/>
-				) : null
-			}
-			{
-				!debugConfig?.characterDebugOverlay ? null : (
-					<Container zIndex={ 99999 }>
-						<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
-					</Container>
-				)
-			}
+			{ showName ? (
+				<RoomCharacterLabel
+					position={ { x: labelX, y: labelY } }
+					character={ character }
+					theme={ held ? 'active' : hover ? 'hover' : 'normal' }
+				/>
+			) : null }
+			{ !debugConfig?.characterDebugOverlay ? null : (
+				<Container>
+					<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
+				</Container>
+			) }
 		</TransitionedContainer>
 	);
 });
@@ -574,30 +569,26 @@ export function RoomCharacterLabel({ position, character, theme }: {
 				style={ style }
 				text={ name }
 			/>
-			{
-				!showAwayIcon ? null : (
-					<Graphics
-						draw={ drawAwayIcon }
-						position={ {
-							x: - 32 * 1.3 * fontScale - nameMeasure.maxLineWidth / 2,
-							y: - 32 * 0.5 * fontScale,
-						} }
-						scale={ (32 / 50) * fontScale }
-					/>
-				)
-			}
-			{
-				!showDisconnectedIcon ? null : (
-					<Graphics
-						draw={ drawDisconnectedIcon }
-						position={ {
-							x: + 2 * fontScale + nameMeasure.maxLineWidth / 2,
-							y: - 56 * 0.5 * fontScale,
-						} }
-						scale={ (56 / 600) * fontScale }
-					/>
-				)
-			}
+			{ !showAwayIcon ? null : (
+				<Graphics
+					draw={ drawAwayIcon }
+					position={ {
+						x: - 32 * 1.3 * fontScale - nameMeasure.maxLineWidth / 2,
+						y: - 32 * 0.5 * fontScale,
+					} }
+					scale={ (32 / 50) * fontScale }
+				/>
+			) }
+			{ !showDisconnectedIcon ? null : (
+				<Graphics
+					draw={ drawDisconnectedIcon }
+					position={ {
+						x: + 2 * fontScale + nameMeasure.maxLineWidth / 2,
+						y: - 56 * 0.5 * fontScale,
+					} }
+					scale={ (56 / 600) * fontScale }
+				/>
+			) }
 		</Container>
 	);
 }

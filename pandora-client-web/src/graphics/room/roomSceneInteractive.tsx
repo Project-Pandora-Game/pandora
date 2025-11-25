@@ -238,7 +238,7 @@ export function RoomGraphicsInteractive({
 					) : null))
 				}
 			</Container>
-			<Container sortableChildren>
+			<Container>
 				{
 					characters.map((character) => {
 						const characterState = globalState.characters.get(character.id);

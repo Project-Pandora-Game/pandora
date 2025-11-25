@@ -21,7 +21,7 @@ import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorUseTextureGetterOverride } from './editorLayer.tsx';
+import { EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
 export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
@@ -102,7 +102,6 @@ export function SetupLayerSelected({
 	...props
 }: {
 	characterState: AssetFrameworkCharacterState;
-	zIndex: number;
 	layer: EditorAssetGraphicsWornLayer;
 }): ReactElement | null {
 	const item = characterState.items.find((i) => (
@@ -126,12 +125,10 @@ export function SetupLayerSelected({
 export function SetupMeshLayerSelected({
 	characterState,
 	item,
-	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
 	item: Item<WearableAssetType> | null;
-	zIndex: number;
 	layer: EditorAssetGraphicsWornLayer<'mesh'>;
 }): ReactElement {
 	const state = useEditorLayerStateOverride(layer);
@@ -209,10 +206,7 @@ export function SetupMeshLayerSelected({
 	}, [points, triangles, uv, x, y, width, height]);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
+		<Container>
 			<Sprite
 				x={ x }
 				y={ y }
@@ -223,7 +217,6 @@ export function SetupMeshLayerSelected({
 				alpha={ alpha }
 			/>
 			<Graphics
-				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 				draw={ drawWireFrame }
 			/>
 			<ImageArea
@@ -238,12 +231,10 @@ export function SetupMeshLayerSelected({
 export function SetupAlphaImageMeshLayerSelected({
 	characterState,
 	item,
-	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
 	item: Item<WearableAssetType> | null;
-	zIndex: number;
 	layer: EditorAssetGraphicsWornLayer<'alphaImageMesh'>;
 }): ReactElement {
 	const definition = useObservable(layer.definition);
@@ -316,10 +307,7 @@ export function SetupAlphaImageMeshLayerSelected({
 	const texture = !image ? Texture.EMPTY : editorGetTexture(image);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
+		<Container>
 			<Sprite
 				x={ x }
 				y={ y }
@@ -328,7 +316,6 @@ export function SetupAlphaImageMeshLayerSelected({
 				texture={ texture }
 			/>
 			<Graphics
-				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 				draw={ drawWireFrame }
 			/>
 			<ImageArea
@@ -342,12 +329,10 @@ export function SetupAlphaImageMeshLayerSelected({
 
 export function SetupAutomeshLayerSelected({
 	characterState,
-	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
 	item: Item<WearableAssetType> | null;
-	zIndex: number;
 	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
 }): ReactElement {
 	const definition = useObservable(layer.definition);
@@ -417,12 +402,8 @@ export function SetupAutomeshLayerSelected({
 	}, [points, triangles, uv, x, y, width, height]);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
+		<Container>
 			<Graphics
-				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 				draw={ drawWireFrame }
 			/>
 			<ImageArea
@@ -435,11 +416,9 @@ export function SetupAutomeshLayerSelected({
 }
 
 export function SetupTextLayerSelected({
-	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
-	zIndex: number;
 	layer: EditorAssetGraphicsWornLayer<'text'>;
 }): ReactElement {
 
@@ -459,14 +438,10 @@ export function SetupTextLayerSelected({
 	}, [width, height]);
 
 	return (
-		<Container
-			zIndex={ zIndex }
-			sortableChildren
-		>
+		<Container>
 			<Graphics
 				position={ { x, y } }
 				angle={ angle }
-				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 				draw={ drawWireFrame }
 			/>
 		</Container>
@@ -526,7 +501,6 @@ function ImageArea({
 
 	return (
 		<Graphics
-			zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 			draw={ drawImageArea }
 		/>
 	);

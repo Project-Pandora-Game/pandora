@@ -12,7 +12,6 @@ const TRANSITIONS = {
 	y: true,
 	angle: true,
 	alpha: true,
-	zIndex: true,
 } as const satisfies Readonly<Partial<Record<ContainerAutoProps, true>>>;
 
 type ExtraTransitionableValues = {
@@ -22,11 +21,12 @@ type ExtraTransitionableValues = {
 	scaleY: number;
 	skewX: number;
 	skewY: number;
+	zIndex: number | undefined;
 };
 type TransitionableValues = Pick<PixiDisplayObjectWriteableProps<PixiContainer>, keyof typeof TRANSITIONS> & ExtraTransitionableValues;
 export type TransitionedContainerTransitionableProps = keyof TransitionableValues;
 
-export const TRANSITIONED_CONTAINER_AUTO_PROPS = omit(CONTAINER_AUTO_PROPS, ...KnownObject.keys(TRANSITIONS));
+export const TRANSITIONED_CONTAINER_AUTO_PROPS = omit(CONTAINER_AUTO_PROPS, ...KnownObject.keys(TRANSITIONS), 'zIndex');
 export type TransitionedContainerAutoProps = keyof typeof TRANSITIONED_CONTAINER_AUTO_PROPS;
 
 export const TRANSITIONED_CONTAINER_EVENTS = CONTAINER_EVENTS;
@@ -78,7 +78,7 @@ const DefaultValues: TransitionableValues = {
 	scaleY: 1,
 	skewX: 0,
 	skewY: 0,
-	zIndex: 0,
+	zIndex: undefined,
 };
 
 type AppliedProps = TransitionedContainerCustomProps & Readonly<Partial<DisplayObjectSpecialProps>>;
@@ -189,22 +189,33 @@ export class PixiTransitionedContainer extends PixiContainer {
 					this.skew.y = newValue;
 				},
 			}, skew[1]),
-			zIndex: new TransitionHandler<number>({
+			zIndex: new TransitionHandler<number | undefined>({
 				transitionDuration: perPropertyTransitionDuration?.zIndex ?? transitionDuration,
 				transitionDelay: perPropertyTransitionDelay?.zIndex ?? transitionDelay,
-				// zIndex should be limited to integers only
+				// zIndex should be to finite numbers
 				valueProcessor: {
 					isTransitionable(a, b) {
-						return Number.isSafeInteger(a) && Number.isSafeInteger(b);
+						return Number.isFinite(a) && Number.isFinite(b);
 					},
 					mix(a, b, ratio) {
+						if (a === undefined || !Number.isFinite(a) || b === undefined || !Number.isFinite(b)) {
+							return ratio < .5 ? a : b;
+						}
 						return Math.round((1 - ratio) * a + ratio * b);
 					},
 				},
 				applyValue: (newValue) => {
+					// Only write value, if it actually is set.
+					// Writing to zIndex has side-effects outside of this element! (it modifies parent, if there is one already)
+					if (newValue === undefined) {
+						if (this.zIndex !== 0) {
+							this.zIndex = 0;
+						}
+						return;
+					}
 					this.zIndex = newValue;
 				},
-			}, initialValues.zIndex ?? DefaultValues.zIndex),
+			}, initialValues.zIndex),
 		};
 	}
 
@@ -275,7 +286,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		}
 
 		if (oldProps.zIndex !== newProps.zIndex) {
-			this._transitionHandlers.zIndex.setValue(newProps.zIndex ?? DefaultValues.zIndex);
+			this._transitionHandlers.zIndex.setValue(newProps.zIndex);
 			needsUpdate ||= this._transitionHandlers.zIndex.needsUpdate;
 		}
 

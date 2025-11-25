@@ -167,11 +167,10 @@ export function EditorScene({
 			onMouseDown={ setAstarget }
 		>
 			<Graphics
-				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
 			<EditorSceneContext.Provider value={ sceneContext }>
-				<Container zIndex={ 10 } ref={ contentRef }>
+				<Container ref={ contentRef }>
 					{ children }
 				</Container>
 			</EditorSceneContext.Provider>

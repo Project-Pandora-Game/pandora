@@ -71,42 +71,38 @@ export function RoomGraphics({
 				draw={ borderDraw }
 			/>
 			<Container sortableChildren>
-				{
-					characters.map((character) => {
-						const characterState = globalState.characters.get(character.id);
-						if (characterState == null ||
-							characterState.position.type !== 'normal' ||
-							characterState.currentRoom !== room.id
-						) {
-							return null;
-						}
+				{ roomDevices.map((device) => (device.isDeployed() ? (
+					<RoomDevice
+						key={ device.id }
+						characters={ characters }
+						charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
+						roomState={ room }
+						item={ device }
+						deployment={ device.deployment }
+						projectionResolver={ projectionResolver }
+						filters={ playerVisionFilters }
+					/>
+				) : null)) }
+				{ characters.map((character) => {
+					const characterState = globalState.characters.get(character.id);
+					if (characterState == null ||
+						characterState.position.type !== 'normal' ||
+						characterState.currentRoom !== room.id
+					) {
+						return null;
+					}
 
-						return (
-							<RoomCharacter
-								key={ character.id }
-								characterState={ characterState }
-								character={ character }
-								projectionResolver={ projectionResolver }
-								showName={ showCharacterNames }
-								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-							/>
-						);
-					})
-				}
-				{
-					roomDevices.map((device) => (device.isDeployed() ? (
-						<RoomDevice
-							key={ device.id }
-							characters={ characters }
-							charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
-							roomState={ room }
-							item={ device }
-							deployment={ device.deployment }
+					return (
+						<RoomCharacter
+							key={ character.id }
+							characterState={ characterState }
+							character={ character }
 							projectionResolver={ projectionResolver }
-							filters={ playerVisionFilters }
+							showName={ showCharacterNames }
+							visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
 						/>
-					) : null))
-				}
+					);
+				}) }
 			</Container>
 		</Container>
 	);

@@ -419,7 +419,10 @@ $drop-overlay-gap: 0.3em;
 
 		.itemName, .assetName {
 			margin: 3px;
+			width: 0;
 			flex: 1;
+			overflow: clip;
+			text-overflow: ellipsis;
 		}
 
 		.itemPreview {
@@ -467,6 +470,11 @@ $drop-overlay-gap: 0.3em;
 			width: 100%;
 			flex-grow: 1;
 			justify-content: space-between;
+
+			span {
+				overflow: clip;
+				text-overflow: ellipsis;
+			}
 
 			.credits {
 				margin-top: common.spacing(medium);

@@ -9,7 +9,7 @@
 		"> 0.5%, last 2 versions and last 3 years, Firefox ESR, not dead"
 	],
 	"scripts": {
-		"clean": "rimraf dist",
+		"clean": "rimraf dist coverage",
 		"build": "pnpm run --silent type-check:webpack && pnpm run webpack:build",
 		"dev": "pnpm run --silent type-check:webpack && pnpm run webpack:serve",
 		"dev:progress": "pnpm run --silent dev --progress",

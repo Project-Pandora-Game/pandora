@@ -28,6 +28,7 @@
 	},
 	"type": "module",
 	"scripts": {
+		"clean": "rimraf coverage && pnpm -r --no-bail --parallel --silent run clean",
 		"setup-dev": "pnpm --filter pandora-common --silent run build",
 		"postinstall": "node .hooks/postinstall.cjs",
 		"ci": "pnpm run build && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",

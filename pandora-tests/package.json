@@ -6,6 +6,7 @@
 	"license": "LGPL-3.0-or-later",
 	"type": "module",
 	"scripts": {
+		"clean": "rimraf temp coverage playwright-report test-results",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "pnpm run \"/type-check:.*/\"",

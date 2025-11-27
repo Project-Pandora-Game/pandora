@@ -40,8 +40,8 @@
 		"tsconfig.base.json"
 	],
 	"scripts": {
-		"clean": "rimraf dist",
-		"build": "pnpm run --silent clean && tsc -p ./tsconfig.json",
+		"clean": "rimraf dist coverage",
+		"build": "rimraf dist && tsc -p ./tsconfig.json",
 		"dev": "tsc -p ./tsconfig.json -w --skipLibCheck",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",

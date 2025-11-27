@@ -85,10 +85,11 @@
 	}
 }
 
-.spaceInviteCreation .input-row {
+.SpaceInviteCreation {
 	display: grid;
-	grid-template-columns: 1fr 2em 1fr;
-	height: 2.1em;
+	grid: auto-flow / minmax(min-content, 1fr) 2em minmax(min-content, 1fr);
+	align-items: center;
+	gap: common.spacing(small);
 
 	input[type=checkbox] {
 		margin: auto 0;

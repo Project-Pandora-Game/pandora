@@ -1256,26 +1256,24 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 
 	return (
 		<ModalDialog>
-			<Column className='spaceInviteCreation' gap='medium'>
-				<div className='input-row'>
+			<Column>
+				<div className='SpaceInviteCreation'>
 					<label>Limit To Account ID</label>
 					<Checkbox checked={ allowAccount } onChange={ setAllowAccount } />
 					<NumberInput min={ 0 } value={ account } onChange={ setAccount } readOnly={ !allowAccount } />
-				</div>
-				<div className='input-row'>
+
 					<label>Limit To Character ID</label>
 					<Checkbox checked={ allowCharacter } onChange={ setAllowCharacter } />
 					<NumberInput min={ 0 } value={ character } onChange={ setCharacter } readOnly={ !allowCharacter } />
-				</div>
-				{
-					isPlayerAdmin && (
-						<div className='input-row'>
+
+					{ isPlayerAdmin ? (
+						<>
 							<label>Max uses</label>
 							<Checkbox checked={ allowMaxUses } onChange={ setAllowMaxUses } />
 							<NumberInput min={ 1 } value={ uses } onChange={ setUses } readOnly={ !allowMaxUses } />
-						</div>
-					)
-				}
+						</>
+					) : null }
+				</div>
 				<Row padding='medium' alignX='space-between'>
 					<Button onClick={ closeDialog }>Cancel</Button>
 					<Button onClick={ onCreate } disabled={ processing }>Create</Button>

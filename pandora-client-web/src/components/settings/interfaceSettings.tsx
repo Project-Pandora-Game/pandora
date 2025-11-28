@@ -278,6 +278,7 @@ function RoomGraphicsSettings(): ReactElement {
 				<ChatroomCharacterAwayStatusIconDisplay />
 				<ChatroomCharacterNameFontSize />
 				<ChatroomOfflineCharacters />
+				<ChatroomBlockedCharacters />
 				<ChatroomCharacterPosintStyle />
 			</Column>
 		</fieldset>
@@ -318,6 +319,18 @@ function ChatroomOfflineCharacters(): ReactElement {
 	}), []);
 
 	return <SelectAccountSettings setting='interfaceChatroomOfflineCharacterFilter' label='Offline characters display effect' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function ChatroomBlockedCharacters(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomBlockedCharacterFilter'], string> => ({
+		'normal': 'No effect (displayed as normal characters)',
+		'ghost': 'Ghost (darken + semi-transparent)',
+		'silhouette': 'Silhouette (mostly transparent silhouette)',
+		'name-only': 'Show only character name',
+		'hidden': 'Hide both the character and the name (show only in room list)',
+	}), []);
+
+	return <SelectAccountSettings setting='interfaceChatroomBlockedCharacterFilter' label='Characters of blocked accounts display effect' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function WardrobeSettings(): ReactElement {

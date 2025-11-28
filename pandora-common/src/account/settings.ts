@@ -109,6 +109,10 @@ export const AccountSettingsSchema = z.object({
 		return v;
 	}, CharacterHideSettingSchema.or(z.enum(['icon', 'darken']))),
 	/**
+	 * Controls how characters from blocked accounts are displayed in a room, by default.
+	 */
+	interfaceChatroomBlockedCharacterFilter: CharacterHideSettingSchema,
+	/**
 	 * Controls how big the font size used in the main chat area is
 	 */
 	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
@@ -173,6 +177,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomChatSplitHorizontal: 'disabled',
 	interfaceChatroomChatSplitVertical: 'disabled',
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
+	interfaceChatroomBlockedCharacterFilter: 'silhouette',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomCharacterAwayStatusIconDisplay: true,

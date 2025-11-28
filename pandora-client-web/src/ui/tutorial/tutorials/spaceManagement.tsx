@@ -1135,7 +1135,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							</p>
 							<p>
 								A final hint about handling space access: If you want to quickly invite another character to your public, private,
-								or locked space for a single time, using the "/invite" command in a direct message to that user is the best way to do that.
+								or locked space for a single time, using the '/invite' command in a direct message to that user is the best way to do that.
 							</p>
 						</>
 					),

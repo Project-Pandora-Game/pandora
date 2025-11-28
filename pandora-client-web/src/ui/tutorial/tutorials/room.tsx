@@ -770,8 +770,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								These usually happen as a result of interacting with character's items,
 								but can also be created through the use of various commands.<br />
 								A list of all commands in Pandora can be brought up by entering a single
-								"/" into the chat.<br />
-								Try using the "/dice" command to roll a dice.
+								'/' into the chat.<br />
+								Try using the '/dice' command to roll a dice.
 							</p>
 						</>
 					),

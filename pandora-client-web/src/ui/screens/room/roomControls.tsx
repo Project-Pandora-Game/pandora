@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { useLocation } from 'react-router';
 import crossIcon from '../../../assets/icons/cross.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import listIcon from '../../../assets/icons/list.svg';
 import photoIcon from '../../../assets/icons/photo.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
@@ -17,7 +18,7 @@ import { Character, useCharacterData, useCharacterDataMultiple } from '../../../
 import { PlayerCharacter } from '../../../character/player.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
-import { useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
+import { useAccountContacts, useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
 import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/accountContacts/accountContacts.tsx';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
@@ -604,6 +605,8 @@ function DisplayCharacter({ char, globalState }: {
 	const location = useLocation();
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
+	const blockedAccounts = useAccountContacts('blocked');
+
 	const {
 		openContextMenu,
 	} = useRoomScreenContext();
@@ -611,6 +614,7 @@ function DisplayCharacter({ char, globalState }: {
 	const data = useCharacterData(char);
 	const state = useCharacterState(globalState, char.id);
 	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
+	const isBlocked = blockedAccounts.some((a) => a.id === data.accountId);
 
 	const isPlayer = char.isPlayer();
 	const playerRoomId = (playerId != null ? globalState.getCharacterState(playerId) : undefined)?.currentRoom ?? null;
@@ -621,8 +625,18 @@ function DisplayCharacter({ char, globalState }: {
 		if (isAdmin) {
 			result.push(<img key='space-admin' className='character-icon' src={ shieldIcon } alt='Space admin' title='Space admin' />);
 		}
+		if (isBlocked) {
+			result.push(
+				<img key='blocked'
+					className='character-icon'
+					src={ forbiddenIcon }
+					title='This character is from an account you blocked'
+					alt='This character is from an account you blocked'
+				/>,
+			);
+		}
 		return result;
-	}, [isAdmin]);
+	}, [isAdmin, isBlocked]);
 
 	const openMenu = useCallback((event: React.MouseEvent) => {
 		openContextMenu({

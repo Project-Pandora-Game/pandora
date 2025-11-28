@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
+import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -278,6 +278,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 					edited={ message.edited ?? false }
 					rooms={ [message.roomData] }
 					receivedRoomId={ message.receivedRoomId }
+					from={ message.from }
 				/>
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
@@ -367,11 +368,12 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
+function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	messageTime: number | null;
 	edited: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
 	receivedRoomId: RoomId | null;
+	from?: IChatMessageChatCharacter;
 }): ReactElement {
 	const time = useMemo(() => messageTime != null ? new Date(messageTime) : null, [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time?.getDate());
@@ -391,7 +393,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
 	return (
 		<span className='info'>
 			{ time != null ? (
-				<span>
+				<span title={ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` + (from != null ? ` by ${ from.name } (${ from.id })` : '') }>
 					{
 						full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
 						(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')

@@ -203,6 +203,8 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 	close: () => void;
 	closeSlot: () => void;
 }) {
+	const { globalState } = useWardrobeActionContext();
+
 	const occupancy = useMemo(() => device.slotOccupancy.get(slot), [device, slot]);
 	const characters = useSpaceCharacters();
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
@@ -223,23 +225,30 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 	}, [character, position, openContextMenu]);
 
 	if (occupancy) {
+		const characterRoomDeviceLink = globalState.getCharacterState(occupancy)?.getRoomDeviceWearablePart()?.roomDeviceLink;
+		const occupied = character != null && characterRoomDeviceLink?.device === device.id && characterRoomDeviceLink.slot === slot;
+
 		return (
 			<>
 				<span>
 					{ device.asset.definition.slots[slot].name }
 				</span>
 				<hr />
-				<Button theme='transparent'
-					onClick={ onSelectCharacter }
-					style={ {
-						backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
-					} }
-				>
-					{ character?.name } ({ occupancy })
-				</Button>
-				<hr />
+				{ occupied ? (
+					<>
+						<Button theme='transparent'
+							onClick={ onSelectCharacter }
+							style={ {
+								backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
+							} }
+						>
+							{ character.name } ({ occupancy })
+						</Button>
+						<hr />
+					</>
+				) : null }
 				<DeviceSlotClear roomState={ roomState } device={ device } slot={ slot } close={ close }>
-					{ (character)
+					{ (occupied)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
 				</DeviceSlotClear>
@@ -320,8 +329,8 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	const navigate = useNavigatePandora();
 
 	const onCloseActual = useCallback(() => {
-		setMenu('main');
 		onClose();
+		setMenu('main');
 	}, [onClose]);
 
 	if (!player || !gameState) {

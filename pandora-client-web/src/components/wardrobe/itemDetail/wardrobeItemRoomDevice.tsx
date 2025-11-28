@@ -185,7 +185,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	occupancy: CharacterId | null;
 	item: ItemPath;
 }): ReactElement | null {
-	const { player } = useWardrobeActionContext();
+	const { player, globalState } = useWardrobeActionContext();
 	const { targetSelector } = useWardrobeContext();
 
 	const characters: readonly Character[] = useSpaceCharacters();
@@ -226,8 +226,17 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 
 	} else {
 		const character = characters.find((c) => c.id === occupancy);
-
-		const characterDescriptor = character ? `${character.name} (${character.id})` : `[UNKNOWN] (${occupancy}) [Character not in the room]`;
+		const characterRoomDeviceLink = globalState.getCharacterState(occupancy)?.getRoomDeviceWearablePart()?.roomDeviceLink;
+		let characterDescriptor: string;
+		let occupied = false;
+		if (character == null) {
+			characterDescriptor = '[Character not in the space]';
+		} else if (characterRoomDeviceLink?.device !== item.itemId || characterRoomDeviceLink?.slot !== slotName) {
+			characterDescriptor = '[Character not in the slot]';
+		} else {
+			characterDescriptor = `${character.name} (${character.id})`;
+			occupied = true;
+		}
 
 		contents = (
 			<>
@@ -238,7 +247,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 					item,
 					slot: slotName,
 				} }>
-					{ character ? 'Exit the device' : 'Clear occupancy of the slot' }
+					{ occupied ? 'Exit the device' : 'Clear occupancy of the slot' }
 				</WardrobeActionButton>
 			</>
 		);

@@ -110,6 +110,9 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowRoomSettings(true) }
+						badge={ Object.keys(roomState.settings).length || null }
+						badgeType='passive'
+						badgeTitle='Count of modified settings for this room'
 					>
 						<img src={ settingIcon } />
 						<div>Room settings</div>

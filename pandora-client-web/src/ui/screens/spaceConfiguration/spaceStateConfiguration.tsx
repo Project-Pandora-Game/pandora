@@ -54,10 +54,13 @@ export function SpaceStateConfigurationUi({
 						limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
 					/>
 				</Row>
-				<Row className='flex-1' alignX='end'>
+				<Row className='flex-1' alignX='start' padding='small'>
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowGlobalRoomSettings(true) }
+						badge={ Object.keys(globalState.space.globalRoomSettings).length || null }
+						badgeType='passive'
+						badgeTitle='Count of modified settings'
 					>
 						<img src={ settingIcon } />
 						<div>Default room settings</div>

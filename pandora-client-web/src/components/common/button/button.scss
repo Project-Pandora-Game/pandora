@@ -4,6 +4,7 @@
 .Button {
 	@include common.center-flex;
 	display: inline-flex;
+	position: relative;
 	gap: 0.5em;
 
 	border-radius: common.spacing('small');
@@ -104,5 +105,30 @@
 
 	&.danger {
 		font-weight: bold;
+	}
+
+	.badge {
+		display: inline-block;
+		position: absolute;
+		top: -0.45em;
+		right: -0.45em;
+
+		aspect-ratio: 1;
+		min-height: unset;
+		min-width: unset;
+		width: 1.4em;
+		height: 1.4em;
+		font-size: 0.8em;
+		line-height: 1.5;
+		background: common.$theme-notification-badge-background;
+		color: common.$theme-notification-badge-text;
+		border-radius: 100%;
+		padding: 0 0.3em;
+		text-align: center;
+
+		&.badge-type-passive {
+			background: common.$theme-notification-badge-passive-background;
+			color: common.$theme-notification-badge-passive-text;
+		}
 	}
 }

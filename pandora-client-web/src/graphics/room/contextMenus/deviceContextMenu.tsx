@@ -1,7 +1,7 @@
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type AssetFrameworkRoomState, type ICharacterRoomData, type RoomId } from 'pandora-common';
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -9,7 +9,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
-import { DialogInPortal } from '../../../components/dialog/dialog.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -327,6 +327,7 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	const gameState = useGameStateOptional();
 	const [menu, setMenu] = useState<'main'>('main');
 	const navigate = useNavigatePandora();
+	const priority = useContext(DraggableDialogPriorityContext);
 
 	const onCloseActual = useCallback(() => {
 		onClose();
@@ -338,7 +339,7 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	}
 
 	return (
-		<DialogInPortal>
+		<DialogInPortal priority={ priority }>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 				<Scrollable>
 					<Column>

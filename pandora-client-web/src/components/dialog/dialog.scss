@@ -4,7 +4,7 @@
 	background: common.$theme-dialog-overlay;
 	position: fixed;
 	inset: 0;
-	z-index: 1000;
+	z-index: common.$z-index-dialog;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -53,12 +53,12 @@
 	&.modal {
 		background: common.$theme-dialog-overlay;
 		pointer-events: auto;
-		z-index: 1000;
+		z-index: common.$z-index-dialog;
 	}
 }
 
 .dialog-draggable {
-	z-index: 1000;
+	z-index: common.$z-index-dialog;
 	// Do NOT hide overflow for the dialog itself - otherwise drag handles break
 	min-width: 8em;
 	min-height: 5em;

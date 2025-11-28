@@ -1,4 +1,5 @@
-$z-index-menu: 100;
+// Things with this ZIndex should use DialogInPortal to avoid conflicts
+$z-index-dialog: 1000;
 
 $spacing: (
 	none: 0,

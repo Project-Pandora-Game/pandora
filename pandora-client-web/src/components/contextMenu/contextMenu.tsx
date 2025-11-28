@@ -1,11 +1,12 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import React, { ForwardedRef, forwardRef, ReactElement, RefObject, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { ForwardedRef, forwardRef, ReactElement, RefObject, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useMounted } from '../../common/useMounted.ts';
 import { Column } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext } from '../dialog/dialog.tsx';
 import './contextMenu.scss';
 
 type ContextMenuHandle = {
@@ -20,6 +21,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 	const [show, setShow] = useState(false);
 	const self = useRef<HTMLDivElement | null>(null);
 	const mounted = useMounted();
+	const priority = useContext(DraggableDialogPriorityContext);
 
 	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
 		event.stopPropagation();
@@ -73,13 +75,15 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 		return null;
 
 	return (
-		<div className={ classNames('context-menu', className) } ref={ finalRef }>
-			<Scrollable>
-				<Column>
-					{ children }
-				</Column>
-			</Scrollable>
-		</div>
+		<DialogInPortal priority={ priority }>
+			<div className={ classNames('context-menu', className) } ref={ finalRef }>
+				<Scrollable>
+					<Column>
+						{ children }
+					</Column>
+				</Scrollable>
+			</div>
+		</DialogInPortal>
 	);
 }
 

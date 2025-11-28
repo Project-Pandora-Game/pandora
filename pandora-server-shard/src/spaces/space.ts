@@ -479,7 +479,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			// Cleanup character data
 			this.history.delete(character.id);
 			this.status.delete(character.id);
-			this._cleanActionCache(character.id);
+			this._cleanActionCache();
 		});
 		this.logger.debug(`Character ${character.id} removed`);
 	}
@@ -725,19 +725,28 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			});
 		} else {
 			actionCacheEntry.descriptor = descriptor;
+			// If we got here, then character is in space (possibly again), reset the leave flag
+			delete actionCacheEntry.leave;
 		}
 
 		return descriptor;
 	}
 
-	private _cleanActionCache(id: CharacterId): void {
-		const cached = this.actionCache.get(id);
-		if (cached)
-			cached.leave = Date.now();
+	private _cleanActionCache(): void {
+		const now = Date.now();
 
-		for (const [key, value] of this.actionCache) {
-			if (value.leave && value.leave + ACTION_CACHE_TIMEOUT < Date.now())
+		for (const [key, value] of Array.from(this.actionCache.entries())) {
+			if (this.getCharacterById(key) != null) {
+				// Character is in space, no deletion
+				delete value.leave;
+			} else if (value.leave == null) {
+				// Character is no longer in space, mark for deletion
+				// This is delayed to allow for delayed messages from Directory to be processed correctly
+				value.leave = now;
+			} else if (now > value.leave + ACTION_CACHE_TIMEOUT) {
+				// The record is stale, prune it
 				this.actionCache.delete(key);
+			}
 		}
 	}
 }

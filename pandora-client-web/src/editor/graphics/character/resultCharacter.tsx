@@ -19,26 +19,23 @@ export function ResultCharacter(): ReactElement {
 
 	return (
 		<GraphicsCharacterEditor layerBuilder={ EditorResultGraphicsCharacterLayerBuilder }>
-			{
-				!showBones ? null :
-				(
-					<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
-						{
-							bones
-								.filter((b) => b.x !== 0 && b.y !== 0)
-								.map((b) => (
-									<DraggableBone
-										key={ b.name }
-										type='result'
-										character={ editor.character }
-										characterState={ editorCharacterState }
-										definition={ b }
-									/>
-								))
-						}
-					</Container>
-				)
-			}
+			{ showBones ? (
+				<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
+					{
+						bones
+							.filter((b) => b.x !== 0 && b.y !== 0)
+							.map((b) => (
+								<DraggableBone
+									key={ b.name }
+									type='result'
+									character={ editor.character }
+									characterState={ editorCharacterState }
+									definition={ b }
+								/>
+							))
+					}
+				</Container>
+			) : null }
 			<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
 				<PreviewCutterRectangle />
 			</Container>

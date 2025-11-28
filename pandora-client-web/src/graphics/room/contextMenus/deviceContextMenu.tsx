@@ -1,7 +1,7 @@
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type AssetFrameworkRoomState, type ICharacterRoomData, type RoomId } from 'pandora-common';
-import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -9,7 +9,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
-import { DialogInPortal } from '../../../components/dialog/dialog.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -203,6 +203,8 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 	close: () => void;
 	closeSlot: () => void;
 }) {
+	const { globalState } = useWardrobeActionContext();
+
 	const occupancy = useMemo(() => device.slotOccupancy.get(slot), [device, slot]);
 	const characters = useSpaceCharacters();
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
@@ -223,23 +225,30 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 	}, [character, position, openContextMenu]);
 
 	if (occupancy) {
+		const characterRoomDeviceLink = globalState.getCharacterState(occupancy)?.getRoomDeviceWearablePart()?.roomDeviceLink;
+		const occupied = character != null && characterRoomDeviceLink?.device === device.id && characterRoomDeviceLink.slot === slot;
+
 		return (
 			<>
 				<span>
 					{ device.asset.definition.slots[slot].name }
 				</span>
 				<hr />
-				<Button theme='transparent'
-					onClick={ onSelectCharacter }
-					style={ {
-						backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
-					} }
-				>
-					{ character?.name } ({ occupancy })
-				</Button>
-				<hr />
+				{ occupied ? (
+					<>
+						<Button theme='transparent'
+							onClick={ onSelectCharacter }
+							style={ {
+								backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
+							} }
+						>
+							{ character.name } ({ occupancy })
+						</Button>
+						<hr />
+					</>
+				) : null }
 				<DeviceSlotClear roomState={ roomState } device={ device } slot={ slot } close={ close }>
-					{ (character)
+					{ (occupied)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
 				</DeviceSlotClear>
@@ -318,10 +327,11 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	const gameState = useGameStateOptional();
 	const [menu, setMenu] = useState<'main'>('main');
 	const navigate = useNavigatePandora();
+	const priority = useContext(DraggableDialogPriorityContext);
 
 	const onCloseActual = useCallback(() => {
-		setMenu('main');
 		onClose();
+		setMenu('main');
 	}, [onClose]);
 
 	if (!player || !gameState) {
@@ -329,7 +339,7 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	}
 
 	return (
-		<DialogInPortal>
+		<DialogInPortal priority={ priority }>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 				<Scrollable>
 					<Column>

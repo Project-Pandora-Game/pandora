@@ -23,36 +23,33 @@ export function SetupCharacter(): ReactElement {
 	return (
 		<GraphicsCharacterEditor layerBuilder={ EditorSetupGraphicsCharacterLayerBuilder }>
 			{ (selectedLayer != null && selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
-				<SetupLayerSelected
-					characterState={ editorCharacterState }
-					layer={ selectedLayer }
-					zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-				/>
+				<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
+					<SetupLayerSelected
+						characterState={ editorCharacterState }
+						layer={ selectedLayer }
+					/>
+				</Container>
 			) : null }
-			{
-				selectedTemplate == null ? null :
-				(<PointTemplateEditLayer templateEditor={ selectedTemplate } />)
-			}
-			{
-				!showBones ? null :
-				(
-					<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA + 1 }>
-						{
-							bones
-								.filter((b) => b.x !== 0 && b.y !== 0)
-								.map((b) => (
-									<DraggableBone
-										key={ b.name }
-										type='setup'
-										character={ editor.character }
-										characterState={ editorCharacterState }
-										definition={ b }
-									/>
-								))
-						}
-					</Container>
-				)
-			}
+			{ selectedTemplate != null ? (
+				<PointTemplateEditLayer templateEditor={ selectedTemplate } />
+			) : null }
+			{ showBones ? (
+				<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA + 1 }>
+					{
+						bones
+							.filter((b) => b.x !== 0 && b.y !== 0)
+							.map((b) => (
+								<DraggableBone
+									key={ b.name }
+									type='setup'
+									character={ editor.character }
+									characterState={ editorCharacterState }
+									definition={ b }
+								/>
+							))
+					}
+				</Container>
+			) : null }
 		</GraphicsCharacterEditor>
 	);
 }

@@ -6,7 +6,7 @@
 	right: 0;
 	bottom: 0;
 	width: min(75vw, 25rem);
-	z-index: 1000;
+	z-index: common.$z-index-dialog;
 	margin: 0;
 	overflow: hidden;
 	pointer-events: auto;

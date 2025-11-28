@@ -27,7 +27,6 @@ import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
-import { useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
@@ -367,6 +366,8 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				showCharacterNames ? (
 					<RoomDeviceCharacterNames
 						item={ item }
+						characters={ characters }
+						charactersInDevice={ charactersInDevice }
 						deployment={ deployment }
 						projectionResolver={ projectionResolver }
 					/>
@@ -378,9 +379,11 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 
 function RoomDeviceCharacterNames({
 	item,
+	characters,
+	charactersInDevice,
 	deployment,
 	projectionResolver,
-}: Pick<RoomDeviceProps, 'item' | 'deployment' | 'projectionResolver'>): ReactElement {
+}: Pick<RoomDeviceProps, 'item' | 'characters' | 'charactersInDevice' | 'deployment' | 'projectionResolver'>): ReactElement {
 	const {
 		interfaceChatroomCharacterNameFontSize,
 	} = useAccountSettings();
@@ -395,8 +398,6 @@ function RoomDeviceCharacterNames({
 		default:
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
-
-	const characters = useSpaceCharacters();
 
 	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
 		deployment.x,
@@ -420,8 +421,15 @@ function RoomDeviceCharacterNames({
 					for (const slot of Object.keys(item.asset.definition.slots)) {
 						const characterId = item.slotOccupancy.get(slot);
 						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
+						const characterState = charactersInDevice.find((c) => c.id === characterId);
 
-						if (character == null)
+						if (character == null || characterState == null)
+							continue;
+
+						// Character must be in this device, otherwise we skip the name
+						// (could happen if character left and rejoined the room without device equipped)
+						const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
+						if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== slot)
 							continue;
 
 						result.push(<RoomDeviceCharacterName
@@ -436,7 +444,7 @@ function RoomDeviceCharacterNames({
 					}
 
 					return result;
-				}, [characters, deploymentY, fontScale, item, scale, x, y, yOffsetExtra])
+				}, [characters, charactersInDevice, deploymentY, fontScale, item, scale, x, y, yOffsetExtra])
 			}
 		</>
 	);
@@ -467,7 +475,6 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 			key={ character.id }
 			position={ { x, y } }
 			scale={ { x: scale, y: scale } }
-			sortableChildren
 			cursor='pointer'
 			eventMode='static'
 			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }

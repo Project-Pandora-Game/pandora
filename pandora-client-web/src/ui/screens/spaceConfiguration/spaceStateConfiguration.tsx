@@ -54,10 +54,13 @@ export function SpaceStateConfigurationUi({
 						limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
 					/>
 				</Row>
-				<Row className='flex-1' alignX='end'>
+				<Row className='flex-1' alignX='start' padding='small'>
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowGlobalRoomSettings(true) }
+						badge={ Object.keys(globalState.space.globalRoomSettings).length || null }
+						badgeType='passive'
+						badgeTitle='Count of modified settings'
 					>
 						<img src={ settingIcon } />
 						<div>Default room settings</div>
@@ -199,12 +202,13 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 							<Button
 								slim
 								className='IconButton'
+								title={ r.name || r.id }
 								onClick={ () => {
 									suppressScroll.current = r.id;
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>
-								<RoomConfigurationBackgroundPreview background={ r.roomBackground } previewSize={ 256 } />
+								<RoomConfigurationBackgroundPreview className='fit' background={ r.roomBackground } previewSize={ 256 } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
 								<div className='overlay'>
 									<span className='label'>{ r.name || r.id }</span>

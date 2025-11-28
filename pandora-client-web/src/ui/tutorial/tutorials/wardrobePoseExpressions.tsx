@@ -157,7 +157,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							Now the section after the category buttons changed and shows several options.<br />
 							The first one is "View" - it allows you to turn your character by spinning it around by 180 degrees.<br />
 							<br />
-							Note: The same can also be achieved by using the '/turn' command in the chat (or the short variant '/t').
+							Note: The same can also be achieved by using the <code>/turn</code> command in the chat (or the short variant '/t').
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -348,7 +348,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							The following legs state selector lets you switch the legs between the standing, sitting, and kneeling state while keeping
 							the current leg rotations applied.<br />
 							<br />
-							Note: The same can also be achieved by using the chat commands '/stand', '/sit', or '/kneel'.
+							Note: The same can also be achieved by using the chat commands <code>/stand</code>, <code>/sit</code>, or <code>/kneel</code>.
 						</p>
 					),
 					conditions: [{ type: 'next' }],

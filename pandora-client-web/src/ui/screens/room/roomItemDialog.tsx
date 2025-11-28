@@ -12,7 +12,7 @@ import { Button, IconButton } from '../../../components/common/button/button.tsx
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
-import { useGameState, useGlobalState, useStateFindItemById, type FindItemResultEntry } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useGameStateOptional, useGlobalState, useStateFindItemById, type FindItemResultEntry } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeModuleConfig } from '../../../components/wardrobe/modules/_wardrobeModules.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -22,13 +22,13 @@ import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../
 import { useWardrobeTargetItem } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { Freeze } from '../../components/common/freeze.tsx';
 import './roomItemDialog.scss';
 import { RoomItemDialogs, RoomItemDialogsShouldShow, type RoomItemDialogDefinition } from './roomItemDialogList.ts';
 
 export function RoomItemDialogsProvider(): ReactElement | null {
 	const roomItemDialogs = useObservable(RoomItemDialogs);
 	const shouldShow = useObservable(RoomItemDialogsShouldShow) > 0;
-	const player = usePlayer();
 
 	useEffect(() => {
 		// Close all non-pinned dialogs when they should get hidden
@@ -37,13 +37,10 @@ export function RoomItemDialogsProvider(): ReactElement | null {
 		}
 	}, [shouldShow]);
 
-	if (player == null)
-		return null;
-
 	return (
-		<WardrobeActionContextProvider player={ player }>
+		<>
 			{ roomItemDialogs.map((d) => <RoomItemDialog { ...d } show={ shouldShow } key={ d.itemId } />) }
-		</WardrobeActionContextProvider>
+		</>
 	);
 }
 
@@ -59,7 +56,8 @@ export function RoomItemDialogsProviderEnabler(): null {
 }
 
 function RoomItemDialog({ itemId, pinned, show }: RoomItemDialogDefinition & { show: boolean; }): ReactElement {
-	const globalState = useGlobalState(useGameState());
+	const player = usePlayer();
+	const globalState = useGlobalState(useGameStateOptional());
 
 	const matchingItems = useStateFindItemById(globalState, itemId);
 	const findResult = matchingItems.length === 1 ? matchingItems[0] : null;
@@ -86,7 +84,7 @@ function RoomItemDialog({ itemId, pinned, show }: RoomItemDialogDefinition & { s
 		<DraggableDialog
 			key={ itemId }
 			close={ close }
-			title={ (findResult?.item.name || findResult?.item.asset.definition.name) ?? '[ERROR: Unknown item]' }
+			title={ player == null ? 'Loading...' : ((findResult?.item.name || findResult?.item.asset.definition.name) ?? '[ERROR: Unknown item]') }
 			className={ classNames('roomItemDialog', show ? null : 'hidden') }
 			initialHeight={ Math.min(400, Math.floor(0.8 * window.innerHeight)) }
 			initialWidth={ Math.min(300, Math.floor(0.8 * window.innerWidth)) }
@@ -98,18 +96,22 @@ function RoomItemDialog({ itemId, pinned, show }: RoomItemDialogDefinition & { s
 				</div>
 			) }
 		>
-			{
-				findResult != null ? (
-					<WardrobeExternalContextProvider target={ findResult.target }>
-						<RoomItemDialogContent { ...findResult } close={ close } />
-					</WardrobeExternalContextProvider>
-				) : (
-					<div className='dialog-content'>
-						<strong>Item not found</strong>
-						<span>The item was most likely deleted while this menu was open or the character wearing it left the space.</span>
-					</div>
-				)
-			}
+			<Freeze freeze={ player == null }>
+				{ player != null ? (
+					<WardrobeActionContextProvider player={ player }>
+						{ findResult != null ? (
+							<WardrobeExternalContextProvider target={ findResult.target }>
+								<RoomItemDialogContent { ...findResult } close={ close } />
+							</WardrobeExternalContextProvider>
+						) : (
+							<div className='dialog-content'>
+								<strong>Item not found</strong>
+								<span>The item was most likely deleted while this menu was open or the character wearing it left the space.</span>
+							</div>
+						) }
+					</WardrobeActionContextProvider>
+				) : null }
+			</Freeze>
 		</DraggableDialog>
 	);
 }

@@ -568,7 +568,30 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The menu that appeared on the right shows all the configuration options of this item.<br />
+								The menu that appeared on the right shows all the configuration options of this item.
+							</p>
+							<p>
+								A special function that each item has is the ability to open these configuration options as a room pop, allowing
+								you to do actions or to configure the item's modules without needing to switch to the wardrobe.<br />
+								You can do this with the "pin"-button at the top or with the <code>/inspect</code> command in the chat.
+							</p>
+							<p>
+								Optionally, you can now try to click the "pin"-button and then go 'Back', leaving the wardrobe temporarily,
+								to see how the popup looks, before proceeding with the next step. Otherwise, please continue further.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.inventoryView .Button[title="Open as room popup"]',
+						},
+					],
+				},
+				{
+					text: (
+						<>
+							<p>
 								At the top of the items's details you will find several actions you might be able to do with it.
 								In the order from left to right:
 							</p>

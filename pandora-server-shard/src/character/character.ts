@@ -289,12 +289,13 @@ export class Character {
 	}
 
 	private linkSpace(id: SpaceId | null): void {
+		Assert(this.isValid, 'Character state should not load while invalid');
+
 		let space: Space | null = null;
 		if (id != null) {
 			space = SpaceManager.getSpace(id) ?? null;
-			if (!space) {
-				this.logger.error(`Failed to link character to space ${id}; not found`);
-			}
+		} else {
+			space = this._personalSpace;
 		}
 		// Short path: No change
 		if (this._context.state === 'space' && this._context.space === space)
@@ -312,7 +313,8 @@ export class Character {
 			);
 			Assert(NOT_NARROWING_FALSE || this._context.state === 'space');
 		} else {
-			// Trigger load into personal space
+			this.logger.error(`Failed to link character to space ${id}; not found`);
+			// Trigger fallback load into personal space
 			this.getOrLoadSpace();
 		}
 	}
@@ -478,7 +480,7 @@ export class Character {
 	public getOrLoadSpace(): Space {
 		// Perform lazy-load if needed
 		if (this._context.state === 'unloaded') {
-			Assert(this.invalid == null, 'Character state should not load while invalid');
+			Assert(this.isValid, 'Character state should not load while invalid');
 			// Load into the personal space
 			this._personalSpace.characterAdd(
 				this,

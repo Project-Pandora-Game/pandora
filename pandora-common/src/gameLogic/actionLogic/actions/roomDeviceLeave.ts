@@ -47,15 +47,16 @@ export function ActionRoomDeviceLeave({
 	const roomManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
 	// We try to find the character and remove the device cleanly.
-	// If character is not found, we ignore it (assuming cleanup-style instead of freeing character)
-	const targetCharacter = processingContext.getTarget({
+	// If character is not found or not actually in the device, we ignore it (assuming cleanup-style instead of freeing character)
+	const targetCharacter = processingContext.getTargetCharacter({
 		type: 'character',
 		characterId: occupyingCharacterId,
 	});
+	const targetCharacterLink = targetCharacter?.characterState.getRoomDeviceWearablePart()?.roomDeviceLink;
 
 	let isCleanup = true;
 
-	if (targetCharacter) {
+	if (targetCharacter && targetCharacterLink != null && targetCharacterLink.device === item.id && targetCharacterLink.slot === action.slot) {
 		if (targetCharacter.type === 'character')
 			processingContext.addInteraction(targetCharacter.character, 'deviceEnterLeave');
 
@@ -87,7 +88,7 @@ export function ActionRoomDeviceLeave({
 					id: 'roomDeviceSlotLeave',
 					item: item.getChatDescriptor(),
 					dictionary: {
-						ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+						ROOM_DEVICE_SLOT: slot.name,
 					},
 				}),
 			);
@@ -110,7 +111,7 @@ export function ActionRoomDeviceLeave({
 				id: 'roomDeviceSlotClear',
 				item: item.getChatDescriptor(),
 				dictionary: {
-					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+					ROOM_DEVICE_SLOT: slot.name,
 				},
 			}),
 		);

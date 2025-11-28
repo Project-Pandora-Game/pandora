@@ -3,6 +3,7 @@ import type { Immutable } from 'immer';
 import {
 	AssertNever,
 	Asset,
+	CHARACTER_SETTINGS_DEFAULT,
 	Item,
 	SplitContainerPath,
 	type ActionRoomSelector,
@@ -18,6 +19,7 @@ import profileIcon from '../../assets/icons/profile.svg';
 import storageIcon from '../../assets/icons/storage.svg';
 import { useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
+import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { SortSpaceCharacters } from '../../ui/screens/room/roomControls.tsx';
 import { useFriendStatus } from '../accountContacts/accountContactContext.ts';
 import { Button } from '../common/button/button.tsx';
@@ -316,7 +318,7 @@ function TargetSelectionPane({ onSelect, currentRoomSelector }: {
 										});
 									} }
 								>
-									<span style={ { color: c.data.publicSettings.labelColor || 'inherit' } }>{ c.name }</span> ({ c.id })  { c.isPlayer() ? '[You]' : '' }
+									<ColoredName color={ c.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ c.name }</ColoredName> ({ c.id })  { c.isPlayer() ? '[You]' : '' }
 								</Button>
 							))
 					}

@@ -14,7 +14,7 @@ $context-menu-themes: (
 	left: 0;
 	background: common.$theme-contextmenu-default-background;
 	color: common.$theme-contextmenu-default-text;
-	z-index: 9999;
+	z-index: common.$z-index-dialog;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;

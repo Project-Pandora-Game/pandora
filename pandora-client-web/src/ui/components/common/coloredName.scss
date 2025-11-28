@@ -1,0 +1,6 @@
+@use '../../../styles/common';
+
+.ColoredName {
+	padding: 0 1px;
+	text-shadow: 1px 0.5px 0 common.$theme-colored-name-hinting;
+}

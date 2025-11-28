@@ -14,11 +14,9 @@ import { useTexture } from './useTexture.ts';
 export const GraphicsBackground = memo(function GraphicsBackground({
 	background,
 	backgroundFilters,
-	zIndex,
 }: {
 	background: Immutable<RoomBackgroundData>;
 	backgroundFilters?: readonly Filter[];
-	zIndex?: number;
 }): ReactElement | null {
 	if (background.graphics.type === 'image') {
 		return (
@@ -26,7 +24,6 @@ export const GraphicsBackground = memo(function GraphicsBackground({
 				graphics={ background.graphics }
 				backgroundSize={ background.imageSize }
 				backgroundFilters={ backgroundFilters }
-				zIndex={ zIndex }
 			/>
 		);
 	} else if (background.graphics.type === '3dBox') {
@@ -35,7 +32,6 @@ export const GraphicsBackground = memo(function GraphicsBackground({
 				graphics={ background.graphics }
 				background={ background }
 				backgroundFilters={ backgroundFilters }
-				zIndex={ zIndex }
 			/>
 		);
 	}
@@ -47,12 +43,10 @@ function GraphicsBackgroundImage({
 	graphics,
 	backgroundSize,
 	backgroundFilters,
-	zIndex,
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: 'image'; }>>;
 	backgroundSize: readonly [number, number];
 	backgroundFilters?: readonly Filter[];
-	zIndex?: number;
 }): ReactElement | null {
 	const backgroundResult = useMemo<{
 		backgroundTint: number;
@@ -89,7 +83,6 @@ function GraphicsBackgroundImage({
 		<Sprite
 			width={ backgroundSize[0] }
 			height={ backgroundSize[1] }
-			zIndex={ zIndex }
 			texture={ backgroundTexture }
 			tint={ backgroundResult.backgroundTint }
 			filters={ backgroundFilters }
@@ -113,12 +106,10 @@ function GraphicsBackground3DBox({
 	graphics,
 	background,
 	backgroundFilters,
-	zIndex,
 }: {
 	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: '3dBox'; }>>;
 	background: Immutable<RoomBackgroundData>;
 	backgroundFilters?: readonly Filter[];
-	zIndex?: number;
 }): ReactElement | null {
 	const projection = useRoomViewProjection(background);
 
@@ -239,7 +230,7 @@ function GraphicsBackground3DBox({
 	}, [graphics, background, projection]);
 
 	return (
-		<Container zIndex={ zIndex } filters={ backgroundFilters }>
+		<Container filters={ backgroundFilters }>
 			{
 				parts.map((p, i) => (
 					<GraphicsBackground3DBoxSide

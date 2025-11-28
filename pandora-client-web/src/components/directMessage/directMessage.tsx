@@ -16,6 +16,7 @@ import { useNotificationSuppress, type NotificationSuppressionHook } from '../..
 import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput.tsx';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages.tsx';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
+import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { Column } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameContext/directMessageChannelProvieder.tsx';
@@ -188,14 +189,14 @@ function DirectMessageElement({ message, currentAccount }: {
 
 		return (
 			<span className='name'>
-				<span
+				<ColoredName
 					className='from'
+					color={ labelColor }
 					data-id={ message.source }
 					title={ `${displayName} (${message.source})` }
-					style={ { color: labelColor } }
 				>
 					{ displayName }
-				</span>
+				</ColoredName>
 				{ ': ' }
 			</span>
 		);

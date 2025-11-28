@@ -9,6 +9,7 @@ import * as PIXI from 'pixi.js';
 import { createContext, useCallback, useContext, useMemo, type ReactElement } from 'react';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
+import { useAccountContacts } from '../../components/accountContacts/accountContactContext.ts';
 import { useActionSpaceContext } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
 import { useObservable } from '../../observable.ts';
@@ -68,16 +69,23 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): readonly PIXI.F
 type CharacterDisplayStyle = CharacterHideSetting | 'darken';
 export function useCharacterDisplayStyle(character: Character<ICharacterRoomData>): CharacterDisplayStyle {
 	const {
+		accountId,
 		onlineStatus,
 	} = useCharacterData(character);
+	const blockedAccounts = useAccountContacts('blocked');
 
-	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
+	const { interfaceChatroomOfflineCharacterFilter, interfaceChatroomBlockedCharacterFilter } = useAccountSettings();
 	const characterHiding = useObservable(CharacterTemporaryHiding);
 	const bypass = useContext(VisionFilterBypassContext);
 
 	const online = onlineStatus !== 'offline' || bypass != null;
+	const isBlocked = blockedAccounts.some((a) => a.id === accountId);
 
-	const displayStyle = characterHiding[character.id] ?? (online ? 'normal' : interfaceChatroomOfflineCharacterFilter);
+	const displayStyle = characterHiding[character.id] ?? (
+		(isBlocked && interfaceChatroomBlockedCharacterFilter !== 'normal') ? interfaceChatroomBlockedCharacterFilter :
+		!online ? interfaceChatroomOfflineCharacterFilter :
+		'normal'
+	);
 
 	// offline "icon" is handled by `RoomCharacterLabel` only
 	return displayStyle === 'icon' ? 'normal' : displayStyle;

@@ -4,7 +4,7 @@ import type { ItemId, RoomId } from '../assets/index.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import { PronounKeySchema } from '../character/pronouns.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
-import { HexColorStringSchema } from '../validation.ts';
+import { HexColorStringSchema, type HexColorString } from '../validation.ts';
 import type { ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionId } from './chatActions.ts';
 
@@ -57,7 +57,7 @@ export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine
 	}
 });
 
-export type IChatMessageChatCharacter = { id: CharacterId; name: string; labelColor: string; };
+export type IChatMessageChatCharacter = { id: CharacterId; name: string; labelColor: HexColorString; };
 export type IChatMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	id: number;
 	insertId?: number;

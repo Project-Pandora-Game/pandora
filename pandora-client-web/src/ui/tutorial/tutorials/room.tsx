@@ -104,7 +104,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<p>
 							The "Leave" button allows you to leave the current space, change to another character, or completely log out of your account.<br />
 							Note that if you want to avoid having to log in again the next time, you should not use the "Logout" button, but rather use
-							"Change character" to disconnect from your current space instantly, without leaving it, and then simply close the browser tab/window.
+							"Change character" to disconnect from your current space instantly, without leaving it, and then simply close the browser tab or window.
 						</p>
 					),
 					highlight: [{ query: '.Header .rightHeader > button[title="Leave"]', inset: true }],
@@ -262,10 +262,11 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Click on your character's name to open its context menu.
+								Click on the name below your character to open the character context menu. In case you cannot see the name
+								because your character is located too close to the bottom border, zoom out a little bit.
 							</p>
 							<p>
-								<i>Note: This can be done even if the name is hidden - just click where the name would be.</i>
+								<i>Note: Even while the name is covered by some other object in the room, the menu can still be opened - just blindly click the area below your character.</i>
 							</p>
 						</>
 					),
@@ -435,7 +436,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								Note: Spaces can consist of more than one room. Users can move between neighboring rooms that have an
 								accessible path in between in three primary ways: By using the path squares on the ground, by clicking on the room in
-								the map under the "Room" tab, or by using the '/moveto' command. Your personal space is most
+								the map under the "Room" tab, or by using the <code>/moveto</code> command. Your personal space is most
 								likely only having a single room right now. There is a later tutorial that will explain the topic
 								of multiple rooms in detail.<br />
 							</p>
@@ -702,17 +703,17 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<>
 							<p>
 								The second most common usage is your character performing an action.<br />
-								This can be done by starting your message with a '*' (star) or using the '/me' command.<br />
+								This can be done by starting your message with a '*' (star) or using the <code>/me</code> command.<br />
 								This type of action is called "emote".
 							</p>
 							<p>
 								Example of this is your character waving.<br />
-								Try emoting that using "*waves" now.
+								Try emoting that using <code>*waves</code> now.
 							</p>
 							<p>
 								<i>
 									Note: Using a '*' will automatically add your character's name at the beginning of your emote.<br />
-									If you want to avoid that (for example to roleplay something happening in the environment), you can use '**' (two stars) or the '/emote' command instead.
+									If you want to avoid that (for example to roleplay something happening in the environment), you can use '**' (two stars) or the <code>/emote</code> command instead.
 								</i>
 							</p>
 						</>
@@ -770,8 +771,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								These usually happen as a result of interacting with character's items,
 								but can also be created through the use of various commands.<br />
 								A list of all commands in Pandora can be brought up by entering a single
-								"/" into the chat.<br />
-								Try using the "/dice" command to roll a dice.
+								'/' into the chat.<br />
+								Try using the <code>/dice</code> command to roll a dice.
 							</p>
 						</>
 					),
@@ -820,7 +821,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								The third most important usage is saying something out‑of‑character (OOC).<br />
 								OOC means it isn't simply your character saying it, but you, as a person, are saying so.<br />
-								This can be done by starting your message with a '((' (two opening parenthesis) or using the '/ooc' command.
+								This can be done by starting your message with a '((' (two opening parenthesis) or using the <code>/ooc</code> command.
 							</p>
 							<p>
 								Try saying anything in OOC now.
@@ -891,7 +892,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								There you can select from a drop-down list of all available chat modes.
-								Switching modes can also be done with chat commands, e.g. '/ooc' without anything afterwards.
+								Switching modes can also be done with chat commands, e.g. <code>/ooc</code> without anything afterwards.
 								You can read more about chat modes in the <ExternalLink href='https://project-pandora.com/wiki/chat'>wiki</ExternalLink>.
 							</p>
 							<p>

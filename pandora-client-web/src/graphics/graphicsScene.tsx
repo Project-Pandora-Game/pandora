@@ -111,7 +111,6 @@ function GraphicsSceneCore({
 				setup={ viewportSetup }
 				onMove={ viewportOnMove }
 				ref={ viewportRef }
-				sortableChildren
 			>
 				{ children }
 			</PixiViewport>

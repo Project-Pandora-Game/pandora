@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type RoomId } from 'pandora-common';
+import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -23,6 +23,7 @@ import { useShardConnector } from '../../../components/gameContext/shardConnecto
 import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
+import { ColoredName } from '../common/coloredName.tsx';
 import { ActionLogEntry } from './actionLogEntry.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatActionLogDisabled, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
@@ -277,6 +278,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 					edited={ message.edited ?? false }
 					rooms={ [message.roomData] }
 					receivedRoomId={ message.receivedRoomId }
+					from={ message.from }
 				/>
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
@@ -366,11 +368,12 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
+function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	messageTime: number | null;
 	edited: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
 	receivedRoomId: RoomId | null;
+	from?: IChatMessageChatCharacter;
 }): ReactElement {
 	const time = useMemo(() => messageTime != null ? new Date(messageTime) : null, [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time?.getDate());
@@ -390,7 +393,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
 	return (
 		<span className='info'>
 			{ time != null ? (
-				<span>
+				<span title={ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` + (from != null ? ` by ${ from.name } (${ from.id })` : '') }>
 					{
 						full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
 						(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')
@@ -407,7 +410,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId }: {
 	);
 }
 
-function DisplayName({ message, color }: { message: IChatMessageChat; color: string; }): ReactElement | null {
+function DisplayName({ message, color }: { message: IChatMessageChat; color: HexColorString; }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 
@@ -436,31 +439,29 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 		setTarget(id as CharacterId);
 	}, [setTarget, playerId]);
 
-	const style = message.type !== 'me' && message.type !== 'emote' ? ({ color }) : undefined;
-
 	if ('to' in message && message.to) {
 		return (
 			<span className='name'>
 				{ before }
-				<span
+				<ColoredName
 					className='from'
+					color={ color }
 					data-id={ message.from.id }
 					title={ `${message.from.name} (${message.from.id})` }
 					onClick={ onClick }
-					style={ style }
 				>
 					{ message.from.name }
-				</span>
+				</ColoredName>
 				{ ' -> ' }
-				<span
+				<ColoredName
 					className='to'
+					color={ message.to.labelColor }
 					data-id={ message.to.id }
 					title={ `${message.to.name} (${message.to.id})` }
 					onClick={ onClick }
-					style={ { color: message.to.labelColor } }
 				>
 					{ message.to.name }
-				</span>
+				</ColoredName>
 				{ after }
 			</span>
 		);
@@ -469,15 +470,26 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	return (
 		<span className='name'>
 			{ before }
-			<span
-				className='from'
-				data-id={ message.from.id }
-				title={ `${message.from.name} (${message.from.id})` }
-				onClick={ onClick }
-				style={ style }
-			>
-				{ message.from.name }
-			</span>
+			{ message.type !== 'me' && message.type !== 'emote' ? (
+				<ColoredName
+					className='from'
+					color={ color }
+					data-id={ message.from.id }
+					title={ `${message.from.name} (${message.from.id})` }
+					onClick={ onClick }
+				>
+					{ message.from.name }
+				</ColoredName>
+			) : (
+				<span
+					className='from'
+					data-id={ message.from.id }
+					title={ `${message.from.name} (${message.from.id})` }
+					onClick={ onClick }
+				>
+					{ message.from.name }
+				</span>
+			) }
 			{ after }
 		</span>
 	);

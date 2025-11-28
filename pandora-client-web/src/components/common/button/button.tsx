@@ -1,17 +1,27 @@
 import classNames from 'classnames';
-import React, { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement } from 'react';
+import React, { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement, type ReactNode } from 'react';
 import './button.scss';
 
 export type ButtonTheme = 'default' | 'defaultActive' | 'danger' | 'transparent' | 'semiTransparent';
 
-export interface ButtonProps extends Omit<DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, 'ref'> {
+export interface ButtonProps extends DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> {
 	theme?: ButtonTheme;
 	slim?: boolean;
+
+	/** A "new item" or "active item" notification-like badge to show on the tab */
+	badge?: ReactNode;
+	/**
+	 * Whether the badge is active (trying to get attention), or highlights passive effect
+	 * @default 'active'
+	 */
+	badgeType?: 'active' | 'passive';
+	/** Title text for the badge */
+	badgeTitle?: string;
 }
 
-function ButtonImpl({ theme = 'default', children, className, slim = false, type = 'button', ...buttonProps }: ButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
+export function Button({ theme = 'default', children, className, slim = false, type = 'button', badge, badgeType = 'active', badgeTitle, ...buttonProps }: ButtonProps): ReactElement {
 	return (
-		<button ref={ ref }
+		<button
 			{ ...buttonProps }
 			type={ type }
 			className={ classNames(
@@ -22,11 +32,14 @@ function ButtonImpl({ theme = 'default', children, className, slim = false, type
 			) }
 		>
 			{ children }
+			{ badge ? (
+				<div className={ `badge badge-type-${badgeType}` } title={ badgeTitle }>
+					{ badge }
+				</div>
+			) : null }
 		</button>
 	);
 }
-
-export const Button = React.forwardRef(ButtonImpl);
 
 export interface IconButtonProps extends Omit<ButtonProps, 'children'> {
 	src: string;

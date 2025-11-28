@@ -17,10 +17,23 @@ const PixiInstanceMap = new WeakMap<Container, PixiInternalContainerInstance<Con
  */
 export abstract class PixiInternalContainerInstance<Element extends Container> {
 	public readonly instance: Element;
+	private readonly _children: Container[] = [];
 
 	constructor(instance: Element) {
 		this.instance = instance;
 		PixiInstanceMap.set(instance, this);
+
+		// Patch child sorting on the container to respect original order
+		const sortChildren = (a: Container, b: Container): number => {
+			return (a._zIndex - b._zIndex) || (this._children.indexOf(a) - this._children.indexOf(b));
+		};
+
+		instance.sortChildren = function () {
+			if (!this.sortDirty) return;
+			this.sortDirty = false;
+
+			this.children.sort(sortChildren);
+		};
 	}
 
 	/**
@@ -30,19 +43,38 @@ export abstract class PixiInternalContainerInstance<Element extends Container> {
 	 */
 	public addChild(child: Container, beforeChild?: Container): void {
 		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
+		Assert(this.instance.children.length === this._children.length, 'Element children modified outside of React');
 
-		if (beforeChild != null) {
+		if (beforeChild == null) {
+			Assert(!this._children.includes(child));
+			// Fast path: Even if the container child ordering changed, it is safe to insert child at the end
+			this._children.push(child);
+			this.instance.addChild(child);
+		} else {
 			Assert(child !== beforeChild);
 			// We need to remove the child first, if this is used as reordering
 			if (child.parent === this.instance) {
+				const currentIndex = this._children.indexOf(child);
+				Assert(currentIndex >= 0);
+				this._children.splice(currentIndex, 1);
 				this.instance.removeChild(child);
 			}
 
-			const index = this.instance.getChildIndex(beforeChild);
+			if (this.instance.sortableChildren) {
+				// Slow path: Reconstruct original children order for sortable containers
+				for (const resortedChild of this.instance.children.splice(0, this.instance.children.length)) {
+					Assert(this._children.includes(resortedChild), 'Element children modified outside of React');
+				}
+				this.instance.children.push(...this._children);
+				this.instance.sortDirty = true;
+			}
+
+			const index = this._children.indexOf(beforeChild);
 			Assert(index >= 0);
+			this._children.splice(index, 0, child);
+
+			Assert(this.instance.children[index] === beforeChild, 'Element children modified outside of React');
 			this.instance.addChildAt(child, index);
-		} else {
-			this.instance.addChild(child);
 		}
 	}
 
@@ -51,6 +83,13 @@ export abstract class PixiInternalContainerInstance<Element extends Container> {
 	 * @param child - The child to remove
 	 */
 	public removeChild(child: Container): void {
+		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
+		Assert(this.instance.children.length === this._children.length, 'Element children modified outside of React');
+
+		const currentIndex = this._children.indexOf(child);
+		Assert(currentIndex >= 0);
+		this._children.splice(currentIndex, 1);
+
 		this.instance.removeChild(child);
 	}
 
@@ -59,7 +98,9 @@ export abstract class PixiInternalContainerInstance<Element extends Container> {
 	 */
 	public clearChildren(): void {
 		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
+		Assert(this.instance.children.length === this._children.length, 'Element children modified outside of React');
 
+		this._children.length = 0;
 		this.instance.removeChildren();
 	}
 

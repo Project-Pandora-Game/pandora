@@ -133,7 +133,6 @@ function PreviewCutterRectangleInner({
 
 	return (
 		<Graphics
-			zIndex={ 0 }
 			hitArea={ new PIXI.Rectangle(0, 0, size, size) }
 			x={ x }
 			y={ y }

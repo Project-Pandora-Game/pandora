@@ -44,6 +44,7 @@ import {
 	type ActionRoomSelector,
 	type ActionTargetSelector,
 	type AppearanceAction,
+	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
 	type IClientShardPromiseResult,
@@ -131,6 +132,7 @@ export interface GameState extends IChatService, ITypedEventEmitter<GameStateEve
 	abortCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'];
 
 	getCurrentSpaceContext(): ActionSpaceContext;
+	getCurrentAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext;
 }
 
 export type PermissionPromptData = {
@@ -269,6 +271,22 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 			this._dependencies.accountManager.currentAccount.value,
 			this.characterModifierEffects.value,
 		);
+	}
+
+	public getCurrentAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext {
+		return {
+			executionContext,
+			player: this.player.gameLogicCharacter,
+			spaceContext: this.getCurrentSpaceContext(),
+			getCharacter: (id) => {
+				const state = this.globalState.currentState.getCharacterState(id);
+				const character = this.characters.value.find((c) => c.id === id);
+				if (!state || !character)
+					return null;
+
+				return character.gameLogicCharacter;
+			},
+		};
 	}
 
 	//#region Handler
@@ -970,7 +988,11 @@ export type FindItemResultEntry = {
 };
 export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
 const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
-export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
+export function FindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
+	if (globalState == null) {
+		return EMPTY_ARRAY;
+	}
+
 	let cache = FindItemByIdCache.get(globalState);
 	if (cache == null) {
 		cache = new Map();
@@ -1018,7 +1040,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 	return result;
 }
 
-export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
+export function useStateFindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
 	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 

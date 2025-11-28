@@ -62,7 +62,6 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	hitArea?: Rectangle;
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];
-	zIndex?: number;
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
 	/**
@@ -329,7 +328,6 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			pivot={ pivot }
 			position={ position }
 			scale={ scale }
-			sortableChildren
 			filters={ actualFilters }
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }

@@ -26,7 +26,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
-import { DialogInPortal, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
@@ -445,8 +445,10 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	onClose: () => void;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
+	const priority = useContext(DraggableDialogPriorityContext);
+
 	return (
-		<DialogInPortal>
+		<DialogInPortal priority={ priority }>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 				<Scrollable>
 					<Column>

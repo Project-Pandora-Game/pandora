@@ -205,7 +205,7 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 									setSelectedRoom((v) => v === r.id ? null : r.id);
 								} }
 							>
-								<RoomConfigurationBackgroundPreview background={ r.roomBackground } previewSize={ 256 } />
+								<RoomConfigurationBackgroundPreview className='fit' background={ r.roomBackground } previewSize={ 256 } />
 								<span className='coordinates'>{ r.position.x }, { r.position.y }</span>
 								<div className='overlay'>
 									<span className='label'>{ r.name || r.id }</span>

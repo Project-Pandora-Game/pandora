@@ -45,29 +45,29 @@ export abstract class PixiInternalContainerInstance<Element extends Container> {
 		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
 		Assert(this.instance.children.length === this._children.length, 'Element children modified outside of React');
 
+		// We need to remove the child first, if this is used as reordering
+		if (child.parent === this.instance) {
+			const currentIndex = this._children.indexOf(child);
+			Assert(currentIndex >= 0);
+			this._children.splice(currentIndex, 1);
+			this.instance.removeChild(child);
+		}
+
+		if (this.instance.sortableChildren) {
+			// Slow path: Reconstruct original children order for sortable containers
+			for (const resortedChild of this.instance.children.splice(0, this.instance.children.length)) {
+				Assert(this._children.includes(resortedChild), 'Element children modified outside of React');
+			}
+			this.instance.children.push(...this._children);
+			this.instance.sortDirty = true;
+		}
+
 		if (beforeChild == null) {
-			Assert(!this._children.includes(child));
-			// Fast path: Even if the container child ordering changed, it is safe to insert child at the end
+			// Even if the container child ordering changed, it is safe to insert child at the end
 			this._children.push(child);
 			this.instance.addChild(child);
 		} else {
 			Assert(child !== beforeChild);
-			// We need to remove the child first, if this is used as reordering
-			if (child.parent === this.instance) {
-				const currentIndex = this._children.indexOf(child);
-				Assert(currentIndex >= 0);
-				this._children.splice(currentIndex, 1);
-				this.instance.removeChild(child);
-			}
-
-			if (this.instance.sortableChildren) {
-				// Slow path: Reconstruct original children order for sortable containers
-				for (const resortedChild of this.instance.children.splice(0, this.instance.children.length)) {
-					Assert(this._children.includes(resortedChild), 'Element children modified outside of React');
-				}
-				this.instance.children.push(...this._children);
-				this.instance.sortDirty = true;
-			}
 
 			const index = this._children.indexOf(beforeChild);
 			Assert(index >= 0);

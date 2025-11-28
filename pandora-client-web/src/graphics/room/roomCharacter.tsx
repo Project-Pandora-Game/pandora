@@ -5,9 +5,11 @@ import {
 	AssetFrameworkCharacterState,
 	CHARACTER_SETTINGS_DEFAULT,
 	CharacterSize,
+	GetLogger,
 	ICharacterRoomData,
 	LegsPose,
 	SpaceClientInfo,
+	type AppearanceAction,
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode, type Filter } from 'pixi.js';
@@ -20,6 +22,7 @@ import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useFetchedResourceText } from '../../common/useFetch.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
+import { useConfirmDialog } from '../../components/dialog/dialog.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
@@ -28,6 +31,7 @@ import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { useCanMoveCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
 import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts';
 import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, type CharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
@@ -245,6 +249,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 }: RoomCharacterInteractiveProps): ReactElement | null {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const id = characterState.id;
+	const confirm = useConfirmDialog();
 
 	const {
 		roomSceneMode,
@@ -257,6 +262,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
 	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
+	const canMoveCharacter = useCanMoveCharacter(character);
 
 	const setPositionErrorCooldown = useRef<number>(null);
 	const setPositionRaw = useEvent((newX: number, newY: number) => {
@@ -270,7 +276,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 			return;
 		}
 
-		execute({
+		const action: AppearanceAction = {
 			type: 'moveCharacter',
 			target: {
 				type: 'character',
@@ -282,7 +288,33 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
 				following: characterState.position.following,
 			},
-		});
+		};
+
+		Promise.resolve()
+			.then(() => {
+				// Check if this would result in a prompt
+				if (canMoveCharacter !== 'prompt')
+					return true;
+
+				dragging.current = null;
+				pointerDown.current = null;
+
+				if (setPositionErrorCooldown.current != null && setPositionErrorCooldown.current >= Date.now()) {
+					// Skip, we already asked recently
+					return false;
+				}
+
+				return confirm('Move permission request', 'You do not currently have permission to move this character. Send permission prompt?');
+			})
+			.then((confirmed) => {
+				if (!confirmed)
+					return;
+
+				execute(action);
+			})
+			.catch((err) => {
+				GetLogger('RoomCharacterInteractive').error('Error during set position handling:', err);
+			});
 	});
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);

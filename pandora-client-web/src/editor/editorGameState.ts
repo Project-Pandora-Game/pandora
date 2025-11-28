@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AssetFrameworkGlobalStateContainer, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type IClientShardPromiseResult, type SpaceCharacterModifierEffectData } from 'pandora-common';
+import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type AssetFrameworkGlobalStateContainer, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type IClientShardPromiseResult, type SpaceCharacterModifierEffectData } from 'pandora-common';
 import type { Character } from '../character/character.ts';
 import type { PlayerCharacter } from '../character/player.ts';
 import { ChatSendError, type GameState, type GameStateEvents, type ISavedMessage } from '../components/gameContext/gameStateContextProvider.tsx';
@@ -72,6 +72,22 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 
 	public getCurrentSpaceContext(): ActionSpaceContext {
 		return this.editor.getCurrentSpaceContext();
+	}
+
+	public getCurrentAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext {
+		return {
+			executionContext,
+			player: this.player.gameLogicCharacter,
+			spaceContext: this.getCurrentSpaceContext(),
+			getCharacter: (id) => {
+				const state = this.globalState.currentState.getCharacterState(id);
+				const character = this.characters.value.find((c) => c.id === id);
+				if (!state || !character)
+					return null;
+
+				return character.gameLogicCharacter;
+			},
+		};
 	}
 
 	//#endregion

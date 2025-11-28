@@ -44,6 +44,7 @@ import {
 	type ActionRoomSelector,
 	type ActionTargetSelector,
 	type AppearanceAction,
+	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
 	type IClientShardPromiseResult,
@@ -131,6 +132,7 @@ export interface GameState extends IChatService, ITypedEventEmitter<GameStateEve
 	abortCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'];
 
 	getCurrentSpaceContext(): ActionSpaceContext;
+	getCurrentAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext;
 }
 
 export type PermissionPromptData = {
@@ -269,6 +271,22 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 			this._dependencies.accountManager.currentAccount.value,
 			this.characterModifierEffects.value,
 		);
+	}
+
+	public getCurrentAppearanceActionContext(executionContext: AppearanceActionContext['executionContext']): AppearanceActionContext {
+		return {
+			executionContext,
+			player: this.player.gameLogicCharacter,
+			spaceContext: this.getCurrentSpaceContext(),
+			getCharacter: (id) => {
+				const state = this.globalState.currentState.getCharacterState(id);
+				const character = this.characters.value.find((c) => c.id === id);
+				if (!state || !character)
+					return null;
+
+				return character.gameLogicCharacter;
+			},
+		};
 	}
 
 	//#region Handler

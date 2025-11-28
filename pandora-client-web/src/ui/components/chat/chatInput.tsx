@@ -25,6 +25,7 @@ import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentT
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
+import { ColoredName } from '../common/coloredName.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 
@@ -598,7 +599,7 @@ function TypingIndicator(): ReactElement {
 			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
 					<span key={ data.id }>
-						<span style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }>{ data.name } </span>
+						<ColoredName color={ data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ data.name } </ColoredName>
 						({ data.id })
 						{ ' is ' }
 						{ status }
@@ -646,7 +647,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 			{ target && (
 				<span>
 					{ 'Whispering to ' }
-					<span style={ { color: target.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }>{ target.data.name }</span>
+					<ColoredName color={ target.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ target.data.name }</ColoredName>
 					{ ' ' }
 					({ target.data.id })
 					{ ' ' }

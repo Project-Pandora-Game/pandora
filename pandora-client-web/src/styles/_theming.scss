@@ -191,6 +191,9 @@ $theme-meter-bar-optimum: #00ab60;
 $theme-meter-bar-sub-optimum: #ffbd4f;
 $theme-meter-sub-sub-optimum: #e22850;
 
+// Dynamically colored names
+$theme-colored-name-hinting: #111;
+
 //#endregion
 
 //#region Scrollbar
@@ -250,7 +253,6 @@ $theme-errorreport-report-text: #000;
 
 $theme-chat-background: #303030;
 $theme-chat-text: #fff;
-$theme-chat-name-shadow: #555;
 $theme-chat-private-opacity: 0.7;
 $theme-chat-dim-opacity: 0.6;
 $theme-chat-messageinfo-text: #888;

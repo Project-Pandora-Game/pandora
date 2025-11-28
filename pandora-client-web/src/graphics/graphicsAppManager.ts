@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { GetLogger, TypedEventEmitter } from 'pandora-common';
+import { Assert, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
 import { USER_DEBUG } from '../config/Environment.ts';
@@ -100,18 +100,23 @@ function InitCleanupHook() {
 	window.addEventListener('beforeunload', function () {
 		// Forcefully cleanup any applications currently in use
 		// we want to avoid any leaks (that tend to happen despite the fact that browsers _should_ cleanup everything when page is unloaded)
-		AvailableApps.splice(0, AvailableApps.length);
 		for (const manager of SharedApps.splice(0, SharedApps.length)) {
 			try {
 				const { app } = manager;
 				if (!app)
 					continue;
 				manager._triggerBeforeDestroy();
+
+				const availableIndex = AvailableApps.indexOf(manager);
+				Assert(availableIndex >= 0);
+				AvailableApps.splice(availableIndex, 1);
+
 				DestroyApplication(app);
 			} catch (error) {
 				GetLogger('GraphicsApplicationManager').error('Failed to cleanup application:', error);
 			}
 		}
+		Assert(AvailableApps.length === 0);
 		DestroyGraphicsLoader();
 	});
 }

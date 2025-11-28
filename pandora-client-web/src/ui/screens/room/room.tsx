@@ -106,7 +106,7 @@ function InteractionBox({ isPortrait, className }: {
 							className={ classNames(
 								'fit',
 								(
-									splitChatHorizontal ? 'flex-1 zero-height' :
+									splitChatHorizontal ? 'flex-2 zero-height' :
 									splitChatVertical ? 'flex-1' :
 									'fill'
 								),

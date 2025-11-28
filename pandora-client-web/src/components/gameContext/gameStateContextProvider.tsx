@@ -970,7 +970,11 @@ export type FindItemResultEntry = {
 };
 export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
 const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
-export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
+export function FindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
+	if (globalState == null) {
+		return EMPTY_ARRAY;
+	}
+
 	let cache = FindItemByIdCache.get(globalState);
 	if (cache == null) {
 		cache = new Map();
@@ -1018,7 +1022,7 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 	return result;
 }
 
-export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
+export function useStateFindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
 	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 

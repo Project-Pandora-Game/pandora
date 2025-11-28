@@ -199,6 +199,7 @@ function RoomGrid({ spaceState, selectedRoom, setSelectedRoom }: {
 							<Button
 								slim
 								className='IconButton'
+								title={ r.name || r.id }
 								onClick={ () => {
 									suppressScroll.current = r.id;
 									setSelectedRoom((v) => v === r.id ? null : r.id);

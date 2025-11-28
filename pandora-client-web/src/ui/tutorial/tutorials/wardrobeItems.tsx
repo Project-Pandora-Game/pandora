@@ -573,7 +573,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 							<p>
 								A special function that each item has is the ability to open these configuration options as a room pop, allowing
 								you to do actions or to configure the item's modules without needing to switch to the wardrobe.<br />
-								You can do this with the "pin"-button at the top or with the '/inspect' command in the chat.
+								You can do this with the "pin"-button at the top or with the <code>/inspect</code> command in the chat.
 							</p>
 							<p>
 								Optionally, you can now try to click the "pin"-button and then go 'Back', leaving the wardrobe temporarily,

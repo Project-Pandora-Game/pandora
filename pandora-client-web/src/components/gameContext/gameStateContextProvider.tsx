@@ -81,7 +81,7 @@ const MessageParseOptionsSchema = z.object({
 	editing: z.number().optional(),
 	type: ChatTypeSchema.optional(),
 	raw: z.boolean().optional(),
-	target: CharacterIdSchema.optional(),
+	targets: CharacterIdSchema.array().optional(),
 });
 
 export type IMessageParseOptions = z.infer<typeof MessageParseOptionsSchema>;
@@ -103,7 +103,7 @@ export interface IChatMessageSender {
 	getMessageEdit(id: number): ISavedMessage | undefined;
 	getLastMessageEdit(): number | undefined;
 
-	setPlayerStatus(status: ChatCharacterStatus, target?: CharacterId): void;
+	setPlayerStatus(status: ChatCharacterStatus, targets?: readonly CharacterId[]): void;
 }
 
 export interface IChatService extends IChatMessageSender {
@@ -330,7 +330,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 			// as server can clear it itself
 			if (this._indicatorStatus !== 'none') {
 				queueMicrotask(() => {
-					this._shard.sendMessage('chatStatus', { status: this._indicatorStatus, target: this._indicatorTarget });
+					this._shard.sendMessage('chatStatus', { status: this._indicatorStatus, targets: this._indicatorTargets?.slice() });
 				});
 			}
 		}
@@ -683,19 +683,19 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 	//#region Typing indicator
 
 	private _indicatorStatus: ChatCharacterStatus = 'none';
-	private _indicatorTarget: CharacterId | undefined;
+	private _indicatorTargets: readonly CharacterId[] | undefined;
 
-	public setPlayerStatus(status: ChatCharacterStatus, target?: CharacterId): void {
+	public setPlayerStatus(status: ChatCharacterStatus, targets?: readonly CharacterId[]): void {
 		const id = this.playerId;
 		if (id && this._status.value.get(id) !== status) {
 			this._status.produceImmer((s) => {
 				s.set(id, status);
 			});
 		}
-		if (this._indicatorStatus !== status || this._indicatorTarget !== target) {
+		if (this._indicatorStatus !== status || !isEqual(this._indicatorTargets, targets)) {
 			this._indicatorStatus = status;
-			this._indicatorTarget = target;
-			this._shard.sendMessage('chatStatus', { status, target });
+			this._indicatorTargets = targets?.slice();
+			this._shard.sendMessage('chatStatus', { status, targets: targets?.slice() });
 		}
 	}
 
@@ -705,18 +705,19 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 
 	private readonly _sent = new Map<number, ISavedMessage>();
 	public sendMessage(message: string, options: IMessageParseOptions = {}): void {
-		const { editing, type, raw, target } = options;
+		const { editing, type, raw, targets } = options;
 		if (editing !== undefined) {
 			const edit = this._sent.get(editing);
 			if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
 				throw new ChatSendError('Message not found');
 			}
 		}
-		if (target !== undefined) {
-			if (!this.characters.value.some((c) => c.data.id === target)) {
-				throw new ChatSendError('Target not found in the room');
+		if (targets !== undefined) {
+			const missing = targets.filter((t) => !this.characters.value.some((c) => c.id === t));
+			if (missing.length > 0) {
+				throw new ChatSendError(`Target '${ missing[0] }' not found in the room`);
 			}
-			if (target === this.playerId) {
+			if (targets.includes(this.playerId)) {
 				throw new ChatSendError('Cannot send targeted message to yourself');
 			}
 			if (type === 'me' || type === 'emote') {
@@ -728,11 +729,11 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		}
 		let messages: IClientMessage[] = [];
 		if (type !== undefined) {
-			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message, type === 'ooc'), to: target }];
+			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message, type === 'ooc'), to: targets }];
 		} else if (raw) {
 			throw new ChatSendError('Raw is not implemented for multi-part messages');
 		} else {
-			messages = ChatParser.parse(message, target);
+			messages = ChatParser.parse(message, targets);
 		}
 		// Test restrictions
 		{
@@ -939,9 +940,9 @@ export function useCharacterRestrictionsManager<T>(globalState: AssetFrameworkGl
 	return useMemo(() => use(manager), [use, manager]);
 }
 
-export function useChatSetPlayerStatus(): (status: ChatCharacterStatus, target?: CharacterId) => void {
+export function useChatSetPlayerStatus(): (status: ChatCharacterStatus, targets?: readonly CharacterId[]) => void {
 	const gameState = useGameState();
-	return useCallback((status: ChatCharacterStatus, target?: CharacterId) => gameState.setPlayerStatus(status, target), [gameState]);
+	return useCallback((status: ChatCharacterStatus, targets?: readonly CharacterId[]) => gameState.setPlayerStatus(status, targets), [gameState]);
 }
 
 export function useChatCharacterStatus(): { data: ICharacterRoomData; status: ChatCharacterStatus; }[] {

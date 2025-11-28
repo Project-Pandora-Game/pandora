@@ -170,7 +170,7 @@ export const ChatParser = new class ChatParser {
 	private readonly _lineParser = new LineParser();
 	private readonly _segmentParser = new SegmentParser();
 
-	public parse(text: string, to?: CharacterId): IClientMessage[] {
+	public parse(text: string, to?: CharacterId[]): IClientMessage[] {
 		const lines = this._lineParser.parse(text, to === undefined);
 		if (!lines.length)
 			return [];

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
+import { CharacterId, CharacterIdSchema, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -411,7 +411,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 }
 
 function DisplayName({ message, color }: { message: IChatMessageChat; color: HexColorString; }): ReactElement | null {
-	const { setTarget } = useChatInput();
+	const { setTargets, targets: whisperTargets } = useChatInput();
 	const playerId = usePlayerId();
 
 	const [before, after] = useMemo(() => {
@@ -431,13 +431,27 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 
 	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();
+		event.preventDefault();
 
 		const id = event.currentTarget.getAttribute('data-id');
 		if (!id || id === playerId)
 			return;
 
-		setTarget(id as CharacterId);
-	}, [setTarget, playerId]);
+		const parsedId = CharacterIdSchema.parse(id);
+		if (event.shiftKey || event.ctrlKey) {
+			// Toggle when holding shift/ctrl
+			const newWhispering = whisperTargets?.map((t) => t.id) ?? [];
+			const currentIndex = newWhispering.indexOf(parsedId);
+			if (currentIndex >= 0) {
+				newWhispering.splice(currentIndex, 1);
+			} else {
+				newWhispering.push(parsedId);
+			}
+			setTargets(newWhispering.length > 0 ? newWhispering : null);
+		} else {
+			setTargets([parsedId]);
+		}
+	}, [setTargets, whisperTargets, playerId]);
 
 	if ('to' in message && message.to) {
 		return (
@@ -453,15 +467,20 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 					{ message.from.name }
 				</ColoredName>
 				{ ' -> ' }
-				<ColoredName
-					className='to'
-					color={ message.to.labelColor }
-					data-id={ message.to.id }
-					title={ `${message.to.name} (${message.to.id})` }
-					onClick={ onClick }
-				>
-					{ message.to.name }
-				</ColoredName>
+				{ message.to.map((t, i) => (
+					<React.Fragment key={ i }>
+						{ i !== 0 ? ', ' : null }
+						<ColoredName
+							className='to'
+							color={ t.labelColor }
+							data-id={ t.id }
+							title={ `${t.name} (${t.id})` }
+							onClick={ onClick }
+						>
+							{ t.name }
+						</ColoredName>
+					</React.Fragment>
+				)) }
 				{ after }
 			</span>
 		);
@@ -516,7 +535,7 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 	})();
 
 	if ('to' in message && message.to) {
-		return before + message.from.name + ' -> ' + message.to.name + after;
+		return before + message.from.name + ' -> ' + message.to.map((t) => t.name).join(', ') + after;
 	}
 
 	return before + message.from.name + after;

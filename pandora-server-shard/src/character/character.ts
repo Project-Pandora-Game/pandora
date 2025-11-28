@@ -733,7 +733,7 @@ export class Character {
 				if (message.type === 'chat') {
 					const metadata: ChatMessageFilterMetadata = {
 						from: message.from.id,
-						to: message.to?.id ?? null,
+						to: message.to?.map((t) => t.id) ?? null,
 					};
 					return {
 						...message,

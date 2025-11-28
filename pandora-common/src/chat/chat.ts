@@ -25,12 +25,12 @@ export const ClientMessageSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('ooc'),
 		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
 	}),
 	z.object({
 		type: z.literal('chat'),
 		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
 	}),
 ]);
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
@@ -68,7 +68,7 @@ export type IChatMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	type: 'me' | 'emote';
 } | {
 	type: 'chat' | 'ooc';
-	to?: IChatMessageChatCharacter;
+	to?: IChatMessageChatCharacter[];
 });
 
 export type IChatMessageDeleted = {
@@ -149,8 +149,8 @@ export type ChatCharacterStatus = z.infer<typeof ChatCharacterStatusSchema>;
 export type ChatCharacterFullStatus = {
 	/** The actual status */
 	status: ChatCharacterStatus;
-	/** Target who can see the status. Others receive 'none'. */
-	target?: CharacterId;
+	/** Targets who can see the status. Others receive 'none'. */
+	targets?: readonly CharacterId[];
 };
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';

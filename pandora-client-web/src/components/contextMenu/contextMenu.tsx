@@ -24,6 +24,12 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 	const priority = useContext(DraggableDialogPriorityContext);
 
 	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
+		// If already open, close instead and allow default context menu
+		if (show) {
+			setShow(false);
+			return;
+		}
+
 		event.stopPropagation();
 		event.preventDefault();
 		closeLastContextMenu?.();
@@ -39,8 +45,6 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 
 	const cancel = useEvent((event: Event) => {
 		if (self.current && !self.current.contains(event.target as Node)) {
-			event.stopPropagation();
-			event.preventDefault();
 			setShow(false);
 		}
 	});

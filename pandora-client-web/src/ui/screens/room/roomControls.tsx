@@ -563,7 +563,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 						}
 
 						result.push(
-							<FieldsetToggle legend='Empty rooms' persistent='rooms.empty-rooms' open={ false }>
+							<FieldsetToggle legend='Empty rooms' persistent='rooms.empty-rooms' open={ false } key='emptyRooms'>
 								<Column gap='small'>
 									{ emptyRooms.length > 0 ? (
 										emptyRooms

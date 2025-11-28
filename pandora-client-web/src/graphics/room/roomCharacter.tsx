@@ -303,6 +303,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 					// Skip, we already asked recently
 					return false;
 				}
+				setPositionErrorCooldown.current = Date.now() + LIVE_UPDATE_ERROR_THROTTLE;
 
 				return confirm('Move permission request', 'You do not currently have permission to move this character. Send permission prompt?');
 			})

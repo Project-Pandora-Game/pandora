@@ -106,7 +106,7 @@ export function WikiNew(): ReactElement {
 			</p>
 			<ul>
 				<li>You can click on a character's name in the chat itself.</li>
-				<li>You can whisper to multiple people at once, by holding CTRL or SHIFT while clicking names in the chat.</li>
+				<li>You can whisper to multiple people at the same time, by holding <kbd>Ctrl</kbd> while clicking names in the chat.</li>
 				<li>You can click on a character's name under the character on the room graphics to open a context menu and select "Whisper" or afterwards "Add to whisper group" there.</li>
 				<li>You can click on the "Whisper"-button or successively "Add to / Remove from whisper group" buttons next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/whisper target" (or "/w target") using either the character's name or the character's ID as the whisper target argument.</li>

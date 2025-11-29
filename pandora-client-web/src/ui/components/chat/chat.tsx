@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
+import { uniq } from 'lodash-es';
 import { CharacterId, CharacterIdSchema, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
 import React, {
 	memo,
@@ -453,28 +454,44 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 		}
 	}, [setTargets, whisperTargets, playerId]);
 
+	const replyAll = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		const ids = uniq([message.from.id, ...('to' in message && message.to ? message.to.map((t) => t.id) : [])].filter((t) => t !== playerId));
+		setTargets(ids);
+	}, [setTargets, playerId, message]);
+
 	if ('to' in message && message.to) {
 		return (
 			<span className='name'>
 				{ before }
 				<ColoredName
-					className='from'
+					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
 				</ColoredName>
-				{ ' -> ' }
+				{ ' ' }
+				<span
+					className='cursor-pointer'
+					title='This message is a whisper (click to reply)'
+					onClick={ replyAll }
+				>
+					{ '->' }
+				</span>
+				{ ' ' }
 				{ message.to.map((t, i) => (
 					<React.Fragment key={ i }>
 						{ i !== 0 ? ', ' : null }
 						<ColoredName
-							className='to'
+							className='to cursor-pointer'
 							color={ t.labelColor }
 							data-id={ t.id }
-							title={ `${t.name} (${t.id})` }
+							title={ `${t.name} (${t.id})` + (t.id === playerId ? ' [You]' : ' (click to whisper)') }
 							onClick={ onClick }
 						>
 							{ t.name }
@@ -491,19 +508,19 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 			{ before }
 			{ message.type !== 'me' && message.type !== 'emote' ? (
 				<ColoredName
-					className='from'
+					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
 				</ColoredName>
 			) : (
 				<span
-					className='from'
+					className='from cursor-pointer'
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }

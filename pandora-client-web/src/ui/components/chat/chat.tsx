@@ -392,7 +392,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	}, [messageTime, full]);
 
 	return (
-		<span className='info'>
+		<span className='info' translate='no'>
 			{ time != null ? (
 				<span title={ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` + (from != null ? ` by ${ from.name } (${ from.id })` : '') }>
 					{
@@ -464,7 +464,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 
 	if ('to' in message && message.to) {
 		return (
-			<span className='name'>
+			<span className='name' translate='no'>
 				{ before }
 				<ColoredName
 					className='from cursor-pointer'
@@ -558,7 +558,7 @@ function RenderChatNameToString(message: ChatMessageChat): string {
 	return before + message.from.name + after;
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
+export const ActionMessageElement = memo(function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number | null;
@@ -602,6 +602,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			) }
 			style={ style }
 			onClick={ () => setFolded(!folded) }
+			translate='no'
 		>
 			<DisplayInfo
 				messageTime={ messageTime }
@@ -627,7 +628,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			}
 		</div>
 	);
-}
+});
 
 export function ActionMessage({ message, ignoreColor = false }: { message: ChatActionMessagePreprocessed; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();

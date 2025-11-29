@@ -10,7 +10,7 @@ export function ActionLogEntry({ entry }: {
 	const time = new Date(entry.time);
 
 	return (
-		<div className='message actionLogEntry'>
+		<div className='message actionLogEntry' translate='no'>
 			<span>
 				{ `[${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)}] ` }
 			</span>

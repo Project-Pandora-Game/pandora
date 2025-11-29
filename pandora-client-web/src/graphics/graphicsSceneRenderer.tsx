@@ -50,7 +50,19 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		Assert(this._appManagerCleanupCallback == null);
 		this.appManager = appManager;
-		const cleanupDestroy = appManager.on('beforeDestroy', this._unmountApp.bind(this));
+		const cleanupDestroy = appManager.on('beforeDestroy', () => {
+			this._appManagerCleanupCallback?.();
+			this._appManagerCleanupCallback = undefined;
+
+			const beforeDestoryAppManager = this.appManager;
+			this.appManager = null;
+
+			this._unmountApp();
+
+			if (beforeDestoryAppManager != null) {
+				ReleaseApplicationManager(beforeDestoryAppManager);
+			}
+		});
 		const cleanupReady = appManager.on('applicationReady', this._mountApp.bind(this));
 		this._appManagerCleanupCallback = () => {
 			cleanupReady();

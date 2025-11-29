@@ -11,6 +11,8 @@ import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import letterIcon from '../../../assets/icons/letter.svg';
 import lipsIcon from '../../../assets/icons/lips.svg';
+import lipsPlusIcon from '../../../assets/icons/lips_plus.svg';
+import lipsMinusIcon from '../../../assets/icons/lips_minus.svg';
 import movementIcon from '../../../assets/icons/movement.svg';
 import profileIcon from '../../../assets/icons/profile.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
@@ -821,7 +823,7 @@ export function CharacterContextMenuContent({ character, onClose }: {
 	onClose: () => void;
 }): ReactElement | null {
 	const navigate = useNavigatePandora();
-	const { setTarget } = useChatInput();
+	const { setTargets, targets: whisperTargets } = useChatInput();
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<MenuType>('main');
 
@@ -887,15 +889,33 @@ export function CharacterContextMenuContent({ character, onClose }: {
 						<PoseCharacterMenuItem />
 						<MoveCharacterMenuItem />
 						<FollowCharacterMenuItem />
-						{ characterData.id !== player.id && (
+						{ characterData.id !== player.id ? (
 							<Button theme='transparent' className='withIcon' onClick={ () => {
 								onClose();
-								setTarget(characterData.id);
+								setTargets([characterData.id]);
 							} }>
 								<img src={ lipsIcon } />
 								<span>Whisper</span>
 							</Button>
-						) }
+						) : null }
+						{ characterData.id !== player.id && whisperTargets != null && !whisperTargets.some((t) => t.id === characterData.id) ? (
+							<Button theme='transparent' className='withIcon' onClick={ () => {
+								onClose();
+								setTargets([...whisperTargets.map((t) => t.id), characterData.id]);
+							} }>
+								<img src={ lipsPlusIcon } />
+								<span>Add to whisper group</span>
+							</Button>
+						) : null }
+						{ characterData.id !== player.id && whisperTargets != null && whisperTargets.some((t) => t.id === characterData.id) ? (
+							<Button theme='transparent' className='withIcon' onClick={ () => {
+								onClose();
+								setTargets(whisperTargets.map((t) => t.id).filter((t) => t !== characterData.id));
+							} }>
+								<img src={ lipsMinusIcon } />
+								<span>Remove from whisper group</span>
+							</Button>
+						) : null }
 					</>
 				) }
 				{ menu === 'follow' ? (

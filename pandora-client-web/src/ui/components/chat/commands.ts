@@ -220,25 +220,25 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					restArgName: 'message',
 					getChatStatus(_context, { target }, message): ChatCharacterFullStatus {
 						if (target && message.trim().length >= 3) {
-							return { status: 'whispering', target: target.id };
+							return { status: 'whispering', targets: [target.id] };
 						}
 						return { status: 'none' };
 					},
 				},
 				({ messageSender, inputHandlerContext }, { target }, message) => {
 					if (!target) {
-						inputHandlerContext.setTarget(null);
+						inputHandlerContext.setTargets(null);
 						return true;
 					}
 
 					message = message.trim();
 					if (!message) {
-						inputHandlerContext.setTarget(target.data.id);
+						inputHandlerContext.setTargets([target.data.id]);
 						return true;
 					}
 
 					messageSender.sendMessage(message, {
-						target: target.data.id,
+						targets: [target.data.id],
 					});
 
 					return true;

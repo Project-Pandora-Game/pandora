@@ -100,13 +100,15 @@ export function WikiNew(): ReactElement {
 			<p>
 				There are several ways to whisper someone in the same space, independent of the room they are inside, but the main ones are listed here.<br />
 				Any of them puts you into a whisper mode that you need to explicitly leave by using the "Cancel"-button above the chat input.
-				Whispered messages can only be seen by the target and not by anyone else. Note, that you can also send an OOC message as a
+				You can add more than one character to the current whisper mode for a group whisper.<br />
+				Whispered messages can only be seen by the selected target(s) and not by anyone else. Note, that you can also send an OOC message as a
 				whisper by starting the message with "((" while whispering.
 			</p>
 			<ul>
 				<li>You can click on a character's name in the chat itself.</li>
-				<li>You can click on a character's name under the character on the room graphics to open a context menu and select "Whisper" there.</li>
-				<li>You can click on the "Whisper"-button next to a character name in the "Room"-tab.</li>
+				<li>You can whisper to multiple people at the same time, by holding <kbd>Ctrl</kbd> while clicking names in the chat.</li>
+				<li>You can click on a character's name under the character on the room graphics to open a context menu and select "Whisper" or afterwards "Add to whisper group" there.</li>
+				<li>You can click on the "Whisper"-button or successively "Add to / Remove from whisper group" buttons next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/whisper target" (or "/w target") using either the character's name or the character's ID as the whisper target argument.</li>
 				<li>You can use the chat command "/whisper" (or "/w") without anything afterwards to cancel the state of whispering someone.</li>
 			</ul>

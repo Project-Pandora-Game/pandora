@@ -46,13 +46,16 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		}
 	}
 
-	public onDestroy(): void {
+	public async onDestroy(): Promise<void> {
 		if (this.interval !== undefined) {
 			clearInterval(this.interval);
 			this.interval = undefined;
 		}
 		// Go through spaces and remove all of them
 		for (const space of Array.from(this.loadedSpaces.values())) {
+			// Save last active time of the space
+			await space.syncActivityData(undefined, true);
+
 			this._unloadSpace(space);
 		}
 		inUseSpacesMetric.set(0);
@@ -86,6 +89,9 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 				space.touch();
 				space.updateActivityData(activityInterval);
 			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now) {
+				// Save last active time of the space
+				space.updateActivityData(undefined, true);
+
 				this._unloadSpace(space);
 			}
 		}
@@ -290,9 +296,6 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			character.baseInfo.trackedSpaceUnload(space);
 		}
 		Assert(space.trackingCharacters.size === 0);
-
-		// Save last active time of the space
-		space.updateActivityData(undefined, true);
 
 		Assert(this.loadedSpaces.get(space.id) === space);
 		this.loadedSpaces.delete(space.id);

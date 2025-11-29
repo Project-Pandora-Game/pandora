@@ -21,7 +21,7 @@ You can also specify characters who can still be whispered to.
 		if (message.type !== 'chat' || message.to == null)
 			return { result: 'ok' };
 
-		if (config.characterWhitelist.includes(message.to))
+		if (message.to.every((a) => config.characterWhitelist.includes(a)))
 			return { result: 'ok' };
 
 		return { result: 'block', reason: 'Whispering normally to this character is not allowed.' };

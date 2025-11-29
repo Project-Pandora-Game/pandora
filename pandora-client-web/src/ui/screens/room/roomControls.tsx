@@ -600,7 +600,7 @@ function DisplayCharacter({ char, globalState }: {
 }): ReactElement {
 	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
-	const { setTarget } = useChatInput();
+	const { targets, setTargets } = useChatInput();
 	const navigate = useNavigatePandora();
 	const location = useLocation();
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
@@ -697,13 +697,27 @@ function DisplayCharacter({ char, globalState }: {
 					} }>
 						Profile
 					</Button>
-					{ !isPlayer && (
+					{ !isPlayer ? (
 						<Button className='slim' onClick={ () => {
-							setTarget(data.id);
+							setTargets([data.id]);
 						} }>
 							Whisper
 						</Button>
-					) }
+					) : null }
+					{ !isPlayer && targets != null && !targets.some((t) => t.id === data.id) ? (
+						<Button className='slim' onClick={ () => {
+							setTargets([...targets.map((t) => t.id), data.id]);
+						} }>
+							Add to whisper group
+						</Button>
+					) : null }
+					{ !isPlayer && targets != null && targets.some((t) => t.id === data.id) ? (
+						<Button className='slim' onClick={ () => {
+							setTargets(targets.map((t) => t.id).filter((t) => t !== data.id));
+						} }>
+							Remove from whisper group
+						</Button>
+					) : null }
 					{ isPlayer && (
 						<Button className='slim' onClick={ showRestrictionOverrideContext }>
 							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }

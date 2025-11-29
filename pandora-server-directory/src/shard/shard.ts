@@ -1,5 +1,5 @@
 import { isEqual, last, uniq } from 'lodash-es';
-import { Assert, AsyncSynchronized, CharacterId, CreateManuallyResolvedPromise, GetLogger, IChatMessageDirectoryAction, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId } from 'pandora-common';
+import { Assert, AsyncSynchronized, CharacterId, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction } from 'pandora-common';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Character } from '../account/character.ts';
@@ -414,8 +414,8 @@ export class Shard {
 		}));
 	}
 
-	private makeDirectoryActionMessages(): Record<SpaceId, IChatMessageDirectoryAction[]> {
-		const result: Record<SpaceId, IChatMessageDirectoryAction[]> = {};
+	private makeDirectoryActionMessages(): Record<SpaceId, ChatMessageDirectoryAction[]> {
+		const result: Record<SpaceId, ChatMessageDirectoryAction[]> = {};
 		for (const space of this.spaces.values()) {
 			if (space.pendingMessages.length > 0) {
 				result[space.id] = space.pendingMessages.slice();

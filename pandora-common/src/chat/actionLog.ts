@@ -4,7 +4,7 @@ import * as z from 'zod';
 import { AppearanceActionSchema, type AppearanceAction, type AppearanceActionType } from '../gameLogic/actionLogic/actions/_index.ts';
 import { RedactSensitiveActionData } from '../gameLogic/actionLogic/actionUtils.ts';
 import { Assert } from '../utility/misc.ts';
-import { IChatMessageActionTargetCharacterSchema, type IChatMessageActionTargetCharacter } from './chat.ts';
+import { ChatReceivedMessageBaseSchema, IChatMessageActionTargetCharacterSchema, type IChatMessageActionTargetCharacter } from './chatCommon.ts';
 
 const GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN = {
 	moveCharacter: 30_000,
@@ -27,7 +27,7 @@ export const ChatMessageActionLogEntrySchema = z.union([
 ]);
 export type ChatMessageActionLogEntry = z.infer<typeof ChatMessageActionLogEntrySchema>;
 
-export const ChatMessageActionLogSchema = z.object({
+export const ChatMessageActionLogSchema = ChatReceivedMessageBaseSchema.extend({
 	type: z.literal('actionLog'),
 	entry: ChatMessageActionLogEntrySchema,
 });

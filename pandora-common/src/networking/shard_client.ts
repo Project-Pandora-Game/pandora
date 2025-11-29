@@ -6,7 +6,7 @@ import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientD
 import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
 import type { CharacterPublicSettings } from '../character/characterSettings.ts';
 import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
-import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat.ts';
+import { ChatCharacterStatusSchema, ChatMessageSchema } from '../chat/chat.ts';
 import { AppearanceActionSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema } from '../gameLogic/index.ts';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
 import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space.ts';
@@ -72,7 +72,7 @@ export const ShardClientSchema = {
 	},
 	chatMessage: {
 		request: z.object({
-			messages: ZodCast<IChatMessage>().array(),
+			messages: ChatMessageSchema.array(),
 		}),
 		response: null,
 	},

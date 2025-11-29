@@ -1,12 +1,11 @@
 import * as z from 'zod';
-import type { AssetId } from '../assets/base.ts';
-import type { ItemId, RoomId } from '../assets/index.ts';
+import { RoomIdSchema } from '../assets/appearanceTypes.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
-import { PronounKeySchema } from '../character/pronouns.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
-import { HexColorStringSchema, type HexColorString } from '../validation.ts';
-import type { ChatMessageActionLog } from './actionLog.ts';
-import { ChatActionId } from './chatActions.ts';
+import { HexColorStringSchema } from '../validation.ts';
+import { ChatMessageActionLogSchema } from './actionLog.ts';
+import { ChatActionIdSchema } from './chatActions.ts';
+import { ChatReceivedMessageBaseSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
@@ -25,12 +24,12 @@ export const ClientMessageSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('ooc'),
 		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
 	}),
 	z.object({
 		type: z.literal('chat'),
 		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
 	}),
 ]);
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
@@ -57,91 +56,82 @@ export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine
 	}
 });
 
-export type IChatMessageChatCharacter = { id: CharacterId; name: string; labelColor: HexColorString; };
-export type IChatMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
-	id: number;
-	insertId?: number;
-	/** Room the message was said in */
-	room: RoomId;
-	from: IChatMessageChatCharacter;
-} & ({
-	type: 'me' | 'emote';
-} | {
-	type: 'chat' | 'ooc';
-	to?: IChatMessageChatCharacter;
-});
-
-export type IChatMessageDeleted = {
-	type: 'deleted';
-	id: number;
-	from: CharacterId;
-};
-
-export const IChatMessageActionTargetCharacterSchema = z.object({
-	type: z.literal('character'),
+export const ChatMessageChatCharacterSchema = z.object({
 	id: CharacterIdSchema,
 	name: z.string(),
-	pronoun: PronounKeySchema,
 	labelColor: HexColorStringSchema,
 });
-export type IChatMessageActionTargetCharacter = z.infer<typeof IChatMessageActionTargetCharacterSchema>;
+export type ChatMessageChatCharacter = z.infer<typeof ChatMessageChatCharacterSchema>;
 
-export type IChatMessageActionItem = {
-	id: ItemId;
-	assetId: AssetId;
-	itemName: string;
-};
-export type IChatMessageActionContainerPath = {
-	id: ItemId;
-	assetId: AssetId;
-	itemName: string;
-	module: string;
-}[];
+const ChatMessageChatBaseDataSchema = ChatReceivedMessageBaseSchema.extend({
+	id: z.number(),
+	insertId: z.number().optional(),
+	/** Room the message was said in */
+	room: RoomIdSchema,
+	from: ChatMessageChatCharacterSchema,
+});
 
-export type IChatMessageActionTargetRoom = {
-	type: 'room';
-	roomId: RoomId;
-};
+export const ChatMessageChatSchema = z.discriminatedUnion('type', [
+	ChatMessageChatBaseDataSchema.extend({
+		type: z.enum(['me', 'emote']),
+		parts: z.array(ChatSegmentSchema),
+	}),
+	ChatMessageChatBaseDataSchema.extend({
+		type: z.literal('ooc'),
+		parts: z.array(ChatSegmentSchema),
+		to: ChatMessageChatCharacterSchema.array().optional(),
+	}),
+	ChatMessageChatBaseDataSchema.extend({
+		type: z.literal('chat'),
+		parts: z.array(ChatSegmentSchema),
+		to: ChatMessageChatCharacterSchema.array().optional(),
+	}),
+]);
+export type ChatMessageChat = z.infer<typeof ChatMessageChatSchema>;
 
-export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoom;
+export const ChatMessageDeletedSchema = ChatReceivedMessageBaseSchema.extend({
+	type: z.literal('deleted'),
+	id: z.number(),
+	from: CharacterIdSchema,
+});
+export type ChatMessageDeleted = z.infer<typeof ChatMessageDeletedSchema>;
 
-export type IChatMessageAction = {
-	type: 'action' | 'serverMessage';
+export const ChatMessageActionSchema = ChatReceivedMessageBaseSchema.extend({
+	type: z.enum(['action', 'serverMessage']),
 	/** id to be looked up in message translation database */
-	id: ChatActionId;
+	id: ChatActionIdSchema,
 	/** The array of characters the message should be sent to */
-	sendTo?: CharacterId[];
+	sendTo: CharacterIdSchema.array().optional(),
 	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
-	rooms: RoomId[] | null;
-	data?: {
+	rooms: RoomIdSchema.array().nullable(),
+	data: z.object({
 		/** Used to generate specific dictionary entries, acts as source */
-		character?: IChatMessageActionTargetCharacter;
+		character: IChatMessageActionTargetCharacterSchema.optional(),
 		/** Used to generate specific dictionary entries, defaults to `character` */
-		target?: IChatMessageActionTarget;
+		target: IChatMessageActionTargetSchema.optional(),
 		/** The item this message is about */
-		item?: IChatMessageActionItem;
+		item: IChatMessageActionItemSchema.optional(),
 		/** The previous state of item this message is about, defaults to `item` */
-		itemPrevious?: IChatMessageActionItem;
+		itemPrevious: IChatMessageActionItemSchema.optional(),
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
-		itemContainerPath?: IChatMessageActionContainerPath;
-	};
-	dictionary?: Record<string, string>;
-};
+		itemContainerPath: IChatMessageActionContainerPathSchema.optional(),
+	}).optional(),
+	dictionary: z.partialRecord(z.string(), z.string()).optional(),
+});
+export type ChatMessageAction = z.infer<typeof ChatMessageActionSchema>;
 
-export type IChatMessageBase = IChatMessageChat | IChatMessageAction | IChatMessageDeleted | ChatMessageActionLog;
-export type IChatMessage = IChatMessageBase & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
-};
+export const ChatMessageSchema = z.union([ChatMessageChatSchema, ChatMessageActionSchema, ChatMessageDeletedSchema, ChatMessageActionLogSchema]);
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
-export type IChatMessageDirectoryAction = Omit<IChatMessageAction, 'data' | 'rooms'> & {
+export const ChatMessageDirectoryActionSchema = ChatMessageActionSchema.omit({ time: true, data: true, rooms: true }).extend({
 	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
-	directoryTime: number;
-	data?: {
-		character?: CharacterId;
-		targetCharacter?: CharacterId;
-	};
-};
+	directoryTime: z.number(),
+	data: z.object({
+		character: CharacterIdSchema.optional(),
+		targetCharacter: CharacterIdSchema.optional(),
+	}).optional(),
+});
+export type ChatMessageDirectoryAction = z.infer<typeof ChatMessageDirectoryActionSchema>;
 
 export const ChatCharacterStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
 export type ChatCharacterStatus = z.infer<typeof ChatCharacterStatusSchema>;
@@ -149,8 +139,8 @@ export type ChatCharacterStatus = z.infer<typeof ChatCharacterStatusSchema>;
 export type ChatCharacterFullStatus = {
 	/** The actual status */
 	status: ChatCharacterStatus;
-	/** Target who can see the status. Others receive 'none'. */
-	target?: CharacterId;
+	/** Targets who can see the status. Others receive 'none'. */
+	targets?: readonly CharacterId[];
 };
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';

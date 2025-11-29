@@ -4,7 +4,7 @@ import type { Character } from '../character/character.ts';
 import type { PlayerCharacter } from '../character/player.ts';
 import { ChatSendError, type GameState, type GameStateEvents, type ISavedMessage } from '../components/gameContext/gameStateContextProvider.tsx';
 import { StaticObservable, type ReadonlyObservable } from '../observable.ts';
-import type { IChatMessageProcessed } from '../ui/components/chat/chatMessages.tsx';
+import type { ChatMessagePreprocessed } from '../ui/components/chat/chatMessages.tsx';
 import type { Editor } from './editor.tsx';
 
 export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> implements GameState {
@@ -94,7 +94,7 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 
 	//#region Chat
 
-	public readonly messages = new StaticObservable<readonly IChatMessageProcessed[]>(EMPTY_ARRAY);
+	public readonly messages = new StaticObservable<readonly ChatMessagePreprocessed[]>(EMPTY_ARRAY);
 	public readonly status = new StaticObservable<ReadonlyMap<CharacterId, ChatCharacterStatus>>(new Map());
 
 	public sendMessage(): void {

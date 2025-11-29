@@ -8,82 +8,84 @@ import {
 	CHAT_ACTIONS,
 	CHAT_ACTIONS_FOLDED_EXTRA,
 	ChatActionDictionaryMetaEntry,
-	IChatMessageAction,
+	ChatMessageActionLogSchema,
+	ChatMessageActionSchema,
+	ChatMessageChatSchema,
+	ChatMessageDeletedSchema,
 	IChatSegment,
-	SpaceId,
+	RoomIdSchema,
+	SpaceIdSchema,
 	type AssetManager,
-	type ChatMessageActionLog,
 	type IChatMessageActionItem,
-	type IChatMessageChat,
-	type IChatMessageDeleted,
 	type ItemDisplayNameType,
-	type RoomId,
 } from 'pandora-common';
 import React, {
 	Fragment,
 	ReactElement,
 } from 'react';
+import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
 import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { RenderedLink } from './links.tsx';
 
-export type ChatMessageProcessedRoomData = {
-	id: RoomId;
-	name: string;
-};
+export const ChatMessageProcessedRoomDataSchema = z.object({
+	id: RoomIdSchema,
+	name: z.string(),
+});
+export type ChatMessageProcessedRoomData = z.infer<typeof ChatMessageProcessedRoomDataSchema>;
 
-export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
+export const ChatDeletedMessageProcessedSchema = ChatMessageDeletedSchema.extend({
 	/** The space this message was received in */
-	spaceId: SpaceId | null;
+	spaceId: SpaceIdSchema.nullable(),
 	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomId;
-};
+	receivedRoomId: RoomIdSchema,
+});
+export type ChatDeletedMessageProcessed = z.infer<typeof ChatDeletedMessageProcessedSchema>;
 
-export type IChatNormalMessageProcessed = IChatMessageChat & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
+export const ChatNormalMessageProcessedSchema = ChatMessageChatSchema.and(z.object({
 	/** The space this message was received in */
-	spaceId: SpaceId | null;
+	spaceId: SpaceIdSchema.nullable(),
 	/** Room the message was said in */
-	roomData: ChatMessageProcessedRoomData;
+	roomData: ChatMessageProcessedRoomDataSchema,
 	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomId;
-	edited?: boolean;
+	receivedRoomId: RoomIdSchema,
+	edited: z.boolean().optional(),
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
-	repetitions?: number;
-};
+	repetitions: z.number().optional(),
+}));
+export type ChatNormalMessageProcessed = z.infer<typeof ChatNormalMessageProcessedSchema>;
 
 export type ChatMessageProcessedDictionaryEntry = string | { text: string; rich: ReactElement; };
-export type ChatMessageProcessedDictionary<TK extends string = string> = Record<TK, ChatMessageProcessedDictionaryEntry>;
+export type ChatMessageProcessedDictionary<TK extends string = string> = Partial<Record<TK, ChatMessageProcessedDictionaryEntry>>;
 
-export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
+export const ChatActionMessagePreprocessedSchema = ChatMessageActionSchema.extend({
 	/** The space this message was received in */
-	spaceId: SpaceId | null;
+	spaceId: SpaceIdSchema.nullable(),
 	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
-	roomsData: ChatMessageProcessedRoomData[] | null;
+	roomsData: ChatMessageProcessedRoomDataSchema.array().nullable(),
 	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomId;
+	receivedRoomId: RoomIdSchema,
 	/** Identical action messages following one after another get combined into a single message to reduce spam. */
-	repetitions?: number;
+	repetitions: z.number().optional(),
+});
+export type ChatActionMessagePreprocessed = z.infer<typeof ChatActionMessagePreprocessedSchema>;
+
+export type ChatActionMessageProcessed = Omit<ChatActionMessagePreprocessed, 'dictionary'> & {
 	dictionary?: ChatMessageProcessedDictionary;
 };
 
-export type ChatActionLogMessageProcessed = ChatMessageActionLog & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
+export const ChatActionLogMessageProcessedSchema = ChatMessageActionLogSchema.extend({
 	/** The space this message was received in */
-	spaceId: SpaceId | null;
-};
+	spaceId: SpaceIdSchema.nullable(),
+});
+export type ChatActionLogMessageProcessed = z.infer<typeof ChatActionLogMessageProcessedSchema>;
 
-export type IChatMessageProcessed = IChatNormalMessageProcessed | IChatDeletedMessageProcessed | IChatActionMessageProcessed | ChatActionLogMessageProcessed;
+export const ChatMessagePreprocessedSchema = z.union([ChatNormalMessageProcessedSchema, ChatDeletedMessageProcessedSchema, ChatActionMessagePreprocessedSchema, ChatActionLogMessageProcessedSchema]);
+export type ChatMessagePreprocessed = z.infer<typeof ChatMessagePreprocessedSchema>;
 
-export function IsActionMessage(message: IChatMessageProcessed): message is IChatActionMessageProcessed {
+export function IsActionMessage(message: ChatMessagePreprocessed): message is ChatActionMessagePreprocessed {
 	return message.type === 'action' || message.type === 'serverMessage';
 }
 
@@ -96,9 +98,9 @@ function ActionMessageDictionaryTemplate(strings: TemplateStringsArray, ...subst
 }
 
 function ActionMessagePrepareDictionary(
-	message: IChatActionMessageProcessed,
+	message: ChatActionMessagePreprocessed,
 	itemDisplayNameType: ItemDisplayNameType,
-): IChatActionMessageProcessed {
+): ChatActionMessageProcessed {
 	const metaDictionary: Partial<ChatMessageProcessedDictionary<ChatActionDictionaryMetaEntry>> = {};
 
 	const source = message.data?.character;
@@ -244,7 +246,7 @@ export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>
 	return contents;
 }
 
-function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
+function GetActionText(action: ChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);
 	const itemPrevious = action.data?.itemPrevious ?? item;
@@ -342,6 +344,9 @@ export function RenderActionContentPart(originalMessage: string, substitutions: 
 			// Do the longest substitutions first to avoid small one replacing part of large one
 			.sort(([a], [b]) => b.length - a.length)
 		) {
+			if (value == null)
+				continue;
+
 			for (let i = message.length - 1; i >= 0; i--) {
 				// Replace keys with values by splitting the original chunk with the key and "joining" with the value
 				const original = message[i];
@@ -371,6 +376,9 @@ export function RenderActionContentPartToString(originalMessage: string, substit
 			// Do the longest substitutions first to avoid small one replacing part of large one
 			.sort(([a], [b]) => b.length - a.length)
 		) {
+			if (value == null)
+				continue;
+
 			for (let i = message.length - 1; i >= 0; i--) {
 				// Replace keys with values by splitting the original chunk with the key and "joining" with the value
 				const original = message[i];
@@ -391,16 +399,16 @@ export function RenderActionContentPartToString(originalMessage: string, substit
 }
 
 export function RenderActionContent(
-	action: IChatActionMessageProcessed,
+	action: ChatActionMessagePreprocessed,
 	assetManager: AssetManager,
 	itemDisplayNameType: ItemDisplayNameType,
 ): [content: ReactElement | null, extraContent: ReactElement | null] {
 	// Append implicit dictionary entries
-	action = ActionMessagePrepareDictionary(action, itemDisplayNameType);
-	let actionText: string | ReactElement | undefined = GetActionText(action, assetManager);
+	const processedAction = ActionMessagePrepareDictionary(action, itemDisplayNameType);
+	let actionText: string | ReactElement | undefined = GetActionText(processedAction, assetManager);
 	if (actionText === undefined) {
 		return [
-			<span key='actionError'>( ERROR UNKNOWN ACTION '{ action.id }' )</span>,
+			<span key='actionError'>( ERROR UNKNOWN ACTION '{ processedAction.id }' )</span>,
 			null,
 		];
 	}
@@ -409,19 +417,19 @@ export function RenderActionContent(
 		return [null, null];
 	}
 
-	actionText = RenderActionContentPart(actionText, action.dictionary);
+	actionText = RenderActionContentPart(actionText, processedAction.dictionary);
 
-	if (action.type === 'action') {
+	if (processedAction.type === 'action') {
 		actionText = <Fragment key='action'>({ actionText })</Fragment>;
 		return [
 			actionText,
 			null,
 		];
-	} else if (action.type === 'serverMessage') {
+	} else if (processedAction.type === 'serverMessage') {
 		// Server messages can have extra info
-		let actionExtraText: string | ReactElement | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(action.id);
+		let actionExtraText: string | ReactElement | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(processedAction.id);
 		if (actionExtraText !== undefined) {
-			actionExtraText = RenderActionContentPart(actionExtraText, action.dictionary);
+			actionExtraText = RenderActionContentPart(actionExtraText, processedAction.dictionary);
 		}
 		return [
 			actionText,
@@ -429,20 +437,20 @@ export function RenderActionContent(
 		];
 	}
 
-	AssertNever(action.type);
+	AssertNever(processedAction.type);
 }
 
 export function RenderActionContentToString(
-	action: IChatActionMessageProcessed,
+	action: ChatActionMessagePreprocessed,
 	assetManager: AssetManager,
 	itemDisplayNameType: ItemDisplayNameType,
 ): [content: string | null, extraContent: string | null] {
 	// Append implicit dictionary entries
-	action = ActionMessagePrepareDictionary(action, itemDisplayNameType);
-	let actionText: string | undefined = GetActionText(action, assetManager);
+	const processedAction = ActionMessagePrepareDictionary(action, itemDisplayNameType);
+	let actionText: string | undefined = GetActionText(processedAction, assetManager);
 	if (actionText === undefined) {
 		return [
-			`( ERROR UNKNOWN ACTION '{ action.id }' )`,
+			`( ERROR UNKNOWN ACTION '${ processedAction.id }' )`,
 			null,
 		];
 	}
@@ -451,18 +459,18 @@ export function RenderActionContentToString(
 		return [null, null];
 	}
 
-	actionText = RenderActionContentPartToString(actionText, action.dictionary);
+	actionText = RenderActionContentPartToString(actionText, processedAction.dictionary);
 
-	if (action.type === 'action') {
+	if (processedAction.type === 'action') {
 		return [
 			`(${ actionText })`,
 			null,
 		];
-	} else if (action.type === 'serverMessage') {
+	} else if (processedAction.type === 'serverMessage') {
 		// Server messages can have extra info
-		let actionExtraText: string | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(action.id);
+		let actionExtraText: string | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(processedAction.id);
 		if (actionExtraText !== undefined) {
-			actionExtraText = RenderActionContentPartToString(actionExtraText, action.dictionary);
+			actionExtraText = RenderActionContentPartToString(actionExtraText, processedAction.dictionary);
 		}
 		return [
 			actionText,
@@ -470,5 +478,5 @@ export function RenderActionContentToString(
 		];
 	}
 
-	AssertNever(action.type);
+	AssertNever(processedAction.type);
 }

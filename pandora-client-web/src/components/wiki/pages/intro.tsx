@@ -86,7 +86,8 @@ export function WikiIntroduction(): ReactElement {
 			<h4>4. A feature-rich room chat</h4>
 			You can find more information about all chat related features under the <Link to='/wiki/spaces/'>"spaces"-tab</Link>.
 			<ul>
-				<li>Click a name in the chat to start whispering to that person</li>
+				<li>Click a name in the chat to start whispering to that person.</li>
+				<li>You can whisper to multiple people at once, by adding them through the character context menu, or by holding CTRL or SHIFT while clicking names in the chat.</li>
 				<li>Right-clicking your own message enables you to edit or delete it for { MESSAGE_EDIT_TIMEOUT / 1000 / 60 } mins after posting it</li>
 				<li>To get help on chat commands, start the command by typing the "/" character, which will then show the list of available commands</li>
 				<li>You can write Out-Of-Character (<Link to='/wiki/safety#SA_Out-of-character_communication'>OOC</Link>) messages by prefixing them with "(("</li>

@@ -120,19 +120,20 @@ export function WikiChat(): ReactElement {
 
 			<h4 id='CHA_Whispering_someone'>Whispering someone</h4>
 			<p>
-				There are several ways to whisper someone in the same room.<br />
+				There are several ways to whisper to one or multiple characters in the same room.<br />
 				Any of them puts you into a whisper mode that you need to explicitly leave by using the "Cancel"-button above the chat input.
 			</p>
 			<ul>
-				<li>You can click on a character name in the chat itself.</li>
-				<li>You can click on a character name under a character on the room background and select "Whisper".</li>
-				<li>You can click on the "Whisper"-button next to a character name in the "Room"-tab.</li>
+				<li>You can click on a character's name in the chat itself.</li>
+				<li>You can whisper to multiple people at once, by holding CTRL or SHIFT while clicking names in the chat.</li>
+				<li>You can click on a character's name under the character on the room graphics to open a context menu and select "Whisper" or afterwards "Add to whisper group" there.</li>
+				<li>You can click on the "Whisper"-button or successively "Add to / Remove from whisper group" buttons next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/w [target]" using either the character name or the character ID as whisper target argument.</li>
 				<li>Chat-related commands while in whisper mode (e.g., "/me") will be executed normally and not be whispered.</li>
 				<li>You can whisper an OOC message though, if you start a whispered message with "((".</li>
 				<li>You can use the chat command "/whisper" (or "/w") without anything afterwards to cancel the state of whispering someone.</li>
-				<li>If your whisper target leaves the room or space, your whisper message cannot be sent.</li>
-				<li>If your whisper target goes offline, your whisper message will still be sent, but currently it will not be delivered.</li>
+				<li>If one of your whisper targets leaves the room or space, your whisper message cannot be sent.</li>
+				<li>If one of your whisper targets goes offline, your whisper message will still be sent, but currently it will not be delivered.</li>
 			</ul>
 
 			<h4 id='CHA_Text_formatting'>Text formatting</h4>

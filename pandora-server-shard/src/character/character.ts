@@ -25,7 +25,6 @@ import {
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
 	ICharacterRoomData,
-	IChatMessage,
 	IShardAccountDefinition,
 	IShardCharacterDefinition,
 	IShardClientChangeEvents,
@@ -39,6 +38,7 @@ import {
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
 	type CharacterSettingsKeys,
+	type ChatMessage,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
 } from 'pandora-common';
@@ -716,16 +716,16 @@ export class Character {
 
 	//#region Chat messages
 
-	private readonly messageQueue: IChatMessage[] = [];
+	private readonly messageQueue: ChatMessage[] = [];
 
-	public queueMessages(messages: IChatMessage[]): void {
+	public queueMessages(messages: ChatMessage[]): void {
 		if (messages.length === 0)
 			return;
 		// Do not store messages for offline characters
 		if (!this.isOnline)
 			return;
 
-		let transformed: IChatMessage[];
+		let transformed: ChatMessage[];
 
 		const hearingFilter = this.getRestrictionManager().getHearingFilter();
 		if (hearingFilter.isActive()) {

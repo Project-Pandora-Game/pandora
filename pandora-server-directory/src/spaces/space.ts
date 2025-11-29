@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type ChatMessageDirectoryAction, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -1277,7 +1277,7 @@ export class Space {
 		this.pendingMessages.length = 0;
 	}
 
-	public readonly pendingMessages: IChatMessageDirectoryAction[] = [];
+	public readonly pendingMessages: ChatMessageDirectoryAction[] = [];
 	private lastMessageTime: number = 0;
 
 	private nextMessageTime(): number {
@@ -1289,13 +1289,11 @@ export class Space {
 		return this.lastMessageTime = time;
 	}
 
-	public sendMessage(...messages: Omit<IChatMessageDirectoryAction, 'directoryTime'>[]): void {
-		const processedMessages = messages.map<IChatMessageDirectoryAction>(
-			(msg) => ({
-				directoryTime: this.nextMessageTime(),
-				...msg,
-			}),
-		);
+	public sendMessage(...messages: Omit<ChatMessageDirectoryAction, 'directoryTime'>[]): void {
+		const processedMessages = messages.map((msg): ChatMessageDirectoryAction => ({
+			directoryTime: this.nextMessageTime(),
+			...msg,
+		}));
 		this.pendingMessages.push(...processedMessages);
 		this._assignedShard?.update('messages').catch(() => { /* NOOP */ });
 	}

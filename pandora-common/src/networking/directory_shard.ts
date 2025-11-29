@@ -2,10 +2,9 @@ import { Immutable } from 'immer';
 import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
 import { CharacterIdSchema } from '../character/index.ts';
-import type { IChatMessageDirectoryAction } from '../chat/index.ts';
+import { ChatMessageDirectoryActionSchema } from '../chat/chat.ts';
 import { SpaceDataSchema, SpaceIdSchema } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
-import { ZodCast } from '../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardAccountDefinitionSchema = z.object({
@@ -41,7 +40,7 @@ export const DirectoryShardUpdateSchema = z.object({
 	characters: ShardCharacterDefinitionSchema.array(),
 	/** List of spaces which are loaded on this shard */
 	spaces: ShardSpaceDefinitionSchema.array(),
-	messages: z.record(SpaceIdSchema, ZodCast<IChatMessageDirectoryAction>().array()),
+	messages: z.record(SpaceIdSchema, ChatMessageDirectoryActionSchema.array()),
 });
 export type IDirectoryShardUpdate = z.infer<typeof DirectoryShardUpdateSchema>;
 

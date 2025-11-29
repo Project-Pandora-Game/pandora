@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager.ts';
-import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoom } from '../chat/index.ts';
+import type { ChatActionId, ChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoom } from '../chat/index.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/index.ts';
 import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../inputLimits.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
@@ -53,7 +53,7 @@ export type ActionRoomSelector = z.infer<typeof RoomSelectorSchema>;
 export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [CharacterSelectorSchema, RoomSelectorSchema]);
 export type ActionTargetSelector = z.infer<typeof ActionTargetSelectorSchema>;
 
-export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMessageAction['data']>, 'character' | 'target'> {
+export interface ActionHandlerMessageTemplate extends Omit<NonNullable<ChatMessageAction['data']>, 'character' | 'target'> {
 	id: ChatActionId;
 	dictionary?: Record<string, string>;
 }

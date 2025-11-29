@@ -11,6 +11,7 @@ import {
 	CharacterIdSchema,
 	CharacterRestrictionsManager,
 	ChatCharacterStatus,
+	ChatMessage,
 	ChatTypeSchema,
 	CloneDeepMutable,
 	CompareSpaceRoles,
@@ -19,7 +20,6 @@ import {
 	GetLogger,
 	ICharacterPrivateData,
 	ICharacterRoomData,
-	IChatMessage,
 	IClientMessage,
 	IDirectoryAccountInfo,
 	IsAuthorized,
@@ -39,7 +39,7 @@ import {
 	SpaceId,
 	SpaceIdSchema,
 	TypedEventEmitter,
-	ZodCast,
+	ZodArrayWithInvalidDrop,
 	type AccountId,
 	type ActionRoomSelector,
 	type ActionTargetSelector,
@@ -69,7 +69,7 @@ import { GetAccountSettings, useCurrentAccount } from '../../services/accountLog
 import type { ClientServices } from '../../services/clientServices.ts';
 import { useGameLogicServiceOptional } from '../../services/serviceProvider.tsx';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
-import { IChatMessageProcessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
+import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 
@@ -82,7 +82,7 @@ const MessageParseOptionsSchema = z.object({
 	type: ChatTypeSchema.optional(),
 	raw: z.boolean().optional(),
 	targets: CharacterIdSchema.array().optional(),
-});
+}).strict();
 
 export type IMessageParseOptions = z.infer<typeof MessageParseOptionsSchema>;
 
@@ -107,7 +107,7 @@ export interface IChatMessageSender {
 }
 
 export interface IChatService extends IChatMessageSender {
-	readonly messages: ReadonlyObservable<readonly IChatMessageProcessed[]>;
+	readonly messages: ReadonlyObservable<readonly ChatMessagePreprocessed[]>;
 }
 
 export type GameStateEvents = {
@@ -154,7 +154,7 @@ type GameStateDependencies = Readonly<Pick<ClientServices, 'accountManager' | 'n
 export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements GameState {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
-	public readonly messages = new Observable<readonly IChatMessageProcessed[]>([]);
+	public readonly messages = new Observable<readonly ChatMessagePreprocessed[]>([]);
 	public readonly currentSpace: Observable<CurrentSpaceInfo>;
 	public readonly characters: Observable<readonly CharacterImpl<ICharacterRoomData>[]>;
 	public readonly characterModifierEffects: Observable<Immutable<SpaceCharacterModifierEffectData>>;
@@ -168,8 +168,8 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 
 	private readonly _restore = BrowserStorage.createSession('chatRestore', undefined, z.object({
 		spaceId: SpaceIdSchema.nullable(),
-		messages: z.array(ZodCast<IChatMessageProcessed>()),
-		sent: z.array(z.tuple([z.number(), SavedMessageSchema])),
+		messages: ZodArrayWithInvalidDrop(ChatMessagePreprocessedSchema, z.unknown()),
+		sent: ZodArrayWithInvalidDrop(z.tuple([z.number(), SavedMessageSchema]), z.unknown()),
 	}).optional());
 
 	private _setRestore(): void {
@@ -450,7 +450,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		);
 	}
 
-	public onMessage(incoming: IChatMessage[]): number {
+	public onMessage(incoming: ChatMessage[]): number {
 		const spaceId = this.currentSpace.value.id;
 		const roomId = this.player.getAppearance(this.globalState.currentState).characterState.currentRoom;
 
@@ -461,7 +461,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map((m): IChatMessageProcessed => {
+			.map((m): ChatMessagePreprocessed => {
 				switch (m.type) {
 					case 'chat':
 					case 'ooc':
@@ -489,7 +489,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		for (const message of messages) {
 			if (message.type === 'deleted') {
 				let found = false;
-				const acc: IChatMessageProcessed[] = [];
+				const acc: ChatMessagePreprocessed[] = [];
 				for (const m of nextMessages) {
 					if ((m.type !== 'chat' && m.type !== 'ooc' && m.type !== 'me' && m.type !== 'emote') || m.id !== message.id)
 						acc.push(m);
@@ -846,7 +846,7 @@ export function useChatMessageSender(): IChatMessageSender {
 	return useGameState();
 }
 
-export function useChatMessages(): readonly IChatMessageProcessed[] {
+export function useChatMessages(): readonly ChatMessagePreprocessed[] {
 	const context = useGameState();
 	return useObservable(context.messages);
 }

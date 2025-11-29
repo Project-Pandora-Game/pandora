@@ -23,9 +23,7 @@ import {
 	CreateActionLogFromGameLogicAction,
 	EMPTY_ARRAY,
 	GameStateUpdate,
-	IChatMessage,
 	IChatMessageActionTargetCharacter,
-	IChatMessageDirectoryAction,
 	IChatSegment,
 	IClientMessage,
 	IShardClient,
@@ -38,11 +36,13 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessage,
+	type ChatMessageAction,
 	type ChatMessageActionLogEntry,
+	type ChatMessageChatCharacter,
+	type ChatMessageDirectoryAction,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
-	type IChatMessageAction,
-	type IChatMessageChatCharacter,
 	type IClientShardNormalResult,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
@@ -552,7 +552,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 
-		const queue: IChatMessage[] = [];
+		const queue: ChatMessage[] = [];
 		const now = Date.now();
 		let originRoom = player.appearance.characterState.currentRoom;
 		let history = this.history.get(from.id);
@@ -595,19 +595,23 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			room: originRoom,
 		});
 		for (const message of messages) {
-			queue.push({
+			const finalMessage: ChatMessage = {
 				type: message.type,
 				id,
 				insertId: editId,
 				room: originRoom,
 				from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
-				to: IsTargeted(message) ? message.to.map((t): IChatMessageChatCharacter | null => {
-					const target = this.getCharacterById(t);
-					return target != null ? { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor } : null;
-				}).filter(IsNotNullable) : undefined,
 				parts: message.parts,
 				time: this.nextMessageTime(),
-			});
+			};
+			if (IsTargeted(message)) {
+				Assert(finalMessage.type === 'chat' || finalMessage.type === 'ooc');
+				finalMessage.to = message.to.map((t): ChatMessageChatCharacter | null => {
+					const target = this.getCharacterById(t);
+					return target != null ? { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor } : null;
+				}).filter(IsNotNullable);
+			}
+			queue.push(finalMessage);
 		}
 		this._queueMessages(queue);
 
@@ -626,7 +630,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		sendTo,
 		dictionary,
 		...data
-	}: ActionHandlerMessage): IChatMessage {
+	}: ActionHandlerMessage): ChatMessage {
 		// No reason to duplicate target if it matches character
 		if (isEqual(target, character)) {
 			target = undefined;
@@ -647,7 +651,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
-	private _queueMessages(messages: IChatMessage[]): void {
+	private _queueMessages(messages: ChatMessage[]): void {
 		for (const character of this.characters) {
 			character.queueMessages(messages.filter((msg) => {
 				switch (msg.type) {
@@ -673,17 +677,17 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public processDirectoryMessages(messages: IChatMessageDirectoryAction[]): void {
+	public processDirectoryMessages(messages: ChatMessageDirectoryAction[]): void {
 		this._queueMessages(messages
 			.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
-			.map((m): IChatMessage => ({
+			.map((m): ChatMessage => ({
 				...omit(m, ['directoryTime']),
 				time: this.nextMessageTime(),
 				rooms: null,
 				data: m.data ? {
 					character: this._getCharacterActionInfo(m.data.character),
 					target: this._getCharacterActionInfo(m.data.targetCharacter),
-				} satisfies IChatMessageAction['data'] : undefined,
+				} satisfies ChatMessageAction['data'] : undefined,
 			})));
 		this.lastDirectoryMessageTime = chain(messages)
 			.map((m) => m.directoryTime)

@@ -95,6 +95,7 @@ export default function (env: WebpackEnv): webpack.Configuration {
 		},
 		optimization: {
 			minimizer: GenerateMinimizer(env),
+			usedExports: true,
 		},
 		output: {
 			path: DIST_DIR,

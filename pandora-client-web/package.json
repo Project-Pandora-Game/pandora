@@ -29,7 +29,7 @@
 	},
 	"dependencies": {
 		"@hcaptcha/react-hcaptcha": "1.16.0",
-		"bowser": "2.12.1",
+		"bowser": "2.13.1",
 		"classnames": "2.5.1",
 		"client-zip": "2.5.0",
 		"color-parse": "2.0.2",

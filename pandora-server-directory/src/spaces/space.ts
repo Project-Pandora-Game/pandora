@@ -1299,6 +1299,13 @@ export class Space {
 	}
 
 	public updateActivityData(interval?: number, forceUpdate: boolean = false): void {
+		this.syncActivityData(interval, forceUpdate)
+			.catch((err) => {
+				this.logger.error('Error syncing activity data:', err);
+			});
+	}
+
+	public async syncActivityData(interval?: number, forceUpdate: boolean = false): Promise<void> {
 		interval ??= SpaceActivityGetNextInterval(Date.now());
 
 		let changed = false;
@@ -1322,10 +1329,7 @@ export class Space {
 		}
 
 		if (changed || forceUpdate) {
-			this._syncActivityData()
-				.catch((err) => {
-					this.logger.error('Error syncing activity data:', err);
-				});
+			await this._syncActivityData();
 		}
 	}
 

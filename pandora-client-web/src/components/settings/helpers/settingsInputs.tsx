@@ -1,6 +1,6 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import React, { useCallback, useId, useMemo, useState, type DependencyList, type ReactElement, type ReactNode } from 'react';
-import type { OptionalKeysOf } from 'type-fest';
+import type { OptionalKeysOf } from 'type-fest/source/optional-keys-of.d.ts';
 import type { ZodType } from 'zod';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput.ts';

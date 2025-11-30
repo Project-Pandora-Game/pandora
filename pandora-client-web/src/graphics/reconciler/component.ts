@@ -3,7 +3,7 @@ import { Assert, type ConditionalKeys, type Satisfies } from 'pandora-common';
 import { type ColorSource, type Container, type EventEmitter, type PointData } from 'pixi.js';
 import type React from 'react';
 import type { ReactNode } from 'react';
-import type { ReadonlyKeysOf } from 'type-fest';
+import type { ReadonlyKeysOf } from 'type-fest/source/readonly-keys-of.d.ts';
 
 // This file extensively does type trickery - attempting to concentrate all type tricks to this file,
 // in hopes that usage outside will be fully type-safe

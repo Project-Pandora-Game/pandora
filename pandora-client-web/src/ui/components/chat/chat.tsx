@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { CharacterId, IChatMessageChat, NaturalListJoin, type AccountSettings, type HexColorString, type IChatMessageChatCharacter, type RoomId } from 'pandora-common';
+import { uniq } from 'lodash-es';
+import { CharacterId, CharacterIdSchema, ChatMessageChat, NaturalListJoin, type AccountSettings, type ChatMessageChatCharacter, type HexColorString, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -27,7 +28,7 @@ import { ColoredName } from '../common/coloredName.tsx';
 import { ActionLogEntry } from './actionLogEntry.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatActionLog, ChatFocusMode, ChatInputArea, useChatActionLogDisabled, useChatCommandContext, useChatFocusModeForced, useChatInput } from './chatInput.tsx';
-import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatMessageProcessedRoomData, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
+import { IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type ChatActionMessagePreprocessed, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData, type ChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
 export function Chat(): ReactElement | null {
@@ -113,7 +114,7 @@ export function Chat(): ReactElement | null {
 		if (chatMaxShownMessages != null && t > chatMaxShownMessages && !showAllMessages) {
 			result = result.slice(t - chatMaxShownMessages, t);
 			result.unshift(
-				<Row alignX='center' padding='small'>
+				<Row alignX='center' padding='small' key='olderMessagesWarning'>
 					<div className='warning-box'>
 						<Row alignY='center'>
 							<span>Older messages ({ t - chatMaxShownMessages }) are hidden for performance reasons</span>
@@ -135,7 +136,7 @@ export function Chat(): ReactElement | null {
 
 		if (showAllMessages) {
 			result.push(
-				<Row alignX='center' padding='small'>
+				<Row alignX='center' padding='small' key='olderMessagesShownWarning'>
 					<div className='warning-box not-selectable'>
 						<Row alignY='center'>
 							<span>Showing complete chat history</span>
@@ -212,7 +213,7 @@ function ChatAutoCompleteHint() {
 	);
 }
 
-const Message = memo(function Message({ message, playerId }: { message: IChatMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
+const Message = memo(function Message({ message, playerId }: { message: ChatMessagePreprocessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
@@ -225,7 +226,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 	return <DisplayUserMessage message={ message } playerId={ playerId } />;
 });
 
-export function RenderChatMessageToString(message: IChatMessageProcessed, accountSettings: Immutable<AccountSettings>): string {
+export function RenderChatMessageToString(message: ChatMessagePreprocessed, accountSettings: Immutable<AccountSettings>): string {
 	if (IsActionMessage(message)) {
 		return RenderActionMessageToString(message, accountSettings);
 	}
@@ -238,7 +239,7 @@ export function RenderChatMessageToString(message: IChatMessageProcessed, accoun
 	return RenderUserMessageToString(message);
 }
 
-function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessageProcessed; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: ChatNormalMessageProcessed; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -294,7 +295,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 	);
 }
 
-function RenderUserMessageToString(message: IChatNormalMessageProcessed): string {
+function RenderUserMessageToString(message: ChatNormalMessageProcessed): string {
 	const [before, after] = (() => {
 		switch (message.type) {
 			case 'ooc':
@@ -373,7 +374,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	edited: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
 	receivedRoomId: RoomId | null;
-	from?: IChatMessageChatCharacter;
+	from?: ChatMessageChatCharacter;
 }): ReactElement {
 	const time = useMemo(() => messageTime != null ? new Date(messageTime) : null, [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time?.getDate());
@@ -391,7 +392,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	}, [messageTime, full]);
 
 	return (
-		<span className='info'>
+		<span className='info' translate='no'>
 			{ time != null ? (
 				<span title={ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` + (from != null ? ` by ${ from.name } (${ from.id })` : '') }>
 					{
@@ -410,8 +411,8 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	);
 }
 
-function DisplayName({ message, color }: { message: IChatMessageChat; color: HexColorString; }): ReactElement | null {
-	const { setTarget } = useChatInput();
+function DisplayName({ message, color }: { message: ChatMessageChat; color: HexColorString; }): ReactElement | null {
+	const { setTargets, targets: whisperTargets } = useChatInput();
 	const playerId = usePlayerId();
 
 	const [before, after] = useMemo(() => {
@@ -431,37 +432,72 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 
 	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();
+		event.preventDefault();
 
 		const id = event.currentTarget.getAttribute('data-id');
 		if (!id || id === playerId)
 			return;
 
-		setTarget(id as CharacterId);
-	}, [setTarget, playerId]);
+		const parsedId = CharacterIdSchema.parse(id);
+		if (event.shiftKey || event.ctrlKey) {
+			// Toggle when holding shift/ctrl
+			const newWhispering = whisperTargets?.map((t) => t.id) ?? [];
+			const currentIndex = newWhispering.indexOf(parsedId);
+			if (currentIndex >= 0) {
+				newWhispering.splice(currentIndex, 1);
+			} else {
+				newWhispering.push(parsedId);
+			}
+			setTargets(newWhispering.length > 0 ? newWhispering : null);
+		} else {
+			setTargets([parsedId]);
+		}
+	}, [setTargets, whisperTargets, playerId]);
+
+	const replyAll = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
+		event.stopPropagation();
+		event.preventDefault();
+
+		const ids = uniq([message.from.id, ...('to' in message && message.to ? message.to.map((t) => t.id) : [])].filter((t) => t !== playerId));
+		setTargets(ids);
+	}, [setTargets, playerId, message]);
 
 	if ('to' in message && message.to) {
 		return (
-			<span className='name'>
+			<span className='name' translate='no'>
 				{ before }
 				<ColoredName
-					className='from'
+					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
 				</ColoredName>
-				{ ' -> ' }
-				<ColoredName
-					className='to'
-					color={ message.to.labelColor }
-					data-id={ message.to.id }
-					title={ `${message.to.name} (${message.to.id})` }
-					onClick={ onClick }
+				{ ' ' }
+				<span
+					className='cursor-pointer'
+					title='This message is a whisper (click to reply)'
+					onClick={ replyAll }
 				>
-					{ message.to.name }
-				</ColoredName>
+					{ '->' }
+				</span>
+				{ ' ' }
+				{ message.to.map((t, i) => (
+					<React.Fragment key={ i }>
+						{ i !== 0 ? ', ' : null }
+						<ColoredName
+							className='to cursor-pointer'
+							color={ t.labelColor }
+							data-id={ t.id }
+							title={ `${t.name} (${t.id})` + (t.id === playerId ? ' [You]' : ' (click to whisper)') }
+							onClick={ onClick }
+						>
+							{ t.name }
+						</ColoredName>
+					</React.Fragment>
+				)) }
 				{ after }
 			</span>
 		);
@@ -472,19 +508,19 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 			{ before }
 			{ message.type !== 'me' && message.type !== 'emote' ? (
 				<ColoredName
-					className='from'
+					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
 				</ColoredName>
 			) : (
 				<span
-					className='from'
+					className='from cursor-pointer'
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
@@ -495,7 +531,7 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: Hex
 	);
 }
 
-function RenderChatNameToString(message: IChatMessageChat): string {
+function RenderChatNameToString(message: ChatMessageChat): string {
 	// Emote has no name
 	if (message.type === 'emote')
 		return '';
@@ -516,13 +552,13 @@ function RenderChatNameToString(message: IChatMessageChat): string {
 	})();
 
 	if ('to' in message && message.to) {
-		return before + message.from.name + ' -> ' + message.to.name + after;
+		return before + message.from.name + ' -> ' + message.to.map((t) => t.name).join(', ') + after;
 	}
 
 	return before + message.from.name + after;
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
+export const ActionMessageElement = memo(function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number | null;
@@ -566,6 +602,7 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			) }
 			style={ style }
 			onClick={ () => setFolded(!folded) }
+			translate='no'
 		>
 			<DisplayInfo
 				messageTime={ messageTime }
@@ -591,9 +628,9 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, re
 			}
 		</div>
 	);
-}
+});
 
-export function ActionMessage({ message, ignoreColor = false }: { message: IChatActionMessageProcessed; ignoreColor?: boolean; }): ReactElement | null {
+export function ActionMessage({ message, ignoreColor = false }: { message: ChatActionMessagePreprocessed; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
 
@@ -624,7 +661,7 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 	);
 }
 
-export function RenderActionMessageToString(message: IChatActionMessageProcessed, { interfaceChatroomItemDisplayNameType }: Immutable<AccountSettings>): string {
+export function RenderActionMessageToString(message: ChatActionMessagePreprocessed, { interfaceChatroomItemDisplayNameType }: Immutable<AccountSettings>): string {
 	const assetManager = GetCurrentAssetManager();
 
 	const [content, extraContent] = RenderActionContentToString(message, assetManager, interfaceChatroomItemDisplayNameType);

@@ -104,11 +104,11 @@ describe('ChatParser', () => {
 					to: undefined,
 				}]);
 
-			expect(ChatParser.parse('((ooc talk))', 'c123321'))
+			expect(ChatParser.parse('((ooc talk))', ['c123321']))
 				.toStrictEqual([{
 					type: 'ooc',
 					parts: [['normal', 'ooc talk']],
-					to: 'c123321',
+					to: ['c123321'],
 				}]);
 		});
 	});

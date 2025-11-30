@@ -10,8 +10,8 @@ export interface ChatMessageFilter {
 export interface ChatMessageFilterMetadata {
 	/** Id of the character the message is from */
 	from: CharacterId;
-	/** Character this message is being whispered to, or `null` of normal chat message */
-	to: CharacterId | null;
+	/** Character(s) this message is being whispered to, or `null` of normal chat message */
+	to: CharacterId[] | null;
 }
 
 export class CompoundChatMessageFilter implements ChatMessageFilter {

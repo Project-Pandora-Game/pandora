@@ -23,12 +23,11 @@ import {
 	CreateActionLogFromGameLogicAction,
 	EMPTY_ARRAY,
 	GameStateUpdate,
-	IChatMessage,
 	IChatMessageActionTargetCharacter,
-	IChatMessageDirectoryAction,
 	IChatSegment,
 	IClientMessage,
 	IShardClient,
+	IsNotNullable,
 	Logger,
 	ServerRoom,
 	SpaceCharacterModifierEffectCalculateUpdate,
@@ -37,10 +36,13 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessage,
+	type ChatMessageAction,
 	type ChatMessageActionLogEntry,
+	type ChatMessageChatCharacter,
+	type ChatMessageDirectoryAction,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
-	type IChatMessageAction,
 	type IClientShardNormalResult,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
@@ -67,7 +69,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
-	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; target?: CharacterId; }>();
+	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; targets?: readonly CharacterId[]; }>();
 	protected readonly actionCache = new Map<CharacterId, {
 		descriptor: IChatMessageActionTargetCharacter;
 		lastAction: [entry: Immutable<ChatMessageActionLogEntry>, time: number] | null;
@@ -272,7 +274,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public getLoadData(forCharacter: CharacterId): SpaceLoadData {
 		const chatStatus: Record<CharacterId, ChatCharacterStatus> = {};
 		for (const [c, status] of this.status) {
-			if (this.getCharacterById(c) == null || status.status === 'none' || (status.target != null && status.target !== forCharacter))
+			if (this.getCharacterById(c) == null || status.status === 'none' || (status.targets != null && !status.targets.includes(forCharacter)))
 				continue;
 
 			chatStatus[c] = status.status;
@@ -500,19 +502,27 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return this.lastMessageTime = time;
 	}
 
-	public updateStatus(character: Character, status: ChatCharacterStatus, target?: CharacterId): void {
-		const last = this.status.get(character.id) ?? { status: 'none', target: undefined };
-		this.status.set(character.id, { status, target });
+	public updateStatus(character: Character, status: ChatCharacterStatus, targets?: readonly CharacterId[]): void {
+		const last = this.status.get(character.id) ?? { status: 'none', targets: undefined };
+		this.status.set(character.id, { status, targets: targets?.slice() });
 
-		if (target !== last.target && last.status !== 'none') {
-			const lastTarget = last.target ? this.getCharacterById(last.target)?.connection : this;
-			lastTarget?.sendMessage('chatCharacterStatus', { id: character.id, status: 'none' });
+		if (!isEqual(targets, last.targets) && last.status !== 'none') {
+			if (last.targets != null) {
+				for (const lastTarget of last.targets) {
+					const conn = this.getCharacterById(lastTarget)?.connection;
+					conn?.sendMessage('chatCharacterStatus', { id: character.id, status: 'none' });
+				}
+			} else {
+				this.sendMessage('chatCharacterStatus', { id: character.id, status: 'none' });
+			}
 			if (status === 'none')
 				return;
 		}
 
-		const sendTo = target ? this.getCharacterById(target)?.connection : this;
-		sendTo?.sendMessage('chatCharacterStatus', { id: character.id, status });
+		const sendTo = targets ? targets.map((t) => this.getCharacterById(t)?.connection) : [this];
+		for (const conn of sendTo) {
+			conn?.sendMessage('chatCharacterStatus', { id: character.id, status });
+		}
 	}
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, editId?: number): IClientShardNormalResult['chatMessage'] {
@@ -542,7 +552,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 
-		const queue: IChatMessage[] = [];
+		const queue: ChatMessage[] = [];
 		const now = Date.now();
 		let originRoom = player.appearance.characterState.currentRoom;
 		let history = this.history.get(from.id);
@@ -585,32 +595,23 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			room: originRoom,
 		});
 		for (const message of messages) {
-			if (!IsTargeted(message)) {
-				queue.push({
-					type: message.type,
-					id,
-					insertId: editId,
-					room: originRoom,
-					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
-					parts: message.parts,
-					time: this.nextMessageTime(),
-				});
-			} else {
-				const target = this.getCharacterById(message.to);
-				if (!target) {
-					continue; // invalid message, target not found
-				}
-				queue.push({
-					type: message.type,
-					id,
-					insertId: editId,
-					room: originRoom,
-					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
-					to: { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor },
-					parts: message.parts,
-					time: this.nextMessageTime(),
-				});
+			const finalMessage: ChatMessage = {
+				type: message.type,
+				id,
+				insertId: editId,
+				room: originRoom,
+				from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
+				parts: message.parts,
+				time: this.nextMessageTime(),
+			};
+			if (IsTargeted(message)) {
+				Assert(finalMessage.type === 'chat' || finalMessage.type === 'ooc');
+				finalMessage.to = message.to.map((t): ChatMessageChatCharacter | null => {
+					const target = this.getCharacterById(t);
+					return target != null ? { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor } : null;
+				}).filter(IsNotNullable);
 			}
+			queue.push(finalMessage);
 		}
 		this._queueMessages(queue);
 
@@ -629,7 +630,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		sendTo,
 		dictionary,
 		...data
-	}: ActionHandlerMessage): IChatMessage {
+	}: ActionHandlerMessage): ChatMessage {
 		// No reason to duplicate target if it matches character
 		if (isEqual(target, character)) {
 			target = undefined;
@@ -650,13 +651,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
-	private _queueMessages(messages: IChatMessage[]): void {
+	private _queueMessages(messages: ChatMessage[]): void {
 		for (const character of this.characters) {
 			character.queueMessages(messages.filter((msg) => {
 				switch (msg.type) {
 					case 'chat':
 					case 'ooc':
-						return msg.to === undefined || character.id === msg.from.id || character.id === msg.to.id;
+						return msg.to === undefined || character.id === msg.from.id || msg.to.some((t) => t.id === character.id);
 					case 'deleted':
 						return true;
 					case 'emote':
@@ -676,17 +677,17 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public processDirectoryMessages(messages: IChatMessageDirectoryAction[]): void {
+	public processDirectoryMessages(messages: ChatMessageDirectoryAction[]): void {
 		this._queueMessages(messages
 			.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
-			.map((m): IChatMessage => ({
+			.map((m): ChatMessage => ({
 				...omit(m, ['directoryTime']),
 				time: this.nextMessageTime(),
 				rooms: null,
 				data: m.data ? {
 					character: this._getCharacterActionInfo(m.data.character),
 					target: this._getCharacterActionInfo(m.data.targetCharacter),
-				} satisfies IChatMessageAction['data'] : undefined,
+				} satisfies ChatMessageAction['data'] : undefined,
 			})));
 		this.lastDirectoryMessageTime = chain(messages)
 			.map((m) => m.directoryTime)
@@ -751,6 +752,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 }
 
-function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId; } {
+function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId[]; } {
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
 }

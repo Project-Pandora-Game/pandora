@@ -157,14 +157,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		client.character.onMessageAck(lastTime);
 	}
 
-	private handleChatStatus({ status, target }: IClientShardArgument['chatStatus'], client: ClientConnection): void {
+	private handleChatStatus({ status, targets }: IClientShardArgument['chatStatus'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		space.updateStatus(character, status, target);
+		space.updateStatus(character, status, targets);
 	}
 
 	private handleGameLogicAction(request: IClientShardArgument['gameLogicAction'], client: ClientConnection): IClientShardNormalResult['gameLogicAction'] {

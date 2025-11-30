@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import * as z from 'zod';
 import type { ActionHandlerMessage, AssetFrameworkGlobalState } from '../assets/index.ts';
-import { AssertNever } from '../utility/misc.ts';
+import { AssertNever, KnownObject } from '../utility/misc.ts';
 import { RecordUnpackSubobjectProperties } from '../validation.ts';
 
 const CHAT_ACTIONS_DEF = {
@@ -422,6 +422,7 @@ export type ChatActionDictionaryMetaEntry =
 	| 'ITEM_CONTAINER_SIMPLE'
 	| 'ITEM_CONTAINER_SIMPLE_DYNAMIC';
 
+export const ChatActionIdSchema: z.ZodType<ChatActionId> = z.enum(KnownObject.keys(CHAT_ACTIONS_DEF));
 export type ChatActionId = keyof typeof CHAT_ACTIONS_DEF;
 
 export const ChatActionTypeSchema = z.enum([

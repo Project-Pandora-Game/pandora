@@ -93,7 +93,7 @@ export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
 
 /** The maximum size of character preview */
-export const LIMIT_CHARACTER_PREVIEW_SIZE = 10 * 1024; // 10kb
+export const LIMIT_CHARACTER_PREVIEW_SIZE = 64 * 64 * 3 + 1024; // 64x64 pixels + 1kb reserve for png headers at the worst case (13kb total max)
 
 /** The maximum length of an outfit name */
 export const LIMIT_OUTFIT_NAME_LENGTH = 48;

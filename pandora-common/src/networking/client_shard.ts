@@ -40,7 +40,7 @@ export const ClientShardSchema = {
 	chatStatus: {
 		request: z.object({
 			status: ChatCharacterStatusSchema,
-			target: CharacterIdSchema.optional(),
+			targets: CharacterIdSchema.array().optional(),
 		}),
 		response: null,
 	},

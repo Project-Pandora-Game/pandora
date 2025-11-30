@@ -1,5 +1,5 @@
 import { produce } from 'immer';
-import { capitalize, clamp, cloneDeep, omit } from 'lodash-es';
+import { capitalize, clamp, cloneDeep, omit, upperFirst } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
@@ -342,26 +342,10 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 			}
 		}
 		setEdit({
-			...preset, pose: {
+			...preset,
+			pose: {
+				...characterState.actualPose,
 				bones,
-				leftArm: {
-					...characterState.actualPose.leftArm,
-					...preset.pose.arms,
-					...preset.pose.leftArm,
-				},
-				rightArm: {
-					...characterState.actualPose.rightArm,
-					...preset.pose.arms,
-					...preset.pose.rightArm,
-				},
-				armsOrder: {
-					...characterState.actualPose.armsOrder,
-					...preset.pose.armsOrder,
-				},
-				legs: {
-					...characterState.actualPose.legs,
-					...preset.pose.legs,
-				},
 			},
 		});
 	}, [preset, setEdit, allBones, characterState]);
@@ -409,10 +393,11 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 							<td></td>
 							<td></td>
 						</tr>
-						<PosePresetArmPoses preset={ preset } />
+						<PosePresetView preset={ preset } />
 						<tr>
 							<td className='noPadding' colSpan={ 3 }><hr /></td>
 						</tr>
+						<PosePresetArmPoses preset={ preset } />
 						<PosePresetArmsOrder preset={ preset } />
 						<tr>
 							<td className='noPadding' colSpan={ 3 }><hr /></td>
@@ -506,6 +491,34 @@ function PosePresetExport({ exported, close }: {
 	);
 }
 
+function PosePresetView({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
+	const { characterState, setEdit } = usePosePresetContext();
+
+	return (
+		<tr>
+			<td>
+				<Checkbox
+					checked={ preset.pose.view != null }
+					onChange={ (checked) => {
+						if (checked) {
+							setEdit({ ...preset, pose: { ...preset.pose, view: characterState.actualPose.view } });
+						} else {
+							const newPose = { ...preset.pose };
+							delete newPose.view;
+							setEdit({ ...preset, pose: newPose });
+						}
+					} } />
+			</td>
+			<td>
+				View
+			</td>
+			<td>
+				{ upperFirst(preset.pose.view ?? characterState.actualPose.view) }
+			</td>
+		</tr>
+	);
+}
+
 function PosePresetArmPoses({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
 	const { characterState, setEdit } = usePosePresetContext();
 
@@ -537,12 +550,12 @@ function PosePresetArmPoses({ preset }: { preset: AssetFrameworkPosePresetWithId
 
 	return (
 		<>
-			<Arm side='left' part='position' />
 			<Arm side='right' part='position' />
-			<Arm side='left' part='rotation' />
 			<Arm side='right' part='rotation' />
-			<Arm side='left' part='fingers' />
 			<Arm side='right' part='fingers' />
+			<Arm side='left' part='position' />
+			<Arm side='left' part='rotation' />
+			<Arm side='left' part='fingers' />
 		</>
 	);
 }

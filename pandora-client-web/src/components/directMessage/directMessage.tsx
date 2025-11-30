@@ -35,8 +35,8 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 				ref.current.value = value;
 			}
 		},
-		target: null,
-		setTarget: () => { /** */ },
+		targets: null,
+		setTargets: () => { /** */ },
 		editing: null,
 		setEditing: () => false,
 		autocompleteHint,

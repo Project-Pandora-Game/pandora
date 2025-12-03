@@ -4,6 +4,7 @@ import { ReactElement, useMemo, useState } from 'react';
 import { Column, DivContainer } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { Tabulation, type TabConfig } from '../../../components/common/tabs/tabs.tsx';
+import { LocalErrorBoundary } from '../../../components/error/localErrorBoundary.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
@@ -99,44 +100,46 @@ function InteractionBox({ isPortrait, className }: {
 				gap='tiny'
 				className='fill-x zero-height flex-1'
 			>
-				{
-					// Chat is handled separately
-					tab === 'chat' ? null : (
-						<Column
-							className={ classNames(
-								'fit',
-								(
-									splitChatHorizontal ? 'flex-2 zero-height' :
-									splitChatVertical ? 'flex-1' :
-									'fill'
-								),
-							) }
-						>
-							{
-								tab === 'room' ? (
-									isPersonalSpace ? (
-										<Scrollable className='controls-container flex-1'>
-											<PersonalSpaceControls />
-										</Scrollable>
-									) : (
-										<Scrollable className='controls-container flex-1'>
-											<RoomControls />
-										</Scrollable>
-									)
-								) : tab === 'pose' ? (
-									<InteractionBoxPose />
-								) : tab === 'expressions' ? (
-									<InteractionBoxExpressions />
-								) : AssertNever(tab)
-							}
-						</Column>
-					)
-				}
-				{
-					tab === 'chat' || splitChatHorizontal || splitChatVertical ? (
-						<Chat />
-					) : null
-				}
+				<LocalErrorBoundary>
+					{
+						// Chat is handled separately
+						tab === 'chat' ? null : (
+							<Column
+								className={ classNames(
+									'fit',
+									(
+										splitChatHorizontal ? 'flex-2 zero-height' :
+										splitChatVertical ? 'flex-1' :
+										'fill'
+									),
+								) }
+							>
+								{
+									tab === 'room' ? (
+										isPersonalSpace ? (
+											<Scrollable className='controls-container flex-1'>
+												<PersonalSpaceControls />
+											</Scrollable>
+										) : (
+											<Scrollable className='controls-container flex-1'>
+												<RoomControls />
+											</Scrollable>
+										)
+									) : tab === 'pose' ? (
+										<InteractionBoxPose />
+									) : tab === 'expressions' ? (
+										<InteractionBoxExpressions />
+									) : AssertNever(tab)
+								}
+							</Column>
+						)
+					}
+					{
+						tab === 'chat' || splitChatHorizontal || splitChatVertical ? (
+							<Chat />
+						) : null
+					}
+				</LocalErrorBoundary>
 			</DivContainer>
 		</Column>
 	);

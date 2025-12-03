@@ -26,6 +26,25 @@
 	display: flex;
 	overflow: hidden;
 
+	.page-list {
+		overflow: auto;
+
+		&.left-list {
+			border-right: 2px solid common.$theme-separator;
+
+			@include common.forcedColors {
+				border-right-color: common.$forcedColors-separator;
+			}
+		}
+
+
+		button {
+			width: 12em;
+			height: 2.75em;
+		}
+	}
+
+
 	.tab-content {
 		max-width: 100vw;
 	}

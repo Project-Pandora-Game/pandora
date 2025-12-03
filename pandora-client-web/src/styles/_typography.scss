@@ -129,7 +129,7 @@ meter {
 	display: block;
 	border: solid 1px common.$theme-separator;
 	border-radius: 2em;
-	height: 0.75em;
+	height: calc(0.75em + 2px);
 
 	&::-webkit-meter-bar {
 		height: 0.75em;

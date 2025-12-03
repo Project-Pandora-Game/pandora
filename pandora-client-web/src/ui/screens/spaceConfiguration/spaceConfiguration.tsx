@@ -131,7 +131,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		};
 		if (!creation) {
 			delete result.features;
-			delete result.development;
 		} else if (result.features) {
 			if (result.features.includes('development') && isDeveloper && !result.development) {
 				result.development = {};

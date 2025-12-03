@@ -436,17 +436,15 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 					<label htmlFor='custom-name'>Custom name:</label>
 					<TextInput id='custom-name' value={ name } onChange={ setName } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
+				{ nameError ? (
+					<Row>
+						<span className='error'>{ nameError }</span>
+					</Row>
+				) : null }
 				<Row alignY='center'>
 					<span>Asset name:</span>
 					<span className='name'>{ item.asset.definition.name }</span>
 				</Row>
-				{
-					nameError && (
-						<Row>
-							<span className='error'>{ nameError }</span>
-						</Row>
-					)
-				}
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row alignX='space-between'>

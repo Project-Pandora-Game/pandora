@@ -250,7 +250,7 @@
 
 .warning-box, .error-box {
 	@include common.center-flex;
-	border: common.$theme-separator solid 1px;
+	border: 1px solid common.$theme-separator;
 	border-radius: 1em;
 	padding: 0.25em 0.5em;
 	margin: 0.25em;

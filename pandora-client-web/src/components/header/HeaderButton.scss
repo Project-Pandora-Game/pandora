@@ -7,7 +7,9 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 .HeaderButton {
 	background: common.$theme-header-button-normal-background;
 	color: common.$theme-header-button-normal-text;
-	border: 0.2em solid transparent;
+	border: 1px solid transparent;
+	border-radius: common.spacing('small');
+	outline-offset: -0.2em;
 	min-width: 4em;
 
 	.icon-container {
@@ -50,7 +52,6 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 	}
 
 	&:focus-visible {
-		outline: 0;
-		border-color: common.$theme-header-button-visiblefocus-outline;
+		outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
 	}
 }

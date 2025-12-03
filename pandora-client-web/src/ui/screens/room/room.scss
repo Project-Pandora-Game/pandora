@@ -67,8 +67,8 @@
 
 			>span, >button {
 				font-size: 1em;
-				padding: 0 0.3em;
-				border: solid transparent 0.2em;
+				padding: 0.15em 0.4em;
+				border: 2px solid transparent;
 				flex-grow: 1;
 
 				display: inline-flex;
@@ -79,12 +79,16 @@
 				color: common.$theme-room-controls-character-text;
 			}
 
-			>button:hover {
-				background: common.$theme-room-controls-character-hover-background;
-			}
+			>button {
+				outline-offset: -0.2em;
 
-			>button:focus-visible {
-				border-color: common.$theme-room-controls-character-visiblefocus-outline;
+				&:hover {
+					background: common.$theme-room-controls-character-hover-background;
+				}
+
+				&:focus-visible {
+					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
+				}
 			}
 		}
 	}
@@ -125,8 +129,8 @@
 
 			>span, >button {
 				font-size: 1em;
-				padding: 0 0.3em;
-				border: solid transparent 0.2em;
+				padding: 0.15em 0.4em;
+				border: 2px solid transparent;
 				flex-grow: 1;
 
 				display: inline-flex;
@@ -163,12 +167,16 @@
 				}
 			}
 
-			>button:hover {
-				background: common.$theme-room-controls-character-hover-background;
-			}
+			>button {
+				outline-offset: -0.2em;
 
-			>button:focus-visible {
-				border-color: common.$theme-room-controls-character-visiblefocus-outline;
+				&:hover {
+					background: common.$theme-room-controls-character-hover-background;
+				}
+
+				&:focus-visible {
+					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
+				}
 			}
 		}
 	}

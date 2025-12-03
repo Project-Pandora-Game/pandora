@@ -5,7 +5,6 @@ $header-height: 2em;
 .wardrobe {
 	display: flex;
 	flex-flow: column;
-	gap: 0.5em;
 	height: 100%;
 	min-width: fit-content;
 
@@ -15,6 +14,7 @@ $header-height: 2em;
 		color: common.$theme-warningbox-text;
 		border: 1px solid common.$theme-separator;
 		padding: 0.25em;
+		margin: common.spacing('tiny');
 	}
 
 	.wardrobeMain {
@@ -219,9 +219,14 @@ $drop-overlay-gap: 0.3em;
 			border: 1px solid common.$theme-wardrobe-outfitbutton-border;
 			background: common.$theme-wardrobe-outfitbutton-normal-background;
 			color: common.$theme-wardrobe-outfitbutton-text;
+			outline-offset: -0.2em;
 
 			&:hover {
 				background: common.$theme-wardrobe-outfitbutton-hover-background;
+			}
+
+			&:focus-visible {
+				outline: 0.2em solid common.$theme-wardrobe-outfitbutton-normal-visiblefocus-outline;
 			}
 
 			.outfitPreview {
@@ -633,6 +638,7 @@ $drop-overlay-gap: 0.3em;
 .wardrobeActionButton, .inventoryViewItem {
 	background: common.$theme-wardrobe-actionbutton-normal-background;
 	color: common.$theme-wardrobe-actionbutton-normal-text;
+	outline-offset: -0.2em;
 
 	&.selected {
 		cursor: pointer;
@@ -657,14 +663,9 @@ $drop-overlay-gap: 0.3em;
 		--progress: 0%;
 		background: linear-gradient(
 			to bottom,
-			common.$theme-wardrobe-actionbutton-progress-done var(--progress),
-			common.$theme-wardrobe-actionbutton-progress-pending var(--progress),
+			common.$theme-wardrobe-actionbutton-progress-done 0 var(--progress),
+			common.$theme-wardrobe-actionbutton-progress-pending var(--progress) 100%,
 		);
-		// --progress: 0deg;
-		// background: conic-gradient(
-		// 	$theme-wardrobe-actionbutton-progress-done var(--progress),
-		// 	$theme-wardrobe-actionbutton-progress-pending var(--progress),
-		// );
 	}
 
 	&.allowed:not(:disabled) {
@@ -714,7 +715,7 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&:focus-visible {
-		border-color: common.$theme-wardrobe-actionbutton-visiblefocus-border;
+		outline: 0.2em solid common.$theme-wardrobe-actionbutton-visiblefocus-border;
 	}
 }
 

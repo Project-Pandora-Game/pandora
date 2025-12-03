@@ -389,7 +389,8 @@ $theme-wardrobe-modebutton-active-background: #232930;
 
 $theme-wardrobe-outfitbutton-border: #000;
 $theme-wardrobe-outfitbutton-normal-background: #202429;
-$theme-wardrobe-outfitbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-wardrobe-outfitbutton-hover-background: color-mix(in srgb, #0d0d0d, $theme-accent-color 35%);
+$theme-wardrobe-outfitbutton-normal-visiblefocus-outline: color-mix(in srgb, #ffffffcc, $theme-accent-color 35%);
 $theme-wardrobe-outfitbutton-text: #eee;
 $theme-wardrobe-outfitbutton-preview-border: #000;
 

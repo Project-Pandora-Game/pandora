@@ -320,6 +320,7 @@ function DeviceOverlaySelector(): ReactElement {
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
 				{ ' ' }
 				<Select
+					id='chatroom-device-overlay'
 					value={ defaultView }
 					onChange={ onSelectionChange }
 				>

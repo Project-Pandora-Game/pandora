@@ -14,6 +14,7 @@
 	.listItem {
 		background: common.$theme-table-body-background;
 		color: common.$theme-table-body-text;
+		border-radius: common.spacing('small');
 
 		&:nth-child(2n) {
 			background: common.$theme-table-body-altbackground;

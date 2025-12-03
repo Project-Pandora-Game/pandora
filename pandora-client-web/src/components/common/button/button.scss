@@ -46,7 +46,7 @@
 					color: map.get($theme-data, "color");
 
 					img, canvas {
-						filter: map.get($theme-data, "icon-filter")
+						filter: map.get($theme-data, "icon-filter");
 					}
 				}
 			}

@@ -53,6 +53,7 @@
 		@include common.flex(row, wrap);
 		align-items: flex-start;
 		min-height: HeaderButton.$header-button-height;
+		gap: 1px;
 
 		&.rightHeader, &.leftHeader {
 			align-items: stretch;
@@ -93,7 +94,9 @@
 	.collapsableHeaderButton {
 		background: common.$theme-header-button-normal-background;
 		color: common.$theme-header-button-normal-text;
-		border: 0.2em solid transparent;
+		border: 1px solid transparent;
+		border-radius: common.spacing('small');
+		outline-offset: -0.2em;
 
 		&:hover {
 			background: common.$theme-header-button-hover-background;
@@ -105,8 +108,7 @@
 		}
 
 		&:focus-visible {
-			outline: 0;
-			border-color: common.$theme-header-button-visiblefocus-outline;
+			outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
 		}
 	}
 }
@@ -120,8 +122,8 @@
 	min-height: 1em;
 	padding: common.spacing(small);
 	gap: common.spacing(small);
-	border-bottom: 2px solid common.$theme-separator;
 	align-items: center;
+	justify-content: center;
 
 	&.type-info {
 		background: common.$theme-noticebox-background;
@@ -163,9 +165,10 @@
 		}
 
 		> div {
-			@include common.flex(column, wrap);
+			@include common.flex(column);
 			align-items: stretch;
 			min-height: HeaderButton.$header-button-height;
+			gap: 1px;
 			flex: unset;
 
 			> button, > span, > .currentAccount > button {

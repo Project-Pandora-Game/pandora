@@ -28,11 +28,6 @@
 				padding: 1px;
 				overflow: clip;
 
-				&.filler {
-					background: transparent;
-					border-color: common.$theme-normal-background-secondary;
-				}
-
 				> button {
 					@include common.center-flex(column);
 					position: relative;

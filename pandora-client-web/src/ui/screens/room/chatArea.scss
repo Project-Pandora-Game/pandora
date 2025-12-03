@@ -76,9 +76,12 @@
 				margin: 0.4em;
 				padding: 0.2em;
 
-				&.foldable:hover {
-					background: common.$theme-chat-serverMessage-foldable-hover-background;
+				&.foldable {
 					cursor: pointer;
+
+					&:hover {
+						background: common.$theme-chat-serverMessage-foldable-hover-background;
+					}
 				}
 			}
 
@@ -211,16 +214,14 @@
 
 .typing-indicator {
 	padding-right: 0.5em;
+}
+
+.typing-indicator, .unread-messages-indicator {
 	cursor: pointer;
 
 	&:hover {
 		background: common.$theme-chat-indicator-interactive-hover-background;
 	}
-}
-
-.unread-messages-indicator:hover {
-	background: common.$theme-chat-indicator-interactive-hover-background;
-	cursor: pointer;
 }
 
 .autocomplete-hint {

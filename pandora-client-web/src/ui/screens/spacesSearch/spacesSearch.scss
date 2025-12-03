@@ -11,8 +11,9 @@
 		align-items: center;
 		background: common.$theme-normal-background;
 		color: common.$theme-normal-text;
-		border: 0.25em solid transparent;
-		padding: 0.25em;
+		border: 1px solid transparent;
+		padding: 0.5em;
+		outline-offset: -0.25em;
 		overflow: hidden;
 
 		grid-template:
@@ -42,7 +43,7 @@
 		}
 
 		&:focus-visible {
-			border-color: common.$theme-spacesearch-entry-visiblefocus-outline;
+			outline: 0.25em solid common.$theme-spacesearch-entry-visiblefocus-outline;
 		}
 
 		&.empty {
@@ -280,7 +281,7 @@
 
 	&:hover {
 		cursor: pointer;
-		border: 2px solid common.$theme-tipsbox-hover-border;
+		border-color: common.$theme-tipsbox-hover-border;
 	}
 
 	&:focus-visible {

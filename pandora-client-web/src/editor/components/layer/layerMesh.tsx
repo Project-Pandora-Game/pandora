@@ -72,27 +72,28 @@ function LayerImageSelect({ layer, stop }: { layer: EditorAssetGraphicsWornLayer
 	], [assetTextures]);
 
 	return (
-		<Row alignY='center'>
-			<label htmlFor='layer-image-select'>
-				Layer image asset:
-				<ContextHelpButton>
-					<p>
-						Select the image you want to be used from the ones you uploaded in the Asset-tab.
-					</p>
-					<p>
-						{ (layer.type === 'alphaImageMesh') ?
-							'The image will be used as an alpha mask to hide parts of the images below from the same priority layer.' :
-							'The layer will show the assigned image based on the set overrides/stop points (if applicable).' }
-						<br />
-						{ (layer.type === 'alphaImageMesh') ?
-							'Most assets do not need alpha masks. Look at existing skirt/shoe assets for examples of mask usage.' :
-							'' }
-					</p>
-				</ContextHelpButton>
-			</label>
+		<Column gap='tiny'>
+			<Row alignY='center'>
+				<label htmlFor='layer-image-select'>
+					Layer image asset:
+					<ContextHelpButton>
+						<p>
+							Select the image you want to be used from the ones you uploaded in the Asset-tab.
+						</p>
+						<p>
+							{ (layer.type === 'alphaImageMesh') ?
+								'The image will be used as an alpha mask to hide parts of the images below from the same priority layer.' :
+								'The layer will show the assigned image based on the set overrides/stop points (if applicable).' }
+							<br />
+							{ (layer.type === 'alphaImageMesh') ?
+								'Most assets do not need alpha masks. Look at existing skirt/shoe assets for examples of mask usage.' :
+								'' }
+						</p>
+					</ContextHelpButton>
+				</label>
+			</Row>
 			<Select
 				id='layer-image-select'
-				className='flex'
 				value={ layerImage }
 				onChange={ (event) => {
 					layer.modifyDefinition((d) => {
@@ -110,7 +111,7 @@ function LayerImageSelect({ layer, stop }: { layer: EditorAssetGraphicsWornLayer
 			>
 				{ elements }
 			</Select>
-		</Row>
+		</Column>
 	);
 }
 
@@ -269,7 +270,7 @@ export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphic
 			</ContextHelpButton>
 			<Select
 				id='layer-priority-select'
-				className='flex-1'
+				className='zero-width flex-1'
 				value={ layerPriority }
 				onChange={ (event) => {
 					layer.modifyDefinition((d) => {
@@ -328,7 +329,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsWornLayer<'m
 			</ContextHelpButton>
 			<Select
 				id='layer-template-select'
-				className='flex-1'
+				className='zero-width flex-1'
 				value={ `t/${points}` }
 				onChange={ (event) => {
 					Assert(event.target.value.startsWith('t/'));

@@ -17,6 +17,12 @@
 	place-items: center;
 	background: common.$theme-normal-background-secondary;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
+
 	.room {
 		contain: size;
 		width: 100%;
@@ -49,6 +55,11 @@
 			overflow-wrap: break-word;
 			color: common.$theme-normal-text;
 			background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+			}
 
 			display: -webkit-box;
 			-webkit-box-orient: vertical;

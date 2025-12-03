@@ -12,9 +12,21 @@
 	border: 0.15em solid transparent;
 	border-radius: common.spacing('small');
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	&.error {
 		background: common.$theme-error-background;
 		color: common.$theme-error-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			text-decoration: underline common.$theme-error-text;
+		}
 	}
 }
 
@@ -30,6 +42,12 @@
 	padding: 0.25em;
 	overflow: hidden;
 
+	@include common.forcedColors {
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonBorder;
+	}
+
 	grid-template:
 		"icon extraIcons name" 1.75em
 		"icon extraIcons description" 1.75em
@@ -38,8 +56,18 @@
 	&.selected {
 		background: common.$theme-active-background;
 		color: common.$theme-active-text;
+
+		@include common.forcedColors {
+			background: SelectedItem;
+			color: SelectedItemText;
+		}
+
 		.entry .offlineCount {
 			color: common.$theme-active-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 
@@ -47,21 +75,43 @@
 		color: common.$theme-hover-text;
 		background: common.$theme-hover-background;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: AccentColor;
+		}
+
 		.entry .offlineCount {
 			color: common.$theme-hover-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 
 	&:focus-visible {
 		outline: 0.25em solid common.$theme-spacesearch-entry-visiblefocus-outline;
+
+		@include common.forcedColors {
+			outline-color: AccentColor;
+		}
 	}
 
 	&.empty {
 		&:not(:hover):not(.selected) {
 			color: common.$theme-normal-text-dim;
 
+			@include common.forcedColors {
+				color: GrayText;
+			}
+
 			.entry .offlineCount {
 				color: common.$theme-normal-text-dim;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 		}
 
@@ -73,6 +123,11 @@
 	&.full .userCount {
 		background: common.$theme-spacesearch-entry-spacefull-highlight;
 		border-radius: 0.5em;
+
+		@include common.forcedColors {
+			background: transparent;
+			border: 2px solid #b60000;
+		}
 	}
 
 	.icon {
@@ -114,6 +169,10 @@
 		.offlineCount {
 			color: common.$theme-normal-text-dim;
 			transition: all 150ms linear;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 

@@ -1,5 +1,28 @@
 @use 'constants';
 
+//#region Theming
+
+@mixin forcedColors {
+	// See
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/system-color
+
+	@media (forced-colors: active) {
+		@at-root & {
+			@content;
+		}
+	}
+
+	@at-root html.forcedColors & {
+		@content;
+	}
+}
+
+// I am not entirely sure what system color is best used as a separator, so using a variable to be able to adjust in the future
+$forcedColors-separator: CanvasText;
+
+//#endregion
+
 //#region Flexbox
 
 @mixin flex($direction: row, $wrap: nowrap) {

@@ -10,6 +10,11 @@
 	contain: size;
 	min-width: min(20em, 90vw);
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
+
 	> .messagesArea {
 		position: relative;
 		flex: 1;
@@ -27,6 +32,11 @@
 			overflow-wrap: break-word;
 			contain: layout style;
 
+			@include common.forcedColors {
+				background: Canvas !important;
+				color: CanvasText !important;
+			}
+
 			&:not(:hover):not(.serverMessage):not(.action) {
 				// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
 				overflow: hidden;
@@ -39,6 +49,10 @@
 					color: common.$theme-chat-serverMessage-text;
 					text-decoration: none;
 
+					@include common.forcedColors {
+						color: inherit;
+					}
+
 					&.hasCustomName, &.hasDescription {
 						&::before {
 							content: '[';
@@ -50,10 +64,18 @@
 
 					&.hasDescription {
 						color: common.$theme-chat-serverMessage-textlink;
+
+						@include common.forcedColors {
+							color: LinkText;
+						}
 					}
 
 					&:hover {
 						color: common.$theme-chat-serverMessage-textlink-hover;
+
+						@include common.forcedColors {
+							color: LinkText;
+						}
 					}
 				}
 			}
@@ -64,8 +86,17 @@
 				background: common.$theme-chat-actionLogEntry-background;
 				color: common.$theme-chat-actionLogEntry-text;
 
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+				}
+
 				&:nth-child(even of .actionLogEntry) {
 					background: common.$theme-chat-actionLogEntry-background-alt;
+
+					@include common.forcedColors {
+						background: Canvas;
+					}
 				}
 			}
 
@@ -76,11 +107,29 @@
 				margin: 0.4em;
 				padding: 0.2em;
 
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+					border: 1px solid common.$forcedColors-separator;
+					border-left-width: 5px;
+				}
+
 				&.foldable {
 					cursor: pointer;
 
+					@include common.forcedColors {
+						background: ButtonFace;
+						color: ButtonText;
+						border-color: ButtonBorder;
+					}
+
 					&:hover {
 						background: common.$theme-chat-serverMessage-foldable-hover-background;
+
+						@include common.forcedColors {
+							background: ButtonFace;
+							border-color: AccentColor;
+						}
 					}
 				}
 			}
@@ -91,10 +140,18 @@
 
 			&.dim {
 				opacity: common.$theme-chat-dim-opacity;
+
+				@include common.forcedColors {
+					opacity: unset;
+				}
 			}
 
 			&.private {
 				opacity: common.$theme-chat-private-opacity;
+
+				@include common.forcedColors {
+					opacity: unset;
+				}
 			}
 
 			> .info {
@@ -103,6 +160,10 @@
 				font-style: italic;
 				font-size: 0.6em;
 				margin-right: 0.2em;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 
 				> span {
 					// Reverse display direction
@@ -130,6 +191,13 @@
 				border: 1px solid common.$theme-separator;
 				outline: 0px solid common.$theme-accent-color;
 
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+					border-color: common.$forcedColors-separator;
+					outline-color: AccentColor;
+				}
+
 				display: inline-block;
 
 				&.highlightChange {
@@ -146,6 +214,12 @@
 				padding: 0.2em;
 				margin: 0 0.2em;
 				border-left: 2px solid common.$theme-chat-editedMessage-notch;
+
+				@include common.forcedColors {
+					background: SelectedItem !important;
+					color: SelectedItemText !important;
+					border-color: SelectedItem;
+				}
 			}
 		}
 
@@ -165,13 +239,26 @@
 		border: none;
 		outline: none;
 
+		@include common.forcedColors {
+			background: Field;
+			color: FieldText;
+		}
+
 		&:focus {
 			background: common.$theme-chat-input-focused-background;
+
+			@include common.forcedColors {
+				background: Field;
+			}
 		}
 
 		&::placeholder {
 			color: common.$theme-chat-input-placeholder-text;
 			opacity: 1; /* Firefox */
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 }
@@ -200,6 +287,12 @@
 	padding-left: 0.5em;
 	gap: 0.5em;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
+
 	img {
 		height: 1em;
 	}
@@ -219,8 +312,19 @@
 .typing-indicator, .unread-messages-indicator {
 	cursor: pointer;
 
+	@include common.forcedColors {
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonBorder;
+	}
+
 	&:hover {
 		background: common.$theme-chat-indicator-interactive-hover-background;
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			border-color: AccentColor;
+		}
 	}
 }
 
@@ -240,6 +344,12 @@
 	padding: 0.5em;
 	gap: 0.1em;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
+
 	hr {
 		width: 100%;
 	}
@@ -248,8 +358,20 @@
 		cursor: pointer;
 		text-indent: 2em hanging;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border: 1px solid transparent;
+		}
+
+
 		&:hover, &.selected {
 			background: common.$theme-autocomplete-hint-entry-hover-background;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				border-color: AccentColor;
+			}
 		}
 	}
 }

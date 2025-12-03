@@ -49,6 +49,7 @@ $theme-error-text: $themecolor-error;
 // Buttons
 $theme-button: (
 	default: (
+		systemTheme: "default",
 		border: #43454a,
 		background: #232930,
 		color: #eee,
@@ -62,6 +63,7 @@ $theme-button: (
 		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
 	),
 	defaultActive: (
+		systemTheme: "selected",
 		border: #43454a,
 		background: color-mix(in srgb, #969a9f, $theme-accent-color 65%),
 		color: #000,
@@ -75,6 +77,7 @@ $theme-button: (
 		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
 	),
 	danger: (
+		systemTheme: "default",
 		border: #43454a,
 		background: #151719,
 		color: #e00,
@@ -88,6 +91,7 @@ $theme-button: (
 		focus-outline: #b00,
 	),
 	"transparent": (
+		systemTheme: "default",
 		border: transparent,
 		background: transparent,
 		color: inherit,
@@ -101,6 +105,7 @@ $theme-button: (
 		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
 	),
 	"semiTransparent": (
+		systemTheme: "default",
 		border: transparent,
 		background: #232930aa,
 		color: inherit,

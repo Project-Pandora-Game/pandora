@@ -4,6 +4,10 @@ fieldset.fieldset-toggle {
 	border: 0.1em solid common.$theme-fieldset-border;
 	border-radius: 0.2em;
 
+	@include common.forcedColors {
+		border-color: common.$forcedColors-separator;
+	}
+
 	&>legend.fieldset-toggle-legend {
 		display: flex;
 		margin-left: 1rem;

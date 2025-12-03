@@ -10,5 +10,11 @@
 	background: common.$theme-dialog-background;
 	color: common.$theme-dialog-text;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	overflow: hidden;
 }

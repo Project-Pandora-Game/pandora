@@ -2,6 +2,12 @@
 
 :target, .target-highlight {
 	animation: target-highlight 2s ease-in;
+
+	@include common.forcedColors {
+		animation: none;
+		background: Mark;
+		color: MarkText;
+	}
 }
 
 @keyframes target-highlight {

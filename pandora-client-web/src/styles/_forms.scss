@@ -14,9 +14,20 @@ input, textarea {
 	background: common.$theme-input-normal-background;
 	color: common.$theme-input-text;
 
+	@include common.forcedColors {
+		border-color: ButtonBorder;
+		background: Field;
+		color: FieldText;
+	}
+
 	&:focus, &:active {
 		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
 		background: common.$theme-input-focused-background;
+
+		@include common.forcedColors {
+			outline-color: AccentColor;
+			background: Field;
+		}
 	}
 
 	&:read-only {
@@ -24,11 +35,19 @@ input, textarea {
 		&:focus, &:active {
 			outline: 0 none;
 		}
+
+		@include common.forcedColors {
+			background: Field;
+		}
 	}
 
 	&::placeholder {
 		color: common.$theme-input-placeholder-text;
 		opacity: 1; /* Firefox */
+
+		@include common.forcedColors {
+			color: GrayText;
+		}
 	}
 }
 
@@ -47,14 +66,29 @@ select {
 	white-space: pre;
 	text-overflow: ellipsis;
 
+	@include common.forcedColors {
+		border-color: ButtonBorder;
+		background: Field;
+		color: FieldText;
+	}
+
 	&:focus-visible {
 		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
+
+		@include common.forcedColors {
+			outline-color: AccentColor;
+		}
 	}
 
 	&:disabled {
 		background: common.$theme-input-readonly-background;
 		&:focus, &:active {
 			outline: 0 none;
+		}
+
+		@include common.forcedColors {
+			background: Field;
+			color: GrayText;
 		}
 	}
 }
@@ -64,6 +98,12 @@ input[type=checkbox] {
 	accent-color: common.$theme-checkbox-accent;
 	border-radius: 0.5em;
 	filter: common.$theme-checkbox-unchecked-filter;
+	forced-color-adjust: auto;
+
+	@include common.forcedColors {
+		filter: none;
+		background: Field;
+	}
 
 	&:checked {
 		filter: none;
@@ -76,6 +116,11 @@ input[type=checkbox] {
 	&:disabled {
 		accent-color: common.$theme-checkbox-disabled-accent;
 		filter: common.$theme-checkbox-disabled-unchecked-filter;
+
+		@include common.forcedColors {
+			filter: none;
+			border-color: GrayText;
+		}
 
 		&:checked {
 			filter: none;

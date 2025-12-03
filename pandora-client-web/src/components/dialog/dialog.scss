@@ -21,6 +21,12 @@
 		border-radius: 1em;
 		background: common.$theme-dialog-background;
 		color: common.$theme-dialog-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
 	}
 
 	&.max-size .dialog-content {
@@ -71,6 +77,12 @@
 	flex-flow: column;
 	isolation: isolate;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	>header {
 		@include common.center-flex;
 		overflow: hidden;
@@ -80,6 +92,12 @@
 		position: relative;
 		min-height: 1.5em;
 		gap: 0.5em;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-bottom: 1px solid common.$forcedColors-separator;
+		}
 
 		.dialog-title {
 			padding: 0.25em 0.5em;
@@ -92,6 +110,12 @@
 			cursor: pointer;
 			border-radius: 50%;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border: 1px solid ButtonBorder;
+			}
+
 			img {
 				width: 70%;
 				height: 70%;
@@ -103,24 +127,48 @@
 		.dialog-close {
 			&:hover {
 				background: common.$theme-dialog-button-close-hover-background;
+
+				@include common.forcedColors {
+					background: ButtonFace;
+					border-color: AccentColor;
+				}
 			}
 		}
 
 		.dialog-shade, .dialog-button {
 			&:hover {
 				background: common.$theme-dialog-button-hover-background;
+
+				@include common.forcedColors {
+					background: ButtonFace;
+					border-color: AccentColor;
+				}
 			}
 
 			&.active {
 				background: common.$theme-dialog-button-active-background;
 				color: common.$theme-dialog-button-active-text;
 
+				@include common.forcedColors {
+					background: SelectedItem;
+					color: SelectedItemText;
+				}
+
 				&:hover {
 					background: common.$theme-dialog-button-active-hover-background;
+
+					@include common.forcedColors {
+						background: SelectedItem;
+						border-color: AccentColor;
+					}
 				}
 
 				img {
 					filter: common.$theme-dialog-button-active-imgfilter;
+
+					@include common.forcedColors {
+						filter: none;
+					}
 				}
 			}
 		}

@@ -5,6 +5,10 @@
 	padding: 2px;
 	gap: 2px !important; // Overriding `Column` we use
 
+	@include common.forcedColors {
+		background: Canvas;
+	}
+
 	.spacesSearchListEntry {
 		display: grid;
 		width: 100%;
@@ -16,6 +20,12 @@
 		outline-offset: -0.25em;
 		overflow: hidden;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: ButtonBorder;
+		}
+
 		grid-template:
 			"icon extraIcons name description" 3.5em
 			/ 2.8em 2em minmax(30%, max-content) 1fr;
@@ -24,34 +34,70 @@
 		&.selected {
 			background: common.$theme-active-background;
 			color: common.$theme-active-text;
+
+			@include common.forcedColors {
+				background: SelectedItem;
+				color: SelectedItemText;
+			}
+
 			.entry .offlineCount {
 				color: common.$theme-active-text-dim;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 		}
 
 		&:nth-child(even):not(:hover):not(.selected) {
 			background: common.$theme-normal-background-secondary;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+			}
 		}
 
 		&:hover:not(.selected) {
 			color: common.$theme-hover-text;
 			background: common.$theme-hover-background;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: AccentColor;
+			}
+
 			.entry .offlineCount {
 				color: common.$theme-hover-text-dim;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 		}
 
 		&:focus-visible {
 			outline: 0.25em solid common.$theme-spacesearch-entry-visiblefocus-outline;
+
+			@include common.forcedColors {
+				outline-color: AccentColor;
+			}
 		}
 
 		&.empty {
 			&:not(:hover):not(.selected) {
 				color: common.$theme-normal-text-dim;
 
+				@include common.forcedColors {
+					color: GrayText;
+				}
+
 				.entry .offlineCount {
 					color: common.$theme-normal-text-dim;
+
+					@include common.forcedColors {
+						color: GrayText;
+					}
 				}
 			}
 
@@ -63,6 +109,11 @@
 		&.full .userCount {
 			background: common.$theme-spacesearch-entry-spacefull-highlight;
 			border-radius: 0.5em;
+
+			@include common.forcedColors {
+				background: transparent;
+				border: 2px solid #b60000;
+			}
 		}
 
 		.icon {
@@ -118,6 +169,10 @@
 			.offlineCount {
 				color: common.$theme-normal-text-dim;
 				transition: all 150ms linear;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 		}
 
@@ -196,6 +251,11 @@
 		border: 1px solid common.$theme-separator;
 		background: common.$theme-spacedetails-feature-norma-background;
 		padding: 0.1em;
+		forced-color-adjust: none;
+
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
 
 		&.warning {
 			background: common.$theme-warningbox-background;
@@ -223,6 +283,11 @@
 		padding: 0.2em;
 		background: common.$theme-spacedetails-description-background;
 		color: common.$theme-spacedetails-description-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
 	}
 
 	.title {
@@ -241,6 +306,10 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+
 		div {
 			display: block;
 			align-items: center;
@@ -249,6 +318,10 @@
 			&.offline {
 				color: common.$theme-normal-text-dim;
 				font-style: italic;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 
 			span {
@@ -274,6 +347,12 @@
 	border: 2px solid common.$theme-tipsbox-normal-border;
 	padding: 0.4em;
 
+	@include common.forcedColors {
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonBorder;
+	}
+
 	.icon {
 		display: inline;
 		color: common.$theme-tipsbox-icon-text;
@@ -282,9 +361,17 @@
 	&:hover {
 		cursor: pointer;
 		border-color: common.$theme-tipsbox-hover-border;
+
+		@include common.forcedColors {
+			border-color: AccentColor;
+		}
 	}
 
 	&:focus-visible {
 		outline: 0.25em solid common.$theme-tipsbox-visiblefocus-outline;
+
+		@include common.forcedColors {
+			outline-color: AccentColor;
+		}
 	}
 }

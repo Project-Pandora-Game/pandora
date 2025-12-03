@@ -18,5 +18,9 @@
 	&:focus-visible {
 		// Not themable as it is based on the icon's color
 		outline: 0.25em solid #257;
+
+		@include common.forcedColors {
+			outline-color: AccentColor;
+		}
 	}
 }

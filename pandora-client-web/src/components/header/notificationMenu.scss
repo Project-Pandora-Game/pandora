@@ -15,6 +15,12 @@
 	color: common.$theme-header-collapsable-text;
 	transition: transform 200ms linear;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	@media only screen and (width < 48rem) {
 		border: none;
 		width: unset;
@@ -38,6 +44,12 @@
 			border-radius: 0.3em;
 			background-color: common.$theme-normal-background;
 			color: common.$theme-normal-text;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border-color: common.$forcedColors-separator;
+			}
 
 			.dismissButton {
 				width: 2em;
@@ -64,6 +76,10 @@
 
 		.noNotificationsInfo {
 			color: common.$theme-normal-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 }

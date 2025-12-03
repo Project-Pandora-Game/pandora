@@ -187,6 +187,10 @@
 
 .text-dim {
 	color: common.$theme-normal-text-dim;
+
+	@include common.forcedColors {
+		color: GrayText;
+	}
 }
 
 .font-standard {
@@ -255,6 +259,12 @@
 	padding: 0.25em 0.5em;
 	margin: 0.25em;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 2px solid common.$forcedColors-separator;
+	}
+
 	p {
 		margin: 0.25em 0;
 	}
@@ -271,11 +281,23 @@
 .warning-box {
 	background: common.$theme-warningbox-background;
 	color: common.$theme-warningbox-text;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$theme-warningbox-background;
+	}
 }
 
 .error-box {
 	background: common.$theme-errorbox-background;
 	color: common.$theme-errorbox-text;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$theme-errorbox-background;
+	}
 }
 
 //#endregion

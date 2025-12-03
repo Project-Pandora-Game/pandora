@@ -294,7 +294,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<div className='input-row'>
 				{
 					(nextAllowedChange > now) ? (
-						<span>Next change available in { FormatTimeInterval(nextAllowedChange - now) }</span>
+						<span>Next change available in { FormatTimeInterval(nextAllowedChange - now, 'two-most-significant') }</span>
 					) : (
 						<span>Display name can be changed only once every { FormatTimeInterval(ACCOUNT_SETTINGS_LIMITED_LIMITS.displayName) }</span>
 					)

@@ -76,14 +76,29 @@
 			background: common.$theme-spaceconfig-backgroundselect-filterdropdown-background;
 			color: common.$theme-spaceconfig-backgroundselect-filterdropdown-text;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: ButtonBorder;
+			}
+
 			&:hover, &:active {
 				&:not(:disabled) {
 					background: common.$theme-spaceconfig-backgroundselect-filterdropdown-hover-background;
+
+					@include common.forcedColors {
+						background: ButtonFace;
+						border-color: AccentColor;
+					}
 				}
 			}
 
 			&:focus-visible {
 				outline: 0.25em solid common.$theme-spaceconfig-backgroundselect-filterdropdown-focus-outline;
+
+				@include common.forcedColors {
+					outline-color: AccentColor;
+				}
 			}
 		}
 
@@ -98,6 +113,12 @@
 			box-shadow: 0.3em 0.3em 0.2em common.$themecolor-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border-color: common.$forcedColors-separator;
+			}
 
 			a>span {
 				display: inline-block;
@@ -121,6 +142,12 @@
 		overflow-y: scroll;
 		background: common.$theme-spaceconfig-backgroundselect-list-background;
 		color: common.$theme-spaceconfig-backgroundselect-list-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
 
 		@media only screen and (width < 48rem) {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -165,5 +192,11 @@
 		min-height: fit-content;
 		background: common.$theme-spaceconfig-backgroundselect-list-background;
 		color: common.$theme-spaceconfig-backgroundselect-list-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
 	}
 }

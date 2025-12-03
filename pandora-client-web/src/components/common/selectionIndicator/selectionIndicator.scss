@@ -6,9 +6,14 @@
 	border-radius: common.spacing('small');
 	outline: 2px solid transparent;
 	transition: outline-color 150ms linear;
+	forced-color-adjust: none;
 
 	&.selected {
 		outline-color: common.$theme-button-selected-outline;
+
+		@include common.forcedColors {
+			outline-color: SelectedItem;
+		}
 	}
 
 	&::before {
@@ -19,9 +24,14 @@
 		border-radius: common.spacing('small');
 		transition: outline-color 150ms linear;
 		pointer-events: none;
+		forced-color-adjust: none;
 	}
 
 	&.active:not(.selected)::before {
 		outline-color: common.$theme-button-selected-outline;
+
+		@include common.forcedColors {
+			outline-color: SelectedItem;
+		}
 	}
 }

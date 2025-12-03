@@ -19,6 +19,7 @@
 	.groupIndicator {
 		width: 0.25em;
 		margin: 0.2em 0;
+		forced-color-adjust: none;
 
 		&.inactive {
 			background-color: common.$theme-wardrobe-modifiers-indication-inactive;
@@ -34,13 +35,32 @@
 		padding-right: 0.2em;
 		overflow-wrap: anywhere;
 		background-color: common.$theme-normal-background-secondary;
+		forced-color-adjust: none;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
 
 		&.inactive {
 			background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-inactive 17%, common.$theme-normal-background-secondary);
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border: 2px solid common.$theme-wardrobe-modifiers-indication-inactive;
+			}
 		}
 
 		&.active {
 			background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-active 27%, common.$theme-normal-background-secondary);
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border: 2px solid common.$theme-wardrobe-modifiers-indication-active;
+			}
 		}
 
 		> span {

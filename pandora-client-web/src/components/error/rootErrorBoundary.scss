@@ -13,6 +13,12 @@
 	color: common.$theme-dialog-text;
 	border-radius: 0.5em;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	& > :last-child {
 		margin-bottom: 0;
 	}
@@ -31,6 +37,12 @@
 		background: common.$theme-errorreport-report-background;
 		color: common.$theme-errorreport-report-text;
 		border-radius: 0.25em;
+
+		@include common.forcedColors {
+			background: Field;
+			color: FieldText;
+			border-color: common.$forcedColors-separator;
+		}
 
 		.button-wrapper {
 			position: absolute;

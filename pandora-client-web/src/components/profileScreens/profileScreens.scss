@@ -7,6 +7,11 @@
 	.tab-content {
 		background: common.$theme-profile-content-background;
 		color: common.$theme-profile-content-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
 	}
 }
 
@@ -19,6 +24,12 @@
 		padding: 0.25em 0.5em;
 		background: common.$theme-profile-header-background;
 		color: common.$theme-profile-header-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-bottom: 1px solid common.$forcedColors-separator;
+		}
 	}
 
 	.profileContent {
@@ -31,6 +42,7 @@
 		height: 1em;
 		border: 2px solid black; // Intentionally not themed
 		border-radius: 50%;
+		forced-color-adjust: none;
 	}
 
 	.characterPreview {
@@ -39,6 +51,10 @@
 		flex-shrink: 0;
 		overflow: hidden;
 		border-right: max(2px, 0.1em) solid common.$theme-separator;
+
+		@include common.forcedColors {
+			border-right-color: common.$forcedColors-separator;
+		}
 
 		&.disabled {
 			display: none;
@@ -60,6 +76,12 @@
 		word-break: break-word;
 		user-select: text;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
+
 		a {
 			text-decoration: underline;
 		}
@@ -69,5 +91,10 @@
 		background: common.$theme-profile-description-edit-background;
 		color: common.$theme-profile-description-edit-text;
 		border: 2px dashed common.$theme-profile-description-edit-border;
+
+		@include common.forcedColors {
+			background: Field;
+			color: FieldText;
+		}
 	}
 }

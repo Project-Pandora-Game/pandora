@@ -12,6 +12,7 @@
 		left: 1px;
 		bottom: 1px;
 		width: 0.5em;
+		forced-color-adjust: none;
 
 		&.status-disabled {
 			background: common.$theme-wardrobe-modifiers-indication-disabled;
@@ -32,5 +33,11 @@
 	&.blocked {
 		background: common.$theme-wardrobe-actionbutton-blocked-background;
 		color: common.$theme-wardrobe-actionbutton-blocked-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 2px solid #d55;
+		}
 	}
 }

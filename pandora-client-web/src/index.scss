@@ -11,6 +11,11 @@ html, body {
 	margin: 0;
 	background: common.$theme-normal-background;
 	color: common.$theme-normal-text;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
 }
 
 body {
@@ -18,6 +23,10 @@ body {
 	accent-color: var(--pandora-accent-color);
 
 	scrollbar-color: common.$theme-scrollbar-thumb common.$theme-scrollbar-track;
+
+	@include common.forcedColors {
+		scrollbar-color: unset;
+	}
 }
 
 #pandora-root, #editor-root {
@@ -27,6 +36,11 @@ body {
 	background: common.$theme-normal-background;
 	color: common.$theme-normal-text;
 	user-select: none;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
 }
 
 div.main-container {
@@ -37,6 +51,11 @@ div.main-container {
 	width: 100%;
 	overflow: hidden;
 	overflow: clip;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
 
 	> .Toastify {
 		position: relative;
@@ -65,5 +84,10 @@ div.main-container {
 		background: common.$theme-footer-background;
 		color: common.$theme-footer-text;
 		user-select: text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
 	}
 }

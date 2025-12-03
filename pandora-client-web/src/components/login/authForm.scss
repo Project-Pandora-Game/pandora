@@ -10,6 +10,12 @@
 	color: common.$theme-auth-routerbox-text;
 	padding: 2em min(2em, max(1em, 5vw));
 	box-shadow: 0 0.2em 0.4em 0 common.$themecolor-shadow, 0 0.3em 1em 0 common.$themecolor-shadow;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
 }
 
 .LoginForm {

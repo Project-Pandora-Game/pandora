@@ -18,6 +18,10 @@
 		padding-left: 2rem;
 		margin-top: 0.5rem;
 		border-left: 2px dashed common.$theme-editor-nestedlist-guide;
+
+		@include common.forcedColors {
+			border-left-color: common.$forcedColors-separator;
+		}
 	}
 
 	&>ul {

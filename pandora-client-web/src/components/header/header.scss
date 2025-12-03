@@ -31,6 +31,12 @@
 			background: common.$theme-header-collapsable-background;
 			color: common.$theme-header-collapsable-text;
 
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border-color: common.$forcedColors-separator;
+			}
+
 			.Button {
 				min-height: 2.5em;
 			}
@@ -48,6 +54,11 @@
 	color: common.$theme-header-text;
 	width: 100%;
 	position: relative;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
 
 	& > div {
 		@include common.flex(row, wrap);
@@ -98,17 +109,37 @@
 		border-radius: common.spacing('small');
 		outline-offset: -0.2em;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: ButtonBorder;
+		}
+
 		&:hover {
 			background: common.$theme-header-button-hover-background;
 			color: common.$theme-header-button-hover-text;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: AccentColor;
+			}
+
 			img {
 				filter: common.$theme-header-button-hover-imgfilter;
+
+				@include common.forcedColors {
+					filter: none;
+				}
 			}
 		}
 
 		&:focus-visible {
 			outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
+
+			@include common.forcedColors {
+				outline-color: AccentColor;
+			}
 		}
 	}
 }
@@ -125,14 +156,34 @@
 	align-items: center;
 	justify-content: center;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-bottom-color: common.$forcedColors-separator;
+		outline-offset: -3px;
+		outline: 3px solid common.$theme-header-background;
+	}
+
 	&.type-info {
 		background: common.$theme-noticebox-background;
 		color: common.$theme-noticebox-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			outline-color: common.$theme-noticebox-background;
+		}
 	}
 
 	&.type-warning {
 		background: common.$theme-warningbox-background;
 		color: common.$theme-warningbox-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			outline-color: common.$theme-warningbox-background;
+		}
 	}
 
 	> .IconButton {
@@ -150,6 +201,12 @@
 	background: common.$theme-header-collapsable-background;
 	color: common.$theme-header-collapsable-text;
 	transition: all 200ms linear;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-top: 1px solid common.$forcedColors-separator;
+	}
 
 	&.hide {
 		transform: translateY(-100vh);

@@ -11,6 +11,10 @@
 		>div {
 			border-top: max(2px, 0.1em) solid common.$theme-separator;
 
+			@include common.forcedColors {
+				border-top-color: common.$forcedColors-separator;
+			}
+
 			> .scrollable-vertical {
 				padding: 0.1em 0.2em;
 			}
@@ -33,6 +37,10 @@
 		&.offline {
 			.status {
 				color: common.$theme-normal-text-dim;
+
+				@include common.forcedColors {
+					color: GrayText;
+				}
 			}
 		}
 	}

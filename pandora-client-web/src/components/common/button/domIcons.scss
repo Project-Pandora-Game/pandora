@@ -5,6 +5,7 @@
 	width: 2em;
 	height: 2em;
 	transition: all 200ms linear;
+	forced-color-adjust: none;
 
 	.icon {
 		position: absolute;
@@ -41,14 +42,26 @@
 		.icon {
 			background: common.$theme-buttonicon-hamburger-color;
 
+			@include common.forcedColors {
+				background: ButtonText;
+			}
+
 			&:before{
 				background: common.$theme-buttonicon-hamburger-color;
 				top: -300%;
+
+				@include common.forcedColors {
+					background: ButtonText;
+				}
 			}
 
 			&:after{
 				background: common.$theme-buttonicon-hamburger-color;
 				top: 300%;
+
+				@include common.forcedColors {
+					background: ButtonText;
+				}
 			}
 		}
 	}
@@ -60,11 +73,19 @@
 			&:before{
 				background: common.$theme-buttonicon-hamburger-color;
 				transform: rotate(45deg);
+
+				@include common.forcedColors {
+					background: ButtonText;
+				}
 			}
 
 			&:after{
 				background: common.$theme-buttonicon-hamburger-color;
 				transform: rotate(-45deg);
+
+				@include common.forcedColors {
+					background: ButtonText;
+				}
 			}
 		}
 	}

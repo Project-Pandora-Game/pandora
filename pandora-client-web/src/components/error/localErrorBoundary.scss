@@ -8,6 +8,11 @@
 	justify-content: center;
 	align-items: center;
 
+	@include common.forcedColors {
+		background: #600;
+		color: #fff;
+	}
+
 	>.localErrorBoundaryContent {
 		display: flex;
 		flex-direction: column;
@@ -42,6 +47,12 @@
 		background: common.$theme-errorreport-report-background;
 		color: common.$theme-errorreport-report-text;
 		border-radius: 0.25em;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
 
 		.button-wrapper {
 			position: absolute;

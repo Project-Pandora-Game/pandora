@@ -27,6 +27,11 @@
 		input:invalid {
 			border-color: common.$theme-input-border-error;
 			outline-color: common.$theme-input-border-error;
+
+			@include common.forcedColors {
+				border-color: ButtonBorder;
+				outline-color: AccentColor;
+			}
 		}
 	}
 
@@ -34,6 +39,12 @@
 		font-size: 0.75em;
 		color: common.$theme-form-validationmessage-text;
 		font-weight: 600;
+
+		@include common.forcedColors {
+			font-size: 1em;
+			color: inherit;
+			text-decoration: underline common.$theme-form-validationmessage-text;
+		}
 	}
 
 	.FormText {
@@ -55,6 +66,12 @@
 	font-size: 0.85em;
 	color: common.$theme-form-validationmessage-text;
 	margin-bottom: 0.8em;
+
+	@include common.forcedColors {
+		font-size: 1em;
+		color: inherit;
+		text-decoration: underline common.$theme-form-validationmessage-text;
+	}
 
 	&.empty:before {
 		content: '\200b';

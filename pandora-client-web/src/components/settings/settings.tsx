@@ -1,6 +1,7 @@
 import { ParseNotNullable } from 'pandora-common';
 import { ReactElement } from 'react';
 import { matchPath, Navigate, resolvePath, Route, Routes, useLocation } from 'react-router';
+import iconAccessibility from '../../assets/icons/accessibility.svg';
 import iconAccount from '../../assets/icons/account.svg';
 import iconColor from '../../assets/icons/color.svg';
 import iconClose from '../../assets/icons/cross.svg';
@@ -16,6 +17,7 @@ import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
+import { AccessibilitySettings } from './accessibilitySettings.tsx';
 import { AccountSettings } from './accountSettings.tsx';
 import { CharacterSettings } from './characterSettings.tsx';
 import { GraphicsSettings } from './graphicsSettings.tsx';
@@ -62,6 +64,11 @@ const SETTINGS_PAGES_SETUP = {
 		name: 'Graphics',
 		image: iconColor,
 		element: GraphicsSettings,
+	},
+	accessibility: {
+		name: 'Accessibility',
+		image: iconAccessibility,
+		element: AccessibilitySettings,
 	},
 } as const satisfies Readonly<Record<string, { name: string; image: string; element: () => ReactElement | null; requiresCharacter?: boolean; }>>;
 

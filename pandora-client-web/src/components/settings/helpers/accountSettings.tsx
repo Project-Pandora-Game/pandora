@@ -43,7 +43,7 @@ export function useAccountSettingDriver<const Setting extends keyof AccountSetti
 type BooleanSettings = ConditionalKeys<AccountSettings, boolean>;
 export function ToggleAccountSetting<const Setting extends BooleanSettings>({ setting, label }: {
 	setting: Setting;
-	label: string;
+	label: ReactNode;
 }): ReactElement {
 	return (
 		<ToggleSettingInput

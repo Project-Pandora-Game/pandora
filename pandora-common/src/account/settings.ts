@@ -1,13 +1,13 @@
 import * as z from 'zod';
 import { ClientNotificationGlobalSettingsSchema } from '../client/notificationDefinition.ts';
 import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
+import { SpaceRoleOrNoneSchema } from '../space/spaceRoles.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
 import { AccountRoleSchema } from './accountRoles.ts';
 import { AccountOnlineStatusSchema } from './contacts.ts';
 import { TutorialIdSchema } from './tutorials.ts';
-import { SpaceRoleOrNoneSchema } from '../space/spaceRoles.ts';
 
 //#region Settings declarations
 
@@ -149,6 +149,10 @@ export const AccountSettingsSchema = z.object({
 	notificationGlobalSettings: ClientNotificationGlobalSettingsSchema,
 	notificationTypeSettings: NotificationTypesSettingsSchema,
 	/**
+	 * Forces the interface to use system colors (emulating `@media (forced-colors: active)`)
+	 */
+	forceSystemColors: z.boolean(),
+	/**
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
 	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
@@ -194,6 +198,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 		usePlatformPopup: false,
 	},
 	notificationTypeSettings: {},
+	forceSystemColors: false,
 	tutorialCompleted: EMPTY_ARRAY,
 });
 

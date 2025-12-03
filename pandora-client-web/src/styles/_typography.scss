@@ -22,11 +22,14 @@ button {
 }
 
 // Emulate forced colors enforcement if toggled manually
-html.forcedColors * {
-	box-shadow: none !important;
-	text-shadow: none !important;
-	color-scheme: light dark !important;
-	scrollbar-color: auto !important;
+html.forcedColors {
+	color-scheme: dark light;
+
+	* {
+		box-shadow: none !important;
+		text-shadow: none !important;
+		scrollbar-color: auto !important;
+	}
 }
 
 a {

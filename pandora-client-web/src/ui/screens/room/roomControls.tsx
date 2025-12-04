@@ -67,6 +67,7 @@ export function RoomControls(): ReactElement | null {
 	}
 
 	const multipleRooms = globalState.space.rooms.length > 1;
+	const characterCount = globalState.characters.size;
 
 	return (
 		<Column padding='medium' className='controls'>
@@ -109,7 +110,10 @@ export function RoomControls(): ReactElement | null {
 			{ multipleRooms ? null : '\u00a0' }
 			<SpaceVisibilityWarning />
 			<span>
-				These characters are in the space <b>{ spaceConfig.name }</b>:
+				{ characterCount > 1 ?
+				`These ${characterCount} characters are ` :
+				 'This character is ' }
+				in the space <b>{ spaceConfig.name }</b>:
 			</span>
 			<DisplayRooms
 				player={ player }

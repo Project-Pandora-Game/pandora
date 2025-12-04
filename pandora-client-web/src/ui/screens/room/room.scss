@@ -127,6 +127,7 @@
 
 					@include common.forcedColors {
 						background: ButtonFace;
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}
@@ -135,6 +136,7 @@
 					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
 
 					@include common.forcedColors {
+						outline-color: common.$forcedColors-accentColorFallback;
 						outline-color: AccentColor;
 					}
 				}
@@ -189,6 +191,7 @@
 					@include common.forcedColors {
 						background: SelectedItem;
 						color: SelectedItemText;
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}
@@ -269,6 +272,7 @@
 
 					@include common.forcedColors {
 						background: ButtonFace;
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}
@@ -277,6 +281,7 @@
 					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
 
 					@include common.forcedColors {
+						outline-color: common.$forcedColors-accentColorFallback;
 						outline-color: AccentColor;
 					}
 				}

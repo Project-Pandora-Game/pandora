@@ -25,6 +25,7 @@ input, textarea {
 		background: common.$theme-input-focused-background;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 			background: Field;
 		}
@@ -76,6 +77,7 @@ select {
 		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

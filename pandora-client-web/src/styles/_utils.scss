@@ -1,4 +1,5 @@
 @use 'constants';
+@use 'theming';
 
 //#region Theming
 
@@ -20,6 +21,8 @@
 
 // I am not entirely sure what system color is best used as a separator, so using a variable to be able to adjust in the future
 $forcedColors-separator: CanvasText;
+// Not everything supports system color `AccentColor`, use this as a fallback
+$forcedColors-accentColorFallback: color-mix(in srgb, light-dark(#000, #fff), theming.$theme-accent-color 60%);
 
 //#endregion
 

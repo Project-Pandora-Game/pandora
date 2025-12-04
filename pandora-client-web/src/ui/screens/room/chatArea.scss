@@ -128,6 +128,7 @@
 
 						@include common.forcedColors {
 							background: ButtonFace;
+							border-color: common.$forcedColors-accentColorFallback;
 							border-color: AccentColor;
 						}
 					}
@@ -195,6 +196,7 @@
 					background: Canvas;
 					color: CanvasText;
 					border-color: common.$forcedColors-separator;
+					outline-color: common.$forcedColors-accentColorFallback;
 					outline-color: AccentColor;
 				}
 
@@ -323,6 +325,7 @@
 
 		@include common.forcedColors {
 			background: ButtonFace;
+			border-color: common.$forcedColors-accentColorFallback;
 			border-color: AccentColor;
 		}
 	}
@@ -370,6 +373,7 @@
 
 			@include common.forcedColors {
 				background: ButtonFace;
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 		}

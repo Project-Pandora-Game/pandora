@@ -254,7 +254,12 @@ function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 			options: {
 				postcssOptions: {
 					plugins: [
-						postcssPresetEnv({ preserve: true }),
+						postcssPresetEnv({
+							preserve: true,
+							features: {
+								'light-dark-function': false, // Does not preserve property precedence and always picks light option anyway
+							},
+						}),
 					],
 				},
 			},

@@ -356,8 +356,8 @@ importers:
         specifier: 7.0.0
         version: 7.0.0
       mongodb-memory-server-core:
-        specifier: 10.4.0
-        version: 10.4.0
+        specifier: 10.4.1
+        version: 10.4.1
       nanoid:
         specifier: 5.1.6
         version: 5.1.6
@@ -4738,8 +4738,8 @@ packages:
     resolution: {integrity: sha512-irhhjRVLE20hbkRl4zpAYLnDMM+zIZnp0IDB9akAFFUZp/3XdOfwwddc7y6cNvF2WCEtfTYRwYbIfYa2kVY0og==}
     engines: {node: '>=20.19.0'}
 
-  mongodb-memory-server-core@10.4.0:
-    resolution: {integrity: sha512-7iIA4v7YMJDZfTFcq/L+pcF45c1GC7FiRFNS8X+ls8IC3EvnHthfM0oOSG+oltFUVqLEk5TBPYvtBbgDRkKFwQ==}
+  mongodb-memory-server-core@10.4.1:
+    resolution: {integrity: sha512-YJdrEyF9hk64nfeoVDMP6IfTzK+gLZhrQqYyP6JJMsqo2LK5eF7JRZ4YPQDmt1re/JhItpiU+ypiZbIG1OsW5Q==}
     engines: {node: '>=16.20.1'}
 
   mongodb@6.20.0:
@@ -12098,7 +12098,7 @@ snapshots:
       '@types/whatwg-url': 13.0.0
       whatwg-url: 14.2.0
 
-  mongodb-memory-server-core@10.4.0:
+  mongodb-memory-server-core@10.4.1:
     dependencies:
       async-mutex: 0.5.0
       camelcase: 6.3.0

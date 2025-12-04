@@ -170,7 +170,12 @@ export class Muffler implements ChatMessageFilter {
 			});
 		}
 
-		return muffled.join('');
+		const ret = muffled.join('');
+
+		if (ret === ret.toUpperCase() || ret === ret.toLowerCase())
+			return ret;
+
+		return ret[0] + ret.slice(1).toLowerCase();
 	}
 
 	private isUpper(char: string) {

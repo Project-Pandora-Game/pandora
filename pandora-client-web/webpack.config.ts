@@ -1,12 +1,11 @@
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import postcssAutoprefixer from 'autoprefixer';
 import { execSync } from 'child_process';
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { loadEnvFile } from 'node:process';
 import { join } from 'path';
-import postcssAutoprefixer from 'autoprefixer';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
 import webpack from 'webpack';
 import 'webpack-dev-server';
@@ -233,21 +232,14 @@ function GenerateRules(env: WebpackEnv): webpack.RuleSetRule[] {
 	return moduleRules;
 }
 
-function GenerateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
+function GenerateMinimizer(_env: WebpackEnv): WebpackMinimizer[] {
 	const minimizer: WebpackMinimizer[] = ['...'];
-	if (env.prod) {
-		minimizer.push(new CssMinimizerPlugin({
-			minimizerOptions: {
-				// Use lite preset, as some transforms done by the minimizer can have unexpected consequences
-				preset: 'lite',
-			},
-		}));
-	}
 	return minimizer;
 }
 
 function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 	const styleLoaders: webpack.RuleSetUseItem[] = [
+		(env.prod ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }),
 		{ loader: 'css-loader' },
 		{
 			loader: 'postcss-loader',
@@ -261,12 +253,6 @@ function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 		},
 		{ loader: 'sass-loader' },
 	];
-
-	if (env.prod) {
-		styleLoaders.unshift(MiniCssExtractPlugin.loader);
-	} else {
-		styleLoaders.unshift({ loader: 'style-loader' });
-	}
 
 	return styleLoaders;
 }

@@ -6,7 +6,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { loadEnvFile } from 'node:process';
 import { join } from 'path';
-import postcssPresetEnv from 'postcss-preset-env';
+import postcssAutoprefixer from 'autoprefixer';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
 import webpack from 'webpack';
 import 'webpack-dev-server';
@@ -254,12 +254,7 @@ function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
 			options: {
 				postcssOptions: {
 					plugins: [
-						postcssPresetEnv({
-							preserve: true,
-							features: {
-								'light-dark-function': false, // Does not preserve property precedence and always picks light option anyway
-							},
-						}),
+						postcssAutoprefixer(),
 					],
 				},
 			},

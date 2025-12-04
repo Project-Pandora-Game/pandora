@@ -64,6 +64,7 @@
 			@include common.forcedColors {
 				background: ButtonFace;
 				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 
@@ -80,6 +81,7 @@
 			outline: 0.25em solid common.$theme-spacesearch-entry-visiblefocus-outline;
 
 			@include common.forcedColors {
+				outline-color: common.$forcedColors-accentColorFallback;
 				outline-color: AccentColor;
 			}
 		}
@@ -363,6 +365,7 @@
 		border-color: common.$theme-tipsbox-hover-border;
 
 		@include common.forcedColors {
+			border-color: common.$forcedColors-accentColorFallback;
 			border-color: AccentColor;
 		}
 	}
@@ -371,6 +374,7 @@
 		outline: 0.25em solid common.$theme-tipsbox-visiblefocus-outline;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

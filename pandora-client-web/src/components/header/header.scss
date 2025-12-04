@@ -122,6 +122,7 @@
 			@include common.forcedColors {
 				background: ButtonFace;
 				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 
@@ -138,6 +139,7 @@
 			outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
 
 			@include common.forcedColors {
+				outline-color: common.$forcedColors-accentColorFallback;
 				outline-color: AccentColor;
 			}
 		}

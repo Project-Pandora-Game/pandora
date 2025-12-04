@@ -130,6 +130,7 @@
 
 				@include common.forcedColors {
 					background: ButtonFace;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -141,6 +142,7 @@
 
 				@include common.forcedColors {
 					background: ButtonFace;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -159,6 +161,7 @@
 
 					@include common.forcedColors {
 						background: SelectedItem;
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}

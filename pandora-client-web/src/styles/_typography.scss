@@ -65,6 +65,7 @@ a {
 		outline: common.$theme-link-visiblefocus-outline solid 0.15em;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

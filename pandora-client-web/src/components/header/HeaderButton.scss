@@ -64,6 +64,7 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 		@include common.forcedColors {
 			background: ButtonFace;
 			color: ButtonText;
+			border-color: common.$forcedColors-accentColorFallback;
 			border-color: AccentColor;
 		}
 
@@ -80,6 +81,7 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 		outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

@@ -20,6 +20,7 @@
 		outline: 0.25em solid #257;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

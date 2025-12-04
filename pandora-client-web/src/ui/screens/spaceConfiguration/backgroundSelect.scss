@@ -88,6 +88,7 @@
 
 					@include common.forcedColors {
 						background: ButtonFace;
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}
@@ -97,6 +98,7 @@
 				outline: 0.25em solid common.$theme-spaceconfig-backgroundselect-filterdropdown-focus-outline;
 
 				@include common.forcedColors {
+					outline-color: common.$forcedColors-accentColorFallback;
 					outline-color: AccentColor;
 				}
 			}

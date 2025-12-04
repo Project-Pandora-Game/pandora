@@ -50,6 +50,7 @@ $header-height: 2em;
 					z-index: 1;
 
 					@include common.forcedColors {
+						border-color: common.$forcedColors-accentColorFallback;
 						border-color: AccentColor;
 					}
 				}
@@ -63,6 +64,7 @@ $header-height: 2em;
 				@include common.forcedColors {
 					background: ButtonFace;
 					color: ButtonText;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -72,6 +74,7 @@ $header-height: 2em;
 				z-index: 1;
 
 				@include common.forcedColors {
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -191,6 +194,7 @@ $header-height: 2em;
 			@include common.forcedColors {
 				background: ButtonFace;
 				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 		}
@@ -200,6 +204,7 @@ $header-height: 2em;
 			z-index: 1;
 
 			@include common.forcedColors {
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 		}

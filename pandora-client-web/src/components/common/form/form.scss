@@ -30,6 +30,7 @@
 
 			@include common.forcedColors {
 				border-color: ButtonBorder;
+				outline-color: common.$forcedColors-accentColorFallback;
 				outline-color: AccentColor;
 			}
 		}

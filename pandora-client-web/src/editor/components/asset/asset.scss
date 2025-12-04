@@ -49,6 +49,7 @@
 
 						@include common.forcedColors {
 							background: ButtonFace;
+							border-color: common.$forcedColors-accentColorFallback;
 							border-color: AccentColor;
 						}
 					}

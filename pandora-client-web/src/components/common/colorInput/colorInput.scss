@@ -146,6 +146,7 @@ $coloreditor-selector-size: 12.5em;
 		outline: 0.25em solid common.$theme-colorbutton-visiblefocus-outline;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

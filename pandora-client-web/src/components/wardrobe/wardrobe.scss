@@ -194,6 +194,7 @@ $drop-overlay-gap: 0.3em;
 		border-color: common.$theme-separator-highlight;
 
 		@include common.forcedColors {
+			border-color: common.$forcedColors-accentColorFallback;
 			border-color: AccentColor;
 		}
 	}
@@ -285,6 +286,7 @@ $drop-overlay-gap: 0.3em;
 
 				@include common.forcedColors {
 					background: ButtonFace;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -293,6 +295,7 @@ $drop-overlay-gap: 0.3em;
 				outline: 0.2em solid common.$theme-wardrobe-outfitbutton-normal-visiblefocus-outline;
 
 				@include common.forcedColors {
+					outline-color: common.$forcedColors-accentColorFallback;
 					outline-color: AccentColor;
 				}
 			}
@@ -414,6 +417,7 @@ $drop-overlay-gap: 0.3em;
 			margin-bottom: 0.75em;
 
 			@include common.forcedColors {
+				border-left-color: common.$forcedColors-accentColorFallback;
 				border-left-color: AccentColor;
 			}
 		}
@@ -807,6 +811,7 @@ $drop-overlay-gap: 0.3em;
 			@include common.forcedColors {
 				background: ButtonFace;
 				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
 				border-color: AccentColor;
 			}
 
@@ -817,6 +822,7 @@ $drop-overlay-gap: 0.3em;
 				@include common.forcedColors {
 					background: ButtonFace;
 					color: ButtonText;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -828,6 +834,7 @@ $drop-overlay-gap: 0.3em;
 				@include common.forcedColors {
 					background: SelectedItem;
 					color: SelectedItemText;
+					border-color: common.$forcedColors-accentColorFallback;
 					border-color: AccentColor;
 				}
 			}
@@ -894,6 +901,7 @@ $drop-overlay-gap: 0.3em;
 		outline: 0.2em solid common.$theme-wardrobe-actionbutton-visiblefocus-border;
 
 		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
 			outline-color: AccentColor;
 		}
 	}

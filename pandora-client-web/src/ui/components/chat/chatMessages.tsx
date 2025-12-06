@@ -313,7 +313,9 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 					hasCustomName ? 'hasCustomName' : null,
 					hasDescription ? 'hasDescription' : null,
 				) }
-				onClick={ () => {
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					ev.preventDefault();
 					OpenRoomItemDialog(item.id);
 				} }
 			>

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
@@ -21,7 +22,8 @@ import { useCharacterDataOptional } from '../../../character/character.ts';
 import { FindItemById, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { DescribeAsset } from './chatMessages.tsx';
+import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
+import { ActionTextItemLink, DescribeAsset } from './chatMessages.tsx';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;
@@ -328,16 +330,45 @@ export function DescribeItem({ item, globalState }: {
 	if (item == null)
 		return <>[UNKNOWN]</>;
 
+	const relocatedItem = FindItemById(globalState, typeof item === 'string' ? item : item.id);
 	if (typeof item === 'string') {
-		const relocatedItem = FindItemById(globalState, item);
 		if (relocatedItem.length === 1) {
-			item = relocatedItem[0].item;
+			return (
+				<ActionTextItemLink
+					item={ relocatedItem[0].item.getChatDescriptor() }
+					itemDisplayNameType={ interfaceChatroomItemDisplayNameType }
+				/>
+			);
 		} else {
 			return <>[Item <code>{ item }</code>]</>;
 		}
 	}
 
-	return <>{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.asset.id), item.name, interfaceChatroomItemDisplayNameType) }</>;
+	const text = <>{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.asset.id), item.name, interfaceChatroomItemDisplayNameType) }</>;
+
+	if (relocatedItem.length === 1) {
+		const hasCustomName = (!!item.name && item.name !== item.asset.definition.name) && interfaceChatroomItemDisplayNameType !== 'original';
+		const hasDescription = !!item.description;
+
+		return (
+			<a
+				className={ classNames(
+					'itemLink',
+					hasCustomName ? 'hasCustomName' : null,
+					hasDescription ? 'hasDescription' : null,
+				) }
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					ev.preventDefault();
+					OpenRoomItemDialog(item.id);
+				} }
+			>
+				{ text }
+			</a>
+		);
+	}
+
+	return text;
 }
 
 export function DescribeContainer({ target, container, globalState }: {

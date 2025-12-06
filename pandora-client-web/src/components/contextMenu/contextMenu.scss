@@ -27,6 +27,12 @@ $context-menu-themes: (
 	isolation: isolate;
 	max-height: 100vh;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	hr {
 		width: 90%;
 		margin: 0;
@@ -40,6 +46,10 @@ $context-menu-themes: (
 
 		&.dim {
 			color: common.$theme-normal-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 
@@ -70,6 +80,11 @@ $context-menu-themes: (
 		&.#{$theme-name} {
 			background: map.get($theme-data, "background");
 			border-color: map.get($theme-data, "border");
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+			}
 		}
 	}
 }

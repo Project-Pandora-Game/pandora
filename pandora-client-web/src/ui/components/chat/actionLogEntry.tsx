@@ -1,5 +1,8 @@
 import { AssertNever, type ChatMessageActionLogGameLogicAction } from 'pandora-common';
-import { type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
+import sourceCodeIcon from '../../../assets/icons/source-code.svg';
+import { IconButton } from '../../../components/common/button/button.tsx';
+import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
 import { useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import type { ChatActionLogMessageProcessed } from './chatMessages.tsx';
 import { DescribeGameLogicAction } from './chatMessagesDescriptions.tsx';
@@ -9,6 +12,8 @@ export function ActionLogEntry({ entry }: {
 }): ReactElement | null {
 	const time = new Date(entry.time);
 
+	const [showDetails, setShowDetails] = useState(false);
+
 	return (
 		<div className='message actionLogEntry' translate='no'>
 			<span>
@@ -17,6 +22,26 @@ export function ActionLogEntry({ entry }: {
 			{ entry.entry[0] === 'gameLogic' ? (
 				<ActionLogEntryGameLogic entry={ entry.entry[1] } />
 			) : AssertNever() }
+			<IconButton
+				src={ sourceCodeIcon }
+				alt='View full action details'
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					ev.preventDefault();
+					setShowDetails((v) => !v);
+				} }
+			/>
+			{ showDetails ? (
+				<DraggableDialog title='Action log entry details' close={ () => {
+					setShowDetails(false);
+				} }>
+					<pre>
+						<code>
+							{ JSON.stringify(entry.entry[1], undefined, '  ') }
+						</code>
+					</pre>
+				</DraggableDialog>
+			) : null }
 		</div>
 	);
 }

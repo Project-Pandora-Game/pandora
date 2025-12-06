@@ -411,7 +411,7 @@ function LayerAutomeshGraphicalLayerItem({ graphicalLayer, layer, index, update,
 							d.name = newValue.trim();
 						});
 					} }
-					className='flex-1'
+					className='zero-width flex-1'
 				/>
 				<IconButton
 					src={ crossIcon }
@@ -1058,7 +1058,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 								</label>
 								<Select
 									id={ `${id}-${combinationId}-${li}` }
-									className='flex-1'
+									className='zero-width flex-1'
 									value={ imageLayers[li] }
 									onChange={ (event) => {
 										layer.modifyDefinition((d) => {

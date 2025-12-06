@@ -1,6 +1,35 @@
 @use 'sass:map';
 @use '../../../styles/common';
 
+$button-system-theme: (
+	default: (
+		border: ButtonBorder,
+		background: ButtonFace,
+		color: ButtonText,
+		icon-filter: none,
+		hover-border: AccentColor,
+		hover-border-fallback: common.$forcedColors-accentColorFallback,
+		disabled-background: ButtonFace,
+		disabled-color: GrayText,
+		disabled-icon-filter: opacity(50%),
+		focus-outline: AccentColor,
+		focus-outline-fallback: common.$forcedColors-accentColorFallback,
+	),
+	selected: (
+		border: ButtonBorder,
+		background: SelectedItem,
+		color: SelectedItemText,
+		icon-filter: none,
+		hover-border: AccentColor,
+		hover-border-fallback: common.$forcedColors-accentColorFallback,
+		disabled-background: SelectedItem,
+		disabled-color: GrayText,
+		disabled-icon-filter: opacity(50%),
+		focus-outline: AccentColor,
+		focus-outline-fallback: common.$forcedColors-accentColorFallback,
+	),
+);
+
 .Button {
 	@include common.center-flex;
 	display: inline-flex;
@@ -14,20 +43,40 @@
 	outline-offset: -0.25em;
 
 	@each $theme-name, $theme-data in common.$theme-button {
+		$theme-system-data: map.get($button-system-theme, map.get($theme-data, "systemTheme"));
+
 		&.#{$theme-name} {
 			background: map.get($theme-data, "background");
 			border-color: map.get($theme-data, "border");
 			color: map.get($theme-data, "color");
 
+			@include common.forcedColors {
+				background: map.get($theme-system-data, "background");
+				border-color: map.get($theme-system-data, "border");
+				color: map.get($theme-system-data, "color");
+			}
+
 			&:hover, &:active {
 				&:not(:disabled) {
 					background: map.get($theme-data, "hover-background");
 					color: map.get($theme-data, "hover-color");
+
+					@include common.forcedColors {
+						background: map.get($theme-system-data, "background");
+						border-color: map.get($theme-system-data, "hover-border-fallback");
+						border-color: map.get($theme-system-data, "hover-border");
+						color: map.get($theme-system-data, "color");
+					}
 				}
 			}
 
 			&:focus-visible {
 				outline: 0.25em solid map.get($theme-data, "focus-outline");
+
+				@include common.forcedColors {
+					outline-color: map.get($theme-system-data, "focus-outline-fallback");
+					outline-color: map.get($theme-system-data, "focus-outline");
+				}
 			}
 
 			&:disabled {
@@ -36,8 +85,18 @@
 				color: map.get($theme-data, "disabled-color");
 				border-color: map.get($theme-data, "disabled-border");
 
+				@include common.forcedColors {
+					background: map.get($theme-system-data, "disabled-background");
+					color: map.get($theme-system-data, "disabled-color");
+					border-color: map.get($theme-system-data, "border");
+				}
+
 				img, canvas {
 					filter: map.get($theme-data, "disabled-icon-filter");
+
+					@include common.forcedColors {
+						filter: map.get($theme-system-data, "disabled-icon-filter");
+					}
 				}
 
 				.normalDisabled {
@@ -45,14 +104,28 @@
 					border-color: map.get($theme-data, "border");
 					color: map.get($theme-data, "color");
 
+					@include common.forcedColors {
+						background: map.get($theme-system-data, "background");
+						border-color: map.get($theme-system-data, "border");
+						color: map.get($theme-system-data, "color");
+					}
+
 					img, canvas {
-						filter: map.get($theme-data, "icon-filter")
+						filter: map.get($theme-data, "icon-filter");
+
+						@include common.forcedColors {
+							filter: map.get($theme-system-data, "icon-filter");
+						}
 					}
 				}
 			}
 
 			img, canvas {
 				filter: map.get($theme-data, "icon-filter");
+
+				@include common.forcedColors {
+					filter: map.get($theme-system-data, "icon-filter");
+				}
 			}
 		}
 	}
@@ -126,9 +199,20 @@
 		padding: 0 0.3em;
 		text-align: center;
 
+		@include common.forcedColors {
+			background: Mark;
+			color: MarkText;
+			border: 1px solid common.$forcedColors-separator;
+		}
+
 		&.badge-type-passive {
 			background: common.$theme-notification-badge-passive-background;
 			color: common.$theme-notification-badge-passive-text;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+			}
 		}
 	}
 }

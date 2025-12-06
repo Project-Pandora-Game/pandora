@@ -8,31 +8,31 @@ const CHAT_ACTIONS_DEF = {
 	//#region Directory (server) messages
 	characterEntered: {
 		type: 'system',
-		message: 'SOURCE_CHARACTER entered.',
+		message: 'SOURCE_CHARACTER / SOURCE_ACCOUNT entered.',
 	},
 	characterLeft: {
 		type: 'system',
-		message: 'SOURCE_CHARACTER left.',
+		message: 'SOURCE_CHARACTER / SOURCE_ACCOUNT left.',
 	},
 	characterDisconnected: {
 		type: 'system',
-		message: 'SOURCE_CHARACTER disconnected.',
+		message: 'SOURCE_CHARACTER / SOURCE_ACCOUNT disconnected.',
 	},
 	characterReconnected: {
 		type: 'system',
-		message: 'SOURCE_CHARACTER reconnected.',
+		message: 'SOURCE_CHARACTER / SOURCE_ACCOUNT reconnected.',
 	},
 	characterKicked: {
 		type: 'system',
-		message: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
+		message: 'TARGET_CHARACTER / TARGET_ACCOUNT has been kicked by SOURCE_CHARACTER.',
 	},
 	characterAutoKicked: {
 		type: 'system',
-		message: `TARGET_CHARACTER left with the help of Pandora's Space Service.`,
+		message: `TARGET_CHARACTER / TARGET_ACCOUNT left with the help of Pandora's Space Service.`,
 	},
 	characterBanned: {
 		type: 'system',
-		message: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
+		message: 'TARGET_CHARACTER / TARGET_ACCOUNT has been banned by SOURCE_CHARACTER.',
 	},
 
 	spaceEntryText: {
@@ -346,55 +346,44 @@ type ChatActionIntermediateDef = {
 };
 
 /**
- * `SOURCE_CHARACTER_NAME`: Name
- *
- * `SOURCE_CHARACTER_ID`: c1
- *
- * `SOURCE_CHARACTER_PRONOUN_SUBJECTIVE`: she/he
- *
- * `SOURCE_CHARACTER_PRONOUN_OBJECTIVE`: her/him
- *
- * `SOURCE_CHARACTER_PRONOUN_POSSESSIVE`: her/his
- *
- * `SOURCE_CHARACTER_PRONOUN_REFLEXIVE`: herself/himself
- *
- * `SOURCE_CHARACTER`: Name (c1)
- *
- * `SOURCE_CHARACTER_POSSESSIVE`: Name's (c1)
- *
- * `TARGET_CHARACTER_NAME`: Name
- *
- * `TARGET_CHARACTER_ID`: c1
- *
- * `TARGET_CHARACTER_PRONOUN_SUBJECTIVE`: she/he
- *
- * `TARGET_CHARACTER_PRONOUN_OBJECTIVE`: her/him
- *
- * `TARGET_CHARACTER_PRONOUN_POSSESSIVE`: her/his
- *
- * `TARGET_CHARACTER_PRONOUN_REFLEXIVE`: herself/himself
- *
- * `TARGET_CHARACTER`: Name (c1)
- *
- * `TARGET_CHARACTER_POSSESSIVE`: Name's (c1)
- *
+ * `SOURCE_CHARACTER_NAME`: Name \
+ * `SOURCE_CHARACTER_ID`: c1 \
+ * `SOURCE_CHARACTER_PRONOUN_SUBJECTIVE`: she/he \
+ * `SOURCE_CHARACTER_PRONOUN_OBJECTIVE`: her/him \
+ * `SOURCE_CHARACTER_PRONOUN_POSSESSIVE`: her/his \
+ * `SOURCE_CHARACTER_PRONOUN_REFLEXIVE`: herself/himself \
+ * `SOURCE_CHARACTER`: Name (c1) \
+ * `SOURCE_CHARACTER_POSSESSIVE`: Name's (c1) \
+ * `TARGET_CHARACTER_NAME`: Name \
+ * `TARGET_CHARACTER_ID`: c1 \
+ * `TARGET_CHARACTER_PRONOUN_SUBJECTIVE`: she/he \
+ * `TARGET_CHARACTER_PRONOUN_OBJECTIVE`: her/him \
+ * `TARGET_CHARACTER_PRONOUN_POSSESSIVE`: her/his \
+ * `TARGET_CHARACTER_PRONOUN_REFLEXIVE`: herself/himself \
+ * `TARGET_CHARACTER`: Name (c1) \
+ * `TARGET_CHARACTER_POSSESSIVE`: Name's (c1) \
  *
  * Special cases if target == source: (either name or pronoun)
  *
- * `TARGET_CHARACTER_DYNAMIC_SUBJECTIVE`: Name | she/he
- *
- * `TARGET_CHARACTER_DYNAMIC_OBJECTIVE`: Name | her/him
- *
- * `TARGET_CHARACTER_DYNAMIC_POSSESSIVE`: Name's (c1) | her/his
- *
- * `TARGET_CHARACTER_DYNAMIC_REFLEXIVE`: Name | herself/himself
+ * `TARGET_CHARACTER_DYNAMIC_SUBJECTIVE`: Name | she/he \
+ * `TARGET_CHARACTER_DYNAMIC_OBJECTIVE`: Name | her/him \
+ * `TARGET_CHARACTER_DYNAMIC_POSSESSIVE`: Name's (c1) | her/his \
+ * `TARGET_CHARACTER_DYNAMIC_REFLEXIVE`: Name | herself/himself \
  *
  * For items:
  *
- * `ITEM_ASSET_NAME`: Name of the asset in question
- * `ITEM_ASSET_NAME_PREVIOUS`: Name of the previous asset
- * `ITEM_CONTAINER_SIMPLE`: Simple description of where the item is located
- * `ITEM_CONTAINER_SIMPLE_DYNAMIC`: Simple description of where the item is located (with name replaced by her(self) if target == source)
+ * `ITEM_ASSET_NAME`: Name of the asset in question \
+ * `ITEM_ASSET_NAME_PREVIOUS`: Name of the previous asset \
+ * `ITEM_CONTAINER_SIMPLE`: Simple description of where the item is located \
+ * `ITEM_CONTAINER_SIMPLE_DYNAMIC`: Simple description of where the item is located (with name replaced by her(self) if target == source) \
+ *
+ * For accounts:
+ * `SOURCE_ACCOUNT_NAME`: Name \
+ * `SOURCE_ACCOUNT_ID`: c1 \
+ * `SOURCE_ACCOUNT`: Name (c1) \
+ * `TARGET_ACCOUNT_NAME`: Name \
+ * `TARGET_ACCOUNT_ID`: c1 \
+ * `TARGET_ACCOUNT`: Name (c1) \
  */
 export type ChatActionDictionaryMetaEntry =
 	| 'SOURCE_CHARACTER_NAME'
@@ -420,7 +409,13 @@ export type ChatActionDictionaryMetaEntry =
 	| 'ITEM_ASSET_NAME'
 	| 'ITEM_ASSET_NAME_PREVIOUS'
 	| 'ITEM_CONTAINER_SIMPLE'
-	| 'ITEM_CONTAINER_SIMPLE_DYNAMIC';
+	| 'ITEM_CONTAINER_SIMPLE_DYNAMIC'
+	| 'SOURCE_ACCOUNT_NAME'
+	| 'SOURCE_ACCOUNT_ID'
+	| 'SOURCE_ACCOUNT'
+	| 'TARGET_ACCOUNT_NAME'
+	| 'TARGET_ACCOUNT_ID'
+	| 'TARGET_ACCOUNT';
 
 export const ChatActionIdSchema: z.ZodType<ChatActionId> = z.enum(KnownObject.keys(CHAT_ACTIONS_DEF));
 export type ChatActionId = keyof typeof CHAT_ACTIONS_DEF;

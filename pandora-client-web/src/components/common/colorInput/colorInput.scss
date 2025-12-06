@@ -15,6 +15,7 @@ $coloreditor-selector-size: 12.5em;
 		height: $coloreditor-selector-size;
 		background: hsla(var(--hue), 100%, 50%, 1);
 		margin-bottom: 0.5em;
+		forced-color-adjust: none;
 
 		&__color {
 			position: absolute;
@@ -44,6 +45,11 @@ $coloreditor-selector-size: 12.5em;
 				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			transform: translate(-50%, -50%);
 			cursor: crosshair;
+
+			@include common.forcedColors {
+				border-color: #000;
+				box-shadow: 0 0 4px #fff;
+			}
 		}
 	}
 
@@ -53,6 +59,7 @@ $coloreditor-selector-size: 12.5em;
 		height: 1em;
 		margin-bottom: 0.5em;
 		padding: 0;
+		forced-color-adjust: none;
 
 		&::-webkit-slider-thumb {
 			-webkit-appearance: none;
@@ -69,6 +76,11 @@ $coloreditor-selector-size: 12.5em;
 				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			cursor: pointer;
 			position: relative;
+
+			@include common.forcedColors {
+				border: 2px solid #000;
+				box-shadow: 0 0 4px #fff;
+			}
 		}
 
 		&::-moz-range-thumb {
@@ -84,23 +96,32 @@ $coloreditor-selector-size: 12.5em;
 				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
 				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			cursor: pointer;
+
+			@include common.forcedColors {
+				border: 2px solid #000;
+				box-shadow: 0 0 4px #fff;
+			}
 		}
 	}
 
 	&__hue {
 		background-image: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red) !important;
+		forced-color-adjust: none;
 	}
 
 	&__saturation {
 		background: var(--gradient-saturation) !important;
+		forced-color-adjust: none;
 	}
 
 	&__value {
 		background: var(--gradient-value) !important;
+		forced-color-adjust: none;
 	}
 
 	&__alpha {
 		background: linear-gradient(90deg, transparent, var(--rgb)) !important;
+		forced-color-adjust: none;
 	}
 
 	&__hex {
@@ -115,8 +136,18 @@ $coloreditor-selector-size: 12.5em;
 	width: 4em;
 	height: 2em;
 	padding: 0;
+	forced-color-adjust: none;
+
+	@include common.forcedColors {
+		border-color: ButtonBorder;
+	}
 
 	&:focus-visible {
 		outline: 0.25em solid common.$theme-colorbutton-visiblefocus-outline;
+
+		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
+			outline-color: AccentColor;
+		}
 	}
 }

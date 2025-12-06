@@ -11,6 +11,12 @@
 	align-self: stretch;
 	box-shadow: 0 0.2em 0.4em 0 common.$themecolor-shadow, 0 0.3em 1em 0 common.$themecolor-shadow;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
+
 	.teaser-content-box {
 		flex: 1;
 		flex-basis: 0;
@@ -22,6 +28,12 @@
 			border-top-left-radius: 0.3em;
 			border-top-right-radius: 0.3em;
 			box-shadow: 0 0.2em 0.4em 0 common.$themecolor-shadow, 0 0.3em 1em 0 common.$themecolor-shadow;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border: 1px solid common.$forcedColors-separator;
+			}
 
 			.teaser-text {
 				@include common.center-flex;
@@ -56,14 +68,33 @@
 		width: 1em;
 		height: 1em;
 		margin-left: 1em;
+		cursor: pointer;
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			border: 1px solid ButtonBorder;
+		}
 
 		&.active {
 			background: common.$theme-auth-teaser-dot-active;
+
+			@include common.forcedColors {
+				background: SelectedItem;
+			}
 		}
 
 		&:hover {
 			background: common.$theme-auth-teaser-dot-hover;
-			cursor: pointer;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				&.active {
+					background: SelectedItem;
+				}
+
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
 		}
 	}
 }

@@ -26,6 +26,12 @@
 	background: common.$theme-textbox-background;
 	color: common.$theme-textbox-text;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 1px solid common.$forcedColors-separator;
+	}
+
 	user-select: text;
 
 	h2, h3, h4 {

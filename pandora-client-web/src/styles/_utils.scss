@@ -1,4 +1,30 @@
 @use 'constants';
+@use 'theming';
+
+//#region Theming
+
+@mixin forcedColors {
+	// See
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors
+	// https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/system-color
+
+	@media (forced-colors: active) {
+		@at-root & {
+			@content;
+		}
+	}
+
+	@at-root html.forcedColors & {
+		@content;
+	}
+}
+
+// I am not entirely sure what system color is best used as a separator, so using a variable to be able to adjust in the future
+$forcedColors-separator: CanvasText;
+// Not everything supports system color `AccentColor`, use this as a fallback
+$forcedColors-accentColorFallback: color-mix(in srgb, light-dark(#000, #fff), theming.$theme-accent-color 60%);
+
+//#endregion
 
 //#region Flexbox
 

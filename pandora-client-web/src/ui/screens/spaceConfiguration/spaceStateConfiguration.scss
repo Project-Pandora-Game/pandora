@@ -28,11 +28,6 @@
 				padding: 1px;
 				overflow: clip;
 
-				&.filler {
-					background: transparent;
-					border-color: common.$theme-normal-background-secondary;
-				}
-
 				> button {
 					@include common.center-flex(column);
 					position: relative;
@@ -56,6 +51,13 @@
 					padding: 1px;
 					font-size: smaller;
 					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-right: 1px solid common.$forcedColors-separator;
+						border-bottom: 1px solid common.$forcedColors-separator;
+					}
 				}
 
 				.overlay {
@@ -89,6 +91,11 @@
 						color: common.$theme-normal-text;
 						background-color: rgba(common.$theme-normal-background-secondary, 0.6);
 
+						@include common.forcedColors {
+							background: Canvas;
+							color: CanvasText;
+						}
+
 						display: -webkit-box;
 						-webkit-box-orient: vertical;
 						-webkit-line-clamp: 2;
@@ -119,17 +126,32 @@
 						&.state-enabled {
 							border-color: #00aa00;
 							background-color: #00aa0088;
+
+							@include common.forcedColors {
+								background: Canvas;
+								color: CanvasText;
+							}
 						}
 
 						&.state-limited {
 							border-color: #fff600;
 							background-color: #ad930088;
 							border-style: dashed;
+
+							@include common.forcedColors {
+								background: Canvas;
+								color: CanvasText;
+							}
 						}
 
 						&.state-disabled {
 							border-color: #880000;
 							background-color: #88000088;
+
+							@include common.forcedColors {
+								background: Canvas;
+								color: CanvasText;
+							}
 						}
 					}
 				}

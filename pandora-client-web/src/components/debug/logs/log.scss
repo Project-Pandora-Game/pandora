@@ -7,6 +7,7 @@
 	white-space: pre-wrap;
 	overflow-wrap: break-word;
 	user-select: text;
+	forced-color-adjust: none;
 
 	&.loglevel-fatal {
 		color: #000;

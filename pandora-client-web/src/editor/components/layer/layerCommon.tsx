@@ -154,7 +154,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 			{ overrides.map((entry, i) => (
 				<Column key={ i } className='override-entry' padding='small'>
 					<Row gap='small'>
-						<Column className='flex-1'>
+						<Column className='zero-width flex-1'>
 							<EntryDetails entry={ entry } update={ (newValue) => {
 								update(overrides.toSpliced(i, 1, newValue));
 							} } />

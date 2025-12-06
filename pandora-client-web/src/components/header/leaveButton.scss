@@ -8,8 +8,18 @@
 		user-select: text;
 		border-color: common.$theme-separator;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
+
 		.unimportant {
 			color: common.$theme-normal-text-dim;
+
+			@include common.forcedColors {
+				color: inherit;
+			}
 		}
 
 		button {

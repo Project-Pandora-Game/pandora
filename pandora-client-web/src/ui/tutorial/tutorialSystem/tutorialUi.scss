@@ -10,6 +10,10 @@
 	.finishedStep {
 		color: common.$theme-tutorial-dialog-text-dim;
 		font-style: italic;
+
+		@include common.forcedColors {
+			color: GrayText;
+		}
 	}
 
 	.maid-container {
@@ -48,6 +52,7 @@
 	margin: 0;
 	z-index: 89000; // This is positioned to be under hover elements (.hover-element), not to obscure them
 	pointer-events: none;
+	forced-color-adjust: none;
 
 	background: transparent;
 	border: 0.3em solid common.$theme-tutorial-highlight-base-1;

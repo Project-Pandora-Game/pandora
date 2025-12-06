@@ -9,6 +9,12 @@
 		box-shadow: 0 0.2em 0.4em 0 common.$themecolor-shadow, 0 0.3em 1em 0 common.$themecolor-shadow;
 		border-radius: 0.2em;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
+
 		.Button {
 			margin-top: 2em;
 		}

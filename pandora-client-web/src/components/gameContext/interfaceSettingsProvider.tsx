@@ -3,11 +3,17 @@ import { useEffect } from 'react';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 
 export function InterfaceSettingsProvider(): null {
-	const { interfaceAccentColor } = useAccountSettings();
+	const { interfaceAccentColor, accessibilityForceSystemColors } = useAccountSettings();
 
 	useEffect(() => {
 		document.body.style.setProperty('--pandora-accent-color', interfaceAccentColor);
-	}, [interfaceAccentColor]);
+
+		if (accessibilityForceSystemColors) {
+			document.documentElement.classList.add('forcedColors');
+		} else {
+			document.documentElement.classList.remove('forcedColors');
+		}
+	}, [interfaceAccentColor, accessibilityForceSystemColors]);
 
 	return null;
 }

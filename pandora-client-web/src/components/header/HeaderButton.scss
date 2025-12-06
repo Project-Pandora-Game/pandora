@@ -7,8 +7,16 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 .HeaderButton {
 	background: common.$theme-header-button-normal-background;
 	color: common.$theme-header-button-normal-text;
-	border: 0.2em solid transparent;
+	border: 1px solid transparent;
+	border-radius: common.spacing('small');
+	outline-offset: -0.2em;
 	min-width: 4em;
+
+	@include common.forcedColors {
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonBorder;
+	}
 
 	.icon-container {
 		position: relative;
@@ -32,25 +40,49 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 			background: common.$theme-notification-badge-background;
 			color: common.$theme-notification-badge-text;
 			padding: 0 0.3em;
+
+			@include common.forcedColors {
+				background: Mark;
+				color: MarkText;
+			}
 		}
 	}
 
 	img {
 		height: $header-button-img-height;
 		filter: common.$theme-header-button-normal-imgfilter;
+
+		@include common.forcedColors {
+			filter: none;
+		}
 	}
 
 	&:hover {
 		background: common.$theme-header-button-hover-background;
 		color: common.$theme-header-button-hover-text;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: common.$forcedColors-accentColorFallback;
+			border-color: AccentColor;
+		}
+
 		img {
 			filter: common.$theme-header-button-hover-imgfilter;
+
+			@include common.forcedColors {
+				filter: none;
+			}
 		}
 	}
 
 	&:focus-visible {
-		outline: 0;
-		border-color: common.$theme-header-button-visiblefocus-outline;
+		outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
+
+		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
+			outline-color: AccentColor;
+		}
 	}
 }

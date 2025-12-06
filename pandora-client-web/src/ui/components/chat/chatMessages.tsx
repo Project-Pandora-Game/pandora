@@ -196,6 +196,23 @@ function ActionMessagePrepareDictionary(
 		}
 	}
 
+	const sourceAccount = message.data?.account;
+	const targetAccount = message.data?.accountTarget ?? sourceAccount;
+
+	if (sourceAccount) {
+		const { id, displayName } = sourceAccount;
+		metaDictionary.SOURCE_ACCOUNT_NAME = displayName;
+		metaDictionary.SOURCE_ACCOUNT_ID = id.toString();
+		metaDictionary.SOURCE_ACCOUNT = `${displayName} (${id})`;
+	}
+
+	if (targetAccount) {
+		const { id, displayName } = targetAccount;
+		metaDictionary.TARGET_ACCOUNT_NAME = displayName;
+		metaDictionary.TARGET_ACCOUNT_ID = id.toString();
+		metaDictionary.TARGET_ACCOUNT = `${displayName} (${id})`;
+	}
+
 	return {
 		...message,
 		dictionary: {
@@ -313,7 +330,9 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 					hasCustomName ? 'hasCustomName' : null,
 					hasDescription ? 'hasDescription' : null,
 				) }
-				onClick={ () => {
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					ev.preventDefault();
 					OpenRoomItemDialog(item.id);
 				} }
 			>

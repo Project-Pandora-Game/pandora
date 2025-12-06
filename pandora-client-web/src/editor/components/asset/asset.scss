@@ -27,20 +27,43 @@
 					padding: 0.4em;
 					overflow: hidden;
 					text-overflow: ellipsis;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+					}
 				}
 
 				.layerName {
 					cursor: pointer;
 					position: relative;
 
+					@include common.forcedColors {
+						background: ButtonFace;
+						color: ButtonText;
+						border: 1px solid ButtonBorder;
+					}
+
 					&:hover {
 						background: common.$theme-editor-asset-layerentry-hover-background;
+
+						@include common.forcedColors {
+							background: ButtonFace;
+							border-color: common.$forcedColors-accentColorFallback;
+							border-color: AccentColor;
+						}
 					}
 				}
 
 				&.selected {
 					.layerName, .layerName:hover {
 						@include common.corner-border(2px, common.$theme-editor-asset-layerentry-selected-border, 0.5em, common.$theme-editor-asset-layerentry-selected-border-spacing);
+
+						@include common.forcedColors {
+							background: SelectedItem;
+							color: SelectedItemText;
+							border: 1px solid ButtonBorder;
+						}
 					}
 				}
 
@@ -59,6 +82,11 @@
 				&.preview img {
 					width: 100%;
 					background: common.$theme-editor-asset-imagepreview-background;
+					forced-color-adjust: none;
+
+					@include common.forcedColors {
+						background: #000;
+					}
 				}
 			}
 		}

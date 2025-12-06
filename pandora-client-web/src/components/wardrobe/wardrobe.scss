@@ -5,7 +5,6 @@ $header-height: 2em;
 .wardrobe {
 	display: flex;
 	flex-flow: column;
-	gap: 0.5em;
 	height: 100%;
 	min-width: fit-content;
 
@@ -15,6 +14,13 @@ $header-height: 2em;
 		color: common.$theme-warningbox-text;
 		border: 1px solid common.$theme-separator;
 		padding: 0.25em;
+		margin: common.spacing('tiny');
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 2px solid common.$theme-warningbox-background;
+		}
 	}
 
 	.wardrobeMain {
@@ -61,6 +67,12 @@ $header-height: 2em;
 					border: 1px solid common.$theme-separator;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border: 2px solid common.$theme-warningbox-background;
+					}
 				}
 
 				.option {
@@ -69,6 +81,12 @@ $header-height: 2em;
 					border: 1px solid common.$theme-separator;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-color: common.$forcedColors-separator;
+					}
 				}
 
 				.actionAttempt {
@@ -76,6 +94,12 @@ $header-height: 2em;
 					color: common.$theme-wardrobe-preview-actionattempt-text;
 					border: 1px solid common.$theme-wardrobe-preview-actionattempt-border;
 					border-radius: 1em;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-color: common.$forcedColors-separator;
+					}
 				}
 			}
 		}
@@ -90,6 +114,12 @@ $header-height: 2em;
 	background: common.$theme-wardrobe-pane-background;
 	color: common.$theme-wardrobe-pane-text;
 	overflow: hidden;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
 }
 
 .wardrobe-ui {
@@ -105,6 +135,7 @@ $drop-overlay-gap: 0.3em;
 
 .itemPreview {
 	overflow: hidden;
+	forced-color-adjust: none;
 
 	&.missing {
 		border: 1px solid common.$theme-separator;
@@ -127,6 +158,10 @@ $drop-overlay-gap: 0.3em;
 	min-width: min(20em, 90vw);
 
 	border: 1px solid common.$theme-separator;
+
+	@include common.forcedColors {
+		border-color: common.$forcedColors-separator;
+	}
 }
 
 .WardrobeCollapsableSection {
@@ -149,8 +184,19 @@ $drop-overlay-gap: 0.3em;
 	color: common.$theme-wardrobe-view-text;
 	border: 2px solid common.$theme-separator;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
 	&.itemEdit {
 		border-color: common.$theme-separator-highlight;
+
+		@include common.forcedColors {
+			border-color: common.$forcedColors-accentColorFallback;
+			border-color: AccentColor;
+		}
 	}
 
 	.toolbar {
@@ -161,6 +207,10 @@ $drop-overlay-gap: 0.3em;
 		padding: 0.25em 0.25em;
 		gap: 0.3em;
 		border-bottom: 1px solid common.$theme-separator;
+
+		@include common.forcedColors {
+			border-bottom-color: common.$forcedColors-separator;
+		}
 
 		&.wrap {
 			flex-wrap: wrap;
@@ -210,6 +260,10 @@ $drop-overlay-gap: 0.3em;
 		width: 100%;
 		border: 2px solid common.$theme-separator;
 
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+
 		.outfitMainButton {
 			width: 100%;
 			min-height: 5em;
@@ -219,9 +273,31 @@ $drop-overlay-gap: 0.3em;
 			border: 1px solid common.$theme-wardrobe-outfitbutton-border;
 			background: common.$theme-wardrobe-outfitbutton-normal-background;
 			color: common.$theme-wardrobe-outfitbutton-text;
+			outline-offset: -0.2em;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border: 2px solid ButtonBorder;
+			}
 
 			&:hover {
 				background: common.$theme-wardrobe-outfitbutton-hover-background;
+
+				@include common.forcedColors {
+					background: ButtonFace;
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
+			}
+
+			&:focus-visible {
+				outline: 0.2em solid common.$theme-wardrobe-outfitbutton-normal-visiblefocus-outline;
+
+				@include common.forcedColors {
+					outline-color: common.$forcedColors-accentColorFallback;
+					outline-color: AccentColor;
+				}
 			}
 
 			.outfitPreview {
@@ -233,6 +309,10 @@ $drop-overlay-gap: 0.3em;
 				border: 1px solid common.$theme-wardrobe-outfitbutton-preview-border;
 				overflow: hidden;
 				aspect-ratio: 2 / 3;
+
+				@include common.forcedColors {
+					border-color: common.$forcedColors-separator;
+				}
 
 				&.big {
 					width: min(35%, 30vh);
@@ -270,6 +350,10 @@ $drop-overlay-gap: 0.3em;
 
 		z-index: 10;
 		background: common.$theme-wardrobe-view-overlay;
+
+		@include common.forcedColors {
+			background: #00000020;
+		}
 
 		.centerButton {
 			width: max(10em, 50%);
@@ -331,6 +415,11 @@ $drop-overlay-gap: 0.3em;
 			border-left: 3px solid common.$theme-separator-highlight;
 			padding: 0.25em 0 0.25em 0.5em;
 			margin-bottom: 0.75em;
+
+			@include common.forcedColors {
+				border-left-color: common.$forcedColors-accentColorFallback;
+				border-left-color: AccentColor;
+			}
 		}
 	}
 
@@ -365,6 +454,10 @@ $drop-overlay-gap: 0.3em;
 	display: flex;
 	position: relative;
 
+	@include common.forcedColors {
+		border-color: ButtonBorder;
+	}
+
 	>.colorRibbon {
 		position: absolute;
 		display: inline-block;
@@ -374,6 +467,11 @@ $drop-overlay-gap: 0.3em;
 		height: 0.9em;
 		clip-path: polygon(0 0, 100% 0, 0 100%);
 		background: common.$theme-wardrobe-itementry-ribbon-border;
+		forced-color-adjust: none;
+
+		@include common.forcedColors {
+			background: ButtonBorder;
+		}
 
 		.colorRibbonInner {
 			position: absolute;
@@ -393,6 +491,10 @@ $drop-overlay-gap: 0.3em;
 			font-style: normal;
 			font-weight: normal;
 			color: common.$theme-normal-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
 		}
 	}
 
@@ -504,6 +606,7 @@ $drop-overlay-gap: 0.3em;
 		justify-content: center;
 		align-items: center;
 		text-shadow: 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow;
+		forced-color-adjust: none;
 	}
 
 	&.pref-favorite {
@@ -606,6 +709,10 @@ $drop-overlay-gap: 0.3em;
 	border-radius: 0.2em;
 	z-index: 1;
 
+	@include common.forcedColors {
+		border: 2px solid ButtonBorder;
+	}
+
 	&:not(.slim) {
 		min-height: 2.5em;
 		min-width: 2.5em;
@@ -633,11 +740,23 @@ $drop-overlay-gap: 0.3em;
 .wardrobeActionButton, .inventoryViewItem {
 	background: common.$theme-wardrobe-actionbutton-normal-background;
 	color: common.$theme-wardrobe-actionbutton-normal-text;
+	outline-offset: -0.2em;
+	forced-color-adjust: none;
+
+	@include common.forcedColors {
+		background: ButtonFace;
+		color: ButtonText;
+	}
 
 	&.selected {
 		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-selected-background;
 		color: common.$theme-wardrobe-actionbutton-selected-text;
+
+		@include common.forcedColors {
+			background: SelectedItem;
+			color: SelectedItemText;
+		}
 	}
 
 	&.requiresAttempt:not(:disabled):not(.selected) {
@@ -645,9 +764,21 @@ $drop-overlay-gap: 0.3em;
 		background: common.$theme-wardrobe-actionbutton-requiresAttempt-background;
 		color: common.$theme-wardrobe-actionbutton-requiresAttempt-text;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: #4ac;
+		}
+
 		&:hover {
 			background: common.$theme-wardrobe-actionbutton-requiresAttempt-hover-background;
 			color: common.$theme-wardrobe-actionbutton-requiresAttempt-hover-text;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: #268;
+			}
 		}
 	}
 
@@ -657,14 +788,18 @@ $drop-overlay-gap: 0.3em;
 		--progress: 0%;
 		background: linear-gradient(
 			to bottom,
-			common.$theme-wardrobe-actionbutton-progress-done var(--progress),
-			common.$theme-wardrobe-actionbutton-progress-pending var(--progress),
+			common.$theme-wardrobe-actionbutton-progress-done 0 var(--progress),
+			common.$theme-wardrobe-actionbutton-progress-pending var(--progress) 100%,
 		);
-		// --progress: 0deg;
-		// background: conic-gradient(
-		// 	$theme-wardrobe-actionbutton-progress-done var(--progress),
-		// 	$theme-wardrobe-actionbutton-progress-pending var(--progress),
-		// );
+
+		@include common.forcedColors {
+			background: common.$theme-wardrobe-actionbutton-progress-pending;
+			background: linear-gradient(
+				to bottom,
+				ButtonFace 0 var(--progress),
+				common.$theme-wardrobe-actionbutton-progress-pending var(--progress) 100%,
+			);
+		}
 	}
 
 	&.allowed:not(:disabled) {
@@ -673,14 +808,35 @@ $drop-overlay-gap: 0.3em;
 			background: common.$theme-wardrobe-actionbutton-hover-background;
 			color: common.$theme-wardrobe-actionbutton-hover-text;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
+
 			&.inventoryViewItem {
 				background: common.$theme-wardrobe-itementry-hover-background;
 				color: common.$theme-wardrobe-itementry-hover-text;
+
+				@include common.forcedColors {
+					background: ButtonFace;
+					color: ButtonText;
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
 			}
 
 			&.selected {
 				background: common.$theme-wardrobe-actionbutton-selectedhover-background;
 				color: common.$theme-wardrobe-actionbutton-selectedhover-text;
+
+				@include common.forcedColors {
+					background: SelectedItem;
+					color: SelectedItemText;
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
 			}
 		}
 	}
@@ -689,32 +845,65 @@ $drop-overlay-gap: 0.3em;
 		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-blocked-background;
 		color: common.$theme-wardrobe-actionbutton-blocked-text;
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: #d55;
+		}
 	}
 
 	&.pending:not(.selected) {
 		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-pending-background;
 		color: common.$theme-wardrobe-actionbutton-pending-text;
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: common.$theme-wardrobe-actionbutton-pending-background;
+		}
 	}
 
 	&.promptRequired:not(.selected) {
 		cursor: pointer;
 		background: common.$theme-wardrobe-actionbutton-promptRequired-background;
 		color: common.$theme-wardrobe-actionbutton-promptRequired-text;
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: #ff4;
+		}
 	}
 
 	&:disabled {
 		background: common.$theme-wardrobe-actionbutton-disabled-background;
 		color: common.$theme-wardrobe-actionbutton-disabled-text;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: GrayText;
+		}
+
 		&.selected {
 			background: common.$theme-wardrobe-actionbutton-selected-background;
 			color: common.$theme-wardrobe-actionbutton-selected-text;
+
+			@include common.forcedColors {
+				background: SelectedItem;
+				color: GrayText;
+			}
 		}
 	}
 
 	&:focus-visible {
-		border-color: common.$theme-wardrobe-actionbutton-visiblefocus-border;
+		outline: 0.2em solid common.$theme-wardrobe-actionbutton-visiblefocus-border;
+
+		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
+			outline-color: AccentColor;
+		}
 	}
 }
 
@@ -876,6 +1065,12 @@ $drop-overlay-gap: 0.3em;
 	padding: 1em;
 	border-radius: 1em;
 	line-height: 1.5em;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
 }
 
 .attribute-description {
@@ -899,6 +1094,11 @@ $drop-overlay-gap: 0.3em;
 		width: 100%;
 		color: common.$theme-wardrobe-errormessage-text;
 		text-align: right;
+
+		@include common.forcedColors {
+			color: inherit;
+			text-decoration: underline common.$theme-wardrobe-errormessage-text;
+		}
 	}
 }
 
@@ -966,11 +1166,22 @@ $drop-overlay-gap: 0.3em;
 			border: 1px solid common.$theme-wardrobe-itemdescription-border;
 			background: common.$theme-wardrobe-itemdescription-background;
 			color: common.$theme-wardrobe-itemdescription-text;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border-color: common.$forcedColors-separator;
+			}
 		}
 	}
 
 	.error {
 		color: common.$theme-wardrobe-errormessage-text;
+
+		@include common.forcedColors {
+			color: inherit;
+			text-decoration: underline common.$theme-wardrobe-errormessage-text;
+		}
 	}
 
 	input {

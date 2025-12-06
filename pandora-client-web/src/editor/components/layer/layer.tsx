@@ -5,7 +5,7 @@ import { ReactElement, useCallback } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
-import { Row } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
@@ -131,23 +131,24 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAsse
 					AssertNever(layer)
 				) }
 			</Row>
-			<Row alignY='center'>
-				<label htmlFor='layer-name'>
-					Layer name:
-				</label>
-				<ContextHelpButton>
-					This field sets the layer's name, as shown in the "Asset"-tab.<br />
-					It affects nothing else and is purely for identifying layers later on.
-				</ContextHelpButton>
+			<Column gap='tiny'>
+				<Row alignY='center'>
+					<label htmlFor='layer-name'>
+						Layer name:
+					</label>
+					<ContextHelpButton>
+						This field sets the layer's name, as shown in the "Asset"-tab.<br />
+						It affects nothing else and is purely for identifying layers later on.
+					</ContextHelpButton>
+				</Row>
 				<TextInput
 					id='layer-name'
-					className='flex'
 					value={ name ?? '' }
 					onChange={ (newValue) => {
 						layer.setName(newValue.trim());
 					} }
 				/>
-			</Row>
+			</Column>
 		</>
 	);
 }

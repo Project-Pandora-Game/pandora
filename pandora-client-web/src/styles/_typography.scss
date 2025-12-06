@@ -100,6 +100,12 @@ code {
 	}
 }
 
+pre code {
+	display: block;
+	text-wrap: wrap;
+	overflow-wrap: break-word;
+}
+
 ul {
 	margin: 0;
 }

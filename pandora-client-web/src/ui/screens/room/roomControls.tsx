@@ -660,9 +660,12 @@ function DisplayCharacter({ char, globalState }: {
 					<span>
 						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
 						<span><b>{ data.name }</b></span>
-						<span> / { data.id } / { data.accountId }</span>
+						<span> ({ data.id })</span>
 					</span>
 				</button>
+				<span>
+					<span>{ data.accountDisplayName } ({ data.accountId })</span>
+				</span>
 				{
 					icons.length > 0 ? (
 						<span>

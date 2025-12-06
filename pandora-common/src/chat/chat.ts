@@ -5,7 +5,7 @@ import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
 import { HexColorStringSchema } from '../validation.ts';
 import { ChatMessageActionLogSchema } from './actionLog.ts';
 import { ChatActionIdSchema } from './chatActions.ts';
-import { ChatReceivedMessageBaseSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
+import { ChatReceivedMessageBaseSchema, IChatMessageActionAccountSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
@@ -115,6 +115,10 @@ export const ChatMessageActionSchema = ChatReceivedMessageBaseSchema.extend({
 		itemPrevious: IChatMessageActionItemSchema.optional(),
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
 		itemContainerPath: IChatMessageActionContainerPathSchema.optional(),
+		/** Used to generate specific dictionary entries, acts as source */
+		account: IChatMessageActionAccountSchema.optional(),
+		/** Used to generate specific dictionary entries, defaults to `account` */
+		accountTarget: IChatMessageActionAccountSchema.optional(),
 	}).optional(),
 	dictionary: z.partialRecord(z.string(), z.string()).optional(),
 });
@@ -129,6 +133,8 @@ export const ChatMessageDirectoryActionSchema = ChatMessageActionSchema.omit({ t
 	data: z.object({
 		character: CharacterIdSchema.optional(),
 		targetCharacter: CharacterIdSchema.optional(),
+		account: IChatMessageActionAccountSchema.optional(),
+		accountTarget: IChatMessageActionAccountSchema.optional(),
 	}).optional(),
 });
 export type ChatMessageDirectoryAction = z.infer<typeof ChatMessageDirectoryActionSchema>;

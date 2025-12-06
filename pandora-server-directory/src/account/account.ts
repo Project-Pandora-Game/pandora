@@ -24,6 +24,7 @@ import {
 	type AccountSettings,
 	type AccountSettingsKeys,
 	type AssetFrameworkPosePresetWithId,
+	type IChatMessageActionAccount,
 	type Logger,
 	type ManagementAccountInfo,
 } from 'pandora-common';
@@ -153,6 +154,15 @@ export class Account implements ActorIdentity {
 			created: this.data.created,
 			visibleRoles: uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
 			profileDescription: this.data.profileDescription,
+		};
+	}
+
+	public getChatDescriptor(): IChatMessageActionAccount {
+		return {
+			type: 'account',
+			id: this.id,
+			displayName: this.displayName,
+			labelColor: this.getEffectiveSettings().labelColor,
 		};
 	}
 

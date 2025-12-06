@@ -974,6 +974,7 @@ export class Space {
 			id: 'characterEntered',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 
@@ -1067,7 +1068,9 @@ export class Space {
 				id: action,
 				data: {
 					targetCharacter: character.baseInfo.id,
+					accountTarget: character.baseInfo.account.getChatDescriptor(),
 					character: source?.id ?? character.baseInfo.id,
+					account: (source ?? character.baseInfo).account.getChatDescriptor(),
 				},
 			});
 		}
@@ -1091,6 +1094,7 @@ export class Space {
 			id: 'characterReconnected',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 	}
@@ -1103,6 +1107,7 @@ export class Space {
 			id: 'characterDisconnected',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 	}

@@ -680,15 +680,32 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public processDirectoryMessages(messages: ChatMessageDirectoryAction[]): void {
 		this._queueMessages(messages
 			.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
-			.map((m): ChatMessage => ({
-				...omit(m, ['directoryTime']),
-				time: this.nextMessageTime(),
-				rooms: null,
-				data: m.data ? {
-					character: this._getCharacterActionInfo(m.data.character),
-					target: this._getCharacterActionInfo(m.data.targetCharacter),
-				} satisfies ChatMessageAction['data'] : undefined,
-			})));
+			.map((m): ChatMessage => {
+				let data: ChatMessageAction['data'];
+				if (m.data) {
+					data = {};
+
+					if (m.data.character != null) {
+						data.character = this._getCharacterActionInfo(m.data.character);
+					}
+					if (m.data.targetCharacter != null) {
+						data.target = this._getCharacterActionInfo(m.data.targetCharacter);
+					}
+					if (m.data.account != null) {
+						data.account = m.data.account;
+					}
+					if (m.data.accountTarget != null) {
+						data.accountTarget = m.data.accountTarget;
+					}
+				}
+
+				return ({
+					...omit(m, ['directoryTime']),
+					time: this.nextMessageTime(),
+					rooms: null,
+					data,
+				});
+			}));
 		this.lastDirectoryMessageTime = chain(messages)
 			.map((m) => m.directoryTime)
 			.concat(this.lastDirectoryMessageTime)

@@ -514,13 +514,13 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 			>
 				{ name }
 			</button>
-			<Button className='slim hideDisabled' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
-				🠉
+			<Button className='slim-fixed hideDisabled' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
+				{ '\u{2B06}' }
 			</Button>
-			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
+			<Button className='slim-fixed' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
-			<Button className='slim hideDisabled' aria-label='delete' onClick={ () => {
+			<Button className='slim-fixed hideDisabled' aria-label='delete' onClick={ () => {
 				// eslint-disable-next-line no-alert
 				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;
@@ -529,7 +529,7 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 				}
 				layer.deleteFromAsset();
 			} } title='DELETE this layer'>
-				🗑️
+				{ '\u{1F5D1}' }
 			</Button>
 		</li>
 	);

@@ -31,7 +31,7 @@ import { PandoraInnerInstanceDriver } from './innerInstance/pandoraEditorInstanc
 const logger = GetLogger('Editor');
 
 export const EDITOR_ALPHAS = [1, 0.6, 0];
-export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
+export const EDITOR_ALPHA_ICONS = ['\u{2B1B}', '\u{2B15}', '\u{2B1A}'];
 
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer;

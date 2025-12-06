@@ -24,7 +24,7 @@ function InterfaceAccessibilitySettings(): ReactElement {
 			<legend>Interface Accessibility</legend>
 			<Column gap='large'>
 				<ToggleAccountSetting
-					setting='forceSystemColors'
+					setting='accessibilityForceSystemColors'
 					label={ (
 						<Row alignY='center'>
 							Use system color scheme

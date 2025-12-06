@@ -151,7 +151,7 @@ export const AccountSettingsSchema = z.object({
 	/**
 	 * Forces the interface to use system colors (emulating `@media (forced-colors: active)`)
 	 */
-	forceSystemColors: z.boolean(),
+	accessibilityForceSystemColors: z.boolean(),
 	/**
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
@@ -198,7 +198,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 		usePlatformPopup: false,
 	},
 	notificationTypeSettings: {},
-	forceSystemColors: false,
+	accessibilityForceSystemColors: false,
 	tutorialCompleted: EMPTY_ARRAY,
 });
 

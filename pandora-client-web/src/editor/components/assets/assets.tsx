@@ -244,7 +244,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				<Button onClick={ () => {
 					appearance.moveItem(item.id, -1);
 				} } title='Move item one up' style={ { fontSize: 'x-small' } } >
-					🠉
+					↑
 				</Button> }
 				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity" disabled={ editorAssetGraphicsWorn == null }>{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>

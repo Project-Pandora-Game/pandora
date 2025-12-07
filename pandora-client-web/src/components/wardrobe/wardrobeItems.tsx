@@ -227,7 +227,7 @@ export function WardrobeItemManipulation(): ReactElement {
 						<WardrobeTemplateEditMenu
 							title='Creating item'
 							template={ heldItem.template }
-							cancelText='✖️ Cancel'
+							cancelText='✗ Cancel'
 							cancel={ () => setHeldItem({ type: 'nothing' }) }
 							updateTemplate={ (newTemplate) => setHeldItem({ type: 'template', template: newTemplate }) }
 						/>

@@ -152,7 +152,7 @@ export function EditorScene({
 				title='Download as image'
 				onClick={ exportImage }
 			>
-				<u>⇣</u>
+				⤓
 			</Button>
 			<EditorColorPicker throttle={ 30 } />
 		</div>

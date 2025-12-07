@@ -515,7 +515,7 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 				{ name }
 			</button>
 			<Button className='slim hideDisabled' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
-				🠉
+				↑
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }

@@ -20,6 +20,7 @@ import {
 	OutfitMeasureCost,
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -27,6 +28,7 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
+import wikiIcon from '../../../assets/icons/wiki.svg';
 import { useBrowserSessionStorage } from '../../../browserStorage.ts';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import { usePlayerVisionFilters } from '../../../graphics/common/visionFilters.tsx';
@@ -155,7 +157,12 @@ export function InventoryOutfitView({ header, targetContainer }: {
 				<div className='inventoryView'>
 					{ header }
 					<div className='toolbar'>
-						<span>Editing:&nbsp;<strong>Temporary collection</strong></span>
+						<Row alignY='center' className='flex-1'>
+							<span>Editing:&nbsp;<strong>Temporary collection</strong></span>
+							<Link title='Get help in the wiki' to='/wiki/items#IT_Saving_collections' className='flex-row'>
+								<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+							</Link>
+						</Row>
 					</div>
 					<OutfitEditView
 						outfit={ temporaryOutfit }
@@ -196,7 +203,12 @@ export function InventoryOutfitView({ header, targetContainer }: {
 			<div className='inventoryView'>
 				{ header }
 				<div className='toolbar'>
-					<span className='center-flex'><strong>Temporary collection</strong></span>
+					<Row alignY='center' alignX='center' className='flex-1'>
+						<span><strong>Temporary collection</strong></span>
+						<Link title='Get help in the wiki' to='/wiki/items#IT_Saving_collections' className='flex-row'>
+							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+						</Link>
+					</Row>
 				</div>
 				<div className='Scrollbar'>
 					<Column className='flex-1' padding='small'>

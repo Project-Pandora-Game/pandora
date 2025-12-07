@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Muffler muffle() should keep existing behavior in complex situations 1`] = `"mnmnnmnnn"`;
+
+exports[`Muffler muffle() should keep existing behavior in complex situations 2`] = `"Ghnm mmmck ghrnmn phnn mwmgmn nmnm ghnm mnnn gnng"`;
+
+exports[`Muffler muffle() should keep existing behavior in complex situations 3`] = `"Hmnnm npsmm ghmmmm nnt nmnt, ghnnnnegngmeghmm mmnpisgmnnm nwnn, shnd dn nnmnnmnm tmmmon wngmimmnwnt ngh nmwnhn nt gmnmmme mmnnn mlngnnn. Mnnmghnn mnsms mn mwngnnmmngn gnnvmmm. Pmnsnmwumn nwmsthms ghnmlnnn mngmnnm ghnmlnnn pmmmnntnsmmm nn tnngmmdnngm tomtwr nnnnmnm. Bnmwnnnm mmghn mmthnm nnnmnntum gnnwnghmtnm vntnw. Nhmmgnnbns sgnnmnnnsnnm nmnmnmnnd dmnnn gmnngmnmm mnmgmmtmghn nmgmnmn."`;

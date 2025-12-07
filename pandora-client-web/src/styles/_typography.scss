@@ -2,6 +2,8 @@
 
 :root {
 	interpolate-size: allow-keywords;
+	forced-color-adjust: preserve-parent-color;
+	color-scheme: dark;
 }
 
 html, body {
@@ -20,6 +22,17 @@ button {
 	font-feature-settings: inherit;
 }
 
+// Emulate forced colors enforcement if toggled manually
+html.forcedColors {
+	color-scheme: dark light;
+
+	* {
+		box-shadow: none !important;
+		text-shadow: none !important;
+		scrollbar-color: auto !important;
+	}
+}
+
 a {
 	display: inline-block;
 	color: common.$theme-link;
@@ -28,16 +41,33 @@ a {
 	transition: all 150ms linear;
 	text-decoration: none;
 
+	@include common.forcedColors {
+		color: LinkText;
+	}
+
 	&:visited:not(:hover):not(:focus):not(:active) {
 		color: common.$theme-link-visited;
+
+		@include common.forcedColors {
+			color: VisitedText;
+		}
 	}
 
 	&:hover, &:focus, &:active {
 		color: common.$theme-link-active;
+
+		@include common.forcedColors {
+			color: ActiveText;
+		}
 	}
 
 	&:focus-visible {
 		outline: common.$theme-link-visiblefocus-outline solid 0.15em;
+
+		@include common.forcedColors {
+			outline-color: common.$forcedColors-accentColorFallback;
+			outline-color: AccentColor;
+		}
 	}
 
 	&.inline {
@@ -62,6 +92,18 @@ code {
 	border: 1px solid common.$theme-code-border;
 	border-radius: common.spacing(small);
 	user-select: text;
+
+	@include common.forcedColors {
+		background: Field;
+		color: FieldText;
+		border-color: GrayText;
+	}
+}
+
+pre code {
+	display: block;
+	text-wrap: wrap;
+	overflow-wrap: break-word;
 }
 
 ul {
@@ -80,6 +122,10 @@ h2, h3, h4 {
 table {
 	border: 1px solid common.$theme-table-border-outer;
 
+	@include common.forcedColors {
+		border-color: common.$forcedColors-separator;
+	}
+
 	tr {
 		min-height: 2em;
 	}
@@ -90,6 +136,10 @@ table {
 		text-align: center;
 		border: 1px solid common.$theme-table-border;
 
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+
 		&.noPadding {
 			padding: 0;
 		}
@@ -98,14 +148,28 @@ table {
 	th {
 		background: common.$theme-table-header-background;
 		color: common.$theme-table-header-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
 	}
 
 	tr {
 		background: common.$theme-table-body-background;
 		color: common.$theme-table-body-text;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
+
 		&:nth-child(2n) {
 			background: common.$theme-table-body-altbackground;
+
+			@include common.forcedColors {
+				background: Canvas;
+			}
 		}
 	}
 
@@ -118,10 +182,18 @@ table {
 
 fieldset {
 	border-color: common.$theme-fieldset-border;
+
+	@include common.forcedColors {
+		border-color: common.$forcedColors-separator;
+	}
 }
 
 input:disabled + label, select:disabled + label, label:has(+ input:disabled), label:has(+ select:disabled) {
 	color: common.$theme-normal-text-dim;
+
+	@include common.forcedColors {
+		color: GrayText;
+	}
 }
 
 meter {
@@ -129,7 +201,13 @@ meter {
 	display: block;
 	border: solid 1px common.$theme-separator;
 	border-radius: 2em;
-	height: 0.75em;
+	height: calc(0.75em + 2px);
+	forced-color-adjust: auto;
+
+	@include common.forcedColors {
+		background: Canvas;
+		border-color: common.$forcedColors-separator;
+	}
 
 	&::-webkit-meter-bar {
 		height: 0.75em;

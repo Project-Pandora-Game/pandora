@@ -24,6 +24,12 @@
 		min-height: min(10vw, 100%);
 		border-left: max(2px, 0.1em) solid common.$theme-room-separator;
 		background: common.$theme-room-background;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-left-color: common.$forcedColors-separator;
+		}
 	}
 }
 
@@ -33,6 +39,12 @@
 	border: 2px solid common.$theme-room-controls-border;
 	contain: size;
 	min-width: min(20em, 90vw);
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
 }
 
 .space-warning {
@@ -41,6 +53,12 @@
 	border: 1px solid common.$theme-separator;
 	border-radius: 0.5em;
 	padding: 0.2em 0.5em;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border: 2px solid common.$theme-warningbox-background;
+	}
 }
 
 .character-info {
@@ -52,6 +70,12 @@
 		border: 1px solid common.$theme-room-controls-room-border;
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
 
 		>legend {
 			display: flex;
@@ -65,10 +89,15 @@
 			background: common.$theme-room-controls-room-border;
 			gap: 1px;
 
+			@include common.forcedColors {
+				background: common.$forcedColors-separator;
+				border-color: common.$forcedColors-separator;
+			}
+
 			>span, >button {
 				font-size: 1em;
-				padding: 0 0.3em;
-				border: solid transparent 0.2em;
+				padding: 0.15em 0.4em;
+				border: 2px solid transparent;
 				flex-grow: 1;
 
 				display: inline-flex;
@@ -77,14 +106,40 @@
 
 				background: common.$theme-room-controls-character-background;
 				color: common.$theme-room-controls-character-text;
+
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+				}
 			}
 
-			>button:hover {
-				background: common.$theme-room-controls-character-hover-background;
-			}
+			>button {
+				outline-offset: -0.2em;
 
-			>button:focus-visible {
-				border-color: common.$theme-room-controls-character-visiblefocus-outline;
+				@include common.forcedColors {
+					background: ButtonFace;
+					color: ButtonText;
+					border: 1px solid ButtonBorder;
+				}
+
+				&:hover {
+					background: common.$theme-room-controls-character-hover-background;
+
+					@include common.forcedColors {
+						background: ButtonFace;
+						border-color: common.$forcedColors-accentColorFallback;
+						border-color: AccentColor;
+					}
+				}
+
+				&:focus-visible {
+					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
+
+					@include common.forcedColors {
+						outline-color: common.$forcedColors-accentColorFallback;
+						outline-color: AccentColor;
+					}
+				}
 			}
 		}
 	}
@@ -97,6 +152,12 @@
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
+
 		>legend {
 			display: flex;
 			flex-flow: row wrap;
@@ -108,25 +169,43 @@
 			background: common.$theme-room-controls-character-border;
 			gap: 1px;
 
+			@include common.forcedColors {
+				background: common.$forcedColors-separator;
+				border-color: common.$forcedColors-separator;
+			}
+
 			&.player {
 				>span, >button {
 					background: common.$theme-room-controls-player-background;
 					color: common.$theme-room-controls-player-text;
+
+					@include common.forcedColors {
+						background: SelectedItem;
+						color: SelectedItemText;
+					}
 				}
 
 				>button:hover {
 					background: common.$theme-room-controls-player-hover-background;
+
+					@include common.forcedColors {
+						background: SelectedItem;
+						color: SelectedItemText;
+						border-color: common.$forcedColors-accentColorFallback;
+						border-color: AccentColor;
+					}
 				}
 			}
 
 			.colorStrip {
 				text-shadow: common.$theme-room-controls-character-colorstrip-shadow 1px 1px 1px;
+				forced-color-adjust: none;
 			}
 
 			>span, >button {
 				font-size: 1em;
-				padding: 0 0.3em;
-				border: solid transparent 0.2em;
+				padding: 0.15em 0.4em;
+				border: 2px solid transparent;
 				flex-grow: 1;
 
 				display: inline-flex;
@@ -136,10 +215,21 @@
 				background: common.$theme-room-controls-character-background;
 				color: common.$theme-room-controls-character-text;
 
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+				}
+
 				&.safemode {
 					background: common.$theme-warningbox-background;
 					color: common.$theme-warningbox-text;
 					padding: 0 0.5em;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-color: common.$theme-warningbox-background;
+					}
 				}
 
 				&.status {
@@ -154,6 +244,11 @@
 
 					&.status-offline {
 						background: common.$theme-room-controls-offlinecharacter-background;
+
+						@include common.forcedColors {
+							background: Canvas;
+							color: GreyText;
+						}
 					}
 				}
 
@@ -163,12 +258,33 @@
 				}
 			}
 
-			>button:hover {
-				background: common.$theme-room-controls-character-hover-background;
-			}
+			>button {
+				outline-offset: -0.2em;
 
-			>button:focus-visible {
-				border-color: common.$theme-room-controls-character-visiblefocus-outline;
+				@include common.forcedColors {
+					background: ButtonFace;
+					color: ButtonText;
+					border: 1px solid ButtonBorder;
+				}
+
+				&:hover {
+					background: common.$theme-room-controls-character-hover-background;
+
+					@include common.forcedColors {
+						background: ButtonFace;
+						border-color: common.$forcedColors-accentColorFallback;
+						border-color: AccentColor;
+					}
+				}
+
+				&:focus-visible {
+					outline: 0.2em solid common.$theme-room-controls-character-visiblefocus-outline;
+
+					@include common.forcedColors {
+						outline-color: common.$forcedColors-accentColorFallback;
+						outline-color: AccentColor;
+					}
+				}
 			}
 		}
 	}
@@ -179,5 +295,10 @@
 		color: common.$themecolor-error;
 		font-weight: bold;
 		margin: auto 0;
+
+		@include common.forcedColors {
+			color: inherit;
+			text-decoration: underline common.$themecolor-error;
+		}
 	}
 }

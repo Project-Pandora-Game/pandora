@@ -6,7 +6,7 @@
 	"license": "LGPL-3.0-or-later",
 	"type": "module",
 	"browserslist": [
-		"> 0.5%, last 2 versions and last 3 years, Firefox ESR, not dead"
+		"> 0.5%, last 2 versions and last 2 years, Firefox ESR, not dead"
 	],
 	"scripts": {
 		"clean": "rimraf dist coverage",
@@ -48,7 +48,7 @@
 		"react-reconciler": "0.33.0",
 		"react-reverse-portal": "2.3.0",
 		"react-rnd": "10.5.2",
-		"react-router": "7.10.0",
+		"react-router": "7.10.1",
 		"react-switch": "7.1.0",
 		"react-toastify": "10.0.6",
 		"socket.io-client": "4.8.1",
@@ -69,10 +69,9 @@
 		"@types/react-dom": "19.2.3",
 		"@types/react-reconciler": "0.32.3",
 		"@types/webpack": "5.28.5",
+		"autoprefixer": "10.4.22",
 		"cross-env": "10.1.0",
 		"css-loader": "7.1.2",
-		"css-minimizer-webpack-plugin": "7.0.2",
-		"cssnano-preset-lite": "4.0.4",
 		"file-loader": "6.2.0",
 		"fork-ts-checker-webpack-plugin": "9.1.0",
 		"html-webpack-plugin": "5.6.5",
@@ -81,7 +80,6 @@
 		"mini-css-extract-plugin": "2.9.4",
 		"postcss": "8.5.6",
 		"postcss-loader": "8.2.0",
-		"postcss-preset-env": "10.4.0",
 		"react-refresh": "0.18.0",
 		"react-refresh-typescript": "2.0.11",
 		"rimraf": "6.1.2",

@@ -1,6 +1,17 @@
 @use '../../../styles/common';
 
 .ColoredName {
+	--colored-name-color: inherit; // Set in HTML
+
 	padding: 0 1px;
 	text-shadow: 1px 0.5px 0 common.$theme-colored-name-hinting;
+	color: var(--colored-name-color);
+
+	@include common.forcedColors {
+		color: inherit;
+		text-shadow: none;
+
+		border-radius: common.spacing('small');
+		border: 1px solid var(--colored-name-color);
+	}
 }

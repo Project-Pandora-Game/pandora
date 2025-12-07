@@ -8,6 +8,10 @@
 		padding: 2px;
 		overflow-y: scroll;
 
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+
 		button:not(.emptySelectionButton) {
 			text-align: start;
 		}

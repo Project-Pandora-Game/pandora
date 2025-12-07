@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { AccountIdSchema } from '../account/account.ts';
 import { RoomIdSchema } from '../assets/appearanceTypes.ts';
 import { AssetIdSchema } from '../assets/base.ts';
 import { ItemIdSchema } from '../assets/item/base.ts';
@@ -20,6 +21,14 @@ export const IChatMessageActionTargetCharacterSchema = z.object({
 	labelColor: HexColorStringSchema,
 });
 export type IChatMessageActionTargetCharacter = z.infer<typeof IChatMessageActionTargetCharacterSchema>;
+
+export const IChatMessageActionAccountSchema = z.object({
+	type: z.literal('account'),
+	id: AccountIdSchema,
+	displayName: z.string(),
+	labelColor: HexColorStringSchema,
+});
+export type IChatMessageActionAccount = z.infer<typeof IChatMessageActionAccountSchema>;
 
 export const IChatMessageActionItemSchema = z.object({
 	id: ItemIdSchema,

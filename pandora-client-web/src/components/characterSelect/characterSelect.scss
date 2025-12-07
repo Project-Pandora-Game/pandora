@@ -63,6 +63,10 @@
 			animation: none;
 		}
 
+		@include common.forcedColors {
+			background: ButtonFace;
+		}
+
 		.border {
 			@include common.center-flex(column);
 			position: relative;
@@ -75,6 +79,12 @@
 			border: 0.2em solid common.$theme-characterselect-card-innerborder;
 			box-shadow: common.$theme-characterselect-card-shadow;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: ButtonBorder;
+			}
+
 			.label {
 				position: absolute;
 				top: .4em;
@@ -83,6 +93,12 @@
 				background: common.$theme-characterselect-card-extrainfo-background;
 				padding: .1em .75em;
 				border-radius: 1em;
+
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+					border: 1px solid common.$forcedColors-separator;
+				}
 			}
 
 			.frame {
@@ -99,6 +115,7 @@
 
 				&:not(.placeholder) {
 					background: common.$theme-characterselect-card-frame-background;
+					forced-color-adjust: none;
 
 					&::after {
 						content: '';
@@ -120,6 +137,10 @@
 					width: 100%;
 					height: 100%;
 					opacity: 0.3;
+
+					@include common.forcedColors {
+						opacity: 0.8;
+					}
 				}
 			}
 
@@ -132,17 +153,32 @@
 			.id {
 				font-size: 0.8em;
 				color: common.$theme-characterselect-card-text-dim;
+
+				@include common.forcedColors {
+					color: CanvasText;
+				}
 			}
 		}
 
 		&:hover {
 			.border {
 				background: common.$theme-characterselect-card-hover-background;
+
+				@include common.forcedColors {
+					background: Canvas;
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
 			}
 		}
 
 		&:focus-visible {
 			outline: 0.25em solid common.$theme-characterselect-card-visiblefocus-outline;
+
+			@include common.forcedColors {
+				outline-color: common.$forcedColors-accentColorFallback;
+				outline-color: AccentColor;
+			}
 		}
 	}
 

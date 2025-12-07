@@ -39,6 +39,12 @@
 	.override-entry {
 		background: common.$theme-normal-background-secondary;
 		border: 1px solid common.$theme-separator;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
 	}
 
 	.ConditionInput > textarea {

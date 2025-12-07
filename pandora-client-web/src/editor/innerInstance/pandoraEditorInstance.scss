@@ -25,6 +25,12 @@
 		background: common.$theme-input-readonly-background;
 		border: 2px solid common.$theme-input-border;
 		user-select: text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: GrayText;
+			border-color: common.$forcedColors-separator;
+		}
 	}
 
 	.PandoraEditorInstanceRoot {
@@ -38,5 +44,11 @@
 		background: common.$theme-normal-background;
 		color: common.$theme-normal-text;
 		user-select: none;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
 	}
 }

@@ -151,7 +151,7 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 
-export const SpaceDirectoryUpdateSchema = SpaceDirectoryConfigSchema.omit({ features: true, development: true }).partial();
+export const SpaceDirectoryUpdateSchema = SpaceDirectoryConfigSchema.omit({ features: true }).partial();
 export type SpaceDirectoryUpdate = z.infer<typeof SpaceDirectoryUpdateSchema>;
 
 /** Info sent to client when searching for a space */

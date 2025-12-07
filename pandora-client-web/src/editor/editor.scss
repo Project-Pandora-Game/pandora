@@ -9,12 +9,21 @@
 	align-items: stretch;
 	overflow: hidden;
 
+	@include common.forcedColors {
+		background: common.$forcedColors-separator;
+	}
+
 	>div {
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
 		background: common.$theme-editor-pane-background;
 		color: common.$theme-editor-pane-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
 
 		&.editor-ui {
 			flex: 1;
@@ -71,6 +80,12 @@
 		border-bottom: 3px solid common.$theme-separator;
 		background: common.$theme-header-background;
 		color: common.$theme-header-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-bottom-color: common.$forcedColors-separator;
+		}
 	}
 }
 
@@ -91,6 +106,11 @@
 
 	.error {
 		color: common.$theme-editor-error-text;
+
+		@include common.forcedColors {
+			color: inherit;
+			text-decoration: underline common.$theme-editor-error-text;
+		}
 	}
 
 	.points-helper-input-table {
@@ -106,11 +126,19 @@
 		border: 1px solid common.$theme-separator;
 		border-collapse: collapse;
 
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+
 		th,
 		td {
 			padding: 0.2em;
 			white-space: nowrap;
 			border: 1px solid common.$theme-separator;
+
+			@include common.forcedColors {
+				border-color: common.$forcedColors-separator;
+			}
 		}
 	}
 
@@ -127,6 +155,12 @@
 .editor-highlightedArea {
 	background: common.$theme-normal-background-secondary;
 	border: 1px solid common.$theme-separator;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
 
 	&.attributeList {
 		max-height: 80vh;

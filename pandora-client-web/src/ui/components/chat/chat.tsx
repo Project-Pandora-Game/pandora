@@ -193,7 +193,6 @@ export function Chat(): ReactElement | null {
 				<Scrollable
 					ref={ messagesDivHandler }
 					className='fill'
-					tabIndex={ 1 }
 				>
 					<Column gap='none' className='messagesContainer'>
 						{ finalMessages }

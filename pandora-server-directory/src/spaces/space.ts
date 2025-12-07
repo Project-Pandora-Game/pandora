@@ -415,8 +415,11 @@ export class Space {
 		if (changes.ghostManagement !== undefined) {
 			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
 		}
+		if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer'))) {
+			this.config.development = changes.development;
+		}
 
-		// Features and development fields are intentionally ignored
+		// Features are intentionally ignored
 
 		// Send message about the space being updated
 		if (source) {
@@ -444,6 +447,8 @@ export class Space {
 				changeList.push('allow list');
 			if (changes.ghostManagement !== undefined)
 				changeList.push('offline character management settings');
+			if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer')))
+				changeList.push('development settings');
 
 			this._sendUpdatedMessage(source, ...changeList);
 		}
@@ -969,6 +974,7 @@ export class Space {
 			id: 'characterEntered',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 
@@ -1062,7 +1068,9 @@ export class Space {
 				id: action,
 				data: {
 					targetCharacter: character.baseInfo.id,
+					accountTarget: character.baseInfo.account.getChatDescriptor(),
 					character: source?.id ?? character.baseInfo.id,
+					account: (source ?? character.baseInfo).account.getChatDescriptor(),
 				},
 			});
 		}
@@ -1086,6 +1094,7 @@ export class Space {
 			id: 'characterReconnected',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 	}
@@ -1098,6 +1107,7 @@ export class Space {
 			id: 'characterDisconnected',
 			data: {
 				character: character.baseInfo.id,
+				account: character.baseInfo.account.getChatDescriptor(),
 			},
 		});
 	}

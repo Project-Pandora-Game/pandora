@@ -7,11 +7,22 @@
 	height: 100%;
 	width: 100vw;
 
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+	}
+
 	&__list {
 		width: min(11em, 25vw);
 		background: common.$theme-dms-list-background;
 		border-right: max(2px, 0.1em) solid common.$theme-separator;
 		position: relative;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-right-color: common.$forcedColors-separator;
+		}
 
 		input {
 			width: 100%;
@@ -51,6 +62,11 @@
 				font-weight: bold;
 				background: common.$theme-dms-list-item-unread-indicator-background;
 				color: common.$theme-dms-list-item-unread-indicator-text;
+
+				@include common.forcedColors {
+					background: Mark;
+					color: MarkText;
+				}
 			}
 		}
 	}
@@ -63,6 +79,12 @@
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				text-decoration: underline common.$theme-dms-chat-error;
+			}
 		}
 
 		> .loading {
@@ -70,6 +92,11 @@
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+			}
 		}
 	}
 
@@ -78,10 +105,21 @@
 		height: 100%;
 		background: common.$theme-dms-crypto-dialog-base-background;
 
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+		}
+
 		.dialog-content {
 			background: common.$theme-dms-crypto-dialog-background;
 			color: common.$theme-dms-crypto-dialog-text;
 			border-radius: 0.5em;
+
+			@include common.forcedColors {
+				background: Canvas;
+				color: CanvasText;
+				border: 1px solid common.$forcedColors-separator;
+			}
 
 			hr {
 				width: 100%;

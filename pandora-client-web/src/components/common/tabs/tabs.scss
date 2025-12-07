@@ -26,6 +26,12 @@ $header-height: 2em;
 			color: common.$theme-tablist-tab-normal-text;
 			border-radius: 1.2em 1.2em 0em 0em;
 
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: ButtonBorder;
+			}
+
 			cursor: pointer;
 			transition: background-color 0.25s ease-in-out;
 
@@ -34,9 +40,19 @@ $header-height: 2em;
 				color: common.$theme-tablist-tab-selected-text;
 				z-index: 2;
 
+				@include common.forcedColors {
+					background: SelectedItem;
+					color: SelectedItemText;
+				}
+
 				&:focus-visible {
 					border-color: common.$theme-tablist-tab-selected-visiblefocus-outline;
 					z-index: 1;
+
+					@include common.forcedColors {
+						border-color: common.$forcedColors-accentColorFallback;
+						border-color: AccentColor;
+					}
 				}
 			}
 
@@ -44,11 +60,23 @@ $header-height: 2em;
 				background: common.$theme-tablist-tab-hover-background;
 				color: common.$theme-tablist-tab-hover-text;
 				z-index: 1;
+
+				@include common.forcedColors {
+					background: ButtonFace;
+					color: ButtonText;
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
 			}
 
 			&:focus-visible:not(.active) {
 				border-color: common.$theme-tablist-tab-normal-visiblefocus-outline;
 				z-index: 1;
+
+				@include common.forcedColors {
+					border-color: common.$forcedColors-accentColorFallback;
+					border-color: AccentColor;
+				}
 			}
 
 			&.slim {
@@ -81,9 +109,20 @@ $header-height: 2em;
 				padding: 0 0.3em;
 				align-self: flex-end;
 
+				@include common.forcedColors {
+					background: Mark;
+					color: MarkText;
+					border: 1px solid common.$forcedColors-separator;
+				}
+
 				&.badge-type-passive {
 					background: common.$theme-notification-badge-passive-background;
 					color: common.$theme-notification-badge-passive-text;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+					}
 				}
 			}
 		}
@@ -141,15 +180,33 @@ $header-height: 2em;
 		border-radius: 0 0 0 0.75em;
 		z-index: 1;
 
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: ButtonBorder;
+		}
+
 		&:hover {
 			background: common.$theme-tablist-tab-hover-background;
 			color: common.$theme-tablist-tab-hover-text;
 			z-index: 1;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
 		}
 
 		&:focus-visible {
 			border-color: common.$theme-tablist-tab-normal-visiblefocus-outline;
 			z-index: 1;
+
+			@include common.forcedColors {
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
 		}
 	}
 }

@@ -99,7 +99,6 @@ function DirectMessageList(): ReactElement | null {
 			<Scrollable
 				ref={ ref }
 				className='fill'
-				tabIndex={ 1 }
 			>
 				<Column gap='none' className='messagesContainer'>
 					{ encryptedMessages.map((message, i) => (

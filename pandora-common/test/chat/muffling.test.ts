@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { Muffler, MuffleSettings } from '../../src/chat/muffling.ts';
 
+const LOREM_IPSUM = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Semper risus in hendrerit gravida. Phasellus egestas tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Bibendum arcu vitae elementum curabitur vitae. Faucibus scelerisque eleifend donec pretium vulputate sapien.';
+
 describe('Muffler', () => {
 	describe('muffle()', () => {
 		let muffler: Muffler;
@@ -17,17 +19,28 @@ describe('Muffler', () => {
 			muffler = new Muffler('salt', config);
 		});
 
-		it('should return a processed string', () => {
-			const test = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Semper risus in hendrerit gravida. Phasellus egestas tellus rutrum tellus pellentesque eu tincidunt tortor aliquam. Bibendum arcu vitae elementum curabitur vitae. Faucibus scelerisque eleifend donec pretium vulputate sapien.';
-			expect(muffler.muffle(test))
-				.not.toEqual(test);
-
-		});
-
 		it('should keep character case in simple situation', () => {
 			const test = 'The quick brown fox jumps over the lazy dog';
 			expect(muffler.muffle(test.toUpperCase()).split('').every((c) => c === c.toUpperCase()));
 			expect(muffler.muffle(test.toLowerCase()).split('').every((c) => c === c.toLowerCase()));
+		});
+
+		it.each([
+			'aaaAAAaaa',
+			'The quick brown fox jumps over the lazy dog',
+			LOREM_IPSUM,
+		])('should keep existing behavior in complex situations', (original) => {
+			const complexMuffler = new Muffler('salt', {
+				lipsTouch: 6,
+				jawMove: 6,
+				throatBreath: 6,
+				tongueRoof: 6,
+				mouthBreath: 6,
+				coherency: 6,
+				stimulus: 6,
+			});
+
+			expect(complexMuffler.muffle(original)).toMatchSnapshot();
 		});
 
 		it('should be word consistent', () => {

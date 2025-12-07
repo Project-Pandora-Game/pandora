@@ -709,7 +709,7 @@ function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }:
 				AssertNever(variable)
 			}
 			<Button className='slim' disabled={ index === 0 } aria-label='move' onClick={ () => reorder(-1) } title='Move up'>
-				🠉
+				↑
 			</Button>
 			<IconButton
 				src={ crossIcon }

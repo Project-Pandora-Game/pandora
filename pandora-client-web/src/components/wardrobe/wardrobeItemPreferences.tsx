@@ -3,9 +3,11 @@ import { Immutable } from 'immer';
 import { noop } from 'lodash-es';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, NaturalListJoin, ResolveAssetPreference } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { useAssetManager } from '../../assets/assetManager.tsx';
+import wikiIcon from '../../assets/icons/wiki.svg';
 import { useBrowserStorage } from '../../browserStorage.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
@@ -351,7 +353,12 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 			</div>
 			<Scrollable>
 				<Column padding='large'>
-					<label htmlFor={ `${idBase}-select` }>Item preference:</label>
+					<Row alignY='center' alignX='space-between' className='flex-1'>
+						<label htmlFor={ `${idBase}-select` }>Item preference:</label>
+						<Link title='Get help in the wiki' to='/wiki/items#IT_Item_preferences_and_limits' className='flex-row'>
+							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+						</Link>
+					</Row>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' }>
 						<option value='' title='Select the preference for the item based on the most limited attribute'>
 							Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
@@ -485,7 +492,12 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			</div>
 			<Scrollable>
 				<Column padding='large'>
-					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
+					<Row alignY='center' alignX='space-between' className='flex-1'>
+						<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
+						<Link title='Get help in the wiki' to='/wiki/items#IT_Item_preferences_and_limits' className='flex-row'>
+							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+						</Link>
+					</Row>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } disabled={ !isConfigurable }>
 						{
 							KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (

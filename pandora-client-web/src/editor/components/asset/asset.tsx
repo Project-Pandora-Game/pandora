@@ -514,13 +514,13 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 			>
 				{ name }
 			</button>
-			<Button className='slim hideDisabled' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
-				🠉
+			<Button className='slim hideDisabled quickButton' aria-label='move' onClick={ () => layer.reorderOnAsset(-1) } title='Move layer up'>
+				↑
 			</Button>
-			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
+			<Button className='slim quickButton' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
-			<Button className='slim hideDisabled' aria-label='delete' onClick={ () => {
+			<Button className='slim hideDisabled quickButton' aria-label='delete' onClick={ () => {
 				// eslint-disable-next-line no-alert
 				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;
@@ -575,11 +575,11 @@ function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraph
 	return (
 		<>
 			<li>
-				<Button className='slim' aria-label='delete' onClick={ onTogglePreview } title='Toggle preview'>
+				<Button className='slim quickButton' aria-label='delete' onClick={ onTogglePreview } title='Toggle preview'>
 					{ preview ? '-' : '+' }
 				</Button>
 				<span className='imageName'>{ image }</span>
-				<Button className='slim' aria-label='delete' onClick={ onDelete } title='DELETE this image'>
+				<Button className='slim quickButton' aria-label='delete' onClick={ onDelete } title='DELETE this image'>
 					🗑️
 				</Button>
 			</li>

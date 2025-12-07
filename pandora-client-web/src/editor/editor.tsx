@@ -31,7 +31,7 @@ import { PandoraInnerInstanceDriver } from './innerInstance/pandoraEditorInstanc
 const logger = GetLogger('Editor');
 
 export const EDITOR_ALPHAS = [1, 0.6, 0];
-export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
+export const EDITOR_ALPHA_ICONS = ['■', '⬕', '⬚'];
 
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer;
@@ -411,7 +411,7 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 								theme='default'
 								onClick={ closeTab }
 							>
-								✖
+								✗
 							</Button>
 						)
 					}

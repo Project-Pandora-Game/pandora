@@ -140,7 +140,7 @@ function ExportDialogInner<T extends z.ZodType>({
 							className='slim'
 							onClick={ () => downloadAsFile() }
 						>
-							<u>⇣</u> Download
+							⤓ Download
 						</Button>
 					</Row>
 					{ extraData.map((d, i) => (
@@ -150,7 +150,7 @@ function ExportDialogInner<T extends z.ZodType>({
 								className='slim'
 								onClick={ () => downloadAsFile(d) }
 							>
-								<u>⇣</u> Download
+								⤓ Download
 							</Button>
 						</Row>
 					)) }

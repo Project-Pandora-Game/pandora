@@ -167,7 +167,7 @@ export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, upd
 								newOverrides.splice(i - 1, 0, ...newOverrides.splice(i, 1));
 								update(newOverrides);
 							} } title='Increase override priority' disabled={ i === 0 }>
-								🠉
+								↑
 							</Button>
 							<Button slim onClick={ () => {
 								update(overrides.toSpliced(i, 1));

@@ -503,7 +503,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 	}
 
 	return (
-		<span className='name'>
+		<span className='name' translate='no'>
 			{ before }
 			{ message.type !== 'me' && message.type !== 'emote' ? (
 				<ColoredName

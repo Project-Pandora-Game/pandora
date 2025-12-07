@@ -37,6 +37,7 @@
 				.layerName {
 					cursor: pointer;
 					position: relative;
+					border: 2px solid transparent;
 
 					@include common.forcedColors {
 						background: ButtonFace;
@@ -87,6 +88,10 @@
 					@include common.forcedColors {
 						background: #000;
 					}
+				}
+
+				.quickButton {
+					width: 1.75em;
 				}
 			}
 		}

@@ -164,6 +164,7 @@ export function WikiItems(): ReactElement {
 					Other users can see those preferences in the form of icon-based highlighting when they open
 					your <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> to add some items.
 				</li>
+				<li>The preferences "Favorite", "Normal", and "Maybe" relate to individual permission levels of the "item limits" group of a character's permissions.</li>
 				<li>"Prevent" blocks anybody other than yourself to use this item on you.</li>
 				<li>"Do not render" will not show you this item on yourself or on other characters, item previews will be blurred in all wardrobes.</li>
 				<li>Note that some assets have default limits set to protect new users from more extreme items, such as password locks or heavy ear plugs. You can change this as you see fit.</li>

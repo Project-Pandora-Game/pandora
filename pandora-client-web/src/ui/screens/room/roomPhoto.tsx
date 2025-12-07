@@ -231,7 +231,7 @@ export function RoomPhotoDialog({ close }: RoomPhotoDialogProps): ReactElement {
 							<>
 								<Row wrap>
 									<Button onClick={ exportImage }>
-										<u>⇣</u> Download
+										⤓ Download
 									</Button>
 									<Suspense fallback={ null }>
 										{ resultBlob != null ? (

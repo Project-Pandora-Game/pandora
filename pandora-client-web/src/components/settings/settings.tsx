@@ -114,7 +114,7 @@ export function Settings(): ReactElement | null {
 							{ selectionButtons }
 						</Column>
 					) : null }
-					<Column className='flex-1' gap='none'>
+					<Column className='flex-1 fit' gap='none'>
 						<Row padding='small' alignX='end' alignY='center'>
 							<Routes>
 								{ Object.keys(SETTINGS_PAGES).map((page) => (

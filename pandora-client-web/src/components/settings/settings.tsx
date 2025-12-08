@@ -114,7 +114,7 @@ export function Settings(): ReactElement | null {
 							{ selectionButtons }
 						</Column>
 					) : null }
-					<Column className='flex-1' gap='none'>
+					<Column className='flex-1 fit' gap='none'>
 						<Row padding='small' alignX='end' alignY='center'>
 							<Routes>
 								{ Object.keys(SETTINGS_PAGES).map((page) => (
@@ -159,7 +159,7 @@ export function Settings(): ReactElement | null {
 									</Column>
 								) : (
 									// In wide mode open first available page by default
-									<Navigate to={ `/settings/${ParseNotNullable(Object.entries(SETTINGS_PAGES).find(([,config]) => !config.requiresCharacter || hasCharacter))[0]}` } />
+									<Navigate to={ `/settings/${ParseNotNullable(Object.entries(SETTINGS_PAGES).find(([,config]) => !config.requiresCharacter || hasCharacter))[0]}` } replace />
 								) }
 							/>
 						</Routes>

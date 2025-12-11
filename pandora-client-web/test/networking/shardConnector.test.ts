@@ -1,6 +1,6 @@
 import { AssertNotNullable, ServiceManager } from 'pandora-common';
 import { ShardConnectionState, ShardConnectorServiceProvider } from '../../src/networking/shardConnector.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../src/services/clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../src/services/clientGameLogicServices.ts';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector.ts';
 import { MockServiceManager } from '../testUtils.tsx';
 

@@ -2,8 +2,7 @@ import { ReactElement, useState } from 'react';
 import * as z from 'zod';
 import pandoraLogo from '../../assets/icons/pandora.svg';
 import { useBrowserStorage } from '../../browserStorage.ts';
-import { ChildrenProps } from '../../common/reactTypes.ts';
-import { GAME_NAME } from '../../config/Environment.ts';
+import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
@@ -26,7 +25,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 				</div>
 				<div className='eula-text'>
 					<p>
-						Welcome to { GAME_NAME }! This game is intended for use by adults only.<br />
+						Welcome to Project Pandora! This game is intended for use by adults only.<br />
 						All characters portrayed in this game are fictitious and of legal age. No identification with actual persons should be inferred.
 					</p>
 					<p>
@@ -40,7 +39,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 							I will not permit any minors to have access to any of the materials from this site.
 						</li>
 						<li>
-							I have read { GAME_NAME }'s <a onClick={ () => setShow(true) } role='button'>privacy policy</a> and accept it. (Last updated on: { EULA_LAST_UPDATED })
+							I have read Pandora's <a onClick={ () => setShow(true) } role='button'>privacy policy</a> and accept it. (Last updated on: { EULA_LAST_UPDATED })
 						</li>
 						<li>
 							I have carefully read the above and agree to all of them.

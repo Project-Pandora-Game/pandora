@@ -10,7 +10,7 @@ import {
 import { LoadAssetDefinitions } from '../../assets/assetManager.tsx';
 import { GameState, GameStateImpl } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../clientGameLogicServices.ts';
 
 type GameStateManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientGameLogicServices, 'shardConnector'> & Pick<ClientGameLogicServicesDependencies, 'accountManager' | 'notificationHandler'>;

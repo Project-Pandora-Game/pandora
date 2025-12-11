@@ -4,6 +4,7 @@ import {
 	AssertNever,
 	HexColorString,
 	Item,
+	Vector2,
 	type GraphicsLayer,
 	type GraphicsLayerType,
 	type LayerStateOverrides,
@@ -35,12 +36,25 @@ export function EvalLayerVerticesTransform(evaluator: CharacterPoseEvaluator, po
 
 	let result: LayerVerticesResult | undefined = cacheEntry.get(points);
 	if (result === undefined) {
+		const tmpVec = new Vector2();
 		result = {
 			vertices: new Float32Array(points
-				.flatMap((point) => evaluator.evalTransform(
-					point.pos,
-					point.transforms,
-				)),
+				.flatMap((point): [number, number] => {
+					if (point.skinning) {
+						tmpVec.set(point.pos[0], point.pos[1]);
+						evaluator.skinPoint(
+							tmpVec,
+							point.skinning,
+							point.transforms,
+						);
+						return [tmpVec.x, tmpVec.y];
+					}
+
+					return evaluator.evalTransform(
+						point.pos,
+						point.transforms,
+					);
+				}),
 			),
 			vertexRotations: new Float32Array(points
 				.map((point) => evaluator.evalTransformAngle(

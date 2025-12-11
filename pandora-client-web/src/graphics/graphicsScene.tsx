@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
-import { type Application } from 'pixi.js';
+import type { Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';

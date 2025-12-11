@@ -12,6 +12,7 @@ import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
+import { GetGraphicsEffectiveAntialias, GraphicsSettingsStorage } from '../graphics/graphicsSettings.tsx';
 import { Observable, useObservable } from '../observable.ts';
 
 export interface IGraphicsLoaderStats {
@@ -208,6 +209,21 @@ export class GraphicsManager {
 }
 
 export const GraphicsManagerInstance = new Observable<GraphicsManager | null>(null);
+
+// Add a hook to purge the current graphics loader cache when the graphics settins change in any way
+// (most of the changes cause different textures to be loaded, so get rid of old ones)
+GraphicsSettingsStorage.subscribe(() => {
+	// Do the cleanup asynchronously so things have time to unload if they were loaded
+	setTimeout(() => {
+		GraphicsManagerInstance.value?.loader.gc();
+
+		// Check if effective antialias changed and reload the page
+		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias()) {
+			globalThis.location.reload();
+		}
+	}, 500);
+});
+const LOAD_TIME_EFFECTIVE_ANTIALIAS = GetGraphicsEffectiveAntialias();
 
 export function useGraphicsUrl(path?: string): string | undefined {
 	const graphicsManger = useObservable(GraphicsManagerInstance);

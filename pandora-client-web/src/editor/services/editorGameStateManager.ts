@@ -6,7 +6,7 @@ import {
 } from 'pandora-common';
 import { GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
-import type { ClientGameLogicServices } from '../../services/clientServices.ts';
+import type { ClientGameLogicServices } from '../../services/clientGameLogicServices.ts';
 import type { IGameStateManager } from '../../services/gameLogic/gameStateManager.ts';
 import { EditorGameStateProxy } from '../editorGameState.ts';
 import type { ClientEditorGameLogicServicesDependencies } from './editorServices.ts';

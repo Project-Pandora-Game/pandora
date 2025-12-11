@@ -7,7 +7,7 @@ test.describe('Load', () => {
 	test('Should load Pandora', async ({ page }) => {
 		await TestOpenPandora(page, { agreeEula: false });
 
-		await expect(page).toHaveTitle('Pandora');
+		await expect(page).toHaveTitle('Project Pandora');
 	});
 
 	test('Should load Editor', async ({ page }) => {
@@ -16,6 +16,6 @@ test.describe('Load', () => {
 			agreeEula: false,
 		});
 
-		await expect(page).toHaveTitle('Pandora Editor');
+		await expect(page).toHaveTitle('Pandora Asset Editor');
 	});
 });

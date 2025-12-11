@@ -1,7 +1,8 @@
 import { ServiceManager, type BaseServicesDefinition, type Satisfies } from 'pandora-common';
 import { AudioServiceProvider } from '../../services/audio.ts';
 import { BrowserPermissionManagerServiceProvider } from '../../services/browserPermissionManager.ts';
-import type { ClientGameLogicServices, ClientServices } from '../../services/clientServices.ts';
+import type { ClientGameLogicServices } from '../../services/clientGameLogicServices.ts';
+import type { ClientServices } from '../../services/clientServices.ts';
 import { NotificationHandlerServiceProvider } from '../../services/notificationHandler.tsx';
 import { ScreenResolutionServiceProvider } from '../../services/screenResolution/screenResolution.ts';
 import { UserActivationServiceProvider } from '../../services/userActivation.ts';

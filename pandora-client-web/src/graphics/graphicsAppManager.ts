@@ -4,6 +4,9 @@ import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
 import { USER_DEBUG } from '../config/Environment.ts';
 import { GetGraphicsEffectiveAntialias } from './graphicsSettings.tsx';
+import { ConfigurePixiSettings } from './pixiSettings.ts';
+
+ConfigurePixiSettings();
 
 const SHARED_APP_MAX_COUNT = 2;
 

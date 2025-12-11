@@ -5,7 +5,8 @@
 	padding: 0.5em;
 
 	.eula-header {
-		max-width: 30em;
+		width: min(30em, 90vw);
+		height: min(9em, 60vh);
 		overflow: hidden;
 		padding-bottom: 1em;
 

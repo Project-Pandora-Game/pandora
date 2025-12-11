@@ -5,7 +5,7 @@ import React, { createContext, ReactElement, ReactNode, useCallback, useContext,
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import crossIcon from '../../assets/icons/cross.svg';
-import { type CommonProps } from '../../common/reactTypes.ts';
+import type { CommonProps } from '../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import type { PointLike } from '../../graphics/common/point.ts';

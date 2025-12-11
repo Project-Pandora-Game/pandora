@@ -19,12 +19,12 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/networking/helpers';
+import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Socket } from 'socket.io-client';
 import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { PersistentToast } from '../persistentToast.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../services/clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../services/clientGameLogicServices.ts';
 import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
 /** State of connection to Shard */

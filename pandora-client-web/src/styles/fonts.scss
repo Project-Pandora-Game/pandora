@@ -1,11 +1,13 @@
 @use "~inter-ui/default" with (
 	$inter-font-display: swap,
-	$inter-font-path: '~inter-ui/web'
+	$inter-font-path: '~inter-ui/web',
+	$inter-font-path-suffix: '', // We don't need to append version, we already hash the file
 );
 
 @use "~inter-ui/variable" with (
 	$inter-font-display: swap,
-	$inter-font-path: '~inter-ui/variable'
+	$inter-font-path: '~inter-ui/variable',
+	$inter-font-path-suffix: '', // We don't need to append version, we already hash the file
 );
 
 @include default.all;

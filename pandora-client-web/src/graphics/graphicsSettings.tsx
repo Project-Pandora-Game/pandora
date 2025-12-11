@@ -2,7 +2,6 @@ import type { Immutable } from 'immer';
 import { AssertNever, CloneDeepMutable } from 'pandora-common';
 import { useMemo } from 'react';
 import * as z from 'zod';
-import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { BrowserStorage } from '../browserStorage.ts';
 import { useMediaQuery } from '../common/useMediaQuery.ts';
 import type { SettingDriver } from '../components/settings/helpers/settingsInputs.tsx';
@@ -39,19 +38,6 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 } as const;
 
 export const GraphicsSettingsStorage = BrowserStorage.create<Partial<Immutable<GraphicsSettings>>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
-// Add a hook to purge the current graphics loader cache when the graphics settins change in any way
-// (most of the changes cause different textures to be loaded, so get rid of old ones)
-GraphicsSettingsStorage.subscribe(() => {
-	// Do the cleanup asynchronously so things have time to unload if they were loaded
-	setTimeout(() => {
-		GraphicsManagerInstance.value?.loader.gc();
-
-		// Check if effective antialias changed and reload the page
-		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias()) {
-			globalThis.location.reload();
-		}
-	}, 500);
-});
 
 export function useGraphicsSettings(): GraphicsSettings {
 	const overrides = useObservable(GraphicsSettingsStorage);
@@ -75,7 +61,6 @@ export function GetGraphicsEffectiveAntialias(): boolean {
 	});
 	return antialias && alphamaskEngine === 'disabled';
 }
-const LOAD_TIME_EFFECTIVE_ANTIALIAS = GetGraphicsEffectiveAntialias();
 
 export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {
 	GraphicsSettingsStorage.produce((v) => {

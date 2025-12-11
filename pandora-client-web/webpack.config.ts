@@ -1,6 +1,7 @@
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import postcssAutoprefixer from 'autoprefixer';
 import { execSync } from 'child_process';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -175,6 +176,11 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 			gitCommitHash: GIT_COMMIT_HASH,
 			buildTime: BUILD_TIME,
 		} satisfies VersionData)),
+		new CopyWebpackPlugin({
+			patterns: [
+				{ from: 'static' },
+			],
+		}),
 	];
 
 	if (env.prod) {

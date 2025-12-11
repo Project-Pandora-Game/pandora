@@ -56,7 +56,7 @@ export function CollectVariablesFromTransform(transform: Immutable<TransformDefi
 	}
 }
 
-export function* GeneratePossiblePoses(variable: PointTransformVariable, targetPose: AppearancePose): Generator<AppearancePose, void> {
+export function* GeneratePossiblePoses(variable: PointTransformVariable, targetPose: AppearancePose, bonePrecisionStep: number = 1): Generator<AppearancePose, void> {
 	switch (variable) {
 		case 'leftArmPosition':
 			for (const position of ArmPoseSchema.options) {
@@ -120,8 +120,10 @@ export function* GeneratePossiblePoses(variable: PointTransformVariable, targetP
 			break;
 		default: {
 			Assert(variable.startsWith('bone:'));
+			Assert((BONE_MIN % bonePrecisionStep) === 0);
+			Assert((BONE_MAX % bonePrecisionStep) === 0);
 			const bone = variable.slice(5);
-			for (let v = BONE_MIN; v <= BONE_MAX; v++) {
+			for (let v = BONE_MIN; v <= BONE_MAX; v += bonePrecisionStep) {
 				targetPose.bones[bone] = v;
 				yield targetPose;
 			}
@@ -130,7 +132,7 @@ export function* GeneratePossiblePoses(variable: PointTransformVariable, targetP
 	}
 }
 
-export function* GeneratePossiblePosesRecursive(variables: readonly PointTransformVariable[], targetPose: AppearancePose): Generator<AppearancePose, void> {
+export function* GeneratePossiblePosesRecursive(variables: readonly PointTransformVariable[], targetPose: AppearancePose, bonePrecisionStep: number = 1): Generator<AppearancePose, void> {
 	if (variables.length === 0) {
 		yield targetPose;
 		return;
@@ -139,11 +141,11 @@ export function* GeneratePossiblePosesRecursive(variables: readonly PointTransfo
 	const variable = variables[0];
 	const rest = variables.slice(1);
 
-	for (const value of GeneratePossiblePoses(variable, targetPose)) {
+	for (const value of GeneratePossiblePoses(variable, targetPose, bonePrecisionStep)) {
 		if (rest.length === 0) {
 			yield value;
 		} else {
-			for (const upper of GeneratePossiblePosesRecursive(rest, value)) {
+			for (const upper of GeneratePossiblePosesRecursive(rest, value, bonePrecisionStep)) {
 				yield upper;
 			}
 		}

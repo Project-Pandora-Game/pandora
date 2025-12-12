@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { APPEARANCE_POSE_DEFAULT, Assert, AssetManager, CloneDeepMutable, Vector2, type BoneDefinition, type PointDefinition, type TransformDefinition } from 'pandora-common';
-import { memo, useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { memo, useState, type ReactElement, type ReactNode } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
@@ -93,10 +93,6 @@ export const PointTransformComparsionDetail = memo(function PointTransformCompar
 
 	const [baselineTransforms, setBaselineTransforms] = useState(point.transforms);
 	const [result, setResult] = useState<PoseComparisonResult | [text: ReactNode, result: PoseComparisonResult][] | null>(null);
-
-	useEffect(() => {
-		setResult(null);
-	}, [point]);
 
 	return (
 		<>

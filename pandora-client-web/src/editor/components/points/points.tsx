@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import { Assert, GetLogger, PointTemplateSourceSchema, type TransformDefinition } from 'pandora-common';
+import { Assert, GetLogger, PointTemplateSourceSchema, Vector2, type TransformDefinition } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -110,6 +110,16 @@ export function PointsHelperMathUi(): ReactElement | null {
 	const selectedPointFinal = useMemo((): (readonly [number, number]) | undefined => {
 		if (selectedPointDefinition == null)
 			return undefined;
+
+		if (selectedPointDefinition.skinning) {
+			const tmpVec = new Vector2(selectedPointDefinition.pos[0], selectedPointDefinition.pos[1]);
+			evaluator.skinPoint(
+				tmpVec,
+				selectedPointDefinition.skinning,
+				selectedPointDefinition.transforms,
+			);
+			return [tmpVec.x, tmpVec.y];
+		}
 
 		return evaluator.evalTransform(
 			selectedPointDefinition.pos,

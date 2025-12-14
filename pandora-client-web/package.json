@@ -69,7 +69,7 @@
 		"@types/react-dom": "19.2.3",
 		"@types/react-reconciler": "0.32.3",
 		"@types/webpack": "5.28.5",
-		"autoprefixer": "10.4.22",
+		"autoprefixer": "10.4.23",
 		"copy-webpack-plugin": "13.0.1",
 		"cross-env": "10.1.0",
 		"css-loader": "7.1.2",

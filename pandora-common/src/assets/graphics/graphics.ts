@@ -10,6 +10,9 @@ export const CharacterSize = {
 	HEIGHT: 1500,
 } as const;
 
+/** The maximum number of bones that can exist (includes mirrored bones as well). Used for various optimizations. */
+export const MAX_BONE_COUNT = 32;
+
 export interface BoneDefinition {
 	name: string;
 	x: number;

@@ -1,4 +1,5 @@
 import { noop } from 'lodash-es';
+import { MAX_BONE_COUNT } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 
 export const DEFAULT_NORMAL_TEXTURE = new PIXI.Texture({
@@ -33,24 +34,64 @@ const SHADER_NORMALS_BIT_GL: PIXI.HighShaderBit = {
 	vertex: {
 		header: /* glsl */`
 uniform mat3 uTextureMatrix;
-in float aRotation; // Rotation in radians per vertex
+uniform vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+in uvec4 aBoneIndices; // Indices of bones, in uBoneQuat
+in vec4 aBoneWeights; // Weights of bones, in uBoneQuat
 out mat3 vTBN;
+
+mat4x4 SkinQuaternionToTransformationmatrix(mat2x4 skinQuaterion) {
+	// Input is ordered (abcd), with meanings (wxyz), so reorder to work with it easier
+	vec4 b0 = skinQuaterion[0].yzwx;
+	vec4 be = skinQuaterion[1].yzwx;
+	float b0norm = 1. / length(b0);
+	b0 *= b0norm;
+	be *= b0norm;
+
+	float t0 = 2. * (- be.w * b0.x + be.x * b0.w - be.y * b0.z + be.z * b0.y);
+	float t1 = 2. * (- be.w * b0.y + be.x * b0.z + be.y * b0.w - be.z * b0.x);
+	float t2 = 2. * (- be.w * b0.z - be.x * b0.y + be.y * b0.x + be.z * b0.w);
+
+	return mat4x4(
+		(1. - 2. * b0.y * b0.y - 2. * b0.z * b0.z), (2. * b0.x * b0.y + 2. * b0.w * b0.z), (2. * b0.x * b0.z - 2. * b0.w * b0.y), 0.,
+		(2. * b0.x * b0.y - 2. * b0.w * b0.z), (1. - 2. * b0.x * b0.x - 2. * b0.z * b0.z), (2. * b0.y * b0.z + 2. * b0.w * b0.x), 0.,
+		(2. * b0.x * b0.z + 2. * b0.w * b0.y), (2. * b0.y * b0.z - 2. * b0.w * b0.x), (1. - 2. * b0.x * b0.x - 2. * b0.y * b0.y), 0.,
+		t0, t1, t2, 1.
+	);
+}
 		`,
 		main: /* glsl */`
 uv = (uTextureMatrix * vec3(uv, 1.0)).xy;
 
-float cosA = cos(aRotation);
-float sinA = sin(aRotation);
-mat2 rotateMatrix = mat2(
-	vec2(cosA, sinA),
-	vec2(-sinA, cosA)
-);
+mat2x4 skinQuaterion = mat2x4(0, 0, 0, 0, 0, 0, 0, 0);
+float remainingWeight = 1.;
+for (int si = 0; si < 4; si++) {
+	float weight = aBoneWeights[si];
+	uint boneIndex = aBoneIndices[si];
+	if (boneIndex == 0u || weight == 0.)
+		continue;
+
+	mat2x4 quat = mat2x4(uBoneQuat[2u * boneIndex], uBoneQuat[2u * boneIndex + 1u]);
+	skinQuaterion += weight * quat;
+	remainingWeight -= weight;
+}
+if (remainingWeight != 0.) {
+	mat2x4 quat = mat2x4(uBoneQuat[0], uBoneQuat[1]);
+	skinQuaterion += remainingWeight * quat;
+}
+
+mat4x4 skinMatrix = SkinQuaternionToTransformationmatrix(skinQuaterion);
+
+position.xy = (skinMatrix * vec4(position, 0, 1)).xy;
 
 vec3 T = vec3(1., 0., 0.);
 vec3 B = vec3(0., 1., 0.);
 vec3 N = vec3(0., 0., 1.);
 
-mat2 model2D = mat2(worldTransformMatrix * modelMatrix) * rotateMatrix;
+T = normalize((skinMatrix * vec4(T, 0)).xyz);
+B = normalize((skinMatrix * vec4(B, 0)).xyz);
+N = normalize((skinMatrix * vec4(N, 0)).xyz);
+// TODO: Figure out how to mix the 2d transform directly into the above calculations
+mat2 model2D = mat2(worldTransformMatrix * modelMatrix);
 T.xy = normalize(model2D * T.xy);
 B.xy = normalize(model2D * B.xy);
 

@@ -106,13 +106,13 @@ export class CharacterPoseTransforms {
 			if (weight === 0)
 				continue;
 
-			this._getBoneTransformQuaterion(tmp, bone);
+			this.getBoneTransformQuaterion(tmp, bone);
 			tmp.multiplyByScalar(weight);
 			skinQuaterion.add(tmp);
 			remainingWeight -= weight;
 		}
 		if (remainingWeight !== 0) {
-			this._getBoneTransformQuaterion(tmp, null);
+			this.getBoneTransformQuaterion(tmp, null);
 			tmp.multiplyByScalar(remainingWeight);
 			skinQuaterion.add(tmp);
 		}
@@ -127,7 +127,7 @@ export class CharacterPoseTransforms {
 	}
 
 	private readonly _boneTransformCache = new Map<BoneName, DualQuaternion>();
-	protected _getBoneTransformQuaterion(target: DualQuaternion, bone: BoneName | null): void {
+	public getBoneTransformQuaterion(target: DualQuaternion, bone: BoneName | null): void {
 		if (bone == null) {
 			target.set(1, 0, 0, 0, 0, 0, 0, 0);
 			return;
@@ -148,7 +148,7 @@ export class CharacterPoseTransforms {
 			// Apply parent transformation
 			if (boneDef.parent != null) {
 				const parent = TmpDQ3;
-				this._getBoneTransformQuaterion(parent, boneDef.parent?.name ?? null);
+				this.getBoneTransformQuaterion(parent, boneDef.parent?.name ?? null);
 				result.leftMultiply(parent);
 			}
 		}

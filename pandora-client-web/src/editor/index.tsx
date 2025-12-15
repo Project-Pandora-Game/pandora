@@ -47,6 +47,20 @@ async function Start(): Promise<void> {
 	logger.info('Starting editor...');
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 
+	// Inject metadata
+	{
+		const description = document.createElement('meta');
+		description.name = 'description';
+		description.content = 'Pandora Asset Editor is a tool for creating and contributing assets for Project Pandora.';
+		document.head.appendChild(description);
+	}
+	{
+		const description = document.createElement('meta');
+		description.name = 'rating';
+		description.content = 'adult';
+		document.head.appendChild(description);
+	}
+
 	// Load services
 	const serviceManager = GenerateClientEditorServices();
 	await serviceManager.load();

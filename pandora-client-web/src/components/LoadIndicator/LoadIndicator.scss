@@ -1,0 +1,18 @@
+@use '../../styles/common';
+
+.LoadIndicator {
+	display: flex;
+
+	color: common.$theme-dialog-text;
+	background: common.$theme-dialog-background;
+	border: 2px solid common.$theme-dialog-border;
+	border-radius: 0.5em;
+
+	padding: 1em 2em;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+}

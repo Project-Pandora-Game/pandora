@@ -14,8 +14,7 @@ import {
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
-import * as PIXI from 'pixi.js';
-import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
+import type { FederatedPointerEvent, Filter, Rectangle, EventMode as PixiEventMode } from 'pixi.js';
 import { memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
@@ -60,7 +59,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	pivot?: PointLike;
 	angle?: number;
 	hitArea?: Rectangle;
-	eventMode?: PIXI.EventMode;
+	eventMode?: PixiEventMode;
 	filters?: readonly Filter[];
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -315,7 +314,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
+	const actualFilters = useMemo<Filter[] | undefined>(() => filters?.slice(), [filters]);
 
 	const swapCullingScale = useMemo(() => new Observable<boolean>(false), []);
 	const onTransitionTick = useCallback((container: PixiTransitionedContainer) => {

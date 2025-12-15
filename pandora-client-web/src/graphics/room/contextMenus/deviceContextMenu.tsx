@@ -21,6 +21,8 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 
 function StoreDeviceMenu({ roomState, device, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -328,6 +330,7 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	const [menu, setMenu] = useState<'main'>('main');
 	const navigate = useNavigatePandora();
 	const priority = useContext(DraggableDialogPriorityContext);
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
 	const onCloseActual = useCallback(() => {
 		onClose();
@@ -348,7 +351,7 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 								onCloseActual();
 								navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }), { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
 							} }>
-								{ device.asset.definition.name }
+								{ ResolveItemDisplayName(device, wardrobeItemDisplayNameType) }
 							</Button>
 							{ menu === 'main' && (
 								<DeviceMainMenu

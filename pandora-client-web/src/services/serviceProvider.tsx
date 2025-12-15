@@ -3,7 +3,8 @@ import { createContext, useContext, type ReactElement } from 'react';
 import type { ChildrenProps } from '../common/reactTypes.ts';
 import { useDebugExpose } from '../common/useDebugExpose.ts';
 import { useNullableObservable } from '../observable.ts';
-import type { ClientGameLogicServices, ClientServices } from './clientServices.ts';
+import type { ClientGameLogicServices } from './clientGameLogicServices.ts';
+import type { ClientServices } from './clientServices.ts';
 
 export const serviceManagerContext = createContext<ServiceProvider<ClientServices> | undefined>(undefined);
 

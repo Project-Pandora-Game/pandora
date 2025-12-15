@@ -8,7 +8,7 @@ import {
 	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../services/clientServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../services/clientGameLogicServices.ts';
 import type { IShardConnectionManager } from '../../services/shardConnectionManager.ts';
 import { GenerateClientEditorGameLogicServices, type EditorServices } from './editorServices.ts';
 

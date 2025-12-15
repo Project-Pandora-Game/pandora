@@ -137,10 +137,10 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<Row>
 							<Column>
 								<p>
-									If you are already familiar with the club or if you prefer exploring it completely by yourself,
-									you can quit a tutorial at any time by clicking the '×' in the corner.<br />
+									You can quit a tutorial at any time by clicking the '×' in the corner. It can be restarted.<br />
 									<br />
-									That said, I strongly recommend going through all of the tutorials over time, as they explain the core mechanics of Pandora.
+									That said, I strongly recommend completing all of the tutorials over time, as they explain the core mechanics of Pandora.
+									Especially the first two are short, but rather essential for new visitors.
 								</p>
 							</Column>
 							<Row alignX='center' className='maid-container'>
@@ -363,7 +363,6 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 				{
 					text: (
 						<>
-							These are all the tutorials we currently have.<br />
 							After you finish this tutorial we strongly recommend following up directly with at least the next, very essential one as well: "Pandora Introduction".
 						</>
 					),
@@ -392,12 +391,26 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 			steps: [
 				{
 					text: (
+						<p>
+							Please be aware that the club is still being renovated.<br />
+							You can expect many new things over time or even help us with building it up further!<br />
+							If you want to help, it is best to familiarize yourself with the club first,
+							and then get in touch using the information found in the "Contact"-tab of the Wiki.
+						</p>
+					),
+					highlight: [{
+						query: '.HeaderButton[title="Wiki"]',
+						inset: true,
+					}],
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: (
 						<>
 							<p>
-								Please be aware that the club is still being renovated.<br />
-								You can expect many new things over time or even help us with building it up further!<br />
-								If you want to help, it is best to familiarize yourself with the club first,
-								and then get in touch using the information found in the "Contact"-tab of the Wiki.
+								Doing at least the next tutorial as well is strongly recommended, but if you prefer
+								to meet other users in online spaces immediately, the "List of spaces" button lets
+								you find and join other parts of Pandora.
 							</p>
 							<p>
 								And that is all from me for now!<br />
@@ -406,8 +419,8 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						</>
 					),
 					highlight: [{
-						query: '.HeaderButton[title="Wiki"]',
-						inset: true,
+						query: '.Button',
+						filter: (e) => e.innerText.includes('List of spaces'),
 					}],
 					conditions: [{ type: 'next' }],
 				},

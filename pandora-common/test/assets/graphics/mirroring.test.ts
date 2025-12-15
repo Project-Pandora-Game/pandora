@@ -1,5 +1,4 @@
 import { describe, expect, it } from '@jest/globals';
-import type { Coordinates } from '../../../src/assets/graphics/common.ts';
 import type { AtomicPoseCondition, Condition, PoseCondition } from '../../../src/assets/graphics/conditions.ts';
 import { MirrorAtomicPoseCondition, MirrorBoneLike, MirrorCondition, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
 import type { TransformDefinition } from '../../../src/assets/graphics/points.ts';
@@ -41,21 +40,14 @@ function SetupTransform(bone: string,
 			return {
 				type,
 				condition,
-				value: value as Coordinates,
+				value,
 			};
 		case 'shift':
 			return {
 				bone,
 				type,
 				condition,
-				value: value as Coordinates,
-			};
-		case 'rotate':
-			return {
-				bone,
-				type,
-				condition,
-				value: value as number,
+				value,
 			};
 	}
 }
@@ -75,16 +67,11 @@ describe('MirrorTransform()', () => {
 		['const-shift', 'test_l', { x: -1, y: -1 }, 'test_r', { x: 1, y: -1 }, undefined],
 		['const-shift', 'test', { x: 1, y: 1 }, 'test', { x: -1, y: 1 }, undefined],
 		['const-shift', 'test', { x: -1, y: 1 }, 'test', { x: 1, y: 1 }, undefined],
-
-		['rotate', 'test_r', 100, 'test_l', -100, undefined],
-		['rotate', 'test_l', 100, 'test_r', -100, undefined],
-		['rotate', 'test_r', -100, 'test_l', 100, undefined],
-		['rotate', 'test_l', -100, 'test_r', 100, undefined],
 	])(
 		'should %p bone: %p, value: %p into bone: %p, value: %p',
 		(type, ibone, ivalue, ebone, evalue, condition: PoseCondition | undefined) => {
-			const input = SetupTransform(ibone, type as 'rotate' | 'shift', condition, ivalue);
-			const exp = SetupTransform(ebone, type as 'rotate' | 'shift', condition?.map(MirrorAtomicPoseCondition), evalue);
+			const input = SetupTransform(ibone, type as 'shift', condition, ivalue);
+			const exp = SetupTransform(ebone, type as 'shift', condition?.map(MirrorAtomicPoseCondition), evalue);
 			expect(MirrorTransform(input)).toStrictEqual(exp);
 		},
 	);
@@ -96,8 +83,8 @@ describe('MirrorTransform()', () => {
 	};
 
 	it('should mirror condition', () => {
-		const input = SetupTransform('test', 'rotate', [conditions], 100);
-		const exp = SetupTransform('test', 'rotate', [MirrorAtomicPoseCondition(conditions)], -100);
+		const input = SetupTransform('test', 'shift', [conditions], { x: -100, y: 10 });
+		const exp = SetupTransform('test', 'shift', [MirrorAtomicPoseCondition(conditions)], { x: 100, y: 10 });
 		expect(MirrorTransform(input)).toStrictEqual(exp);
 	});
 

@@ -33,7 +33,6 @@ function ComparePointTransforms(assetManager: AssetManager, point: Immutable<Poi
 	}
 
 	const poseVariables = Array.from(poseVariablesSet);
-	const skinningTransforms = point.transforms.filter((t) => t.type !== 'rotate');
 
 	let minError: number = Infinity;
 	let maxError: number = -Infinity;
@@ -52,7 +51,7 @@ function ComparePointTransforms(assetManager: AssetManager, point: Immutable<Poi
 			evaluator.skinPoint(
 				skinResult,
 				point.skinning,
-				skinningTransforms,
+				point.transforms,
 			);
 		} else {
 			evaluator.evalTransformVec(

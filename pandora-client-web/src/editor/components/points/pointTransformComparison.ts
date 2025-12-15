@@ -38,9 +38,6 @@ function CollectVariablesFromAtomicPoseCondition(condition: Immutable<AtomicPose
 
 export function CollectVariablesFromTransform(transform: Immutable<TransformDefinition>, variableSet: Set<PointTransformVariable>): void {
 	switch (transform.type) {
-		case 'rotate':
-			variableSet.add(`bone:${transform.bone}`);
-			break;
 		case 'shift':
 			variableSet.add(`bone:${transform.bone}`);
 			break;

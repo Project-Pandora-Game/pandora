@@ -1,14 +1,53 @@
 @use '../../styles/common';
 
+@property --loadIndicatorTurn {
+	syntax: '<angle>';
+	initial-value: 0turn;
+	inherits: true;
+}
+
+@keyframes LoadIndicatorTurn {
+	0% {
+		--loadIndicatorTurn: 0turn;
+	}
+	100% {
+		--loadIndicatorTurn: 1turn;
+	}
+}
+
 .LoadIndicator {
 	display: flex;
+	display: inline-block;
+	position: relative;
+	margin: 5px;
 
 	color: common.$theme-dialog-text;
-	background: common.$theme-dialog-background;
-	border: 2px solid common.$theme-dialog-border;
-	border-radius: 0.5em;
-
+	border-radius: 1em;
+	border: 2px solid transparent;
 	padding: 1em 2em;
+
+	--loadIndicatorTurn: 0.2turn;
+
+	background: common.$theme-dialog-background;
+	background:
+		linear-gradient(common.$theme-dialog-background, common.$theme-dialog-background) padding-box,
+		conic-gradient(from var(--loadIndicatorTurn),
+			common.$theme-separator,
+			common.$theme-separator 15%,
+			common.$theme-separator-highlight 25%,
+			common.$theme-separator 30%,
+			common.$theme-separator 65%,
+			common.$theme-separator-highlight 75%,
+			common.$theme-separator 80%,
+			common.$theme-separator 100%,
+		) border-box,
+		common.$theme-dialog-background;
+
+	animation: LoadIndicatorTurn 2000ms linear infinite forwards;
+
+	@media (prefers-reduced-motion) {
+		animation: none;
+	}
 
 	@include common.forcedColors {
 		background: Canvas;

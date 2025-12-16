@@ -1,10 +1,11 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
 import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router';
+import { LoadIndicator } from '../components/LoadIndicator/LoadIndicator.tsx';
 import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
 import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
 import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';
-import { ModalDialog } from '../components/dialog/dialog.tsx';
+import { DivContainer } from '../components/common/container/container.tsx';
 import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
@@ -97,11 +98,11 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 			</Freeze>
 			{
 				(!isLoggedIn && hasAuthToken) && (
-					<ModalDialog>
-						<div className='message'>
+					<DivContainer align='center' justify='center'>
+						<LoadIndicator>
 							Awaiting automatic login...
-						</div>
-					</ModalDialog>
+						</LoadIndicator>
+					</DivContainer>
 				)
 			}
 		</>
@@ -129,11 +130,11 @@ function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: {
 			</Freeze>
 			{
 				!hasCharacter && (
-					<ModalDialog>
-						<div className='message'>
+					<DivContainer align='center' justify='center'>
+						<LoadIndicator>
 							<CharacterAutoConnectState />
-						</div>
-					</ModalDialog>
+						</LoadIndicator>
+					</DivContainer>
 				)
 			}
 		</>

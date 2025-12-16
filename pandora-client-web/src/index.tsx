@@ -25,7 +25,11 @@ try {
 	logger.fatal('Init failed:', error);
 }
 
-const Main = lazy(() => import('./main.tsx'));
+function LoadMain() {
+	return import('./main.tsx');
+}
+
+const Main = lazy(LoadMain);
 
 /**
  * Starts the application.
@@ -76,6 +80,14 @@ async function Start(): Promise<void> {
 			</EulaGate>
 		</React.StrictMode>,
 	);
+
+	// Preload main application for when user confirms EULA
+	globalThis.addEventListener('load', () => {
+		LoadMain()
+			.catch((e) => {
+				logger.error('Failed to preload Main:', e);
+			});
+	}, { once: true });
 }
 
 /**

@@ -143,6 +143,42 @@
 				outline-color: AccentColor;
 			}
 		}
+
+		@include common.forcedColors {
+			background: ButtonFace;
+			color: ButtonText;
+			border-color: ButtonBorder;
+		}
+
+		.icon-container {
+			position: relative;
+			display: inline-block;
+			height: 1.8em;
+			padding-left: 1em;
+
+			.badge {
+				position: absolute;
+				display: inline-block;
+				border-radius: 100%;
+				bottom: 0;
+				left: 1%;
+				aspect-ratio: 1;
+				min-height: unset;
+				min-width: unset;
+				width: 1.5em;
+				height: 1.5em;
+				font-size: 0.8em;
+				line-height: 1.5;
+				background: common.$theme-notification-badge-background;
+				color: common.$theme-notification-badge-text;
+				padding: 0 0.1em;
+
+				@include common.forcedColors {
+					background: Mark;
+					color: MarkText;
+				}
+			}
+		}
 	}
 }
 

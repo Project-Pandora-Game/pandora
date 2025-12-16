@@ -390,7 +390,9 @@ function OverlayHeader({ onClose: close, visible }: {
 	);
 }
 
-function CollapsableHeader(): ReactElement {
+function CollapsableHeader({ onAnyClick }: {
+	onAnyClick?: () => void;
+}): ReactElement {
 	const [showMenu, setShowMenu] = useState(false);
 
 	const currentAccount = useCurrentAccount();
@@ -398,12 +400,36 @@ function CollapsableHeader(): ReactElement {
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 
+	const directMessageManager = useServiceOptional('directMessageManager');
+	const unreadDirectMessageCount = useObservableMultiple(
+		(useNullableObservable(directMessageManager?.chats) ?? EMPTY_ARRAY)
+			.map((c) => c.displayInfo),
+	).filter((c) => c.hasUnread).length;
+	const incomingFriendRequestCount = useAccountContacts('incoming').length;
+	const [notifications] = useNotificationHeader();
+	const { notificationGlobalSettings } = useAccountSettings();
+	const notificationPermissionState = useObservable((useService('browserPermissionManager')).permissionStates).notifications;
+	const shouldNotifyAboutNotificationPermission = notificationGlobalSettings.usePlatformPopup && notificationPermissionState === 'prompt';
+	const badge = unreadDirectMessageCount + incomingFriendRequestCount + notifications.length + (shouldNotifyAboutNotificationPermission ? 1 : 0);
+
+	const navigate = useNavigatePandora();
+	const goToWardrobe = useCallback(() => {
+		if (characterData != null) {
+			navigate(`/wardrobe/character/${characterData.id}`);
+			onAnyClick?.();
+		}
+	}, [navigate, onAnyClick, characterData]);
+
 	return (
 		<Row alignX='space-between' alignY='center' className='flex-1'>
 			<span className='headerText'>
 				{
 					currentAccount == null ? '[not logged in]' :
-					characterData != null ? (characterName ?? `[Character ${characterData.id}]`) :
+					characterData != null ? (
+						<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
+							{ characterName ?? `[Character ${characterData.id}]` }
+						</button>
+					) :
 					connectionInfo != null ? `[Character ${connectionInfo.characterId}]` :
 					'[no character selected]'
 				}
@@ -411,7 +437,10 @@ function CollapsableHeader(): ReactElement {
 			<button className='collapsableHeaderButton' onClick={ () => {
 				setShowMenu(!showMenu);
 			} }>
-				<IconHamburger state={ showMenu ? 'cross' : 'hamburger' } />
+				<div className='icon-container'>
+					<IconHamburger state={ showMenu ? 'cross' : 'hamburger' } />
+					{ badge ? <span className='badge'>{ badge > 99 ? '99+' : badge }</span> : undefined }
+				</div>
 			</button>
 			<OverlayHeader visible={ showMenu } onClose={ () => setShowMenu(false) } />
 		</Row>

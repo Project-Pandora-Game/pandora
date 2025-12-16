@@ -99,13 +99,13 @@ function LeftHeader({ onAnyClick }: {
 	return (
 		<div className='leftHeader flex'>
 			{ characterData ? (
-				<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
+				<Button theme='transparent' onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
 					{ preview ? (<img className='avatar' src={ preview } />) : null }
 					<span className='headerText'>
 						<span className='label'>Current character:</span>
 						{ characterName ?? `[Character ${characterData.id}]` }
 					</span>
-				</button>
+				</Button>
 			) : connectionInfo ? (
 				<span className='headerText'>
 					<span className='label'>Current character:</span>
@@ -422,26 +422,33 @@ function CollapsableHeader({ onAnyClick }: {
 
 	return (
 		<Row alignX='space-between' alignY='center' className='flex-1'>
-			<span className='headerText'>
-				{
-					currentAccount == null ? '[not logged in]' :
-					characterData != null ? (
-						<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
-							{ characterName ?? `[Character ${characterData.id}]` }
-						</button>
-					) :
-					connectionInfo != null ? `[Character ${connectionInfo.characterId}]` :
-					'[no character selected]'
-				}
-			</span>
-			<button className='collapsableHeaderButton' onClick={ () => {
+			{ characterData ? (
+				<Button theme='transparent' onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
+					<span className='headerText'>
+						{ characterName ?? `[Character ${characterData.id}]` }
+					</span>
+				</Button>
+			) : connectionInfo ? (
+				<span className='headerText'>
+					{ `[Character ${connectionInfo.characterId}]` }
+				</span>
+			) : currentAccount != null ? (
+				<span className='headerText'>
+					[no character selected]
+				</span>
+			) : (
+				<span className='headerText'>
+					[not logged in]
+				</span>
+			) }
+			<Button theme='transparent' className='HeaderButton NarrowHaederButton' onClick={ () => {
 				setShowMenu(!showMenu);
 			} }>
 				<div className='icon-container'>
 					<IconHamburger state={ showMenu ? 'cross' : 'hamburger' } />
 					{ badge ? <span className='badge'>{ badge > 99 ? '99+' : badge }</span> : undefined }
 				</div>
-			</button>
+			</Button>
 			<OverlayHeader visible={ showMenu } onClose={ () => setShowMenu(false) } />
 		</Row>
 	);

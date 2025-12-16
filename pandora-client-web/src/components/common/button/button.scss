@@ -30,6 +30,9 @@ $button-system-theme: (
 	),
 );
 
+$header-button-img-height: 1.5em;
+$header-button-v-padding: 0.3em;
+
 .Button {
 	@include common.center-flex;
 	display: inline-flex;
@@ -161,7 +164,52 @@ $button-system-theme: (
 		}
 	}
 
-	&:not(.IconButton) {
+	&.HeaderButton {
+		min-width: 4em;
+		padding: 0;
+		justify-content: start;
+		text-align: start;
+
+		.icon-container {
+			position: relative;
+			display: inline-block;
+			height: $header-button-img-height + 2 * $header-button-v-padding;
+			padding: $header-button-v-padding 0.5em;
+
+			.badge {
+				position: absolute;
+				display: inline-block;
+				top: unset;
+				right: unset;
+				bottom: 0;
+				left: 60%;
+			}
+		}
+
+		img {
+			height: $header-button-img-height;
+		}
+
+		&.NarrowHaederButton {
+			min-width: unset;
+			padding: 1px 4px;
+
+			.icon-container {
+				position: unset;
+				height: unset;
+				padding: 0;
+
+				.badge {
+					top: 1px;
+					right: 1px;
+					bottom: unset;
+					left: unset;
+				}
+			}
+		}
+	}
+
+	&:not(.IconButton):not(.HeaderButton) {
 		img, canvas {
 			margin: -0.2em 0;
 			height: 1.2em;

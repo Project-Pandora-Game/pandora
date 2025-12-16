@@ -1,16 +1,18 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceAction,
 	AppearanceActionProcessingContext,
 	AppearanceActionProcessingResult,
 	AppearanceItems,
+	ApplyAction,
 	Assert,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	Item,
 	ItemInteractionType,
 	ItemPath,
+	LockLogic,
 	SplitContainerPath,
 	type ActionTargetSelector,
 	type ItemContainerPath,
@@ -113,6 +115,25 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		}
 	}
 
+	// Warn if locking a lock that won't be unlockable
+	if (
+		result.valid &&
+		action.type === 'moduleAction' &&
+		action.action.moduleType === 'lockSlot' &&
+		action.action.lockAction.action === 'lock'
+	) {
+		const unlockLockAction = LockLogic.makeUnlockActionFromLockAction(action.action.lockAction);
+		const reverseAction = produce(action, (d) => {
+			Assert(d.action.moduleType === 'lockSlot');
+			d.action.lockAction = unlockLockAction;
+		});
+
+		const reverseResult = ApplyAction(result.createChainProcessingContext(), reverseAction);
+		if (!reverseResult.valid) {
+			warnings.push(`You will not be able to unlock this lock`);
+		}
+	}
+
 	// Warn about room device undeploy removing characters from it
 	if (action.type === 'roomDeviceDeploy' && !action.deployment.deployed) {
 		const originalDeviceState = EvalItemPath(result.originalState.getItems(action.target) ?? [], action.item);
@@ -142,7 +163,7 @@ export function WardrobeCheckResultForConfirmationWarnings(
 
 			const deletedCount = countSignificantDeletedItems(deletedItem);
 			if (deletedCount > 0) {
-				warnings.push(`Deleting this item will also delete ${deletedCount} ${ deletedCount > 1 ? 'items' : 'item' } stored inside (count does not include locks).`);
+				warnings.push(`Deleting this item will also delete ${deletedCount} ${deletedCount > 1 ? 'items' : 'item'} stored inside (count does not include locks).`);
 			}
 		}
 	}

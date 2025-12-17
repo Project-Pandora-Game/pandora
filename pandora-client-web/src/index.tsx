@@ -83,10 +83,12 @@ async function Start(): Promise<void> {
 
 	// Preload main application for when user confirms EULA
 	globalThis.addEventListener('load', () => {
-		LoadMain()
-			.catch((e) => {
-				logger.error('Failed to preload Main:', e);
-			});
+		setTimeout(() => {
+			LoadMain()
+				.catch((e) => {
+					logger.error('Failed to preload Main:', e);
+				});
+		}, 250);
 	}, { once: true });
 }
 

@@ -17,14 +17,12 @@
 
 .LoadIndicator {
 	display: flex;
-	display: inline-block;
-	position: relative;
-	margin: 5px;
 
 	color: common.$theme-dialog-text;
 	border-radius: 1em;
 	border: 2px solid transparent;
 	padding: 1em 2em;
+	margin: 1em;
 
 	--loadIndicatorTurn: 0.2turn;
 

@@ -33,7 +33,10 @@ export function RoomItemDialogsProvider(): ReactElement | null {
 	useEffect(() => {
 		// Close all non-pinned dialogs when they should get hidden
 		if (!shouldShow) {
-			RoomItemDialogs.produce((d) => d.filter((i) => i.pinned));
+			RoomItemDialogs.produce((d) => {
+				const newDialogs = d.filter((i) => i.pinned);
+				return d.length === newDialogs.length ? d : newDialogs;
+			});
 		}
 	}, [shouldShow]);
 

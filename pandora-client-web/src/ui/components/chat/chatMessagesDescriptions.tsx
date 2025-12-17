@@ -56,6 +56,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionCustomize action={ action } { ...props } />;
 		case 'moduleAction':
 			return <DescribeGameLogicActionModuleAction action={ action } { ...props } />;
+		case 'point':
+			return <DescribeGameLogicActionPoint action={ action } { ...props } />;
 		case 'restrictionOverrideChange':
 			return <DescribeGameLogicActionRestrictionOverrideChange action={ action } { ...props } />;
 		case 'randomize':
@@ -217,6 +219,18 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 	return (
 		<>
 			{ actionDescription } of <DescribeItem item={ item } globalState={ globalState } />
+			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionPoint({ action, globalState }: DescribeGameLogicActionProps<'point'>): ReactElement {
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+
+	return (
+		<>
+			Point at <DescribeItem item={ item } globalState={ globalState } />
 			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);

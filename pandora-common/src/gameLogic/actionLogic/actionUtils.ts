@@ -20,6 +20,7 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'move':
 		case 'color':
 		case 'customize':
+		case 'point':
 		case 'restrictionOverrideChange':
 		case 'randomize':
 		case 'roomDeviceDeploy':

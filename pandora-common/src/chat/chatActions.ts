@@ -76,6 +76,16 @@ const CHAT_ACTIONS_DEF = {
 		message: `SOURCE_CHARACTER left timeout mode.`,
 	},
 
+	// Items that are pointed at
+	itemPointAttached: {
+		type: 'itemInteraction',
+		message: `SOURCE_CHARACTER pointed at ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
+	},
+	itemPointStored: {
+		type: 'itemInteraction',
+		message: `SOURCE_CHARACTER pointed at ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
+	},
+
 	// Item changes directly on character
 	itemAdd: {
 		type: 'itemInteraction',

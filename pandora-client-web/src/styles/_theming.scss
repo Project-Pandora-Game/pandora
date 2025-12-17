@@ -319,14 +319,6 @@ $theme-header-text: #eee;
 $theme-header-collapsable-background: #19191a;
 $theme-header-collapsable-text: #eee;
 
-$theme-header-button-normal-background: transparent;
-$theme-header-button-normal-text: inherit;
-$theme-header-button-normal-imgfilter: none;
-$theme-header-button-hover-background: color-mix(in srgb, #222, $theme-accent-color 35%);
-$theme-header-button-hover-text: inherit;
-$theme-header-button-hover-imgfilter: none;
-$theme-header-button-visiblefocus-outline: #ffffffcc;
-
 $theme-notification-badge-background: #a00;
 $theme-notification-badge-text: #fff;
 $theme-notification-badge-passive-background: #060;

@@ -270,6 +270,22 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
+	{
+		key: ['point'],
+		description: 'Highlights an item on a character or in the room inventory in the chat',
+		longDescription: 'Shows a message which draws attention to or links an item worn by a character in the same space or in the room inventory.',
+		usage: '<character | room> <item>',
+		handler: CreateClientCommand()
+			.argument('target', CommandSelectorGameLogicActionTarget())
+			.argument('item', CommandSelectorItem('target'))
+			.handler(({ gameState }, { target, item }) => {
+				return CommandDoGameAction(gameState, {
+					type: 'point',
+					target,
+					item,
+				});
+			}),
+	},
 	//#region Commands for gambling and playing games
 	{
 		key: ['coinflip'],

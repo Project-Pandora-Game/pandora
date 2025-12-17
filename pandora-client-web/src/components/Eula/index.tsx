@@ -21,7 +21,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 			<Column className='fill-y'>
 				<div className='flex-1' />
 				<div className='eula-header'>
-					<img src={ pandoraLogo } alt='Pandora Logo' />
+					<img src={ pandoraLogo } alt='Pandora Logo' fetchPriority='high' />
 				</div>
 				<div className='eula-text'>
 					<p>

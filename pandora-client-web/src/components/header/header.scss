@@ -1,5 +1,4 @@
 @use '../../styles/common';
-@use 'HeaderButton';
 
 .Header, .OverlayHeader {
 	.onlineStatusIndicator {
@@ -63,7 +62,7 @@
 	& > div {
 		@include common.flex(row, wrap);
 		align-items: flex-start;
-		min-height: HeaderButton.$header-button-height;
+		min-height: 2.1em;
 		gap: 1px;
 
 		&.rightHeader, &.leftHeader {
@@ -98,51 +97,8 @@
 	.label, .headerText {
 		@include common.center-flex;
 		min-width: 6em;
-		min-height: HeaderButton.$header-button-height;
+		min-height: 2.1em;
 		padding: 0 0.5em;
-	}
-
-	.collapsableHeaderButton {
-		background: common.$theme-header-button-normal-background;
-		color: common.$theme-header-button-normal-text;
-		border: 1px solid transparent;
-		border-radius: common.spacing('small');
-		outline-offset: -0.2em;
-
-		@include common.forcedColors {
-			background: ButtonFace;
-			color: ButtonText;
-			border-color: ButtonBorder;
-		}
-
-		&:hover {
-			background: common.$theme-header-button-hover-background;
-			color: common.$theme-header-button-hover-text;
-
-			@include common.forcedColors {
-				background: ButtonFace;
-				color: ButtonText;
-				border-color: common.$forcedColors-accentColorFallback;
-				border-color: AccentColor;
-			}
-
-			img {
-				filter: common.$theme-header-button-hover-imgfilter;
-
-				@include common.forcedColors {
-					filter: none;
-				}
-			}
-		}
-
-		&:focus-visible {
-			outline: 0.2em solid common.$theme-header-button-visiblefocus-outline;
-
-			@include common.forcedColors {
-				outline-color: common.$forcedColors-accentColorFallback;
-				outline-color: AccentColor;
-			}
-		}
 	}
 }
 
@@ -226,7 +182,7 @@
 		> div {
 			@include common.flex(column);
 			align-items: stretch;
-			min-height: HeaderButton.$header-button-height;
+			min-height: 2.1em;
 			gap: 1px;
 			flex: unset;
 
@@ -234,17 +190,22 @@
 				@include common.flex(row);
 				align-items: center;
 				min-width: 6em;
-				min-height: HeaderButton.$header-button-height;
+				min-height: 2.1em;
 				padding: 0 1em;
 			}
 
 			> span, > .currentAccount > button {
-				padding: 0 1em 0 3.7em;
+				padding: 0 1em 0 4em;
 			}
 
 			> .currentAccount > button {
 				width: 100%;
 				justify-content: start;
+			}
+
+			.HeaderButton {
+				justify-content: start;
+				text-align: start;
 			}
 
 			.label {

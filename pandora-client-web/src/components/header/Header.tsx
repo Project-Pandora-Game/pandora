@@ -441,7 +441,7 @@ function CollapsableHeader({ onAnyClick }: {
 					[not logged in]
 				</span>
 			) }
-			<Button theme='transparent' className='HeaderButton NarrowHaederButton' onClick={ () => {
+			<Button theme='transparent' className='HeaderButton NarrowHeaderButton' onClick={ () => {
 				setShowMenu(!showMenu);
 			} }>
 				<div className='icon-container'>

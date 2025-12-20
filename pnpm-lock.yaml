@@ -75,8 +75,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       immer:
-        specifier: 11.0.1
-        version: 11.0.1
+        specifier: 11.1.0
+        version: 11.1.0
       inter-ui:
         specifier: 4.1.1
         version: 4.1.1
@@ -277,8 +277,8 @@ importers:
         specifier: 5.0.1
         version: 5.0.1
       immer:
-        specifier: 11.0.1
-        version: 11.0.1
+        specifier: 11.1.0
+        version: 11.1.0
       lodash-es:
         specifier: 4.17.22
         version: 4.17.22
@@ -341,8 +341,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1
       immer:
-        specifier: 11.0.1
-        version: 11.0.1
+        specifier: 11.1.0
+        version: 11.1.0
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -441,8 +441,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1
       immer:
-        specifier: 11.0.1
-        version: 11.0.1
+        specifier: 11.1.0
+        version: 11.1.0
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -3564,8 +3564,8 @@ packages:
     resolution: {integrity: sha512-gJzzk+PQNznz8ysRrC0aOkBNVRBDtE1n53IqyqEf3PXrYwomFs5q4pGMizBMJF+ykh03insJ27hB8gSrD2Hn8A==}
     engines: {node: '>= 4'}
 
-  immer@11.0.1:
-    resolution: {integrity: sha512-naDCyggtcBWANtIrjQEajhhBEuL9b0Zg4zmlWK2CzS6xCWSE39/vvf4LqnMjUAWHBhot4m9MHCM/Z+mfWhUkiA==}
+  immer@11.1.0:
+    resolution: {integrity: sha512-dlzb07f5LDY+tzs+iLCSXV2yuhaYfezqyZQc+n6baLECWkOMEWxkECAOnXL0ba7lsA25fM9b2jtzpu/uxo1a7g==}
 
   immutable@5.1.1:
     resolution: {integrity: sha512-3jatXi9ObIsPGr3N5hGw/vWWcTkq6hUYhpQz4k0wLC+owqWi/LiugIw9x0EdNZ2yGedKN/HzePiBvaJRXa0Ujg==}
@@ -9919,7 +9919,7 @@ snapshots:
 
   ignore@7.0.4: {}
 
-  immer@11.0.1: {}
+  immer@11.1.0: {}
 
   immutable@5.1.1: {}
 

@@ -263,6 +263,11 @@ export async function LoadAssetAutoMeshLayer(
 		logger.warning('Following image mappings are unused:', Array.from(unusedImageMaps).join(', '));
 	}
 
-	return (await Promise.all(resultLayers.map((l) => LoadAssetImageLayer(l, context, logger.prefixMessages('Autogenerate layer:\n\t')))))
+	return (await Promise.all(resultLayers.map((l) => LoadAssetImageLayer(
+		l,
+		context,
+		logger.prefixMessages('Autogenerate layer:\n\t'),
+		{ allowUnusedPointTypes: true },
+	))))
 		.flat();
 }

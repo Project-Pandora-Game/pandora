@@ -1,6 +1,6 @@
 import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -654,18 +654,20 @@ function PosingToolBone({
 
 	const [posX, posY, angle] = useMemo((): [number, number, number] => {
 		let rotation = evaluator.getBoneLikeValue(definition.name) + (definition.baseRotation ?? 0);
-		let x = bonePoseOverride?.x ??
-			(definition.x + (definition.uiPositionOffset?.[0] ?? 0));
-		let y = bonePoseOverride?.y ??
-			(definition.y + (definition.uiPositionOffset?.[1] ?? 0));
+		const pos = new Vector2(
+			bonePoseOverride?.x ?? (definition.x + (definition.uiPositionOffset?.[0] ?? 0)),
+			bonePoseOverride?.y ?? (definition.y + (definition.uiPositionOffset?.[1] ?? 0)),
+		);
 		if (definition.parent) {
 			rotation += evaluator.getBoneLikeValue(definition.parent.name);
-			[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
+			evaluator.skinPoint(pos, [
+				{ bone: definition.parent.name, weight: 1 },
+			]);
 		}
 		if (definition.isMirror) {
 			rotation = 180 - rotation;
 		}
-		return [x, y, rotation];
+		return [pos.x, pos.y, rotation];
 	}, [definition, evaluator, bonePoseOverride]);
 
 	const onMove = useEvent((x: number, y: number): void => {

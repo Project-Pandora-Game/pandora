@@ -29,14 +29,14 @@ import type { AppearanceActionContext } from './appearanceActions.ts';
 import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown.ts';
 
 export class AppearanceActionProcessingContext {
-	private readonly _context: AppearanceActionContext;
+	public readonly _internalActionContext: AppearanceActionContext;
 
 	public get player(): GameLogicCharacter {
-		return this._context.player;
+		return this._internalActionContext.player;
 	}
 
 	public get executionContext(): AppearanceActionContext['executionContext'] {
-		return this._context.executionContext;
+		return this._internalActionContext.executionContext;
 	}
 
 	public readonly assetManager: AssetManager;
@@ -75,7 +75,7 @@ export class AppearanceActionProcessingContext {
 	}
 
 	constructor(context: AppearanceActionContext, initialState: AssetFrameworkGlobalState) {
-		this._context = context;
+		this._internalActionContext = context;
 		this.assetManager = initialState.assetManager;
 		this.originalState = initialState;
 
@@ -89,7 +89,7 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public getCharacter(id: CharacterId): CharacterRestrictionsManager | null {
-		const char = this._context.getCharacter(id);
+		const char = this._internalActionContext.getCharacter(id);
 
 		if (char == null)
 			return null;
@@ -98,7 +98,7 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public getTargetCharacter(target: ActionCharacterSelector): ActionTargetCharacter | null {
-		const char = this._context.getCharacter(target.characterId);
+		const char = this._internalActionContext.getCharacter(target.characterId);
 
 		if (char == null)
 			return null;
@@ -142,7 +142,7 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public getSpaceContext(): ActionSpaceContext {
-		return this._context.spaceContext;
+		return this._internalActionContext.spaceContext;
 	}
 
 	public queueMessage(message: ActionHandlerMessageWithTarget): void {
@@ -413,6 +413,10 @@ export class AppearanceActionProcessingResultValid extends AppearanceActionProce
 		this.actionData = processingContext.actionData;
 		Assert(processingContext.actionProblems.length === 0);
 		Assert(this.resultState.isValid());
+	}
+
+	public createChainProcessingContext(): AppearanceActionProcessingContext {
+		return new AppearanceActionProcessingContext(this._finalProcessingContext._internalActionContext, this.resultState);
 	}
 
 	public override addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid {

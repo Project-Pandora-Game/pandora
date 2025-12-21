@@ -38,15 +38,15 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "3.954.0",
-		"@aws-sdk/credential-provider-node": "3.954.0",
+		"@aws-sdk/client-sesv2": "3.956.0",
+		"@aws-sdk/credential-provider-node": "3.956.0",
 		"@octokit/auth-oauth-app": "9.0.3",
 		"@octokit/rest": "22.0.1",
 		"argon2": "0.44.0",
 		"async-lock": "1.4.1",
 		"discord.js": "14.25.1",
 		"express": "5.2.1",
-		"immer": "11.0.1",
+		"immer": "11.1.0",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.17.22",
 		"mongodb": "7.0.0",

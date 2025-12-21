@@ -214,6 +214,18 @@ export class DualQuaternion {
 		target.set(this.ae, this.be, this.ce, this.de);
 	}
 
+	public toArray(target: Float32Array, offset: number = 0): void {
+		Assert(target.length >= offset + 8);
+		target[offset++] = this.a;
+		target[offset++] = this.b;
+		target[offset++] = this.c;
+		target[offset++] = this.d;
+		target[offset++] = this.ae;
+		target[offset++] = this.be;
+		target[offset++] = this.ce;
+		target[offset++] = this.de;
+	}
+
 	public toTransformationMatrix(target: Matrix4x4): void {
 		const b0 = TempQuaternion1;
 		const be = TempQuaternion2;

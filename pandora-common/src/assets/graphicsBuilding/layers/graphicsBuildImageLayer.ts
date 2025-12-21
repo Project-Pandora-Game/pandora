@@ -18,10 +18,21 @@ import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrim
 import { TriangleRectangleOverlap } from '../math/intersections.ts';
 import { CalculatePointsTriangles } from '../math/triangulation.ts';
 
+export interface LoadAssetImageLayerOptions {
+	/**
+	 * Avoids producing a warning when layer defines point types that get filtered out.
+	 * @default false
+	 */
+	allowUnusedPointTypes?: boolean;
+}
+
 async function LoadAssetImageLayerSingle(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
 	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
+	{
+		allowUnusedPointTypes = false,
+	}: LoadAssetImageLayerOptions = {},
 ): Promise<Immutable<GraphicsMeshLayer | GraphicsAlphaImageMeshLayer>> {
 	const pointTemplate = context.getPointTemplate(layer.points);
 
@@ -286,7 +297,7 @@ async function LoadAssetImageLayerSingle(
 		}
 
 		// Validate that layer actually uses its declared point types
-		if (layer.pointType != null) {
+		if (layer.pointType != null && !allowUnusedPointTypes) {
 			for (const layerPointType of layer.pointType) {
 				if (!usedPointTypes.has(layerPointType)) {
 					logger.warning(`Layer declares usage of point type '${layerPointType}', but it is not actually used.`);
@@ -362,11 +373,13 @@ export async function LoadAssetImageLayer(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
 	context: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>,
 	logger: Logger,
+	options: LoadAssetImageLayerOptions = {},
 ): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
 	const resultLayer = await LoadAssetImageLayerSingle(
 		layer,
 		context,
 		logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`),
+		options,
 	);
 
 	if (layer.mirror !== LayerMirror.NONE) {
@@ -385,6 +398,7 @@ export async function LoadAssetImageLayer(
 			}),
 			context,
 			logger.prefixMessages(`[Mirrored layer ${layer.name ?? '[unnamed]'}]`),
+			options,
 		);
 		return [resultLayer, resultMirror];
 	}

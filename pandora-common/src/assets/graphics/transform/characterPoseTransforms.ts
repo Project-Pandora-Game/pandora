@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { DEG_TO_RAD, DualQuaternion, Matrix4x4, Quaternion, Vector2, Vector2Rotate, Vector3, Vector4 } from '../../../math/index.ts';
+import { DEG_TO_RAD, DualQuaternion, Matrix4x4, Quaternion, Vector2, Vector3, Vector4 } from '../../../math/index.ts';
 import { Assert, AssertNever } from '../../../utility/misc.ts';
 import type { AssetManager } from '../../assetManager.ts';
 import type { AppearancePose } from '../../state/characterStatePose.ts';
@@ -41,16 +41,6 @@ export class CharacterPoseTransforms {
 			}
 
 			switch (type) {
-				case 'rotate': {
-					const bone = this._getBone(transform.bone);
-					let vecX = position.x - bone.x;
-					let vecY = position.y - bone.y;
-					const value = transform.value * this.getBoneLikeValue(transform.bone);
-					[vecX, vecY] = Vector2Rotate(vecX, vecY, value);
-					position.x = bone.x + vecX;
-					position.y = bone.y + vecY;
-					break;
-				}
 				case 'shift': {
 					const percent = this.getBoneLikeValue(transform.bone) / 180;
 					position.x += percent * transform.value.x;
@@ -63,23 +53,6 @@ export class CharacterPoseTransforms {
 					break;
 			}
 		}
-	}
-
-	public evalTransformAngle(transforms: Immutable<TransformDefinition[]>): number {
-		let angle = 0;
-		for (const transform of transforms) {
-			const { type, condition } = transform;
-			if (condition && !condition.every((c) => this.evalCondition(c))) {
-				continue;
-			}
-			if (type === 'rotate') {
-				const boneName = transform.bone;
-				const rotation = this.getBoneLikeValue(boneName);
-				const value = transform.value * rotation;
-				angle += value;
-			}
-		}
-		return angle;
 	}
 	//#endregion
 
@@ -106,13 +79,13 @@ export class CharacterPoseTransforms {
 			if (weight === 0)
 				continue;
 
-			this._getBoneTransformQuaterion(tmp, bone);
+			this.getBoneTransformQuaterion(tmp, bone);
 			tmp.multiplyByScalar(weight);
 			skinQuaterion.add(tmp);
 			remainingWeight -= weight;
 		}
 		if (remainingWeight !== 0) {
-			this._getBoneTransformQuaterion(tmp, null);
+			this.getBoneTransformQuaterion(tmp, null);
 			tmp.multiplyByScalar(remainingWeight);
 			skinQuaterion.add(tmp);
 		}
@@ -127,7 +100,7 @@ export class CharacterPoseTransforms {
 	}
 
 	private readonly _boneTransformCache = new Map<BoneName, DualQuaternion>();
-	protected _getBoneTransformQuaterion(target: DualQuaternion, bone: BoneName | null): void {
+	public getBoneTransformQuaterion(target: DualQuaternion, bone: BoneName | null): void {
 		if (bone == null) {
 			target.set(1, 0, 0, 0, 0, 0, 0, 0);
 			return;
@@ -148,7 +121,7 @@ export class CharacterPoseTransforms {
 			// Apply parent transformation
 			if (boneDef.parent != null) {
 				const parent = TmpDQ3;
-				this._getBoneTransformQuaterion(parent, boneDef.parent?.name ?? null);
+				this.getBoneTransformQuaterion(parent, boneDef.parent?.name ?? null);
 				result.leftMultiply(parent);
 			}
 		}

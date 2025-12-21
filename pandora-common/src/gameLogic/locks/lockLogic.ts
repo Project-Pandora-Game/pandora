@@ -500,4 +500,17 @@ export class LockLogic {
 		}
 		return true;
 	}
+
+	public static makeUnlockActionFromLockAction(lockAction: Immutable<Extract<LockAction, { action: 'lock'; }>>): Extract<LockAction, { action: 'unlock'; }> {
+		const a: Extract<LockAction, { action: 'unlock'; }> = {
+			action: 'unlock',
+		};
+
+		if (lockAction.password != null) {
+			a.password = lockAction.password;
+			a.clearLastPassword = true;
+		}
+
+		return a;
+	}
 }

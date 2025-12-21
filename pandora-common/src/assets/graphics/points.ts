@@ -7,12 +7,6 @@ import { LayerPrioritySchema, type LayerPriority } from './layers/common.ts';
 
 export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 	z.object({
-		type: ZodWrapInternString(z.literal('rotate')),
-		bone: BoneNameSchema,
-		value: z.number(),
-		condition: PoseConditionSchema.optional(),
-	}),
-	z.object({
 		type: ZodWrapInternString(z.literal('shift')),
 		bone: BoneNameSchema,
 		value: CoordinatesSchema,

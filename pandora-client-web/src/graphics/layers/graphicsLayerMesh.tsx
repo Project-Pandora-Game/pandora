@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever, EMPTY_ARRAY, type ItemRoomDevice, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
+import { AssertNever, DualQuaternion, EMPTY_ARRAY, MAX_BONE_COUNT, type ItemRoomDevice, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
@@ -9,7 +9,7 @@ import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
-import { ContextCullClockwise, useItemColor, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
+import { ContextCullClockwise, useItemColor, useLayerVertices, useLayerVerticesTransformData, type GraphicsLayerProps, type LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
 import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
 export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
@@ -35,7 +35,8 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 
 	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 
-	const { vertices, vertexRotations } = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
+	const verticesData = useLayerVerticesTransformData(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
@@ -55,8 +56,7 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 	return (
 		layer.normalMap != null ? (
 			<GraphicsLayerMeshNormals
-				vertices={ vertices }
-				vertexRotations={ vertexRotations }
+				vertices={ verticesData }
 				uvs={ uv }
 				triangles={ triangles }
 				texture={ texture }
@@ -102,13 +102,25 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 		if (layer.geometry.type === '2d') {
 			if (layer.geometry.topology === 'triangle-list') {
 				const vertices = Math.floor(layer.geometry.positions.length / 2);
+				const vertexTransformData: LayerVerticesTransformData = {
+					vertices: new Float32Array(layer.geometry.positions),
+					vertexSkinningBoneIndices: new Uint16Array(4 * vertices),
+					vertexSkinningBoneWeights: new Float32Array(4 * vertices),
+					boneTransforms: new Float32Array(8 * MAX_BONE_COUNT),
+				};
 				const result = {
 					type: '2d',
-					positions: new Float32Array(layer.geometry.positions),
+					positions: vertexTransformData.vertices,
+					vertexTransformData,
 					vertexRotations: new Float32Array(vertices),
 					uvs: new Float32Array(layer.geometry.uvs),
 					indices: new Uint32Array(layer.geometry.indices),
 				} as const;
+
+				new DualQuaternion(1, 0, 0, 0, 0, 0, 0, 0).toArray(vertexTransformData.boneTransforms);
+				for (let i = 80; i < 8 * MAX_BONE_COUNT; i++) {
+					vertexTransformData.boneTransforms[i] = 0;
+				}
 
 				const offset = layer.geometry.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ?? layer.geometry.offset;
 				const offsetX = offset?.x ?? 0;
@@ -117,6 +129,12 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 					result.vertexRotations[vi] = 0;
 					result.positions[2 * vi] += offsetX;
 					result.positions[2 * vi + 1] += offsetY;
+
+					for (let si = 0; si < 4; si++) {
+						const skinTargetIndex = 4 * vi + si;
+						vertexTransformData.vertexSkinningBoneIndices[skinTargetIndex] = 0;
+						vertexTransformData.vertexSkinningBoneWeights[skinTargetIndex] = 0;
+					}
 				}
 
 				return result;
@@ -149,8 +167,7 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 			layer.normalMap != null ? (
 				<GraphicsLayerMeshNormals
 					ref={ layer.clipToRoom ? applyRoomMask : null }
-					vertices={ geometryData.positions }
-					vertexRotations={ geometryData.vertexRotations }
+					vertices={ geometryData.vertexTransformData }
 					uvs={ geometryData.uvs }
 					triangles={ geometryData.indices }
 					texture={ texture }

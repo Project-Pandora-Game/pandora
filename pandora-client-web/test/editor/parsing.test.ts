@@ -1,5 +1,4 @@
-import { TransformDefinition } from 'pandora-common';
-import { ParseCondition, ParseTransforms, SerializeTransforms, SplitAndClean } from '../../src/editor/parsing.ts';
+import { ParseCondition, SplitAndClean } from '../../src/editor/parsing.ts';
 
 describe('SplitAndClean()', () => {
 	it('should split but trim and filter out items', () => {
@@ -19,39 +18,3 @@ describe('ParseCondition()', () => {
 	});
 });
 
-describe('Transforms', () => {
-
-	const mocktransform: TransformDefinition = {
-		type: 'rotate',
-		value: 10,
-		bone: 'base_bone',
-		condition: [
-			{
-				bone: 'test_bone',
-				operator: '=',
-				value: 10,
-			},
-		],
-	};
-
-	const mockSerialize = 'rotate base_bone 10 test_bone=10\nrotate base_bone 10 test_bone=10';
-
-	describe('ParseTransforms()', () => {
-		it('should parse string to transforms', () => {
-			expect(ParseTransforms(mockSerialize, ['test_bone', 'base_bone']))
-				.toStrictEqual([mocktransform, mocktransform]);
-		});
-
-		it('should throw error if bone is not valid', () => {
-			expect(() => ParseTransforms(mockSerialize, ['invalid_bone'])).toThrow();
-		});
-
-	});
-	describe('SerializeTransforms()', () => {
-		it('should serialize TransformDefinition into string', () => {
-			expect(SerializeTransforms([mocktransform, mocktransform]))
-				.toBe(mockSerialize);
-		});
-	});
-
-});

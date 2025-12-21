@@ -276,10 +276,6 @@ export function ParsePoseCondition(input: string, validBones: string[]): PoseCon
 
 function SerializeTransform(transform: Immutable<TransformDefinition>): string {
 	switch (transform.type) {
-		case 'rotate': {
-			const res = `${transform.type} ${transform.bone} ${transform.value}`;
-			return transform.condition ? `${res} ${SerializePoseCondition(transform.condition)}` : res;
-		}
 		case 'shift': {
 			const res = `shift ${transform.bone} ${transform.value.x} ${transform.value.y}`;
 			return transform.condition ? `${res} ${SerializePoseCondition(transform.condition)}` : res;
@@ -297,22 +293,6 @@ function ParseTransform(input: string, validBones: string[]): TransformDefinitio
 	const columns = SplitAndClean(input, ' ');
 	const type = columns.shift();
 	switch (type) {
-		case 'rotate': {
-			if (columns.length < 2 || columns.length > 3) {
-				throw new Error('Rot requires 2-3 arguments');
-			}
-			if (!validBones.includes(columns[0])) {
-				throw new Error(`Unknown bone '${columns[0]}'`);
-			}
-			const ratio = ParseFloat(columns[1]);
-			const condition = columns.length === 3 ? ParsePoseCondition(columns[2], validBones) : undefined;
-			return {
-				type,
-				bone: columns[0],
-				value: ratio,
-				condition,
-			};
-		}
 		case 'shift': {
 			if (columns.length < 3 || columns.length > 4) {
 				throw new Error('Shift requires 3-4 arguments');

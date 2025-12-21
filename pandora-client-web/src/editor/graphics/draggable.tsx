@@ -9,6 +9,7 @@ import {
 	MirrorBoneLike,
 	MirrorTransform,
 	PointDefinition,
+	Vector2,
 	Vector2GetAngle,
 	Vector2Rotate,
 	type PointDefinitionCalculated,
@@ -202,12 +203,13 @@ export function DraggableBone({
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {
-			let bx = definition.x;
-			let by = definition.y;
+			const b = new Vector2(definition.x, definition.y);
 			if (definition.parent) {
-				[bx, by] = evaluator.evalTransform([bx, by], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
+				evaluator.skinPoint(b, [
+					{ bone: definition.parent.name, weight: 1 },
+				]);
 			}
-			let angle = Vector2GetAngle(x - bx, y - by);
+			let angle = Vector2GetAngle(x - b.x, y - b.y);
 			if (definition.isMirror) {
 				angle = ((180 + 360) - angle) % 360;
 			}
@@ -226,17 +228,18 @@ export function DraggableBone({
 	const [posX, posY] = useMemo(() => {
 		if (type === 'result') {
 			let angle = evaluator.getBoneLikeValue(definition.name) + (definition.baseRotation ?? 0);
-			let x = definition.x;
-			let y = definition.y;
+			const pos = new Vector2(definition.x, definition.y);
 			if (definition.parent) {
 				angle += evaluator.getBoneLikeValue(definition.parent.name);
-				[x, y] = evaluator.evalTransform([x, y], [{ type: 'rotate', bone: definition.parent.name, value: definition.isMirror ? -1 : 1 }]);
+				evaluator.skinPoint(pos, [
+					{ bone: definition.parent.name, weight: 1 },
+				]);
 			}
 			if (definition.isMirror) {
 				angle = 180 - angle;
 			}
 			const [shiftX, shiftY] = Vector2Rotate(20, 0, angle);
-			return [x + shiftX, y + shiftY];
+			return [pos.x + shiftX, pos.y + shiftY];
 		} else {
 			return [definition.x, definition.y];
 		}

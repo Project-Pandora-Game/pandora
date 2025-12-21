@@ -150,6 +150,7 @@ function PendingRequestActions({ id }: { id: AccountId; displayName: string; }) 
 }
 
 function IncomingRequestActions({ id, displayName }: { id: AccountId; displayName: string; }) {
+	const goToDm = useGoToDM(id);
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const [accept, acceptInProgress] = useAsyncEvent(async () => {
@@ -165,10 +166,11 @@ function IncomingRequestActions({ id, displayName }: { id: AccountId; displayNam
 		return undefined;
 	}, AccountContactChangeHandleResult);
 	return (
-		<>
+		<Row alignX='center' padding='medium'>
 			<Button className='slim' onClick={ accept } disabled={ acceptInProgress }>Accept</Button>
 			<Button className='slim' onClick={ decline } disabled={ declineInProgress }>Decline</Button>
-		</>
+			<Button className='slim' onClick={ goToDm }>Send a direct message</Button>
+		</Row>
 	);
 }
 

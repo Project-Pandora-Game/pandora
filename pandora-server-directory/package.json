@@ -52,10 +52,10 @@
 		"mongodb": "7.0.0",
 		"mongodb-memory-server-core": "11.0.0",
 		"nanoid": "5.1.6",
-		"nodemailer": "7.0.11",
+		"nodemailer": "7.0.12",
 		"pandora-common": "workspace:*",
 		"prom-client": "15.1.3",
-		"socket.io": "4.8.1",
+		"socket.io": "4.8.2",
 		"wtfnode": "0.10.1",
 		"zod": "4.2.1"
 	},

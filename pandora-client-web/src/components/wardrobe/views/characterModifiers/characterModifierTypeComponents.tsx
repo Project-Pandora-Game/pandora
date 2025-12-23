@@ -1,0 +1,123 @@
+import {
+	AppearanceActionProcessingContext,
+	AssertNever,
+	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	CharacterModifierActionCheckAdd,
+	GetLogger,
+	type CharacterModifierId,
+	type CharacterModifierTemplate,
+	type CharacterModifierType,
+	type IClientShardNormalResult,
+	type PermissionGroup,
+} from 'pandora-common';
+import { ReactElement, useCallback, useMemo } from 'react';
+import { toast } from 'react-toastify';
+import type { Character } from '../../../../character/character.ts';
+import { useAsyncEvent } from '../../../../common/useEvent.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
+import { RenderChatPart } from '../../../../ui/components/chat/chatMessageText.tsx';
+import { ChatParser } from '../../../../ui/components/chat/chatParser.ts';
+import { Column } from '../../../common/container/container.tsx';
+import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider.tsx';
+import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext.tsx';
+import { ActionProblemsContent } from '../../wardrobeActionProblems.tsx';
+import { WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
+import './characterModifierTypeDetailsView.scss';
+
+export function WardrobeCharacterModifierTypeDescription({ type }: {
+	type: CharacterModifierType;
+}): ReactElement {
+	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
+
+	const description = useMemo(() => (
+		ChatParser.parseStyle(typeDefinition.description)
+			.map((c, i) => RenderChatPart(c, i, false))
+	), [typeDefinition]);
+
+	return (
+		<div className='wardrobeModifierTypeDescription'>
+			{ description }
+		</div>
+	);
+}
+
+export function WardrobeCharacterModifierAddButton({ character, modifier, onSuccess }: {
+	character: Character;
+	modifier: CharacterModifierTemplate;
+	onSuccess?: (newInstanceId: CharacterModifierId) => void;
+}): ReactElement {
+	const { actions, globalState } = useWardrobeActionContext();
+	const shard = useShardConnector();
+
+	const checkInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		return CharacterModifierActionCheckAdd(processingContext, character.id, modifier.type);
+	}, [actions, globalState, character, modifier]);
+	const check = useCheckAddPermissions(checkInitial);
+
+	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
+
+	const [execute, processing] = useAsyncEvent(async () => {
+		if (shard == null) {
+			return null;
+		}
+
+		return await shard.awaitResponse('characterModifierAdd', {
+			target: character.id,
+			modifier,
+			enabled: false,
+		});
+	}, (result: IClientShardNormalResult['characterModifierAdd'] | null) => {
+		if (result == null) {
+			toast(`Error performing action:\nNot connected`, TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'ok') {
+			onSuccess?.(result.instanceId);
+		} else if (result.result === 'characterNotFound') {
+			toast('The target character is no longer in the same space', TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'invalidConfiguration') {
+			toast('Error in the modifier configuration', TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'tooManyModifiers') {
+			toast('The target character already has too many modifiers. Remove some before adding a new one.', TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'failure') {
+			toast(
+				<Column>
+					<span>Problems performing action:</span>
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
+				</Column>,
+				TOAST_OPTIONS_ERROR,
+			);
+		} else {
+			AssertNever(result);
+		}
+	}, {
+		errorHandler: (err) => {
+			GetLogger('WardrobeCharacterModifierTypeDetailsView').error('Failed to add character modifier:', err);
+			toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	const onClick = useCallback(() => {
+		const permissions = check.valid ? [] : check.problems
+			.filter((p) => p.result === 'restrictionError')
+			.map((p) => p.restriction)
+			.filter((r) => r.type === 'missingPermission')
+			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
+
+		if (permissions.length > 0) {
+			requestPermissions(character.id, permissions);
+		} else {
+			execute();
+		}
+	}, [check, execute, requestPermissions, character]);
+
+	return (
+		<WardrobeActionButtonElement
+			check={ check }
+			onClick={ onClick }
+			disabled={ processing || processingPermissionRequest }
+		>
+			Add this modifier
+		</WardrobeActionButtonElement>
+	);
+}

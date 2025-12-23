@@ -10,9 +10,9 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { useResolveCharacterName, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useResolveCharacterName, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import type { SelfSelect } from '../chat/commandsHelpers.ts';
 import './characterListInput.scss';
 

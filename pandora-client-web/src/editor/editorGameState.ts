@@ -4,7 +4,7 @@ import type { Character } from '../character/character.ts';
 import type { PlayerCharacter } from '../character/player.ts';
 import { ChatSendError, type GameState, type GameStateEvents, type ISavedMessage } from '../components/gameContext/gameStateContextProvider.tsx';
 import { StaticObservable, type ReadonlyObservable } from '../observable.ts';
-import type { ChatMessagePreprocessed } from '../ui/components/chat/chatMessages.tsx';
+import type { ChatMessagePreprocessed } from '../ui/components/chat/chatMessageTypes.ts';
 import type { Editor } from './editor.tsx';
 
 export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> implements GameState {

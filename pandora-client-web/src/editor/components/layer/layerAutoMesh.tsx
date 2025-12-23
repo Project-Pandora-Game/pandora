@@ -33,7 +33,7 @@ import { InventoryAttributePreview } from '../../../components/wardrobe/wardrobe
 import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
 import { EditorBuildAssetGraphicsWornContext } from '../../assets/editorAssetGraphicsBuilding.ts';
-import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
+import { EditorAssetGraphicsManager, useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 
@@ -496,7 +496,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 		if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 			return;
 
-		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -539,7 +539,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 			return;
 		}
 
-		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -731,7 +731,7 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	const assetManager = useAssetManagerEditor();
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
 
-	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
+	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 
 	return (
 		<ModalDialog>
@@ -994,7 +994,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsWornLayer<'a
 	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
 		return null;
 
-	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
+	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 	for (const variable of variables) {
@@ -1182,7 +1182,7 @@ function LayerAutomeshFillImagesDialog({ layer, asset, close, prefixes, setPrefi
 	}, [graphicalLayers, prefixes, setPrefixes]);
 
 	const combinations = useMemo(() => {
-		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager);
+		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {

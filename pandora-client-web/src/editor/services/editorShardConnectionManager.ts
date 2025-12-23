@@ -10,7 +10,8 @@ import {
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../services/clientGameLogicServices.ts';
 import type { IShardConnectionManager } from '../../services/shardConnectionManager.ts';
-import { GenerateClientEditorGameLogicServices, type EditorServices } from './editorServices.ts';
+import { GenerateClientEditorGameLogicServices } from './editorGameLogicServices.ts';
+import type { EditorServices } from './editorServices.ts';
 
 type EditorShardConnectionManagerServiceConfig = Satisfies<{
 	dependencies: Omit<EditorServices, 'shardConnectionManager' | 'directoryConnector' | 'directMessageManager'>;

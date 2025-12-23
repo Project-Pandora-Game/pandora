@@ -32,7 +32,7 @@ import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
-import { CreateOutfitPreviewDollState } from './wardrobeOutfitView.tsx';
+import { CreateOutfitPreviewDollState } from './wardrobeOutfitPreview.tsx';
 
 export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary = false }: {
 	extraActions?: ReactNode;

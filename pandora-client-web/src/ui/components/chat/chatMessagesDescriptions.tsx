@@ -19,11 +19,11 @@ import {
 import { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { useCharacterDataOptional } from '../../../character/character.ts';
-import { FindItemById, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { FindItemById, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
-import { ActionTextItemLink, DescribeAsset } from './chatMessages.tsx';
+import { ActionTextItemLink, DescribeAsset } from './chatMessageAction.tsx';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;

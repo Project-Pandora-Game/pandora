@@ -26,7 +26,7 @@ import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifi
 import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView.tsx';
 import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView.tsx';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from './wardrobeActionContext.tsx';
-import { ActionWarningContent } from './wardrobeComponents.tsx';
+import { ActionProblemsContent } from './wardrobeActionProblems.tsx';
 
 export type ModifierFocus = {
 	type: 'instance';
@@ -171,7 +171,7 @@ function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFo
 			<div className='inventoryView'>
 				<Column padding='medium'>
 					<span>You cannot see the full modifier list of this character.</span>
-					<ActionWarningContent problems={ data.problems } prompt={ false } />
+					<ActionProblemsContent problems={ data.problems } prompt={ false } />
 					<button
 						className={ classNames(
 							'wardrobeActionButton',

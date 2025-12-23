@@ -9,7 +9,7 @@ import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import type { ClientGameLogicServices } from '../../services/clientGameLogicServices.ts';
 import type { IGameStateManager } from '../../services/gameLogic/gameStateManager.ts';
 import { EditorGameStateProxy } from '../editorGameState.ts';
-import type { ClientEditorGameLogicServicesDependencies } from './editorServices.ts';
+import type { ClientEditorGameLogicServicesDependencies } from './editorGameLogicServices.ts';
 
 type EditorGameStateManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientEditorGameLogicServicesDependencies, 'editor'>;

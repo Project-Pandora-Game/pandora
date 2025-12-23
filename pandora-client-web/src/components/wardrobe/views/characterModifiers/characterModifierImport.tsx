@@ -16,7 +16,7 @@ import { ModalDialog } from '../../../dialog/dialog.tsx';
 import { ImportDialog } from '../../../exportImport/importDialog.tsx';
 import { ModifierInstanceNameInput } from './characterModifierInstanceDetailsView.tsx';
 import './characterModifierInstanceView.scss';
-import { WardrobeCharacterModifierAddButton, WardrobeCharacterModifierTypeDescription } from './characterModifierTypeDetailsView.tsx';
+import { WardrobeCharacterModifierAddButton, WardrobeCharacterModifierTypeDescription } from './characterModifierTypeComponents.tsx';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList.tsx';
 import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 

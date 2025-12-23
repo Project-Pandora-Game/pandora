@@ -12,10 +12,10 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
+import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
 import { useGameLogicServiceOptional } from '../../services/serviceProvider.tsx';
 import { useDebugContext } from '../error/debugContextProvider.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
-import { useGameStateOptional } from './gameStateContextProvider.tsx';
 
 export function ShardConnectorContextProvider(): null {
 	const navigate = useNavigatePandora();

@@ -18,8 +18,8 @@ import settingIcon from '../../../assets/icons/setting.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
+import { UsageMeter } from '../../../components/common/usageMeter/usageMeter.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
-import { StorageUsageMeter } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { RoomConfiguration, RoomConfigurationBackgroundPreview } from './roomConfiguration.tsx';
 import { RoomCreation } from './roomCreation.tsx';
 import { RoomSpaceGlobalSettingsDialog } from './roomSettings.tsx';
@@ -43,12 +43,12 @@ export function SpaceStateConfigurationUi({
 		<Column className='SpaceStateConfigurationUi' alignX='center' gap='none'>
 			<Row className='fill-x' padding='small'>
 				<Row className='flex-2' alignX='space-evenly' alignY='center'>
-					<StorageUsageMeter
+					<UsageMeter
 						title='Rooms inside the space'
 						used={ globalState.space.rooms.length }
 						limit={ LIMIT_SPACE_ROOM_COUNT }
 					/>
-					<StorageUsageMeter
+					<UsageMeter
 						title='Total items across all room inventories'
 						used={ globalState.space.getTotalItemCount() }
 						limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }

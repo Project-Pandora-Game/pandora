@@ -1,10 +1,10 @@
 import { LIMIT_ITEM_NAME_LENGTH } from 'pandora-common';
 import { type ReactElement, useState } from 'react';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
+import { useCharacterState, useGameState, useGlobalState } from '../../../../../services/gameLogic/gameStateHooks.ts';
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { ModalDialog } from '../../../../dialog/dialog.tsx';
-import { useCharacterState, useGameState, useGlobalState } from '../../../../gameContext/gameStateContextProvider.tsx';
 import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionItemWithName({ condition, setCondition, invert, setInvert, processing, character }: CharacterModifierConditionListEntryProps<'hasItemWithName'>): ReactElement {

@@ -30,14 +30,16 @@ import { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { Button } from '../../components/common/button/button.tsx';
 import { Column } from '../../components/common/container/container.tsx';
-import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import type { GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
 import { usePlayer, usePlayerRestrictionManager } from '../../components/gameContext/playerContextProvider.tsx';
 import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../services/gameLogic/gameStateHooks.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
-import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { RoomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
@@ -51,7 +53,6 @@ import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharac
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -390,7 +391,7 @@ export function RoomSceneInteractive({ className }: {
 		viewportConfig,
 		viewportRef,
 		viewportOnMove,
-		forwardContexts: [serviceManagerContext, UseTextureGetterOverride, roomScreenContext, wardrobeActionContext, permissionCheckContext],
+		forwardContexts: [serviceManagerContext, UseTextureGetterOverride, RoomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),

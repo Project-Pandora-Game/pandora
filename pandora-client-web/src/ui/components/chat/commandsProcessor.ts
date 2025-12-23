@@ -14,11 +14,11 @@ import {
 } from 'pandora-common';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
+import type { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../../networking/shardConnector.ts';
 import type { NavigateFunctionPandora } from '../../../routing/navigate.ts';
 import type { IAccountManager } from '../../../services/accountLogic/accountManager.ts';
-import type { IChatInputHandler } from './chatInput.tsx';
+import type { IChatInputHandler } from './chatInputContext.tsx';
 
 export const COMMAND_KEY = '/';
 

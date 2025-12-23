@@ -18,6 +18,13 @@ import {
 import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import diskIcon from '../../../assets/icons/disk.svg';
+import editIcon from '../../../assets/icons/edit.svg';
+import exportIcon from '../../../assets/icons/export.svg';
+import importIcon from '../../../assets/icons/import.svg';
+import triangleDown from '../../../assets/icons/triangle_down.svg';
+import triangleUp from '../../../assets/icons/triangle_up.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
@@ -26,22 +33,14 @@ import { useServiceManager, useServiceOptional } from '../../../services/service
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
+import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog, type ExportDialogTarget } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
-import { GeneratePosePreview, PoseButton } from '../views/wardrobePoseView.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
-
-import deleteIcon from '../../../assets/icons/delete.svg';
-import diskIcon from '../../../assets/icons/disk.svg';
-import editIcon from '../../../assets/icons/edit.svg';
-import exportIcon from '../../../assets/icons/export.svg';
-import importIcon from '../../../assets/icons/import.svg';
-import triangleDown from '../../../assets/icons/triangle_down.svg';
-import triangleUp from '../../../assets/icons/triangle_up.svg';
-
-import { StorageUsageMeter } from '../wardrobeComponents.tsx';
+import { PoseButton } from './poseButton.tsx';
+import { GeneratePosePreview } from './posePreview.tsx';
 import './storedPosePresets.scss';
 
 type WardrobeStoredPosePresetsProps = {
@@ -681,7 +680,7 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 	return (
 		<DraggableDialog title='Edit saved poses' close={ close }>
 			<Row padding='large' alignX='space-between'>
-				<StorageUsageMeter
+				<UsageMeter
 					title='Saved pose slots used'
 					used={ presets ? presets?.length : 0 }
 					limit={ LIMIT_ACCOUNT_POSE_PRESET_STORAGE }

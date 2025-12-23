@@ -28,9 +28,10 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
+import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { InventoryAssetPreview, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { ActionTargetToWardrobeUrl } from '../wardrobeNavigation.tsx';
 import { WardrobeHeldItem } from '../wardrobeTypes.ts';
@@ -110,7 +111,7 @@ export function InventoryItemView({
 							</div>
 						</>
 					) : (
-						<StorageUsageMeter
+						<UsageMeter
 							title={ title }
 							used={ itemCount }
 							limit={ targetSelector.type === 'character' ? LIMIT_ITEM_CHARACTER_WORN : LIMIT_ITEM_ROOM_INVENTORY }

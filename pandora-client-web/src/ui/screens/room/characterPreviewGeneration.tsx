@@ -10,7 +10,6 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { GetDirectoryUrl, useAuthTokenHeader } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { useGameStateOptional, useGlobalState } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useCharacterSettingDriver } from '../../../components/settings/helpers/characterSettings.tsx';
 import { NumberSettingInput, ToggleSettingInput, useSubsettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
@@ -22,6 +21,7 @@ import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
+import { useGameStateOptional, useGlobalState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 
 const CHARACTER_PREVIEW_SIZE = 64;

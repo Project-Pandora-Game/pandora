@@ -5,12 +5,13 @@ import { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { useGlobalState, type GameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import type { GameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ActionAttemptCancelButton, ActionAttemptConfirmButton, ActionAttemptInterruptButton } from '../../../components/wardrobe/views/wardrobeActionAttempt.tsx';
 import { useObservable } from '../../../observable.ts';
+import { useGlobalState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { SpaceOwnershipInvitationConfirm } from '../../screens/spaceConfiguration/spaceOwnershipInvite.tsx';
-import { ActionMessageElement } from './chat.tsx';
+import { ActionMessageElement } from './chatMessage.tsx';
 import { DescribeGameLogicAction } from './chatMessagesDescriptions.tsx';
 
 interface ChatInjectedMessageDescriptor {

@@ -2,8 +2,7 @@ import { Assert, AssertNotNullable, CreateManuallyResolvedPromise, type Rectangl
 import { Application, Container } from 'pixi.js';
 import type { ReactNode } from 'react';
 import { ForwardingErrorBoundary } from '../../components/error/forwardingErrorBoundary.tsx';
-import { ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
-import { DEFAULT_BACKGROUND_COLOR } from '../graphicsScene.tsx';
+import { DEFAULT_BACKGROUND_COLOR, ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
 import { GraphicsSuspenseContext, GraphicsSuspenseManager } from '../graphicsSuspense/graphicsSuspense.tsx';
 import { CreatePixiRoot } from '../reconciler/reconciler.ts';
 import { PixiTicker, PixiTickerContext } from '../reconciler/tick.ts';

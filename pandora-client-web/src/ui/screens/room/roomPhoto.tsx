@@ -12,7 +12,6 @@ import { useFriendStatus } from '../../../components/accountContacts/accountCont
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { usePlayerVisionFilters, VisionFilterBypass } from '../../../graphics/common/visionFilters.tsx';
@@ -23,9 +22,10 @@ import { RoomGraphics } from '../../../graphics/room/roomScene.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import type { ClientServices } from '../../../services/clientServices.ts';
+import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { SortSpaceCharacters } from '../../components/characterList/sortCharacters.ts';
 import { ShareButton } from '../../components/common/shareButton.tsx';
-import { SortSpaceCharacters } from './roomControls.tsx';
 import './roomPhoto.scss';
 
 export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, characters, globalState, roomState, characterNames }: {

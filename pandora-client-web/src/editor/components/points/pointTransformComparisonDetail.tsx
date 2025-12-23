@@ -6,7 +6,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { CharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { CollectVariablesFromTransform, GeneratePossiblePosesRecursive, type PointTransformVariable } from './pointTransformComparison.ts';
-import { PointTransformationsTextarea } from './points.tsx';
+import { PointTransformationsTextarea } from './pointTransformInput.tsx';
 
 type PoseComparisonResult = {
 	poseVariables: PointTransformVariable[];

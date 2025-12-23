@@ -25,7 +25,7 @@ import {
 } from 'pandora-common';
 import { CharacterEvents } from '../../../character/character.ts';
 import type { PlayerCharacter } from '../../../character/player.ts';
-import { Editor } from '../../editor.tsx';
+import type { Editor } from '../../editor.tsx';
 import { useEditorState } from '../../editorContextProvider.tsx';
 
 export interface EditorActionContext {

@@ -1,17 +1,13 @@
 import classNames from 'classnames';
-import { clamp, first, noop, remove } from 'lodash-es';
+import { clamp, first, noop } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
-	AppearanceBundle,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	AssetFrameworkOutfit,
 	AssetFrameworkOutfitSchema,
 	AssetFrameworkOutfitWithId,
-	AssetFrameworkSpaceState,
 	CloneDeepMutable,
-	CreateItemBundleFromTemplate,
-	GetDefaultAppearanceBundle,
 	GetLogger,
 	ItemContainerPath,
 	ItemTemplate,
@@ -30,17 +26,17 @@ import editIcon from '../../../assets/icons/edit.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
 import wikiIcon from '../../../assets/icons/wiki.svg';
 import { useBrowserSessionStorage } from '../../../browserStorage.ts';
-import type { PlayerCharacter } from '../../../character/player.ts';
 import { usePlayerVisionFilters } from '../../../graphics/common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
-import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter.tsx';
+import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacterPosition.ts';
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../common/container/container.tsx';
+import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
@@ -48,9 +44,10 @@ import { THEME_NORMAL_BACKGROUND } from '../../gameContext/interfaceSettingsProv
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { OutfitEditView } from './wardrobeOutfitEditView.tsx';
+import { CreateOutfitPreviewDollState } from './wardrobeOutfitPreview.tsx';
 
 export function InventoryOutfitView({ header, targetContainer }: {
 	header?: ReactNode;
@@ -117,7 +114,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 			<div className='inventoryView'>
 				{ header }
 				<div className='toolbar'>
-					<StorageUsageMeter title='Storage used' used={ null } limit={ LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE } />
+					<UsageMeter title='Storage used' used={ null } limit={ LIMIT_ITEM_ACCOUNT_OUTFIT_STORAGE } />
 					<div className='flex-1' />
 					<Button
 						onClick={ () => {
@@ -236,7 +233,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 				{ header }
 				<div className='toolbar'>
 					<span>Editing collection: { editedOutfit?.name ?? editedOutfitId }</span>
-					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
+					<UsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
 					<IconButton
 						onClick={ () => setEditedOutfitId(null) }
 						theme='default'
@@ -296,7 +293,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 				) : null
 			}
 			<div className='toolbar'>
-				<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
+				<UsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
 				<div className='flex-1' />
 				<Button
 					onClick={ () => {
@@ -396,62 +393,6 @@ function OutfitPreview({ outfit }: {
 			</GraphicsSceneBackgroundRenderer>
 		</div>
 	);
-}
-
-export function CreateOutfitPreviewDollState(
-	outfit: AssetFrameworkOutfit,
-	baseCharacterState: AssetFrameworkCharacterState,
-	globalState: AssetFrameworkGlobalState,
-	player: PlayerCharacter,
-): readonly [AssetFrameworkCharacterState, AssetFrameworkGlobalState] {
-	const assetManager = globalState.assetManager;
-
-	// As a base use the current character, but only body - not any items
-	const templateBundle = baseCharacterState.items
-		.filter((item) => item.isType('bodypart'))
-		.map((item) => item.exportToBundle({}));
-
-	const overwrittenBodyparts = new Set<string>();
-
-	for (const itemTemplate of outfit.items) {
-		const itemBundle = CreateItemBundleFromTemplate(itemTemplate, {
-			assetManager,
-			creator: player.gameLogicCharacter,
-			createItemBundleFromTemplate: CreateItemBundleFromTemplate,
-		});
-		if (itemBundle != null) {
-			const asset = assetManager.getAssetById(itemBundle.asset);
-			// We need to overwrite bodyparts of type we are adding for the preview to make sense
-			if (asset?.isType('bodypart') && !overwrittenBodyparts.has(asset.definition.bodypart)) {
-				const bodypart = asset.definition.bodypart;
-				// But we don't want to drop bodyparts that are in the outfit multiple times (e.g. hairs)
-				overwrittenBodyparts.add(bodypart);
-				remove(templateBundle, (oldItem) => {
-					const oldAsset = assetManager.getAssetById(oldItem.asset);
-					return oldAsset?.isType('bodypart') && oldAsset.definition.bodypart === bodypart;
-				});
-			}
-
-			templateBundle.push(itemBundle);
-		}
-	}
-
-	const currentRoom = globalState.space.getRoom(baseCharacterState.currentRoom);
-
-	const characterBundle: AppearanceBundle = GetDefaultAppearanceBundle();
-	characterBundle.items = templateBundle;
-	characterBundle.requestedPose = CloneDeepMutable(baseCharacterState.requestedPose);
-	characterBundle.position = CloneDeepMutable(baseCharacterState.position);
-	let previewSpaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
-	if (currentRoom != null) {
-		previewSpaceState = previewSpaceState.withRooms([currentRoom]);
-	}
-	const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
-	return [
-		previewCharacterState,
-		AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState)
-			.withCharacter(previewCharacterState.id, previewCharacterState),
-	] as const;
 }
 
 function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfit, targetContainer }: {

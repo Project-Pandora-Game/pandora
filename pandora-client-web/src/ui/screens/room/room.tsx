@@ -5,18 +5,18 @@ import { Column, DivContainer } from '../../../components/common/container/conta
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { Tabulation, type TabConfig } from '../../../components/common/tabs/tabs.tsx';
 import { LocalErrorBoundary } from '../../../components/error/localErrorBoundary.tsx';
-import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
 import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
 import { RoomSceneInteractive } from '../../../graphics/room/roomSceneInteractive.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useIsLowScreen, useIsNarrowScreen, useIsPortrait } from '../../../styles/mediaQueries.ts';
 import { Chat } from '../../components/chat/chat.tsx';
 import './chatArea.scss';
 import './room.scss';
-import { RoomScreenContextProvider } from './roomContext.tsx';
+import { RoomScreenContextProvider } from './roomContextProvider.tsx';
 import { PersonalSpaceControls, RoomControls } from './roomControls.tsx';
 
 export function RoomScreen(): ReactElement | null {

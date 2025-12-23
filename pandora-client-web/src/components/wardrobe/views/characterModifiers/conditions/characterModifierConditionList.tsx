@@ -8,12 +8,12 @@ import type { Character } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../../persistentToast';
+import { useGameState, useGlobalState, useSpaceInfo } from '../../../../../services/gameLogic/gameStateHooks.ts';
 import { LogicConditionEditor, type LogicConditionEditorCondition, type LogicConditionEditorConditionComponentProps } from '../../../../../ui/components/logicConditionEditor/logicConditionEditor.tsx';
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
 import { ImportDialog } from '../../../../exportImport/importDialog.tsx';
-import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameContext/gameStateContextProvider.tsx';
 import { CharacterModifierConditionListEntry, type CharacterModifierConditionListEntryData } from './characterModifierCondition.tsx';
 import './style.scss';
 

@@ -6,6 +6,7 @@ import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { useDevicePixelRatio } from '../services/screenResolution/screenResolutionHooks.ts';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from './baseComponents/pixiViewport.tsx';
+import { DEFAULT_BACKGROUND_COLOR } from './graphicsAppManager.ts';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
 import { useGraphicsSettings, type GraphicsUpscalingSetting } from './graphicsSettings.tsx';
 
@@ -22,8 +23,6 @@ export type GraphicsSceneProps = {
 	onMount?: (app: Application) => void;
 	onUnmount?: (app: Application) => void;
 };
-
-export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
 
 function GraphicsSceneCore({
 	children,

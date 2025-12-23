@@ -11,7 +11,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Observable, useObservable } from '../../../observable.ts';
-import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene.tsx';
+import { useEditorSceneContext, type EditorSceneContext } from '../../graphics/editorSceneContext.tsx';
 import { ImageExporter } from '../../graphics/export/imageExporter.ts';
 import './previewCutter.scss';
 

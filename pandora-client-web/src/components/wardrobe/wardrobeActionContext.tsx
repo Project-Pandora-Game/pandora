@@ -28,12 +28,12 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { LIVE_UPDATE_ERROR_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
 import { Column } from '../common/container/container.tsx';
 import { useConfirmDialog } from '../dialog/dialog.tsx';
-import { useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
-import { ActionWarningContent } from './wardrobeComponents.tsx';
-import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils.ts';
+import { ActionProblemsContent } from './wardrobeActionProblems.tsx';
+import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeActionWarnings.tsx';
 
 export interface WardrobeActionContext {
 	player: Character;
@@ -273,7 +273,7 @@ export function useWardrobeExecuteChecked(action: Nullable<Immutable<AppearanceA
 				return;
 
 			if (!result.valid && result.prompt == null) {
-				toast(<ActionWarningContent problems={ result.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+				toast(<ActionProblemsContent problems={ result.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
 				return;
 			}
 

@@ -10,10 +10,10 @@ import { createContext, useCallback, useContext, useMemo, type ReactElement } fr
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { useAccountContacts } from '../../components/accountContacts/accountContactContext.ts';
-import { useActionSpaceContext } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useActionSpaceContext } from '../../services/gameLogic/gameStateHooks.ts';
 import { CharacterTemporaryHiding } from '../../ui/screens/room/roomState.ts';
 
 export type VisionFilterBypass = null | 'no-ghost' | 'bypass';

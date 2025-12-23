@@ -9,10 +9,10 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
-import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
+import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),

@@ -9,9 +9,10 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { useResolveAccountName, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useResolveAccountName } from '../../../services/accountLogic/accountNameResolution.ts';
+import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import './accountListInput.scss';
 
 type QuickListAccountInfo = {

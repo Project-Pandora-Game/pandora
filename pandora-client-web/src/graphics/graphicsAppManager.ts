@@ -10,8 +10,10 @@ ConfigurePixiSettings();
 
 const SHARED_APP_MAX_COUNT = 2;
 
+export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
+
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
-	backgroundColor: 0x1099bb,
+	backgroundColor: DEFAULT_BACKGROUND_COLOR,
 	resolution: 1,
 	autoDensity: true,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on

@@ -1,10 +1,10 @@
 import { RoomNameSchema, type RoomName } from 'pandora-common';
 import { useState, type ReactElement } from 'react';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput.tsx';
+import { useGameState, useGlobalState } from '../../../../../services/gameLogic/gameStateHooks.ts';
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { ModalDialog } from '../../../../dialog/dialog.tsx';
-import { useGameState, useGlobalState } from '../../../../gameContext/gameStateContextProvider.tsx';
 import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionInRoomWithName({ condition, setCondition, invert, setInvert, processing, character }: CharacterModifierConditionListEntryProps<'inRoomWithName'>): ReactElement {

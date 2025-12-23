@@ -8,7 +8,8 @@ import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Row } from '../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
-import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents.tsx';
+import { ActionButtonHoverInfo } from '../wardrobeActionProblems.tsx';
+import { CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 
@@ -52,7 +53,7 @@ export function WardrobeModuleConfigStorage({ target, item, moduleName, m }: War
 				) }
 				onClick={ onClick }
 			>
-				<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
+				<ActionButtonHoverInfo checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

@@ -1,4 +1,4 @@
-import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type IAccountFriendStatus } from 'pandora-common';
+import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -26,7 +26,6 @@ import { Column, DivContainer, Row } from '../../../components/common/container/
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
@@ -38,9 +37,11 @@ import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsScene
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
-import { useChatInput } from '../../components/chat/chatInput.tsx';
+import { SortSpaceCharacters } from '../../components/characterList/sortCharacters.ts';
+import { useChatInput } from '../../components/chat/chatInputContext.tsx';
 import { SPACE_ROLE_TEXT_CUMULATIVE } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';
@@ -447,49 +448,6 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 			}
 		</div>
 	);
-}
-
-export function SortSpaceCharacters(characters: readonly Character<ICharacterRoomData>[], friends: readonly IAccountFriendStatus[]): Character<ICharacterRoomData>[] {
-	const enum CharOrder {
-		PLAYER,
-		ONLINE_FRIEND,
-		ONLINE,
-		FRIEND,
-		OFFLINE,
-	}
-
-	const player = characters.find((c) => c.isPlayer());
-
-	const getCharOrder = (character: Character<ICharacterRoomData>) => {
-		const isPlayer = character.isPlayer();
-		const isSameAccount = character.data.accountId === player?.data.accountId;
-		const isOnline = character.data.onlineStatus !== 'offline';
-		const isFriend = friends.some((friend) => friend.id === character.data.accountId);
-
-		if (isPlayer)
-			return CharOrder.PLAYER;
-
-		if (isOnline && (isFriend || isSameAccount))
-			return CharOrder.ONLINE_FRIEND;
-
-		if (isOnline)
-			return CharOrder.ONLINE;
-
-		if (isFriend || isSameAccount)
-			return CharOrder.FRIEND;
-
-		return CharOrder.OFFLINE;
-	};
-
-	const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
-		const order = getCharOrder(character1) - getCharOrder(character2);
-		if (order !== 0)
-			return order;
-
-		return character1.name.localeCompare(character2.name);
-	};
-
-	return characters.toSorted(charactersSortFunction);
 }
 
 function DisplayRooms({ playerState, characters, globalState }: {

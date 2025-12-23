@@ -4,7 +4,7 @@ import { Application, Rectangle, Texture } from 'pixi.js';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import { CreatePixiApplication } from '../../graphics/graphicsAppManager.ts';
 import { GetTextureBoundingBox } from '../../graphics/utility/textureBoundingBox.ts';
-import { EditorAssetGraphicsManager } from './editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsManagerClass } from './editorAssetGraphicsManager.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from './editorAssetGraphicsRoomDeviceLayer.ts';
 import type { EditorAssetGraphicsWornLayer } from './editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphicsBase } from './graphics/editorAssetGraphicsBase.ts';
@@ -82,6 +82,7 @@ class EditorImageResource implements GraphicsBuildImageResource {
 export function EditorBuildAssetGraphicsContext<TAssetData>(
 	asset: EditorAssetGraphicsBase,
 	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	builtAssetData: TAssetData,
 	buildTextures?: Map<string, Texture>,
 ): GraphicsBuildContext<TAssetData> {
@@ -95,8 +96,8 @@ export function EditorBuildAssetGraphicsContext<TAssetData>(
 			return assetManager.getAllBones();
 		},
 		getPointTemplate(name) {
-			return EditorAssetGraphicsManager.editedPointTemplates.value.get(name) ??
-				EditorAssetGraphicsManager.originalPointTemplates[name];
+			return editorGraphicsManager.editedPointTemplates.value.get(name) ??
+				editorGraphicsManager.originalPointTemplates[name];
 		},
 		bufferToBase64: ArrayToBase64,
 		loadImage(image) {
@@ -122,6 +123,7 @@ export function EditorBuildAssetGraphicsWornContext(
 	asset: EditorAssetGraphicsBase,
 	logicAsset: Asset<'personal'> | Asset<'bodypart'> | Asset<'roomDevice'>,
 	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	buildTextures?: Map<string, Texture>,
 ): GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> {
 	if (logicAsset.isType('roomDevice')) {
@@ -130,6 +132,7 @@ export function EditorBuildAssetGraphicsWornContext(
 		return EditorBuildAssetGraphicsContext<Immutable<GraphicsBuildContextAssetData>>(
 			asset,
 			assetManager,
+			editorGraphicsManager,
 			{
 				modules: roomDeviceBuildData.modules,
 				colorizationKeys: roomDeviceBuildData.colorizationKeys,
@@ -137,7 +140,7 @@ export function EditorBuildAssetGraphicsWornContext(
 			buildTextures,
 		);
 	}
-	return EditorBuildAssetGraphicsContext(asset, assetManager, EditorBuiltAssetDataFromWornAsset(logicAsset), buildTextures);
+	return EditorBuildAssetGraphicsContext(asset, assetManager, editorGraphicsManager, EditorBuiltAssetDataFromWornAsset(logicAsset), buildTextures);
 }
 
 export function EditorBuiltAssetDataFromRoomDeviceAsset(asset: Asset<'roomDevice'>): Immutable<GraphicsBuildContextRoomDeviceData> {
@@ -152,21 +155,24 @@ export function EditorBuildAssetRoomDeviceGraphicsContext(
 	asset: EditorAssetGraphicsRoomDevice,
 	logicAsset: Asset<'roomDevice'>,
 	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	buildTextures?: Map<string, Texture>,
 ): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> {
-	return EditorBuildAssetGraphicsContext(asset, assetManager, EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset), buildTextures);
+	return EditorBuildAssetGraphicsContext(asset, assetManager, editorGraphicsManager, EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset), buildTextures);
 }
 
 export async function EditorBuildWornAssetGraphics(
 	asset: EditorWornLayersContainer,
 	builtAssetData: Immutable<GraphicsBuildContextAssetData>,
 	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
 ): Promise<Immutable<AssetGraphicsWornDefinition>> {
 	const assetLoadContext: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>> = EditorBuildAssetGraphicsContext(
 		asset.assetGraphics,
 		assetManager,
+		editorGraphicsManager,
 		builtAssetData,
 		buildTextures,
 	);
@@ -192,6 +198,7 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 	asset: EditorAssetGraphicsRoomDevice,
 	builtAssetData: Immutable<GraphicsBuildContextRoomDeviceData>,
 	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
 ): Promise<{
@@ -201,6 +208,7 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 	const assetLoadContext: GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> = EditorBuildAssetGraphicsContext(
 		asset,
 		assetManager,
+		editorGraphicsManager,
 		builtAssetData,
 		buildTextures,
 	);
@@ -230,6 +238,7 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 				colorizationKeys: builtAssetData.colorizationKeys,
 			},
 			assetManager,
+			editorGraphicsManager,
 			slotLogger,
 			buildTextures,
 		);

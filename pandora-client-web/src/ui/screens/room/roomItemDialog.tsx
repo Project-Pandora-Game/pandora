@@ -12,7 +12,6 @@ import { Button, IconButton } from '../../../components/common/button/button.tsx
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
-import { useGameStateOptional, useGlobalState, useStateFindItemById, type FindItemResultEntry } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeModuleConfig } from '../../../components/wardrobe/modules/_wardrobeModules.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -22,6 +21,7 @@ import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../
 import { useWardrobeTargetItem } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useGameStateOptional, useGlobalState, useStateFindItemById, type FindItemResultEntry } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Freeze } from '../../components/common/freeze.tsx';
 import './roomItemDialog.scss';
 import { RoomItemDialogs, RoomItemDialogsShouldShow, type RoomItemDialogDefinition } from './roomItemDialogList.ts';

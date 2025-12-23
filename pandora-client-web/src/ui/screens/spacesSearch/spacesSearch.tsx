@@ -18,11 +18,11 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import './spacesSearch.scss';

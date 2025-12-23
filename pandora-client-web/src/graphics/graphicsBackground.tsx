@@ -7,7 +7,7 @@ import { useAssetManager } from '../assets/assetManager.tsx';
 import { Container } from './baseComponents/container.ts';
 import { PixiMesh } from './baseComponents/mesh.tsx';
 import { Sprite } from './baseComponents/sprite.ts';
-import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
+import { DEFAULT_BACKGROUND_COLOR } from './graphicsAppManager.ts';
 import { useRoomViewProjection } from './room/roomProjection.tsx';
 import { useTexture } from './useTexture.ts';
 

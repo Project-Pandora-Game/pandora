@@ -1,77 +1,58 @@
 import { freeze, Immutable } from 'immer';
-import { isEqual, noop } from 'lodash-es';
+import { isEqual } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	AssertNever,
-	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateClientBundle,
 	AssetFrameworkGlobalStateContainer,
 	CharacterId,
 	CharacterIdSchema,
-	CharacterRestrictionsManager,
 	ChatCharacterStatus,
 	ChatMessage,
 	ChatTypeSchema,
 	CloneDeepMutable,
-	CompareSpaceRoles,
-	EMPTY_ARRAY,
 	GameStateUpdate,
 	GetLogger,
 	ICharacterPrivateData,
 	ICharacterRoomData,
 	IClientMessage,
-	IDirectoryAccountInfo,
-	IsAuthorized,
 	IShardClientArgument,
-	Item,
-	ItemPath,
 	KnownObject,
 	LIMIT_CHAT_MESSAGE_LENGTH,
 	Logger,
 	MakePermissionConfigFromDefault,
-	Nullable,
 	PermissionConfig,
 	PermissionGroup,
 	PermissionSetup,
-	SpaceClientInfo,
-	SpaceFeature,
 	SpaceId,
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodArrayWithInvalidDrop,
-	type AccountId,
-	type ActionRoomSelector,
-	type ActionTargetSelector,
 	type AppearanceAction,
 	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
 	type IClientShardPromiseResult,
-	type ItemContainerPath,
-	type ItemId,
 	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
-	type SpaceRole,
 } from 'pandora-common';
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { BrowserStorage } from '../../browserStorage.ts';
-import { CharacterImpl, useCharacterDataOptional, type Character } from '../../character/character.ts';
+import { CharacterImpl, type Character } from '../../character/character.ts';
 import { PlayerCharacter, PlayerCharacterImpl } from '../../character/player.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
-import { Observable, useNullableObservable, useObservable, type ReadonlyObservable } from '../../observable.ts';
+import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { GetAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
-import { useGameLogicServiceOptional } from '../../services/serviceProvider.tsx';
-import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
-import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessages.tsx';
+import { MakeActionSpaceContext } from '../../services/gameLogic/gameStateHooks.ts';
+import { RenderChatMessageToString } from '../../ui/components/chat/chatMessage.tsx';
+import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessageTypes.ts';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
-import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 
 const logger = GetLogger('GameState');
 
@@ -828,240 +809,4 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 	}
 
 	//#endregion MessageSender
-}
-
-export function useGameStateOptional(): GameState | null {
-	return useNullableObservable(useGameLogicServiceOptional('gameState')?.gameState);
-}
-
-export function useGameState(): GameState {
-	const gameState = useGameStateOptional();
-	if (!gameState) {
-		throw new Error('Attempt to access GameState outside of context');
-	}
-	return gameState;
-}
-
-export function useChatMessageSender(): IChatMessageSender {
-	return useGameState();
-}
-
-export function useChatMessages(): readonly ChatMessagePreprocessed[] {
-	const context = useGameState();
-	return useObservable(context.messages);
-}
-
-export function useSpaceCharacters(): readonly Character<ICharacterRoomData>[] {
-	const context = useGameStateOptional();
-	return useNullableObservable(context?.characters) ?? EMPTY_ARRAY;
-}
-
-export function useResolveCharacterName(characterId: CharacterId): string | null {
-	// Look through space characters to see if we find matching one
-	const characters = useSpaceCharacters();
-	const character = characters.find((c) => c.id === characterId);
-
-	const data = useCharacterDataOptional(character ?? null);
-
-	return (data != null) ? data.name : null;
-}
-
-export function useResolveAccountName(accountId: AccountId): string | null {
-	const currentAccount = useCurrentAccount();
-
-	// Look through contacts
-	const contacts = useAccountContacts(null);
-	const contact = contacts.find((a) => a.id === accountId);
-
-	// Look through space characters to see if we find character of this account
-	const characters = useSpaceCharacters();
-	const character = characters.find((c) => c.data.accountId === accountId);
-	const characterData = useCharacterDataOptional(character ?? null);
-
-	if (accountId === 0) {
-		return '[[Pandora]]';
-	} else if (currentAccount?.id === accountId) {
-		return currentAccount.displayName;
-	} else if (contact != null) {
-		return contact.displayName;
-	} else if (characterData != null) {
-		return characterData.accountDisplayName;
-	}
-
-	return null;
-}
-
-export function useSpaceInfo(): Immutable<CurrentSpaceInfo> {
-	const context = useGameState();
-	return useObservable(context.currentSpace);
-}
-
-export function useSpaceInfoOptional(): Immutable<CurrentSpaceInfo> | null {
-	const context = useGameStateOptional();
-	return useNullableObservable(context?.currentSpace);
-}
-
-export function useSpaceFeatures(): readonly SpaceFeature[] {
-	const info = useSpaceInfo();
-	return info.config.features;
-}
-
-export function MakeActionSpaceContext(
-	spaceInfo: CurrentSpaceInfo,
-	playerAccount: IDirectoryAccountInfo | null,
-	playerModifierEffects: Immutable<SpaceCharacterModifierEffectData>,
-): ActionSpaceContext {
-	return {
-		features: spaceInfo.config.features,
-		getAccountSpaceRole: (accountId) => {
-			if (accountId === playerAccount?.id) {
-				return GetSpaceInfoAccountRole(spaceInfo.config, playerAccount);
-			}
-			return GetSpaceInfoAccountRole(spaceInfo.config, { id: accountId });
-		},
-		development: spaceInfo.config.development,
-		getCharacterModifierEffects: (characterId) => {
-			return playerModifierEffects[characterId] ?? EMPTY_ARRAY;
-		},
-	};
-}
-
-export function useActionSpaceContext(): ActionSpaceContext {
-	const context = useGameState();
-	const info = useObservable(context.currentSpace);
-	const characterModifierEffects = useObservable(context.characterModifierEffects);
-	const playerAccount = useCurrentAccount();
-	return useMemo((): ActionSpaceContext => (MakeActionSpaceContext(info, playerAccount, characterModifierEffects)), [info, playerAccount, characterModifierEffects]);
-}
-
-export function useCharacterRestrictionsManager<T>(globalState: AssetFrameworkGlobalState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
-	const spaceContext = useActionSpaceContext();
-	const manager = useMemo(() => character.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
-	return useMemo(() => use(manager), [use, manager]);
-}
-
-export function useChatSetPlayerStatus(): (status: ChatCharacterStatus, targets?: readonly CharacterId[]) => void {
-	const gameState = useGameState();
-	return useCallback((status: ChatCharacterStatus, targets?: readonly CharacterId[]) => gameState.setPlayerStatus(status, targets), [gameState]);
-}
-
-export function useChatCharacterStatus(): { data: ICharacterRoomData; status: ChatCharacterStatus; }[] {
-	const gameState = useGameState();
-	const characters = useObservable(gameState.characters);
-	const status = useObservable(gameState.status);
-	return useMemo(() => {
-		const result: { data: ICharacterRoomData; status: ChatCharacterStatus; }[] = [];
-		for (const c of characters) {
-			const s = status.get(c.id);
-			if (s != null && s !== 'none') {
-				result.push({ data: c.data, status: s });
-			}
-		}
-		return result;
-	}, [characters, status]);
-}
-
-export function useGlobalState(context: GameState): AssetFrameworkGlobalState;
-export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null;
-export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null {
-	return useSyncExternalStore(
-		useCallback((onChange) => {
-			if (context == null)
-				return noop;
-
-			return context.on('globalStateChange', () => {
-				onChange();
-			});
-		}, [context]),
-		useCallback(() => (context?.globalState.currentState ?? null), [context]),
-	);
-}
-
-export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
-	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
-}
-
-export type FindItemResultEntry = {
-	item: Item;
-	target: ActionTargetSelector;
-	path: ItemPath;
-	room: ActionRoomSelector;
-};
-export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
-const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
-export function FindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
-	if (globalState == null) {
-		return EMPTY_ARRAY;
-	}
-
-	let cache = FindItemByIdCache.get(globalState);
-	if (cache == null) {
-		cache = new Map();
-		FindItemByIdCache.set(globalState, cache);
-	}
-
-	const cachedResult = cache.get(id);
-	if (cachedResult != null) {
-		return cachedResult;
-	}
-	const result: Readonly<FindItemResultEntry>[] = [];
-
-	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath, room: ActionRoomSelector): void {
-		for (const item of items) {
-			if (item.id === id) {
-				result.push({
-					item,
-					target,
-					path: {
-						container,
-						itemId: item.id,
-					},
-					room,
-				});
-			}
-
-			for (const [moduleName, module] of item.getModules()) {
-				processContainer(module.getContents(), target, [
-					...container,
-					{ item: item.id, module: moduleName },
-				], room);
-			}
-		}
-	}
-
-	for (const character of globalState.characters.values()) {
-		processContainer(character.items, { type: 'character', characterId: character.id }, [], { type: 'room', roomId: character.currentRoom });
-	}
-	for (const room of globalState.space.rooms) {
-		processContainer(room.items, { type: 'room', roomId: room.id }, [], { type: 'room', roomId: room.id });
-	}
-
-	freeze(result);
-	cache.set(id, result);
-	return result;
-}
-
-export function useStateFindItemById(globalState: AssetFrameworkGlobalState | null, id: ItemId): FindItemResult {
-	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
-}
-
-export function GetSpaceInfoAccountRole(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): SpaceRole {
-	if (account?.id == null)
-		return 'everyone';
-
-	if (data.owners.includes(account.id))
-		return 'owner';
-	if (data.admin.includes(account.id))
-		return 'admin';
-
-	if (data.development?.autoAdmin && IsAuthorized(account.roles, 'developer'))
-		return 'admin';
-	if (data.allow.includes(account.id))
-		return 'allowlisted';
-
-	return 'everyone';
-}
-
-export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
-	return CompareSpaceRoles(GetSpaceInfoAccountRole(data, account), 'admin') >= 0;
 }

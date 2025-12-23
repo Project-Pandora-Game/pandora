@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { clamp, uniq } from 'lodash-es';
+import { clamp } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AppearanceAction,
@@ -8,16 +8,14 @@ import {
 	AppearanceActionProcessingResult,
 	AssertNever,
 	Asset,
-	FormatTimeInterval,
 	IsNotNullable,
 	type AppearanceActionData,
 	type CharacterActionAttempt,
-	type GameLogicActionSlowdownReason,
 	type HexColorString,
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import * as z from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.tsx';
+import { AppearanceActionProblemShouldHide } from '../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -27,118 +25,11 @@ import { useAssetPreferenceVisibilityCheck } from '../../graphics/common/assetVi
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button, ButtonProps, IconButton } from '../common/button/button.tsx';
-import { Column } from '../common/container/container.tsx';
 import { HoverElement } from '../hoverElement/hoverElement.tsx';
 import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext.tsx';
+import { ActionButtonHoverInfo } from './wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue.ts';
 import { useWardrobeContext } from './wardrobeContext.tsx';
-
-export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
-	const reasons = useMemo(() => (
-		uniq(
-			Array.from(slowdownReasons)
-				.map((reason) => RenderAppearanceActionSlowdown(reason))
-				.filter(Boolean),
-		)
-	), [slowdownReasons]);
-
-	return (
-		<>
-			This action will start a usage attempt that will take at least { FormatTimeInterval(slowdownTime, 'two-most-significant') } before
-			you can decide when it is successful or stopped.
-			{
-				reasons.length > 0 ? (
-					<>
-						<br />
-						This will happen because:
-						<ul>
-							{
-								reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
-							}
-						</ul>
-					</>
-				) : null
-			}
-		</>
-	);
-}
-
-export function ActionWarningContent({ problems, prompt, customText }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; customText?: string; }): ReactElement {
-	const { wardrobeItemDisplayNameType } = useAccountSettings();
-	const assetManager = useAssetManager();
-	const reasons = useMemo(() => (
-		uniq(
-			problems
-				.map((problem) => RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType))
-				.filter(Boolean),
-		)
-	), [assetManager, problems, wardrobeItemDisplayNameType]);
-
-	if (reasons.length === 0) {
-		return (
-			<>
-				This action isn't possible.
-			</>
-		);
-	}
-
-	let text: string;
-	if (customText != null) {
-		text = customText;
-	} else if (prompt) {
-		text = 'Executing the action will prompt for the following permissions:';
-	} else {
-		text = "This action isn't possible, because:";
-	}
-
-	return (
-		<>
-			{ text }
-			<ul>
-				{
-					reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
-				}
-			</ul>
-		</>
-	);
-}
-
-export function ActionWarning({ checkResult, parent, actionInProgress }: {
-	checkResult: AppearanceActionProcessingResult;
-	actionInProgress: boolean;
-	parent: HTMLElement | null;
-}) {
-	const slowdown = checkResult.getActionSlowdownTime();
-	if (checkResult.valid && slowdown === 0 && !actionInProgress) {
-		return null;
-	}
-
-	return (
-		<HoverElement parent={ parent } className='action-warning display-linebreak'>
-			<Column>
-				{
-					actionInProgress ? (
-						<strong>You are currently attempting this action.</strong>
-					) : null
-				}
-				{
-					!checkResult.valid ? (
-						<div>
-							<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />
-						</div>
-					) : null
-				}
-				{ // Show slowdown only if the result is valid to make things less complicated
-					(checkResult.valid && slowdown > 0) ? (
-						<div>
-							<ActionSlowdownContent slowdownReasons={ checkResult.actionSlowdownReasons } slowdownTime={ slowdown } />
-						</div>
-					) : null
-				}
-			</Column>
-		</HoverElement>
-	);
-}
 
 export function WardrobeActionButtonElement({
 	Element = 'button',
@@ -244,7 +135,7 @@ export function WardrobeActionButtonElement({
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
+					<ActionButtonHoverInfo checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
 				) : null
 			}
 			{ children }
@@ -588,28 +479,6 @@ export function InventoryAttributePreview({ attribute }: {
 
 	return (
 		<div className='itemPreview missing'>?</div>
-	);
-}
-
-export function StorageUsageMeter({ title, used, limit }: {
-	title: string;
-	used: number | null;
-	limit: number;
-}): ReactElement {
-	if (used == null) {
-		return (
-			<Column gap='tiny' alignY='center' padding='small'>
-				<span>{ title }: Loading...</span>
-				<progress />
-			</Column>
-		);
-	}
-
-	return (
-		<Column gap='tiny' alignY='center' padding='small'>
-			<span>{ title }: { used } / { limit } ({ Math.ceil(100 * used / limit) }%)</span>
-			<meter className='fill-x' min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
-		</Column>
 	);
 }
 

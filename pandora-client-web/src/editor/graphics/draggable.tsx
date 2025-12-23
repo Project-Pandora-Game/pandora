@@ -21,7 +21,7 @@ import { useEvent } from '../../common/useEvent.ts';
 import { useCharacterPoseEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
 import { DotGraphics } from '../../graphics/utility/dotGraphics.tsx';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable.ts';
-import { EditorCharacter } from './character/appearanceEditor.ts';
+import type { EditorCharacter } from './character/appearanceEditor.ts';
 import type { PointTemplateEditor } from './pointTemplateEditor.tsx';
 
 type DraggableProps = {

@@ -29,7 +29,8 @@ import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProv
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider.tsx';
 import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../../views/wardrobeLockLogic.tsx';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext.tsx';
-import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
+import { ActionProblemsContent } from '../../wardrobeActionProblems.tsx';
+import { WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
 
 export interface WardrobeCharacterModifierLockProps {
 	character: Character;
@@ -205,7 +206,7 @@ function WardrobeCharacterModifierLockAddButton({ character, instance, lockAsset
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -281,7 +282,7 @@ function WardrobeCharacterModifierLockRemoveButton({ character, instance }: Ward
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -393,7 +394,7 @@ function WardrobeCharacterModifierLockActionButton({
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);

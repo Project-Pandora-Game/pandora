@@ -256,6 +256,7 @@ export class EditorAssetGraphicsManagerClass {
 					asset,
 					EditorBuiltAssetDataFromWornAsset(logicAsset),
 					assetManager,
+					this,
 					logger,
 					buildTextures,
 				);
@@ -266,6 +267,7 @@ export class EditorAssetGraphicsManagerClass {
 					asset,
 					EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset),
 					assetManager,
+					this,
 					logger,
 					buildTextures,
 				);

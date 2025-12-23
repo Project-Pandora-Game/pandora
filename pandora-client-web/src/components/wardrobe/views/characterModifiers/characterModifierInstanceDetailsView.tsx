@@ -39,9 +39,10 @@ import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProv
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider.tsx';
 import { ContextHelpButton } from '../../../help/contextHelpButton.tsx';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext.tsx';
-import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
+import { ActionProblemsContent } from '../../wardrobeActionProblems.tsx';
+import { WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
 import { WardrobeCharacterModifierLock } from './characterModifierInstanceLock.tsx';
-import { WardrobeCharacterModifierTypeDescription } from './characterModifierTypeDetailsView.tsx';
+import { WardrobeCharacterModifierTypeDescription } from './characterModifierTypeComponents.tsx';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList.tsx';
 import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
@@ -125,7 +126,7 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -213,7 +214,7 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 					check != null && !check.valid ? (
 						<fieldset className={ check.prompt != null ? 'modifyCheckProblem promptRequired' : 'modifyCheckProblem blocked' }>
 							<Column>
-								<ActionWarningContent
+								<ActionProblemsContent
 									problems={ check.problems }
 									prompt={ check.prompt != null }
 									customText={
@@ -414,7 +415,7 @@ function ModifierInstanceReorderButton({ character, instance, allModifiers, shif
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -490,7 +491,7 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
+					<ActionProblemsContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);

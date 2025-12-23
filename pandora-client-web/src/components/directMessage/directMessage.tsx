@@ -12,16 +12,17 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
+import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
-import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput.tsx';
-import { RenderChatPart } from '../../ui/components/chat/chatMessages.tsx';
+import { AutoCompleteHint } from '../../ui/components/chat/chatInput.tsx';
+import { ChatInputContext, IChatInputHandler, useChatInput } from '../../ui/components/chat/chatInputContext.tsx';
+import { RenderChatPart } from '../../ui/components/chat/chatMessageText.tsx';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { Column } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameContext/directMessageChannelProvieder.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { useGameStateOptional } from '../gameContext/gameStateContextProvider.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 import { DIRECT_MESSAGE_COMMANDS, DirectMessageCommandExecutionContext } from './directMessageCommandContext.tsx';
 
@@ -58,12 +59,12 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 
 	return (
 		<div className='chatArea'>
-			<chatInputContext.Provider value={ ctx }>
+			<ChatInputContext.Provider value={ ctx }>
 				<DirectMessageChannelProvider accountId={ accountId }>
 					<DirectMessageList />
 					<DirectChannelInput ref={ ref } />
 				</DirectMessageChannelProvider>
-			</chatInputContext.Provider>
+			</ChatInputContext.Provider>
 		</div>
 	);
 }

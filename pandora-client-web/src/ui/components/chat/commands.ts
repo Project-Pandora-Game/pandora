@@ -3,10 +3,10 @@ import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelect
 import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
 import { toast } from 'react-toastify';
 import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
-import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { IsSpaceAdmin } from '../../../services/gameLogic/gameStateHooks.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
-import { ChatMode } from './chatInput.tsx';
+import type { ChatMode } from './chatInputContext.tsx';
 import { CommandDoGameAction } from './commandHelpers/gameAction.tsx';
 import { COMMAND_CARDGAME } from './commands/cardgame.ts';
 import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';

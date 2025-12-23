@@ -13,9 +13,9 @@ import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-rou
 import { Character, useCharacterRestrictionManager } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
+import { useGameState, useSpaceCharacters, useSpaceInfo } from '../../services/gameLogic/gameStateHooks.ts';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs.tsx';
-import { useGameState, useSpaceCharacters, useSpaceInfo } from '../gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
 import { WardrobeExpressionGui } from './views/wardrobeExpressionsView.tsx';
 import { WardrobePoseGui } from './views/wardrobePoseView.tsx';

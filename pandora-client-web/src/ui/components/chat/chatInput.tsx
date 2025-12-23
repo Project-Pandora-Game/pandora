@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
 import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus, type ICharacterRoomData, type Promisable } from 'pandora-common';
-import React, { createContext, ForwardedRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import React, { ForwardedRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
@@ -17,56 +17,20 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { ChatSendError, IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { useCharacterSettings, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { ChatSendError } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
-import { Observable, useNullableObservable, useObservable } from '../../../observable.ts';
+import { useNullableObservable, useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus } from '../../../services/gameLogic/chatHooks.ts';
+import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { ColoredName } from '../common/coloredName.tsx';
+import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
-
-type Editing = {
-	target: number;
-	restore: IMessageParseOptions;
-};
-
-export type IChatInputHandler = {
-	setValue: (value: string) => void;
-	targets: readonly Character[] | null;
-	setTargets: (targets: readonly CharacterId[] | null) => void;
-	editing: Editing | null;
-	setEditing: (editing: number | null) => boolean;
-	autocompleteHint: AutocompleteDisplayData | null;
-	setAutocompleteHint: (hint: AutocompleteDisplayData | null) => void;
-	mode: ChatMode | null;
-	setMode: (mode: ChatMode | null) => void;
-	showSelector: boolean;
-	setShowSelector: (show: boolean) => void;
-	allowCommands: boolean;
-	ref: RefObject<HTMLTextAreaElement | null>;
-};
-
-export const chatInputContext = createContext<IChatInputHandler | null>(null);
-/**
- * Whether the chat is in focus mode or not.
- * In focus mode, messages from other rooms that would be dimmed are instead hidden altogether.
- */
-export const ChatFocusMode = new Observable<boolean>(false);
-/**
- * Whether the chat should display the ugly, but detailed action log.
- */
-export const ChatActionLog = new Observable<boolean>(false);
-
-export function useChatFocusModeForced(): boolean | null {
-	return usePlayerRestrictionManager().getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
-}
-export function useChatActionLogDisabled(): boolean {
-	return usePlayerRestrictionManager().getModifierEffectsByType('setting_chat_action_log').length > 0;
-}
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -79,15 +43,10 @@ const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatIn
 /** How many last sent messages are remembered in the session storage */
 const INPUT_HISTORY_MAX_LENGTH = 64;
 
-export type ChatMode = {
-	type: IChatType;
-	raw: boolean;
-};
-
 export function ChatInputContextProvider({ children }: { children: React.ReactNode; }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [targets, setTargets] = useState<readonly Character[] | null>(null);
-	const [editing, setEditingState] = useState<Editing | null>(null);
+	const [editing, setEditingState] = useState<ChatInputHandlerEditing | null>(null);
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplayData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
@@ -105,7 +64,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		}
 	}, [spaceId]);
 
-	const setEditing = useEvent((edit: Editing | null) => {
+	const setEditing = useEvent((edit: ChatInputHandlerEditing | null) => {
 		setEditingState(edit);
 		if (!edit) {
 			ref.current?.focus();
@@ -186,9 +145,9 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	}, [targets, editing, setEditing, autocompleteHint, showSelector, setShowSelector, playerId, characters, mode]);
 
 	return (
-		<chatInputContext.Provider value={ context }>
+		<ChatInputContext.Provider value={ context }>
 			{ children }
-		</chatInputContext.Provider>
+		</ChatInputContext.Provider>
 	);
 }
 
@@ -553,12 +512,6 @@ function TextArea({ messagesDiv, scrollMessagesView, ref }: {
 			defaultValue={ InputRestore.value.input }
 		/>
 	);
-}
-
-export function useChatInput(): IChatInputHandler {
-	const context = useContext(chatInputContext);
-	AssertNotNullable(context);
-	return context;
 }
 
 function TypingIndicator(): ReactElement {

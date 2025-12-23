@@ -6,9 +6,9 @@ import { useCreateCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { useNavigatePandora } from '../../routing/navigate.ts';
+import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form.tsx';
-import { useGameStateOptional } from '../gameContext/gameStateContextProvider.tsx';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import './characterCreate.scss';
 

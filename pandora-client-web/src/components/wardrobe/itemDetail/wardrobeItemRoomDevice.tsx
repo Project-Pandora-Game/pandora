@@ -17,9 +17,9 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';

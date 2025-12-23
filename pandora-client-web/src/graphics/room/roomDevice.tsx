@@ -4,7 +4,6 @@ import {
 	AssertNever,
 	AssetFrameworkCharacterState,
 	CharacterSize,
-	CloneDeepMutable,
 	Coordinates,
 	EMPTY_ARRAY,
 	GetLogger,
@@ -34,7 +33,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
-import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
@@ -42,7 +41,7 @@ import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFilters } from '../common/visionFilters.tsx';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
+import { GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
@@ -51,7 +50,8 @@ import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, useRoomCharacterOffsets } from './roomCharacter.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel } from './roomCharacter.tsx';
+import { CalculateCharacterDeviceSlotPosition, useRoomCharacterOffsets } from './roomCharacterPosition.ts';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -809,51 +809,6 @@ function GraphicsLayerRoomDeviceSlot({ item, layer, charactersInDevice, characte
 			characterState={ characterState }
 		/>
 	);
-}
-
-export interface CalculateCharacterDeviceSlotPositionProps {
-	item: ItemRoomDevice;
-	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
-	characterState: AssetFrameworkCharacterState;
-	evaluator: AppearanceConditionEvaluator;
-	baseScale: number;
-	pivot: Readonly<PointLike>;
-}
-
-export function CalculateCharacterDeviceSlotPosition({ item, layer, characterState, evaluator, baseScale, pivot }: CalculateCharacterDeviceSlotPositionProps): {
-	/** Position on the room canvas */
-	position: Readonly<PointLike>;
-	/** Final scale of the character (both pose and room scaling applied) */
-	scale: Readonly<PointLike>;
-	/** Position of character's pivot (usually between feet; between knees when kneeling) */
-	pivot: Readonly<PointLike>;
-} {
-	const devicePivot = item.asset.definition.pivot;
-
-	const effectiveCharacterPosition = layer.characterPositionOverrides
-		?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item)))?.position
-			?? layer.characterPosition;
-
-	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
-	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
-
-	const scale = (effectiveCharacterPosition.disablePoseOffset ? 1 : baseScale) * (effectiveCharacterPosition.relativeScale ?? 1);
-
-	const backView = characterState.actualPose.view === 'back';
-
-	const scaleX = backView ? -1 : 1;
-
-	const actualPivot: PointLike = CloneDeepMutable(effectiveCharacterPosition.disablePoseOffset ? CHARACTER_PIVOT_POSITION : pivot);
-	if (effectiveCharacterPosition.pivotOffset != null) {
-		actualPivot.x += effectiveCharacterPosition.pivotOffset.x;
-		actualPivot.y += effectiveCharacterPosition.pivotOffset.y;
-	}
-
-	return {
-		position: { x, y },
-		scale: { x: scale * scaleX, y: scale },
-		pivot: actualPivot,
-	};
 }
 
 function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState }: {

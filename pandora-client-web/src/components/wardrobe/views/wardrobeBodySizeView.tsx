@@ -12,7 +12,8 @@ import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
 import { Column } from '../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
-import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
+import { ActionButtonHoverInfo, ActionProblemsContent } from '../wardrobeActionProblems.tsx';
+import { CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { BoneRowElement } from './wardrobePoseView.tsx';
 
@@ -89,7 +90,7 @@ export function WardrobeBodySizeGate({ children }: ChildrenProps): ReactElement 
 		return (
 			<Column padding='medium'>
 				<span>You cannot change this character's body.</span>
-				<ActionWarningContent problems={ checkResult.problems } prompt={ false } />
+				<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />
 				<button
 					ref={ setRef }
 					className={ classNames(
@@ -99,7 +100,7 @@ export function WardrobeBodySizeGate({ children }: ChildrenProps): ReactElement 
 					onClick={ onClick }
 					disabled={ processing }
 				>
-					<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
+					<ActionButtonHoverInfo checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
 					Request access
 				</button>
 			</Column>

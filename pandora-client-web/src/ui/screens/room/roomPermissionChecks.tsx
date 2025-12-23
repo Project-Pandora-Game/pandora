@@ -5,11 +5,11 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character.ts';
-import { useActionSpaceContext, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { useActionSpaceContext, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { DeviceOverlayState } from './roomState.ts';
 

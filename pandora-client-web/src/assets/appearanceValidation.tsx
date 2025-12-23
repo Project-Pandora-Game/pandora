@@ -11,7 +11,7 @@ import {
 } from 'pandora-common';
 import type { ReactNode } from 'react';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
-import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
+import { DescribeAttribute } from '../ui/components/chat/chatMessageAction.tsx';
 import { SPACE_ROLE_TEXT, SPACE_ROLE_TEXT_CUMULATIVE } from '../ui/components/commonInputs/spaceRoleSelect.tsx';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */

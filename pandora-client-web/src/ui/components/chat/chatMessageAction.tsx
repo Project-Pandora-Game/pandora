@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import type { Immutable } from 'immer';
 import {
 	Assert,
 	AssertNever,
@@ -8,13 +7,6 @@ import {
 	CHAT_ACTIONS,
 	CHAT_ACTIONS_FOLDED_EXTRA,
 	ChatActionDictionaryMetaEntry,
-	ChatMessageActionLogSchema,
-	ChatMessageActionSchema,
-	ChatMessageChatSchema,
-	ChatMessageDeletedSchema,
-	IChatSegment,
-	RoomIdSchema,
-	SpaceIdSchema,
 	type AssetManager,
 	type IChatMessageActionItem,
 	type ItemDisplayNameType,
@@ -23,71 +15,16 @@ import React, {
 	Fragment,
 	ReactElement,
 } from 'react';
-import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
-import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
+import { useGameState, useGlobalState, useStateFindItemById } from '../../../services/gameLogic/gameStateHooks.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
-import { RenderedLink } from './links.tsx';
-
-export const ChatMessageProcessedRoomDataSchema = z.object({
-	id: RoomIdSchema,
-	name: z.string(),
-});
-export type ChatMessageProcessedRoomData = z.infer<typeof ChatMessageProcessedRoomDataSchema>;
-
-export const ChatDeletedMessageProcessedSchema = ChatMessageDeletedSchema.extend({
-	/** The space this message was received in */
-	spaceId: SpaceIdSchema.nullable(),
-	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomIdSchema,
-});
-export type ChatDeletedMessageProcessed = z.infer<typeof ChatDeletedMessageProcessedSchema>;
-
-export const ChatNormalMessageProcessedSchema = ChatMessageChatSchema.and(z.object({
-	/** The space this message was received in */
-	spaceId: SpaceIdSchema.nullable(),
-	/** Room the message was said in */
-	roomData: ChatMessageProcessedRoomDataSchema,
-	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomIdSchema,
-	edited: z.boolean().optional(),
-	/** Identical action messages following one after another get combined into a single message to reduce spam. */
-	repetitions: z.number().optional(),
-}));
-export type ChatNormalMessageProcessed = z.infer<typeof ChatNormalMessageProcessedSchema>;
-
-export type ChatMessageProcessedDictionaryEntry = string | { text: string; rich: ReactElement; };
-export type ChatMessageProcessedDictionary<TK extends string = string> = Partial<Record<TK, ChatMessageProcessedDictionaryEntry>>;
-
-export const ChatActionMessagePreprocessedSchema = ChatMessageActionSchema.extend({
-	/** The space this message was received in */
-	spaceId: SpaceIdSchema.nullable(),
-	/** Rooms for which the action message is relevant. Messages concerning the whole space should set this to `null`. */
-	roomsData: ChatMessageProcessedRoomDataSchema.array().nullable(),
-	/** Id of a room the player character was in when the message was received. */
-	receivedRoomId: RoomIdSchema,
-	/** Identical action messages following one after another get combined into a single message to reduce spam. */
-	repetitions: z.number().optional(),
-});
-export type ChatActionMessagePreprocessed = z.infer<typeof ChatActionMessagePreprocessedSchema>;
-
-export type ChatActionMessageProcessed = Omit<ChatActionMessagePreprocessed, 'dictionary'> & {
-	dictionary?: ChatMessageProcessedDictionary;
-};
-
-export const ChatActionLogMessageProcessedSchema = ChatMessageActionLogSchema.extend({
-	/** The space this message was received in */
-	spaceId: SpaceIdSchema.nullable(),
-});
-export type ChatActionLogMessageProcessed = z.infer<typeof ChatActionLogMessageProcessedSchema>;
-
-export const ChatMessagePreprocessedSchema = z.union([ChatNormalMessageProcessedSchema, ChatDeletedMessageProcessedSchema, ChatActionMessagePreprocessedSchema, ChatActionLogMessageProcessedSchema]);
-export type ChatMessagePreprocessed = z.infer<typeof ChatMessagePreprocessedSchema>;
-
-export function IsActionMessage(message: ChatMessagePreprocessed): message is ChatActionMessagePreprocessed {
-	return message.type === 'action' || message.type === 'serverMessage';
-}
+import type {
+	ChatActionMessagePreprocessed,
+	ChatActionMessageProcessed,
+	ChatMessageProcessedDictionary,
+	ChatMessageProcessedDictionaryEntry,
+} from './chatMessageTypes.ts';
 
 function ActionMessageDictionaryTemplate(strings: TemplateStringsArray, ...substitutions: ChatMessageProcessedDictionaryEntry[]): ChatMessageProcessedDictionaryEntry {
 	Assert(strings.length === substitutions.length + 1);
@@ -236,31 +173,6 @@ export function DescribeAsset(assetManager: AssetManager, assetId: AssetId): str
 export function DescribeAttribute(assetManager: AssetManager, attributeName: string): string {
 	const attribute = assetManager.getAttributeDefinition(attributeName);
 	return attribute != null ? `${attribute.description}` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
-}
-
-export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index: number, allowLinkInNormal: boolean): ReactElement {
-	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
-		const url = new URL(contents);
-		return (
-			<RenderedLink key={ index } index={ index } url={ url } />
-		);
-	}
-	switch (type) {
-		case 'normal':
-			return <span key={ index }>{ contents }</span>;
-		case 'italic':
-			return <em key={ index }>{ contents }</em>;
-		case 'bold':
-			return <strong key={ index }>{ contents }</strong>;
-	}
-}
-
-export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>, allowLinkInNormal: boolean): string {
-	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
-		const url = new URL(contents);
-		return url.href;
-	}
-	return contents;
 }
 
 function GetActionText(action: ChatActionMessageProcessed, assetManager: AssetManager): string | undefined {

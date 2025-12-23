@@ -3,8 +3,8 @@ import { useState, type ReactElement } from 'react';
 import sourceCodeIcon from '../../../assets/icons/source-code.svg';
 import { IconButton } from '../../../components/common/button/button.tsx';
 import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
-import { useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import type { ChatActionLogMessageProcessed } from './chatMessages.tsx';
+import { useGameState, useGlobalState } from '../../../services/gameLogic/gameStateHooks.ts';
+import type { ChatActionLogMessageProcessed } from './chatMessageTypes.ts';
 import { DescribeGameLogicAction } from './chatMessagesDescriptions.tsx';
 
 export function ActionLogEntry({ entry }: {

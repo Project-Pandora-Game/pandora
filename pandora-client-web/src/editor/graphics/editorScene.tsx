@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { throttle } from 'lodash-es';
-import { AssertNotNullable, CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
+import { CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -12,13 +12,15 @@ import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
+import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { useEditor } from '../editorContextProvider.tsx';
 import { EditorServiceManagerContext } from '../services/editorServiceProvider.tsx';
-import { ResultCharacter, SetupCharacter } from './character/index.ts';
+import { ResultCharacter } from './character/resultCharacter.tsx';
+import { SetupCharacter } from './character/setupCharacter.tsx';
+import { EditorSceneContext } from './editorSceneContext.tsx';
 import { ImageExporter } from './export/imageExporter.ts';
-import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 
 function EditorColorPicker({ throttle: throttleMs }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -39,13 +41,6 @@ function EditorColorPicker({ throttle: throttleMs }: { throttle: number; }): Rea
 		/>
 	);
 }
-
-export type EditorSceneContext = {
-	contentRef: React.RefObject<PIXI.Container | null>;
-	appRef: React.RefObject<PIXI.Application | null>;
-};
-
-const EditorSceneContext = React.createContext<EditorSceneContext | null>(null);
 
 export function EditorScene({
 	id,
@@ -192,10 +187,4 @@ export function EditorResultScene(): ReactElement {
 			<ResultCharacter />
 		</EditorScene>
 	);
-}
-
-export function useEditorSceneContext(): EditorSceneContext {
-	const context = React.useContext(EditorSceneContext);
-	AssertNotNullable(context);
-	return context;
 }

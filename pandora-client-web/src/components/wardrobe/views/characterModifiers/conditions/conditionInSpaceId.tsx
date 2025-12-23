@@ -2,10 +2,10 @@ import { SpaceIdSchema, type SpaceId } from 'pandora-common';
 import { useState, type ReactElement } from 'react';
 import { Checkbox } from '../../../../../common/userInteraction/checkbox';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
+import { useSpaceInfo } from '../../../../../services/gameLogic/gameStateHooks.ts';
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { ModalDialog } from '../../../../dialog/dialog.tsx';
-import { useSpaceInfo } from '../../../../gameContext/gameStateContextProvider.tsx';
 import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionInSpaceId({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'inSpaceId'>): ReactElement {

@@ -8,7 +8,7 @@ import { RootErrorBoundary } from '../components/error/rootErrorBoundary.tsx';
 import { InterfaceSettingsProvider } from '../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider.tsx';
 import { useNullableObservable } from '../observable.ts';
-import { Editor } from './editor.tsx';
+import type { Editor } from './editor.tsx';
 import { EditorServiceManagerContextProvider, useEditorServiceOptional } from './services/editorServiceProvider.tsx';
 import type { EditorServices } from './services/editorServices.ts';
 

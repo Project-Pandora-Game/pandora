@@ -27,17 +27,18 @@ import wikiIcon from '../../assets/icons/wiki.svg';
 import { useFunctionBind } from '../../common/useFunctionBind.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useGameStateOptional, useGlobalState } from '../../services/gameLogic/gameStateHooks.ts';
 import { CharacterListInputActions } from '../../ui/components/characterListInput/characterListInput.tsx';
 import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
+import { UsageMeter } from '../common/usageMeter/usageMeter.tsx';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog.tsx';
-import { PermissionPromptData, useGameStateOptional, useGlobalState, type GameState } from '../gameContext/gameStateContextProvider.tsx';
+import type { GameState, PermissionPromptData } from '../gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HoverElement } from '../hoverElement/hoverElement.tsx';
-import { StorageUsageMeter } from '../wardrobe/wardrobeComponents.tsx';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -394,7 +395,7 @@ function PermissionConfigOverrides({ overrides, limit, setConfig }: { overrides:
 	return (
 		<Column padding='large'>
 			<h4>Character based overrides</h4>
-			<StorageUsageMeter title='Used' used={ Object.keys(overrides).length } limit={ limit } />
+			<UsageMeter title='Used' used={ Object.keys(overrides).length } limit={ limit } />
 			<br />
 			<PermissionConfigOverrideType type='yes' content={ values.allow } setConfig={ setConfig } />
 			<br />

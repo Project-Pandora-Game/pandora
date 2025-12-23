@@ -13,7 +13,7 @@ import {
 import { useMemo } from 'react';
 import { useCharacterDataOptional } from '../../character/character.ts';
 import { PlayerCharacter } from '../../character/player.ts';
-import { useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState } from './gameStateContextProvider.tsx';
+import { useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState } from '../../services/gameLogic/gameStateHooks.ts';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useGameStateOptional()?.player ?? null;

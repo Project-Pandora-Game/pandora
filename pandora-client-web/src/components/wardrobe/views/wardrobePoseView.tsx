@@ -3,33 +3,23 @@ import type { Immutable } from 'immer';
 import { capitalize, isEqual, throttle } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
-	AppearanceItemProperties,
 	ArmRotationSchema,
-	Assert,
 	AssetFrameworkCharacterState,
-	AssetFrameworkSpaceState,
 	AssetsPosePreset,
 	AssetsPosePresets,
 	BONE_MAX,
 	BONE_MIN,
 	BoneDefinition,
-	CharacterSize,
 	CharacterViewSchema,
 	CloneDeepMutable,
-	GetLogger,
 	LegsPoseSchema,
-	MergePartialAppearancePoses,
 	PartialAppearancePose,
 	ProduceAppearancePose,
 	type ArmPose,
-	type AssetManager,
 	type AssetsPosePresetCategory,
-	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
-	type ReadonlyAppearanceLimitTree,
-	type ServiceProvider,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import * as z from 'zod';
 import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
@@ -44,73 +34,22 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
-import { GraphicsCharacter, type GraphicsCharacterLayerFilter, type LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
-import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import type { ClientServices } from '../../../services/clientServices.ts';
-import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
-import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName.tsx';
+import { PoseButton, PoseButtonPreview } from '../poseDetail/poseButton.tsx';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
-import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
+import { ActionButtonHoverInfo, ActionProblemsContent } from '../wardrobeActionProblems.tsx';
+import { CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 
-type CheckedPosePreset = {
-	active: boolean;
-	requested: boolean;
-	available: boolean;
-	pose: PartialAppearancePose;
-	name: string;
-};
-
 const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
-
-const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, ReadonlyAppearanceLimitTree>();
-function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
-	const assetManager = characterState.assetManager;
-	// Always specifying extends allows us to strip any non-pose properties
-	const mergedPose = MergePartialAppearancePoses(pose, pose.optional ?? {});
-	// Cache the limits calculation as we have many buttons that can reuse this
-	let limits: ReadonlyAppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
-	if (limits === undefined) {
-		limits = AppearanceItemProperties(characterState.items).limits;
-		CHARACTER_STATE_LIMITS_CACHE.set(characterState, limits);
-	}
-	return {
-		pose: mergedPose,
-		requested: isEqual(
-			characterState.requestedPose,
-			ProduceAppearancePose(
-				characterState.requestedPose,
-				{
-					assetManager,
-					boneTypeFilter: 'pose',
-				},
-				mergedPose,
-			),
-		),
-		active: isEqual(
-			characterState.actualPose,
-			ProduceAppearancePose(
-				characterState.actualPose,
-				{
-					assetManager,
-					boneTypeFilter: 'pose',
-				},
-				mergedPose,
-			),
-		),
-		available: limits.validate(pose),
-		name: pose.name,
-	};
-}
 
 function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): Immutable<AssetsPosePresets> {
 	const assetManager = characterState.assetManager;
@@ -668,7 +607,7 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 		return (
 			<Column padding='medium'>
 				<span>You cannot pose this character.</span>
-				<ActionWarningContent problems={ checkResult.problems } prompt={ false } />
+				<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />
 				<button
 					ref={ setRef }
 					className={ classNames(
@@ -678,7 +617,7 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 					onClick={ onClick }
 					disabled={ processing }
 				>
-					<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
+					<ActionButtonHoverInfo checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
 					Request access
 				</button>
 			</Column>
@@ -687,182 +626,6 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 
 	return (
 		<>{ children }</>
-	);
-}
-
-export function PoseButton({ preset, preview, setPose, characterState }: {
-	preset: Immutable<AssetsPosePreset>;
-	preview?: Immutable<AssetsPosePresetPreview>;
-	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: PartialAppearancePose) => void;
-}): ReactElement {
-	const { name, available, requested, active, pose } = CheckPosePreset(preset, characterState);
-	return (
-		<SelectionIndicator
-			selected={ requested }
-			active={ active }
-			padding='tiny'
-			className={ classNames(
-				'pose',
-				{
-					['pose-unavailable']: !available,
-				},
-			) }
-		>
-			<Button
-				slim
-				onClick={ () => setPose(pose) }
-				className={ preview != null ? 'IconButton PoseButton flex-1' : 'flex-1 PoseButton' }
-			>
-				{
-					preview != null ? (
-						<>
-							<PoseButtonPreview
-								assetManager={ characterState.assetManager }
-								preset={ preset }
-								preview={ preview }
-							/>
-							<span>{ name }</span>
-						</>
-					) : (
-						<>{ name }</>
-					)
-				}
-			</Button>
-		</SelectionIndicator>
-	);
-}
-
-const PREVIEW_COLOR = 0xcccccc;
-const PREVIEW_COLOR_DIM = 0x666666;
-const PREVIEW_SIZE = 128;
-
-const PREVIEW_CACHE = new WeakMap<
-	AssetManager,
-	WeakMap<
-		Immutable<AssetsPosePresetPreview>,
-		WeakMap<
-			Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
-			HTMLCanvasElement
-		>
-	>
->();
-
-export async function GeneratePosePreview(
-	assetManager: AssetManager,
-	preview: Immutable<AssetsPosePresetPreview>,
-	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
-	serviceManager: ServiceProvider<ClientServices>,
-	previewSize: number,
-): Promise<HTMLCanvasElement> {
-	// Get a cache
-	let managerCache = PREVIEW_CACHE.get(assetManager);
-	if (managerCache == null) {
-		PREVIEW_CACHE.set(assetManager, (managerCache = new WeakMap()));
-	}
-
-	let previewCache = managerCache.get(preview);
-	if (previewCache == null) {
-		managerCache.set(preview, (previewCache = new WeakMap()));
-	}
-
-	let result = previewCache.get(preset);
-	if (result != null && result.width === previewSize && result.height === previewSize) {
-		return result;
-	}
-
-	const layerStateOverrideGetter: LayerStateOverrideGetter = (layer) => {
-		if (layer.type === 'mesh' && layer.previewOverrides != null) {
-			return {
-				color: (preview.highlight == null || preview.highlight.includes(layer.priority)) ? PREVIEW_COLOR : PREVIEW_COLOR_DIM,
-				alpha: layer.previewOverrides.alpha,
-			};
-		}
-		return undefined;
-	};
-
-	const layerFilter: GraphicsCharacterLayerFilter = (layer) => {
-		return layer.layer.type === 'mesh' && layer.layer.previewOverrides != null;
-	};
-
-	const pose = MergePartialAppearancePoses(preset, preset.optional);
-
-	const spaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
-	const previewCharacterState = AssetFrameworkCharacterState
-		.createDefault(assetManager, 'c0', spaceState)
-		.produceWithPose(preview.basePose ?? {}, 'pose')
-		.produceWithPose(pose, 'pose');
-
-	const scale = previewSize / preview.size;
-
-	result = await RenderGraphicsTreeInBackground(
-		<serviceManagerContext.Provider value={ serviceManager }>
-			<GraphicsCharacter
-				position={ { x: previewSize / 2, y: previewSize / 2 } }
-				pivot={ { x: (preview.x ?? ((CharacterSize.WIDTH - preview.size) / 2)) + preview.size / 2, y: preview.y + preview.size / 2 } }
-				scale={ { x: scale * (previewCharacterState.actualPose.view === 'back' ? -1 : 1), y: scale } }
-				angle={ previewCharacterState.actualPose.bones.character_rotation || 0 }
-				characterState={ previewCharacterState }
-				layerStateOverrideGetter={ layerStateOverrideGetter }
-				layerFilter={ layerFilter }
-			/>
-		</serviceManagerContext.Provider>,
-		{ x: 0, y: 0, width: previewSize, height: previewSize },
-		0,
-		0,
-	);
-	previewCache.set(preset, result);
-
-	return result;
-}
-
-function PoseButtonPreview({ assetManager, preset, preview }: {
-	assetManager: AssetManager;
-	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>;
-	preview: Immutable<AssetsPosePresetPreview>;
-}): ReactElement | null {
-	const serviceManager = useServiceManager();
-	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const { wardrobePosePreview } = useAccountSettings();
-
-	const dpr = useDevicePixelRatio();
-
-	useEffect(() => {
-		if (!wardrobePosePreview)
-			return;
-
-		let valid = true;
-
-		GeneratePosePreview(assetManager, preview, preset, serviceManager, PREVIEW_SIZE * dpr)
-			.then((result) => {
-				if (!valid || canvasRef.current == null)
-					return;
-
-				const { width, height } = canvasRef.current;
-				const ctx = canvasRef.current.getContext('2d');
-				Assert(ctx != null);
-				ctx.clearRect(0, 0, width, height);
-				ctx.drawImage(result, 0, 0, width, height);
-			})
-			.catch((err) => {
-				GetLogger('PoseButtonPreview')
-					.error('Error generating preview:', err);
-			});
-
-		return () => {
-			valid = false;
-		};
-	}, [assetManager, preset, preview, serviceManager, wardrobePosePreview, dpr]);
-
-	if (!wardrobePosePreview)
-		return null;
-
-	return (
-		<canvas
-			ref={ canvasRef }
-			width={ PREVIEW_SIZE * dpr }
-			height={ PREVIEW_SIZE * dpr }
-		/>
 	);
 }
 

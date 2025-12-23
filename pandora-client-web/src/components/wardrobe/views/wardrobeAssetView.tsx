@@ -26,13 +26,14 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { useObservable } from '../../../observable.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext.tsx';
+import { ActionButtonHoverInfo } from '../wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
-import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
 
@@ -402,7 +403,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		>
 			{
 				check != null ? (
-					<ActionWarning checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
+					<ActionButtonHoverInfo checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ listMode } />

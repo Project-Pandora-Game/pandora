@@ -7,9 +7,9 @@ import crossIcon from '../../../assets/icons/cross.svg';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { useResolveAccountName } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useResolveAccountName } from '../../../services/accountLogic/accountNameResolution.ts';
 import './accountListInput.scss';
 import { AccountListInputQuickSelectDialog, type AccountListInputAddButtonProps } from './accountListInputSelectionDialog.tsx';
 

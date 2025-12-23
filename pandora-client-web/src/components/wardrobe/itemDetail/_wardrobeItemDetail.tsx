@@ -32,8 +32,9 @@ import { FormCreateStringValidator } from '../../common/form/form.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { WardrobeAssetDetailContent } from '../assetDetail/wardrobeAssetDetail.tsx';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
+import { ActionProblemsContent } from '../wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
-import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { WardrobeActionButton } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { useWardrobeTargetItem } from '../wardrobeUtils.ts';
 import { WardrobeItemColorization } from './wardrobeItemColor.tsx';
@@ -338,7 +339,7 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 
 	const onClick = useCallback(() => {
 		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.getActionSlowdownTime() > 0)) {
-			toast(<ActionWarningContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
+			toast(<ActionProblemsContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		onStartEdit();

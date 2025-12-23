@@ -1,10 +1,10 @@
 import { type CharacterId, CharacterIdSchema } from 'pandora-common';
 import { type ReactElement, useState } from 'react';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
+import { useResolveCharacterName, useSpaceCharacters } from '../../../../../services/gameLogic/gameStateHooks.ts';
 import { Button } from '../../../../common/button/button.tsx';
 import { Column, Row } from '../../../../common/container/container.tsx';
 import { ModalDialog } from '../../../../dialog/dialog.tsx';
-import { useResolveCharacterName, useSpaceCharacters } from '../../../../gameContext/gameStateContextProvider.tsx';
 import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionCharacterPresent({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'characterPresent'>): ReactElement {

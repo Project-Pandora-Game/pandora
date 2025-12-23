@@ -4,8 +4,8 @@ import { RenderAppearanceActionProblem } from '../../../../assets/appearanceVali
 import { Column } from '../../../../components/common/container/container.tsx';
 import { OpenConfirmDialog } from '../../../../components/dialog/dialog.tsx';
 import { type GameState } from '../../../../components/gameContext/gameStateContextProvider.tsx';
-import { ActionWarningContent } from '../../../../components/wardrobe/wardrobeComponents.tsx';
-import { WardrobeCheckResultForConfirmationWarnings } from '../../../../components/wardrobe/wardrobeUtils.ts';
+import { ActionProblemsContent } from '../../../../components/wardrobe/wardrobeActionProblems.tsx';
+import { WardrobeCheckResultForConfirmationWarnings } from '../../../../components/wardrobe/wardrobeActionWarnings.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../persistentToast.ts';
 
 export function CommandDoGameAction(gameState: GameState, action: AppearanceAction): Promisable<boolean> {
@@ -30,7 +30,7 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 	const checkResult = ApplyAction(processingContext, action);
 
 	if (!checkResult.valid && checkResult.prompt == null) {
-		toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+		toast(<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
 		return false;
 	}
 

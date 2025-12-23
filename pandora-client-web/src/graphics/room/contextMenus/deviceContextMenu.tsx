@@ -10,19 +10,19 @@ import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
 import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
-import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
+import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
+import { ActionProblemsContent } from '../../../components/wardrobe/wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
-import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 
 function StoreDeviceMenu({ roomState, device, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -92,7 +92,7 @@ function MoveDeviceMenu({ roomState, device, close }: {
 			return;
 		}
 		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
-			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+			toast(<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		setRoomSceneMode({ mode: 'moveDevice', deviceItemId: device.id });

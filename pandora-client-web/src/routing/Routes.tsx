@@ -7,7 +7,6 @@ import { CharacterCreate } from '../components/characterCreate/characterCreate.t
 import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';
 import { DivContainer } from '../components/common/container/container.tsx';
 import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider.tsx';
-import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
 import { AuthPage } from '../components/login/authPage.tsx';
@@ -17,6 +16,7 @@ import { WardrobeRouter } from '../components/wardrobe/wardrobe.tsx';
 import { ShardConnectionState } from '../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../observable.ts';
 import { useCurrentAccount } from '../services/accountLogic/accountManagerHooks.ts';
+import { useGameStateOptional } from '../services/gameLogic/gameStateHooks.ts';
 import { useService } from '../services/serviceProvider.tsx';
 import { Freeze } from '../ui/components/common/freeze.tsx';
 import { RoomScreen } from '../ui/screens/room/room.tsx';

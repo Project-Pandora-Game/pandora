@@ -1,10 +1,10 @@
 import { AccountId, CharacterId, CharacterIdSchema } from 'pandora-common';
 import { ReactElement } from 'react';
 import { useParams } from 'react-router';
+import { useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
 import { Column } from '../common/container/container.tsx';
 import { BackLink, useNavigateBack } from '../common/link/back.tsx';
 import { Tab, TabContainer, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
-import { useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
 import { AccountProfile } from './accountProfile.tsx';
 import { CharacterProfile } from './characterProfile.tsx';
 import './profileScreens.scss';

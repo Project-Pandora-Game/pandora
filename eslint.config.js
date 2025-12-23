@@ -346,7 +346,6 @@ export default tsEslint.config(
 		},
 		rules: {
 			// Disabled recommended rules
-			'import/no-cycle': 'off',
 			'react/prop-types': 'off',
 			// NOs
 			'react/no-unsafe': ['error', { 'checkAliases': true }],

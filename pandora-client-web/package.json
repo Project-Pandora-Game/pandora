@@ -28,7 +28,7 @@
 		"start": "pnpm dev"
 	},
 	"dependencies": {
-		"@hcaptcha/react-hcaptcha": "1.17.1",
+		"@hcaptcha/react-hcaptcha": "1.17.2",
 		"bowser": "2.13.1",
 		"classnames": "2.5.1",
 		"client-zip": "2.5.0",

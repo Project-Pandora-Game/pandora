@@ -20,7 +20,7 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, ReactElement, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
@@ -36,7 +36,7 @@ import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructio
 import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { Sprite } from '../baseComponents/sprite.ts';
+import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { PointLike } from '../common/point.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
 import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
@@ -44,7 +44,7 @@ import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFi
 import { GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
-import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
+import { ContextCullClockwise, SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
 import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
 import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
@@ -753,16 +753,12 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
 	}, [evaluator, item, layer]);
 
-	const offset = useMemo<Coordinates | undefined>(() => {
-		return layer.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ?? layer.offset;
+	const offset = useMemo((): Coordinates => {
+		return layer.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ??
+			{ x: layer.x, y: layer.y };
 	}, [evaluator, item, layer]);
 
-	const {
-		image: resizedImage,
-		scale,
-	} = useImageResolutionAlternative(image);
-
-	const texture = useTexture(resizedImage, undefined);
+	const texture = useTexture(useImageResolutionAlternative(image).image, undefined);
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
@@ -770,12 +766,48 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 
 	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
 
+	const cullClockwise = useContext(ContextCullClockwise);
+	const cullingState = useMemo(() => {
+		const pixiState = PIXI.State.for2d();
+		pixiState.culling = true;
+		pixiState.clockwiseFrontFace = cullClockwise;
+		return pixiState;
+	}, [cullClockwise]);
+
+	const geometryData = useMemo(() => {
+		const { width, height } = layer;
+
+		const result = {
+			positions: new Float32Array([
+				0, 0,
+				width, 0,
+				0, height,
+				width, height,
+			]),
+			uvs: new Float32Array([
+				0, 0,
+				1, 0,
+				0, 1,
+				1, 1,
+			]),
+			indices: new Uint32Array([
+				3, 1, 0,
+				0, 2, 3,
+			]),
+		} as const;
+
+		return result;
+	}, [layer]);
+
 	return (
-		<Sprite
+		<PixiMesh
 			ref={ layer.clipToRoom ? applyRoomMask : null }
-			x={ offset?.x ?? 0 }
-			y={ offset?.y ?? 0 }
-			scale={ scale }
+			x={ offset.x }
+			y={ offset.y }
+			state={ cullingState }
+			vertices={ geometryData.positions }
+			uvs={ geometryData.uvs }
+			indices={ geometryData.indices }
 			texture={ texture }
 			tint={ color }
 			alpha={ alpha }

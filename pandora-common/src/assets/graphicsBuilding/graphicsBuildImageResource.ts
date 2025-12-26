@@ -1,5 +1,6 @@
 import type { Immutable } from 'immer';
 import { CloneDeepMutable } from '../../utility/misc.ts';
+import type { Size } from '../graphics/common.ts';
 import type { LayerImageOverride, LayerImageSetting } from '../graphics/layers/common.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
 
@@ -26,6 +27,7 @@ export interface GraphicsBuildImageResource {
 	addDownscaledImage(resolution: number): GraphicsBuildImageResource;
 	addSizeCheck(exactWidth: number, exactHeight: number): void;
 
+	getSize(): Promise<Size>;
 	getContentBoundingBox(): Promise<ImageBoundingBox>;
 }
 

@@ -355,7 +355,7 @@ async function LoadAssetImageLayerSingle(
 		}
 	}
 
-	// Adjust layer size of we trimmed it down
+	// Adjust layer size if we trimmed it down
 	if (imageTrimArea != null) {
 		const left = imageTrimArea[0];
 		const top = imageTrimArea[1];

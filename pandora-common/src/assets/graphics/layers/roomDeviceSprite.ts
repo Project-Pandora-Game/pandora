@@ -1,15 +1,10 @@
 import * as z from 'zod';
-import { CoordinatesSchema } from '../common.ts';
+import { CoordinatesSchema, RectangleSchema } from '../common.ts';
 import { ConditionSchema } from '../conditions.ts';
 import { LayerImageOverrideSchema } from './common.ts';
 
-export const RoomDeviceGraphicsLayerSpriteSchema = z.object({
+export const RoomDeviceGraphicsLayerSpriteSchema = RectangleSchema.extend({
 	type: z.literal('sprite'),
-	/**
-	 * Offset of this sprite relative to device's origin point
-	 * @default { x: 0, y: 0 }
-	 */
-	offset: CoordinatesSchema.optional(),
 	offsetOverrides: z.object({
 		offset: CoordinatesSchema,
 		condition: ConditionSchema,

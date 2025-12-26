@@ -1,16 +1,15 @@
 import * as z from 'zod';
-import { CoordinatesSchema } from '../../graphics/common.ts';
+import { CoordinatesSchema, RectangleSchema } from '../../graphics/common.ts';
 import { ConditionSchema } from '../../graphics/conditions.ts';
 import { LayerImageOverrideSchema } from '../../graphics/layers/common.ts';
 
-export const GraphicsSourceRoomDeviceLayerSpriteSchema = z.object({
+export const GraphicsSourceRoomDeviceLayerSpriteSchema = RectangleSchema.extend({
 	type: z.literal('sprite'),
 	name: z.string().optional(),
 	/**
 	 * Offset of this sprite relative to cage's origin point
 	 * @default { x: 0, y: 0 }
 	 */
-	offset: CoordinatesSchema.optional(),
 	offsetOverrides: z.object({
 		offset: CoordinatesSchema,
 		condition: ConditionSchema,

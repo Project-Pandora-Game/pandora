@@ -48,8 +48,8 @@ export function GetTextureBoundingBox(texture: Texture, app: Application): Image
 	Assert(imageData.height === height);
 	Assert(imageData.data.length === (4 * width * height));
 
-	let left = width - 1;
-	let top = height - 1;
+	let left = width;
+	let top = height;
 	let rightExclusive = 0;
 	let bottomExclusive = 0;
 
@@ -70,7 +70,7 @@ export function GetTextureBoundingBox(texture: Texture, app: Application): Image
 	let result: ImageBoundingBox;
 
 	// Special case if the image is empty
-	if (left === (width - 1) && top === (height - 1) && rightExclusive === 0 && bottomExclusive === 0) {
+	if (left === width && top === height && rightExclusive === 0 && bottomExclusive === 0) {
 		result = {
 			left: 0,
 			top: 0,

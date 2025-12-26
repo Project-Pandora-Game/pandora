@@ -1,5 +1,5 @@
 import { type Immutable } from 'immer';
-import { Assert, EMPTY_ARRAY, LoadAssetLayer, LoadAssetRoomDeviceLayer, type Asset, type AssetGraphicsRoomDeviceDefinition, type AssetGraphicsWornDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildContextRoomDeviceData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger, type RoomDeviceGraphicsLayer } from 'pandora-common';
+import { Assert, EMPTY_ARRAY, LoadAssetLayer, LoadAssetRoomDeviceLayer, type Asset, type AssetGraphicsRoomDeviceDefinition, type AssetGraphicsWornDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildContextRoomDeviceData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger, type RoomDeviceGraphicsLayer, type Size } from 'pandora-common';
 import { Application, Rectangle, Texture } from 'pixi.js';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import { CreatePixiApplication } from '../../graphics/graphicsAppManager.ts';
@@ -67,6 +67,14 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	public addSizeCheck(_exactWidth: number, _exactHeight: number): void {
 		// NOOP
 	}
+
+	public getSize(): Promise<Size> {
+		return Promise.resolve({
+			width: this.texture.frame.width,
+			height: this.texture.frame.height,
+		});
+	}
+
 	public async getContentBoundingBox(): Promise<ImageBoundingBox> {
 		if (BuildingPixiApplicationPromise == null) {
 			BuildingPixiApplicationPromise = CreatePixiApplication(false);

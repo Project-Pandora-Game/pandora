@@ -83,6 +83,10 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 					break;
 				case 'sprite':
 					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: 1,
+						height: 1,
 						type: 'sprite',
 						name: '',
 						image: '',

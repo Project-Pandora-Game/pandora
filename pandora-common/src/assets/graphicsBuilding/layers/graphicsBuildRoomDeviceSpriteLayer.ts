@@ -5,7 +5,7 @@ import type { LayerImageOverride } from '../../graphics/layers/common.ts';
 import type { RoomDeviceGraphicsLayerSprite } from '../../graphics/layers/roomDeviceSprite.ts';
 import type { GraphicsSourceRoomDeviceLayerSprite } from '../../graphicsSource/index.ts';
 import type { GraphicsBuildContext, GraphicsBuildContextRoomDeviceData } from '../graphicsBuildContext.ts';
-import { LoadLayerImage, type ImageBoundingBox } from '../graphicsBuildImageResource.ts';
+import { LoadLayerImage, type LayerImageTrimArea } from '../graphicsBuildImageResource.ts';
 
 export async function LoadAssetRoomDeviceSpriteLayer(
 	layer: Immutable<GraphicsSourceRoomDeviceLayerSprite>,
@@ -21,78 +21,94 @@ export async function LoadAssetRoomDeviceSpriteLayer(
 		.filter(Boolean),
 	));
 
+	let imageTrimArea: LayerImageTrimArea = null;
+	if (!context.generateOptimizedTextures) {
+		// NOOP
+	} else {
+		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
+
+		// Get all the image's bounding boxes for this layer
+		const boundingBoxes = await Promise.all(images.map((i) => context.loadImage(i).getContentBoundingBox()));
+		// Calculate total image bounding boxes
+		const imageBoundingBox: LayerImageTrimArea = [1, 1, 0, 0]; // left, top, rightExclusive, bottomExclusive
+		for (const image of boundingBoxes) {
+			if (image.width === 0 || image.height === 0)
+				continue;
+			imageBoundingBox[0] = Math.min(imageBoundingBox[0], image.left / image.width);
+			imageBoundingBox[1] = Math.min(imageBoundingBox[1], image.top / image.height);
+			imageBoundingBox[2] = Math.max(imageBoundingBox[2], image.rightExclusive / image.width);
+			imageBoundingBox[3] = Math.max(imageBoundingBox[3], image.bottomExclusive / image.height);
+		}
+
+		if (!(imageBoundingBox[0] < imageBoundingBox[2]) || !(imageBoundingBox[1] < imageBoundingBox[3])) {
+			logger.warning('All layer\'s images are empty. This will produce empty mesh.');
+			imageBoundingBox[0] = 0;
+			imageBoundingBox[1] = 0;
+		}
+
+		// Use image bounding box as trim area, scaled to the original layer size.
+		// There are no points to consider in this layer type
+		imageTrimArea = [
+			Math.floor(imageBoundingBox[0] * layer.width),
+			Math.floor(imageBoundingBox[1] * layer.height),
+			Math.ceil(imageBoundingBox[2] * layer.width),
+			Math.ceil(imageBoundingBox[3] * layer.height),
+		];
+
+		// Check against bad conditions
+		Assert(imageTrimArea[0] >= 0);
+		Assert(imageTrimArea[0] <= layer.width);
+		Assert(imageTrimArea[1] >= 0);
+		Assert(imageTrimArea[1] <= layer.height);
+		Assert(imageTrimArea[2] >= 0);
+		Assert(imageTrimArea[2] <= layer.width);
+		Assert(imageTrimArea[3] >= 0);
+		Assert(imageTrimArea[3] <= layer.height);
+
+		if (!(imageTrimArea[0] < imageTrimArea[2])) {
+			logger.warning('Trim area has non-positive width. Does the layer have no non-empty images?');
+			imageTrimArea = null;
+		} else if (!(imageTrimArea[1] < imageTrimArea[3])) {
+			logger.warning('Trim area has non-positive height. Does the layer have no non-empty images?');
+			imageTrimArea = null;
+		} else if (!context.generateOptimizedTextures) {
+			imageTrimArea = null;
+		}
+	}
+
+	const normalizedImageTrimArea: LayerImageTrimArea = imageTrimArea != null ? [
+		imageTrimArea[0] / layer.width,
+		imageTrimArea[1] / layer.height,
+		imageTrimArea[2] / layer.width,
+		imageTrimArea[3] / layer.height,
+	] : null;
+
 	const result: RoomDeviceGraphicsLayerSprite = {
+		x: layer.x,
+		y: layer.y,
+		width: layer.width,
+		height: layer.height,
 		type: 'sprite',
-		image: '',
-		imageOverrides: undefined,
+		image: layer.image && LoadLayerImage(layer.image, context, normalizedImageTrimArea),
+		imageOverrides: layer.imageOverrides?.map((override): LayerImageOverride => ({
+			...CloneDeepMutable(override),
+			image: override.image && LoadLayerImage(override.image, context, normalizedImageTrimArea),
+		})),
 		colorizationKey: layer.colorizationKey,
-		offset: CloneDeepMutable(layer.offset),
 		offsetOverrides: CloneDeepMutable(layer.offsetOverrides),
 		clipToRoom: layer.clipToRoom,
 	};
 
-	let minX = Infinity;
-	let minY = Infinity;
-	const boundingBoxes = new Map<string, ImageBoundingBox>();
-	if (!context.generateOptimizedTextures) {
-		// NOOP
-		minX = 0;
-		minY = 0;
-	} else {
-		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
+	// Adjust layer size if we trimmed it down
+	if (imageTrimArea != null) {
+		const left = imageTrimArea[0];
+		const top = imageTrimArea[1];
+		result.x += left;
+		result.y += top;
 
-		const boundingBoxesCalculation = await Promise.all(
-			images.map((i) => context.loadImage(i).getContentBoundingBox().then((box) => [i, box] as const)),
-		);
-		for (const [image, boundingBox] of boundingBoxesCalculation) {
-			boundingBoxes.set(image, boundingBox);
-
-			if (boundingBox.width === 0 || boundingBox.height === 0)
-				continue;
-
-			minX = Math.min(minX, boundingBox.left);
-			minY = Math.min(minY, boundingBox.top);
-		}
-
-		Assert(minX >= 0);
-		Assert(minY >= 0);
-		if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
-			logger.warning('All layer\'s images are empty.');
-			minX = 0;
-			minY = 0;
-		} else {
-			result.offset ??= { x: 0, y: 0 };
-			result.offset.x += minX;
-			result.offset.y += minY;
-			for (const override of (result.offsetOverrides ?? [])) {
-				override.offset.x += minX;
-				override.offset.y += minY;
-			}
-		}
+		result.width = imageTrimArea[2] - left;
+		result.height = imageTrimArea[3] - top;
 	}
-
-	function loadLayerImage(image: string, boundingBox?: ImageBoundingBox): string {
-		if (boundingBox != null) {
-			Assert(minX <= boundingBox.left);
-			Assert(minY <= boundingBox.top);
-
-			return LoadLayerImage(image, context, [
-				minX / boundingBox.width,
-				minY / boundingBox.height,
-				boundingBox.rightExclusive / boundingBox.width,
-				boundingBox.bottomExclusive / boundingBox.height,
-			]);
-		}
-
-		return LoadLayerImage(image, context, null);
-	}
-
-	result.image = layer.image && loadLayerImage(layer.image, boundingBoxes.get(layer.image));
-	result.imageOverrides = layer.imageOverrides
-		?.map((override): LayerImageOverride => ({
-			...CloneDeepMutable(override),
-			image: override.image && loadLayerImage(override.image, boundingBoxes.get(override.image)),
-		}));
 
 	if (result.colorizationKey != null && !context.builtAssetData.colorizationKeys.has(result.colorizationKey)) {
 		logger.warning(`colorizationKey ${result.colorizationKey} outside of defined colorization keys [${[...context.builtAssetData.colorizationKeys].join(', ')}]`);

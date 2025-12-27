@@ -34,6 +34,7 @@ import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
 import { EditorBuildAssetGraphicsWornContext } from '../../assets/editorAssetGraphicsBuilding.ts';
 import { EditorAssetGraphicsManager, useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
+import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 
@@ -72,7 +73,9 @@ export function LayerAutoMeshUI({ layer }: {
 	);
 }
 
-function LayerNormalMapSettings({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
+export function LayerNormalMapSettings({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'> | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'autoSprite'>;
+}): ReactElement {
 	const { normalMap } = useObservable(layer.definition);
 
 	return (

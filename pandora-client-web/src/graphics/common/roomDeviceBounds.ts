@@ -17,15 +17,15 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, gr
 
 	for (const layer of graphics.layers) {
 		if (layer.type === 'sprite') {
-			const offsetX = Math.min(layer.offset?.x ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.x)) ?? layer.offset?.x ?? 0);
-			const offsetY = Math.min(layer.offset?.y ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.y)) ?? layer.offset?.y ?? 0);
+			const offsetXmin = min([layer.x ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
+			const offsetXmax = max([layer.x ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
+			const offsetYmin = min([layer.y ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.y) ?? [])]) ?? 0;
+			const offsetYmax = max([layer.y ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.y) ?? [])]) ?? 0;
 
-			itemLeft = Math.min(itemLeft, offsetX);
-			itemTop = Math.min(itemTop, offsetY);
-			if (offsetX < definition.pivot.x) {
-				const width = 2 * (definition.pivot.x - offsetX);
-				itemRight = Math.max(itemRight, offsetX + width);
-			}
+			itemLeft = Math.min(itemLeft, offsetXmin);
+			itemTop = Math.min(itemTop, offsetYmin);
+			itemRight = Math.max(itemRight, offsetXmax + layer.width);
+			itemBottom = Math.max(itemBottom, offsetYmax + layer.height);
 		} else if (layer.type === 'slot') {
 			for (const position of [layer.characterPosition, ...(layer.characterPositionOverrides ?? []).map((o) => o.position)]) {
 				const characterScale = position.relativeScale ?? 1;

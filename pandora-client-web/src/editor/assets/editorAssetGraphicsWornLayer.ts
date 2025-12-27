@@ -44,34 +44,6 @@ export class EditorAssetGraphicsWornLayerContainer<TLayer extends GraphicsSource
 		this._definition.produceImmer(producer);
 	}
 
-	public setHeight(height: number): void {
-		if (height > 0) {
-			this.modifyDefinition((d) => {
-				d.height = height;
-			});
-		}
-	}
-
-	public setWidth(width: number): void {
-		if (width > 0) {
-			this.modifyDefinition((d) => {
-				d.width = width;
-			});
-		}
-	}
-
-	public setXOffset(offset: number): void {
-		this.modifyDefinition((d) => {
-			d.x = offset;
-		});
-	}
-
-	public setYOffset(offset: number): void {
-		this.modifyDefinition((d) => {
-			d.y = offset;
-		});
-	}
-
 	public setName(name: string): void {
 		this.modifyDefinition((d) => {
 			d.name = name;

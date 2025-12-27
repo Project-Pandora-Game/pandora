@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { SortPathStrings, type AtomicCondition, type Condition, type GraphicsSourceLayer } from 'pandora-common';
+import { Assert, SortPathStrings, type AtomicCondition, type Condition } from 'pandora-common';
 import { ReactElement, useId, useMemo, type ReactNode } from 'react';
 import { useEvent } from '../../../common/useEvent.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -8,20 +8,29 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
+import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetGraphicsBase.ts';
 import { EditorConditionInput, type EditorConditionInputMetadata } from './conditionEditor.tsx';
 
-export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
+export function LayerHeightAndWidthSetting({ layer }: {
+	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'autoSprite'>;
+}): ReactElement | null {
 	const id = useId();
-	const { width, height } = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+	const { width, height } = useObservable(layer.definition);
 
 	const onChangeHeight = useEvent((newValue: number) => {
-		layer.setHeight(newValue);
+		Assert(newValue > 0);
+		layer.modifyDefinition((d) => {
+			d.height = newValue;
+		});
 	});
 
 	const onChangeWidth = useEvent((newValue: number) => {
-		layer.setWidth(newValue);
+		Assert(newValue > 0);
+		layer.modifyDefinition((d) => {
+			d.width = newValue;
+		});
 	});
 
 	return (
@@ -44,6 +53,7 @@ export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphi
 				id={ id + ':width' }
 				value={ width }
 				onChange={ onChangeWidth }
+				min={ 1 }
 				className='area-xInput'
 			/>
 			<label className='area-yLabel' htmlFor={ id + ':height' }>
@@ -53,6 +63,7 @@ export function LayerHeightAndWidthSetting({ layer }: { layer: EditorAssetGraphi
 				id={ id + ':height' }
 				value={ height }
 				onChange={ onChangeHeight }
+				min={ 1 }
 				className='area-yInput'
 			/>
 		</div>
@@ -95,18 +106,24 @@ export function LayerOffsetSettingTemplate({ x, y, setX, setY, title }: {
 	);
 }
 
-export function LayerOffsetSetting({ layer }: { layer: EditorAssetGraphicsWornLayer; }): ReactElement | null {
+export function LayerOffsetSetting({ layer }: {
+	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'autoSprite'>;
+}): ReactElement | null {
 	const {
 		x: layerXOffset,
 		y: layerYOffset,
-	} = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+	} = useObservable(layer.definition);
 
 	const onChangeX = useEvent((newValue: number) => {
-		layer.setXOffset(newValue);
+		layer.modifyDefinition((d) => {
+			d.x = newValue;
+		});
 	});
 
 	const onChangeY = useEvent((newValue: number) => {
-		layer.setYOffset(newValue);
+		layer.modifyDefinition((d) => {
+			d.y = newValue;
+		});
 	});
 
 	return (

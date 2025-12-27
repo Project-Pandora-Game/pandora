@@ -1,5 +1,5 @@
 import { castDraft, produce, type Immutable } from 'immer';
-import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride } from 'pandora-common';
+import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride, type RoomDeviceLayerImageOverride } from 'pandora-common';
 import { ReactElement, useCallback, useId, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -11,7 +11,7 @@ import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
-import { LayerImageSelectInput, LayerOffsetSettingTemplate, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
+import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
 import { EditorLayerColorPicker, LayerColorizationSetting } from './layerMesh.tsx';
 
 export function LayerRoomDeviceSpriteUI({ layer }: {
@@ -24,7 +24,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 		asset = undefined;
 
 	const {
-		offset,
+		x, y,
 		offsetOverrides,
 		clipToRoom,
 		image,
@@ -44,7 +44,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
 	}, [evaluator, wornItem]);
 
-	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
+	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<RoomDeviceLayerImageOverride>>>(({ entry, update }) => {
 		return (
 			<>
 				<LayerImageSelectInput
@@ -59,9 +59,6 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 				{ entry.normalMapImage !== undefined ? (
 					<span>This entry has Editor-unsupported property <code>normalMapImage</code></span>
 				) : null }
-				{ entry.uvPose !== undefined ? (
-					<span>This entry has Editor-unsupported property <code>uvPose</code></span>
-				) : null }
 			</>
 		);
 	}, [layer]);
@@ -69,7 +66,8 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 	return (
 		<>
 			<hr />
-			<OffsetSetting layer={ layer } />
+			<LayerHeightAndWidthSetting layer={ layer } />
+			<LayerOffsetSetting layer={ layer } />
 			<h4>Offset overrides</h4>
 			<SettingConditionOverrideTemplate<Immutable<NonNullable<GraphicsSourceRoomDeviceLayerSprite['offsetOverrides']>[number]>>
 				overrides={ offsetOverrides ?? EMPTY_ARRAY }
@@ -87,7 +85,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 				withConditions={ (entry, newConditions) => produce(entry, (d) => {
 					d.condition = castDraft(newConditions);
 				}) }
-				makeNewEntry={ () => ({ offset: { x: offset?.x ?? 0, y: offset?.y ?? 0 }, condition: [[]] }) }
+				makeNewEntry={ () => ({ offset: { x, y }, condition: [[]] }) }
 				conditionEvalutator={ evaluateCondition }
 				conditionsMetadata={ useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]) }
 			/>
@@ -201,51 +199,3 @@ const SlotPositionOverridesDetail: SettingConditionOverrideTemplateDetails<Immut
 			</div>
 		);
 	};
-
-function OffsetSetting({ layer }: { layer: EditorAssetGraphicsRoomDeviceLayer<'sprite'>; }): ReactElement | null {
-	const {
-		offset,
-	} = useObservable(layer.definition);
-
-	return (
-		<LayerOffsetSettingTemplate
-			x={ offset?.x ?? 0 }
-			y={ offset?.y ?? 0 }
-			setX={ (newValue: number) => {
-				layer.modifyDefinition((d) => {
-					d.offset ??= { x: 0, y: 0 };
-					d.offset.x = newValue;
-					if (d.offset.x === 0 && d.offset.y === 0) {
-						delete d.offset;
-					}
-				});
-			} }
-			setY={ (newValue: number) => {
-				layer.modifyDefinition((d) => {
-					d.offset ??= { x: 0, y: 0 };
-					d.offset.y = newValue;
-					if (d.offset.x === 0 && d.offset.y === 0) {
-						delete d.offset;
-					}
-				});
-			} }
-			title={ (
-				<>
-					<span>
-						Layer Offset
-					</span>
-					<ContextHelpButton>
-						<p>
-							These two values define how much the current layer is set off in the X- and Y-axis.<br />
-							This way you will be able to place an item higher or lower relative to the device's pivot.
-						</p>
-						<p>
-							A positive x-value will move the image to the right, a negative one to the left.<br />
-							A positive y-value will move the image to the bottom, a negative one to the top.
-						</p>
-					</ContextHelpButton>
-				</>
-			) }
-		/>
-	);
-}

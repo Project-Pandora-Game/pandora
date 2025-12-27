@@ -28,13 +28,16 @@ import { SortSpaceCharacters } from '../../components/characterList/sortCharacte
 import { ShareButton } from '../../components/common/shareButton.tsx';
 import './roomPhoto.scss';
 
-export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, characters, globalState, roomState, characterNames }: {
+export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, noRoomBackground = false, backgroundAlpha, characters, globalState, roomState, characterNames }: {
 	roomState: AssetFrameworkRoomState;
 	globalState: AssetFrameworkGlobalState;
 	quality: 'roomSize' | '4K' | '1080p' | '720p' | '360p';
 	trim: boolean;
 	serviceManager: ServiceProvider<ClientServices>;
 	noGhost: boolean;
+	/** @default false */
+	noRoomBackground?: boolean;
+	backgroundAlpha?: number;
 	characters: readonly Character<ICharacterRoomData>[];
 	characterNames: boolean;
 }): Promise<HTMLCanvasElement> {
@@ -89,14 +92,16 @@ export async function CreateRoomPhoto({ quality, trim, serviceManager, noGhost, 
 							characters={ characters }
 							globalState={ globalState }
 							room={ roomState }
-							showCharacterNames={ characterNames } />
+							showCharacterNames={ characterNames }
+							noRoomBackground={ noRoomBackground }
+						/>
 					</Container>
 				</VisionFilterBypass>
 			</serviceManagerContext.Provider>
 		),
 		{ x: 0, y: 0, width, height },
 		0x000000,
-		1,
+		backgroundAlpha ?? 1,
 	);
 }
 
@@ -311,6 +316,7 @@ function RoomPhotoDialogRoomControls({ show, setPhoto }: {
 	const [showCharacters, setShowCharacters] = useState<boolean>(true);
 	const [characterNames, setCharacterNames] = useState<boolean>(false);
 	const [noGhost, setNoGhost] = useState<boolean>(true);
+	const [noRoomBackground, setNoRoomBackground] = useState<boolean>(false);
 
 	const roomState = useMemo(() => {
 		const roomStateInner = globalState.space.getRoom(playerState.currentRoom);
@@ -330,6 +336,8 @@ function RoomPhotoDialogRoomControls({ show, setPhoto }: {
 			noGhost,
 			characters: showCharacters ? characters : [],
 			characterNames,
+			noRoomBackground,
+			backgroundAlpha: noRoomBackground ? 0 : 1,
 		});
 	}, (resultCanvas) => {
 		setPhoto(resultCanvas);
@@ -378,6 +386,10 @@ function RoomPhotoDialogRoomControls({ show, setPhoto }: {
 					</Row>
 				</Column>
 			</fieldset>
+			<Row alignY='center'>
+				<Checkbox id={ id + '-noRoomBackground' } checked={ noRoomBackground } onChange={ setNoRoomBackground } />
+				<label htmlFor={ id + '-noRoomBackground' }>Transparent room background</label>
+			</Row>
 			{ (
 				((quality === 'roomSize' || quality === '4K') && textureResolution < 1) ||
 				((quality === '1080p') && textureResolution < 0.5)

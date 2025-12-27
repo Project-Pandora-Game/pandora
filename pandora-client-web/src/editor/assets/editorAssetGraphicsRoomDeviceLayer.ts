@@ -2,6 +2,7 @@ import { Draft, Immutable, freeze } from 'immer';
 import {
 	AssertNever,
 	CloneDeepMutable,
+	type GraphicsSourceRoomDeviceAutoSpriteLayer,
 	type GraphicsSourceRoomDeviceLayer,
 	type GraphicsSourceRoomDeviceLayerMesh,
 	type GraphicsSourceRoomDeviceLayerSlot,
@@ -57,6 +58,8 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSlot>(asset, definition);
 			case 'sprite':
 				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSprite>(asset, definition);
+			case 'autoSprite':
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceAutoSpriteLayer>(asset, definition);
 			case 'mesh':
 				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerMesh>(asset, definition);
 			case 'text':
@@ -83,9 +86,30 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 					break;
 				case 'sprite':
 					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: 1,
+						height: 1,
 						type: 'sprite',
 						name: '',
 						image: '',
+					};
+					break;
+				case 'autoSprite':
+					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: 1,
+						height: 1,
+						name: '',
+						type: 'autoSprite',
+						graphicalLayers: [
+							{ name: '' },
+						],
+						variables: [],
+						imageMap: {
+							'': [''],
+						},
 					};
 					break;
 				case 'mesh':

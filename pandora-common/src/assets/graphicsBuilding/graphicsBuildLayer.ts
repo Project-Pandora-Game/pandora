@@ -6,6 +6,7 @@ import type { GraphicsSourceLayer, GraphicsSourceRoomDeviceLayer } from '../grap
 import type { GraphicsBuildContext, GraphicsBuildContextAssetData, GraphicsBuildContextRoomDeviceData } from './graphicsBuildContext.ts';
 import { LoadAssetAutoMeshLayer } from './layers/graphicsBuildAutoMeshLayer.ts';
 import { LoadAssetImageLayer } from './layers/graphicsBuildImageLayer.ts';
+import { LoadRoomDeviceAutoSpriteLayer } from './layers/graphicsBuildRoomDeviceAutoSpriteLayer.ts';
 import { LoadAssetRoomDeviceMeshLayer } from './layers/graphicsBuildRoomDeviceMeshLayer.ts';
 import { LoadAssetRoomDeviceSlotLayer } from './layers/graphicsBuildRoomDeviceSlotLayer.ts';
 import { LoadAssetRoomDeviceSpriteLayer } from './layers/graphicsBuildRoomDeviceSpriteLayer.ts';
@@ -37,6 +38,8 @@ export async function LoadAssetRoomDeviceLayer(
 	switch (layer.type) {
 		case 'sprite':
 			return await LoadAssetRoomDeviceSpriteLayer(layer, context, logger);
+		case 'autoSprite':
+			return await LoadRoomDeviceAutoSpriteLayer(layer, context, logger);
 		case 'slot':
 			return await LoadAssetRoomDeviceSlotLayer(layer, context, logger);
 		case 'text':

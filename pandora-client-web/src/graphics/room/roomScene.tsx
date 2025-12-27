@@ -25,6 +25,8 @@ export interface RoomGraphicsProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
 	showCharacterNames: boolean;
+	/** @default false */
+	noRoomBackground?: boolean;
 }
 
 export function RoomGraphics({
@@ -32,6 +34,7 @@ export function RoomGraphics({
 	characters,
 	globalState,
 	showCharacterNames,
+	noRoomBackground = false,
 }: RoomGraphicsProps): ReactElement {
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (room.items.filter(FilterItemType('roomDevice')) ?? []), [room]);
 	// Optimize for the fact, that vast majority of room devices do not have a character
@@ -54,6 +57,7 @@ export function RoomGraphics({
 	const projectionResolver = useRoomViewProjection(roomBackground);
 	const playerVisionFilters = usePlayerVisionFiltersFactory(false);
 	const playerSelfVisionFilters = usePlayerVisionFiltersFactory(true);
+	const backgroundFilters = useMemo(playerVisionFilters, [playerVisionFilters]);
 
 	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
@@ -63,13 +67,17 @@ export function RoomGraphics({
 
 	return (
 		<Container key={ room.id }>
-			<GraphicsBackground
-				background={ roomBackground }
-				backgroundFilters={ useMemo(playerVisionFilters, [playerVisionFilters]) }
-			/>
-			<Graphics
-				draw={ borderDraw }
-			/>
+			{ !noRoomBackground ? (
+				<>
+					<GraphicsBackground
+						background={ roomBackground }
+						backgroundFilters={ backgroundFilters }
+					/>
+					<Graphics
+						draw={ borderDraw }
+					/>
+				</>
+			) : null }
 			<Container sortableChildren>
 				{ roomDevices.map((device) => (device.isDeployed() ? (
 					<RoomDevice

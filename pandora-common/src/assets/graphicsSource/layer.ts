@@ -2,6 +2,7 @@ import * as z from 'zod';
 import { GraphicsSourceAlphaImageMeshLayerSchema } from './layers/alphaImageMesh.ts';
 import { GraphicsSourceAutoMeshLayerSchema } from './layers/autoMesh.ts';
 import { GraphicsSourceMeshLayerSchema } from './layers/mesh.ts';
+import { GraphicsSourceRoomDeviceAutoSpriteLayerSchema } from './layers/roomDeviceAutoSprite.ts';
 import { GraphicsSourceRoomDeviceLayerMeshSchema } from './layers/roomDeviceMesh.ts';
 import { GraphicsSourceRoomDeviceLayerSlotSchema } from './layers/roomDeviceSlot.ts';
 import { GraphicsSourceRoomDeviceLayerSpriteSchema } from './layers/roomDeviceSprite.ts';
@@ -19,6 +20,7 @@ export type GraphicsSourceLayerType = GraphicsSourceLayer['type'];
 
 export const GraphicsSourceRoomDeviceLayerSchema = z.discriminatedUnion('type', [
 	GraphicsSourceRoomDeviceLayerSpriteSchema,
+	GraphicsSourceRoomDeviceAutoSpriteLayerSchema,
 	GraphicsSourceRoomDeviceLayerSlotSchema,
 	GraphicsSourceRoomDeviceLayerTextSchema,
 	GraphicsSourceRoomDeviceLayerMeshSchema,

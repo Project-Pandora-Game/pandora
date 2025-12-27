@@ -89,14 +89,18 @@ export async function LoadAssetRoomDeviceSpriteLayer(
 		width: layer.width,
 		height: layer.height,
 		type: 'sprite',
+		offsetOverrides: CloneDeepMutable(layer.offsetOverrides),
+		clipToRoom: layer.clipToRoom,
+		colorizationKey: layer.colorizationKey,
+
+		normalMap: layer.normalMap,
 		image: layer.image && LoadLayerImage(layer.image, context, normalizedImageTrimArea),
+		normalMapImage: layer.normalMapImage && LoadLayerImage(layer.normalMapImage, context, normalizedImageTrimArea),
 		imageOverrides: layer.imageOverrides?.map((override): LayerImageOverride => ({
 			...CloneDeepMutable(override),
 			image: override.image && LoadLayerImage(override.image, context, normalizedImageTrimArea),
+			normalMapImage: override.normalMapImage && LoadLayerImage(override.normalMapImage, context, normalizedImageTrimArea),
 		})),
-		colorizationKey: layer.colorizationKey,
-		offsetOverrides: CloneDeepMutable(layer.offsetOverrides),
-		clipToRoom: layer.clipToRoom,
 	};
 
 	// Adjust layer size if we trimmed it down
@@ -105,6 +109,12 @@ export async function LoadAssetRoomDeviceSpriteLayer(
 		const top = imageTrimArea[1];
 		result.x += left;
 		result.y += top;
+		if (result.offsetOverrides != null) {
+			for (const override of result.offsetOverrides) {
+				override.offset.x += left;
+				override.offset.y += top;
+			}
+		}
 
 		result.width = imageTrimArea[2] - left;
 		result.height = imageTrimArea[3] - top;

@@ -224,6 +224,12 @@ function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => vo
 					Add character slot layer
 				</Button>
 				<Button onClick={ () => {
+					editor.targetLayer.value = layerContainer.addLayer('autoSprite');
+					close();
+				} }>
+					Add automatic image layer
+				</Button>
+				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('sprite');
 					close();
 				} }>

@@ -5,11 +5,13 @@ import {
 	AssetFrameworkCharacterState,
 	CharacterSize,
 	Coordinates,
+	DualQuaternion,
 	EMPTY_ARRAY,
 	GetLogger,
 	GetRoomPositionBounds,
 	ICharacterRoomData,
 	ItemRoomDevice,
+	MAX_BONE_COUNT,
 	RoomDeviceDeploymentPosition,
 	RoomDeviceGraphicsLayerSlot,
 	RoomDeviceGraphicsLayerSprite,
@@ -44,8 +46,9 @@ import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFi
 import { GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
-import { ContextCullClockwise, SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
+import { ContextCullClockwise, SwapCullingDirection, useItemColor, type LayerVerticesTransformData } from '../layers/graphicsLayerCommon.tsx';
 import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
+import { GraphicsLayerMeshNormals } from '../layers/graphicsLayerMeshNormals.tsx';
 import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
@@ -749,8 +752,8 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 
 	const evaluator = useStandaloneConditionEvaluator();
 
-	const image = useMemo<string>(() => {
-		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
+	const { image, normalMapImage } = useMemo(() => {
+		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item))) ?? layer;
 	}, [evaluator, item, layer]);
 
 	const offset = useMemo((): Coordinates => {
@@ -759,6 +762,7 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 	}, [evaluator, item, layer]);
 
 	const texture = useTexture(useImageResolutionAlternative(image).image, undefined);
+	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
@@ -777,13 +781,26 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 	const geometryData = useMemo(() => {
 		const { width, height } = layer;
 
-		const result = {
-			positions: new Float32Array([
+		const vertexTransformData: LayerVerticesTransformData = {
+			vertices: new Float32Array([
 				0, 0,
 				width, 0,
 				0, height,
 				width, height,
 			]),
+			vertexSkinningBoneIndices: new Uint16Array(new Array(4 * 4).fill(0)),
+			vertexSkinningBoneWeights: new Float32Array(new Array(4 * 4).fill(0)),
+			boneTransforms: new Float32Array(8 * MAX_BONE_COUNT),
+		};
+
+		new DualQuaternion(1, 0, 0, 0, 0, 0, 0, 0).toArray(vertexTransformData.boneTransforms);
+		for (let i = 80; i < 8 * MAX_BONE_COUNT; i++) {
+			vertexTransformData.boneTransforms[i] = 0;
+		}
+
+		const result = {
+			positions: vertexTransformData.vertices,
+			vertexTransformData,
 			uvs: new Float32Array([
 				0, 0,
 				1, 0,
@@ -800,19 +817,37 @@ const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprit
 	}, [layer]);
 
 	return (
-		<PixiMesh
-			ref={ layer.clipToRoom ? applyRoomMask : null }
-			x={ offset.x }
-			y={ offset.y }
-			state={ cullingState }
-			vertices={ geometryData.positions }
-			uvs={ geometryData.uvs }
-			indices={ geometryData.indices }
-			texture={ texture }
-			tint={ color }
-			alpha={ alpha }
-			filters={ actualFilters }
-		/>
+		layer.normalMap != null ? (
+			<GraphicsLayerMeshNormals
+				ref={ layer.clipToRoom ? applyRoomMask : null }
+				x={ offset.x }
+				y={ offset.y }
+				state={ cullingState }
+				vertices={ geometryData.vertexTransformData }
+				uvs={ geometryData.uvs }
+				triangles={ geometryData.indices }
+				texture={ texture }
+				normalMapTexture={ normalMapTexture }
+				normalMapData={ layer.normalMap }
+				color={ color }
+				alpha={ alpha }
+				filters={ actualFilters }
+			/>
+		) : (
+			<PixiMesh
+				ref={ layer.clipToRoom ? applyRoomMask : null }
+				x={ offset.x }
+				y={ offset.y }
+				state={ cullingState }
+				vertices={ geometryData.positions }
+				uvs={ geometryData.uvs }
+				indices={ geometryData.indices }
+				texture={ texture }
+				tint={ color }
+				alpha={ alpha }
+				filters={ actualFilters }
+			/>
+		)
 	);
 });
 

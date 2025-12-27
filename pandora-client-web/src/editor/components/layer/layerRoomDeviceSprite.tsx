@@ -1,5 +1,5 @@
 import { castDraft, produce, type Immutable } from 'immer';
-import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride } from 'pandora-common';
+import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride, type RoomDeviceLayerImageOverride } from 'pandora-common';
 import { ReactElement, useCallback, useId, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -44,7 +44,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
 	}, [evaluator, wornItem]);
 
-	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
+	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<RoomDeviceLayerImageOverride>>>(({ entry, update }) => {
 		return (
 			<>
 				<LayerImageSelectInput
@@ -58,9 +58,6 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 				/>
 				{ entry.normalMapImage !== undefined ? (
 					<span>This entry has Editor-unsupported property <code>normalMapImage</code></span>
-				) : null }
-				{ entry.uvPose !== undefined ? (
-					<span>This entry has Editor-unsupported property <code>uvPose</code></span>
 				) : null }
 			</>
 		);

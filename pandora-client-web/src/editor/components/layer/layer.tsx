@@ -17,6 +17,7 @@ import { useEditor } from '../../editorContextProvider.tsx';
 import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
 import { LayerMeshUI } from './layerMesh.tsx';
+import { LayerRoomDeviceAutoSpriteUI } from './layerRoomDeviceAutoSprite.tsx';
 import { LayerRoomDeviceMeshUI } from './layerRoomDeviceMesh.tsx';
 import { LayerRoomDeviceSlotUI } from './layerRoomDeviceSlot.tsx';
 import { LayerRoomDeviceSpriteUI } from './layerRoomDeviceSprite.tsx';
@@ -66,6 +67,9 @@ export function LayerUI(): ReactElement {
 				) :
 				(selectedLayer.type === 'sprite') ? (
 					<LayerRoomDeviceSpriteUI layer={ selectedLayer } />
+				) :
+				(selectedLayer.type === 'autoSprite') ? (
+					<LayerRoomDeviceAutoSpriteUI layer={ selectedLayer } />
 				) :
 				(selectedLayer.type === 'mesh') ? (
 					<LayerRoomDeviceMeshUI layer={ selectedLayer } />
@@ -119,6 +123,9 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAsse
 					) :
 					(layer.type === 'sprite') ? (
 						<span>Simple image</span>
+					) :
+					(layer.type === 'autoSprite') ? (
+						<span>Automatic image</span>
 					) :
 					(layer.type === 'mesh') ? (
 						<span>Custom mesh</span>

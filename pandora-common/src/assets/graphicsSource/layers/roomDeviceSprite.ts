@@ -1,7 +1,7 @@
 import * as z from 'zod';
 import { CoordinatesSchema, RectangleSchema } from '../../graphics/common.ts';
 import { ConditionSchema } from '../../graphics/conditions.ts';
-import { LayerImageOverrideSchema } from '../../graphics/layers/common.ts';
+import { LayerNormalDataSchema, RoomDeviceLayerImageOverrideSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceRoomDeviceLayerSpriteSchema = RectangleSchema.extend({
 	type: z.literal('sprite'),
@@ -22,7 +22,10 @@ export const GraphicsSourceRoomDeviceLayerSpriteSchema = RectangleSchema.extend(
 	clipToRoom: z.boolean().optional(),
 	/** Name of colorization key used to color this sprite layer */
 	colorizationKey: z.string().optional(),
+
+	normalMap: LayerNormalDataSchema.optional(),
 	image: z.string(),
-	imageOverrides: LayerImageOverrideSchema.array().optional(),
+	normalMapImage: z.string().optional(),
+	imageOverrides: RoomDeviceLayerImageOverrideSchema.array().optional(),
 }).strict();
 export type GraphicsSourceRoomDeviceLayerSprite = z.infer<typeof GraphicsSourceRoomDeviceLayerSpriteSchema>;

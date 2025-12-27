@@ -14,7 +14,7 @@ import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetG
 import { EditorConditionInput, type EditorConditionInputMetadata } from './conditionEditor.tsx';
 
 export function LayerHeightAndWidthSetting({ layer }: {
-	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite'>;
+	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'autoSprite'>;
 }): ReactElement | null {
 	const id = useId();
 	const { width, height } = useObservable(layer.definition);
@@ -22,14 +22,14 @@ export function LayerHeightAndWidthSetting({ layer }: {
 	const onChangeHeight = useEvent((newValue: number) => {
 		Assert(newValue > 0);
 		layer.modifyDefinition((d) => {
-			d.height = height;
+			d.height = newValue;
 		});
 	});
 
 	const onChangeWidth = useEvent((newValue: number) => {
 		Assert(newValue > 0);
 		layer.modifyDefinition((d) => {
-			d.width = height;
+			d.width = newValue;
 		});
 	});
 
@@ -107,7 +107,7 @@ export function LayerOffsetSettingTemplate({ x, y, setX, setY, title }: {
 }
 
 export function LayerOffsetSetting({ layer }: {
-	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite'>;
+	layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer<'sprite' | 'autoSprite'>;
 }): ReactElement | null {
 	const {
 		x: layerXOffset,

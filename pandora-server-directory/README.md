@@ -4,12 +4,8 @@
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/en/) (currently version 16)
-* `pnpm`:
-  ```
-  corepack enable
-  ```
-  Note that if you have an existing Node.js installation, this will only work for Node.js >= 16.10.
+See main readme for more info.
+
 ### Running the app
 
 To run the app in development mode:

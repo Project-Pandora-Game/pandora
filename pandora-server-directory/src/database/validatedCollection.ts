@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, omit } from 'lodash-es';
-import { CollationOptions, Collection, Db, Document, IndexDescription, MongoClient, ObjectId } from 'mongodb';
+import { CollationOptions, Collection, Db, Document, IndexDescription, MongoClient, ObjectId, type WithId } from 'mongodb';
 import { ArrayToRecordKeys, Assert, IsObject, KnownObject, Logger } from 'pandora-common';
 import * as z from 'zod';
 
@@ -175,7 +175,7 @@ export class ValidatedCollection<T extends Document> {
 		const { log, dryRun } = migration;
 		log.info(`Processing ${this.name}...`);
 
-		for await (const originalData of this.collection.find().stream()) {
+		for await (const originalData of (this.collection.find().stream() as AsyncIterable<WithId<T>>)) {
 			migration.totalCount++;
 			const documentId: ObjectId = originalData._id;
 			Assert(documentId instanceof ObjectId);
@@ -251,7 +251,7 @@ async function* ValidatingAsyncIter<T extends Document>(
 	schema: z.ZodType<T>,
 	onError: () => void,
 ): AsyncGenerator<T | null, void, unknown> {
-	for await (const originalData of document.find().stream()) {
+	for await (const originalData of (document.find().stream() as AsyncIterable<WithId<T>>)) {
 		const documentId: ObjectId = originalData._id;
 		Assert(documentId instanceof ObjectId);
 

@@ -5,7 +5,7 @@
 	"repository": "github:Project-Pandora-Game/pandora-server-shard",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
-		"node": ">=22.x"
+		"node": ">=24.x"
 	},
 	"type": "module",
 	"scripts": {
@@ -59,7 +59,7 @@
 		"@types/express": "5.0.6",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "22.19.3",
+		"@types/node": "24.10.4",
 		"@types/wtfnode": "0.10.0",
 		"discord-api-types": "0.38.37",
 		"jest": "30.2.0",

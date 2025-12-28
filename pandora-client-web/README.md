@@ -15,11 +15,8 @@
 ## Development
 ### Quick start
 #### Requirements
-- [Node][node] version 22 or above:
-- Enable pnpm through corepack which is included in node 22:
-```
-corepack enable
-```
+
+See main readme for more info.
 
 #### Install dependencies
 Install dependencies using `pnpm` (should only be needed once after cloning):

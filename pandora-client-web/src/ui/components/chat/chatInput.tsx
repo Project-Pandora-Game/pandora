@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
 import settingsIcon from '../../../assets/icons/setting.svg';
+import typingIcon from '../../../assets/icons/typing.svg';
+import whisperIcon from '../../../assets/icons/whisper.svg';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -541,7 +543,7 @@ function TypingIndicator(): ReactElement {
 		});
 
 	const extra: ReactNode[] = [];
-	if (statuses.filter((s) => s.status === 'typing').length > 3) {
+	if (statuses.filter((s) => s.status === 'typing').length > 4) {
 		statuses = statuses.filter((s) => s.status !== 'typing');
 		extra.push(<span key='extra-multiple-typing'>Multiple people are typing</span>);
 	}
@@ -560,8 +562,7 @@ function TypingIndicator(): ReactElement {
 					<span key={ data.id }>
 						<ColoredName color={ data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ data.name } </ColoredName>
 						({ data.id })
-						{ ' is ' }
-						{ status }
+						<img src={ status === 'whispering' ? whisperIcon : typingIcon } />
 					</span>
 				)) }
 				{ extra }

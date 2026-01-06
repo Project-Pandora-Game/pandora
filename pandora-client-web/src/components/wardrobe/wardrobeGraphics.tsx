@@ -70,7 +70,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 			<Row gap='medium' alignY='start' className='fill-x'>
 				<Row className='pointer-events-enable flex' gap='medium'>
 					<Button className='slim iconButton'
-						title='Toggle character view'
+						title='Turn character around (also outside the wardrobe)'
 						onClick={ onClick }
 						disabled={ processing }
 					>

@@ -4,7 +4,7 @@ import type { CommonProps } from '../../../common/reactTypes.ts';
 import type { ScssOverflow, ScssSpacing } from '../../../styles/constants.ts';
 import './container.scss';
 
-export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style' | 'inert'> {
+export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style' | 'inert' | 'title'> {
 	// Flex properties
 
 	/** Default: row */

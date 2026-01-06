@@ -1,11 +1,13 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus, type ICharacterRoomData, type Promisable } from 'pandora-common';
-import React, { ForwardedRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus, type ChatCharacterStatus, type ICharacterRoomData, type Promisable } from 'pandora-common';
+import React, { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
 import settingsIcon from '../../../assets/icons/setting.svg';
+import statusTypingIcon from '../../../assets/icons/status-typing.svg';
+import statusWhisperingIcon from '../../../assets/icons/status-whispering.svg';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -515,7 +517,7 @@ function TextArea({ messagesDiv, scrollMessagesView, ref }: {
 }
 
 function TypingIndicator(): ReactElement {
-	let statuses = useChatCharacterStatus();
+	const statuses = useChatCharacterStatus();
 	const { player, globalState, playerState } = usePlayerState();
 	const playerId = player.id;
 	const { showSelector, setShowSelector } = useChatInput();
@@ -528,22 +530,22 @@ function TypingIndicator(): ReactElement {
 	const focusModeSetting = useObservable(ChatFocusMode);
 	const focusModeForced = useChatFocusModeForced();
 	const focusMode = focusModeForced ?? focusModeSetting;
-	statuses = statuses
-		.filter((s) => {
-			// Hide typing state of characters in other rooms
-			if (focusMode) {
-				const characterState = globalState.getCharacterState(s.data.id);
-				if (characterState != null && characterState.currentRoom !== playerState.currentRoom)
-					return false;
-			}
 
-			return s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering');
-		});
+	const statusGroups: Partial<Record<ChatCharacterStatus, ICharacterRoomData[]>> = {};
 
-	const extra: ReactNode[] = [];
-	if (statuses.filter((s) => s.status === 'typing').length > 3) {
-		statuses = statuses.filter((s) => s.status !== 'typing');
-		extra.push(<span key='extra-multiple-typing'>Multiple people are typing</span>);
+	for (const s of statuses) {
+		// Skip player
+		if (s.data.id === playerId)
+			continue;
+
+		// Hide typing state of characters in other rooms, except whispering
+		if (focusMode && s.status !== 'whispering') {
+			const characterState = globalState.getCharacterState(s.data.id);
+			if (characterState != null && characterState.currentRoom !== playerState.currentRoom)
+				continue;
+		}
+
+		(statusGroups[s.status] ??= []).push(s.data);
 	}
 
 	return (
@@ -556,15 +558,40 @@ function TypingIndicator(): ReactElement {
 				/>
 			) : null }
 			<Row className='flex-1' wrap>
-				{ statuses.map(({ data, status }) => (
-					<span key={ data.id }>
-						<ColoredName color={ data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ data.name } </ColoredName>
-						({ data.id })
-						{ ' is ' }
-						{ status }
-					</span>
-				)) }
-				{ extra }
+				{ statusGroups.whispering != null && statusGroups.whispering.length > 4 ? (
+					<span>Multiple people are whispering</span>
+				) : statusGroups.whispering != null && statusGroups.whispering.length > 0 ? (
+					statusGroups.whispering.map((character) => (
+						<Row
+							key={ character.id }
+							alignY='center'
+							gap='small'
+							title={ `${character.name} (${character.id}) is whispering` }
+						>
+							<ColoredName color={ character.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>
+								{ character.name }
+							</ColoredName>
+							<img src={ statusWhisperingIcon } alt='is typing' />
+						</Row>
+					))
+				) : null }
+				{ statusGroups.typing != null && statusGroups.typing.length > 4 ? (
+					<span>Multiple people are typing</span>
+				) : statusGroups.typing != null && statusGroups.typing.length > 0 ? (
+						statusGroups.typing.map((character) => (
+							<Row
+								key={ character.id }
+								alignY='center'
+								gap='small'
+								title={ `${character.name} (${character.id}) is typing` }
+							>
+								<ColoredName color={ character.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>
+									{ character.name }
+								</ColoredName>
+								<img src={ statusTypingIcon } alt='is typing' />
+							</Row>
+						))
+				) : null }
 			</Row>
 			<img src={ settingsIcon } alt='Change chat mode' />
 		</div>

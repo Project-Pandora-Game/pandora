@@ -56,9 +56,11 @@ export const EnvParser = CreateEnvParser({
 	/** Static hash salt */
 	EMAIL_SALT: z.string().default('pandora-directory-server:'),
 	/** Email sender type, possible values: mock, smtp, ses */
-	EMAIL_SENDER_TYPE: z.enum(['mock', 'smtp', 'ses']).default('mock'),
+	EMAIL_SENDER_TYPE: z.enum(['mock', 'smtp', 'ses', 'webhook']).default('mock'),
 	/** SMTP Email configuration, space-separated list: service host user */
 	EMAIL_SMTP_CONFIG: z.string().default(''),
+	/** URL that a POST request with envelope body will be sent to, if sender type is `webhook` */
+	EMAIL_WEBHOOK_URL: z.string().default(''),
 	/** SMTP Email user password */
 	EMAIL_SMTP_PASSWORD: z.string().default(''),
 

@@ -19,7 +19,11 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "1.57.0",
+		"@types/express": "5.0.6",
+		"@types/mailparser": "3.4.6",
 		"@types/node": "24.10.8",
+		"express": "5.2.1",
+		"mailparser": "3.9.1",
 		"nyc": "17.1.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",

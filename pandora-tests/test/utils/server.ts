@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 import { fork, spawn, type ChildProcess } from 'child_process';
 import path from 'path';
-import { PNPM_EXECUTABLE, TEST_ASSETS_DIR, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_SERVER_SHARD_ENTRYPOINT, TEST_SERVER_SHARD_TEST_DIR, TEST_SHARD_PORT, TEST_TEMP } from '../_setup/config.ts';
+import { PNPM_EXECUTABLE, TEST_ASSETS_DIR, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_LISTENER_HTTP_SERVER_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_SERVER_SHARD_ENTRYPOINT, TEST_SERVER_SHARD_SECRET, TEST_SERVER_SHARD_TEST_DIR, TEST_SHARD_PORT, TEST_TEMP } from '../_setup/config.ts';
 import { Assert, EnvStringify } from './utils.ts';
 
 import type { ENV as DIRECTORY_ENV } from 'pandora-server-directory/src/config.ts';
@@ -14,12 +14,13 @@ const DIRECTORY_ENV_DEFAULTS: DirectoryEnvSetup = {
 	SERVER_PORT: TEST_DIRECTORY_PORT,
 	SERVER_HTTPS_CERT: '',
 	SERVER_HTTPS_KEY: '',
-	SHARD_SHARED_SECRET: '',
+	SHARD_SHARED_SECRET: TEST_SERVER_SHARD_SECRET,
 	TRUSTED_REVERSE_PROXY_HOPS: 0,
 	LOG_DIR: path.resolve(TEST_SERVER_DIRECTORY_TEST_DIR, './logs'),
 	LOG_PRODUCTION: false,
 	LOG_DISCORD_WEBHOOK_URL: '',
-	EMAIL_SENDER_TYPE: 'mock',
+	EMAIL_SENDER_TYPE: 'webhook',
+	EMAIL_WEBHOOK_URL: `http://localhost:${TEST_LISTENER_HTTP_SERVER_PORT}/email/send_email`,
 	EMAIL_SMTP_CONFIG: '',
 	EMAIL_SMTP_PASSWORD: '',
 	DATABASE_TYPE: 'mock',
@@ -43,7 +44,8 @@ export interface TestStartDirectoryOptions {
 
 export type ShardEnvSetup = Partial<typeof SHARD_ENV>;
 const SHARD_ENV_DEFAULTS: ShardEnvSetup = {
-	SHARD_DEVELOPMENT_MODE: false,
+	// Intentionally not set, because it breaks.
+	// SHARD_DEVELOPMENT_MODE: false,
 
 	//Networking
 	SERVER_PORT: TEST_SHARD_PORT,
@@ -51,7 +53,7 @@ const SHARD_ENV_DEFAULTS: ShardEnvSetup = {
 	SERVER_HTTPS_KEY: '',
 	SERVER_PUBLIC_ADDRESS: `http://127.0.0.1:${TEST_SHARD_PORT}`,
 	TRUSTED_REVERSE_PROXY_HOPS: 0,
-	SHARD_SHARED_SECRET: '',
+	SHARD_SHARED_SECRET: TEST_SERVER_SHARD_SECRET,
 	DIRECTORY_ADDRESS: `http://127.0.0.1:${TEST_DIRECTORY_PORT}`,
 
 	//Logging
@@ -77,6 +79,7 @@ export interface TestStartShardOptions {
 
 interface ServerInstanceOptions {
 	entrypoint: string;
+	args?: string[];
 	env: NodeJS.ProcessEnv;
 	keepActive: boolean;
 }
@@ -115,6 +118,7 @@ class ServerInstance {
 				'node',
 				'--enable-source-maps',
 				options.entrypoint,
+				...(options.args ?? []),
 			], {
 				cwd: TEST_TEMP,
 				env: options.env,
@@ -181,7 +185,7 @@ class ServerInstance {
 
 const Servers: ServerInstance[] = [];
 
-export function InternalSetupTestingEnvDirectory(): void {
+export function InternalSetupTestingEnvServers(): void {
 	test.afterEach(async () => {
 		for (let i = Servers.length - 1; i >= 0; i--) {
 			const server = Servers[i];

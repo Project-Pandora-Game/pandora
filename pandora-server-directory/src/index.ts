@@ -16,6 +16,13 @@ import { ShardTokenStore } from './shard/shardTokenStore.ts';
 import { SpaceManager } from './spaces/spaceManager.ts';
 const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } = ENV;
 
+{
+	const nodeLogger = GetLogger('Node');
+	process.on('warning', (warning) => {
+		nodeLogger.warning(warning);
+	});
+}
+
 const logger = GetLogger('init');
 
 Start().catch((error) => {

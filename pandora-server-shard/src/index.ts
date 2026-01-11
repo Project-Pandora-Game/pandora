@@ -8,7 +8,13 @@ import { AddDiscordLogOutput, AddFileOutput } from './logging.ts';
 import { HttpServer } from './networking/httpServer.ts';
 import { ConnectToDirectory } from './networking/socketio_directory_connector.ts';
 const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } = ENV;
-// get version from package.json
+
+{
+	const nodeLogger = GetLogger('Node');
+	process.on('warning', (warning) => {
+		nodeLogger.warning(warning);
+	});
+}
 
 const logger = GetLogger('init');
 

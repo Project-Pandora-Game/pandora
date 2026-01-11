@@ -5,7 +5,6 @@ import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useMounted } from '../../common/useMounted.ts';
 import { Column } from '../common/container/container.tsx';
-import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { DialogInPortal, DraggableDialogPriorityContext } from '../dialog/dialog.tsx';
 import './contextMenu.scss';
 
@@ -81,11 +80,9 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 	return (
 		<DialogInPortal priority={ priority }>
 			<div className={ classNames('context-menu', className) } ref={ finalRef }>
-				<Scrollable>
-					<Column>
-						{ children }
-					</Column>
-				</Scrollable>
+				<Column overflowY='auto' padding='small'>
+					{ children }
+				</Column>
 			</div>
 		</DialogInPortal>
 	);

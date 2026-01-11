@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Immutable, produce } from 'immer';
-import { AssertNever, AssertNotNullable, CharacterHideSettingSchema, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterHideSettingSchema, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
@@ -26,7 +26,6 @@ import { AccountContactChangeHandleResult, useAccountContact } from '../../../co
 import { useGoToDM } from '../../../components/accountContacts/accountContacts.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
 import { DialogInPortal, DraggableDialogPriorityContext, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
@@ -449,14 +448,25 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	const ref = useContextMenuPosition(position);
 	const priority = useContext(DraggableDialogPriorityContext);
 
+	const { publicSettings } = useCharacterData(character);
+	const labelColor = publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor;
+
 	return (
 		<DialogInPortal priority={ priority }>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-				<Scrollable>
-					<Column>
-						<CharacterContextMenuContent character={ character } onClose={ onClose } />
-					</Column>
-				</Scrollable>
+				<Column
+					overflowY='auto'
+					padding='small'
+					// Give the menu a colored border so you can tell at a glance whether you selected a good character or not
+					style={ {
+						border: '2px solid',
+						borderRadius: '0.1em', // .context-menu's [border radius] - [border width]
+						borderColor: labelColor,
+						forcedColorAdjust: 'none',
+					} }
+				>
+					<CharacterContextMenuContent character={ character } onClose={ onClose } />
+				</Column>
 			</div>
 		</DialogInPortal>
 	);

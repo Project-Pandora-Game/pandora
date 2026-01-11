@@ -1,11 +1,13 @@
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useRef, type ForwardedRef } from 'react';
 import { Graphics, type GraphicsProps } from './baseComponents/graphics.ts';
+import type { Character } from '../character/character.ts';
 
 export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {
 	radius: number;
 	colorUpDown?: number;
 	colorLeftRight?: number;
+	character?: Character;
 	drawExtra?: (g: PIXI.GraphicsContext) => void;
 	ref?: ForwardedRef<PIXI.Graphics>;
 }
@@ -14,6 +16,7 @@ export function MovementHelperGraphics({
 	radius,
 	colorUpDown,
 	colorLeftRight,
+	character,
 	drawExtra,
 	...props
 }: MovementHelperGraphicsProps): ReactElement | null {
@@ -23,11 +26,13 @@ export function MovementHelperGraphics({
 	const centerOffset = Math.ceil(0.1 * radius);
 	const circleEdgeWidth = 4;
 
+	const color = character?.isPlayer() ? 0x00ff00 : 0xffffff;
+
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: circleEdgeWidth, color: 0xffffff, alpha: 1 });
+			.stroke({ width: circleEdgeWidth, color, alpha: 1 });
 
 		if (colorLeftRight != null) {
 			g
@@ -84,7 +89,7 @@ export function MovementHelperGraphics({
 		}
 
 		drawExtra?.(g);
-	}, [radius, colorLeftRight, colorUpDown, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
+	}, [radius, colorLeftRight, colorUpDown, color, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
 
 	return (
 		<Graphics

@@ -6,6 +6,7 @@ import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
+import type { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
@@ -182,6 +183,7 @@ export function RoomCharacterMovementTool({
 						<SwitchModePosingButton
 							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
 							radius={ 40 }
+							character={ character }
 							onClick={ () => {
 								if (canPoseCharacter === 'prompt') {
 									toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
@@ -196,6 +198,7 @@ export function RoomCharacterMovementTool({
 				radius={ hitAreaRadius }
 				colorLeftRight={ 0xff0000 }
 				colorUpDown={ 0x00ff00 }
+				character={ character }
 				position={ { x: labelX, y: labelY } }
 				scale={ { x: 1, y: 0.6 } }
 				hitArea={ hitArea }
@@ -209,6 +212,7 @@ export function RoomCharacterMovementTool({
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorUpDown={ 0x0000ff }
+				character={ character }
 				position={ { x: labelX + 110, y: labelY - yOffsetExtra } }
 				hitArea={ hitArea }
 				eventMode='static'
@@ -301,6 +305,7 @@ export function RoomCharacterPosingTool({
 						<SwitchModeMovementButton
 							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
 							radius={ 40 }
+							character={ character }
 							onClick={ () => {
 								if (canMoveCharacter === 'prompt') {
 									toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
@@ -336,6 +341,7 @@ export function RoomCharacterPosingTool({
 							<PosingToolIKHandle
 								key={ i }
 								ikHandle={ h }
+								character={ character }
 								characterState={ characterState }
 								projectionResolver={ projectionResolver }
 								setPose={ setPose }
@@ -392,6 +398,7 @@ export function RoomCharacterPosingTool({
 
 type PosingToolIKHandleProps = {
 	ikHandle: Immutable<InversePosingHandle>;
+	character?: Character;
 	characterState: AssetFrameworkCharacterState;
 	projectionResolver: RoomProjectionResolver;
 	setPose: (newPose: PartialAppearancePose) => void;
@@ -400,6 +407,7 @@ type PosingToolIKHandleProps = {
 /** A single inverse kinematics posing handle. Handles are defined in asset repository. */
 function PosingToolIKHandle({
 	ikHandle,
+	character,
 	characterState,
 	projectionResolver,
 	setPose,
@@ -567,6 +575,7 @@ function PosingToolIKHandle({
 				radius={ hitAreaRadius }
 				colorUpDown={ (ikHandle.style === 'up-down' || ikHandle.style === 'move') ? 0xcccccc : undefined }
 				colorLeftRight={ (ikHandle.style === 'left-right' || ikHandle.style === 'move') ? 0xcccccc : undefined }
+				character={ character }
 				drawExtra={ drawExtra }
 				angle={ currentAngle }
 				position={ { x: currentPosition.x, y: currentPosition.y } }
@@ -780,10 +789,12 @@ function PosingToolBone({
 function SwitchModeMovementButton({
 	position,
 	radius,
+	character,
 	onClick,
 }: {
 	position: Readonly<PointLike>;
 	radius: number;
+	character: Character;
 	onClick: () => void;
 }): ReactElement {
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
@@ -813,6 +824,7 @@ function SwitchModeMovementButton({
 			radius={ radius }
 			colorLeftRight={ 0xffffff }
 			colorUpDown={ 0xffffff }
+			character={ character }
 			position={ position }
 			hitArea={ hitArea }
 			eventMode='static'
@@ -827,16 +839,20 @@ function SwitchModeMovementButton({
 function SwitchModePosingButton({
 	position,
 	radius,
+	character,
 	onClick,
 }: {
 	position: Readonly<PointLike>;
 	radius: number;
+	character: Character;
 	onClick: () => void;
 }): ReactElement {
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
 	const held = useRef(false);
 	/** Sized 24x24 */
 	const POSING_ICON_PATH = 'M12 1a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm8.79 4.546L14.776 6H9.223l-6.012-.454a.72.72 0 0 0-.168 1.428l6.106.97a.473.473 0 0 1 .395.409L10 12 6.865 22.067a.68.68 0 0 0 .313.808l.071.04a.707.707 0 0 0 .994-.338L12 13.914l3.757 8.663a.707.707 0 0 0 .994.338l.07-.04a.68.68 0 0 0 .314-.808L14 12l.456-3.647a.473.473 0 0 1 .395-.409l6.106-.97a.72.72 0 0 0-.168-1.428z';
+
+	const color = character.isPlayer() ? 0x00ff00 : 0xffffff;
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
@@ -861,7 +877,7 @@ function SwitchModePosingButton({
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
+			.stroke({ width: 4, color, alpha: 1 });
 
 		const iconButtonSize = 1.8 * (radius / 24);
 		g
@@ -869,7 +885,7 @@ function SwitchModePosingButton({
 			.path(new PIXI.GraphicsPath(POSING_ICON_PATH))
 			.resetTransform()
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [radius]);
+	}, [radius, color]);
 
 	return (
 		<Graphics

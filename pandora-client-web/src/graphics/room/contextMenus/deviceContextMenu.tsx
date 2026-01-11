@@ -7,7 +7,6 @@ import { Character, useCharacterData, useCharacterDataOptional } from '../../../
 import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
 import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
@@ -344,29 +343,27 @@ function DeviceContextMenuCurrent({ roomState, device, position, onClose }: {
 	return (
 		<DialogInPortal priority={ priority }>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-				<Scrollable>
-					<Column>
-						<WardrobeActionContextProvider player={ player }>
-							<Button theme='transparent' onClick={ () => {
-								onCloseActual();
-								navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }), { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
-							} }>
-								{ ResolveItemDisplayName(device, wardrobeItemDisplayNameType) }
-							</Button>
-							{ menu === 'main' && (
-								<DeviceMainMenu
-									roomState={ roomState }
-									device={ device }
-									position={ position }
-									close={ onCloseActual }
-								/>
-							) }
-						</WardrobeActionContextProvider>
-						<Button theme='transparent' onClick={ onClose } >
-							Close
+				<Column overflowY='auto' padding='small'>
+					<WardrobeActionContextProvider player={ player }>
+						<Button theme='transparent' onClick={ () => {
+							onCloseActual();
+							navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }), { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
+						} }>
+							{ ResolveItemDisplayName(device, wardrobeItemDisplayNameType) }
 						</Button>
-					</Column>
-				</Scrollable>
+						{ menu === 'main' && (
+							<DeviceMainMenu
+								roomState={ roomState }
+								device={ device }
+								position={ position }
+								close={ onCloseActual }
+							/>
+						) }
+					</WardrobeActionContextProvider>
+					<Button theme='transparent' onClick={ onClose } >
+						Close
+					</Button>
+				</Column>
 			</div>
 		</DialogInPortal>
 	);

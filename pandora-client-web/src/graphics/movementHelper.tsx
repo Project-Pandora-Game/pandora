@@ -1,9 +1,12 @@
 import * as PIXI from 'pixi.js';
-import { ReactElement, useCallback, useRef, type ForwardedRef } from 'react';
+import { ReactElement, useCallback, useMemo, useRef, useState, type ForwardedRef } from 'react';
+import { Color } from '../components/common/colorInput/colorInput.tsx';
+import { useAccountSettings } from '../services/accountLogic/accountManagerHooks.ts';
 import { Graphics, type GraphicsProps } from './baseComponents/graphics.ts';
 
 export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {
 	radius: number;
+	theme: 'normal' | 'hover' | 'active';
 	colorUpDown?: number;
 	colorLeftRight?: number;
 	drawExtra?: (g: PIXI.GraphicsContext) => void;
@@ -12,22 +15,27 @@ export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'>
 
 export function MovementHelperGraphics({
 	radius,
+	theme,
 	colorUpDown,
 	colorLeftRight,
 	drawExtra,
 	...props
 }: MovementHelperGraphicsProps): ReactElement | null {
+	const { interfaceAccentColor } = useAccountSettings();
+
 	const arrowBodyLength = 0.3 * radius;
 	const arrowWidthInner = Math.ceil(0.08 * radius);
 	const arrowWidth = 0.32 * radius;
 	const centerOffset = Math.ceil(0.1 * radius);
 	const circleEdgeWidth = 4;
 
+	const color = useMemo(() => new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), theme === 'active' ? 0.65 : theme === 'hover' ? 0.35 : 0).toHex(), [interfaceAccentColor, theme]);
+
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: circleEdgeWidth, color: 0xffffff, alpha: 1 });
+			.stroke({ width: circleEdgeWidth, color, alpha: 1 });
 
 		if (colorLeftRight != null) {
 			g
@@ -84,7 +92,7 @@ export function MovementHelperGraphics({
 		}
 
 		drawExtra?.(g);
-	}, [radius, colorLeftRight, colorUpDown, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
+	}, [radius, colorLeftRight, colorUpDown, color, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
 
 	return (
 		<Graphics
@@ -112,6 +120,10 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 	centerValue = 0,
 	...props
 }: PosingStateHelperGraphicsProps<TValue>): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
+
 	const count = values.length;
 	const radius = 17;
 	const gap = 4;
@@ -119,6 +131,7 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 	const offset = 2 * radius + gap;
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const color = new Color('#cccccc').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
 
 		// Draw outline
 		for (let i = 0; i < count; i++) {
@@ -157,9 +170,9 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 		if (currentValueIndex >= 0) {
 			const currentXOffset = (currentValueIndex - centerValue) * offset;
 			g.circle(currentXOffset, 0, radius - 3)
-				.fill({ color: 0xcccccc });
+				.fill({ color });
 		}
-	}, [centerValue, count, values, offset, value, actualValue]);
+	}, [centerValue, count, values, offset, value, actualValue, held, hover, interfaceAccentColor]);
 
 	const onMove = useCallback((x: number, y: number): void => {
 		const targetOffset = Math.round(x / (2 * radius + gap)) + centerValue;
@@ -173,6 +186,7 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
+			setHeld(true);
 			dragging.current = event.getLocalPosition<PIXI.Point>(event.target);
 			onMove(dragging.current.x, dragging.current.y);
 		}
@@ -180,6 +194,7 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 
 	const onPointerUp = useCallback((_event: PIXI.FederatedPointerEvent) => {
 		dragging.current = null;
+		setHeld(false);
 	}, []);
 
 	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -205,6 +220,12 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 			onpointermove={ onPointerMove }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }

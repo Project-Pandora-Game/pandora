@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
 import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
@@ -92,6 +93,11 @@ export function RoomCharacterMovementTool({
 	const pointerDown = useRef<number | null>(null);
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
+	const [heldPos, setHeldPos] = useState(false);
+	const [hoverPos, setHoverPos] = useState(false);
+	const [heldOffset, setHeldOffset] = useState(false);
+	const [hoverOffset, setHoverOffset] = useState(false);
+
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (dragging.current || !event.currentTarget.parent?.parent)
 			return;
@@ -119,11 +125,13 @@ export function RoomCharacterMovementTool({
 
 	const onPointerDownPos = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
+		setHeldPos(true);
 		pointerDown.current = Date.now();
 		pointerDownTarget.current = 'pos';
 	}, []);
 	const onPointerDownOffset = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
+		setHeldOffset(true);
 		pointerDown.current = Date.now();
 		pointerDownTarget.current = 'offset';
 	}, []);
@@ -143,6 +151,8 @@ export function RoomCharacterMovementTool({
 		}
 		pointerDown.current = null;
 		pointerDownTarget.current = null;
+		setHeldPos(false);
+		setHeldOffset(false);
 	});
 
 	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -194,6 +204,7 @@ export function RoomCharacterMovementTool({
 			</TransitionedContainer>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
+				theme={ heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
 				colorLeftRight={ 0xff0000 }
 				colorUpDown={ 0x00ff00 }
 				position={ { x: labelX, y: labelY } }
@@ -205,9 +216,16 @@ export function RoomCharacterMovementTool({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverPos(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverPos(false);
+				}, []) }
 			/>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
+				theme={ heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
 				colorUpDown={ 0x0000ff }
 				position={ { x: labelX + 110, y: labelY - yOffsetExtra } }
 				hitArea={ hitArea }
@@ -217,6 +235,12 @@ export function RoomCharacterMovementTool({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverOffset(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverOffset(false);
+				}, []) }
 			/>
 		</TransitionedContainer>
 	);
@@ -416,6 +440,9 @@ function PosingToolIKHandle({
 	const [open, setOpen] = useState(true);
 	const styleHasOpen = ikHandle.style === 'hand-left' || ikHandle.style === 'hand-right';
 
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
+
 	const {
 		yOffsetExtra,
 		pivot,
@@ -483,6 +510,7 @@ function PosingToolIKHandle({
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
+			setHeld(true);
 			pointerDown.current = Date.now();
 		}
 	}, []);
@@ -507,6 +535,7 @@ function PosingToolIKHandle({
 			}
 		}
 		pointerDown.current = null;
+		setHeld(false);
 	});
 
 	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -564,6 +593,7 @@ function PosingToolIKHandle({
 		<>
 			<MovementHelperGraphics
 				ref={ graphicsRef }
+				theme={ held ? 'active' : hover ? 'hover' : 'normal' }
 				radius={ hitAreaRadius }
 				colorUpDown={ (ikHandle.style === 'up-down' || ikHandle.style === 'move') ? 0xcccccc : undefined }
 				colorLeftRight={ (ikHandle.style === 'left-right' || ikHandle.style === 'move') ? 0xcccccc : undefined }
@@ -577,6 +607,12 @@ function PosingToolIKHandle({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHover(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHover(false);
+				}, []) }
 			/>
 			{
 				(open && styleHasOpen) ? (
@@ -642,6 +678,8 @@ function PosingToolBone({
 	characterState,
 	onRotate,
 }: PosingToolBoneProps): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
+
 	const radius = 30;
 	const arrowBodyLength = 10;
 	const arrowWidthInner = 2;
@@ -689,6 +727,9 @@ function PosingToolBone({
 		onRotate(rotation);
 	});
 
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
+
 	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
@@ -711,6 +752,7 @@ function PosingToolBone({
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
+			setHeld(true);
 			pointerDown.current = Date.now();
 		}
 	}, []);
@@ -724,6 +766,7 @@ function PosingToolBone({
 			onRotate(0);
 		}
 		pointerDown.current = null;
+		setHeld(false);
 	});
 
 	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -741,10 +784,12 @@ function PosingToolBone({
 	}, [onDragMove, onDragStart]);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const color = new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
+
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 })
+			.stroke({ width: 4, color, alpha: 1 })
 			.poly([
 				centerOffset, -arrowWidthInner,
 				centerOffset + arrowBodyLength, -arrowWidthInner,
@@ -757,7 +802,7 @@ function PosingToolBone({
 			.fill({ color: 0xffffff, alpha: 1 })
 			.ellipse(0, 0, centerOffset, centerOffset)
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, []);
+	}, [held, hover, interfaceAccentColor]);
 
 	return (
 		<Graphics
@@ -773,6 +818,12 @@ function PosingToolBone({
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
 			onglobalpointermove={ onPointerMove }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }
@@ -787,30 +838,37 @@ function SwitchModeMovementButton({
 	onClick: () => void;
 }): ReactElement {
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const held = useRef(false);
+	const heldRef = useRef(false);
+
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
-			held.current = true;
+			setHeld(true);
+			heldRef.current = true;
 		}
 	}, []);
 
 	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
+		if (heldRef.current) {
 			event.stopPropagation();
-			held.current = false;
+			heldRef.current = false;
 			onClick();
 		}
+		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		held.current = false;
+		heldRef.current = false;
+		setHeld(false);
 	}, []);
 
 	return (
 		<MovementHelperGraphics
 			radius={ radius }
+			theme={ held ? 'active' : hover ? 'hover' : 'normal' }
 			colorLeftRight={ 0xffffff }
 			colorUpDown={ 0xffffff }
 			position={ position }
@@ -820,6 +878,12 @@ function SwitchModeMovementButton({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUpOutside }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }
@@ -833,35 +897,44 @@ function SwitchModePosingButton({
 	radius: number;
 	onClick: () => void;
 }): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
+
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const held = useRef(false);
+	const heldRef = useRef(false);
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 	/** Sized 24x24 */
 	const POSING_ICON_PATH = 'M12 1a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm8.79 4.546L14.776 6H9.223l-6.012-.454a.72.72 0 0 0-.168 1.428l6.106.97a.473.473 0 0 1 .395.409L10 12 6.865 22.067a.68.68 0 0 0 .313.808l.071.04a.707.707 0 0 0 .994-.338L12 13.914l3.757 8.663a.707.707 0 0 0 .994.338l.07-.04a.68.68 0 0 0 .314-.808L14 12l.456-3.647a.473.473 0 0 1 .395-.409l6.106-.97a.72.72 0 0 0-.168-1.428z';
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
-			held.current = true;
+			setHeld(true);
+			heldRef.current = true;
 		}
 	}, []);
 
 	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
+		if (heldRef.current) {
 			event.stopPropagation();
-			held.current = false;
+			heldRef.current = false;
 			onClick();
 		}
+		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		held.current = false;
+		heldRef.current = false;
+		setHeld(false);
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const color = new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
+
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
+			.stroke({ width: 4, color, alpha: 1 });
 
 		const iconButtonSize = 1.8 * (radius / 24);
 		g
@@ -869,7 +942,7 @@ function SwitchModePosingButton({
 			.path(new PIXI.GraphicsPath(POSING_ICON_PATH))
 			.resetTransform()
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [radius]);
+	}, [radius, held, hover, interfaceAccentColor]);
 
 	return (
 		<Graphics
@@ -881,6 +954,12 @@ function SwitchModePosingButton({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUpOutside }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }
@@ -898,9 +977,12 @@ function SwitchHandPositionButton({
 	poseIndex: number;
 	poseCount: number;
 }): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
 	const accentColor = useInterfaceAccentColorPacked();
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const held = useRef(false);
+	const heldRef = useRef(false);
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 	/** Sized 32x32 */
 	const POSING_ICON_PATH_1 = 'M25 14a1 1 0 0 1-1-1v-2a5.006 5.006 0 0 0-5-5h-2a1 1 0 0 1 0-2h2a7.008 7.008 0 0 1 7 7v2a1 1 0 0 1-1 1z';
 	const POSING_ICON_PATH_2 = 'M17 8a1 1 0 0 1-.707-.293l-2-2a1 1 0 0 1 0-1.414l2-2a1 1 0 1 1 1.414 1.414L16.414 5l1.293 1.293A1 1 0 0 1 17 8zm-4 20h-2a5.006 5.006 0 0 1-5-5v-4a1 1 0 0 1 2 0v4a3 3 0 0 0 3 3h2a1 1 0 0 1 0 2z';
@@ -909,24 +991,28 @@ function SwitchHandPositionButton({
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
-			held.current = true;
+			setHeld(true);
+			heldRef.current = true;
 		}
 	}, []);
 
 	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
+		if (heldRef.current) {
 			event.stopPropagation();
-			held.current = false;
+			heldRef.current = false;
 			onClick();
 		}
+		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		held.current = false;
+		heldRef.current = false;
+		setHeld(false);
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		const currentStart = poseIndex / poseCount;
+		const color = new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
 
 		g
 			.rect(-radius, -radius + (2 * radius * currentStart), 2 * radius, 2 * radius / poseCount)
@@ -935,7 +1021,7 @@ function SwitchHandPositionButton({
 		g
 			.rect(-radius, -radius, 2 * radius, 2 * radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
+			.stroke({ width: 4, color, alpha: 1 });
 
 		const iconButtonSize = 1.8 * (radius / 32);
 		g
@@ -945,7 +1031,7 @@ function SwitchHandPositionButton({
 			.path(new PIXI.GraphicsPath(POSING_ICON_PATH_3))
 			.resetTransform()
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [accentColor, radius, poseIndex, poseCount]);
+	}, [accentColor, radius, poseIndex, poseCount, held, hover, interfaceAccentColor]);
 
 	return (
 		<Graphics
@@ -957,6 +1043,12 @@ function SwitchHandPositionButton({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUpOutside }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }
@@ -974,32 +1066,37 @@ function ExitPosingUiButton({
 	const sideGap = 5;
 
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const held = useRef(false);
+	const heldRef = useRef(false);
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
-			held.current = true;
+			setHeld(true);
+			heldRef.current = true;
 		}
 	}, []);
 
 	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
+		if (heldRef.current) {
 			event.stopPropagation();
-			held.current = false;
+			heldRef.current = false;
 			onClick();
 		}
+		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		held.current = false;
+		heldRef.current = false;
+		setHeld(false);
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
 			.ellipse(0, 0, radius, radius)
 			.fill({ color: 0x880000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffaaaa, alpha: 1 })
+			.stroke({ width: 4, color: held ? '#ff0000' : hover ? '#ff6666' : '#ffaaaa', alpha: 1 })
 			.poly([
 				innerWidth, -innerWidth,
 				radius - sideGap, -innerWidth,
@@ -1015,7 +1112,7 @@ function ExitPosingUiButton({
 				innerWidth, -(radius - sideGap),
 			])
 			.fill({ color: 0xaa0000, alpha: 1 });
-	}, [radius]);
+	}, [radius, held, hover]);
 
 	return (
 		<Graphics
@@ -1028,6 +1125,12 @@ function ExitPosingUiButton({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUpOutside }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }
@@ -1043,38 +1146,46 @@ function TurnAroundButton({
 	radiusBig: number;
 	onClick: () => void;
 }): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
 	const arrowheadLength = 0.4 * radiusBig;
 	const innerSize = 0.2 * radiusSmall;
 	const arrowheadWidth = 0.6 * radiusSmall;
 	const edgeWidth = 4;
 
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radiusBig, -radiusSmall, 2 * radiusBig, 2 * radiusSmall), [radiusBig, radiusSmall]);
-	const held = useRef(false);
+	const heldRef = useRef(false);
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (event.button !== 1) {
 			event.stopPropagation();
-			held.current = true;
+			setHeld(true);
+			heldRef.current = true;
 		}
 	}, []);
 
 	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
+		if (heldRef.current) {
 			event.stopPropagation();
-			held.current = false;
+			heldRef.current = false;
 			onClick();
 		}
+		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		held.current = false;
+		heldRef.current = false;
+		setHeld(false);
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const color = new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
+
 		g
 			.rect(-radiusBig, -radiusSmall, 2 * radiusBig, 2 * radiusSmall)
 			.fill({ color: 0x880000, alpha: 0.4 })
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 })
+			.stroke({ width: 4, color, alpha: 1 })
 			.poly([
 				radiusBig - edgeWidth - arrowheadLength, -innerSize,
 				radiusBig - edgeWidth - arrowheadLength, -arrowheadWidth,
@@ -1089,7 +1200,7 @@ function TurnAroundButton({
 				- radiusBig + edgeWidth + arrowheadLength, -innerSize,
 			])
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [arrowheadLength, arrowheadWidth, innerSize, radiusBig, radiusSmall]);
+	}, [arrowheadLength, arrowheadWidth, innerSize, radiusBig, radiusSmall, held, hover, interfaceAccentColor]);
 
 	return (
 		<Graphics
@@ -1101,6 +1212,12 @@ function TurnAroundButton({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUpOutside }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
 		/>
 	);
 }

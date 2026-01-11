@@ -331,15 +331,19 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 
 	const movementContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<PIXI.Point | null>(null);
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
-		if (dragging.current || !movementContainer.current?.parent) return;
+		if (event.button === 1 || dragging.current || !movementContainer.current?.parent) return;
+		setHeld(true);
 		dragging.current = event.getLocalPosition<PIXI.Point>(movementContainer.current.parent);
 	}, []);
 
 	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
 		dragging.current = null;
+		setHeld(false);
 	});
 
 	const onPointerMove = useEvent((event: PIXI.FederatedPointerEvent) => {
@@ -361,6 +365,7 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 		>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
+				theme={ held ? 'active' : hover ? 'hover' : 'normal' }
 				colorLeftRight={ 0x880000 }
 				colorUpDown={ 0x008800 }
 				scale={ { x: 1, y: 0.6 } }
@@ -371,6 +376,12 @@ function RoomLinkNodeGraphicsMovementTool({ projectionResolver, direction, curre
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHover(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHover(false);
+				}, []) }
 			/>
 		</Container>
 	);

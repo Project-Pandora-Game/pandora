@@ -152,6 +152,11 @@ export function RoomDeviceMovementTool({
 	const pointerDown = useRef<number | null>(null);
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
+	const [heldPos, setHeldPos] = useState(false);
+	const [hoverPos, setHoverPos] = useState(false);
+	const [heldOffset, setHeldOffset] = useState(false);
+	const [hoverOffset, setHoverOffset] = useState(false);
+
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (dragging.current || !roomDeviceContainer.current?.parent) return;
 		dragging.current = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
@@ -177,11 +182,13 @@ export function RoomDeviceMovementTool({
 
 	const onPointerDownPos = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
+		setHeldPos(true);
 		pointerDown.current = Date.now();
 		pointerDownTarget.current = 'pos';
 	}, []);
 	const onPointerDownOffset = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
+		setHeldOffset(true);
 		pointerDown.current = Date.now();
 		pointerDownTarget.current = 'offset';
 	}, []);
@@ -201,6 +208,8 @@ export function RoomDeviceMovementTool({
 		}
 		pointerDown.current = null;
 		pointerDownTarget.current = null;
+		setHeldPos(false);
+		setHeldOffset(false);
 	});
 
 	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -227,6 +236,7 @@ export function RoomDeviceMovementTool({
 		>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
+				theme={ heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
 				colorLeftRight={ 0xff0000 }
 				colorUpDown={ 0x00ff00 }
 				position={ { x: labelX, y: labelY } }
@@ -238,9 +248,16 @@ export function RoomDeviceMovementTool({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverPos(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverPos(false);
+				}, []) }
 			/>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
+				theme={ heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
 				colorUpDown={ 0x0000ff }
 				position={ { x: labelX + 110, y: labelY - (yOffsetExtra / scale) } }
 				hitArea={ hitArea }
@@ -250,6 +267,12 @@ export function RoomDeviceMovementTool({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverOffset(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverOffset(false);
+				}, []) }
 			/>
 		</Container>
 	);

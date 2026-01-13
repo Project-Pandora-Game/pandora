@@ -19,7 +19,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "1.57.0",
-		"@types/node": "24.10.7",
+		"@types/node": "24.10.8",
 		"nyc": "17.1.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",

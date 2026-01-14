@@ -2,6 +2,10 @@ import * as path from 'path';
 
 export const PNPM_EXECUTABLE = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 
+// Test assets
+/** URL for test assets download. Replace `%v` with expected sha256 base64url hash of the uncompressed archive file. */
+export const TEST_ASSETS_DOWNLOAD_URL = 'https://project-pandora.com/pandora-extra-assets/testing/test-assets-%v.tar.zst';
+
 // Ports and addresses
 export const TEST_DIRECTORY_PORT = 25560;
 export const TEST_SHARD_PORT = 25570;

@@ -2,6 +2,8 @@
 import { test as setup } from '@playwright/test';
 import { spawnSync, SpawnSyncOptions } from 'child_process';
 import * as fs from 'fs';
+import { createHash } from 'node:crypto';
+import zlib, { zstdDecompressSync } from 'node:zlib';
 import type { EnvInputJson } from 'pandora-common';
 import { resolve } from 'path';
 import * as tar from 'tar';
@@ -9,12 +11,14 @@ import type { WEBPACK_CONFIG } from '../../../pandora-client-web/src/config/defi
 import {
 	PNPM_EXECUTABLE,
 	TEST_ASSETS_DIR,
+	TEST_ASSETS_DOWNLOAD_URL,
 	TEST_CLIENT_DIRECTORY_ADDRESS,
 	TEST_CLIENT_DIST_DIR,
 	TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
 	TEST_COVERAGE_TEMP,
 	TEST_HTTP_SERVER_PORT,
 	TEST_PROJECT_ASSETS_DIR,
+	TEST_PROJECT_PANDORA_DIR,
 	TEST_SERVER_DIRECTORY_TEST_DIR,
 	TEST_SERVER_SHARD_TEST_DIR,
 	TEST_TEMP,
@@ -33,7 +37,7 @@ function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {
 	}
 }
 
-setup('Setup', () => {
+setup('Setup', async () => {
 	console.log('\n--- Running global setup ---\n');
 
 	const shouldBuild = process.env.SKIP_TEST_BUILD !== 'true' || !fs.existsSync(TEST_TEMP);
@@ -85,8 +89,37 @@ setup('Setup', () => {
 			console.log('  Using test archive from local pandora-assets project');
 			fs.copyFileSync(ASSETS_PROJECT_ARCHIVE_PATH, TEMP_ARCHIVE_PATH);
 		} else {
-			// TODO
-			throw new Error('Fetching test archive is not yet supported');
+			const bundleVersion = fs.readFileSync(resolve(TEST_PROJECT_PANDORA_DIR, './pandora-common/test/testAssetsVersion.txt'), { encoding: 'utf-8' }).trim();
+
+			if (fs.existsSync(TEMP_ARCHIVE_PATH) && createHash('sha256').update(fs.readFileSync(TEMP_ARCHIVE_PATH)).digest('base64url') === bundleVersion) {
+				console.log('  Using cached test assets');
+			} else {
+				// Download archive bundle
+				const url = TEST_ASSETS_DOWNLOAD_URL.replace('%v', bundleVersion);
+				console.log('  Downloading test assets from', url);
+
+				const testAssetsCompressed = await fetch(url).then((r) => {
+					if (!r.ok) {
+						throw new Error(`Received ${r.status} ${r.statusText} response`);
+					}
+					return r.arrayBuffer();
+				});
+
+				// Decompress
+				const testAssetsUncompressed = zstdDecompressSync(testAssetsCompressed, {
+					params: {
+						[zlib.constants.ZSTD_d_windowLogMax]: 31,
+					},
+				});
+
+				// Check hash
+				if (createHash('sha256').update(testAssetsUncompressed).digest('base64url') !== bundleVersion) {
+					throw new Error('Received test archive checksum mismatch');
+				}
+				fs.writeFileSync(TEMP_ARCHIVE_PATH, testAssetsUncompressed);
+
+				console.log('  Downloading test assets done');
+			}
 		}
 
 		// Extract the archive

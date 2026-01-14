@@ -37,7 +37,8 @@
 	},
 	"files": [
 		"/dist/**/*",
-		"tsconfig.base.json"
+		"tsconfig.base.json",
+		"test/testAssetsVersion.txt"
 	],
 	"scripts": {
 		"clean": "rimraf dist coverage",

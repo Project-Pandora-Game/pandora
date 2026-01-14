@@ -7,15 +7,15 @@ export class ClientHandler {
 	public readonly page: Page;
 
 	public get eula(): ScreenHandlerEula {
-		return new ScreenHandlerEula(this.page);
+		return new ScreenHandlerEula(this.page, this);
 	}
 
 	public get auth(): ScreenHandlerAuth {
-		return new ScreenHandlerAuth(this.page);
+		return new ScreenHandlerAuth(this.page, this);
 	}
 
 	public get toasts(): ScreenHandlerToasts {
-		return new ScreenHandlerToasts(this.page);
+		return new ScreenHandlerToasts(this.page, this);
 	}
 
 	constructor(page: Page) {

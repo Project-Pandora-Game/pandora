@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { SetupTestingEnv, TEST_EULA_TEXT, TestOpenPandora } from './utils/helpers.ts';
+import { SetupTestingEnv, TestOpenPandora } from './utils/helpers.ts';
+import { TEST_EULA_TEXT } from './utils/screen_interactions/eula.ts';
 
 SetupTestingEnv();
 

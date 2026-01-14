@@ -178,6 +178,7 @@ function RightHeader({ onAnyClick }: {
 						<Button
 							theme='transparent'
 							title='Availability status'
+							data-testid='current-account'
 							slim
 							onClick={ () => {
 								setShowOnlineStatusMenu((v) => !v);
@@ -202,7 +203,7 @@ function RightHeader({ onAnyClick }: {
 					<LeaveButton onClickExtra={ onAnyClick } />
 				</>
 			) }
-			{ !loggedIn && <span className='headerText'>[not logged in]</span> }
+			{ !loggedIn && <span className='headerText' data-testid='current-account'>[not logged in]</span> }
 		</div>
 	);
 }

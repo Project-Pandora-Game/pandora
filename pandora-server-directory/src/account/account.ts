@@ -1,4 +1,4 @@
-import { cloneDeep, omit, remove, uniq } from 'lodash-es';
+import { cloneDeep, omit, uniq } from 'lodash-es';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	ACCOUNT_SETTINGS_LIMITED_LIMITS,
@@ -242,7 +242,7 @@ export class Account implements ActorIdentity {
 
 			const cooldown = this.data.settingsCooldowns[key] ?? 0;
 			if (cooldown > now) {
-				remove(settings, (i) => i === key);
+				settings = settings.filter((i) => i !== key);
 				continue;
 			}
 

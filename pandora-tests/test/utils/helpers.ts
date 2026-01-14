@@ -1,6 +1,9 @@
-import { ConsoleMessage, Page, expect, test } from '@playwright/test';
+import { ConsoleMessage, Page, test } from '@playwright/test';
+import { GetClientHandler, type ClientHandler } from './_clientHandler.ts';
 import { CoverageProcessPage } from './coverage.ts';
-import { InternalSetupTestingEnvDirectory } from './server.ts';
+import { InternalSetupTestingEnvServers, TestStartDirectory, TestStartShard } from './server.ts';
+import { Sleep } from './utils.ts';
+import { InternalSetupTestingWebListener } from './webListener.ts';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
@@ -34,16 +37,29 @@ interface TestOpenPandoraOptions {
 	path?: `/${string}`;
 	/** @default true */
 	agreeEula?: boolean;
+
+	/** @default false */
+	startServers?: boolean;
 }
 
-export async function TestOpenPandora(page: Page, options: TestOpenPandoraOptions = {}): Promise<void> {
+export async function TestOpenPandora(page: Page, options: TestOpenPandoraOptions = {}): Promise<ClientHandler> {
+	if (options.startServers ?? false) {
+		await TestStartDirectory();
+		await TestStartShard();
+	}
+
 	await TestSetupPage(page);
 
 	await page.goto(options.path ?? '/');
 
+	const handler = GetClientHandler(page);
+
 	if (options.agreeEula !== false) {
-		await TestPandoraAgreeEula(page);
+		await handler.eula.agree();
+		await Sleep(200); // HACK: Give things time to initialize
 	}
+
+	return handler;
 }
 
 // Coverage helpers
@@ -60,13 +76,6 @@ export function SetupTestingEnv(): void {
 		}
 	});
 
-	InternalSetupTestingEnvDirectory();
-}
-
-// EULA helper
-export const TEST_EULA_TEXT = 'By playing this game, you agree to the following:';
-async function TestPandoraAgreeEula(page: Page): Promise<void> {
-	await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
-	await page.getByRole('button', { name: /^Agree/ }).click();
-	await expect(page.getByText(TEST_EULA_TEXT)).not.toBeVisible();
+	InternalSetupTestingWebListener();
+	InternalSetupTestingEnvServers();
 }

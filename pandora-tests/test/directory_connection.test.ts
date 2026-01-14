@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { SetupTestingEnv, TestOpenPandora } from './utils/helpers.ts';
-import { TestStartDirectory, TestStopDirectory } from './utils/server.ts';
+import { TestStartDirectory } from './utils/server.ts';
 
 SetupTestingEnv();
 
@@ -28,11 +28,11 @@ test.describe('Directory Connection', () => {
 
 		// Wait for connection
 		const connectedPrompt = expect(page.getByText('Connected to Directory')).toBeVisible({ timeout: 30_000 });
-		await TestStartDirectory();
+		const directoryServer = await TestStartDirectory();
 		await connectedPrompt;
 
 		// Stop directory and check for warning toast
-		await TestStopDirectory();
+		await directoryServer.stop();
 		await expect(page.getByText('Directory connection lost')).toBeVisible({ timeout: 10_000 });
 	});
 
@@ -41,11 +41,11 @@ test.describe('Directory Connection', () => {
 
 		// Wait for connection
 		const connectedPrompt = expect(page.getByText('Connected to Directory')).toBeVisible({ timeout: 30_000 });
-		await TestStartDirectory();
+		const directoryServer = await TestStartDirectory();
 		await connectedPrompt;
 
 		// Stop directory and check for warning toast
-		await TestStopDirectory();
+		await directoryServer.stop();
 		await expect(page.getByText('Directory connection lost')).toBeVisible({ timeout: 10_000 });
 
 		// Restart directory, expecting reconnect

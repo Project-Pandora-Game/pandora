@@ -56,7 +56,7 @@ export async function TestOpenPandora(page: Page, options: TestOpenPandoraOption
 
 	if (options.agreeEula !== false) {
 		await handler.eula.agree();
-		await Sleep(500); // HACK: Give things time to initialize
+		await Sleep(200); // HACK: Give things time to initialize
 	}
 
 	return handler;

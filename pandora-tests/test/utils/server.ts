@@ -1,8 +1,9 @@
 import { test } from '@playwright/test';
 import { fork, spawn, type ChildProcess } from 'child_process';
+import fs from 'node:fs';
 import path from 'path';
 import { PNPM_EXECUTABLE, TEST_ASSETS_DIR, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_LISTENER_HTTP_SERVER_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_SERVER_SHARD_ENTRYPOINT, TEST_SERVER_SHARD_SECRET, TEST_SERVER_SHARD_TEST_DIR, TEST_SHARD_PORT, TEST_TEMP } from '../_setup/config.ts';
-import { Assert, EnvStringify } from './utils.ts';
+import { Assert, EnvStringify, Sleep } from './utils.ts';
 
 import type { ENV as DIRECTORY_ENV } from 'pandora-server-directory/src/config.ts';
 import type { ENV as SHARD_ENV } from 'pandora-server-shard/src/config.ts';
@@ -208,8 +209,14 @@ export function InternalSetupTestingEnvServers(): void {
 	});
 }
 
-export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> = {}): Promise<ServerInstance> {
-	return Promise.resolve(new ServerInstance({
+export async function TestStartDirectory(options: Partial<TestStartDirectoryOptions> = {}): Promise<ServerInstance> {
+	// Nuke logs
+	const directoryLogs = path.resolve(TEST_SERVER_DIRECTORY_TEST_DIR, './logs');
+	const debugLog = path.resolve(directoryLogs, './directory_debug.log');
+
+	fs.rmSync(directoryLogs, { recursive: true, force: true });
+
+	const instance = new ServerInstance({
 		entrypoint: TEST_SERVER_DIRECTORY_ENTRYPOINT,
 		env: EnvStringify({
 			...process.env,
@@ -217,7 +224,20 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 			...options.configOverrides,
 		}),
 		keepActive: options.keepActive === true,
-	}));
+	});
+
+	while (true) {
+		// Expect debug log with this text in it
+		const READY_TEXT = '[init] Ready!';
+
+		if (fs.existsSync(debugLog) && fs.readFileSync(debugLog, { encoding: 'utf-8' }).includes(READY_TEXT)) {
+			break;
+		}
+
+		await Sleep(25);
+	}
+
+	return instance;
 }
 
 export function TestStartShard(options: Partial<TestStartShardOptions> = {}): Promise<ServerInstance> {

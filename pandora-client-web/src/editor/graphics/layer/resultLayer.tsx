@@ -18,6 +18,9 @@ import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCal
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
+// Turns the wireframe much more visible, useful for making tutorial about asset creation
+const HIGHLIGHT_WIREFRAME = false;
+
 export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
@@ -120,7 +123,7 @@ export function EditorGraphicsResultLayerMesh({
 					.stroke({ width: 2, color: 0xff0000, alpha: 0.8, pixelLine: true });
 			} else {
 				g
-					.stroke({ width: 1, color: 0x333333, alpha: 0.2, pixelLine: true });
+					.stroke({ width: 1, color: HIGHLIGHT_WIREFRAME ? 0xffffff : 0x333333, alpha: HIGHLIGHT_WIREFRAME ? 1 : 0.2, pixelLine: true });
 			}
 		}
 	}, [triangles, vertices, x, y, width, height]);
@@ -150,7 +153,7 @@ export function EditorGraphicsResultLayerMesh({
 					<Graphics
 						draw={ drawWireFrame }
 					/>
-					{ displayPoints.map((p, i) => (
+					{ HIGHLIGHT_WIREFRAME ? null : displayPoints.map((p, i) => (
 						<DotGraphics key={ i }
 							tint={
 								(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?
@@ -205,7 +208,7 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 					.stroke({ width: 2, color: 0xff0000, alpha: 0.8, pixelLine: true });
 			} else {
 				g
-					.stroke({ width: 1, color: 0x333333, alpha: 0.2, pixelLine: true });
+					.stroke({ width: 1, color: HIGHLIGHT_WIREFRAME ? 0xffffff : 0x333333, alpha: HIGHLIGHT_WIREFRAME ? 1 : 0.2, pixelLine: true });
 			}
 		}
 	}, [triangles, vertices, x, y, width, height]);
@@ -235,7 +238,7 @@ export function EditorGraphicsResultLayerAlphaImageMesh({
 					<Graphics
 						draw={ drawWireFrame }
 					/>
-					{ displayPoints.map((p, i) => (
+					{ HIGHLIGHT_WIREFRAME ? null : displayPoints.map((p, i) => (
 						<DotGraphics key={ i }
 							tint={
 								(editedTemplate?.templateName === pointTemplate && isEqual(pointEditSelectedPoint?.definition.value.index, points[i].index)) ?

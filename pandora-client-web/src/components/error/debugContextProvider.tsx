@@ -27,6 +27,7 @@ export const debugContext = createContext<DebugContext>({
 });
 
 export const DebugContextProvider = ({ children }: ChildrenProps): ReactElement => {
+	// TODO: Turn this into a service to avoid re-renders when debug data changes
 	const [debugData, setDebugDataInternal] = useState<DebugData>({});
 
 	const setDebugData = useCallback((additionalData: DebugData) => {

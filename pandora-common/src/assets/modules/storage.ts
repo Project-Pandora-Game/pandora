@@ -183,6 +183,7 @@ export class ItemModuleStorage<TProperties = unknown, TStaticData = unknown> imp
 			return {
 				success: false,
 				error: {
+					// TODO: Make this a more sensible "Too big to fit" message
 					problem: 'contentNotAllowed',
 					asset: problematic.asset.id,
 					itemName: problematic.name ?? '',

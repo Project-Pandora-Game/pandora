@@ -71,6 +71,8 @@ export class AssetManagerEditor extends AssetManagerClient {
 		});
 
 		// Download the definition
+		// FIXME: This is wrong for bodyparts
+		// TODO: We should consider a template for room devices
 		const assetTemplateContent = `
 // The comments provide info about what is REQUIRED before submitting an asset.
 // After filling the info in, please remove the helper comments before creating a PR.

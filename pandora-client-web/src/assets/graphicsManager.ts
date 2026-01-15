@@ -208,6 +208,7 @@ export class GraphicsManager {
 	}
 }
 
+// TODO: Refactor me
 export const GraphicsManagerInstance = new Observable<GraphicsManager | null>(null);
 
 // Add a hook to purge the current graphics loader cache when the graphics settins change in any way

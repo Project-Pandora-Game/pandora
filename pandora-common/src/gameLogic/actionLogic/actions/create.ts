@@ -1,3 +1,4 @@
+import { produce } from 'immer';
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes.ts';
 import type { AppearanceItems } from '../../../assets/index.ts';
@@ -30,7 +31,7 @@ export function ActionCreate({
 	if (!target)
 		return processingContext.invalid();
 
-	const item = assetManager.createItemFromTemplate(action.itemTemplate, processingContext.player);
+	let item = assetManager.createItemFromTemplate(action.itemTemplate, processingContext.player);
 	if (item == null)
 		return processingContext.invalid();
 
@@ -57,13 +58,40 @@ export function ActionCreate({
 	// Do change
 	let removed: AppearanceItems = [];
 	// if this is a bodypart not allowing multiple do a swap instead, but only in root
-	if (manipulator.isCharacter() &&
-		item.isType('bodypart') &&
-		manipulator.assetManager.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false
-	) {
-		removed = manipulator.removeMatchingItems((oldItem) => oldItem.isType('bodypart') &&
-			oldItem.asset.definition.bodypart === item.asset.definition.bodypart,
-		);
+	if (manipulator.isCharacter() && item.isType('bodypart')) {
+		const bodypart = item.asset.definition.bodypart;
+		if (manipulator.assetManager.bodyparts.find((bp) => item?.isType('bodypart') && bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+			removed = manipulator.removeMatchingItems((oldItem) => oldItem.isType('bodypart') &&
+				oldItem.asset.definition.bodypart === bodypart,
+			);
+		}
+	}
+
+	// Personal item's deployment can happen on creation
+	if (item.isType('personal') && item.deployment !== null) {
+		const playerState = processingContext.getPlayerRestrictionManager().appearance.characterState;
+		const playerPosition = playerState.position;
+		Assert(item.asset.definition.roomDeployment != null);
+		// If it is being put into the same room the player is in, position it relative to the player, but only if the auto-deploy is enabled
+		if (item.deployment.autoDeploy &&
+			action.target.type === 'room' &&
+			action.container.length === 0 &&
+			playerPosition.type === 'normal' &&
+			playerPosition.room === action.target.roomId
+		) {
+			// TODO: Use room device with slot offset instead, if possible, but it might be more finicky than might seem at first glance
+			const { autoDeployRelativePosition } = item.asset.definition.roomDeployment;
+
+			item = item.withDeployment(produce(item.deployment, (d) => {
+				d.deployed = true;
+				const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
+				d.position = [
+					playerPosition.position[0] + inversion * autoDeployRelativePosition[0],
+					playerPosition.position[1] + inversion * autoDeployRelativePosition[1],
+					playerPosition.position[2] + inversion * autoDeployRelativePosition[2],
+				];
+			}));
+		}
 	}
 
 	let targetIndex: number | undefined;

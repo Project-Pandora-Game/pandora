@@ -146,7 +146,7 @@ export function WardrobeItemConfigMenu({
 						singleItemContainer ? null : (
 							<>
 								<WardrobeActionButton action={ {
-									type: 'move',
+									type: 'moveItem',
 									target: targetSelector,
 									item,
 									shift: 1,
@@ -154,7 +154,7 @@ export function WardrobeItemConfigMenu({
 									▲ Wear on top
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
-									type: 'move',
+									type: 'moveItem',
 									target: targetSelector,
 									item,
 									shift: -1,

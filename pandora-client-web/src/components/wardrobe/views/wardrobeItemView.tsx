@@ -381,7 +381,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 							asset.isType('bodypart') ? (
 								<>
 									<WardrobeActionButton action={ {
-										type: 'move',
+										type: 'moveItem',
 										target: targetSelector,
 										item,
 										shift: 1,
@@ -389,7 +389,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 										▲
 									</WardrobeActionButton>
 									<WardrobeActionButton action={ {
-										type: 'move',
+										type: 'moveItem',
 										target: targetSelector,
 										item,
 										shift: -1,

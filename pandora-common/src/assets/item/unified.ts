@@ -17,7 +17,7 @@ import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion.ts';
 import { ItemBodypart } from './bodypart.ts';
 import { ItemLock } from './lock.ts';
-import { ItemPersonal } from './personal.ts';
+import { ItemPersonal, PersonalItemBundleSchema, PersonalItemTemplateDataSchema } from './personal.ts';
 import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice.ts';
 import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart.ts';
 
@@ -26,7 +26,7 @@ import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWe
  * Used for storing appearance or room data in database and for transferring it to the clients.
  * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
  */
-export const ItemBundleSchema = z.object({
+export const ItemBundleSchema: z.ZodType<ItemBundle> = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	spawnedBy: CharacterIdSchema.optional(),
@@ -36,13 +36,15 @@ export const ItemBundleSchema = z.object({
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
 	moduleData: z.record(z.string(), z.lazy(() => ItemModuleDataSchema)).optional(),
+	/** Personal item specific data */
+	personalData: PersonalItemBundleSchema.optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 	/** Lock specific data */
 	lockData: LockDataBundleSchema.optional(),
-}) satisfies z.ZodType<ItemBundle>;
+});
 
 /**
  * Data describing an item configuration as a template.
@@ -58,6 +60,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate> = z.object({
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
 	modules: z.record(z.string(), z.lazy(() => ItemModuleTemplateSchema)).optional(),
+	personalData: PersonalItemTemplateDataSchema.optional(),
 });
 
 export const AssetFrameworkOutfitSchema = z.object({
@@ -120,6 +123,19 @@ export function CreateItemBundleFromTemplate(template: Immutable<ItemTemplate>, 
 				continue;
 
 			bundle.moduleData[moduleName] = loadedData;
+		}
+	}
+
+	// Personal item specific data
+	if (template.personalData != null && asset.isType('personal')) {
+		bundle.personalData = {};
+
+		if (template.personalData.autoDeploy != null) {
+			bundle.personalData.deployment = {
+				autoDeploy: template.personalData.autoDeploy,
+				deployed: false,
+				position: [0, 0, 0],
+			};
 		}
 	}
 

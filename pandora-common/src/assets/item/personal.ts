@@ -1,18 +1,20 @@
 import type { Immutable } from 'immer';
 import { first } from 'lodash-es';
+import * as z from 'zod';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import { CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
 import type { HexRGBAColorString } from '../../validation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetColorization } from '../definitions.ts';
+import { ItemModuleAction, LoadItemModule } from '../modules.ts';
 import type { IExportOptions, IItemModule } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
-import type { ColorGroupResult, IItemLoadContext, ItemBundle, ItemTemplate } from './base.ts';
-import type { AppearanceItems } from './items.ts';
-
-import { MemoizeNoArg } from '../../utility/misc.ts';
-import { ItemModuleAction, LoadItemModule } from '../modules.ts';
+import { RoomPositionSchema, type RoomPosition } from '../state/roomGeometry.ts';
 import { QueryStateFlagCombinations, StateFlagCombinationAssetPropertiesGetter } from '../stateFlags.ts';
+import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base.ts';
+import type { AppearanceItems } from './items.ts';
 
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
@@ -22,23 +24,64 @@ declare module './_internal.ts' {
 	}
 }
 
+export type PersonalItemDeployment = {
+	/** If set, the item will be automatically deployed upon being placed in the room inventory. */
+	autoDeploy: boolean;
+	/** Whether the item is currently visible in a room. Can only be set if in a room. */
+	deployed: boolean;
+	/** The position in the room. Remembered even if item isn't currently deployed. */
+	position: RoomPosition;
+};
+export const PersonalItemDeploymentSchema: z.ZodType<PersonalItemDeployment> = z.object({
+	autoDeploy: z.boolean(),
+	deployed: z.boolean(),
+	position: RoomPositionSchema,
+});
+
+/** Data specific to personal items */
+export type PersonalItemBundle = {
+	/** Position of personal item inside a room, if the item can be deployed into a room. */
+	deployment?: PersonalItemDeployment;
+};
+/** Data specific to personal items */
+export const PersonalItemBundleSchema: z.ZodType<PersonalItemBundle> = z.object({
+	deployment: PersonalItemDeploymentSchema.optional(),
+});
+
+/** Template data specific to personal items */
+export type PersonalItemTemplateData = {
+	/** The `autoDeploy` flag from personal item deployment data */
+	autoDeploy?: boolean;
+};
+/** Template data specific to personal items */
+export const PersonalItemTemplateDataSchema: z.ZodType<PersonalItemTemplateData> = z.object({
+	autoDeploy: z.boolean().optional(),
+});
+
 interface ItemPersonalProps extends ItemBaseProps<'personal'> {
 	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 	readonly requireFreeHandsToUse: boolean;
+	readonly deployment: Immutable<PersonalItemDeployment> | null;
 }
 
 export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalProps {
 	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 	public readonly requireFreeHandsToUse: boolean;
+	public readonly deployment: Immutable<PersonalItemDeployment> | null;
 
 	protected constructor(props: ItemPersonalProps, overrideProps?: Partial<ItemPersonalProps>) {
 		super(props, overrideProps);
 		this.modules = overrideProps?.modules ?? props.modules;
 		this.requireFreeHandsToUse = overrideProps?.requireFreeHandsToUse ?? props.requireFreeHandsToUse;
+		this.deployment = overrideProps?.deployment !== undefined ? overrideProps.deployment : props.deployment;
 	}
 
 	protected override withProps(overrideProps: Partial<ItemPersonalProps>): ItemPersonal {
 		return new ItemPersonal(this, overrideProps);
+	}
+
+	public withDeployment(deployment: Immutable<PersonalItemDeployment> | null): ItemPersonal {
+		return this.withProps({ deployment });
 	}
 
 	public static loadFromBundle(asset: Asset<'personal'>, bundle: ItemBundle, context: IItemLoadContext): ItemPersonal {
@@ -54,21 +97,72 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			modules,
 			requireFreeHandsToUse,
+			// If the item is deployable, create deployment data. Otherwise force it cleared.
+			deployment: asset.definition.roomDeployment != null ? (
+				bundle.personalData?.deployment ?? {
+					autoDeploy: true,
+					deployed: false,
+					position: [0, 0, 0],
+				}
+			) : null,
 		});
 	}
 
 	public override exportToTemplate(): ItemTemplate {
+		let personalData: PersonalItemTemplateData | undefined;
+
+		if (this.deployment != null) {
+			personalData ??= {};
+			personalData.autoDeploy = this.deployment.autoDeploy;
+		}
+
 		return {
 			...super.exportToTemplate(),
 			requireFreeHandsToUse: this.requireFreeHandsToUse,
+			personalData,
 		};
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {
+		let personalData: PersonalItemBundle | undefined;
+
+		if (this.deployment != null) {
+			personalData ??= {};
+			personalData.deployment = CloneDeepMutable(this.deployment);
+		}
+
 		return {
 			...super.exportToBundle(options),
 			requireFreeHandsToUse: this.requireFreeHandsToUse,
+			personalData,
 		};
+	}
+
+	public override validate(context: IItemValidationContext): AppearanceValidationResult {
+		{
+			const r = super.validate(context);
+			if (!r.success)
+				return r;
+		}
+
+		if ((this.deployment != null) !== (this.asset.definition.roomDeployment != null)) {
+			return {
+				success: false,
+				error: { problem: 'invalid' },
+			};
+		}
+
+		if (this.deployment?.deployed && context.location !== 'roomInventory')
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+					itemName: this.name ?? '',
+				},
+			};
+
+		return { success: true };
 	}
 
 	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {

@@ -10,7 +10,7 @@ import { ActionCreate, AppearanceActionCreateSchema } from './create.ts';
 import { ActionAppearanceCustomize, AppearanceActionCustomize } from './customize.ts';
 import { ActionDelete, AppearanceActionDeleteSchema } from './delete.ts';
 import { ActionModuleAction, AppearanceActionModuleAction } from './moduleAction.ts';
-import { ActionMoveItem, AppearanceActionMove } from './move.ts';
+import { ActionMoveItem, AppearanceActionMoveItem } from './moveItem.ts';
 import { ActionMoveCharacter, AppearanceActionMoveCharacter } from './moveCharacter.ts';
 import { ActionPoint, AppearanceActionPoint } from './point.ts';
 import { ActionPose, AppearanceActionPose } from './pose.ts';
@@ -31,7 +31,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionMoveCharacter,
 	AppearanceActionPose,
 	AppearanceActionBody,
-	AppearanceActionMove,
+	AppearanceActionMoveItem,
 	AppearanceActionColor,
 	AppearanceActionCustomize,
 	AppearanceActionModuleAction,
@@ -83,7 +83,7 @@ function ApplyActionBase(
 			return ActionTransferItem({ ...arg, action });
 		case 'moveCharacter':
 			return ActionMoveCharacter({ ...arg, action });
-		case 'move':
+		case 'moveItem':
 			return ActionMoveItem({ ...arg, action });
 		case 'color':
 			return ActionColor({ ...arg, action });

@@ -12,6 +12,7 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { ItemModuleData, ItemModuleTemplate } from '../modules.ts';
 import type { AssetFrameworkRoomState } from '../state/roomState.ts';
 import type { InternalItemTypeMap, ItemBase } from './_internal.ts';
+import type { PersonalItemBundle, PersonalItemTemplateData } from './personal.ts';
 import type { RoomDeviceBundle } from './roomDevice.ts';
 import type { RoomDeviceLink } from './roomDeviceWearablePart.ts';
 
@@ -52,6 +53,8 @@ export type ItemBundle = {
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;
 	moduleData?: Record<string, ItemModuleData>;
+	/** Personal item specific data */
+	personalData?: PersonalItemBundle;
 	/** Room device specific data */
 	roomDeviceData?: RoomDeviceBundle;
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
@@ -73,6 +76,8 @@ export type ItemTemplate = {
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;
 	modules?: Record<string, ItemModuleTemplate>;
+	/** Personal item specific template data */
+	personalData?: PersonalItemTemplateData;
 };
 
 export type IItemLoadContext = {

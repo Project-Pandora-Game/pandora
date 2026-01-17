@@ -5,6 +5,8 @@ import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
+import { produce } from 'immer';
+import { Assert } from '../../../utility/misc.ts';
 
 /** Action that moves item between two containers (e.g. character and character or character and room inventory or character and bag the charater is wearing) */
 export const AppearanceActionTransferSchema = z.object({
@@ -55,7 +57,7 @@ export function ActionTransferItem({
 	if (removedItems.length !== 1)
 		return processingContext.invalid();
 
-	const item = removedItems[0];
+	let item = removedItems[0];
 
 	// Player adding the item must be able to use it on target
 	processingContext.checkCanUseItemDirect(
@@ -69,6 +71,40 @@ export function ActionTransferItem({
 	// Check if item allows being transferred (moving not between targets nor containers is fine, as then it is essentially a move)
 	if (!isReorder) {
 		item.checkAllowTransfer(processingContext);
+	}
+
+	// Personal item's deployment can change when transferring it
+	if (item.isType('personal') && item.deployment !== null && !isReorder) {
+		const playerState = processingContext.getPlayerRestrictionManager().appearance.characterState;
+		const playerPosition = playerState.position;
+		Assert(item.asset.definition.roomDeployment != null);
+		// If it is being put into the same room the player is in, position it relative to the player, but only if the auto-deploy is enabled
+		if (item.deployment.autoDeploy &&
+			action.target.type === 'room' &&
+			targetContainer.length === 0 &&
+			playerPosition.type === 'normal' &&
+			playerPosition.room === action.target.roomId
+		) {
+			// TODO: Use room device with slot offset instead, if possible, but it might be more finicky than might seem at first glance
+			const { autoDeployRelativePosition } = item.asset.definition.roomDeployment;
+
+			item = item.withDeployment(produce(item.deployment, (d) => {
+				d.deployed = true;
+				const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
+				d.position = [
+					playerPosition.position[0] + inversion * autoDeployRelativePosition[0],
+					playerPosition.position[1] + inversion * autoDeployRelativePosition[1],
+					playerPosition.position[2] + inversion * autoDeployRelativePosition[2],
+				];
+			}));
+		} else {
+			// If not being put into room, hide and reset position
+			// Same if moving to another room, as we have no good place to position it without making a mess in one place in the room
+			item = item.withDeployment(produce(item.deployment, (d) => {
+				d.deployed = false;
+				d.position = [0, 0, 0];
+			}));
+		}
 	}
 
 	let targetIndex: number | undefined;

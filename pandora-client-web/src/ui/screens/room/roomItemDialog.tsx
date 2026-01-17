@@ -222,7 +222,7 @@ function RoomItemDialogContentQuickActions({ path, target, room, close }: RoomIt
 				allowReorder ? (
 					<>
 						<GameLogicActionButton action={ {
-							type: 'move',
+							type: 'moveItem',
 							target,
 							item: path,
 							shift: 1,
@@ -230,7 +230,7 @@ function RoomItemDialogContentQuickActions({ path, target, room, close }: RoomIt
 							▲ Wear on top
 						</GameLogicActionButton>
 						<GameLogicActionButton action={ {
-							type: 'move',
+							type: 'moveItem',
 							target,
 							item: path,
 							shift: -1,

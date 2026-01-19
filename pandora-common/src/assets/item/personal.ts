@@ -50,7 +50,9 @@ export const PersonalItemBundleSchema: z.ZodType<PersonalItemBundle> = z.object(
 
 /** Template data specific to personal items */
 export type PersonalItemTemplateData = {
-	/** The `autoDeploy` flag from personal item deployment data */
+	/** The `autoDeploy` flag from personal item deployment data
+	 * @default true
+	 */
 	autoDeploy?: boolean;
 };
 /** Template data specific to personal items */

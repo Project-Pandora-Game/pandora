@@ -58,7 +58,7 @@
 		"@jest/globals": "30.2.0",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.6.2",
 		"@testing-library/jest-dom": "6.9.1",
-		"@testing-library/react": "16.3.1",
+		"@testing-library/react": "16.3.2",
 		"@testing-library/user-event": "14.6.1",
 		"@types/jest": "30.0.0",
 		"@types/lodash-es": "4.17.12",

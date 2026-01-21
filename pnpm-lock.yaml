@@ -562,8 +562,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       tar:
-        specifier: 7.5.4
-        version: 7.5.4
+        specifier: 7.5.6
+        version: 7.5.6
       tslib:
         specifier: 2.8.1
         version: 2.8.1
@@ -5628,8 +5628,8 @@ packages:
   tar-stream@3.1.7:
     resolution: {integrity: sha512-qJj60CXt7IU1Ffyc3NJMjh6EkuCFej46zUqJ4J7pqYlThyd9bO0XBTmcOIhSzZJVWfsLks0+nle/j538YAW9RQ==}
 
-  tar@7.5.4:
-    resolution: {integrity: sha512-AN04xbWGrSTDmVwlI4/GTlIIwMFk/XEv7uL8aa57zuvRy6s4hdBed+lVq2fAZ89XDa7Us3ANXcE3Tvqvja1kTA==}
+  tar@7.5.6:
+    resolution: {integrity: sha512-xqUeu2JAIJpXyvskvU3uvQW8PAmHrtXp2KDuMJwQqW8Sqq0CaZBAQ+dKS3RBXVhU4wC5NjAdKrmh84241gO9cA==}
     engines: {node: '>=18'}
 
   tdigest@0.1.2:
@@ -12480,7 +12480,7 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
-  tar@7.5.4:
+  tar@7.5.6:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0

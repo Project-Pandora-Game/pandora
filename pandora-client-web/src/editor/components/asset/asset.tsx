@@ -198,7 +198,11 @@ function AddWornLayerUiDialog({ close, layerContainer }: { close: () => void; la
 	);
 }
 
-function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => void; layerContainer: EditorRoomLayersContainer; }): ReactElement {
+function AddRoomDeviceLayerUiDialog({ close, layerContainer, disallowSlots = false }: {
+	close: () => void;
+	layerContainer: EditorRoomLayersContainer;
+	disallowSlots?: boolean;
+}): ReactElement {
 	const editor = useEditor();
 
 	return (
@@ -207,7 +211,7 @@ function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => vo
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('slot');
 					close();
-				} }>
+				} } disabled={ disallowSlots }>
 					Add character slot layer
 				</Button>
 				<Button onClick={ () => {
@@ -455,6 +459,7 @@ function WornItemRoomLayerView({ asset, logicalAsset }: { asset: EditorAssetGrap
 					<AddRoomDeviceLayerUiDialog
 						close={ () => setShowAddLayer(false) }
 						layerContainer={ roomLayersContainer }
+						disallowSlots
 					/>
 				) : null }
 				{ roomLayers != null && roomLayers.length === 0 ? (

@@ -190,6 +190,28 @@ export function EditorBuildAssetRoomDeviceGraphicsContext(
 	return EditorBuildAssetGraphicsContext(asset, assetManager, editorGraphicsManager, EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset), buildTextures);
 }
 
+export function EditorBuildAssetRoomDeviceGraphicsContextForDeployablePersonalAsset(
+	asset: EditorAssetGraphicsBase,
+	logicAsset: Asset<'personal'>,
+	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> {
+	const wearableData = EditorBuiltAssetDataFromWornAsset(logicAsset);
+
+	return EditorBuildAssetGraphicsContext<Immutable<GraphicsBuildContextRoomDeviceData>>(
+		asset,
+		assetManager,
+		editorGraphicsManager,
+		{
+			modules: wearableData.modules,
+			colorizationKeys: wearableData.colorizationKeys,
+			slotIds: new Set(),
+		},
+		buildTextures,
+	);
+}
+
 export async function EditorBuildWornAssetGraphics(
 	asset: EditorWornLayersContainer,
 	builtAssetData: Immutable<GraphicsBuildContextAssetData>,

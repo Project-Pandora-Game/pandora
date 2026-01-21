@@ -11,13 +11,18 @@ import {
 	type GraphicsSourceRoomDeviceLayerType,
 } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
-import type { EditorAssetGraphicsRoomDevice } from './graphics/editorAssetGraphicsRoomDevice.ts';
+import type { EditorAssetGraphics } from './graphics/editorAssetGraphics.ts';
+import type { EditorRoomLayersContainer } from './graphics/editorGraphicsLayerContainer.ts';
 
 export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends GraphicsSourceRoomDeviceLayer> {
-	public readonly assetGraphics: EditorAssetGraphicsRoomDevice;
+	public readonly container: EditorRoomLayersContainer;
 	private _definition: Observable<Immutable<TLayer>>;
 
 	public readonly type: TLayer['type'];
+
+	public get assetGraphics(): EditorAssetGraphics {
+		return this.container.assetGraphics;
+	}
 
 	public get definition(): ReadonlyObservable<Immutable<TLayer>> {
 		return this._definition;
@@ -25,11 +30,11 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 
 	public get index(): number {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return this.assetGraphics.layers.value.findIndex((l: EditorAssetGraphicsRoomDeviceLayerContainer<any>) => l === this);
+		return this.container.layers.value.findIndex((l: EditorAssetGraphicsRoomDeviceLayerContainer<any>) => l === this);
 	}
 
-	private constructor(asset: EditorAssetGraphicsRoomDevice, definition: Immutable<TLayer>) {
-		this.assetGraphics = asset;
+	private constructor(container: EditorRoomLayersContainer, definition: Immutable<TLayer>) {
+		this.container = container;
 		this.type = definition.type;
 		this._definition = new Observable(freeze(definition));
 	}
@@ -45,31 +50,31 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 	}
 
 	public deleteFromAsset(): void {
-		this.assetGraphics.deleteLayer(this);
+		this.container.deleteLayer(this);
 	}
 
 	public reorderOnAsset(shift: number): void {
-		this.assetGraphics.moveLayerRelative(this, shift);
+		this.container.moveLayerRelative(this, shift);
 	}
 
-	public static create(definition: Immutable<GraphicsSourceRoomDeviceLayer>, asset: EditorAssetGraphicsRoomDevice): EditorAssetGraphicsRoomDeviceLayer {
+	public static create(definition: Immutable<GraphicsSourceRoomDeviceLayer>, container: EditorRoomLayersContainer): EditorAssetGraphicsRoomDeviceLayer {
 		switch (definition.type) {
 			case 'slot':
-				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSlot>(asset, definition);
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSlot>(container, definition);
 			case 'sprite':
-				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSprite>(asset, definition);
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerSprite>(container, definition);
 			case 'autoSprite':
-				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceAutoSpriteLayer>(asset, definition);
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceAutoSpriteLayer>(container, definition);
 			case 'mesh':
-				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerMesh>(asset, definition);
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerMesh>(container, definition);
 			case 'text':
-				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerText>(asset, definition);
+				return new EditorAssetGraphicsRoomDeviceLayerContainer<GraphicsSourceRoomDeviceLayerText>(container, definition);
 			default:
 		}
 		AssertNever(definition);
 	}
 
-	public static createNew(layer: GraphicsSourceRoomDeviceLayerType | Immutable<GraphicsSourceRoomDeviceLayer>, asset: EditorAssetGraphicsRoomDevice): EditorAssetGraphicsRoomDeviceLayer {
+	public static createNew(layer: GraphicsSourceRoomDeviceLayerType | Immutable<GraphicsSourceRoomDeviceLayer>, container: EditorRoomLayersContainer): EditorAssetGraphicsRoomDeviceLayer {
 		let layerDefinition: GraphicsSourceRoomDeviceLayer;
 		if (typeof layer === 'string') {
 			switch (layer) {
@@ -146,7 +151,7 @@ export class EditorAssetGraphicsRoomDeviceLayerContainer<TLayer extends Graphics
 		} else {
 			layerDefinition = CloneDeepMutable(layer);
 		}
-		return EditorAssetGraphicsRoomDeviceLayerContainer.create(freeze(layerDefinition, true), asset);
+		return EditorAssetGraphicsRoomDeviceLayerContainer.create(freeze(layerDefinition, true), container);
 	}
 }
 

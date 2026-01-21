@@ -5,6 +5,8 @@ import { GraphicsSourceLayerSchema, GraphicsSourceRoomDeviceLayerSchema } from '
 
 export const AssetSourceGraphicsDefinitionSchema = z.object({
 	layers: GraphicsSourceLayerSchema.array(),
+	/** The graphics that is used when the item can be (and is) deployed in a room. */
+	roomLayers: GraphicsSourceRoomDeviceLayerSchema.array().optional(),
 }).strict();
 export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDefinitionSchema>;
 

@@ -10,6 +10,8 @@ export interface GraphicsBuildContextAssetData {
 	modules: Record<string, AssetModuleDefinition<unknown, any>> | undefined;
 	/** List of all valid colorization keys for this asset. */
 	colorizationKeys: ReadonlySet<string>;
+	/** Whether this asset can be shown inside the room. */
+	supportsInRoomGraphics: boolean;
 }
 
 export interface GraphicsBuildContextRoomDeviceData {

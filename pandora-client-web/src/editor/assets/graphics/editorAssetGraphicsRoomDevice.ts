@@ -2,13 +2,13 @@ import { downloadZip, type InputWithSizeMeta } from 'client-zip';
 import { freeze, type Immutable } from 'immer';
 import { AssetSourceGraphicsRoomDeviceDefinitionSchema, type AssetId, type AssetSourceGraphicsRoomDeviceDefinition, type AssetSourceGraphicsRoomDeviceSlotDefinition, type GraphicsSourceLayer, type GraphicsSourceLayerType, type GraphicsSourceRoomDeviceLayer, type GraphicsSourceRoomDeviceLayerType } from 'pandora-common';
 import { DownloadAsFile } from '../../../common/downloadHelper.ts';
-import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import { Observable, StaticObservable, type ReadonlyObservable } from '../../../observable.ts';
 import { EditorAssetGraphicsRoomDeviceLayerContainer, type EditorAssetGraphicsRoomDeviceLayer } from '../editorAssetGraphicsRoomDeviceLayer.ts';
 import { EditorAssetGraphicsWornLayerContainer, type EditorAssetGraphicsWornLayer } from '../editorAssetGraphicsWornLayer.ts';
 import { EditorAssetGraphicsBase } from './editorAssetGraphicsBase.ts';
-import type { EditorWornLayersContainer } from './editorAssetGraphicsWorn.ts';
+import type { EditorRoomLayersContainer, EditorWornLayersContainer } from './editorGraphicsLayerContainer.ts';
 
-export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
+export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase implements EditorRoomLayersContainer {
 	private readonly _layers = new Observable<readonly EditorAssetGraphicsRoomDeviceLayer[]>([]);
 	public get layers(): ReadonlyObservable<readonly EditorAssetGraphicsRoomDeviceLayer[]> {
 		return this._layers;
@@ -17,6 +17,10 @@ export class EditorAssetGraphicsRoomDevice extends EditorAssetGraphicsBase {
 	private readonly _slotGraphics = new Observable<ReadonlyMap<string, EditorAssetGraphicsRoomDeviceSlot>>(new Map());
 	public get slotGraphics(): ReadonlyObservable<ReadonlyMap<string, EditorAssetGraphicsRoomDeviceSlot>> {
 		return this._slotGraphics;
+	}
+
+	public get assetGraphics(): this {
+		return this;
 	}
 
 	constructor(id: AssetId, definition: Immutable<AssetSourceGraphicsRoomDeviceDefinition>, onChange?: () => void) {
@@ -160,6 +164,7 @@ export class EditorAssetGraphicsRoomDeviceSlot implements EditorWornLayersContai
 	public get layers(): ReadonlyObservable<readonly EditorAssetGraphicsWornLayer[]> {
 		return this._layers;
 	}
+	public readonly roomLayers: ReadonlyObservable<EditorRoomLayersContainer | null> = new StaticObservable(null);
 
 	public readonly assetGraphics: EditorAssetGraphicsRoomDevice;
 

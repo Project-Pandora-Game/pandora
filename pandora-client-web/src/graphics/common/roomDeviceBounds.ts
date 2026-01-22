@@ -1,21 +1,19 @@
 import type { Immutable } from 'immer';
 import { max, min } from 'lodash-es';
-import { AssertNever, CharacterSize, type Asset, type AssetGraphicsRoomDeviceDefinition, type Rectangle } from 'pandora-common';
+import { AssertNever, CharacterSize, type Coordinates, type Rectangle, type RoomDeviceGraphicsLayer } from 'pandora-common';
 import { CHARACTER_PIVOT_POSITION } from '../graphicsCharacter.tsx';
 
 /**
- * Calculates approximate bounds for room device graphics, relative to its pivot
- * @param asset
+ * Calculates approximate bounds for room device/item graphics, relative to its pivot
  */
-export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, graphics: Immutable<AssetGraphicsRoomDeviceDefinition>): Rectangle {
-	const definition = asset.definition;
+export function CalculateRoomDeviceGraphicsBounds(roomGraphicsLayers: Immutable<RoomDeviceGraphicsLayer[]>, pivot?: Immutable<Coordinates>): Rectangle {
 
-	let itemLeft = definition.pivot.x - 20;
-	let itemRight = definition.pivot.x + 20;
-	let itemTop = definition.pivot.y - 20;
-	let itemBottom = definition.pivot.y + 20;
+	let itemLeft = (pivot?.x ?? 0) - 20;
+	let itemRight = (pivot?.x ?? 0) + 20;
+	let itemTop = (pivot?.y ?? 0) - 20;
+	let itemBottom = (pivot?.y ?? 0) + 20;
 
-	for (const layer of graphics.layers) {
+	for (const layer of roomGraphicsLayers) {
 		if (layer.type === 'sprite') {
 			const offsetXmin = min([layer.x ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
 			const offsetXmax = max([layer.x ?? 0, ...(layer.offsetOverrides?.map((o) => o.offset.x) ?? [])]) ?? 0;
@@ -29,8 +27,8 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, gr
 		} else if (layer.type === 'slot') {
 			for (const position of [layer.characterPosition, ...(layer.characterPositionOverrides ?? []).map((o) => o.position)]) {
 				const characterScale = position.relativeScale ?? 1;
-				const x = definition.pivot.x + position.offsetX - characterScale * (CHARACTER_PIVOT_POSITION.x + (position.pivotOffset?.x ?? 0));
-				const y = definition.pivot.y + position.offsetY - characterScale * (CHARACTER_PIVOT_POSITION.y + (position.pivotOffset?.y ?? 0));
+				const x = (pivot?.x ?? 0) + position.offsetX - characterScale * (CHARACTER_PIVOT_POSITION.x + (position.pivotOffset?.x ?? 0));
+				const y = (pivot?.y ?? 0) + position.offsetY - characterScale * (CHARACTER_PIVOT_POSITION.y + (position.pivotOffset?.y ?? 0));
 
 				itemLeft = Math.min(itemLeft, x);
 				itemTop = Math.min(itemTop, y);
@@ -73,8 +71,8 @@ export function CalculateRoomDeviceGraphicsBounds(asset: Asset<'roomDevice'>, gr
 	}
 
 	return {
-		x: itemLeft - definition.pivot.x,
-		y: itemTop - definition.pivot.y,
+		x: itemLeft - (pivot?.x ?? 0),
+		y: itemTop - (pivot?.y ?? 0),
 		width: itemRight - itemLeft,
 		height: itemBottom - itemTop,
 	};

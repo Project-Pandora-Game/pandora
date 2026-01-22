@@ -5,11 +5,11 @@ import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	ICharacterRoomData,
-	ItemRoomDevice,
 	Rectangle,
 	RoomBackgroundData,
 	SpaceClientInfo,
 	type AssetFrameworkRoomState,
+	type Item,
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
@@ -266,18 +266,13 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 		</Row>
 	);
 
-	const focusDevice = useMemo((): ItemRoomDevice | undefined => {
+	const focusItem = useMemo((): Item | undefined => {
 		const itemId = currentFocus.container.length > 0 ? currentFocus.container[0].item : currentFocus.itemId;
 
 		if (itemId == null)
 			return undefined;
 
-		const item = globalState.getItems(currentRoomSelector)?.find((i) => i.id === itemId);
-
-		if (item == null || !item.isType('roomDevice') || !item.isDeployed())
-			return undefined;
-
-		return item;
+		return globalState.getItems(currentRoomSelector)?.find((i) => i.id === itemId);
 	}, [currentFocus, currentRoomSelector, globalState]);
 
 	return (
@@ -285,7 +280,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 			{ ...graphicsProps }
 			globalState={ globalState }
 			overlay={ overlay }
-			focusDevice={ focusDevice }
+			focusItem={ focusItem }
 		/>
 	);
 }
@@ -295,7 +290,7 @@ interface RoomPreviewProps {
 	globalState: AssetFrameworkGlobalState;
 	roomState: AssetFrameworkRoomState;
 	overlay?: ReactNode;
-	focusDevice?: ItemRoomDevice;
+	focusItem?: Item;
 }
 
 export function RoomPreview({
@@ -303,38 +298,62 @@ export function RoomPreview({
 	globalState,
 	roomState,
 	overlay,
-	focusDevice,
+	focusItem,
 }: RoomPreviewProps): ReactElement {
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
-		if (focusDevice == null || !focusDevice.isDeployed())
+		if (focusItem == null)
 			return undefined;
 
-		const graphics = graphicsManager?.assetGraphics[focusDevice.asset.id];
-		if (graphics?.type !== 'roomDevice')
-			return undefined;
+		if (focusItem.isType('roomDevice') && focusItem.isDeployed()) {
+			const graphics = graphicsManager?.assetGraphics[focusItem.asset.id];
+			if (graphics?.type !== 'roomDevice')
+				return undefined;
 
-		const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(focusDevice.asset, graphics);
+			const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(graphics.layers, focusItem.asset.definition.pivot);
 
-		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
-			focusDevice.deployment.x,
-			focusDevice.deployment.y,
-			focusDevice.deployment.yOffset,
-		]);
+			const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+				focusItem.deployment.x,
+				focusItem.deployment.y,
+				focusItem.deployment.yOffset,
+			]);
 
-		const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
-		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
+			const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+			const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
 
-		return {
-			x: posX + Math.floor(scale * x),
-			y: posY - yOffsetExtra + Math.floor(scale * y),
-			width: Math.ceil(width * scale),
-			height: Math.ceil(height * scale),
-		};
-	}, [focusDevice, graphicsManager, projectionResolver]);
+			return {
+				x: posX + Math.floor(scale * x),
+				y: posY - yOffsetExtra + Math.floor(scale * y),
+				width: Math.ceil(width * scale),
+				height: Math.ceil(height * scale),
+			};
+		}
+
+		if (focusItem.isType('personal') && focusItem.deployment?.deployed) {
+			const graphics = graphicsManager?.assetGraphics[focusItem.asset.id];
+			if (graphics?.type !== 'worn' || graphics.roomLayers == null)
+				return undefined;
+
+			const { x, y, width, height } = CalculateRoomDeviceGraphicsBounds(graphics.roomLayers);
+
+			const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition(focusItem.deployment.position);
+
+			const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+			const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
+
+			return {
+				x: posX + Math.floor(scale * x),
+				y: posY - yOffsetExtra + Math.floor(scale * y),
+				width: Math.ceil(width * scale),
+				height: Math.ceil(height * scale),
+			};
+		}
+
+		return undefined;
+	}, [focusItem, graphicsManager, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		forwardContexts: [serviceManagerContext, UseTextureGetterOverride],

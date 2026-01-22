@@ -79,7 +79,7 @@ export function ActionTransferItem({
 		const playerPosition = playerState.position;
 		Assert(item.asset.definition.roomDeployment != null);
 		// If it is being put into the same room the player is in, position it relative to the player, but only if the auto-deploy is enabled
-		if (item.deployment.autoDeploy &&
+		if (item.deployment != null &&
 			action.target.type === 'room' &&
 			targetContainer.length === 0 &&
 			playerPosition.type === 'normal' &&
@@ -89,7 +89,7 @@ export function ActionTransferItem({
 			const { autoDeployRelativePosition } = item.asset.definition.roomDeployment;
 
 			item = item.withDeployment(produce(item.deployment, (d) => {
-				d.deployed = true;
+				d.deployed = d.autoDeploy;
 				const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
 				d.position = [
 					playerPosition.position[0] + inversion * autoDeployRelativePosition[0],

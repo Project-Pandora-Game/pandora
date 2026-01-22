@@ -6,6 +6,7 @@ import { usePlayer } from '../../../components/gameContext/playerContextProvider
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu.tsx';
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu.tsx';
+import { ItemContextMenu } from '../../../graphics/room/contextMenus/itemContextMenu.tsx';
 import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions.tsx';
 import { IRoomContextMenuFocus, IRoomSceneMode, RoomScreenContext } from './roomContext.tsx';
 import { RoomItemDialogsProviderEnabler } from './roomItemDialog.tsx';
@@ -44,6 +45,13 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 				deviceItemId: target.deviceItemId,
 				position,
 			});
+		} else if (target.type === 'item') {
+			setContextMenuFocus({
+				type: 'item',
+				room: target.room,
+				itemId: target.itemId,
+				position,
+			});
 		} else {
 			AssertNever(target);
 		}
@@ -70,25 +78,29 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 				<RoomConstructionModeCheckProvider />
 				<RoomItemDialogsProviderEnabler />
 				{ children }
-				{
-				contextMenuFocus?.type === 'character' ? (
+				{ contextMenuFocus == null ? (
+					null
+				) : contextMenuFocus.type === 'character' ? (
 					<CharacterContextMenu
 						character={ contextMenuFocus.character }
 						position={ contextMenuFocus.position }
 						onClose={ closeContextMenu }
 					/>
-				) : null
-				}
-				{
-				contextMenuFocus?.type === 'device' ? (
+				) : contextMenuFocus.type === 'device' ? (
 					<DeviceContextMenu
 						room={ contextMenuFocus.room }
 						deviceItemId={ contextMenuFocus.deviceItemId }
 						position={ contextMenuFocus.position }
 						onClose={ closeContextMenu }
 					/>
-				) : null
-				}
+				) : contextMenuFocus.type === 'item' ? (
+					<ItemContextMenu
+						room={ contextMenuFocus.room }
+						itemId={ contextMenuFocus.itemId }
+						position={ contextMenuFocus.position }
+						onClose={ closeContextMenu }
+					/>
+				) : AssertNever(contextMenuFocus) }
 			</WardrobeActionContextProvider>
 		</RoomScreenContext.Provider>
 	);

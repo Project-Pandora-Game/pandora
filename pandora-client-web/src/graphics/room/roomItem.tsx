@@ -1,52 +1,41 @@
-import { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
 import {
-	AssertNever,
-	AssetFrameworkCharacterState,
-	ICharacterRoomData,
-	ItemRoomDevice,
-	RoomDeviceDeploymentPosition,
+	EMPTY_ARRAY,
 	type AssetFrameworkRoomState,
+	type Item,
+	type RoomPosition,
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
-import { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
-import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
+import { DeviceOverlaySetting, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PointLike } from '../common/point.ts';
-import { useCharacterDisplayStyle } from '../common/visionFilters.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
-import { RoomCharacterLabel } from './roomCharacter.tsx';
 import { RoomItemGraphics } from './roomItemGraphics.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
-type RoomDeviceInteractiveProps = {
-	characters: readonly Character<ICharacterRoomData>[];
-	charactersInDevice: readonly AssetFrameworkCharacterState[];
+type RoomItemInteractiveProps = {
 	roomState: AssetFrameworkRoomState;
-	item: ItemRoomDevice;
-	deployment: Immutable<RoomDeviceDeploymentPosition>;
+	item: Item;
+	position: RoomPosition;
 	projectionResolver: RoomProjectionResolver;
 	filters: () => readonly PIXI.Filter[];
 };
 
-type RoomDeviceProps = {
-	characters: readonly Character<ICharacterRoomData>[];
-	charactersInDevice: readonly AssetFrameworkCharacterState[];
+type RoomItemProps = {
 	roomState: AssetFrameworkRoomState;
-	item: ItemRoomDevice;
-	deployment: Immutable<RoomDeviceDeploymentPosition>;
+	item: Item;
+	position: RoomPosition;
 	projectionResolver: RoomProjectionResolver;
 	filters: () => readonly PIXI.Filter[];
 
@@ -58,12 +47,12 @@ type RoomDeviceProps = {
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
-export function RoomDeviceMovementTool({
+export function RoomItemMovementTool({
 	roomState,
 	item,
-	deployment,
+	position,
 	projectionResolver,
-}: Pick<RoomDeviceInteractiveProps, 'roomState' | 'item' | 'deployment' | 'projectionResolver'>): ReactElement | null {
+}: Pick<RoomItemInteractiveProps, 'roomState' | 'item' | 'position' | 'projectionResolver'>): ReactElement | null {
 	const asset = item.asset;
 
 	const {
@@ -76,41 +65,27 @@ export function RoomDeviceMovementTool({
 		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
 
 		execute({
-			type: 'roomDeviceDeploy',
-			target: {
-				type: 'room',
-				roomId: roomState.id,
-			},
-			item: {
-				container: [],
-				itemId: item.id,
-			},
-			deployment: {
+			type: 'moveItem',
+			target: { type: 'room', roomId: roomState.id },
+			item: { container: [], itemId: item.id },
+			personalItemDeployment: {
 				deployed: true,
-				position: {
-					x: newX,
-					y: newY,
-					yOffset: newYOffset,
-				},
+				position: [newX, newY, newYOffset],
 			},
 		});
 	}, [execute, roomState.id, item.id, projectionResolver]);
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
-	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
-		deployment.x,
-		deployment.y,
-		deployment.yOffset,
-	]);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition(position);
 
 	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
 	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 
-	const pivot = useMemo<PointLike>(() => ({
+	const pivot = useMemo((): PointLike => asset.isType('roomDevice') ? ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
-	}), [asset]);
+	}) : ({ x: 0, y: 0 }), [asset]);
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
@@ -148,7 +123,7 @@ export function RoomDeviceMovementTool({
 
 			const newYOffset = (dragPointerEnd.y - labelY) * -scale;
 
-			setPositionThrottled(deployment.x, deployment.y, newYOffset);
+			setPositionThrottled(position[0], position[1], newYOffset);
 		}
 	});
 
@@ -175,7 +150,7 @@ export function RoomDeviceMovementTool({
 			if (pointerDownTarget.current === 'pos') {
 				setRoomSceneMode({ mode: 'normal' });
 			} else if (pointerDownTarget.current === 'offset') {
-				setPositionThrottled(deployment.x, deployment.y, 0);
+				setPositionThrottled(position[0], position[1], 0);
 			}
 		}
 		pointerDown.current = null;
@@ -250,15 +225,13 @@ export function RoomDeviceMovementTool({
 	);
 }
 
-export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
-	characters,
-	charactersInDevice,
+export const RoomItemInteractive = memo(function RoomItemInteractive({
 	roomState,
 	item,
-	deployment,
+	position,
 	projectionResolver,
 	filters,
-}: RoomDeviceInteractiveProps): ReactElement | null {
+}: RoomItemInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 
 	const {
@@ -266,12 +239,12 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 		openContextMenu,
 	} = useRoomScreenContext();
 
-	const isBeingMoved = roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === item.id;
+	const isBeingMoved = roomSceneMode.mode === 'moveItem' && roomSceneMode.itemId === item.id;
 
-	const pivot = useMemo<PointLike>(() => ({
+	const pivot = useMemo((): PointLike => asset.isType('roomDevice') ? ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
-	}), [asset]);
+	}) : ({ x: 0, y: 0 }), [asset]);
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
@@ -290,9 +263,9 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
 		if (pointerDown.current !== null) {
 			openContextMenu({
-				type: 'device',
+				type: 'item',
 				room: roomState.id,
-				deviceItemId: item.id,
+				itemId: item.id,
 			}, {
 				x: event.pageX,
 				y: event.pageY,
@@ -306,12 +279,8 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
 
-	const canInteractNormally = Object.keys(asset.definition.slots).length > 0;
-	const enableMenu = !isBeingMoved && (canInteractNormally || showOverlaySetting === 'always');
-	const showMenuHelper = enableMenu && (
-		showOverlaySetting === 'always' ||
-		(showOverlaySetting === 'interactable' && canInteractNormally)
-	);
+	const enableMenu = !isBeingMoved && showOverlaySetting === 'always';
+	const showMenuHelper = enableMenu && showOverlaySetting === 'always';
 
 	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (!showMenuHelper) {
@@ -332,194 +301,34 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
 	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
-	const showCharacterNames = useObservable(SettingDisplayCharacterName);
-
 	return (
-		<>
-			<RoomDevice
-				characters={ characters }
-				charactersInDevice={ charactersInDevice }
-				roomState={ roomState }
-				item={ item }
-				deployment={ deployment }
-				projectionResolver={ projectionResolver }
-				filters={ filters }
-				hitArea={ hitArea }
-				cursor={ enableMenu ? 'pointer' : 'none' }
-				eventMode={ enableMenu ? 'static' : 'none' }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-			>
-				{
-					enableMenu ? (
-						<Graphics
-							zIndex={ 99998 }
-							draw={ deviceMenuHelperDraw }
-							position={ { x: labelX, y: labelY } }
-						/>
-					) : null
-				}
-			</RoomDevice>
-			{
-				showCharacterNames ? (
-					<RoomDeviceCharacterNames
-						item={ item }
-						characters={ characters }
-						charactersInDevice={ charactersInDevice }
-						deployment={ deployment }
-						projectionResolver={ projectionResolver }
-					/>
-				) : null
-			}
-		</>
+		<RoomItem
+			roomState={ roomState }
+			item={ item }
+			position={ position }
+			projectionResolver={ projectionResolver }
+			filters={ filters }
+			hitArea={ hitArea }
+			cursor={ enableMenu ? 'pointer' : 'none' }
+			eventMode={ enableMenu ? 'static' : 'none' }
+			onPointerDown={ onPointerDown }
+			onPointerUp={ onPointerUp }
+		>
+			{ enableMenu ? (
+				<Graphics
+					zIndex={ 99998 }
+					draw={ deviceMenuHelperDraw }
+					position={ { x: labelX, y: labelY } }
+				/>
+			) : null }
+		</RoomItem>
 	);
 });
 
-function RoomDeviceCharacterNames({
-	item,
-	characters,
-	charactersInDevice,
-	deployment,
-	projectionResolver,
-}: Pick<RoomDeviceProps, 'item' | 'characters' | 'charactersInDevice' | 'deployment' | 'projectionResolver'>): ReactElement {
-	const {
-		interfaceChatroomCharacterNameFontSize,
-	} = useAccountSettings();
-
-	let fontScale: number;
-	switch (interfaceChatroomCharacterNameFontSize) {
-		case 'xs': fontScale = 0.6; break;
-		case 's': fontScale = 1.0; break;
-		case 'm': fontScale = 1.4; break;
-		case 'l': fontScale = 1.8; break;
-		case 'xl': fontScale = 2.2; break;
-		default:
-			AssertNever(interfaceChatroomCharacterNameFontSize);
-	}
-
-	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
-		deployment.x,
-		deployment.y,
-		deployment.yOffset,
-	]);
-
-	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
-	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
-
-	return (
-		<>
-			{
-				useMemo(() => {
-					if (characters == null)
-						return null;
-
-					const result: ReactNode[] = [];
-					const spacing = 42 * fontScale;
-
-					for (const slot of Object.keys(item.asset.definition.slots)) {
-						const characterId = item.slotOccupancy.get(slot);
-						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
-						const characterState = charactersInDevice.find((c) => c.id === characterId);
-
-						if (character == null || characterState == null)
-							continue;
-
-						// Character must be in this device, otherwise we skip the name
-						// (could happen if character left and rejoined the room without device equipped)
-						const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
-						if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== slot)
-							continue;
-
-						result.push(<RoomDeviceCharacterName
-							key={ character.id }
-							character={ character }
-							x={ x }
-							y={ y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) }
-							zIndex={ -deploymentY - 0.5 }
-							scale={ scale }
-							spacing={ spacing }
-						/>);
-					}
-
-					return result;
-				}, [characters, charactersInDevice, deploymentY, fontScale, item, scale, x, y, yOffsetExtra])
-			}
-		</>
-	);
-}
-
-function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
-	character: Character;
-	x: number;
-	y: number;
-	zIndex: number;
-	scale: number;
-	spacing: number;
-}): ReactElement | null {
-	const {
-		openContextMenu,
-	} = useRoomScreenContext();
-
-	const characterDisplayStyle = useCharacterDisplayStyle(character);
-
-	const [hover, setHover] = useState(false);
-	const [held, setHeld] = useState(false);
-
-	if (characterDisplayStyle === 'hidden')
-		return null;
-
-	return (
-		<Container
-			key={ character.id }
-			position={ { x, y } }
-			scale={ { x: scale, y: scale } }
-			cursor='pointer'
-			eventMode='static'
-			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-			onpointerdown={ (ev) => {
-				if (ev.button !== 1) {
-					ev.stopPropagation();
-					setHeld(true);
-				}
-			} }
-			onpointerup={ (ev) => {
-				if (held) {
-					ev.stopPropagation();
-					setHeld(false);
-					openContextMenu({
-						type: 'character',
-						character,
-					}, {
-						x: ev.pageX,
-						y: ev.pageY,
-					});
-				}
-			} }
-			onpointerupoutside={ () => {
-				setHeld(false);
-			} }
-			onpointerenter={ () => {
-				setHover(true);
-			} }
-			onpointerleave={ () => {
-				setHover(false);
-			} }
-			zIndex={ zIndex }
-		>
-			<RoomCharacterLabel
-				character={ character }
-				theme={ held ? 'active' : hover ? 'hover' : 'normal' }
-			/>
-		</Container>
-	);
-}
-
-export const RoomDevice = memo(function RoomDevice({
-	characters,
-	charactersInDevice,
+export const RoomItem = memo(function RoomItem({
 	roomState,
 	item,
-	deployment,
+	position,
 	projectionResolver,
 	filters,
 
@@ -529,15 +338,15 @@ export const RoomDevice = memo(function RoomDevice({
 	eventMode,
 	onPointerDown,
 	onPointerUp,
-}: RoomDeviceProps): ReactElement | null {
+}: RoomItemProps): ReactElement | null {
 	return (
 		<RoomItemGraphics
 			item={ item }
-			position={ [deployment.x, deployment.y, deployment.yOffset] }
+			position={ position }
 			roomBackground={ roomState.roomBackground }
 			projectionResolver={ projectionResolver }
-			charactersInDevice={ charactersInDevice }
-			characters={ characters }
+			charactersInDevice={ EMPTY_ARRAY }
+			characters={ EMPTY_ARRAY }
 			filters={ filters }
 			hitArea={ hitArea }
 			eventMode={ eventMode }

@@ -1,9 +1,8 @@
 import {
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
-	FilterItemType,
 	ICharacterRoomData,
-	ItemRoomDevice,
+	IsNotNullable,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkRoomState,
 	type ItemId,
@@ -17,6 +16,7 @@ import { usePlayerVisionFiltersFactory } from '../common/visionFilters.tsx';
 import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { RoomCharacter } from './roomCharacter.tsx';
 import { RoomDevice } from './roomDevice.tsx';
+import { RoomItem } from './roomItem.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
 import './roomScene.scss';
 
@@ -36,7 +36,6 @@ export function RoomGraphics({
 	showCharacterNames,
 	noRoomBackground = false,
 }: RoomGraphicsProps): ReactElement {
-	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (room.items.filter(FilterItemType('roomDevice')) ?? []), [room]);
 	// Optimize for the fact, that vast majority of room devices do not have a character
 	const roomDeviceCharacters = useMemo((): ReadonlyMap<ItemId, readonly AssetFrameworkCharacterState[]> => {
 		const result = new Map<ItemId, AssetFrameworkCharacterState[]>();
@@ -79,18 +78,39 @@ export function RoomGraphics({
 				</>
 			) : null }
 			<Container sortableChildren>
-				{ roomDevices.map((device) => (device.isDeployed() ? (
-					<RoomDevice
-						key={ device.id }
-						characters={ characters }
-						charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
-						roomState={ room }
-						item={ device }
-						deployment={ device.deployment }
-						projectionResolver={ projectionResolver }
-						filters={ playerVisionFilters }
-					/>
-				) : null)) }
+				{ useMemo((): readonly ReactElement[] => {
+					return room.items.map((item) => {
+						if (item.isType('roomDevice') && item.isDeployed()) {
+							return (
+								<RoomDevice
+									key={ item.id }
+									characters={ characters }
+									charactersInDevice={ roomDeviceCharacters.get(item.id) ?? EMPTY_ARRAY }
+									roomState={ room }
+									item={ item }
+									deployment={ item.deployment }
+									projectionResolver={ projectionResolver }
+									filters={ playerVisionFilters }
+								/>
+							);
+						}
+
+						if (item.isType('personal') && item.deployment?.deployed) {
+							return (
+								<RoomItem
+									key={ item.id }
+									roomState={ room }
+									item={ item }
+									position={ item.deployment.position }
+									projectionResolver={ projectionResolver }
+									filters={ playerVisionFilters }
+								/>
+							);
+						}
+
+						return null;
+					}).filter(IsNotNullable);
+				}, [characters, playerVisionFilters, projectionResolver, room, roomDeviceCharacters]) }
 				{ characters.map((character) => {
 					const characterState = globalState.characters.get(character.id);
 					if (characterState == null ||

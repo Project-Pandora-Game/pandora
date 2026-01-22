@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { EMPTY_ARRAY, PANDORA_FONTS, type ItemRoomDevice, type RoomDeviceGraphicsLayerText } from 'pandora-common';
+import { EMPTY_ARRAY, PANDORA_FONTS, type Item, type RoomDeviceGraphicsLayerText } from 'pandora-common';
 import { ItemModuleText } from 'pandora-common/assets/modules/text';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
@@ -94,7 +94,7 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 	item,
 	getFilters,
 }: {
-	item: ItemRoomDevice;
+	item: Item;
 	layer: Immutable<RoomDeviceGraphicsLayerText>;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
 }): ReactElement {

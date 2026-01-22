@@ -2,14 +2,14 @@ import { Immutable } from 'immer';
 import { clamp } from 'lodash-es';
 import {
 	Assert,
+	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	CalculateBackgroundDataFromCalibrationData,
 	CardinalDirectionSchema,
 	EMPTY_ARRAY,
-	FilterItemType,
 	ICharacterRoomData,
-	ItemRoomDevice,
+	IsNotNullable,
 	RectangleSchema,
 	RoomBackgroundData,
 	RoomDescriptionSchema,
@@ -51,6 +51,7 @@ import { UseTextureGetterOverride } from '../useTexture.ts';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
+import { RoomItemInteractive, RoomItemMovementTool } from './roomItem.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
 
@@ -91,7 +92,6 @@ export function RoomGraphicsInteractive({
 		roomSceneMode,
 	} = useRoomScreenContext();
 
-	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (room.items.filter(FilterItemType('roomDevice')) ?? []), [room]);
 	// Optimize for the fact, that vast majority of room devices do not have a character
 	const roomDeviceCharacters = useMemo((): ReadonlyMap<ItemId, readonly AssetFrameworkCharacterState[]> => {
 		const result = new Map<ItemId, AssetFrameworkCharacterState[]>();
@@ -201,18 +201,39 @@ export function RoomGraphicsInteractive({
 				/>
 			)) }
 			<Container sortableChildren>
-				{ roomDevices.map((device) => (device.isDeployed() ? (
-					<RoomDeviceInteractive
-						key={ device.id }
-						characters={ characters }
-						charactersInDevice={ roomDeviceCharacters.get(device.id) ?? EMPTY_ARRAY }
-						roomState={ room }
-						item={ device }
-						deployment={ device.deployment }
-						projectionResolver={ projectionResolver }
-						filters={ playerVisionFilters }
-					/>
-				) : null)) }
+				{ useMemo((): readonly ReactElement[] => {
+					return room.items.map((item) => {
+						if (item.isType('roomDevice') && item.isDeployed()) {
+							return (
+								<RoomDeviceInteractive
+									key={ item.id }
+									characters={ characters }
+									charactersInDevice={ roomDeviceCharacters.get(item.id) ?? EMPTY_ARRAY }
+									roomState={ room }
+									item={ item }
+									deployment={ item.deployment }
+									projectionResolver={ projectionResolver }
+									filters={ playerVisionFilters }
+								/>
+							);
+						}
+
+						if (item.isType('personal') && item.deployment?.deployed) {
+							return (
+								<RoomItemInteractive
+									key={ item.id }
+									roomState={ room }
+									item={ item }
+									position={ item.deployment.position }
+									projectionResolver={ projectionResolver }
+									filters={ playerVisionFilters }
+								/>
+							);
+						}
+
+						return null;
+					}).filter(IsNotNullable);
+				}, [characters, playerVisionFilters, projectionResolver, room, roomDeviceCharacters]) }
 				{ characters.map((character) => {
 					const characterState = globalState.characters.get(character.id);
 					if (characterState == null ||
@@ -236,52 +257,78 @@ export function RoomGraphicsInteractive({
 				}) }
 			</Container>
 			<Container>
-				{
-					characters.map((character) => {
-						const characterState = globalState.characters.get(character.id);
-						if (characterState == null)
+				{ (() => {
+					if (roomSceneMode.mode === 'normal') {
+						// No extras to show
+						return null;
+					} if (roomSceneMode.mode === 'moveCharacter') {
+						const character = characters.find((c) => c.id === roomSceneMode.characterId);
+						const characterState = globalState.characters.get(roomSceneMode.characterId);
+						if (character == null || characterState == null)
 							return null;
 
-						if (roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id) {
-							return (
-								<RoomCharacterMovementTool
-									key={ character.id }
-									characterState={ characterState }
-									character={ character }
-									spaceInfo={ info }
-									debugConfig={ debugConfig }
-									projectionResolver={ projectionResolver }
-									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-								/>
-							);
-						} else if (roomSceneMode.mode === 'poseCharacter' && roomSceneMode.characterId === character.id) {
-							return (
-								<RoomCharacterPosingTool
-									key={ character.id }
-									characterState={ characterState }
-									character={ character }
-									spaceInfo={ info }
-									debugConfig={ debugConfig }
-									projectionResolver={ projectionResolver }
-									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-								/>
-							);
-						}
+						return (
+							<RoomCharacterMovementTool
+								key={ character.id }
+								characterState={ characterState }
+								character={ character }
+								spaceInfo={ info }
+								debugConfig={ debugConfig }
+								projectionResolver={ projectionResolver }
+								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+							/>
+						);
+					} else if (roomSceneMode.mode === 'poseCharacter') {
+						const character = characters.find((c) => c.id === roomSceneMode.characterId);
+						const characterState = globalState.characters.get(roomSceneMode.characterId);
+						if (character == null || characterState == null)
+							return null;
 
-						return null;
-					})
-				}
-				{
-					roomDevices.map((device) => ((roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === device.id && device.isDeployed()) ? (
-						<RoomDeviceMovementTool
-							key={ device.id }
-							roomState={ room }
-							item={ device }
-							deployment={ device.deployment }
-							projectionResolver={ projectionResolver }
-						/>
-					) : null))
-				}
+						return (
+							<RoomCharacterPosingTool
+								key={ character.id }
+								characterState={ characterState }
+								character={ character }
+								spaceInfo={ info }
+								debugConfig={ debugConfig }
+								projectionResolver={ projectionResolver }
+								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+							/>
+						);
+					} else if (roomSceneMode.mode === 'moveDevice') {
+						const device = room.items.find((i) => i.id === roomSceneMode.deviceItemId);
+
+						if (!device?.isType('roomDevice') || !device.isDeployed())
+							return null;
+
+						return (
+							<RoomDeviceMovementTool
+								key={ device.id }
+								roomState={ room }
+								item={ device }
+								deployment={ device.deployment }
+								projectionResolver={ projectionResolver }
+							/>
+						);
+					} else if (roomSceneMode.mode === 'moveItem') {
+						const item = room.items.find((i) => i.id === roomSceneMode.itemId);
+
+						if (!item?.isType('personal') || !item.deployment?.deployed)
+							return null;
+
+						return (
+							<RoomItemMovementTool
+								key={ item.id }
+								roomState={ room }
+								item={ item }
+								position={ item.deployment.position }
+								projectionResolver={ projectionResolver }
+							/>
+						);
+					}
+
+					AssertNever(roomSceneMode);
+				})() }
 			</Container>
 		</Container>
 	);

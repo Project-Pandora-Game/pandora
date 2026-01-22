@@ -94,7 +94,7 @@ function WardrobePersonalItemDeploymentPosition({ deployment, targetSelector, it
 	const checkResult = useStaggeredAppearanceActionResult(checkAction);
 	const disabled = checkResult == null || !checkResult.valid || checkResult.getActionSlowdownTime() > 0;
 
-	const onChangeCaller = useCallback((newPosition: Immutable<RoomPosition>) => {
+	const onChangeCaller = useCallback((newPosition: RoomPosition) => {
 		execute({
 			type: 'moveItem',
 			target: targetSelector,
@@ -104,7 +104,7 @@ function WardrobePersonalItemDeploymentPosition({ deployment, targetSelector, it
 	}, [execute, targetSelector, itemPath]);
 	const onChangeCallerThrottled = useMemo(() => throttle(onChangeCaller, LIVE_UPDATE_THROTTLE), [onChangeCaller]);
 
-	const changeCallback = useCallback((newPosition: Immutable<RoomPosition>) => {
+	const changeCallback = useCallback((newPosition: RoomPosition) => {
 		setPositionX(newPosition[0]);
 		setPositionY(newPosition[1]);
 		setPositionYOffset(newPosition[2]);

@@ -7,11 +7,17 @@ import type { PointLike } from '../../../graphics/common/point.ts';
 export type IRoomSceneMode = {
 	mode: 'normal';
 } | {
-	mode: 'moveCharacter' | 'poseCharacter';
+	mode: 'moveCharacter';
+	characterId: CharacterId;
+} | {
+	mode: 'poseCharacter';
 	characterId: CharacterId;
 } | {
 	mode: 'moveDevice';
 	deviceItemId: ItemId;
+} | {
+	mode: 'moveItem';
+	itemId: ItemId;
 };
 
 type IRoomContextMenuCharacterFocus = {
@@ -27,13 +33,20 @@ type IRoomContextMenuDeviceFocus = {
 	position: Readonly<PointLike>;
 };
 
-export type IRoomContextMenuFocus = IRoomContextMenuCharacterFocus | IRoomContextMenuDeviceFocus;
+type IRoomContextMenuItemFocus = {
+	type: 'item';
+	room: RoomId;
+	itemId: ItemId;
+	position: Readonly<PointLike>;
+};
+
+export type IRoomContextMenuFocus = IRoomContextMenuCharacterFocus | IRoomContextMenuDeviceFocus | IRoomContextMenuItemFocus;
 
 export type RoomScreenContext = {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	contextMenuFocus: Readonly<IRoomContextMenuFocus> | null;
-	openContextMenu: (target: Omit<IRoomContextMenuCharacterFocus, 'position'> | Omit<IRoomContextMenuDeviceFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
+	openContextMenu: (target: Omit<IRoomContextMenuCharacterFocus, 'position'> | Omit<IRoomContextMenuDeviceFocus, 'position'> | Omit<IRoomContextMenuItemFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
 };
 
 export const RoomScreenContext = createContext<RoomScreenContext | null>(null);

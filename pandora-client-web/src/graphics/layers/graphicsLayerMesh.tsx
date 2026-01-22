@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever, DualQuaternion, EMPTY_ARRAY, MAX_BONE_COUNT, type ItemRoomDevice, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
+import { AssertNever, DualQuaternion, EMPTY_ARRAY, MAX_BONE_COUNT, type Item, type RoomDeviceGraphicsLayerMesh, type RoomDeviceLayerImageOverride, type RoomDeviceLayerImageSetting } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
@@ -87,7 +87,7 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 	roomMask,
 	getFilters,
 }: {
-	item: ItemRoomDevice;
+	item: Item;
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
 	roomMask?: PixiMaskSource;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);

@@ -52,7 +52,7 @@ export const RoomBackgroundDataSchema = z.object({
 	/** How much of the image's bottom edge is covered by the area */
 	areaCoverage: z.number().min(0.01),
 
-	/** The height of the ceiling, in area size units. Unused, debug-only. */
+	/** The height of the ceiling, in area size units. Used for room clipping. */
 	ceiling: z.number().min(0),
 
 	/** The offset of the camera's center, used for calculating skew */
@@ -193,7 +193,7 @@ export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 ]);
 export type CharacterSpacePosition = z.infer<typeof CharacterSpacePositionSchema>;
 
-export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: Immutable<RoomPosition>): boolean {
+export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: RoomPosition): boolean {
 	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
 
 	return position[0] >= minX && position[0] <= maxX && position[1] >= minY && position[1] <= maxY;

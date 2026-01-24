@@ -60,7 +60,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate> = z.object({
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
 	modules: z.record(z.string(), z.lazy(() => ItemModuleTemplateSchema)).optional(),
-	personalData: PersonalItemTemplateDataSchema.optional(),
+	personalData: PersonalItemTemplateDataSchema.optional().catch(undefined),
 });
 
 export const AssetFrameworkOutfitSchema = z.object({

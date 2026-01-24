@@ -24,16 +24,19 @@ declare module './_internal.ts' {
 	}
 }
 
+export type PersonalItemDeploymentAutoDeploy = 'atCharacter' | 'keepPosition' | false;
+export const PersonalItemDeploymentAutoDeploySchema: z.ZodType<PersonalItemDeploymentAutoDeploy> = z.literal(['atCharacter', 'keepPosition', false]);
+
 export type PersonalItemDeployment = {
-	/** If set, the item will be automatically deployed upon being placed in the room inventory. */
-	autoDeploy: boolean;
+	/** If set to anything other than `false`, the item will be automatically deployed upon being placed in the room inventory. */
+	autoDeploy: PersonalItemDeploymentAutoDeploy;
 	/** Whether the item is currently visible in a room. Can only be set if in a room. */
 	deployed: boolean;
 	/** The position in the room. Remembered even if item isn't currently deployed. */
 	position: RoomPosition;
 };
 export const PersonalItemDeploymentSchema: z.ZodType<PersonalItemDeployment> = z.object({
-	autoDeploy: z.boolean(),
+	autoDeploy: PersonalItemDeploymentAutoDeploySchema,
 	deployed: z.boolean(),
 	position: RoomPositionSchema,
 });
@@ -45,19 +48,19 @@ export type PersonalItemBundle = {
 };
 /** Data specific to personal items */
 export const PersonalItemBundleSchema: z.ZodType<PersonalItemBundle> = z.object({
-	deployment: PersonalItemDeploymentSchema.optional(),
+	deployment: PersonalItemDeploymentSchema.optional().catch(undefined),
 });
 
 /** Template data specific to personal items */
 export type PersonalItemTemplateData = {
 	/** The `autoDeploy` flag from personal item deployment data
-	 * @default true
+	 * @default 'atCharacter'
 	 */
-	autoDeploy?: boolean;
+	autoDeploy?: PersonalItemDeploymentAutoDeploy;
 };
 /** Template data specific to personal items */
 export const PersonalItemTemplateDataSchema: z.ZodType<PersonalItemTemplateData> = z.object({
-	autoDeploy: z.boolean().optional(),
+	autoDeploy: PersonalItemDeploymentAutoDeploySchema.optional(),
 });
 
 interface ItemPersonalProps extends ItemBaseProps<'personal'> {
@@ -102,7 +105,7 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 			// If the item is deployable, create deployment data. Otherwise force it cleared.
 			deployment: asset.definition.roomDeployment != null ? (
 				bundle.personalData?.deployment ?? {
-					autoDeploy: true,
+					autoDeploy: 'atCharacter',
 					deployed: false,
 					position: [0, 0, 0],
 				}

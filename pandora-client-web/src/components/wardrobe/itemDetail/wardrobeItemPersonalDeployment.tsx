@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
 import {
@@ -14,6 +15,7 @@ import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
 import { WardrobeActionButton } from '../wardrobeComponents.tsx';
@@ -23,52 +25,101 @@ export function WardrobePersonalItemDeployment({ item, targetSelector, itemPath 
 	targetSelector: ActionTargetSelector;
 	itemPath: ItemPath;
 }): ReactElement | null {
+	const { playerState } = usePlayerState();
 
-	if (item.deployment == null)
+	if (item.deployment == null || item.asset.definition.roomDeployment == null)
 		return null;
+
+	const { autoDeployRelativePosition } = item.asset.definition.roomDeployment;
 
 	const inRoomInventory = targetSelector.type === 'room' && itemPath.container.length === 0;
 
 	return (
 		<FieldsetToggle legend='Room visibility'>
 			<Column padding='medium'>
-				<i>This item can be displayed inside the room if moved to the room inventory</i>
+				<i>Item can be displayed inside the room while in its room inventory</i>
 				{ inRoomInventory ? (
 					<>
-						<WardrobeActionButton action={ {
-							type: 'moveItem',
-							target: targetSelector,
-							item: itemPath,
-							personalItemDeployment: { deployed: !item.deployment.deployed },
-						} }>
-							{ item.deployment.deployed ? (
-								'Hide this item'
-							) : (
-								'Show this item in the room'
-							) }
-						</WardrobeActionButton>
+						{ item.deployment.deployed ? (
+							<WardrobeActionButton action={ {
+								type: 'moveItem',
+								target: targetSelector,
+								item: itemPath,
+								personalItemDeployment: { deployed: false },
+							} }>
+								Hide this item
+							</WardrobeActionButton>
+						) : (
+							<Row>
+								<WardrobeActionButton className='flex-grow-1' action={ {
+									type: 'moveItem',
+									target: targetSelector,
+									item: itemPath,
+									personalItemDeployment: { deployed: true },
+								} }>
+									Show this item at its last position
+								</WardrobeActionButton>
+								<WardrobeActionButton
+									className='flex-grow-1'
+									action={ {
+										type: 'moveItem',
+										target: targetSelector,
+										item: itemPath,
+										personalItemDeployment: {
+											deployed: true, position: [
+												playerState.position.position[0] + (playerState.actualPose.view === 'back' ? -1 : 1) * autoDeployRelativePosition[0],
+												playerState.position.position[1] + (playerState.actualPose.view === 'back' ? -1 : 1) * autoDeployRelativePosition[1],
+												playerState.position.position[2] + (playerState.actualPose.view === 'back' ? -1 : 1) * autoDeployRelativePosition[2],
+											],
+										},
+									} }
+									disabled={ playerState.position.type !== 'normal' || playerState.position.room !== targetSelector.roomId }
+								>
+									Show this item near your character
+								</WardrobeActionButton>
+							</Row>
+						) }
 						<WardrobePersonalItemDeploymentPosition deployment={ item.deployment } targetSelector={ targetSelector } itemPath={ itemPath } />
 					</>
 				) : null }
-				<Row alignX='space-between' alignY='center'>
-					{ item.deployment.autoDeploy ? (
-						<div>Item will be shown automatically</div>
-					) : (
-						<div>Item will <strong>not</strong> be shown automatically</div>
-					) }
-					<WardrobeActionButton action={ {
-						type: 'customize',
-						target: targetSelector,
-						item: itemPath,
-						personalItemAutoDeploy: !item.deployment.autoDeploy,
-					} }>
-						{ item.deployment.autoDeploy ? (
-							'Disable'
-						) : (
-							'Enable'
-						) }
-					</WardrobeActionButton>
-				</Row>
+				<Column gap='tiny'>
+					When this item is moved to a room inventory:
+					<Row alignY='center' wrap gap='tiny'>
+						<WardrobeActionButton
+							className={ classNames('slim flex-grow-1', item.deployment.autoDeploy === false ? 'selected' : '') }
+							action={ {
+								type: 'customize',
+								target: targetSelector,
+								item: itemPath,
+								personalItemAutoDeploy: false,
+							} }
+						>
+							Do not display
+						</WardrobeActionButton>
+						<WardrobeActionButton
+							className={ classNames('slim flex-grow-1', item.deployment.autoDeploy === 'atCharacter' ? 'selected' : '') }
+							action={ {
+								type: 'customize',
+								target: targetSelector,
+								item: itemPath,
+								personalItemAutoDeploy: 'atCharacter',
+							} }
+						>
+							Place near character
+						</WardrobeActionButton>
+						<WardrobeActionButton
+							className={ classNames('slim flex-grow-1', item.deployment.autoDeploy === 'keepPosition' ? 'selected' : '') }
+							action={ {
+								type: 'customize',
+								target: targetSelector,
+								item: itemPath,
+								personalItemAutoDeploy: 'keepPosition',
+							} }
+						>
+							Place at previous spot
+						</WardrobeActionButton>
+					</Row>
+				</Column>
 			</Column>
 		</FieldsetToggle>
 	);

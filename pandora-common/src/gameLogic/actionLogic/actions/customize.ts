@@ -1,11 +1,12 @@
+import { produce } from 'immer';
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { PersonalItemDeploymentAutoDeploySchema } from '../../../assets/item/personal.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../../../inputLimits.ts';
+import { AssertNotNullable } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
-import { produce } from 'immer';
-import { AssertNotNullable } from '../../../utility/misc.ts';
 
 export const AppearanceActionCustomize = z.object({
 	type: z.literal('customize'),
@@ -20,7 +21,7 @@ export const AppearanceActionCustomize = z.object({
 	/** New usage state to require hands to use or not */
 	requireFreeHandsToUse: z.boolean().optional(),
 	/** Sets whether personal item should auto-deploy to room when put into it. The asset must support room deployment for this to be allowed. */
-	personalItemAutoDeploy: z.boolean().optional(),
+	personalItemAutoDeploy: PersonalItemDeploymentAutoDeploySchema.optional(),
 });
 
 /** Customizes an item. */

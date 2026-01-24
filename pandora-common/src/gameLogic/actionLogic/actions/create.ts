@@ -73,7 +73,7 @@ export function ActionCreate({
 		const playerPosition = playerState.position;
 		Assert(item.asset.definition.roomDeployment != null);
 		// If it is being put into the same room the player is in, position it relative to the player, but only if the auto-deploy is enabled
-		if (item.deployment != null &&
+		if (item.deployment.autoDeploy &&
 			action.target.type === 'room' &&
 			action.container.length === 0 &&
 			playerPosition.type === 'normal' &&
@@ -83,13 +83,19 @@ export function ActionCreate({
 			const { autoDeployRelativePosition } = item.asset.definition.roomDeployment;
 
 			item = item.withDeployment(produce(item.deployment, (d) => {
-				d.deployed = d.autoDeploy;
-				const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
-				d.position = [
-					playerPosition.position[0] + inversion * autoDeployRelativePosition[0],
-					playerPosition.position[1] + inversion * autoDeployRelativePosition[1],
-					playerPosition.position[2] + inversion * autoDeployRelativePosition[2],
-				];
+				d.deployed = true;
+				if (d.autoDeploy === 'atCharacter') {
+					const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
+					d.position = [
+						playerPosition.position[0] + inversion * autoDeployRelativePosition[0],
+						playerPosition.position[1] + inversion * autoDeployRelativePosition[1],
+						playerPosition.position[2] + inversion * autoDeployRelativePosition[2],
+					];
+				}
+			}));
+		} else {
+			item = item.withDeployment(produce(item.deployment, (d) => {
+				d.deployed = false;
 			}));
 		}
 	}

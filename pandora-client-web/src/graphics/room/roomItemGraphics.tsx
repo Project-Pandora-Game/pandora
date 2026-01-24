@@ -38,7 +38,10 @@ export interface RoomItemGraphicsProps extends ChildrenProps {
 	projectionResolver: RoomProjectionResolver;
 	charactersInDevice: readonly AssetFrameworkCharacterState[];
 	characters: readonly Character<ICharacterRoomData>[];
+	/** Filters to apply to each room layer. Slots do not have filters applied to. */
 	filters: () => readonly PIXI.Filter[];
+	/** Filters to apply to the whole device, including any slots. Note, that these still do not apply to supplied children. */
+	containerFilters?: () => readonly PIXI.Filter[];
 	hitArea?: PIXI.Rectangle;
 	eventMode?: PIXI.EventMode;
 	cursor?: PIXI.Cursor;
@@ -47,6 +50,8 @@ export interface RoomItemGraphicsProps extends ChildrenProps {
 	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
 	onPointerUpOutside?: (event: PIXI.FederatedPointerEvent) => void;
 	onPointerMove?: (event: PIXI.FederatedPointerEvent) => void;
+	onPointerEnter?: (event: PIXI.FederatedPointerEvent) => void;
+	onPointerLeave?: (event: PIXI.FederatedPointerEvent) => void;
 }
 
 function RoomItemGraphicsWithManager({
@@ -57,10 +62,13 @@ function RoomItemGraphicsWithManager({
 	charactersInDevice,
 	characters,
 	filters,
+	containerFilters,
 	onPointerDown,
 	onPointerUp,
 	onPointerUpOutside,
 	onPointerMove,
+	onPointerEnter,
+	onPointerLeave,
 	children,
 	cursor,
 	eventMode,
@@ -120,6 +128,8 @@ function RoomItemGraphicsWithManager({
 		AssertNever(graphics);
 	}, [asset, graphicsGetter]);
 
+	const actualContainerFilters = useMemo<PIXI.Filter[] | undefined>(() => containerFilters?.().slice(), [containerFilters]);
+
 	return (
 		<>
 			<Container
@@ -135,9 +145,11 @@ function RoomItemGraphicsWithManager({
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUpOutside }
 				onpointermove={ onPointerMove }
+				onpointerenter={ onPointerEnter }
+				onpointerleave={ onPointerLeave }
 			>
 				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-					<Container zIndex={ 0 }>
+					<Container zIndex={ 0 } filters={ actualContainerFilters }>
 						{ useMemo(() => layers.map((layer, i) => {
 							if (layer.type === 'sprite') {
 								return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;

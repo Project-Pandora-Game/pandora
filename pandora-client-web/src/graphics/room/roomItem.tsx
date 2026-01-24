@@ -6,18 +6,22 @@ import {
 	type RoomPosition,
 	type RoomProjectionResolver,
 } from 'pandora-common';
+import { OutlineFilter } from 'pixi-filters';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlaySetting, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
-import { Graphics } from '../baseComponents/graphics.ts';
 import { PointLike } from '../common/point.ts';
+import { CalculateRoomDeviceGraphicsBounds } from '../common/roomDeviceBounds.ts';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { RoomItemGraphics } from './roomItemGraphics.tsx';
 
@@ -37,7 +41,10 @@ type RoomItemProps = {
 	item: Item;
 	position: RoomPosition;
 	projectionResolver: RoomProjectionResolver;
+	/** Filters to apply to each room layer. Slots do not have filters applied to. */
 	filters: () => readonly PIXI.Filter[];
+	/** Filters to apply to the whole device, including any slots. Note, that these still do not apply to supplied children. */
+	containerFilters?: () => readonly PIXI.Filter[];
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;
@@ -45,6 +52,11 @@ type RoomItemProps = {
 	eventMode?: PIXI.EventMode;
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
+	/** Defaults to onPointerUp */
+	onPointerUpOutside?: (event: FederatedPointerEvent) => void;
+	onPointerMove?: (event: FederatedPointerEvent) => void;
+	onPointerEnter?: (event: FederatedPointerEvent) => void;
+	onPointerLeave?: (event: FederatedPointerEvent) => void;
 };
 
 export function RoomItemMovementTool({
@@ -232,6 +244,8 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 	projectionResolver,
 	filters,
 }: RoomItemInteractiveProps): ReactElement | null {
+	const graphicsManager = useObservable(GraphicsManagerInstance);
+	const { interfaceAccentColor } = useAccountSettings();
 	const asset = item.asset;
 
 	const {
@@ -241,65 +255,80 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 
 	const isBeingMoved = roomSceneMode.mode === 'moveItem' && roomSceneMode.itemId === item.id;
 
-	const pivot = useMemo((): PointLike => asset.isType('roomDevice') ? ({
-		x: asset.definition.pivot.x,
-		y: asset.definition.pivot.y,
-	}) : ({ x: 0, y: 0 }), [asset]);
+	const hitArea = useMemo(() => {
+		const graphics = graphicsManager?.assetGraphics[asset.id];
 
-	const labelX = pivot.x;
-	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
+		const bounds = CalculateRoomDeviceGraphicsBounds((graphics?.type === 'worn' ? graphics.roomLayers : undefined) ?? []);
+		return new PIXI.Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
+	}, [graphicsManager, asset.id]);
 
-	const hitAreaRadius = 50;
-	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
-
-	/** Time at which user pressed button/touched */
-	const pointerDown = useRef<number | null>(null);
+	/** Global position at which user pressed button/touched */
+	const pointerDown = useRef<PIXI.Point | null>(null);
+	const [hover, setHover] = useState(false);
+	const [held, setHeld] = useState(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		event.stopPropagation();
-		pointerDown.current = Date.now();
+		// Intentionally not stopping propagation, as we want people to be able to move background even through the item
+		pointerDown.current = event.global.clone();
+		setHeld(true);
 	}, []);
 
-	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
+	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (pointerDown.current !== null) {
-			openContextMenu({
-				type: 'item',
-				room: roomState.id,
-				itemId: item.id,
-			}, {
-				x: event.pageX,
-				y: event.pageY,
-			});
+			const movedDistance = event.global.clone().subtract(pointerDown.current).magnitudeSquared();
+			// If we moved less than 10 pixels, then open menu, otherwise ignore this
+			if (movedDistance < 100) {
+				openContextMenu({
+					type: 'item',
+					room: roomState.id,
+					itemId: item.id,
+				}, {
+					x: event.pageX,
+					y: event.pageY,
+				});
+			}
 		}
 		pointerDown.current = null;
-	});
+		setHeld(false);
+	}, [item.id, openContextMenu, roomState.id]);
 
-	// Overlay graphics
+	const onPointerUpOutside = useCallback(() => {
+		pointerDown.current = null;
+		setHeld(false);
+	}, []);
+
+	const onPointeMove = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (pointerDown.current !== null) {
+			const movedDistance = event.global.clone().subtract(pointerDown.current).magnitudeSquared();
+			// If we moved at least 10 pixels, then cancel hold
+			if (movedDistance >= 100) {
+				pointerDown.current = null;
+				setHeld(false);
+			}
+		}
+	}, []);
+
+	// Selection graphics
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
 
 	const enableMenu = !isBeingMoved && showOverlaySetting === 'always';
-	const showMenuHelper = enableMenu && showOverlaySetting === 'always';
 
-	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
-		if (!showMenuHelper) {
-			return;
+	const containerFilters = useCallback(() => {
+		if (enableMenu && (hover || held)) {
+			const outlineColor = new Color('#222222').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : 0.35).toHex();
+
+			return [
+				new OutlineFilter({
+					color: outlineColor,
+					thickness: 4,
+				}),
+			];
 		}
 
-		g
-			.circle(0, 0, hitAreaRadius)
-			.fill({ color: roomConstructionMode ? 0xff0000 : 0x000075, alpha: roomConstructionMode ? 0.7 : 0.2 })
-			.poly([
-				-30, 10,
-				5, -40,
-				5, -5,
-				30, -5,
-				-5, 40,
-				-5, 10,
-			])
-			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
-	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
+		return [];
+	}, [enableMenu, held, hover, interfaceAccentColor]);
 
 	return (
 		<RoomItem
@@ -308,19 +337,21 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 			position={ position }
 			projectionResolver={ projectionResolver }
 			filters={ filters }
+			containerFilters={ containerFilters }
 			hitArea={ hitArea }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
+			onPointerUpOutside={ onPointerUpOutside }
+			onPointerMove={ onPointeMove }
+			onPointerEnter={ () => {
+				setHover(true);
+			} }
+			onPointerLeave={ () => {
+				setHover(false);
+			} }
 		>
-			{ enableMenu ? (
-				<Graphics
-					zIndex={ 99998 }
-					draw={ deviceMenuHelperDraw }
-					position={ { x: labelX, y: labelY } }
-				/>
-			) : null }
 		</RoomItem>
 	);
 });
@@ -331,6 +362,7 @@ export const RoomItem = memo(function RoomItem({
 	position,
 	projectionResolver,
 	filters,
+	containerFilters,
 
 	children,
 	hitArea,
@@ -338,6 +370,10 @@ export const RoomItem = memo(function RoomItem({
 	eventMode,
 	onPointerDown,
 	onPointerUp,
+	onPointerUpOutside,
+	onPointerMove,
+	onPointerEnter,
+	onPointerLeave,
 }: RoomItemProps): ReactElement | null {
 	return (
 		<RoomItemGraphics
@@ -348,12 +384,16 @@ export const RoomItem = memo(function RoomItem({
 			charactersInDevice={ EMPTY_ARRAY }
 			characters={ EMPTY_ARRAY }
 			filters={ filters }
+			containerFilters={ containerFilters }
 			hitArea={ hitArea }
 			eventMode={ eventMode }
 			cursor={ cursor }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUp }
+			onPointerUpOutside={ onPointerUpOutside ?? onPointerUp }
+			onPointerMove={ onPointerMove }
+			onPointerEnter={ onPointerEnter }
+			onPointerLeave={ onPointerLeave }
 		>
 			{ children }
 		</RoomItemGraphics>

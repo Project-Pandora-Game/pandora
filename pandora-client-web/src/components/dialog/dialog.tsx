@@ -583,7 +583,7 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 	}), [entry]);
 }
 
-function ButtonConfirmImpl({ title, content, priority, onClick, disabled, children, ...props }: ButtonProps & { title: string; content?: ReactNode; priority?: number; }, ref: React.ForwardedRef<HTMLButtonElement>) {
+function ButtonConfirmImpl({ title, content, priority, onClick, disabled, children, ...props }: Omit<ButtonProps, 'title' | 'content'> & { title: string; content?: ReactNode; priority?: number; }, ref: React.ForwardedRef<HTMLButtonElement>) {
 	const confirm = useConfirmDialog();
 
 	const [onActualClick, processing] = useAsyncEvent(async (ev: React.MouseEvent<HTMLButtonElement>) => {

@@ -20,19 +20,22 @@ import {
 import { IItemModule } from 'pandora-common/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import React, { ReactElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import broomIcon from '../../../assets/icons/broom.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_INFO } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useGameState } from '../../../services/gameLogic/gameStateHooks.ts';
+import { Sleep } from '../../../utility.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
 import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
-import { ButtonConfirm } from '../../dialog/dialog.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
@@ -50,6 +53,7 @@ export function InventoryItemView({
 	title: string;
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
+	const confirm = useConfirmDialog();
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const { targetSelector, heldItem, focuser, currentRoomSelector } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
@@ -78,24 +82,56 @@ export function InventoryItemView({
 
 	const [cleanUp, processing] = useAsyncEvent(async () => {
 		const items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
-		for (const item of items) {
-			if (
-				item.name === undefined &&
-				item.description === undefined &&
-				item.asset.definition.storageModule === undefined &&
-				(item.asset.type === 'personal' || item.asset.type === 'lock')
-			) {
-				await gameState.doImmediateAction(
-					{
-						type: 'delete',
-						target: targetSelector,
-						item: {
-							container: [],
-							itemId: item.id,
-						},
-					},
-				);
+
+		const itemsToDelete = items.filter((item) => {
+			if (!item.isType('personal') && !item.isType('lock'))
+				return false;
+
+			if (item.name !== undefined || item.description !== undefined)
+				return false;
+
+			function countSignificantContainedItems(i1: Item): number {
+				return Array.from(i1.getModules().keys())
+					.reduce((s, module) => s + i1.getModuleItems(module).reduce((s2, i2) => s2 + (!i2.isType('lock') ? 1 : 0) + countSignificantContainedItems(i2), 0), 0);
 			}
+			const containedItemsCount = countSignificantContainedItems(item);
+			if (containedItemsCount > 0)
+				return false;
+
+			return true;
+		});
+
+		if (itemsToDelete.length === 0) {
+			toast('Found nothing to clean!', TOAST_OPTIONS_INFO);
+			return;
+		}
+
+		if (!await confirm('Clean up the room inventory', (
+			<>
+				<p>
+					This will delete all items without a description or custom name. Room-level items, items containing non-lock items, and items inside other items are ignored.<br />
+					Do you want to proceed?
+				</p>
+				The following { itemsToDelete.length > 1 ? `${itemsToDelete.length} items` : 'item' } will be deleted:
+				<ul className='overflow-auto' style={ { maxHeight: '50vh' } }>
+					{ itemsToDelete.map((item) => <li key={ item.id }>{ ResolveItemDisplayName(item, wardrobeItemDisplayNameType) }</li>) }
+				</ul>
+			</>
+		)))
+			return;
+
+		for (const item of itemsToDelete) {
+			await gameState.doImmediateAction(
+				{
+					type: 'delete',
+					target: targetSelector,
+					item: {
+						container: [],
+						itemId: item.id,
+					},
+				},
+			);
+			await Sleep(50); // Lets not spam server too much
 		}
 	}, null);
 
@@ -151,17 +187,15 @@ export function InventoryItemView({
 					(focus.container.length <= 0) ? (
 						targetSelector.type === 'room' ? (
 							<>
-								<ButtonConfirm className='slim' disabled={ processing } onClick={ () => {
-									cleanUp();
-								} }
-								title='Cleaning up the room inventory'
-								content={
-									`This will delete all wearable items without a description or custom name. Storage and room items are ignored.\nDo you want to proceed?`
-								}
+								<Button
+									className='slim'
+									title='Clean up the room inventory'
+									onClick={ cleanUp }
+									disabled={ processing }
 								>
 									<img src={ broomIcon } alt='Action clean up' />
 									Clean
-								</ButtonConfirm>
+								</Button>
 								<Button className='slim' onClick={ () => {
 									focuser.reset();
 									navigate('/wardrobe');

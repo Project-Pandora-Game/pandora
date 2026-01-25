@@ -44,6 +44,7 @@ import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomD
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from '../baseComponents/pixiViewport.tsx';
+import { HitscanContainerProvider } from '../common/hitscan/hitscanContainer.tsx';
 import { usePlayerVisionFilters, usePlayerVisionFiltersFactory } from '../common/visionFilters.tsx';
 import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
@@ -90,6 +91,7 @@ export function RoomGraphicsInteractive({
 }: RoomGraphicsInteractiveProps): ReactElement {
 	const {
 		roomSceneMode,
+		openContextMenu,
 	} = useRoomScreenContext();
 
 	// Optimize for the fact, that vast majority of room devices do not have a character
@@ -175,161 +177,170 @@ export function RoomGraphicsInteractive({
 		}
 	}, [projectionResolver]);
 
+	const sceneRef = useRef<PIXI.Container>(null);
+
 	return (
-		<Container key={ room.id }>
-			<GraphicsBackground
-				background={ roomBackground }
-				backgroundFilters={ usePlayerVisionFilters(false) }
-			/>
-			{
-				!debugConfig?.roomScalingHelper ? null : (
-					<Graphics
-						draw={ calibrationLineDraw }
-					/>
-				)
-			}
-			<Graphics
-				draw={ borderDraw }
-			/>
-			{ CardinalDirectionSchema.options.map((direction) => (
-				<RoomLinkNodeGraphics
-					key={ direction }
-					cardinalDirection={ direction }
-					room={ room }
-					globalState={ globalState }
-					projectionResolver={ projectionResolver }
+		<Container key={ room.id } ref={ sceneRef } eventMode='static'>
+			<HitscanContainerProvider
+				containerRef={ sceneRef }
+				openContextMenu={ useCallback((menuComponent) => {
+					openContextMenu({ type: 'raw', component: menuComponent });
+				}, [openContextMenu]) }
+			>
+				<GraphicsBackground
+					background={ roomBackground }
+					backgroundFilters={ usePlayerVisionFilters(false) }
 				/>
-			)) }
-			<Container sortableChildren>
-				{ useMemo((): readonly ReactElement[] => {
-					return room.items.map((item) => {
-						if (item.isType('roomDevice') && item.isDeployed()) {
-							return (
-								<RoomDeviceInteractive
-									key={ item.id }
-									characters={ characters }
-									charactersInDevice={ roomDeviceCharacters.get(item.id) ?? EMPTY_ARRAY }
-									roomState={ room }
-									item={ item }
-									deployment={ item.deployment }
-									projectionResolver={ projectionResolver }
-									filters={ playerVisionFilters }
-								/>
-							);
+				{
+					!debugConfig?.roomScalingHelper ? null : (
+						<Graphics
+							draw={ calibrationLineDraw }
+						/>
+					)
+				}
+				<Graphics
+					draw={ borderDraw }
+				/>
+				{ CardinalDirectionSchema.options.map((direction) => (
+					<RoomLinkNodeGraphics
+						key={ direction }
+						cardinalDirection={ direction }
+						room={ room }
+						globalState={ globalState }
+						projectionResolver={ projectionResolver }
+					/>
+				)) }
+				<Container sortableChildren>
+					{ useMemo((): readonly ReactElement[] => {
+						return room.items.map((item) => {
+							if (item.isType('roomDevice') && item.isDeployed()) {
+								return (
+									<RoomDeviceInteractive
+										key={ item.id }
+										characters={ characters }
+										charactersInDevice={ roomDeviceCharacters.get(item.id) ?? EMPTY_ARRAY }
+										roomState={ room }
+										item={ item }
+										deployment={ item.deployment }
+										projectionResolver={ projectionResolver }
+										filters={ playerVisionFilters }
+									/>
+								);
+							}
+
+							if (item.isType('personal') && item.deployment?.deployed) {
+								return (
+									<RoomItemInteractive
+										key={ item.id }
+										roomState={ room }
+										item={ item }
+										position={ item.deployment.position }
+										projectionResolver={ projectionResolver }
+										filters={ playerVisionFilters }
+									/>
+								);
+							}
+
+							return null;
+						}).filter(IsNotNullable);
+					}, [characters, playerVisionFilters, projectionResolver, room, roomDeviceCharacters]) }
+					{ characters.map((character) => {
+						const characterState = globalState.characters.get(character.id);
+						if (characterState == null ||
+							characterState.position.type !== 'normal' ||
+							characterState.currentRoom !== room.id
+						) {
+							return null;
 						}
 
-						if (item.isType('personal') && item.deployment?.deployed) {
+						return (
+							<RoomCharacterInteractive
+								key={ character.id }
+								characterState={ characterState }
+								character={ character }
+								spaceInfo={ info }
+								debugConfig={ debugConfig }
+								projectionResolver={ projectionResolver }
+								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+							/>
+						);
+					}) }
+				</Container>
+				<Container>
+					{ (() => {
+						if (roomSceneMode.mode === 'normal') {
+							// No extras to show
+							return null;
+						} if (roomSceneMode.mode === 'moveCharacter') {
+							const character = characters.find((c) => c.id === roomSceneMode.characterId);
+							const characterState = globalState.characters.get(roomSceneMode.characterId);
+							if (character == null || characterState == null)
+								return null;
+
 							return (
-								<RoomItemInteractive
+								<RoomCharacterMovementTool
+									key={ character.id }
+									characterState={ characterState }
+									character={ character }
+									spaceInfo={ info }
+									debugConfig={ debugConfig }
+									projectionResolver={ projectionResolver }
+									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+								/>
+							);
+						} else if (roomSceneMode.mode === 'poseCharacter') {
+							const character = characters.find((c) => c.id === roomSceneMode.characterId);
+							const characterState = globalState.characters.get(roomSceneMode.characterId);
+							if (character == null || characterState == null)
+								return null;
+
+							return (
+								<RoomCharacterPosingTool
+									key={ character.id }
+									characterState={ characterState }
+									character={ character }
+									spaceInfo={ info }
+									debugConfig={ debugConfig }
+									projectionResolver={ projectionResolver }
+									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
+								/>
+							);
+						} else if (roomSceneMode.mode === 'moveDevice') {
+							const device = room.items.find((i) => i.id === roomSceneMode.deviceItemId);
+
+							if (!device?.isType('roomDevice') || !device.isDeployed())
+								return null;
+
+							return (
+								<RoomDeviceMovementTool
+									key={ device.id }
+									roomState={ room }
+									item={ device }
+									deployment={ device.deployment }
+									projectionResolver={ projectionResolver }
+								/>
+							);
+						} else if (roomSceneMode.mode === 'moveItem') {
+							const item = room.items.find((i) => i.id === roomSceneMode.itemId);
+
+							if (!item?.isType('personal') || !item.deployment?.deployed)
+								return null;
+
+							return (
+								<RoomItemMovementTool
 									key={ item.id }
 									roomState={ room }
 									item={ item }
 									position={ item.deployment.position }
 									projectionResolver={ projectionResolver }
-									filters={ playerVisionFilters }
 								/>
 							);
 						}
 
-						return null;
-					}).filter(IsNotNullable);
-				}, [characters, playerVisionFilters, projectionResolver, room, roomDeviceCharacters]) }
-				{ characters.map((character) => {
-					const characterState = globalState.characters.get(character.id);
-					if (characterState == null ||
-						characterState.position.type !== 'normal' ||
-						characterState.currentRoom !== room.id
-					) {
-						return null;
-					}
-
-					return (
-						<RoomCharacterInteractive
-							key={ character.id }
-							characterState={ characterState }
-							character={ character }
-							spaceInfo={ info }
-							debugConfig={ debugConfig }
-							projectionResolver={ projectionResolver }
-							visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-						/>
-					);
-				}) }
-			</Container>
-			<Container>
-				{ (() => {
-					if (roomSceneMode.mode === 'normal') {
-						// No extras to show
-						return null;
-					} if (roomSceneMode.mode === 'moveCharacter') {
-						const character = characters.find((c) => c.id === roomSceneMode.characterId);
-						const characterState = globalState.characters.get(roomSceneMode.characterId);
-						if (character == null || characterState == null)
-							return null;
-
-						return (
-							<RoomCharacterMovementTool
-								key={ character.id }
-								characterState={ characterState }
-								character={ character }
-								spaceInfo={ info }
-								debugConfig={ debugConfig }
-								projectionResolver={ projectionResolver }
-								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-							/>
-						);
-					} else if (roomSceneMode.mode === 'poseCharacter') {
-						const character = characters.find((c) => c.id === roomSceneMode.characterId);
-						const characterState = globalState.characters.get(roomSceneMode.characterId);
-						if (character == null || characterState == null)
-							return null;
-
-						return (
-							<RoomCharacterPosingTool
-								key={ character.id }
-								characterState={ characterState }
-								character={ character }
-								spaceInfo={ info }
-								debugConfig={ debugConfig }
-								projectionResolver={ projectionResolver }
-								visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-							/>
-						);
-					} else if (roomSceneMode.mode === 'moveDevice') {
-						const device = room.items.find((i) => i.id === roomSceneMode.deviceItemId);
-
-						if (!device?.isType('roomDevice') || !device.isDeployed())
-							return null;
-
-						return (
-							<RoomDeviceMovementTool
-								key={ device.id }
-								roomState={ room }
-								item={ device }
-								deployment={ device.deployment }
-								projectionResolver={ projectionResolver }
-							/>
-						);
-					} else if (roomSceneMode.mode === 'moveItem') {
-						const item = room.items.find((i) => i.id === roomSceneMode.itemId);
-
-						if (!item?.isType('personal') || !item.deployment?.deployed)
-							return null;
-
-						return (
-							<RoomItemMovementTool
-								key={ item.id }
-								roomState={ room }
-								item={ item }
-								position={ item.deployment.position }
-								projectionResolver={ projectionResolver }
-							/>
-						);
-					}
-
-					AssertNever(roomSceneMode);
-				})() }
-			</Container>
+						AssertNever(roomSceneMode);
+					})() }
+				</Container>
+			</HitscanContainerProvider>
 		</Container>
 	);
 }
@@ -359,7 +370,7 @@ export function RoomSceneInteractive({ className }: {
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (contextMenuFocus != null) {
-			openContextMenu(null, null);
+			openContextMenu(null);
 			event.stopPropagation();
 			event.preventDefault();
 		}

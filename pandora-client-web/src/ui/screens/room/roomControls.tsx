@@ -605,9 +605,10 @@ function DisplayCharacter({ char, globalState }: {
 		openContextMenu({
 			type: 'character',
 			character: char,
-		}, {
-			x: event.pageX,
-			y: event.pageY,
+			position: {
+				x: event.pageX,
+				y: event.pageY,
+			},
 		});
 	}, [char, openContextMenu]);
 

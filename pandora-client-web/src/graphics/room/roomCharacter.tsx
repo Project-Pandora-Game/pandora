@@ -9,10 +9,11 @@ import {
 	ICharacterRoomData,
 	SpaceClientInfo,
 	type AppearanceAction,
+	type Coordinates,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import { CanvasTextMetrics, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode, type Filter } from 'pixi.js';
-import { memo, ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { CanvasTextMetrics, GraphicsContext, Rectangle, TextStyle, type Cursor, type EventMode, type Filter } from 'pixi.js';
+import { memo, ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import statusIconAway from '../../assets/icons/state-away.svg';
@@ -27,6 +28,7 @@ import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/E
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useCanMoveCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
@@ -34,6 +36,8 @@ import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts'
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
+import type { HitscanEvent } from '../common/hitscan/hitscanContext.ts';
+import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
 import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { useCharacterDisplayFilters, useCharacterDisplayStyle } from '../common/visionFilters.tsx';
@@ -66,9 +70,10 @@ type RoomCharacterDisplayProps = {
 	hitArea?: Rectangle;
 	cursor?: Cursor;
 	eventMode?: EventMode;
-	onPointerDown?: (event: FederatedPointerEvent) => void;
-	onPointerUp?: (event: FederatedPointerEvent) => void;
-	onPointerMove?: (event: FederatedPointerEvent) => void;
+	onPointerDown?: (pos: Readonly<HitscanEvent>) => void;
+	onPointerUp?: (pos: Readonly<HitscanEvent>) => void;
+	onHitscanSelect?: (pos: Readonly<HitscanEvent>) => void;
+	onDrag?: (pos: Readonly<HitscanEvent>, start: Readonly<HitscanEvent>) => void;
 };
 
 export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -161,55 +166,59 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
-	const dragging = useRef<Point | null>(null);
+	const dragging = useRef<Readonly<Coordinates> | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 
-	const onDragStart = useCallback((event: FederatedPointerEvent) => {
-		if (dragging.current || !event.currentTarget.parent)
+	const onDragStart = useCallback((pos: Readonly<HitscanEvent>) => {
+		if (dragging.current)
 			return;
-		dragging.current = event.getLocalPosition<Point>(event.currentTarget.parent);
+		dragging.current = pos;
 	}, []);
 
-	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !spaceInfo || !event.currentTarget.parent)
+	const onDragMove = useEvent((pos: Readonly<HitscanEvent>) => {
+		if (!dragging.current || !spaceInfo)
 			return;
-		const dragPointerEnd = event.getLocalPosition<Point>(event.currentTarget.parent);
 
-		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
+		const [newX, newY] = projectionResolver.inverseGivenZ(pos.x, (pos.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
 
 		setPositionThrottled(newX, newY);
 	});
 
-	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
-		if (event.button !== 1) {
-			event.stopPropagation();
-			pointerDown.current = Date.now();
-		}
+	const onPointerDown = useCallback(() => {
+		pointerDown.current = Date.now();
 	}, []);
 
-	const onPointerUp = useEvent((event: FederatedPointerEvent) => {
+	const onPointerUp = useEvent((pos: Readonly<HitscanEvent>) => {
 		dragging.current = null;
 		if (pointerDown.current !== null && Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
 			openContextMenu({
 				type: 'character',
 				character,
-			}, {
-				x: event.pageX,
-				y: event.pageY,
+				position: {
+					x: pos.pageX,
+					y: pos.pageY,
+				},
 			});
 		}
 		pointerDown.current = null;
 	});
+	const onHitscanSelect = useEvent((pos: Readonly<HitscanEvent>) => {
+		openContextMenu({
+			type: 'character',
+			character,
+			position: {
+				x: pos.pageX,
+				y: pos.pageY,
+			},
+		});
+	});
 
-	const onPointerMove = useCallback((event: FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			event.stopPropagation();
-		}
+	const onDrag = useCallback((pos: Readonly<HitscanEvent>) => {
 		if (dragging.current) {
-			onDragMove(event);
+			onDragMove(pos);
 		} else if (pointerDown.current !== null && Date.now() >= pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
-			onDragStart(event);
+			onDragStart(pos);
 		}
 	}, [onDragMove, onDragStart]);
 
@@ -230,7 +239,8 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 			hitArea={ hitArea }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
-			onPointerMove={ onPointerMove }
+			onHitscanSelect={ onHitscanSelect }
+			onDrag={ onDrag }
 		/>
 	);
 });
@@ -247,18 +257,16 @@ export const RoomCharacter = memo(function RoomCharacter({
 	eventMode,
 	cursor,
 	hitArea,
-	onPointerDown: onPointerDownOuter,
-	onPointerMove,
-	onPointerUp: onPointerUpOuter,
+	onPointerDown,
+	onPointerUp,
+	onHitscanSelect,
+	onDrag,
 }: RoomCharacterDisplayProps): ReactElement | null {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const characterDisplayStyle = useCharacterDisplayStyle(character);
 	const characterFilters = useCharacterDisplayFilters(characterDisplayStyle);
 	const filters = useMemo(() => [...visionFilters(), ...characterFilters], [visionFilters, characterFilters]);
-
-	const [held, setHeld] = useState(false);
-	const [hover, setHover] = useState(false);
 
 	const {
 		position,
@@ -286,26 +294,45 @@ export const RoomCharacter = memo(function RoomCharacter({
 		quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION :
 		CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
 
-	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
-		setHeld(true);
-		onPointerDownOuter?.(event);
-	}, [onPointerDownOuter]);
-
-	const onPointerUp = useCallback((event: FederatedPointerEvent) => {
-		setHeld(false);
-		onPointerUpOuter?.(event);
-	}, [onPointerUpOuter]);
-
-	const onPointerEnter = useCallback((_event: FederatedPointerEvent) => {
-		setHover(true);
-	}, []);
-
-	const onPointerLeave = useCallback((_event: FederatedPointerEvent) => {
-		setHover(false);
-	}, []);
-
 	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
 	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
+
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (hitArea == null)
+			return null;
+
+		const roomHitArea = new Rectangle(
+			position.x + scale * hitArea.x,
+			position.y + scale * hitArea.y,
+			scale * hitArea.width,
+			scale * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			stopClickPropagation: true,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				return (
+					<><ColoredName color={ character.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }> { character.data.name }</ColoredName> ({ character.data.id })</>
+				);
+			},
+			onPointerDown(pos) {
+				onPointerDown?.(pos);
+			},
+			onPointerUp(pos) {
+				onPointerUp?.(pos);
+			},
+			onClick(pos, fromSelectionMenu) {
+				if (fromSelectionMenu) {
+					onHitscanSelect?.(pos);
+				}
+			},
+			onDrag(pos, start) {
+				onDrag?.(pos, start);
+			},
+		};
+	}, [hitArea, onDrag, onPointerDown, onPointerUp, onHitscanSelect, position, scale, character]));
 
 	if (roomDeviceLink != null || characterDisplayStyle === 'hidden')
 		return null;
@@ -318,12 +345,6 @@ export const RoomCharacter = memo(function RoomCharacter({
 			eventMode={ eventMode ?? 'auto' }
 			cursor={ cursor ?? 'default' }
 			hitArea={ hitArea ?? null }
-			onpointerdown={ onPointerDown }
-			onpointerup={ onPointerUp }
-			onpointerupoutside={ onPointerUp }
-			onglobalpointermove={ onPointerMove }
-			onpointerenter={ onPointerEnter }
-			onpointerleave={ onPointerLeave }
 			transitionDuration={ movementTransitionDuration }
 			tickerRef={ transitionTickerRef }
 		>

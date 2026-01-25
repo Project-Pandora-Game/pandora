@@ -293,9 +293,10 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				type: 'device',
 				room: roomState.id,
 				deviceItemId: item.id,
-			}, {
-				x: event.pageX,
-				y: event.pageY,
+				position: {
+					x: event.pageX,
+					y: event.pageY,
+				},
 			});
 		}
 		pointerDown.current = null;
@@ -489,9 +490,10 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 					openContextMenu({
 						type: 'character',
 						character,
-					}, {
-						x: ev.pageX,
-						y: ev.pageY,
+						position: {
+							x: ev.pageX,
+							y: ev.pageY,
+						},
 					});
 				}
 			} }

@@ -29,32 +29,8 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 		}
 	}, [roomConstructionMode, roomSceneMode]);
 
-	const openContextMenu = useCallback<RoomScreenContext['openContextMenu']>((target, position) => {
-		if (!target || !position) {
-			setContextMenuFocus(null);
-		} else if (target.type === 'character') {
-			setContextMenuFocus({
-				type: 'character',
-				character: target.character,
-				position,
-			});
-		} else if (target.type === 'device') {
-			setContextMenuFocus({
-				type: 'device',
-				room: target.room,
-				deviceItemId: target.deviceItemId,
-				position,
-			});
-		} else if (target.type === 'item') {
-			setContextMenuFocus({
-				type: 'item',
-				room: target.room,
-				itemId: target.itemId,
-				position,
-			});
-		} else {
-			AssertNever(target);
-		}
+	const openContextMenu = useCallback<RoomScreenContext['openContextMenu']>((target) => {
+		setContextMenuFocus(target);
 	}, []);
 
 	const closeContextMenu = useCallback(() => {
@@ -98,6 +74,10 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 						room={ contextMenuFocus.room }
 						itemId={ contextMenuFocus.itemId }
 						position={ contextMenuFocus.position }
+						onClose={ closeContextMenu }
+					/>
+				) : contextMenuFocus.type === 'raw' ? (
+					<contextMenuFocus.component
 						onClose={ closeContextMenu }
 					/>
 				) : AssertNever(contextMenuFocus) }

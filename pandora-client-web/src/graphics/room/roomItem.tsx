@@ -282,9 +282,10 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 					type: 'item',
 					room: roomState.id,
 					itemId: item.id,
-				}, {
-					x: event.pageX,
-					y: event.pageY,
+					position: {
+						x: event.pageX,
+						y: event.pageY,
+					},
 				});
 			}
 		}

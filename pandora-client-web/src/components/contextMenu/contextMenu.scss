@@ -38,7 +38,7 @@ $context-menu-themes: (
 		align-self: center;
 	}
 
-	span, .Button {
+	> span, > div > span, > .Button, > div > .Button {
 		@include common.center-flex;
 		margin: 0;
 		padding: 0.2em 0.5em;
@@ -52,7 +52,7 @@ $context-menu-themes: (
 		}
 	}
 
-	.Button {
+	> .Button, > div > .Button {
 		@include common.center-flex(row, nowrap);
 
 		padding: 0.5em 0.8em;

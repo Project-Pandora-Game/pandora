@@ -6,28 +6,26 @@ import {
 	type AssetSourceGraphicsDefinition,
 	type GraphicsSourceLayer,
 	type GraphicsSourceLayerType,
+	type GraphicsSourceRoomDeviceLayer,
+	type GraphicsSourceRoomDeviceLayerType,
+	type Writable,
 } from 'pandora-common';
 import { DownloadAsFile } from '../../../common/downloadHelper.ts';
 import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import { EditorAssetGraphicsRoomDeviceLayerContainer, type EditorAssetGraphicsRoomDeviceLayer } from '../editorAssetGraphicsRoomDeviceLayer.ts';
 import { EditorAssetGraphicsWornLayer, EditorAssetGraphicsWornLayerContainer } from '../editorAssetGraphicsWornLayer.ts';
-import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
 import { EditorAssetGraphicsBase } from './editorAssetGraphicsBase.ts';
-
-export interface EditorWornLayersContainer {
-	readonly assetGraphics: EditorAssetGraphics;
-	readonly layers: ReadonlyObservable<readonly EditorAssetGraphicsWornLayer[]>;
-
-	addLayer(layer: GraphicsSourceLayerType | Immutable<GraphicsSourceLayer>, insertIndex?: number): EditorAssetGraphicsWornLayer;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	deleteLayer(layer: EditorAssetGraphicsWornLayerContainer<any>): void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	moveLayerRelative(layer: EditorAssetGraphicsWornLayerContainer<any>, shift: number): void;
-}
+import type { EditorRoomLayersContainer, EditorWornLayersContainer } from './editorGraphicsLayerContainer.ts';
 
 export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements EditorWornLayersContainer {
 	private readonly _layers = new Observable<readonly EditorAssetGraphicsWornLayer[]>([]);
 	public get layers(): ReadonlyObservable<readonly EditorAssetGraphicsWornLayer[]> {
 		return this._layers;
+	}
+
+	private readonly _roomLayers = new Observable<EditorWornAssetGraphicsRoomLayersContainer | null>(null);
+	public get roomLayers(): ReadonlyObservable<EditorWornAssetGraphicsRoomLayersContainer | null> {
+		return this._roomLayers;
 	}
 
 	public get assetGraphics(): this {
@@ -48,13 +46,47 @@ export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements 
 			});
 			return layer;
 		});
+		this._roomLayers.value = definition.roomLayers != null ? new EditorWornAssetGraphicsRoomLayersContainer(this, definition.roomLayers, () => {
+			this.onChange();
+		}) : null;
 		this.onChange();
 	}
 
 	public export(): Immutable<AssetSourceGraphicsDefinition> {
-		return {
+		const result: Writable<Immutable<AssetSourceGraphicsDefinition>> = {
 			layers: this._layers.value.map((l) => l.definition.value),
 		};
+
+		const roomLayers = this.roomLayers.value;
+		if (roomLayers != null) {
+			result.roomLayers = roomLayers.export();
+		}
+
+		return result;
+	}
+
+	public getOrCreateRoomGraphics(): EditorWornAssetGraphicsRoomLayersContainer {
+		const current = this._roomLayers.value;
+		if (current != null)
+			return current;
+
+		const roomLayersContainer = new EditorWornAssetGraphicsRoomLayersContainer(
+			this,
+			[],
+			() => {
+				this.onChange();
+			},
+		);
+		this._roomLayers.value = roomLayersContainer;
+
+		this.onChange();
+		return roomLayersContainer;
+	}
+
+	public deleteRoomGraphics(): void {
+		this._roomLayers.value = null;
+
+		this.onChange();
 	}
 
 	public addLayer(layer: GraphicsSourceLayerType | Immutable<GraphicsSourceLayer>, insertIndex?: number): EditorAssetGraphicsWornLayer {
@@ -125,5 +157,72 @@ export class EditorAssetGraphicsWorn extends EditorAssetGraphicsBase implements 
 		}).blob();
 
 		DownloadAsFile(blob, `${this.id.replace(/^a\//, '').replaceAll('/', '_')}.zip`);
+	}
+}
+
+export class EditorWornAssetGraphicsRoomLayersContainer implements EditorRoomLayersContainer {
+	private readonly _layers = new Observable<readonly EditorAssetGraphicsRoomDeviceLayer[]>([]);
+	public get layers(): ReadonlyObservable<readonly EditorAssetGraphicsRoomDeviceLayer[]> {
+		return this._layers;
+	}
+
+	public readonly assetGraphics: EditorAssetGraphicsWorn;
+
+	private readonly onChange: (() => void);
+
+	constructor(assetGraphics: EditorAssetGraphicsWorn, definition: Immutable<GraphicsSourceRoomDeviceLayer[]>, onChange: () => void) {
+		this.assetGraphics = assetGraphics;
+		this.onChange = onChange;
+		freeze(definition, true);
+		this._layers.value = definition.map((l): EditorAssetGraphicsRoomDeviceLayer => {
+			const layer = EditorAssetGraphicsRoomDeviceLayerContainer.create(l, this);
+			layer.definition.subscribe(() => {
+				this.onChange();
+			});
+			return layer;
+		});
+	}
+
+	public export(): Immutable<GraphicsSourceRoomDeviceLayer[]> {
+		return this._layers.value.map((l) => l.definition.value);
+	}
+
+	public addLayer(layer: GraphicsSourceRoomDeviceLayerType | Immutable<GraphicsSourceRoomDeviceLayer>, insertIndex?: number): EditorAssetGraphicsRoomDeviceLayer {
+		const newLayer = EditorAssetGraphicsRoomDeviceLayerContainer.createNew(layer, this);
+		newLayer.definition.subscribe(() => {
+			this.onChange();
+		});
+		this._layers.produce((v) => v.toSpliced(insertIndex ?? v.length, 0, newLayer));
+		this.onChange();
+		return newLayer;
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public deleteLayer(layer: EditorAssetGraphicsRoomDeviceLayerContainer<any>): void {
+		const index = this._layers.value.indexOf(layer);
+		if (index < 0)
+			return;
+
+		this._layers.produce((layers) => layers.filter((l) => l !== layer));
+
+		this.onChange();
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public moveLayerRelative(layer: EditorAssetGraphicsRoomDeviceLayerContainer<any>, shift: number): void {
+		const currentPos = this._layers.value.indexOf(layer);
+		if (currentPos < 0)
+			return;
+
+		const newPos = currentPos + shift;
+		if (newPos < 0 && newPos >= this._layers.value.length)
+			return;
+
+		const newLayers = this._layers.value.slice();
+		newLayers.splice(currentPos, 1);
+		newLayers.splice(newPos, 0, layer);
+		this._layers.value = newLayers;
+
+		this.onChange();
 	}
 }

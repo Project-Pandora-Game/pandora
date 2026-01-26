@@ -23,7 +23,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -60,7 +60,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -97,7 +97,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -134,7 +134,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -171,7 +171,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -207,7 +207,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,
@@ -243,7 +243,7 @@ describe('ActionMoveItem', () => {
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
-				type: 'move',
+				type: 'moveItem',
 				target: {
 					type: 'character',
 					characterId: character.id,

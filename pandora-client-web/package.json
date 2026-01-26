@@ -40,6 +40,7 @@
 		"lz-string": "1.5.0",
 		"nanoid": "5.1.6",
 		"pandora-common": "workspace:*",
+		"pixi-filters": "6.1.5",
 		"pixi-viewport": "6.0.3",
 		"pixi.js": "8.15.0",
 		"react": "19.2.4",

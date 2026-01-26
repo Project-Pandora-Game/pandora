@@ -102,7 +102,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	public moveItem(id: ItemId, shift: number, context: EditorActionContext = {}): boolean {
 		return this.editorDoAction({
-			type: 'move',
+			type: 'moveItem',
 			target: {
 				type: 'character',
 				characterId: this.id,

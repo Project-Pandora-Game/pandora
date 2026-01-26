@@ -68,7 +68,7 @@ This effect uses the same system as if the character was restrained and had to a
 			} else {
 				shouldSlow = config.affectItemActions;
 			}
-		} else if (action.type === 'move') {
+		} else if (action.type === 'moveItem') {
 			shouldSlow = config.affectReorder;
 		} else if (action.type === 'moduleAction') {
 			if (action.action.moduleType === 'typed') {

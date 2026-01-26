@@ -46,7 +46,7 @@ import { SPACE_ROLE_TEXT_CUMULATIVE } from '../../components/commonInputs/spaceR
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
-import { useRoomScreenContext } from './roomContext.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.tsx';
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
@@ -605,9 +605,10 @@ function DisplayCharacter({ char, globalState }: {
 		openContextMenu({
 			type: 'character',
 			character: char,
-		}, {
-			x: event.pageX,
-			y: event.pageY,
+			position: {
+				x: event.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+				y: event.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+			},
 		});
 	}, [char, openContextMenu]);
 

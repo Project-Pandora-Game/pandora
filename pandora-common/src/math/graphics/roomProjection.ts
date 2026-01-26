@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { clamp } from 'lodash-es';
-import type { RoomBackgroundData } from '../../assets/index.ts';
+import type { RoomBackgroundData, RoomPosition } from '../../assets/index.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import { DEG_TO_RAD } from '../constants.ts';
 
@@ -97,7 +97,7 @@ export class RoomProjectionResolver {
 	 * (allows arbitrary values for x and y that match closest, otherwise it selects closest values still within bounds)
 	 * Default: `false`
 	 */
-	public inverseGivenZ(resX: number, resY: number, z: number, ignoreFloorBounds: boolean = false): [x: number, y: number, z: number] {
+	public inverseGivenZ(resX: number, resY: number, z: number, ignoreFloorBounds: boolean = false): RoomPosition {
 		// Clamp input to the viewport
 		resX = clamp(resX, 0, this.roomBackground.imageSize[0]);
 		// Remember, that Y increases from the bottom, and we need `scale` to be strictly bigger than zero (doesn't matter how small)
@@ -122,7 +122,7 @@ export class RoomProjectionResolver {
 	/**
 	 * Takes a position and returns the closest valid position
 	 */
-	public fixupPosition([x, y, z]: readonly [x: number, y: number, z: number]): [x: number, y: number, z: number] {
+	public fixupPosition([x, y, z]: RoomPosition): RoomPosition {
 		const minX = -this.floorAreaWidthLeft;
 		const maxX = this.floorAreaWidthRight;
 		const minY = 0;

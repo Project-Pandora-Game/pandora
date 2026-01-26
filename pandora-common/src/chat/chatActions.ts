@@ -78,11 +78,11 @@ const CHAT_ACTIONS_DEF = {
 
 	// Items that are pointed at
 	itemPointAttached: {
-		type: 'itemInteraction',
+		type: 'important',
 		message: `SOURCE_CHARACTER pointed at ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	},
 	itemPointStored: {
-		type: 'itemInteraction',
+		type: 'important',
 		message: `SOURCE_CHARACTER pointed at ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	},
 

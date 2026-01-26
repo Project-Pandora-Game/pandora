@@ -23,6 +23,7 @@ import { FormCreateStringValidator } from '../../common/form/form.tsx';
 import { WardrobeAssetDetailContent } from '../assetDetail/wardrobeAssetDetail.tsx';
 import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules.tsx';
 import { WardrobeTemplateColorization } from './wardrobeTemplateColor.tsx';
+import { WardrobeTemplatePersonalItemDeployment } from './wardrobeTemplatePersonalDeployment.tsx';
 
 export function WardrobeTemplateEditMenu({
 	title,
@@ -112,21 +113,26 @@ export function WardrobeTemplateEditMenu({
 						/>
 					) : null
 				}
-				{
-					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
-						<WardrobeTemplateColorization
-							asset={ asset }
-							color={ template.color ?? {} }
-							onChange={ (newColor) => {
-								const newTemplate: Immutable<ItemTemplate> = {
-									...template,
-									color: newColor,
-								};
-								updateTemplate(newTemplate);
-							} }
-						/>
-					) : null
-				}
+				{ (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
+					<WardrobeTemplateColorization
+						asset={ asset }
+						color={ template.color ?? {} }
+						onChange={ (newColor) => {
+							const newTemplate: Immutable<ItemTemplate> = {
+								...template,
+								color: newColor,
+							};
+							updateTemplate(newTemplate);
+						} }
+					/>
+				) : null }
+				{ asset.isType('personal') ? (
+					<WardrobeTemplatePersonalItemDeployment
+						asset={ asset }
+						template={ template }
+						updateTemplate={ updateTemplate }
+					/>
+				) : null }
 				{
 					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						Array.from(Object.entries<Immutable<AssetModuleDefinition<unknown, unknown>>>(asset.definition.modules as Record<string, AssetModuleDefinition<unknown, unknown>> ?? {}))

@@ -179,7 +179,7 @@ function LayerQuickActions({ layer }: {
 				if (layer instanceof EditorAssetGraphicsWornLayerContainer) {
 					layer.container.deleteLayer(layer);
 				} else if (layer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) {
-					layer.assetGraphics.deleteLayer(layer);
+					layer.container.deleteLayer(layer);
 				} else {
 					AssertNever(layer);
 				}
@@ -204,7 +204,7 @@ function LayerQuickActions({ layer }: {
 			const copy = produce(layer.definition.value, (d) => {
 				d.name = newName;
 			});
-			editor.targetLayer.value = layer.assetGraphics.addLayer(copy, layer.index + 1);
+			editor.targetLayer.value = layer.container.addLayer(copy, layer.index + 1);
 		} else {
 			AssertNever(layer);
 		}

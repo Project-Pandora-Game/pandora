@@ -1,5 +1,24 @@
 import { type Immutable } from 'immer';
-import { Assert, EMPTY_ARRAY, LoadAssetLayer, LoadAssetRoomDeviceLayer, type Asset, type AssetGraphicsRoomDeviceDefinition, type AssetGraphicsWornDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildContextRoomDeviceData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger, type RoomDeviceGraphicsLayer, type Size } from 'pandora-common';
+import {
+	Assert,
+	EMPTY_ARRAY,
+	LoadAssetLayer,
+	LoadAssetRoomDeviceLayer,
+	type Asset,
+	type AssetGraphicsRoomDeviceDefinition,
+	type AssetGraphicsWornDefinition,
+	type AssetManager,
+	type GraphicsBuildContext,
+	type GraphicsBuildContextAssetData,
+	type GraphicsBuildContextRoomDeviceData,
+	type GraphicsBuildImageResource,
+	type GraphicsLayer,
+	type ImageBoundingBox,
+	type Logger,
+	type RoomDeviceGraphicsLayer,
+	type Size,
+	type Writable,
+} from 'pandora-common';
 import { Application, Rectangle, Texture } from 'pixi.js';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import { CreatePixiApplication } from '../../graphics/graphicsAppManager.ts';
@@ -9,7 +28,7 @@ import type { EditorAssetGraphicsRoomDeviceLayer } from './editorAssetGraphicsRo
 import type { EditorAssetGraphicsWornLayer } from './editorAssetGraphicsWornLayer.ts';
 import type { EditorAssetGraphicsBase } from './graphics/editorAssetGraphicsBase.ts';
 import type { EditorAssetGraphicsRoomDevice } from './graphics/editorAssetGraphicsRoomDevice.ts';
-import type { EditorWornLayersContainer } from './graphics/editorAssetGraphicsWorn.ts';
+import type { EditorWornLayersContainer } from './graphics/editorGraphicsLayerContainer.ts';
 
 /** Map to editor asset graphics source layer. Only used in editor. */
 export const AssetGraphicsWornSourceMap = new WeakMap<Immutable<GraphicsLayer>, EditorAssetGraphicsWornLayer>();
@@ -124,6 +143,7 @@ export function EditorBuiltAssetDataFromWornAsset(asset: Asset<'personal'> | Ass
 	return {
 		modules: asset.definition.modules,
 		colorizationKeys: new Set(Object.keys(asset.definition.colorization ?? {})),
+		supportsInRoomGraphics: asset.isType('personal') && asset.definition.roomDeployment != null,
 	};
 }
 
@@ -144,6 +164,7 @@ export function EditorBuildAssetGraphicsWornContext(
 			{
 				modules: roomDeviceBuildData.modules,
 				colorizationKeys: roomDeviceBuildData.colorizationKeys,
+				supportsInRoomGraphics: false,
 			},
 			buildTextures,
 		);
@@ -160,13 +181,35 @@ export function EditorBuiltAssetDataFromRoomDeviceAsset(asset: Asset<'roomDevice
 }
 
 export function EditorBuildAssetRoomDeviceGraphicsContext(
-	asset: EditorAssetGraphicsRoomDevice,
+	asset: EditorAssetGraphicsBase,
 	logicAsset: Asset<'roomDevice'>,
 	assetManager: AssetManager,
 	editorGraphicsManager: EditorAssetGraphicsManagerClass,
 	buildTextures?: Map<string, Texture>,
 ): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> {
 	return EditorBuildAssetGraphicsContext(asset, assetManager, editorGraphicsManager, EditorBuiltAssetDataFromRoomDeviceAsset(logicAsset), buildTextures);
+}
+
+export function EditorBuildAssetRoomDeviceGraphicsContextForDeployablePersonalAsset(
+	asset: EditorAssetGraphicsBase,
+	logicAsset: Asset<'personal'>,
+	assetManager: AssetManager,
+	editorGraphicsManager: EditorAssetGraphicsManagerClass,
+	buildTextures?: Map<string, Texture>,
+): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> {
+	const wearableData = EditorBuiltAssetDataFromWornAsset(logicAsset);
+
+	return EditorBuildAssetGraphicsContext<Immutable<GraphicsBuildContextRoomDeviceData>>(
+		asset,
+		assetManager,
+		editorGraphicsManager,
+		{
+			modules: wearableData.modules,
+			colorizationKeys: wearableData.colorizationKeys,
+			slotIds: new Set(),
+		},
+		buildTextures,
+	);
 }
 
 export async function EditorBuildWornAssetGraphics(
@@ -196,10 +239,45 @@ export async function EditorBuildWornAssetGraphics(
 			}),
 	))).flat();
 
-	return {
+	const result: Writable<Immutable<AssetGraphicsWornDefinition>> = {
 		type: 'worn',
 		layers,
 	};
+
+	const roomLayers = asset.roomLayers.value;
+	if (roomLayers != null) {
+		if (!builtAssetData.supportsInRoomGraphics) {
+			logger.warning('Room graphics is defined, but asset does not support room deployment');
+		}
+
+		const roomLoadContext = EditorBuildAssetGraphicsContext<Immutable<GraphicsBuildContextRoomDeviceData>>(
+			asset.assetGraphics,
+			assetManager,
+			editorGraphicsManager,
+			{
+				modules: builtAssetData.modules,
+				colorizationKeys: builtAssetData.colorizationKeys,
+				slotIds: new Set(),
+			},
+			buildTextures,
+		);
+		const roomLayersLogger = logger.prefixMessages(`Room graphics:\n\t\t`);
+
+		result.roomLayers = (await Promise.all(roomLayers.layers.value.map((sourceLayer) =>
+			LoadAssetRoomDeviceLayer(sourceLayer.definition.value, roomLoadContext, roomLayersLogger)
+				.then((layerBuildResult) => {
+					// Add source map for the built layer
+					for (const builtLayer of layerBuildResult) {
+						AssetGraphicsRoomDeviceSourceMap.set(builtLayer, sourceLayer);
+					}
+					return layerBuildResult;
+				}),
+		))).flat();
+	} else if (builtAssetData.supportsInRoomGraphics) {
+		logger.warning('Asset supports room deployment, but in-room graphics are not defined');
+	}
+
+	return result;
 }
 
 export async function EditorBuildRoomDeviceAssetGraphics(
@@ -244,6 +322,7 @@ export async function EditorBuildRoomDeviceAssetGraphics(
 			{
 				modules: builtAssetData.modules,
 				colorizationKeys: builtAssetData.colorizationKeys,
+				supportsInRoomGraphics: false,
 			},
 			assetManager,
 			editorGraphicsManager,

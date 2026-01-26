@@ -39,6 +39,7 @@ import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { useWardrobeTargetItem } from '../wardrobeUtils.ts';
 import { WardrobeItemColorization } from './wardrobeItemColor.tsx';
 import { WardrobeItemName } from './wardrobeItemName.tsx';
+import { WardrobePersonalItemDeployment } from './wardrobeItemPersonalDeployment.tsx';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice.tsx';
 
 export function WardrobeItemConfigMenu({
@@ -146,7 +147,7 @@ export function WardrobeItemConfigMenu({
 						singleItemContainer ? null : (
 							<>
 								<WardrobeActionButton action={ {
-									type: 'move',
+									type: 'moveItem',
 									target: targetSelector,
 									item,
 									shift: 1,
@@ -154,7 +155,7 @@ export function WardrobeItemConfigMenu({
 									▲ Wear on top
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
-									type: 'move',
+									type: 'moveItem',
 									target: targetSelector,
 									item,
 									shift: -1,
@@ -204,39 +205,30 @@ export function WardrobeItemConfigMenu({
 						/>
 					) : null
 				}
-				{
-					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
-						<WardrobeItemRequireFreeHandsCustomize wornItem={ wornItem } item={ item } />
-					) : null
-				}
-				{
-					(wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
-						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
-					) : null
-				}
-				{
-					wornItem.isType('roomDevice') ? (
-						<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />
-					) : null
-				}
-				{
-					wornItem.isType('roomDevice') ? (
-						<WardrobeRoomDeviceSlots roomDevice={ wornItem } item={ item } />
-					) : null
-				}
-				{
-					wornItem.isType('roomDeviceWearablePart') ? (
-						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ currentRoomSelector } />
-					) : null
-				}
-				{
-					Array.from(wornItem.getModules().entries())
-						.map(([moduleName, m]) => (
-							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig target={ targetSelector } item={ item } moduleName={ moduleName } m={ m } />
-							</FieldsetToggle>
-						))
-				}
+				{ (wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+					<WardrobeItemRequireFreeHandsCustomize wornItem={ wornItem } item={ item } />
+				) : null }
+				{ (wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+					<WardrobeItemColorization wornItem={ wornItem } item={ item } />
+				) : null }
+				{ wornItem.isType('personal') ? (
+					<WardrobePersonalItemDeployment targetSelector={ targetSelector } itemPath={ item } item={ wornItem } />
+				) : null }
+				{ wornItem.isType('roomDevice') ? (
+					<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />
+				) : null }
+				{ wornItem.isType('roomDevice') ? (
+					<WardrobeRoomDeviceSlots roomDevice={ wornItem } item={ item } />
+				) : null }
+				{ wornItem.isType('roomDeviceWearablePart') ? (
+					<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ currentRoomSelector } />
+				) : null }
+				{ Array.from(wornItem.getModules().entries())
+					.map(([moduleName, m]) => (
+						<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
+							<WardrobeModuleConfig target={ targetSelector } item={ item } moduleName={ moduleName } m={ m } />
+						</FieldsetToggle>
+					)) }
 			</Column>
 		</div>
 	);

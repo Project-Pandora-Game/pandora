@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, AssetSourceGraphicsDefinitionSchema, AssetSourceGraphicsRoomDeviceDefinitionSchema, GetLogger, SortPathStrings, type RoomDeviceSlot } from 'pandora-common';
+import { AssertNever, AssetSourceGraphicsDefinitionSchema, AssetSourceGraphicsRoomDeviceDefinitionSchema, GetLogger, SortPathStrings, type Asset, type RoomDeviceSlot } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
@@ -19,7 +19,8 @@ import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraph
 import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraphics.ts';
 import type { EditorAssetGraphicsBase } from '../../assets/graphics/editorAssetGraphicsBase.ts';
 import { EditorAssetGraphicsRoomDevice } from '../../assets/graphics/editorAssetGraphicsRoomDevice.ts';
-import { EditorAssetGraphicsWorn, type EditorWornLayersContainer } from '../../assets/graphics/editorAssetGraphicsWorn.ts';
+import { EditorAssetGraphicsWorn } from '../../assets/graphics/editorAssetGraphicsWorn.ts';
+import type { EditorRoomLayersContainer, EditorWornLayersContainer } from '../../assets/graphics/editorGraphicsLayerContainer.ts';
 import { EDITOR_ALPHA_ICONS } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import './asset.scss';
@@ -28,7 +29,6 @@ export function AssetUI() {
 	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
 	const targetLayer = useObservable(editor.targetLayer);
-	const [showAddLayer, setShowAddLayer] = useState(false);
 
 	if (!selectedAsset) {
 		return (
@@ -95,20 +95,7 @@ export function AssetUI() {
 				Unselect layer
 			</Button>
 			{ (selectedAsset instanceof EditorAssetGraphicsWorn) ? (
-				<>
-					<AssetLayerList asset={ selectedAsset } />
-					<Button onClick={ () => {
-						setShowAddLayer(true);
-					} }>
-						Add layer
-					</Button>
-					{ showAddLayer ? (
-						<AddWornLayerUiDialog
-							close={ () => setShowAddLayer(false) }
-							layerContainer={ selectedAsset }
-						/>
-					) : null }
-				</>
+				<WornItemLayerView asset={ selectedAsset } />
 			) : (selectedAsset instanceof EditorAssetGraphicsRoomDevice) ? (
 				<RoomDeviceLayerView asset={ selectedAsset } />
 			) : (
@@ -211,7 +198,11 @@ function AddWornLayerUiDialog({ close, layerContainer }: { close: () => void; la
 	);
 }
 
-function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => void; layerContainer: EditorAssetGraphicsRoomDevice; }): ReactElement {
+function AddRoomDeviceLayerUiDialog({ close, layerContainer, disallowSlots = false }: {
+	close: () => void;
+	layerContainer: EditorRoomLayersContainer;
+	disallowSlots?: boolean;
+}): ReactElement {
 	const editor = useEditor();
 
 	return (
@@ -220,7 +211,7 @@ function AddRoomDeviceLayerUiDialog({ close, layerContainer }: { close: () => vo
 				<Button onClick={ () => {
 					editor.targetLayer.value = layerContainer.addLayer('slot');
 					close();
-				} }>
+				} } disabled={ disallowSlots }>
 					Add character slot layer
 				</Button>
 				<Button onClick={ () => {
@@ -393,6 +384,96 @@ function AssetBuildResult({ asset }: { asset: EditorAssetGraphicsBase; }): React
 	);
 }
 
+function WornItemLayerView({ asset }: { asset: EditorAssetGraphicsWorn; }): ReactElement | null {
+	const [showAddLayer, setShowAddLayer] = useState(false);
+	const assetManager = useAssetManager();
+
+	const logicalAsset = assetManager.getAssetById(asset.id);
+
+	if (!logicalAsset?.isWearable())
+		return null;
+
+	return (
+		<>
+			<h4>Item layers</h4>
+			<AssetLayerList asset={ asset } />
+			<Button onClick={ () => {
+				setShowAddLayer(true);
+			} }>
+				Add layer
+			</Button>
+			{ showAddLayer ? (
+				<AddWornLayerUiDialog
+					close={ () => setShowAddLayer(false) }
+					layerContainer={ asset }
+				/>
+			) : null }
+			{ logicalAsset.isType('personal') ? (
+				<WornItemRoomLayerView asset={ asset } logicalAsset={ logicalAsset } />
+			) : null }
+		</>
+	);
+}
+
+function WornItemRoomLayerView({ asset, logicalAsset }: { asset: EditorAssetGraphicsWorn; logicalAsset: Asset<'personal'>; }): ReactElement | null {
+	const [showAddLayer, setShowAddLayer] = useState(false);
+
+	const roomLayersContainer = useObservable(asset.roomLayers);
+	const roomLayers = useNullableObservable(roomLayersContainer?.layers);
+
+	if (roomLayersContainer == null) {
+		return (
+			<>
+				<hr className='fill-x' />
+				<Column padding='medium'>
+					<h4>Room graphics</h4>
+					{ logicalAsset.definition.roomDeployment != null ? (
+						<>
+							<span>This asset has no in-room graphics</span>
+							<Button onClick={ () => {
+								asset.getOrCreateRoomGraphics();
+							} }>
+								Create in-room graphics
+							</Button>
+						</>
+					) : (
+						<span>Configure <code>roomDeployment</code> in asset definition to enable displaying the asset inside the room.</span>
+					) }
+				</Column>
+			</>
+		);
+	}
+
+	return (
+		<>
+			<hr className='fill-x' />
+			<Column padding='medium'>
+				<h4>Room graphics</h4>
+				<AssetLayerList asset={ roomLayersContainer } />
+				<Button onClick={ () => {
+					setShowAddLayer(true);
+				} }>
+					Add layer
+				</Button>
+				{ showAddLayer ? (
+					<AddRoomDeviceLayerUiDialog
+						close={ () => setShowAddLayer(false) }
+						layerContainer={ roomLayersContainer }
+						disallowSlots
+					/>
+				) : null }
+				{ roomLayers != null && roomLayers.length === 0 ? (
+					<Button onClick={ () => {
+						asset.deleteRoomGraphics();
+					} }>
+						Remove in-room graphics
+					</Button>
+				) : null }
+			</Column>
+		</>
+	);
+}
+
 function RoomDeviceLayerView({ asset }: { asset: EditorAssetGraphicsRoomDevice; }): ReactElement | null {
 	const [showAddLayer, setShowAddLayer] = useState(false);
 	const assetManager = useAssetManager();
@@ -476,7 +557,7 @@ function RoomDeviceSlotLayerView({ asset, slotName }: { asset: EditorAssetGraphi
 	);
 }
 
-function AssetLayerList({ asset }: { asset: EditorWornLayersContainer | EditorAssetGraphicsRoomDevice; }): ReactElement {
+function AssetLayerList({ asset }: { asset: EditorWornLayersContainer | EditorRoomLayersContainer; }): ReactElement {
 	const layers = useObservable(asset.layers);
 
 	return (

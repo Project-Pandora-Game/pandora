@@ -1,17 +1,23 @@
 import type { Immutable } from 'immer';
-import { Assert, ICharacterRoomData, ItemId, type CharacterId, type RoomId } from 'pandora-common';
-import { createContext, useContext } from 'react';
+import { Assert, ICharacterRoomData, ItemId, type CharacterId, type Coordinates, type RoomId } from 'pandora-common';
+import { createContext, useContext, type FC } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { PointLike } from '../../../graphics/common/point.ts';
 
 export type IRoomSceneMode = {
 	mode: 'normal';
 } | {
-	mode: 'moveCharacter' | 'poseCharacter';
+	mode: 'moveCharacter';
+	characterId: CharacterId;
+} | {
+	mode: 'poseCharacter';
 	characterId: CharacterId;
 } | {
 	mode: 'moveDevice';
 	deviceItemId: ItemId;
+} | {
+	mode: 'moveItem';
+	itemId: ItemId;
 };
 
 type IRoomContextMenuCharacterFocus = {
@@ -27,14 +33,29 @@ type IRoomContextMenuDeviceFocus = {
 	position: Readonly<PointLike>;
 };
 
-export type IRoomContextMenuFocus = IRoomContextMenuCharacterFocus | IRoomContextMenuDeviceFocus;
+type IRoomContextMenuItemFocus = {
+	type: 'item';
+	room: RoomId;
+	itemId: ItemId;
+	position: Readonly<PointLike>;
+};
+
+type IRawContextMenuFocus = {
+	type: 'raw';
+	component: FC<{ onClose: () => void; }>;
+};
+
+export type IRoomContextMenuFocus = IRoomContextMenuCharacterFocus | IRoomContextMenuDeviceFocus | IRoomContextMenuItemFocus | IRawContextMenuFocus;
 
 export type RoomScreenContext = {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	contextMenuFocus: Readonly<IRoomContextMenuFocus> | null;
-	openContextMenu: (target: Omit<IRoomContextMenuCharacterFocus, 'position'> | Omit<IRoomContextMenuDeviceFocus, 'position'> | null, position: Readonly<PointLike> | null) => void;
+	openContextMenu: (target: IRoomContextMenuFocus | null) => void;
 };
+
+/** Offset (in pixels) where to open the context menu relative to the cursor */
+export const ROOM_CONTEXT_MENU_OFFSET: Readonly<Coordinates> = { x: 4, y: 4 };
 
 export const RoomScreenContext = createContext<RoomScreenContext | null>(null);
 

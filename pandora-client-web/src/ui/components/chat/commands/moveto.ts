@@ -8,7 +8,7 @@ import {
 	GenerateInitialRoomPosition,
 	GetRoomPositionBounds,
 	ParseNotNullable,
-	type CharacterRoomPosition,
+	type RoomPosition,
 	type CommandForkDescriptor,
 	type Coordinates,
 	type Promisable,
@@ -117,14 +117,14 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 								return false;
 							}
 
-							const targetPosition: Writable<CharacterRoomPosition> = CloneDeepMutable(
+							const targetPosition: Writable<RoomPosition> = CloneDeepMutable(
 								targetRoom.id === playerAppearance.characterState.position.room ? playerAppearance.characterState.position.position :
 									GenerateInitialRoomPosition(targetRoom, targetRoom.getLinkToRoom(ParseNotNullable(playerAppearance.getCurrentRoom()), true)?.direction),
 							);
 
 							if (distance != null) {
 								// Calculate a leash-like movement for distance
-								const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(targetPosition);
+								const deltaVector: Writable<RoomPosition> = CloneDeepMutable(targetPosition);
 								for (let i = 0; i <= 2; i++) {
 									deltaVector[i] -= targetCharacter.position.position[i];
 								}

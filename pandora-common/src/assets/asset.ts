@@ -34,8 +34,10 @@ export class Asset<Type extends AssetType = AssetType> {
 				GetModuleStaticAttributes(module, (p) => new Set(p.attributes?.provides)).forEach((a) => staticAttributes.add(a));
 			}
 		} else if (definition.type === 'roomDevice') {
+			// TODO: Load static attributes from modules
 			definition.staticAttributes?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'roomDeviceWearablePart') {
+			// TODO: Load static attributes from parent
 			definition.attributes?.provides?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'lock') {
 			staticAttributes.add('Lock');

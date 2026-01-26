@@ -48,7 +48,7 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionPose action={ action } { ...props } />;
 		case 'body':
 			return <DescribeGameLogicActionBody action={ action } { ...props } />;
-		case 'move':
+		case 'moveItem':
 			return <DescribeGameLogicActionMove action={ action } { ...props } />;
 		case 'color':
 			return <DescribeGameLogicActionColor action={ action } { ...props } />;
@@ -140,7 +140,7 @@ function DescribeGameLogicActionBody({ action }: DescribeGameLogicActionProps<'b
 	return <>Modify <DescribeSpaceCharacter id={ action.target } form='possessive' /> body sizes.</>;
 }
 
-function DescribeGameLogicActionMove({ action, globalState }: DescribeGameLogicActionProps<'move'>): ReactElement {
+function DescribeGameLogicActionMove({ action, globalState }: DescribeGameLogicActionProps<'moveItem'>): ReactElement {
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
 
 	return <>Reorder items { isPhysicallyEquipped ? 'on' : 'in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.</>;

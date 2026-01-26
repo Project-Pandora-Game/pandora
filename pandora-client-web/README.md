@@ -117,21 +117,84 @@ pnpm type-check:src   # ./src
 Files for Pandora's client are organized in the following way.
 If you are adding a new feature, please consider where to place the code based on the following tree.
 
+Note, that this is ideal structure after reorganization, and not all code has been moved yet. I apologize for the mess.
+
 - `assets` - Static non-code files such as icons.
 - `debug` - Code useful for debugging. This code is normally not actually used anywhere, but look here for useful tools to help you during development.
 - `common` - Code not strictly related to Pandora itself. Any code here should only use things from `common` and `assets`.
 	- `userInteraction` - Code related to how user interacts with the UI - for example components for a button, various inputs, ...
+		- button
+		- selection indicator
+		- color input
+		- select
+		- input - other wrappers (`TextInput`, `TextAreaInput`, `NumberInput`)
 	- `layout` - Code related to organising things on the screen
+		- dialog
+		- container
+		- fieldset
+		- tabs
+	- crypto
+	- form
+	- link
+	- scrollbar
+	- error boundary
+	- hover element
 - `services` - Code that runs in the background, not normally visible by users
 	- `accountLogic` - Logic around account-only actions (login, direct messaging, ...). Only needs directory connection.
+		- directory connector
+		- account manager
+		- DMs
 	- `gameLogic` - Logic around "game" features (character selection, chat, character/space state). Needs shard connection.
-- `config` - Build-time configuration data
-- `styles` - Anything related to global styling and theming
-- `ui` - All the UI code of Pandora
+		- shard connector
+		- game state
+			- character + player
+			- space
+		- chat
+		- outgoing chat
+		- permission check
+	- version check
+	- asset manager
+	- graphics loader + manager (cache)
+	- notifications
+- `config` - Build-time configuration data.
+- `styles` - Anything related to global styling and theming; components have their specific styling next to them.
+- `ui` - All the UI code of Pandora.
 	- `components` - UI components that are reusable across multiple screens
+		- actions
+			- some parts of wardrobe (TBD)
+			- validation messages
 	- `screens` - Each screen is meant to be shown by itself in the main UI area of the client. Parts of a screen are not meant to be reused by other screens.
-	- `dialogs` - Isolated UI that runs on top of some screen, but not intergrated into it
+		- contacts
+			- direct messages
+		- login
+			- login
+				- teaser
+			- registration
+		- character creation
+		- character select
+		- chatroom
+			- context menu
+		- chatroom admin
+		- chatroom search
+		- eula
+		- profiles
+			- character profile
+			- account profile
+		- settings
+		- wardrobe
+		- wiki
+	- `dialogs` - Isolated UI that runs on top of some screen, but not intergrated into it.
+		- restriction override
+		- export/import
+		- help
 	- `header` - Header. The always visible bar on top.
-- `graphics` - All code related to graphics rendering; should be lazy-loadable
+	- `tutorial` - Tutorials framework and all tutorials Pandora has.
+- `graphics` - All code related to graphics rendering; should be lazy-loadable.
+	- definitions
+	- scene
+	- all the graphical things
 - `management` - Anything that is only relevant to Pandora admins; should be lazy-loadable
 - `editor` - Code that is only relevant to the editor; loads only when editor entrypoint is used
+	- services
+		- asset manager
+	- graphics

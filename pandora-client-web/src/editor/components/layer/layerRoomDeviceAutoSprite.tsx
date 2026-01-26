@@ -6,11 +6,14 @@ import {
 	EMPTY_ARRAY,
 	GenerateMultipleListsFullJoin,
 	GRAPHICS_ROOM_DEVICE_AUTO_SPRITE_LAYER_DEFAULT_VARIANT,
+	IsNotNullable,
 	KnownObject,
 	RoomDeviceAutoSpriteLayerGenerateVariableData,
 	SortPathStrings,
 	type Asset,
 	type AtomicCondition,
+	type GraphicsBuildContext,
+	type GraphicsBuildContextRoomDeviceData,
 	type GraphicsSourceRoomDeviceAutoSpriteGraphicalLayer,
 	type GraphicsSourceRoomDeviceAutoSpriteLayer,
 	type GraphicsSourceRoomDeviceAutoSpriteLayerVariable,
@@ -31,7 +34,7 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { useStandaloneConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { useObservable } from '../../../observable.ts';
 import { useAssetManagerEditor } from '../../assets/assetManager.ts';
-import { EditorBuildAssetGraphicsWornContext, EditorBuildAssetRoomDeviceGraphicsContext } from '../../assets/editorAssetGraphicsBuilding.ts';
+import { EditorBuildAssetGraphicsWornContext, EditorBuildAssetRoomDeviceGraphicsContext, EditorBuildAssetRoomDeviceGraphicsContextForDeployablePersonalAsset } from '../../assets/editorAssetGraphicsBuilding.ts';
 import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -45,7 +48,7 @@ export function LayerRoomDeviceAutoSpriteUI({ layer }: {
 	const id = useId();
 	const assetManager = useAssetManager();
 	let asset = assetManager.getAssetById(layer.assetGraphics.id);
-	if (!asset?.isType('roomDevice'))
+	if (asset != null && !asset.isType('roomDevice') && !asset.isType('personal'))
 		asset = undefined;
 
 	const {
@@ -56,16 +59,15 @@ export function LayerRoomDeviceAutoSpriteUI({ layer }: {
 
 	const characterState = useEditorCharacterState();
 	const evaluator = useStandaloneConditionEvaluator();
-	const wornItem = characterState.items
-		.filter((i) => i.isType('roomDeviceWearablePart'))
-		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);
+	const item = characterState.items.filter((i) => i.isType('personal')).find((i) => i.asset.id === layer.assetGraphics.id) ??
+		characterState.items.filter((i) => i.isType('roomDeviceWearablePart')).map((i) => i.roomDevice).filter(IsNotNullable).find((i) => i.asset.id === layer.assetGraphics.id);
 
 	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
-		if ('module' in c && wornItem?.roomDevice == null)
+		if ('module' in c && item == null)
 			return undefined;
 
-		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
-	}, [evaluator, wornItem]);
+		return evaluator.evalCondition(c, item ?? null);
+	}, [evaluator, item]);
 
 	return (
 		<>
@@ -335,11 +337,22 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 
 	const { variables } = useObservable(layer.definition);
 
+	const buildContext = useMemo((): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> | null => {
+		if (asset?.isType('roomDevice')) {
+			return EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
+		}
+
+		if (asset?.isType('personal')) {
+			return EditorBuildAssetRoomDeviceGraphicsContextForDeployablePersonalAsset(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
+		}
+
+		return null;
+	}, [asset, assetManager, layer.assetGraphics]);
+
 	const addVariable = useCallback((newVariable: GraphicsSourceRoomDeviceAutoSpriteLayerVariable) => {
-		if (asset == null || !asset.isType('roomDevice'))
+		if (buildContext == null)
 			return;
 
-		const buildContext = EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -369,11 +382,10 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 			d.imageMap = newImages;
 
 		});
-	}, [asset, assetManager, layer, variables]);
+	}, [buildContext, layer, variables]);
 
 	const reorderVariable = useCallback((startIndex: number, shift: number | null) => {
-		if (asset == null ||
-			!asset.isType('roomDevice') ||
+		if (buildContext == null ||
 			startIndex < 0 ||
 			startIndex >= variables.length ||
 			shift != null && (startIndex + shift) < 0 ||
@@ -382,7 +394,6 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 			return;
 		}
 
-		const buildContext = EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -421,10 +432,10 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 			d.imageMap = newImages;
 
 		});
-	}, [asset, assetManager, layer, variables]);
+	}, [buildContext, layer, variables]);
 
 	const updateVariable = useCallback((index: number, newValue: Immutable<GraphicsSourceRoomDeviceAutoSpriteLayerVariable>) => {
-		if (asset == null ||
+		if (buildContext == null ||
 			index < 0 ||
 			index >= variables.length
 		) {
@@ -436,9 +447,9 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 
 			// TODO: Figure out how to update all images
 		});
-	}, [asset, layer, variables]);
+	}, [buildContext, layer, variables]);
 
-	if (asset == null || !asset.isType('roomDevice'))
+	if (asset == null || (!asset.isType('roomDevice') && !asset.isType('personal')) || buildContext == null)
 		return null;
 
 	return (
@@ -584,6 +595,18 @@ function LayerRoomDeviceAutoSpriteImages({ layer }: {
 	const [autofillDialogTarget, setAutofillDialogTarget] = useState<null | true | string>(null);
 	const [autofillPrefixes, setAutofillPrefixes] = useState<readonly string[]>([]);
 
+	const buildContext = useMemo((): GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>> | null => {
+		if (asset?.isType('roomDevice')) {
+			return EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
+		}
+
+		if (asset?.isType('personal')) {
+			return EditorBuildAssetRoomDeviceGraphicsContextForDeployablePersonalAsset(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
+		}
+
+		return null;
+	}, [asset, assetManager, layer.assetGraphics]);
+
 	const imageSelectElements = useMemo((): readonly ReactElement[] => [
 		<option value='' key=''>[ None ]</option>,
 		...(
@@ -596,10 +619,9 @@ function LayerRoomDeviceAutoSpriteImages({ layer }: {
 		),
 	], [assetTextures]);
 
-	if (asset == null || !asset.isType('roomDevice'))
+	if (asset == null || buildContext == null)
 		return null;
 
-	const buildContext = EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 	const variants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
 
 	for (const variable of variables) {
@@ -750,7 +772,7 @@ function LayerRoomDeviceAutoSpriteImages({ layer }: {
 				autofillDialogTarget != null ? (
 					<LayerRoomDeviceAutoSpriteFillImagesDialog
 						layer={ layer }
-						asset={ asset }
+						buildContext={ buildContext }
 						close={ () => {
 							setAutofillDialogTarget(null);
 						} }
@@ -764,19 +786,16 @@ function LayerRoomDeviceAutoSpriteImages({ layer }: {
 	);
 }
 
-function LayerRoomDeviceAutoSpriteFillImagesDialog({ layer, asset, close, prefixes, setPrefixes, limitToCombination }: {
+function LayerRoomDeviceAutoSpriteFillImagesDialog({ layer, buildContext, close, prefixes, setPrefixes, limitToCombination }: {
 	layer: EditorAssetGraphicsRoomDeviceLayer<'autoSprite'>;
-	asset: Asset<'roomDevice'>;
+	buildContext: GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>>;
 	close: () => void;
 	prefixes: readonly string[];
 	setPrefixes: React.Dispatch<React.SetStateAction<readonly string[]>>;
 	limitToCombination?: string;
 }): ReactElement {
-	Assert(layer.assetGraphics.id === asset.id);
-
 	const [overwriteAll, setOverwriteAll] = useState(false);
 
-	const assetManager = useAssetManager();
 	const { variables, graphicalLayers } = useObservable(layer.definition);
 	const assetTextures = useObservable(layer.assetGraphics.textures);
 
@@ -787,7 +806,6 @@ function LayerRoomDeviceAutoSpriteFillImagesDialog({ layer, asset, close, prefix
 	}, [graphicalLayers, prefixes, setPrefixes]);
 
 	const combinations = useMemo(() => {
-		const buildContext = EditorBuildAssetRoomDeviceGraphicsContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const variants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -796,7 +814,7 @@ function LayerRoomDeviceAutoSpriteFillImagesDialog({ layer, asset, close, prefix
 			variants.push(values);
 		}
 		return (variants.length > 0 ? Array.from(GenerateMultipleListsFullJoin(variants)) : [[GRAPHICS_ROOM_DEVICE_AUTO_SPRITE_LAYER_DEFAULT_VARIANT]]);
-	}, [layer, asset, assetManager, variables]);
+	}, [buildContext, variables]);
 
 	const apply = useCallback(() => {
 		if (prefixes.length !== graphicalLayers.length)

@@ -29,6 +29,8 @@ export interface BoneDefinition {
 export const AssetGraphicsWornDefinitionSchema = z.object({
 	type: z.literal('worn'),
 	layers: GraphicsLayerSchema.array(),
+	/** The graphics that is used when the item can be (and is) deployed in a room. */
+	roomLayers: RoomDeviceGraphicsLayerSchema.array().optional(),
 }).strict();
 export type AssetGraphicsWornDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 

@@ -1,5 +1,5 @@
 import { castDraft, produce, type Immutable } from 'immer';
-import { EMPTY_ARRAY, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride, type RoomDeviceLayerImageOverride } from 'pandora-common';
+import { EMPTY_ARRAY, IsNotNullable, type AtomicCondition, type GraphicsSourceRoomDeviceLayerSprite, type LayerImageOverride, type RoomDeviceLayerImageOverride } from 'pandora-common';
 import { ReactElement, useCallback, useId, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -20,7 +20,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 	const id = useId();
 	const assetManager = useAssetManager();
 	let asset = assetManager.getAssetById(layer.assetGraphics.id);
-	if (!asset?.isType('roomDevice'))
+	if (asset != null && !asset.isType('roomDevice') && !asset.isType('personal'))
 		asset = undefined;
 
 	const {
@@ -33,16 +33,15 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 
 	const characterState = useEditorCharacterState();
 	const evaluator = useStandaloneConditionEvaluator();
-	const wornItem = characterState.items
-		.filter((i) => i.isType('roomDeviceWearablePart'))
-		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);
+	const item = characterState.items.filter((i) => i.isType('personal')).find((i) => i.asset.id === layer.assetGraphics.id) ??
+		characterState.items.filter((i) => i.isType('roomDeviceWearablePart')).map((i) => i.roomDevice).filter(IsNotNullable).find((i) => i.asset.id === layer.assetGraphics.id);
 
 	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
-		if ('module' in c && wornItem?.roomDevice == null)
+		if ('module' in c && item == null)
 			return undefined;
 
-		return evaluator.evalCondition(c, wornItem?.roomDevice ?? null);
-	}, [evaluator, wornItem]);
+		return evaluator.evalCondition(c, item ?? null);
+	}, [evaluator, item]);
 
 	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<RoomDeviceLayerImageOverride>>>(({ entry, update }) => {
 		return (

@@ -11,7 +11,7 @@ import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties, RoomDeviceSlotProperties } from './roomDeviceProperties.ts';
 import type { AssetsPosePreset, AssetsPosePresets, PartialAppearancePose } from './state/characterStatePose.ts';
-import type { RoomBackgroundData } from './state/roomGeometry.ts';
+import type { RoomBackgroundData, RoomPosition } from './state/roomGeometry.ts';
 import type { AssetStateFlagCombination } from './stateFlags.ts';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
@@ -203,6 +203,18 @@ export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	stateFlagCombinations?: AssetStateFlagCombination<AssetProperties<A>>[];
 }
 
+export interface PersonalAssetRoomDeploymentDefinition {
+	/** How should the item be positioned relative to the character that just created/dropped it.
+	 * Increasing the first coordinate moves it right (in room view), decreasing left.
+	 * Second coordinate moves it back (or to the front when negative).
+	 * Third coordinate moves it up or down and should generally be `0` (floor level).
+	 *
+	 * Note that the x and y offset will be inverted if the character is currently facing backwards.
+	 * @example [-100, -1, 0] // When dropped, position it roughly under the character's right hand, in front of the character, on the floor
+	 */
+	autoDeployRelativePosition: RoomPosition;
+}
+
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
 	/**
 	 * If this asset can be worn on body directly.
@@ -252,6 +264,9 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 
 	/** Which colorization group should be used for item's ribbon in inventory (if not specified defaults to first color group) */
 	colorRibbonGroup?: string;
+
+	/** When set, this item can be deployed and positioned to be visible in a room, if placed in the room inventory. */
+	roomDeployment?: PersonalAssetRoomDeploymentDefinition;
 
 	/**
 	 * Modules this asset has

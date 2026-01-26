@@ -52,7 +52,7 @@ export const RoomBackgroundDataSchema = z.object({
 	/** How much of the image's bottom edge is covered by the area */
 	areaCoverage: z.number().min(0.01),
 
-	/** The height of the ceiling, in area size units. Unused, debug-only. */
+	/** The height of the ceiling, in area size units. Used for room clipping. */
 	ceiling: z.number().min(0),
 
 	/** The offset of the camera's center, used for calculating skew */
@@ -164,16 +164,16 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 	};
 }
 
-export const CharacterRoomPositionSchema: z.ZodType<CharacterRoomPosition> = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+export const RoomPositionSchema: z.ZodType<RoomPosition> = z.tuple([z.number().int(), z.number().int(), z.number().int()])
 	.catch([0, 0, 0])
 	.readonly();
-export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+export type RoomPosition = readonly [x: number, y: number, yOffset: number];
 
 export const CharacterRoomPositionFollowSchema = z.discriminatedUnion('followType', [
 	z.object({
 		followType: z.literal('relativeLock'),
 		target: CharacterIdSchema,
-		delta: CharacterRoomPositionSchema,
+		delta: RoomPositionSchema,
 	}),
 	z.object({
 		followType: z.literal('leash'),
@@ -187,13 +187,13 @@ export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('normal'),
 		room: RoomIdSchema.catch('room:default'),
-		position: CharacterRoomPositionSchema,
+		position: RoomPositionSchema,
 		following: CharacterRoomPositionFollowSchema.optional(),
 	}),
 ]);
 export type CharacterSpacePosition = z.infer<typeof CharacterSpacePositionSchema>;
 
-export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: Immutable<CharacterRoomPosition>): boolean {
+export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: RoomPosition): boolean {
 	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
 
 	return position[0] >= minX && position[0] <= maxX && position[1] >= minY && position[1] <= maxY;
@@ -208,9 +208,9 @@ export function GetRoomPositionBounds(roomBackground: Immutable<RoomBackgroundDa
 	return { minX, maxX, minY, maxY };
 }
 
-export function FixRoomPosition(position: CharacterRoomPosition, roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition;
+export function FixRoomPosition(position: RoomPosition, roomBackground: Immutable<RoomBackgroundData>): RoomPosition;
 export function FixRoomPosition(position: readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): readonly [x: number, y: number];
-export function FixRoomPosition(position: CharacterRoomPosition | readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition | readonly [x: number, y: number] {
+export function FixRoomPosition(position: RoomPosition | readonly [x: number, y: number], roomBackground: Immutable<RoomBackgroundData>): RoomPosition | readonly [x: number, y: number] {
 	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
 
 	const x = clamp(Math.round(position[0]), minX, maxX);
@@ -234,7 +234,7 @@ export function FixRoomPosition(position: CharacterRoomPosition | readonly [x: n
  * @param entryDirection
  * @returns
  */
-export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection): CharacterRoomPosition {
+export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection): RoomPosition {
 	// Absolute bounds of the background
 	const { minY } = GetRoomPositionBounds(room.roomBackground);
 
@@ -331,7 +331,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
 					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
 					position.room = targetCharacterRoom.id;
-					const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(position.position);
+					const deltaVector: Writable<RoomPosition> = CloneDeepMutable(position.position);
 					for (let i = 0; i <= 2; i++) {
 						deltaVector[i] -= followTarget.position.position[i];
 					}

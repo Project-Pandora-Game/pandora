@@ -222,7 +222,8 @@ function DeviceSlotMenu({ roomState, device, slot, position, close, closeSlot }:
 		openContextMenu({
 			type: 'character',
 			character,
-		}, position);
+			position,
+		});
 	}, [character, position, openContextMenu]);
 
 	if (occupancy) {

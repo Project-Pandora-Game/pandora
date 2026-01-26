@@ -13,7 +13,7 @@ import {
 } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import type { EditorAssetGraphics } from './graphics/editorAssetGraphics.ts';
-import type { EditorWornLayersContainer } from './graphics/editorAssetGraphicsWorn.ts';
+import type { EditorWornLayersContainer } from './graphics/editorGraphicsLayerContainer.ts';
 
 export class EditorAssetGraphicsWornLayerContainer<TLayer extends GraphicsSourceLayer> {
 	public readonly container: EditorWornLayersContainer;

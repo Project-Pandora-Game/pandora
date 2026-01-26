@@ -3,58 +3,34 @@ import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
-	CharacterSize,
-	Coordinates,
-	DualQuaternion,
-	EMPTY_ARRAY,
-	GetLogger,
-	GetRoomPositionBounds,
+	CHARACTER_SETTINGS_DEFAULT,
 	ICharacterRoomData,
 	ItemRoomDevice,
-	MAX_BONE_COUNT,
 	RoomDeviceDeploymentPosition,
-	RoomDeviceGraphicsLayerSlot,
-	RoomDeviceGraphicsLayerSprite,
 	type AssetFrameworkRoomState,
-	type AssetId,
-	type RoomDeviceGraphicsLayer,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import { memo, ReactElement, ReactNode, useCallback, useContext, useMemo, useRef, useState } from 'react';
-import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
+import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { Character } from '../../character/character.ts';
-import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
+import { WardrobeItemName } from '../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
-import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { ColoredName } from '../../ui/components/common/coloredName.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
-import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { PixiMesh } from '../baseComponents/mesh.tsx';
+import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
 import { PointLike } from '../common/point.ts';
-import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
-import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
-import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFilters } from '../common/visionFilters.tsx';
-import { GraphicsCharacter, type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
-import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
-import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
-import { ContextCullClockwise, SwapCullingDirection, useItemColor, type LayerVerticesTransformData } from '../layers/graphicsLayerCommon.tsx';
-import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
-import { GraphicsLayerMeshNormals } from '../layers/graphicsLayerMeshNormals.tsx';
-import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
+import { useCharacterDisplayStyle } from '../common/visionFilters.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
-import { useTexture } from '../useTexture.ts';
-import { EvaluateCondition } from '../utility.ts';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel } from './roomCharacter.tsx';
-import { CalculateCharacterDeviceSlotPosition, useRoomCharacterOffsets } from './roomCharacterPosition.ts';
+import { RoomCharacterLabel } from './roomCharacter.tsx';
+import { RoomItemGraphics } from './roomItemGraphics.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -82,8 +58,6 @@ type RoomDeviceProps = {
 	hitArea?: PIXI.Rectangle;
 	cursor?: PIXI.Cursor;
 	eventMode?: PIXI.EventMode;
-	onPointerDown?: (event: FederatedPointerEvent) => void;
-	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
 export function RoomDeviceMovementTool({
@@ -288,6 +262,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	filters,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
+	const { interfaceAccentColor } = useAccountSettings();
 
 	const {
 		roomSceneMode,
@@ -296,38 +271,26 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 
 	const isBeingMoved = roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === item.id;
 
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([item.deployment.x, item.deployment.y, item.deployment.yOffset]);
+
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = useMemo((): PointLike => {
+		const scaleAt = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+		return { x: scaleAt, y: scaleAt };
+	}, [deploymentX, deploymentY, projectionResolver]);
+
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
 	}), [asset]);
+
+	const position2d = useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]);
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
-
-	/** Time at which user pressed button/touched */
-	const pointerDown = useRef<number | null>(null);
-
-	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		event.stopPropagation();
-		pointerDown.current = Date.now();
-	}, []);
-
-	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			openContextMenu({
-				type: 'device',
-				room: roomState.id,
-				deviceItemId: item.id,
-			}, {
-				x: event.pageX,
-				y: event.pageY,
-			});
-		}
-		pointerDown.current = null;
-	});
 
 	// Overlay graphics
 	const defaultView = useObservable(DeviceOverlaySetting);
@@ -341,9 +304,51 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 		(showOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (!enableMenu)
+			return null;
+
+		const roomHitArea = new PIXI.Rectangle(
+			position2d.x + scale.x * (hitArea.x - pivot.x),
+			position2d.y + scale.y * (hitArea.y - pivot.y),
+			scale.x * hitArea.width,
+			scale.y * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			stopClickPropagation: true,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				return (
+					<WardrobeItemName item={ item } />
+				);
+			},
+			onClick(pos) {
+				openContextMenu({
+					type: 'device',
+					room: roomState.id,
+					deviceItemId: item.id,
+					position: {
+						x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+						y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+					},
+				});
+			},
+		};
+	}, [enableMenu, hitArea, roomState.id, item, openContextMenu, position2d, pivot, scale]));
+
 	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (!showMenuHelper) {
 			return;
+		}
+
+		// Draw outline if hovering or holding the button
+		if (held || hover) {
+			const outlineColor = new Color('#222222').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : 0.35).toHex();
+			const outlineWidth = 4;
+			g.circle(0, 0, hitAreaRadius + outlineWidth / 2)
+				.stroke({ color: outlineColor, alpha: 1, width: outlineWidth });
 		}
 
 		g
@@ -358,7 +363,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				-5, 10,
 			])
 			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
-	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
+	}, [showMenuHelper, roomConstructionMode, hitAreaRadius, held, hover, interfaceAccentColor]);
 
 	const showCharacterNames = useObservable(SettingDisplayCharacterName);
 
@@ -375,8 +380,6 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				hitArea={ hitArea }
 				cursor={ enableMenu ? 'pointer' : 'none' }
 				eventMode={ enableMenu ? 'static' : 'none' }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
 			>
 				{
 					enableMenu ? (
@@ -490,8 +493,42 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 
 	const characterDisplayStyle = useCharacterDisplayStyle(character);
 
-	const [hover, setHover] = useState(false);
-	const [held, setHeld] = useState(false);
+	const hitArea = useMemo(() => new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing), [spacing]);
+
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (characterDisplayStyle === 'hidden')
+			return null;
+
+		const roomHitArea = new PIXI.Rectangle(
+			x + scale * hitArea.x,
+			y + scale * hitArea.y,
+			scale * hitArea.width,
+			scale * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			stopClickPropagation: true,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				const { publicSettings, name, id } = character.data;
+
+				return (
+					<><ColoredName color={ publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ name }</ColoredName> ({ id })</>
+				);
+			},
+			onClick(pos) {
+				openContextMenu({
+					type: 'character',
+					character,
+					position: {
+						x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+						y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+					},
+				});
+			},
+		};
+	}, [character, characterDisplayStyle, hitArea, openContextMenu, x, y, scale]));
 
 	if (characterDisplayStyle === 'hidden')
 		return null;
@@ -503,35 +540,7 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 			scale={ { x: scale, y: scale } }
 			cursor='pointer'
 			eventMode='static'
-			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-			onpointerdown={ (ev) => {
-				if (ev.button !== 1) {
-					ev.stopPropagation();
-					setHeld(true);
-				}
-			} }
-			onpointerup={ (ev) => {
-				if (held) {
-					ev.stopPropagation();
-					setHeld(false);
-					openContextMenu({
-						type: 'character',
-						character,
-					}, {
-						x: ev.pageX,
-						y: ev.pageY,
-					});
-				}
-			} }
-			onpointerupoutside={ () => {
-				setHeld(false);
-			} }
-			onpointerenter={ () => {
-				setHover(true);
-			} }
-			onpointerleave={ () => {
-				setHover(false);
-			} }
+			hitArea={ hitArea }
 			zIndex={ zIndex }
 		>
 			<RoomCharacterLabel
@@ -555,445 +564,21 @@ export const RoomDevice = memo(function RoomDevice({
 	hitArea,
 	cursor,
 	eventMode,
-	onPointerDown,
-	onPointerUp,
 }: RoomDeviceProps): ReactElement | null {
-	const asset = item.asset;
-	const debugConfig = useDebugConfig();
-
-	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
-		deployment.x,
-		deployment.y,
-		deployment.yOffset,
-	]);
-
-	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
-	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
-
-	const pivot = useMemo<PointLike>(() => ({
-		x: asset.definition.pivot.x,
-		y: asset.definition.pivot.y,
-	}), [asset]);
-
-	const background = roomState.roomBackground;
-	const maskDraw = useCallback((g: PIXI.GraphicsContext) => {
-		const { minX, maxX } = GetRoomPositionBounds(background);
-		const ceiling = background.ceiling || (background.imageSize[1] + yOffsetExtra);
-		const [x1, y1] = projectionResolver.transform(minX, deploymentY, 0);
-		const [x2, y2] = projectionResolver.transform(maxX, deploymentY, 0);
-		const [x3, y3] = projectionResolver.transform(maxX, deploymentY, ceiling);
-		const [x4, y4] = projectionResolver.transform(minX, deploymentY, ceiling);
-
-		g.poly([
-			x1, y1,
-			x2, y2,
-			x3, background.ceiling ? y3 : 0,
-			x4, background.ceiling ? y4 : 0,
-		])
-			.fill({ color: 0xffffff });
-	}, [background, deploymentY, projectionResolver, yOffsetExtra]);
-
-	const roomMask = usePixiMaskSource();
-
 	return (
-		<>
-			<RoomDeviceGraphics
-				characters={ characters }
-				charactersInDevice={ charactersInDevice }
-				item={ item }
-				filters={ filters }
-				position={ useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]) }
-				scale={ useMemo((): PointLike => ({ x: scale, y: scale }), [scale]) }
-				pivot={ pivot }
-				hitArea={ hitArea }
-				eventMode={ eventMode }
-				cursor={ cursor }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-				onPointerUpOutside={ onPointerUp }
-				zIndex={ -deploymentY }
-				roomMask={ roomMask }
-			>
-				{ children }
-				{
-					!debugConfig?.deviceDebugOverlay ? null : (
-						<Container zIndex={ 99999 }>
-							<RoomDeviceDebugGraphics pivot={ pivot } />
-						</Container>
-					)
-				}
-			</RoomDeviceGraphics>
-			<Graphics
-				ref={ roomMask.maskRef }
-				draw={ maskDraw }
-			/>
-		</>
-	);
-});
-
-function RoomDeviceDebugGraphics({ pivot }: {
-	pivot: Readonly<PointLike>;
-}): ReactElement {
-	const debugGraphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
-		g
-			// Vertical guide line
-			.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
-			.lineTo(pivot.x, pivot.y + 100)
-			.stroke({ color: 0xffff00, width: 1, alpha: 0.5, pixelLine: true })
-			// Ground line
-			.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
-			.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
-			.stroke({ color: 0xffff00, width: 1, alpha: 1, pixelLine: true })
-			// Pivot point (wanted)
-			.circle(pivot.x, pivot.y, 5)
-			.fill(0xffff00)
-			.stroke({ color: 0x000000, width: 1 });
-	}, [pivot]);
-
-	return (
-		<Graphics draw={ debugGraphicsDraw } />
-	);
-}
-
-export interface RoomDeviceGraphicsProps extends ChildrenProps {
-	item: ItemRoomDevice;
-	charactersInDevice: readonly AssetFrameworkCharacterState[];
-	characters: readonly Character<ICharacterRoomData>[];
-	filters: () => readonly PIXI.Filter[];
-	position?: PointLike;
-	scale?: PointLike;
-	pivot?: PointLike;
-	hitArea?: PIXI.Rectangle;
-	eventMode?: PIXI.EventMode;
-	cursor?: PIXI.Cursor;
-	zIndex?: number;
-	roomMask?: PixiMaskSource;
-
-	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerUpOutside?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerMove?: (event: PIXI.FederatedPointerEvent) => void;
-}
-
-function RoomDeviceGraphicsWithManager({
-	item,
-	charactersInDevice,
-	characters,
-	filters,
-	position: positionOffset,
-	scale: scaleExtra,
-	pivot: pivotExtra,
-	onPointerDown,
-	onPointerUp,
-	onPointerUpOutside,
-	onPointerMove,
-	children,
-	cursor,
-	eventMode,
-	hitArea,
-	roomMask,
-	graphicsGetter,
-	...graphicsProps
-}: RoomDeviceGraphicsProps & {
-	graphicsGetter: GraphicsGetterFunction;
-}): ReactElement {
-	const asset = item.asset;
-	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: 0, y: 0 }), [pivotExtra]);
-	const position = useMemo<PointLike>(() => ({
-		x: positionOffset?.x ?? 0,
-		y: positionOffset?.y ?? 0,
-	}), [positionOffset]);
-
-	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: 1, y: 1 }), [scaleExtra]);
-
-	const layers = useMemo<Immutable<RoomDeviceGraphicsLayer[]>>(() => {
-		const graphics = graphicsGetter(asset.id);
-		if (!graphics) {
-			GetLogger('RoomDeviceGraphics').warning(`Asset ${asset.id} no graphics found`);
-			return EMPTY_ARRAY;
-		} else if (graphics.type !== 'roomDevice') {
-			GetLogger('RoomDeviceGraphics').warning(`Asset ${asset.id} is room device, but graphics has type ${graphics.type}`);
-			return EMPTY_ARRAY;
-		}
-
-		return graphics.layers;
-	}, [asset, graphicsGetter]);
-
-	return (
-		<Container
-			{ ...graphicsProps }
-			pivot={ pivot }
-			position={ position }
-			scale={ scale }
-			sortableChildren
-			cursor={ cursor ?? 'default' }
-			eventMode={ eventMode ?? 'auto' }
-			hitArea={ hitArea ?? null }
-			onpointerdown={ onPointerDown }
-			onpointerup={ onPointerUp }
-			onpointerupoutside={ onPointerUpOutside }
-			onpointermove={ onPointerMove }
-		>
-			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-				<Container zIndex={ 0 }>
-					{ useMemo(() => layers.map((layer, i) => {
-						if (layer.type === 'sprite') {
-							return <GraphicsLayerRoomDeviceSprite key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
-						} else if (layer.type === 'slot') {
-							return <GraphicsLayerRoomDeviceSlot key={ i } charactersInDevice={ charactersInDevice } item={ item } layer={ layer } characters={ characters } />;
-						} else if (layer.type === 'text') {
-							return <GraphicsLayerRoomDeviceText key={ i } item={ item } layer={ layer } getFilters={ filters } />;
-						} else if (layer.type === 'mesh') {
-							return <GraphicsLayerRoomDeviceMesh key={ i } item={ item } layer={ layer } roomMask={ roomMask } getFilters={ filters } />;
-						}
-						AssertNever(layer);
-					}), [layers, item, roomMask, filters, characters, charactersInDevice]) }
-				</Container>
-				{ children }
-			</SwapCullingDirection>
-		</Container>
-	);
-}
-
-function RoomDeviceGraphics(props: RoomDeviceGraphicsProps): ReactElement | null {
-	const manager = useObservable(GraphicsManagerInstance);
-	const assetGraphics = manager?.assetGraphics;
-	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => assetGraphics == null ? undefined : ((id: AssetId) => assetGraphics[id]), [assetGraphics]);
-
-	if (!graphicsGetter)
-		return null;
-
-	return <RoomDeviceGraphicsWithManager { ...props } graphicsGetter={ graphicsGetter } />;
-}
-
-const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask, getFilters }: {
-	item: ItemRoomDevice;
-	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
-	roomMask?: PixiMaskSource;
-	getFilters: () => (readonly PIXI.Filter[] | undefined);
-}): ReactElement | null {
-
-	const evaluator = useStandaloneConditionEvaluator();
-
-	const { image, normalMapImage } = useMemo(() => {
-		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item))) ?? layer;
-	}, [evaluator, item, layer]);
-
-	const offset = useMemo((): Coordinates => {
-		return layer.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ??
-			{ x: layer.x, y: layer.y };
-	}, [evaluator, item, layer]);
-
-	const texture = useTexture(useImageResolutionAlternative(image).image, undefined);
-	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
-
-	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
-
-	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
-
-	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
-
-	const cullClockwise = useContext(ContextCullClockwise);
-	const cullingState = useMemo(() => {
-		const pixiState = PIXI.State.for2d();
-		pixiState.culling = true;
-		pixiState.clockwiseFrontFace = cullClockwise;
-		return pixiState;
-	}, [cullClockwise]);
-
-	const geometryData = useMemo(() => {
-		const { width, height } = layer;
-
-		const vertexTransformData: LayerVerticesTransformData = {
-			vertices: new Float32Array([
-				0, 0,
-				width, 0,
-				0, height,
-				width, height,
-			]),
-			vertexSkinningBoneIndices: new Uint16Array(new Array(4 * 4).fill(0)),
-			vertexSkinningBoneWeights: new Float32Array(new Array(4 * 4).fill(0)),
-			boneTransforms: new Float32Array(8 * MAX_BONE_COUNT),
-		};
-
-		new DualQuaternion(1, 0, 0, 0, 0, 0, 0, 0).toArray(vertexTransformData.boneTransforms);
-		for (let i = 80; i < 8 * MAX_BONE_COUNT; i++) {
-			vertexTransformData.boneTransforms[i] = 0;
-		}
-
-		const result = {
-			positions: vertexTransformData.vertices,
-			vertexTransformData,
-			uvs: new Float32Array([
-				0, 0,
-				1, 0,
-				0, 1,
-				1, 1,
-			]),
-			indices: new Uint32Array([
-				3, 1, 0,
-				0, 2, 3,
-			]),
-		} as const;
-
-		return result;
-	}, [layer]);
-
-	return (
-		layer.normalMap != null ? (
-			<GraphicsLayerMeshNormals
-				ref={ layer.clipToRoom ? applyRoomMask : null }
-				x={ offset.x }
-				y={ offset.y }
-				state={ cullingState }
-				vertices={ geometryData.vertexTransformData }
-				uvs={ geometryData.uvs }
-				triangles={ geometryData.indices }
-				texture={ texture }
-				normalMapTexture={ normalMapTexture }
-				normalMapData={ layer.normalMap }
-				color={ color }
-				alpha={ alpha }
-				filters={ actualFilters }
-			/>
-		) : (
-			<PixiMesh
-				ref={ layer.clipToRoom ? applyRoomMask : null }
-				x={ offset.x }
-				y={ offset.y }
-				state={ cullingState }
-				vertices={ geometryData.positions }
-				uvs={ geometryData.uvs }
-				indices={ geometryData.indices }
-				texture={ texture }
-				tint={ color }
-				alpha={ alpha }
-				filters={ actualFilters }
-			/>
-		)
-	);
-});
-
-function GraphicsLayerRoomDeviceSlot({ item, layer, charactersInDevice, characters }: {
-	item: ItemRoomDevice;
-	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
-	charactersInDevice: readonly AssetFrameworkCharacterState[];
-	characters: readonly Character<ICharacterRoomData>[];
-}): ReactElement | null {
-	const characterId = item.slotOccupancy.get(layer.slot);
-	const characterState = useMemo(() => (characterId != null ? charactersInDevice.find((c) => c.id === characterId) : undefined), [charactersInDevice, characterId]);
-
-	if (!characterId)
-		return null;
-
-	const character = characters.find((c) => c.id === characterId);
-
-	if (!character || !characterState)
-		return null;
-
-	return (
-		<GraphicsLayerRoomDeviceSlotCharacter
+		<RoomItemGraphics
 			item={ item }
-			layer={ layer }
-			character={ character }
-			characterState={ characterState }
-		/>
-	);
-}
-
-function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characterState }: {
-	item: ItemRoomDevice;
-	layer: Immutable<RoomDeviceGraphicsLayerSlot>;
-	character: Character<ICharacterRoomData>;
-	characterState: AssetFrameworkCharacterState;
-}): ReactElement | null {
-	const debugConfig = useDebugConfig();
-	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
-
-	const playerFilters = usePlayerVisionFilters(character.isPlayer());
-	const characterDisplayStyle = useCharacterDisplayStyle(character);
-	const characterFilters = useCharacterDisplayFilters(characterDisplayStyle);
-	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
-
-	const {
-		baseScale,
-		pivot,
-		rotationAngle,
-	} = useRoomCharacterOffsets(characterState);
-
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
-
-	const {
-		position,
-		pivot: actualPivot,
-		scale,
-	} = useMemo(() => CalculateCharacterDeviceSlotPosition({
-		item,
-		layer,
-		characterState,
-		evaluator,
-		baseScale,
-		pivot,
-	}), [item, layer, characterState, evaluator, baseScale, pivot]);
-
-	// Character must be in this device, otherwise we skip rendering it here
-	// (could happen if character left and rejoined the room without device equipped)
-	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
-	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot || characterDisplayStyle === 'hidden' || characterDisplayStyle === 'name-only')
-		return null;
-
-	const movementTransitionDuration = !smoothMovementEnabled ? 0 : CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
-
-	return (
-		<GraphicsCharacter
-			characterState={ characterState }
-			position={ position }
-			pivot={ actualPivot }
-			scale={ scale }
-			angle={ rotationAngle }
+			position={ [deployment.x, deployment.y, deployment.yOffset] }
+			roomBackground={ roomState.roomBackground }
+			projectionResolver={ projectionResolver }
+			charactersInDevice={ charactersInDevice }
+			characters={ characters }
 			filters={ filters }
-			useBlinking
-			movementTransitionDuration={ movementTransitionDuration }
-			perPropertyMovementTransitionDuration={ ROOM_DEVICE_CHARACTER_TRANSITION_OVERRIDES }
+			hitArea={ hitArea }
+			eventMode={ eventMode }
+			cursor={ cursor }
 		>
-			{
-				!debugConfig?.characterDebugOverlay ? null : (
-					<Container zIndex={ 99999 }>
-						<RoomDeviceLayerSlotCharacterDebugGraphics actualPivot={ actualPivot } />
-					</Container>
-				)
-			}
-		</GraphicsCharacter>
+			{ children }
+		</RoomItemGraphics>
 	);
-}
-
-const ROOM_DEVICE_CHARACTER_TRANSITION_OVERRIDES: TransitionedContainerCustomProps['perPropertyTransitionDuration'] = {
-	angle: 0,
-	scaleX: 0,
-	scaleY: 0,
-	x: 0,
-	y: 0,
-};
-
-function RoomDeviceLayerSlotCharacterDebugGraphics({ actualPivot }: {
-	actualPivot: Readonly<PointLike>;
-}): ReactElement {
-	const debugGraphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
-		g
-			// Mask area
-			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-			.stroke({ color: 0xffff00, width: 1, pixelLine: true })
-			// Character canvas standard area
-			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-			.stroke({ color: 0x00ff00, width: 1, pixelLine: true })
-			// Pivot point
-			.circle(actualPivot.x, actualPivot.y, 5)
-			.fill(0xffaa00)
-			.stroke({ color: 0x000000, width: 1 });
-	}, [actualPivot]);
-
-	return (
-		<Graphics draw={ debugGraphicsDraw } />
-	);
-}
+});

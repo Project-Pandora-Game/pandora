@@ -1,7 +1,10 @@
+import { produce } from 'immer';
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { PersonalItemDeploymentAutoDeploySchema } from '../../../assets/item/personal.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../../../inputLimits.ts';
+import { AssertNotNullable } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -17,6 +20,8 @@ export const AppearanceActionCustomize = z.object({
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */
 	requireFreeHandsToUse: z.boolean().optional(),
+	/** Sets whether personal item should auto-deploy to room when put into it. The asset must support room deployment for this to be allowed. */
+	personalItemAutoDeploy: PersonalItemDeploymentAutoDeploySchema.optional(),
 });
 
 /** Customizes an item. */
@@ -44,6 +49,7 @@ export function ActionAppearanceCustomize({
 	const isCustomize = action.name !== undefined || action.description !== undefined;
 
 	// Player must be able to do the action
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.ACCESS_ONLY);
 	if (isModify) {
 		processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
 	}
@@ -70,6 +76,17 @@ export function ActionAppearanceCustomize({
 		// Apply the new requireFreeHandsToUse value, if a new value is defined
 		if (action.requireFreeHandsToUse !== undefined && (it.isType('personal') || it.isType('roomDevice'))) {
 			it = it.customizeFreeHandUsage(action.requireFreeHandsToUse);
+		}
+
+		// Apply `personalItemAutoDeploy`
+		if (action.personalItemAutoDeploy !== undefined) {
+			if (!it.isType('personal') || it.deployment == null)
+				return null;
+
+			it = it.withDeployment(produce(it.deployment, (d) => {
+				AssertNotNullable(action.personalItemAutoDeploy);
+				d.autoDeploy = action.personalItemAutoDeploy;
+			}));
 		}
 
 		return it;

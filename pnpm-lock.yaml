@@ -92,6 +92,9 @@ importers:
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
+      pixi-filters:
+        specifier: 6.1.5
+        version: 6.1.5(pixi.js@8.15.0)
       pixi-viewport:
         specifier: 6.0.3
         version: 6.0.3(pixi.js@8.15.0)
@@ -1787,6 +1790,9 @@ packages:
 
   '@types/express@5.0.6':
     resolution: {integrity: sha512-sKYVuV7Sv9fbPIt/442koC7+IIwK5olP1KWeD88e/idgoJqDm3JV/YUiPwkoKK92ylff2MGxSz1CSjsXelx0YA==}
+
+  '@types/gradient-parser@0.1.5':
+    resolution: {integrity: sha512-r7K3NkJz3A95WkVVmjs0NcchhHstC2C/VIYNX4JC6tieviUNo774FFeOHjThr3Vw/WCeMP9kAT77MKbIRlO/4w==}
 
   '@types/html-minifier-terser@6.1.0':
     resolution: {integrity: sha512-oh/6byDPnL1zeNXFrDXFLyZjkr1MsBG667IM792caf1L2UPOOMf65NFzjUH/ltyfwjAGfs1rsX1eftK0jC/KIg==}
@@ -4782,6 +4788,11 @@ packages:
   pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
+
+  pixi-filters@6.1.5:
+    resolution: {integrity: sha512-Ewb/J+kxAbaNN+0/ATJbglAJG+skGJfh7BIDP3ILIDdD6wWk1p0pGa25pVf1T8hGBOQSUNVAmwwJBwkj+cyLLA==}
+    peerDependencies:
+      pixi.js: '>=8.0.0-0'
 
   pixi-viewport@6.0.3:
     resolution: {integrity: sha512-2+qPJ0/n+8hQYhWvY+795+x9y3MiUrCOWacK0DY53whowWaGdx9iDocy7z1pBwjkZhC52YvrJQuZKK0sdVLtBw==}
@@ -8080,6 +8091,8 @@ snapshots:
       '@types/body-parser': 1.19.6
       '@types/express-serve-static-core': 5.1.1
       '@types/serve-static': 2.2.0
+
+  '@types/gradient-parser@0.1.5': {}
 
   '@types/html-minifier-terser@6.1.0': {}
 
@@ -11553,6 +11566,11 @@ snapshots:
   picomatch@4.0.3: {}
 
   pirates@4.0.7: {}
+
+  pixi-filters@6.1.5(pixi.js@8.15.0):
+    dependencies:
+      '@types/gradient-parser': 0.1.5
+      pixi.js: 8.15.0
 
   pixi-viewport@6.0.3(pixi.js@8.15.0):
     dependencies:

@@ -3,25 +3,29 @@ import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
+	CHARACTER_SETTINGS_DEFAULT,
 	ICharacterRoomData,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
 	type AssetFrameworkRoomState,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { Character } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
+import { WardrobeItemName } from '../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { ColoredName } from '../../ui/components/common/coloredName.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
+import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
 import { PointLike } from '../common/point.ts';
 import { useCharacterDisplayStyle } from '../common/visionFilters.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
@@ -54,8 +58,6 @@ type RoomDeviceProps = {
 	hitArea?: PIXI.Rectangle;
 	cursor?: PIXI.Cursor;
 	eventMode?: PIXI.EventMode;
-	onPointerDown?: (event: FederatedPointerEvent) => void;
-	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
 export function RoomDeviceMovementTool({
@@ -260,6 +262,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	filters,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
+	const { interfaceAccentColor } = useAccountSettings();
 
 	const {
 		roomSceneMode,
@@ -268,39 +271,26 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 
 	const isBeingMoved = roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === item.id;
 
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([item.deployment.x, item.deployment.y, item.deployment.yOffset]);
+
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = useMemo((): PointLike => {
+		const scaleAt = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+		return { x: scaleAt, y: scaleAt };
+	}, [deploymentX, deploymentY, projectionResolver]);
+
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
 	}), [asset]);
+
+	const position2d = useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]);
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
-
-	/** Time at which user pressed button/touched */
-	const pointerDown = useRef<number | null>(null);
-
-	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		event.stopPropagation();
-		pointerDown.current = Date.now();
-	}, []);
-
-	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			openContextMenu({
-				type: 'device',
-				room: roomState.id,
-				deviceItemId: item.id,
-				position: {
-					x: event.pageX,
-					y: event.pageY,
-				},
-			});
-		}
-		pointerDown.current = null;
-	});
 
 	// Overlay graphics
 	const defaultView = useObservable(DeviceOverlaySetting);
@@ -314,9 +304,51 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 		(showOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (!enableMenu)
+			return null;
+
+		const roomHitArea = new PIXI.Rectangle(
+			position2d.x + scale.x * (hitArea.x - pivot.x),
+			position2d.y + scale.y * (hitArea.y - pivot.y),
+			scale.x * hitArea.width,
+			scale.y * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			stopClickPropagation: true,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				return (
+					<WardrobeItemName item={ item } />
+				);
+			},
+			onClick(pos) {
+				openContextMenu({
+					type: 'device',
+					room: roomState.id,
+					deviceItemId: item.id,
+					position: {
+						x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+						y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+					},
+				});
+			},
+		};
+	}, [enableMenu, hitArea, roomState.id, item, openContextMenu, position2d, pivot, scale]));
+
 	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (!showMenuHelper) {
 			return;
+		}
+
+		// Draw outline if hovering or holding the button
+		if (held || hover) {
+			const outlineColor = new Color('#222222').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : 0.35).toHex();
+			const outlineWidth = 4;
+			g.circle(0, 0, hitAreaRadius + outlineWidth / 2)
+				.stroke({ color: outlineColor, alpha: 1, width: outlineWidth });
 		}
 
 		g
@@ -331,7 +363,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				-5, 10,
 			])
 			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
-	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
+	}, [showMenuHelper, roomConstructionMode, hitAreaRadius, held, hover, interfaceAccentColor]);
 
 	const showCharacterNames = useObservable(SettingDisplayCharacterName);
 
@@ -348,8 +380,6 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 				hitArea={ hitArea }
 				cursor={ enableMenu ? 'pointer' : 'none' }
 				eventMode={ enableMenu ? 'static' : 'none' }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
 			>
 				{
 					enableMenu ? (
@@ -463,8 +493,42 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 
 	const characterDisplayStyle = useCharacterDisplayStyle(character);
 
-	const [hover, setHover] = useState(false);
-	const [held, setHeld] = useState(false);
+	const hitArea = useMemo(() => new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing), [spacing]);
+
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (characterDisplayStyle === 'hidden')
+			return null;
+
+		const roomHitArea = new PIXI.Rectangle(
+			x + scale * hitArea.x,
+			y + scale * hitArea.y,
+			scale * hitArea.width,
+			scale * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			stopClickPropagation: true,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				const { publicSettings, name, id } = character.data;
+
+				return (
+					<><ColoredName color={ publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ name }</ColoredName> ({ id })</>
+				);
+			},
+			onClick(pos) {
+				openContextMenu({
+					type: 'character',
+					character,
+					position: {
+						x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+						y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+					},
+				});
+			},
+		};
+	}, [character, characterDisplayStyle, hitArea, openContextMenu, x, y, scale]));
 
 	if (characterDisplayStyle === 'hidden')
 		return null;
@@ -476,36 +540,7 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 			scale={ { x: scale, y: scale } }
 			cursor='pointer'
 			eventMode='static'
-			hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-			onpointerdown={ (ev) => {
-				if (ev.button !== 1) {
-					ev.stopPropagation();
-					setHeld(true);
-				}
-			} }
-			onpointerup={ (ev) => {
-				if (held) {
-					ev.stopPropagation();
-					setHeld(false);
-					openContextMenu({
-						type: 'character',
-						character,
-						position: {
-							x: ev.pageX,
-							y: ev.pageY,
-						},
-					});
-				}
-			} }
-			onpointerupoutside={ () => {
-				setHeld(false);
-			} }
-			onpointerenter={ () => {
-				setHover(true);
-			} }
-			onpointerleave={ () => {
-				setHover(false);
-			} }
+			hitArea={ hitArea }
 			zIndex={ zIndex }
 		>
 			<RoomCharacterLabel
@@ -529,8 +564,6 @@ export const RoomDevice = memo(function RoomDevice({
 	hitArea,
 	cursor,
 	eventMode,
-	onPointerDown,
-	onPointerUp,
 }: RoomDeviceProps): ReactElement | null {
 	return (
 		<RoomItemGraphics
@@ -544,9 +577,6 @@ export const RoomDevice = memo(function RoomDevice({
 			hitArea={ hitArea }
 			eventMode={ eventMode }
 			cursor={ cursor }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUp }
 		>
 			{ children }
 		</RoomItemGraphics>

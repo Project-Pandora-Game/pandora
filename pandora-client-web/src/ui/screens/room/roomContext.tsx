@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { Assert, ICharacterRoomData, ItemId, type CharacterId, type RoomId } from 'pandora-common';
+import { Assert, ICharacterRoomData, ItemId, type CharacterId, type Coordinates, type RoomId } from 'pandora-common';
 import { createContext, useContext, type FC } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { PointLike } from '../../../graphics/common/point.ts';
@@ -53,6 +53,9 @@ export type RoomScreenContext = {
 	contextMenuFocus: Readonly<IRoomContextMenuFocus> | null;
 	openContextMenu: (target: IRoomContextMenuFocus | null) => void;
 };
+
+/** Offset (in pixels) where to open the context menu relative to the cursor */
+export const ROOM_CONTEXT_MENU_OFFSET: Readonly<Coordinates> = { x: 4, y: 4 };
 
 export const RoomScreenContext = createContext<RoomScreenContext | null>(null);
 

@@ -7,19 +7,21 @@ import {
 	type RoomProjectionResolver,
 } from 'pandora-common';
 import { OutlineFilter } from 'pixi-filters';
-import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
+import { WardrobeItemName } from '../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlaySetting, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
+import type { HitscanEvent } from '../common/hitscan/hitscanContext.ts';
+import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
 import { PointLike } from '../common/point.ts';
 import { CalculateRoomDeviceGraphicsBounds } from '../common/roomDeviceBounds.ts';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
@@ -50,13 +52,6 @@ type RoomItemProps = {
 	hitArea?: PIXI.Rectangle;
 	cursor?: PIXI.Cursor;
 	eventMode?: PIXI.EventMode;
-	onPointerDown?: (event: FederatedPointerEvent) => void;
-	onPointerUp?: (event: FederatedPointerEvent) => void;
-	/** Defaults to onPointerUp */
-	onPointerUpOutside?: (event: FederatedPointerEvent) => void;
-	onPointerMove?: (event: FederatedPointerEvent) => void;
-	onPointerEnter?: (event: FederatedPointerEvent) => void;
-	onPointerLeave?: (event: FederatedPointerEvent) => void;
 };
 
 export function RoomItemMovementTool({
@@ -262,52 +257,15 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 		return new PIXI.Rectangle(bounds.x, bounds.y, bounds.width, bounds.height);
 	}, [graphicsManager, asset.id]);
 
-	/** Global position at which user pressed button/touched */
-	const pointerDown = useRef<PIXI.Point | null>(null);
-	const [hover, setHover] = useState(false);
-	const [held, setHeld] = useState(false);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition(position);
 
-	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		// Intentionally not stopping propagation, as we want people to be able to move background even through the item
-		pointerDown.current = event.global.clone();
-		setHeld(true);
-	}, []);
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = useMemo((): PointLike => {
+		const scaleAt = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+		return { x: scaleAt, y: scaleAt };
+	}, [deploymentX, deploymentY, projectionResolver]);
 
-	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			const movedDistance = event.global.clone().subtract(pointerDown.current).magnitudeSquared();
-			// If we moved less than 10 pixels, then open menu, otherwise ignore this
-			if (movedDistance < 100) {
-				openContextMenu({
-					type: 'item',
-					room: roomState.id,
-					itemId: item.id,
-					position: {
-						x: event.pageX,
-						y: event.pageY,
-					},
-				});
-			}
-		}
-		pointerDown.current = null;
-		setHeld(false);
-	}, [item.id, openContextMenu, roomState.id]);
-
-	const onPointerUpOutside = useCallback(() => {
-		pointerDown.current = null;
-		setHeld(false);
-	}, []);
-
-	const onPointeMove = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			const movedDistance = event.global.clone().subtract(pointerDown.current).magnitudeSquared();
-			// If we moved at least 10 pixels, then cancel hold
-			if (movedDistance >= 100) {
-				pointerDown.current = null;
-				setHeld(false);
-			}
-		}
-	}, []);
+	const position2d = useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]);
 
 	// Selection graphics
 	const defaultView = useObservable(DeviceOverlaySetting);
@@ -315,6 +273,73 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
 
 	const enableMenu = !isBeingMoved && showOverlaySetting === 'always';
+
+	/** Global position at which user pressed button/touched */
+	const pointerDown = useRef<Readonly<HitscanEvent> | null>(null);
+
+	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
+		if (!enableMenu)
+			return null;
+
+		const roomHitArea = new PIXI.Rectangle(
+			position2d.x + scale.x * hitArea.x,
+			position2d.y + scale.y * hitArea.y,
+			scale.x * hitArea.width,
+			scale.y * hitArea.height,
+		);
+
+		return {
+			hitArea: roomHitArea,
+			// Intentionally not stopping propagation, as we want people to be able to move background even through the item
+			stopClickPropagation: false,
+			// eslint-disable-next-line react/no-unstable-nested-components
+			getSelectionButtonContents() {
+				return (
+					<WardrobeItemName item={ item } />
+				);
+			},
+			onPointerDown(pos) {
+				pointerDown.current = pos;
+			},
+			onPointerUp(pos) {
+				if (pointerDown.current !== null) {
+					openContextMenu({
+						type: 'item',
+						room: roomState.id,
+						itemId: item.id,
+						position: {
+							x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+							y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+						},
+					});
+				}
+				pointerDown.current = null;
+			},
+			onPointerUpOutside() {
+				pointerDown.current = null;
+			},
+			onClick(pos, fromSelectionMenu) {
+				if (fromSelectionMenu) {
+					openContextMenu({
+						type: 'item',
+						room: roomState.id,
+						itemId: item.id,
+						position: {
+							x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+							y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
+						},
+					});
+				}
+			},
+			onDrag(pos, start) {
+				const movedDistance = Math.hypot(pos.x - start.x, pos.y - start.y);
+				// If we moved at least 10 pixels, then cancel hold
+				if (movedDistance >= 10) {
+					pointerDown.current = null;
+				}
+			},
+		};
+	}, [enableMenu, hitArea, roomState.id, item, openContextMenu, position2d, scale]));
 
 	const containerFilters = useCallback(() => {
 		if (enableMenu && (hover || held)) {
@@ -342,18 +367,7 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 			hitArea={ hitArea }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUpOutside }
-			onPointerMove={ onPointeMove }
-			onPointerEnter={ () => {
-				setHover(true);
-			} }
-			onPointerLeave={ () => {
-				setHover(false);
-			} }
-		>
-		</RoomItem>
+		/>
 	);
 });
 
@@ -369,12 +383,6 @@ export const RoomItem = memo(function RoomItem({
 	hitArea,
 	cursor,
 	eventMode,
-	onPointerDown,
-	onPointerUp,
-	onPointerUpOutside,
-	onPointerMove,
-	onPointerEnter,
-	onPointerLeave,
 }: RoomItemProps): ReactElement | null {
 	return (
 		<RoomItemGraphics
@@ -389,12 +397,6 @@ export const RoomItem = memo(function RoomItem({
 			hitArea={ hitArea }
 			eventMode={ eventMode }
 			cursor={ cursor }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUpOutside ?? onPointerUp }
-			onPointerMove={ onPointerMove }
-			onPointerEnter={ onPointerEnter }
-			onPointerLeave={ onPointerLeave }
 		>
 			{ children }
 		</RoomItemGraphics>

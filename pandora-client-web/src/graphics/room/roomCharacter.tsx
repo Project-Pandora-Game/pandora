@@ -29,7 +29,7 @@ import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useCanMoveCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
 import { SettingDisplayCharacterName } from '../../ui/screens/room/roomState.ts';
@@ -196,8 +196,8 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 				type: 'character',
 				character,
 				position: {
-					x: pos.pageX,
-					y: pos.pageY,
+					x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+					y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
 				},
 			});
 		}
@@ -208,8 +208,8 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 			type: 'character',
 			character,
 			position: {
-				x: pos.pageX,
-				y: pos.pageY,
+				x: pos.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+				y: pos.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
 			},
 		});
 	});
@@ -313,8 +313,10 @@ export const RoomCharacter = memo(function RoomCharacter({
 			stopClickPropagation: true,
 			// eslint-disable-next-line react/no-unstable-nested-components
 			getSelectionButtonContents() {
+				const { publicSettings, name, id } = character.data;
+
 				return (
-					<><ColoredName color={ character.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }> { character.data.name }</ColoredName> ({ character.data.id })</>
+					<><ColoredName color={ publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ name }</ColoredName> ({ id })</>
 				);
 			},
 			onPointerDown(pos) {

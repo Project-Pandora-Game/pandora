@@ -6,6 +6,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/contextMenu.tsx';
 import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
+import { ROOM_CONTEXT_MENU_OFFSET } from '../../../ui/screens/room/roomContext.tsx';
 import type { PointLike } from '../point.ts';
 import { HitscanContext, type HitscanContextProvider, type HitscanEvent, type HitscanTarget } from './hitscanContext.ts';
 
@@ -188,8 +189,8 @@ export class HitscanContainer implements HitscanContextProvider {
 		} else if (clicks.length > 1) {
 			// If there is more, do a selection menu
 			const contextMenuPosition: PointLike = {
-				x: event.pageX,
-				y: event.pageY,
+				x: event.pageX + ROOM_CONTEXT_MENU_OFFSET.x,
+				y: event.pageY + ROOM_CONTEXT_MENU_OFFSET.y,
 			};
 			this.openContextMenu?.(({ onClose }) => {
 				const ref = useContextMenuPosition(contextMenuPosition);
@@ -200,10 +201,19 @@ export class HitscanContainer implements HitscanContextProvider {
 						<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 							<Column overflowY='auto' padding='small'>
 								{ clicks.map((click, i) => (
-									<Button key={ i } theme='transparent' onClick={ () => {
-										onClose();
-										click.target.onClick?.(pos, true);
-									} }>
+									<Button key={ i }
+										theme='transparent'
+										onClick={ () => {
+											onClose();
+											click.target.onClick?.(pos, true);
+										} }
+										onMouseEnter={ () => {
+											click.target.onPointerEnter?.();
+										} }
+										onMouseLeave={ () => {
+											click.target.onPointerLeave?.();
+										} }
+									>
 										{ click.target.getSelectionButtonContents() }
 									</Button>
 								)) }

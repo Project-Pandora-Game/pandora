@@ -1,7 +1,7 @@
 import { freeze, type Immutable } from 'immer';
 import { GetLogger, type Coordinates } from 'pandora-common';
 import type * as PIXI from 'pixi.js';
-import { useContext, useEffect, useRef, type ReactElement } from 'react';
+import { useContext, useDebugValue, useEffect, useRef, type ReactElement } from 'react';
 import { Observable, useNullableObservable, type ReadonlyObservable } from '../../../observable.ts';
 import { HitscanContext, type HitscanEvent, type HitscanTarget } from './hitscanContext.ts';
 
@@ -40,6 +40,8 @@ export function useDefineHitscanTarget(props: HitscanTargetProps | null): Immuta
 		}
 	}
 	const hitscanTarget = hitscanTargetRef.current;
+
+	useDebugValue(hitscanTarget);
 
 	useEffect(() => {
 		if (hitscanTarget == null)

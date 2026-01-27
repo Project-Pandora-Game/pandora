@@ -77,9 +77,7 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 	return {
 		render(element, sync = false) {
 			if (sync) {
-				// @ts-expect-error: No reconciler typings for React 19 are available yet.
 				PixiFiber.updateContainerSync(element, container);
-				// @ts-expect-error: No reconciler typings for React 19 are available yet.
 				PixiFiber.flushSyncWork();
 				// Flush any pending "passive" work
 				PixiFiber.flushPassiveEffects();
@@ -89,7 +87,6 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 		},
 		flush() {
 			return new Promise((resolve) => {
-				// @ts-expect-error: No reconciler typings for React 19 are available yet.
 				PixiFiber.flushSyncWork();
 				// Flush any pending "passive" work
 				PixiFiber.flushPassiveEffects();
@@ -98,9 +95,7 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 		},
 		unmount() {
 			// Clear all children of the container
-			// @ts-expect-error: No reconciler typings for React 19 are available yet.
 			PixiFiber.updateContainerSync(null, container);
-			// @ts-expect-error: No reconciler typings for React 19 are available yet.
 			PixiFiber.flushSyncWork();
 			// Flush any pending "passive" work
 			PixiFiber.flushPassiveEffects();

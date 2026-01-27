@@ -3,7 +3,7 @@ import { Assert } from 'pandora-common';
 import type { Container as PixiContainer } from 'pixi.js';
 import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
-import type { Lane } from 'react-reconciler';
+import type { EventPriority } from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants.js';
 import { GIT_COMMIT_HASH } from '../../config/Environment.ts';
 import { PIXI_REGISTERED_COMPONENTS } from './component.ts';
@@ -80,7 +80,7 @@ export type PixiHostConfig = React19HostConfig<
 
 const NO_CONTEXT: Record<string, never> = {};
 
-let CurrentUpdatePriority: Lane = 0;
+let CurrentUpdatePriority: EventPriority = 0;
 
 function MakeUnsupportedShim(reason: string): () => never {
 	return function () {
@@ -165,13 +165,13 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	prepareScopeUpdate: MakeUnsupportedShim('React Scopes are not supported.'),
 	getInstanceFromScope: MakeUnsupportedShim('React Scopes are not supported.'),
 
-	setCurrentUpdatePriority(newPriority: Lane): void {
+	setCurrentUpdatePriority(newPriority) {
 		CurrentUpdatePriority = newPriority;
 	},
-	getCurrentUpdatePriority(): Lane {
+	getCurrentUpdatePriority() {
 		return CurrentUpdatePriority;
 	},
-	resolveUpdatePriority(): Lane { // Replaces getCurrentEventPriority
+	resolveUpdatePriority() { // Replaces getCurrentEventPriority
 		return CurrentUpdatePriority || DefaultEventPriority;
 	},
 	resolveEventType() {

@@ -27,9 +27,14 @@ export function TestSubmitButtonIsRendered(): void {
 
 export async function ExpectFieldToBeInvalid(label: string, errorMessage?: string): Promise<void> {
 	await waitFor(() => {
-		expect(screen.getByLabelText(label)).toBeInvalid();
+		const input = screen.getByLabelText(label);
+		expect(input).toBeInvalid();
 		if (errorMessage) {
-			expect(screen.getByText(errorMessage)).toBeVisible();
+			if (input instanceof HTMLInputElement) {
+				expect(input.validationMessage).toBe(errorMessage);
+			} else {
+				expect(screen.getByText(errorMessage)).toBeVisible();
+			}
 		}
 	});
 }

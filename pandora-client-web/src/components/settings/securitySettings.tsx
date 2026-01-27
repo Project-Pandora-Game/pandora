@@ -203,7 +203,7 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 			}
 		},
 	);
-	const onSubmit = React.useCallback((ev: React.FormEvent) => {
+	const onSubmit = React.useCallback((ev: React.SubmitEvent) => {
 		ev.preventDefault();
 		extend();
 	}, [extend]);

@@ -1,5 +1,5 @@
 import { AssertNever, GetLogger, IsString, IsUsername, type Promisable } from 'pandora-common';
-import { FormEvent, useState } from 'react';
+import { type SubmitEvent, useState } from 'react';
 import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import { useLogin } from '../../../networking/account_manager.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -17,7 +17,7 @@ export interface UseLoginFormReturn {
 	dirty: boolean;
 	errorMessage: string;
 	errors: FieldErrors<UseLoginFormData>;
-	onSubmit: (event: FormEvent<HTMLFormElement>) => Promisable<void>;
+	onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promisable<void>;
 	isSubmitting: boolean;
 	register: UseFormRegister<UseLoginFormData>;
 }

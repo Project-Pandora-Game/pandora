@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { capitalize } from 'lodash-es';
 import { GetLogger, type Promisable } from 'pandora-common';
-import { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
+import { HTMLProps, ReactElement, RefAttributes, useCallback, type SubmitEvent } from 'react';
 import { FieldError } from 'react-hook-form';
 import { Link, type LinkProps } from 'react-router';
 import * as z from 'zod';
@@ -10,11 +10,11 @@ import './form.scss';
 
 export interface AuthFormProps extends CommonProps {
 	dirty?: boolean;
-	onSubmit?: (event: FormEvent<HTMLFormElement>) => Promisable<void>;
+	onSubmit?: (event: SubmitEvent<HTMLFormElement>) => Promisable<void>;
 }
 
 export function Form({ children, className, dirty = false, id, onSubmit }: AuthFormProps): ReactElement {
-	const submitHandler = useCallback((event: FormEvent<HTMLFormElement>): void => {
+	const submitHandler = useCallback((event: SubmitEvent<HTMLFormElement>): void => {
 		(async () => {
 			await onSubmit?.(event);
 		})()

@@ -65,7 +65,7 @@ export function CharacterCreate(): ReactElement | null {
 			}
 		});
 
-	const onSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+	const onSubmit = useCallback((event: React.SubmitEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 		handleSubmit();

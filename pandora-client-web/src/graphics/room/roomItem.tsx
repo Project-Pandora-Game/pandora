@@ -18,7 +18,6 @@ import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
-import { DeviceOverlaySetting, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
 import type { HitscanEvent } from '../common/hitscan/hitscanContext.ts';
 import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
@@ -268,11 +267,7 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 	const position2d = useMemo((): PointLike => ({ x, y: y - yOffsetExtra }), [x, y, yOffsetExtra]);
 
 	// Selection graphics
-	const defaultView = useObservable(DeviceOverlaySetting);
-	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
-
-	const enableMenu = !isBeingMoved && showOverlaySetting === 'always';
+	const enableMenu = !isBeingMoved;
 
 	/** Global position at which user pressed button/touched */
 	const pointerDown = useRef<Readonly<HitscanEvent> | null>(null);

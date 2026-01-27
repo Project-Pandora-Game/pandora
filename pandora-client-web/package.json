@@ -45,7 +45,7 @@
 		"pixi.js": "8.15.0",
 		"react": "19.2.4",
 		"react-dom": "19.2.4",
-		"react-hook-form": "7.69.0",
+		"react-hook-form": "7.71.1",
 		"react-reconciler": "0.33.0",
 		"react-reverse-portal": "2.3.0",
 		"react-rnd": "10.5.2",

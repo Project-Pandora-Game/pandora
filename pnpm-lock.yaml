@@ -57,8 +57,8 @@ importers:
   pandora-client-web:
     dependencies:
       '@hcaptcha/react-hcaptcha':
-        specifier: 1.17.4
-        version: 1.17.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 2.0.2
+        version: 2.0.2
       bowser:
         specifier: 2.13.1
         version: 2.13.1
@@ -1023,14 +1023,8 @@ packages:
   '@ewoudenberg/difflib@0.1.0':
     resolution: {integrity: sha512-OU5P5mJyD3OoWYMWY+yIgwvgNS9cFAU10f+DDuvtogcWQOoJIsQ4Hy2McSfUfhKjq8L0FuWVb4Rt7kgA+XK86A==}
 
-  '@hcaptcha/loader@2.3.0':
-    resolution: {integrity: sha512-i4lnNxKBe+COf3R1nFZEWaZoHIoJjvDgWqvcNrdZq8ehoSNMN6KVZ56dcQ02qKie2h3+BkbkwlJA9DOIuLlK/g==}
-
-  '@hcaptcha/react-hcaptcha@1.17.4':
-    resolution: {integrity: sha512-rIvgesG1N7SS9sAYYHFoWm+nXqRrxq7RcA9z2pKkDWV+S1GdfmrTNYA1aPyVWVe3eowphTCwyDJvl97Swwy0mw==}
-    peerDependencies:
-      react: '>= 16.3.0'
-      react-dom: '>= 16.3.0'
+  '@hcaptcha/react-hcaptcha@2.0.2':
+    resolution: {integrity: sha512-VbuH6VJ6m3BHmVBHs0fL9t+suZd7PQEqCzqL2BiUbBvbHI3XfvSgdiug2QiEPN8zskbPTIV/FfGPF53JCckrow==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -7048,14 +7042,7 @@ snapshots:
     dependencies:
       heap: 0.2.7
 
-  '@hcaptcha/loader@2.3.0': {}
-
-  '@hcaptcha/react-hcaptcha@1.17.4(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@babel/runtime': 7.28.6
-      '@hcaptcha/loader': 2.3.0
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+  '@hcaptcha/react-hcaptcha@2.0.2': {}
 
   '@humanfs/core@0.19.1': {}
 

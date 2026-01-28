@@ -49,7 +49,7 @@ function MoveItemMenu({ roomState, item, close }: {
 		type: 'moveItem',
 		target: { type: 'room', roomId: roomState.id },
 		item: { container: [], itemId: item.id },
-		personalItemDeployment: { deployed: true, position: item.isType('personal') ? item.deployment?.position : undefined },
+		personalItemDeployment: { position: item.isType('personal') ? item.deployment?.position : undefined },
 	}), [item, roomState.id]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.valid;

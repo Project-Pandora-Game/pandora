@@ -8,6 +8,8 @@ import { ChatReceivedMessageBaseSchema, IChatMessageActionTargetCharacterSchema,
 
 const GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN = {
 	moveCharacter: 30_000,
+	moveItem: 30_000,
+	roomDeviceDeploy: 30_000,
 	color: 30_000,
 	pose: 30_000,
 	body: 30_000,
@@ -47,26 +49,54 @@ export function ActionLogShouldDeduplicate(action: Immutable<ChatMessageActionLo
 		// This should only be called for same source
 		Assert(action[1].actor.id === lastAction[1].actor.id);
 
-		switch (action[1].action.type) {
+		const logicAction = action[1].action;
+		const lastLogicAction = lastAction[1].action;
+
+		// Check basic match
+		if (logicAction.type !== lastLogicAction.type ||
+			// Check coooldown
+			!Object.hasOwn(GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN, logicAction.type) ||
+			!(lastActionTime + (GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN[logicAction.type as keyof typeof GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN] ?? 0) >= time)
+		) {
+			return false;
+		}
+
+		switch (logicAction.type) {
 			case 'moveCharacter':
-				return lastAction[1].action.type === 'moveCharacter' &&
-					isEqual(action[1].action.target, lastAction[1].action.target) &&
-					action[1].action.moveTo.type === lastAction[1].action.moveTo.type &&
-					action[1].action.moveTo.following?.followType === lastAction[1].action.moveTo.following?.followType &&
-					isEqual(action[1].action.moveTo.following?.target, lastAction[1].action.moveTo.following?.target) &&
-					(lastActionTime + GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN.moveCharacter >= time);
+				return lastLogicAction.type === 'moveCharacter' &&
+					isEqual(logicAction.target, lastLogicAction.target) &&
+					logicAction.moveTo.type === lastLogicAction.moveTo.type &&
+					logicAction.moveTo.following?.followType === lastLogicAction.moveTo.following?.followType &&
+					isEqual(logicAction.moveTo.following?.target, lastLogicAction.moveTo.following?.target);
+
+			case 'moveItem':
+				return lastLogicAction.type === 'moveItem' &&
+					// Target item must match
+					isEqual(logicAction.target, lastLogicAction.target) &&
+					isEqual(logicAction.item, lastLogicAction.item) &&
+					// Do not deduplicate shifts, only room position changes
+					(logicAction.shift ?? 0) === 0 &&
+					(lastLogicAction.shift ?? 0) === 0 &&
+					// Deployment state cannot have changed
+					logicAction.personalItemDeployment?.deployed === lastLogicAction.personalItemDeployment?.deployed;
+
+			case 'roomDeviceDeploy':
+				return lastLogicAction.type === 'roomDeviceDeploy' &&
+					// Target item must match
+					isEqual(logicAction.target, lastLogicAction.target) &&
+					isEqual(logicAction.item, lastLogicAction.item) &&
+					// Deployment state cannot have changed
+					logicAction.deployment.deployed === lastLogicAction.deployment.deployed;
 
 			case 'color':
-				return lastAction[1].action.type === 'color' &&
-					isEqual(action[1].action.target, lastAction[1].action.target) &&
-					isEqual(action[1].action.item, lastAction[1].action.item) &&
-					(lastActionTime + GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN.moveCharacter >= time);
+				return lastLogicAction.type === 'color' &&
+					isEqual(logicAction.target, lastLogicAction.target) &&
+					isEqual(logicAction.item, lastLogicAction.item);
 
 			case 'pose':
 			case 'body':
-				return (lastAction[1].action.type === 'pose' || lastAction[1].action.type === 'body') &&
-					isEqual(action[1].action.target, lastAction[1].action.target) &&
-					(lastActionTime + GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN.moveCharacter >= time);
+				return (lastLogicAction.type === 'pose' || lastLogicAction.type === 'body') &&
+					isEqual(logicAction.target, lastLogicAction.target);
 		}
 	}
 

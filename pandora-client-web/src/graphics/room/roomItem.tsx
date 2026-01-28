@@ -75,7 +75,6 @@ export function RoomItemMovementTool({
 			target: { type: 'room', roomId: roomState.id },
 			item: { container: [], itemId: item.id },
 			personalItemDeployment: {
-				deployed: true,
 				position: [newX, newY, newYOffset],
 			},
 		});

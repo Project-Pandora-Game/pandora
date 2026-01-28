@@ -1,11 +1,13 @@
 import { AssertNever } from './misc.ts';
 
+/**
+ * Creates a string where text is joined using commas and last element is joined using 'and'.
+ */
 export function NaturalListJoin(list: readonly string[]): string {
-	let res = list[0] ?? '';
 	if (list.length > 1) {
-		res = `${list.slice(1).join(', ')} and ${res}`;
+		return `${list.slice(0, list.length - 1).join(', ')} and ${list[list.length - 1]}`;
 	}
-	return res;
+	return list[0] ?? '';
 }
 
 /** Formats time in ms into days, hours minutes and seconds - also has a short mode that only shows the largest unit, e.g. 17h */

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { GetLogger, IDirectoryAccountInfo } from 'pandora-common';
+import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useObservable } from '../../observable.ts';
@@ -93,6 +93,7 @@ function DirectMessageList({ scrollRef, ref }: {
 }): ReactElement | null {
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
 	const { chat, encryption } = useDirectMessageChat();
+	const { displayName } = useObservable(chat.displayInfo);
 	const encryptedMessages = useObservable(chat.messages);
 	const account = useCurrentAccount();
 	const [autoScrollRef, scroll] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
@@ -139,6 +140,10 @@ function DirectMessageList({ scrollRef, ref }: {
 				className='fill'
 			>
 				<Column gap='none' className='messagesContainer'>
+					<Column alignX='center' padding='large' gap='tiny' className='text-dim'>
+						<span>This is the beginning of your direct message history with { displayName ?? '[Loading ...]' } ({ chat.id })</span>
+						<span>Only the <strong>last { LIMIT_DIRECT_MESSAGE_STORE_COUNT } messages</strong> per chat are saved</span>
+					</Column>
 					{ encryptedMessages.map((message, i) => (
 						<React.Fragment key={ message.time }>
 							<DirectMessageElement

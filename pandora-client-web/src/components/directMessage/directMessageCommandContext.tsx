@@ -1,10 +1,18 @@
-import { CommandBuilder, CreateCommand, FormatTimeInterval, ICommandExecutionContext, IEmpty, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY } from 'pandora-common';
+import { ICommandExecutionContext, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
+import { useCallback, useMemo } from 'react';
 import type { useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
 import type { DirectoryConnector } from '../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../networking/shardConnector.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
-import type { IClientCommand } from '../../ui/components/chat/commandsProcessor.ts';
+import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
+import type { ICommandInvokeContext } from '../../ui/components/chat/commandsProcessor.ts';
+import { useDirectMessageChat } from '../gameContext/directMessageChannelProvieder.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import type { GameState } from '../gameContext/gameStateContextProvider.tsx';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 
 export interface DirectMessageCommandExecutionContext extends ICommandExecutionContext {
 	directoryConnector: DirectoryConnector;
@@ -15,37 +23,32 @@ export interface DirectMessageCommandExecutionContext extends ICommandExecutionC
 	sendMessage: (message: string, editing?: number) => Promise<void>;
 }
 
-function CreateDMCommand(): CommandBuilder<DirectMessageCommandExecutionContext, IEmpty, IEmpty> {
-	return CreateCommand<DirectMessageCommandExecutionContext>();
+export function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeContext<DirectMessageCommandExecutionContext> {
+	const directoryConnector = useDirectoryConnector();
+	const shardConnector = useShardConnector();
+	const gameState = useGameStateOptional();
+	const { chat, encryption } = useDirectMessageChat();
+	const navigate = useNavigatePandora();
+
+	const sendMessage = useCallback<DirectMessageCommandExecutionContext['sendMessage']>(async (message, editing) => {
+		const encrypted = message.length === 0 ? '' : await encryption.service.encrypt(message);
+		if (encrypted.length > LIMIT_DIRECT_MESSAGE_LENGTH_BASE64) {
+			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, keyHash: encryption.keyHash, content: encrypted, editing });
+		if (response.result !== 'ok') {
+			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
+		}
+	}, [directoryConnector, chat, encryption]);
+
+	return useMemo((): ICommandInvokeContext<DirectMessageCommandExecutionContext> => ({
+		directoryConnector,
+		shardConnector,
+		gameState,
+		chat,
+		navigate,
+		sendMessage,
+		displayError: displayError ? (message) => toast(message, TOAST_OPTIONS_ERROR) : undefined,
+	}), [directoryConnector, shardConnector, gameState, chat, navigate, sendMessage, displayError]);
 }
-
-export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageCommandExecutionContext>[] = [
-	{
-		key: ['invite'],
-		usage: '',
-		description: 'Creates an invite link to your current space',
-		longDescription: `Creates an invite link to your current space. This invite is limited to the account, is only valid for ${ FormatTimeInterval(LIMIT_JOIN_ME_INVITE_MAX_VALIDITY) }, and has a single use.`,
-		handler: CreateDMCommand()
-			.handler(async ({ directoryConnector, gameState, chat, displayError, sendMessage }) => {
-				if (gameState?.currentSpace.value.id == null) {
-					displayError?.('You are not in a space');
-					return false;
-				}
-
-				const spaceId = gameState.currentSpace.value.id;
-				const resp = await directoryConnector.awaitResponse('spaceInvite', {
-					action: 'create',
-					data: {
-						type: 'joinMe',
-						accountId: chat.id,
-					},
-				});
-				if (resp.result === 'created') {
-					await sendMessage(`https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}?invite=${encodeURIComponent(resp.invite.id)}`);
-					return true;
-				}
-				displayError?.('Failed to create invite: ' + resp.result);
-				return false;
-			}),
-	},
-];

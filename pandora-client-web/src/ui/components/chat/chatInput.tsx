@@ -194,8 +194,7 @@ function TextArea({ messagesDiv, scrollMessagesView, ref }: {
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatSetPlayerStatus();
 	const sender = useChatMessageSender();
-	const chatInput = useChatInput();
-	const { targets, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
+	const { targets, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = useChatInput();
 	const { chatCommandHintBehavior } = useAccountSettings();
 
 	const shardConnector = useShardConnector();

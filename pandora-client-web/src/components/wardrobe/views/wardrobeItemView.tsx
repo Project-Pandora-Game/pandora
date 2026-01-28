@@ -23,6 +23,7 @@ import React, { ReactElement, useEffect, useMemo, useRef, useState, type ReactNo
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import broomIcon from '../../../assets/icons/broom.svg';
+import roomIcon from '../../../assets/icons/room.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
@@ -437,6 +438,23 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 				<InventoryAssetPreview asset={ asset } small={ true } />
 				<WardrobeItemName item={ wornItem } />
 				<div className='quickActions'>
+					{ ((wornItem.isType('roomDevice') && wornItem.isDeployed()) ||
+						(wornItem.isType('personal') && wornItem.deployment?.deployed)) ? (
+							<div className='icon' title='Item is visible in the room'>
+								<img
+									src={ roomIcon }
+									alt='Item is visible in the room'
+								/>
+							</div>
+						) :
+						wornItem.isType('roomDeviceWearablePart') ? (
+							<div className='icon' title='Part of a room-level item the character is in'>
+								<img
+									src={ roomIcon }
+									alt='Part of a room-level item the character is in'
+								/>
+							</div>
+						) : null }
 					{ storageModuleName != null && storageModule != null ? (
 						<ViewStorageButton
 							showContent={ showContent }
@@ -450,6 +468,10 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 								},
 							] }
 						/>
+					) : (!asset.isType('bodypart')) ? (
+						// For non-bodyparts display placeholder so the above icon is nicely aligned
+						// For bodyparts do not display it, as they can't be in room and usually don't have storage
+						<ViewStorageButtonPlaceholder />
 					) : null }
 					{
 						singleItemContainer ? null : (
@@ -552,6 +574,19 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 				setShowContent((v) => containerAccessCheck.valid && !v);
 			} }
 			title='View contents'
+		>
+			<img src={ storageIcon } alt='View contents' />
+		</WardrobeActionButtonElement>
+	);
+}
+
+export function ViewStorageButtonPlaceholder(): React.ReactNode {
+	return (
+		<WardrobeActionButtonElement
+			check={ null }
+			disabled
+			hide
+			hideReserveSpace
 		>
 			<img src={ storageIcon } alt='View contents' />
 		</WardrobeActionButtonElement>

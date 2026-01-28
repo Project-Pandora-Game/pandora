@@ -669,10 +669,9 @@ $drop-overlay-gap: 0.3em;
 		gap: 0.2em;
 		margin-left: auto;
 
-		.wardrobeActionButton {
-			height: 2.2em;
-			width: 2.2em;
-			padding: 0.15em;
+		.wardrobeActionButton, .icon {
+			height: 2.5em;
+			width: 2.5em;
 
 			img {
 				width: 100%;
@@ -681,6 +680,10 @@ $drop-overlay-gap: 0.3em;
 				pointer-events: none;
 				object-fit: contain;
 			}
+		}
+
+		.wardrobeActionButton {
+			padding: 0.15em;
 		}
 	}
 

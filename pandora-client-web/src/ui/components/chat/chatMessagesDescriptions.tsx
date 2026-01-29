@@ -142,6 +142,19 @@ function DescribeGameLogicActionBody({ action }: DescribeGameLogicActionProps<'b
 
 function DescribeGameLogicActionMove({ action, globalState }: DescribeGameLogicActionProps<'moveItem'>): ReactElement {
 	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+
+	if ((action.shift ?? 0) === 0 && action.personalItemDeployment != null) {
+		if (action.personalItemDeployment.deployed != null) {
+			if (action.personalItemDeployment.deployed) {
+				return <>Deploy the <DescribeItem item={ item } globalState={ globalState } /> from the room inventory.</>;
+			} else {
+				return <>Store the <DescribeItem item={ item } globalState={ globalState } /> into the room inventory.</>;
+			}
+		}
+
+		return <>Reposition the <DescribeItem item={ item } globalState={ globalState } />.</>;
+	}
 
 	return <>Reorder items { isPhysicallyEquipped ? 'on' : 'in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.</>;
 }
@@ -166,6 +179,7 @@ function DescribeGameLogicActionCustomize({ action, globalState }: DescribeGameL
 		(action.name != null) ? 'name' : null,
 		(action.description != null) ? 'description' : null,
 		(action.requireFreeHandsToUse != null) ? 'bound usage' : null,
+		(action.personalItemAutoDeploy != null) ? 'room visibility settings' : null,
 	].filter(IsNotNullable));
 
 	return (
@@ -271,6 +285,8 @@ function DescribeGameLogicActionRoomDeviceDeploy({ action, globalState }: Descri
 		return <>Store the <DescribeItem item={ item } globalState={ globalState } /> into the room inventory.</>;
 	}
 
+	// FIXME: This will make past messages change if the deployment state changes
+	// Fixing this will likely need making "deployed" in the action optional and treat any action with that flag as change
 	if (item?.isType('roomDevice') && item.isDeployed()) {
 		return <>Reposition the <DescribeItem item={ item } globalState={ globalState } />.</>;
 	}

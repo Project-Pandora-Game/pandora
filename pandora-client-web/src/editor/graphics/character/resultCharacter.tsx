@@ -8,9 +8,9 @@ import { DraggableBone } from '../draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
 import { EditorResultGraphicsCharacterLayerBuilder } from '../layer/index.ts';
 import { useEditorCharacterState } from './appearanceEditor.ts';
-import { GraphicsCharacterEditor } from './editorCharacter.tsx';
+import { GraphicsCharacterEditor, type GraphicsCharacterEditorProps } from './editorCharacter.tsx';
 
-export function ResultCharacter(): ReactElement {
+export function ResultCharacter(props: Omit<GraphicsCharacterEditorProps, 'layerBuilder'>): ReactElement {
 	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const assetManager = useAssetManager();
@@ -18,7 +18,7 @@ export function ResultCharacter(): ReactElement {
 	const showBones = useObservable(editor.showBones);
 
 	return (
-		<GraphicsCharacterEditor layerBuilder={ EditorResultGraphicsCharacterLayerBuilder }>
+		<GraphicsCharacterEditor { ...props } layerBuilder={ EditorResultGraphicsCharacterLayerBuilder }>
 			{ showBones ? (
 				<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
 					{

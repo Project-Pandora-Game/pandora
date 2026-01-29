@@ -1,54 +1,60 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, type Promisable } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
+import React, { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
-import { useEvent } from '../../common/useEvent.ts';
-import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent.ts';
-import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
 import { useObservable } from '../../observable.ts';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
-import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
 import { AutoCompleteHint } from '../../ui/components/chat/chatInput.tsx';
-import { ChatInputContext, IChatInputHandler, useChatInput } from '../../ui/components/chat/chatInputContext.tsx';
+import { ChatInputContext, IChatInputHandler } from '../../ui/components/chat/chatInputContext.tsx';
 import { RenderChatPart } from '../../ui/components/chat/chatMessageText.tsx';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
+import { AutocompleteDisplayData } from '../../ui/components/chat/commandsProcessor.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { Column } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameContext/directMessageChannelProvieder.tsx';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
-import { DIRECT_MESSAGE_COMMANDS, DirectMessageCommandExecutionContext } from './directMessageCommandContext.tsx';
+import { useDirectMessageCommandContext } from './directMessageCommandContext.tsx';
+import { DIRECT_MESSAGE_COMMANDS } from './directMessageCommands.tsx';
+import { DirectMessageInput, DirectMessageInputSaveStorage } from './directMessageInput.tsx';
 
-export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
+export function DirectMessage({ accountId }: {
+	accountId: number;
+}): ReactElement {
 	const ref = React.useRef<HTMLTextAreaElement>(null);
+	const chatId: string = `chat:${accountId}`;
 	const [autocompleteHint, setAutocompleteHint] = React.useState<AutocompleteDisplayData | null>(null);
+
+	const messagesDiv = useRef<HTMLDivElement>(null);
+	const scrollFnRef = useRef<(forceScroll: boolean, behavior?: ScrollBehavior) => void>(null);
 
 	const ctx = React.useMemo((): IChatInputHandler => ({
 		setValue: (value: string) => {
 			if (ref.current) {
 				ref.current.value = value;
 			}
+			DirectMessageInputSaveStorage.produceImmer((d) => {
+				const dSaveData = (d[chatId] ??= { input: '', history: [] });
+				dSaveData.input = value;
+			});
 		},
 		targets: null,
-		setTargets: () => { /** */ },
+		setTargets: () => { /* Not supported */ },
 		editing: null,
-		setEditing: () => false,
+		setEditing: () => {
+			// Not supported
+			return false;
+		},
 		autocompleteHint,
 		setAutocompleteHint,
 		mode: null,
-		setMode: () => { /** */ },
+		setMode: () => { /* Not supported */ },
 		showSelector: false,
-		setShowSelector: () => { /** */ },
+		setShowSelector: () => { /* Not supported */ },
 		allowCommands: true,
 		ref,
-	}), [autocompleteHint]);
+	}), [autocompleteHint, chatId]);
 
 	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
 		return (
@@ -57,24 +63,56 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 		) && notification.metadata.from === accountId;
 	}, [accountId]));
 
+	const scroll = useCallback((forceScroll: boolean, behavior?: ScrollBehavior): void => {
+		scrollFnRef.current?.(forceScroll, behavior);
+	}, []);
+
 	return (
 		<div className='chatArea'>
 			<ChatInputContext.Provider value={ ctx }>
 				<DirectMessageChannelProvider accountId={ accountId }>
-					<DirectMessageList />
-					<DirectChannelInput ref={ ref } />
+					<DirectMessageList
+						ref={ messagesDiv }
+						scrollRef={ scrollFnRef }
+					/>
+					<DirectMessageInput
+						ref={ ref }
+						chatId={ chatId }
+						messagesDiv={ messagesDiv }
+						scrollMessagesView={ scroll }
+					/>
 				</DirectMessageChannelProvider>
 			</ChatInputContext.Provider>
 		</div>
 	);
 }
 
-function DirectMessageList(): ReactElement | null {
+function DirectMessageList({ scrollRef, ref }: {
+	scrollRef?: RefObject<((forceScroll: boolean, behavior?: ScrollBehavior) => void) | null>;
+	ref?: RefObject<HTMLDivElement | null>;
+}): ReactElement | null {
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
 	const { chat, encryption } = useDirectMessageChat();
+	const { displayName } = useObservable(chat.displayInfo);
 	const encryptedMessages = useObservable(chat.messages);
 	const account = useCurrentAccount();
-	const [ref] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
+	const [autoScrollRef, scroll] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
+
+	const resizeObserver = useMemo(() => new ResizeObserver(() => scroll(false, 'instant')), [scroll]);
+	const messagesDivHandler = useCallback((div: HTMLDivElement | null) => {
+		if (autoScrollRef.current != null) {
+			resizeObserver.unobserve(autoScrollRef.current);
+		}
+		autoScrollRef.current = div;
+		if (ref !== undefined) {
+			ref.current = div;
+		}
+		if (div != null) {
+			resizeObserver.observe(div);
+		}
+	}, [autoScrollRef, ref, resizeObserver]);
+
+	useImperativeHandle(scrollRef, () => scroll, [scroll]);
 
 	if (!account) {
 		return (
@@ -98,10 +136,14 @@ function DirectMessageList(): ReactElement | null {
 			) }
 		>
 			<Scrollable
-				ref={ ref }
+				ref={ messagesDivHandler }
 				className='fill'
 			>
 				<Column gap='none' className='messagesContainer'>
+					<Column alignX='center' padding='large' gap='tiny' className='text-dim'>
+						<span>This is the beginning of your direct message history with { displayName ?? '[Loading ...]' } ({ chat.id })</span>
+						<span>Only the <strong>last { LIMIT_DIRECT_MESSAGE_STORE_COUNT } messages</strong> per chat are saved</span>
+					</Column>
 					{ encryptedMessages.map((message, i) => (
 						<React.Fragment key={ message.time }>
 							<DirectMessageElement
@@ -130,36 +172,6 @@ function OldMessagesKeyWarning(): ReactElement {
 			Sending a new message will delete the older messages from the conversation history.
 		</div>
 	);
-}
-
-function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeContext<DirectMessageCommandExecutionContext> {
-	const directoryConnector = useDirectoryConnector();
-	const shardConnector = useShardConnector();
-	const gameState = useGameStateOptional();
-	const { chat, encryption } = useDirectMessageChat();
-	const navigate = useNavigatePandora();
-
-	const sendMessage = useCallback<DirectMessageCommandExecutionContext['sendMessage']>(async (message, editing) => {
-		const encrypted = message.length === 0 ? '' : await encryption.service.encrypt(message);
-		if (encrypted.length > LIMIT_DIRECT_MESSAGE_LENGTH_BASE64) {
-			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
-			return;
-		}
-		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, keyHash: encryption.keyHash, content: encrypted, editing });
-		if (response.result !== 'ok') {
-			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
-		}
-	}, [directoryConnector, chat, encryption]);
-
-	return useMemo((): ICommandInvokeContext<DirectMessageCommandExecutionContext> => ({
-		directoryConnector,
-		shardConnector,
-		gameState,
-		chat,
-		navigate,
-		sendMessage,
-		displayError: displayError ? (message) => toast(message, TOAST_OPTIONS_ERROR) : undefined,
-	}), [directoryConnector, shardConnector, gameState, chat, navigate, sendMessage, displayError]);
 }
 
 function DirectMessageAutoCompleteHint(): ReactElement | null {
@@ -269,162 +281,3 @@ function DirectMessageContents({ message }: { message: Immutable<LoadedDirectMes
 		</>
 	);
 }
-
-function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextAreaElement>): ReactElement | null {
-	const ctx = useDirectMessageCommandContext(true);
-	const chat = ctx.chat;
-	const info = useObservable(chat.displayInfo);
-	const { editing, setEditing, setAutocompleteHint, allowCommands } = useChatInput();
-	const { chatCommandHintBehavior } = useAccountSettings();
-
-	const handleSend = (input: string): Promisable<boolean> => {
-		setAutocompleteHint(null);
-		if (
-			input.startsWith(COMMAND_KEY) &&
-			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			allowCommands
-		) {
-			// Process command
-			return RunCommand(input.slice(1), ctx, DIRECT_MESSAGE_COMMANDS);
-		} else {
-			if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
-				input = input.slice(1);
-			}
-			input = input.trim();
-			// Ignore empty input, unless editing
-			if (editing == null && !input) {
-				return false;
-			}
-			ctx.sendMessage(input, editing?.target)
-				.catch((e) => {
-					toast(`Failed to send message: ${String(e)}`, TOAST_OPTIONS_ERROR);
-					GetLogger('DirectMessage').error('Failed to send message:', e);
-				});
-
-			return true;
-		}
-	};
-
-	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		const textarea = ev.currentTarget;
-		const input = textarea.value;
-		if (ev.key === 'Enter' && !ev.shiftKey) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			try {
-				function cleanup() {
-					textarea.value = '';
-					setEditing(null);
-				}
-
-				const result = handleSend(input);
-				if (typeof result === 'boolean') {
-					if (result) {
-						cleanup();
-					}
-				} else {
-					textarea.disabled = true;
-					result.then((r) => {
-						textarea.disabled = false;
-						if (r) {
-							cleanup();
-						}
-					}, (error) => {
-						textarea.disabled = false;
-						toast('Error processing command', TOAST_OPTIONS_ERROR);
-						GetLogger('DirectChannelInput').error('Error async processing input:', error);
-					});
-				}
-			} catch (error) {
-				if (error instanceof Error) {
-					toast(error.message, TOAST_OPTIONS_ERROR);
-				}
-			}
-		} else if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			try {
-				// Process command
-				const inputPosition = textarea.selectionStart || textarea.value.length;
-				const command = textarea.value.slice(1, textarea.selectionStart);
-
-				const autocompleteResult = CommandAutocompleteCycle(command, ctx, DIRECT_MESSAGE_COMMANDS, ev.shiftKey);
-
-				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
-
-				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
-				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
-				if (chatCommandHintBehavior === 'always-show') {
-					setAutocompleteHint(autocompleteResult);
-				} else if (chatCommandHintBehavior === 'on-tab') {
-					setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
-				} else {
-					AssertNever(chatCommandHintBehavior);
-				}
-
-			} catch (error) {
-				if (error instanceof Error) {
-					toast(error.message, TOAST_OPTIONS_ERROR);
-				}
-			}
-		}
-	});
-
-	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const textarea = ev.currentTarget;
-		let input = textarea.value;
-		if (
-			input.startsWith(COMMAND_KEY) &&
-			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			allowCommands
-		) {
-			input = input.slice(1, textarea.selectionStart || textarea.value.length);
-
-			const autocompleteResult = CommandAutocomplete(input, ctx, DIRECT_MESSAGE_COMMANDS);
-
-			if (chatCommandHintBehavior === 'always-show') {
-				setAutocompleteHint({
-					replace: textarea.value,
-					result: autocompleteResult,
-					index: null,
-					nextSegment: false,
-				});
-			} else if (chatCommandHintBehavior === 'on-tab') {
-				if (autocompleteResult != null &&
-					autocompleteResult.options.length === 1 &&
-					autocompleteResult.options[0].replaceValue === input &&
-					!!autocompleteResult.options[0].longDescription
-				) {
-					// Display segments with long description anyway, if they match exactly
-					setAutocompleteHint({
-						replace: textarea.value,
-						result: autocompleteResult,
-						index: null,
-						nextSegment: false,
-					});
-				} else {
-					setAutocompleteHint(null);
-				}
-			} else {
-				AssertNever(chatCommandHintBehavior);
-			}
-		} else {
-			setAutocompleteHint(null);
-		}
-	});
-
-	const actualRef = useTextFormattingOnKeyboardEvent(ref);
-	useInputAutofocus(actualRef);
-
-	return (
-		<textarea
-			ref={ actualRef }
-			onKeyDown={ onKeyDown }
-			onChange={ onChange }
-			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
-			placeholder={ `> Send message to ${info.displayName ?? '[Loading ...]'} (${chat.id}) or use a /command` }
-		/>
-	);
-}
-
-const DirectChannelInput = React.forwardRef(DirectChannelInputImpl);

@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { throttle } from 'lodash-es';
-import { CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
+import { CharacterSize, Coordinates, GetLogger, type HexColorString } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -11,6 +11,7 @@ import { ColorInput } from '../../components/common/colorInput/colorInput.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport.tsx';
+import { PixiTransitionedContainer } from '../../graphics/common/transitions/transitionedContainer.ts';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
 import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
@@ -46,7 +47,10 @@ export function EditorScene({
 	id,
 	className,
 	children,
-}: CommonProps): ReactElement {
+	coordinateSourceRef,
+}: CommonProps & {
+	coordinateSourceRef?: PIXI.Container | null;
+}): ReactElement {
 	const editor = useEditor();
 	const contentRef = useRef<PIXI.Container>(null);
 	const appRef = useRef<PIXI.Application>(null);
@@ -125,32 +129,35 @@ export function EditorScene({
 	}, []);
 
 	const overlay = (
-		<div className='overlay'>
-			<Button className='slim iconButton'
-				title='Toggle character view'
-				onClick={ () => {
-					const appearance = character.getAppearance();
-					appearance.setView(appearance.getView() === 'front' ? 'back' : 'front');
-				} }
-			>
-				↷
-			</Button>
-			<Button className='slim iconButton'
-				title='Center the view'
-				onClick={ () => {
-					viewportRef.current?.center();
-				} }
-			>
-				⊙
-			</Button>
-			<Button className='slim iconButton'
-				title='Download as image'
-				onClick={ exportImage }
-			>
-				⤓
-			</Button>
-			<EditorColorPicker throttle={ 30 } />
-		</div>
+		<>
+			<div className='overlay'>
+				<Button className='slim iconButton'
+					title='Toggle character view'
+					onClick={ () => {
+						const appearance = character.getAppearance();
+						appearance.setView(appearance.getView() === 'front' ? 'back' : 'front');
+					} }
+				>
+					↷
+				</Button>
+				<Button className='slim iconButton'
+					title='Center the view'
+					onClick={ () => {
+						viewportRef.current?.center();
+					} }
+				>
+					⊙
+				</Button>
+				<Button className='slim iconButton'
+					title='Download as image'
+					onClick={ exportImage }
+				>
+					⤓
+				</Button>
+				<EditorColorPicker throttle={ 30 } />
+			</div>
+			<CoordinatesDisplay coordinateSourceRef={ coordinateSourceRef ?? null } pixi={ appRef } />
+		</>
 	);
 
 	return (
@@ -173,18 +180,70 @@ export function EditorScene({
 	);
 }
 
-export function EditorSetupScene(): ReactElement {
+function CoordinatesDisplay({ coordinateSourceRef, pixi }: {
+	coordinateSourceRef: PIXI.Container | null;
+	pixi: Readonly<RefObject<PIXI.Application | null>>;
+}): ReactElement | null {
+	const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+
+	useEffect(() => {
+		setCoordinates(null);
+
+		if (coordinateSourceRef == null)
+			return;
+
+		const onGlobalPointerMove = (e: PIXI.FederatedPointerEvent) => {
+			const canvas = pixi.current?.canvas;
+			if (canvas == null) {
+				setCoordinates(null);
+				return;
+			}
+			const canvasRect = canvas.getBoundingClientRect();
+			const validPos = canvasRect.left <= e.clientX && e.clientX < canvasRect.right &&
+				canvasRect.top <= e.clientY && e.clientY < canvasRect.bottom;
+
+			if (validPos) {
+				const pos = e.getLocalPosition(coordinateSourceRef);
+				setCoordinates({ x: Math.round(pos.x), y: Math.round(pos.y) });
+			} else {
+				setCoordinates(null);
+			}
+		};
+
+		coordinateSourceRef.addEventListener('globalpointermove', onGlobalPointerMove);
+
+		return () => {
+			coordinateSourceRef.removeEventListener('globalpointermove', onGlobalPointerMove);
+		};
+	}, [coordinateSourceRef, pixi]);
+
+	if (coordinates == null || coordinateSourceRef == null)
+		return null;
+
 	return (
-		<EditorScene>
-			<SetupCharacter />
+		// Pad numbers with "figure space" so they do not move around
+		<div className='CoordinatesDisplay font-tabular'>
+			{ coordinates.x.toString().padStart(4, '\u2007') }, { coordinates.y.toString().padStart(4, '\u2007') }
+		</div>
+	);
+}
+
+export function EditorSetupScene(): ReactElement {
+	const [coordinateSource, setCoordinateSource] = useState<PixiTransitionedContainer | null>(null);
+
+	return (
+		<EditorScene coordinateSourceRef={ coordinateSource }>
+			<SetupCharacter ref={ setCoordinateSource } eventMode='static' />
 		</EditorScene>
 	);
 }
 
 export function EditorResultScene(): ReactElement {
+	const [coordinateSource, setCoordinateSource] = useState<PixiTransitionedContainer | null>(null);
+
 	return (
-		<EditorScene>
-			<ResultCharacter />
+		<EditorScene coordinateSourceRef={ coordinateSource }>
+			<ResultCharacter ref={ setCoordinateSource } eventMode='static' />
 		</EditorScene>
 	);
 }

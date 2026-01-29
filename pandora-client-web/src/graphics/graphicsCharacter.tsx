@@ -14,8 +14,8 @@ import {
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
-import type { FederatedPointerEvent, Filter, Rectangle, EventMode as PixiEventMode } from 'pixi.js';
-import { memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { FederatedPointerEvent, Filter, EventMode as PixiEventMode, Rectangle } from 'pixi.js';
+import { memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
@@ -50,6 +50,7 @@ export type GraphicsCharacterLayerBuilder = (
 ) => ReactElement[];
 
 export interface GraphicsCharacterProps extends ChildrenProps {
+	ref?: Ref<PixiTransitionedContainer>;
 	layerBuilder?: GraphicsCharacterLayerBuilder;
 	layerFilter?: GraphicsCharacterLayerFilter;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;

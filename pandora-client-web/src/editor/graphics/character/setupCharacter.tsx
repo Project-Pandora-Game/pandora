@@ -9,9 +9,9 @@ import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
 import { EditorSetupGraphicsCharacterLayerBuilder, SetupLayerSelected } from '../layer/index.ts';
 import { PointTemplateEditLayer } from '../pointTemplateEditor.tsx';
 import { useEditorCharacterState } from './appearanceEditor.ts';
-import { GraphicsCharacterEditor } from './editorCharacter.tsx';
+import { GraphicsCharacterEditor, type GraphicsCharacterEditorProps } from './editorCharacter.tsx';
 
-export function SetupCharacter(): ReactElement {
+export function SetupCharacter(props: Omit<GraphicsCharacterEditorProps, 'layerBuilder'>): ReactElement {
 	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const assetManager = useAssetManager();
@@ -21,7 +21,7 @@ export function SetupCharacter(): ReactElement {
 	const selectedTemplate = useObservable(editor.targetTemplate);
 
 	return (
-		<GraphicsCharacterEditor layerBuilder={ EditorSetupGraphicsCharacterLayerBuilder }>
+		<GraphicsCharacterEditor { ...props } layerBuilder={ EditorSetupGraphicsCharacterLayerBuilder }>
 			{ (selectedLayer != null && selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
 				<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
 					<SetupLayerSelected

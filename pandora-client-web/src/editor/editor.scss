@@ -68,6 +68,25 @@
 						border-radius: 0.2em;
 					}
 				}
+
+				.CoordinatesDisplay {
+					position: absolute;
+					bottom: 0;
+					left: 0;
+					border-radius: 0 common.spacing('small') 0 0;
+					max-width: calc(100% - 0.5em);
+					padding: common.spacing('tiny');
+					font-size: smaller;
+					background-color: rgba(common.$theme-normal-background-secondary, 0.6);
+					pointer-events: none;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-right: 1px solid common.$forcedColors-separator;
+						border-bottom: 1px solid common.$forcedColors-separator;
+					}
+				}
 			}
 		}
 	}

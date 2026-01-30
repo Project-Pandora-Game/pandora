@@ -94,7 +94,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		this._messageHandler = new MessageHandler<IDirectoryShard>({
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 			stop: Stop,
-			spaceCheckCanEnter: this.handleSpaceCheckCanEnter.bind(this),
 			spaceCheckCanLeave: this.handleSpaceCheckCanLeave.bind(this),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
@@ -310,17 +309,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 
 		this._state = DirectoryConnectionState.CONNECTED;
 		logger.info('Registered with Directory');
-	}
-
-	private handleSpaceCheckCanEnter({ character: characterId, space: spaceId }: IDirectoryShardArgument['spaceCheckCanEnter']): IDirectoryShardResult['spaceCheckCanEnter'] {
-		const character = CharacterManager.getCharacter(characterId);
-		const space = SpaceManager.getSpace(spaceId);
-
-		// We must know both the character and the space
-		if (character == null || space == null)
-			return { result: 'targetNotFound' };
-
-		return { result: 'ok' };
 	}
 
 	private handleSpaceCheckCanLeave({ character: characterId }: IDirectoryShardArgument['spaceCheckCanLeave']): IDirectoryShardResult['spaceCheckCanLeave'] {

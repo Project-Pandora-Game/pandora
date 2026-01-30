@@ -1,6 +1,9 @@
+import classNames from 'classnames';
 import { AppearanceAction, EvalItemPath, ItemId, type AssetFrameworkRoomState, type Item, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
@@ -34,8 +37,53 @@ function HideItemMenu({ roomState, item, close }: {
 	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<Button theme='transparent' onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
-			Hide from room
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				available ? '' : 'text-strikethrough',
+			) }
+			onClick={ execute }
+			disabled={ processing }
+		>
+			<img src={ forbiddenIcon } />
+			<span>Hide from room</span>
+		</Button>
+	);
+}
+
+function WearItemMenu({ roomState, item, close }: {
+	roomState: AssetFrameworkRoomState;
+	item: Item;
+	close: () => void;
+}): ReactElement | null {
+	const player = usePlayer();
+
+	const action = useMemo((): AppearanceAction | null => player != null ? ({
+		type: 'transfer',
+		source: { type: 'room', roomId: roomState.id },
+		item: { container: [], itemId: item.id },
+		target: { type: 'character', characterId: player.id },
+		container: [],
+	}) : null, [item.id, roomState.id, player]);
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.valid;
+	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+
+	if (action == null || !item.isWearable())
+		return null;
+
+	return (
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				available ? '' : 'text-strikethrough',
+			) }
+			onClick={ execute }
+			disabled={ processing }
+		>
+			<div className='icon'>⇪</div><span>Wear item</span>
 		</Button>
 	);
 }
@@ -68,8 +116,16 @@ function MoveItemMenu({ roomState, item, close }: {
 	};
 
 	return (
-		<Button theme='transparent' onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>
-			Move
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				available ? '' : 'text-strikethrough',
+			) }
+			onClick={ onClick }
+		>
+			<img src={ arrowAllIcon } />
+			<span>Move</span>
 		</Button>
 	);
 }
@@ -84,6 +140,7 @@ function ItemMainMenu({ roomState, item, close }: {
 			<hr />
 			<MoveItemMenu roomState={ roomState } item={ item } close={ close } />
 			<HideItemMenu roomState={ roomState } item={ item } close={ close } />
+			<WearItemMenu roomState={ roomState } item={ item } close={ close } />
 		</>
 	);
 }

@@ -20,7 +20,7 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useChatMessageSender } from '../../../services/gameLogic/chatHooks.ts';
 import { ColoredName } from '../common/coloredName.tsx';
 import { ActionLogEntry } from './actionLogEntry.tsx';
-import { useChatInput } from './chatInputContext.tsx';
+import { ChatMessageShouldDim, useChatInput } from './chatInputContext.ts';
 import { RenderActionContent, RenderActionContentToString } from './chatMessageAction.tsx';
 import { RenderChatPart, RenderChatPartToString } from './chatMessageText.tsx';
 import { IsActionMessage, type ChatActionMessagePreprocessed, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData, type ChatNormalMessageProcessed } from './chatMessageTypes.ts';
@@ -76,11 +76,8 @@ function DisplayUserMessage({ message, playerId }: { message: ChatNormalMessageP
 				className={ classNames(
 					'message',
 					message.type,
-					(
-						isPrivate ? 'private' :
-						message.room !== message.receivedRoomId ? 'dim' :
-						null
-					),
+					isPrivate ? 'private' : null,
+					ChatMessageShouldDim(message) ? 'dim' : null,
 					editingClass,
 				) }
 				style={ style }
@@ -459,7 +456,7 @@ export function ActionMessage({ message, ignoreColor = false }: { message: ChatA
 			messageTime={ message.time }
 			edited={ false }
 			repetitions={ message.repetitions }
-			dim={ message.rooms != null && !message.rooms.includes(message.receivedRoomId) }
+			dim={ ChatMessageShouldDim(message) }
 			rooms={ message.roomsData }
 			receivedRoomId={ message.receivedRoomId }
 			extraContent={ extraContent != null ? (

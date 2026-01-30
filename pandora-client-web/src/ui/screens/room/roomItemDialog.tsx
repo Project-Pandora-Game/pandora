@@ -205,7 +205,8 @@ function RoomItemDialogContentInfo({ item, path, target }: RoomItemDialogContent
 	);
 }
 
-function RoomItemDialogContentQuickActions({ path, target, room, close }: RoomItemDialogContentProps): ReactElement {
+function RoomItemDialogContentQuickActions({ path, target, room, item, close }: RoomItemDialogContentProps): ReactElement {
+	const player = usePlayer();
 	const isRoomInventory = target.type === 'room' && path.container.length === 0;
 
 	const containerPath = SplitContainerPath(path.container);
@@ -253,6 +254,20 @@ function RoomItemDialogContentQuickActions({ path, target, room, close }: RoomIt
 					>
 						<span>
 							<u>▽</u> Remove and store in room
+						</span>
+					</GameLogicActionButton>
+				) : (item.isWearable() && player != null) ? (
+					<GameLogicActionButton
+						action={ {
+							type: 'transfer',
+							source: target,
+							item: path,
+							target: { type: 'character', characterId: player.id },
+							container: [],
+						} }
+					>
+						<span>
+							⇪ Wear item
 						</span>
 					</GameLogicActionButton>
 				) : null

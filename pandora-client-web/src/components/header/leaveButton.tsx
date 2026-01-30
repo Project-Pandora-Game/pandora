@@ -117,6 +117,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	spaceId: SpaceId;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const navigate = useNavigatePandora();
 	const globalState = useGlobalState(useGameState());
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
 	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
@@ -155,6 +156,12 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
+			<Button onClick={ () => {
+				navigate('/spaces/search');
+				closeDialog();
+			} } >
+				<img src={ listIcon } />List other spaces
+			</Button>
 			<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
 				<img src={ logoutIcon } />Leave space
 			</Button>

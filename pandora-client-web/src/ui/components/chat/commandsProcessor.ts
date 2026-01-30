@@ -18,7 +18,7 @@ import type { DirectoryConnector } from '../../../networking/directoryConnector.
 import type { ShardConnector } from '../../../networking/shardConnector.ts';
 import type { NavigateFunctionPandora } from '../../../routing/navigate.ts';
 import type { IAccountManager } from '../../../services/accountLogic/accountManager.ts';
-import type { IChatInputHandler } from './chatInputContext.tsx';
+import type { IChatInputHandler } from './chatInputContext.ts';
 
 export const COMMAND_KEY = '/';
 

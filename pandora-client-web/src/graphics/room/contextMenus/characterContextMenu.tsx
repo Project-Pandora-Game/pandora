@@ -38,7 +38,7 @@ import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentT
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
-import { useChatInput } from '../../../ui/components/chat/chatInputContext.tsx';
+import { useChatInput } from '../../../ui/components/chat/chatInputContext.ts';
 import { SPACE_ADMIN_ACTION_FAIL_REASONS } from '../../../ui/components/chat/commands.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks.tsx';

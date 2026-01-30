@@ -41,7 +41,7 @@ import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOpt
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { SortSpaceCharacters } from '../../components/characterList/sortCharacters.ts';
-import { useChatInput } from '../../components/chat/chatInputContext.tsx';
+import { useChatInput } from '../../components/chat/chatInputContext.ts';
 import { SPACE_ROLE_TEXT_CUMULATIVE } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfiguration.tsx';

@@ -148,6 +148,7 @@ export function EditorWardrobeUI(): ReactElement {
 								<WardrobeItemConfigMenu
 									key={ currentFocus.itemId }
 									item={ currentFocus }
+									room={ { type: 'room', roomId: characterState.currentRoom } }
 								/>
 							</div>
 						</>

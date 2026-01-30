@@ -75,7 +75,11 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 			{
 				WardrobeFocusesItem(currentFocus) &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } />
+					<WardrobeItemConfigMenu
+						key={ currentFocus.itemId }
+						item={ currentFocus }
+						room={ { type: 'room', roomId: characterState.currentRoom } }
+					/>
 				</div>
 			}
 		</div>

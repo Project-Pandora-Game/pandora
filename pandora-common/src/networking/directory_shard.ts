@@ -55,15 +55,6 @@ export const DirectoryShardSchema = {
 		response: z.object({}),
 	},
 	//#region Space manipulation
-	spaceCheckCanEnter: {
-		request: z.object({
-			character: CharacterIdSchema,
-			space: SpaceIdSchema,
-		}),
-		response: z.object({
-			result: z.enum(['ok', 'targetNotFound']),
-		}),
-	},
 	spaceCheckCanLeave: {
 		request: z.object({
 			character: CharacterIdSchema,

@@ -756,24 +756,6 @@ export class Character {
 		if (shard?.shardConnection == null)
 			return 'failed';
 
-		// Must be allowed to join space based on character restrictions (ask shard)
-		const restrictionResult = await shard.shardConnection.awaitResponse('spaceCheckCanEnter', {
-			character: this.baseInfo.id,
-			space: space.id,
-		}).catch(() => undefined);
-
-		// Check if the query was successful
-		if (restrictionResult == null || restrictionResult.result === 'targetNotFound') {
-			// Fail on intermittent failures (no connection to shard, the request failed, the shard doesn't recognize this client (e.g. was disconnected during this request))
-			return 'failed';
-		}
-
-		if (restrictionResult.result === 'ok') {
-			// NOOP (fallthough)
-		} else {
-			AssertNever(restrictionResult.result);
-		}
-
 		// Must be allowed to join the space (second check to prevent race conditions)
 		const allowResult2 = space.checkAllowEnter(this, invite);
 

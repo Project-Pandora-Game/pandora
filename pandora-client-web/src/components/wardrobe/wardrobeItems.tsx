@@ -5,6 +5,7 @@ import {
 	Asset,
 	CHARACTER_SETTINGS_DEFAULT,
 	Item,
+	MapNullable,
 	SplitContainerPath,
 	type ActionRoomSelector,
 	type ActionTargetSelector,
@@ -219,6 +220,8 @@ export function WardrobeItemManipulation(): ReactElement {
 						<WardrobeItemConfigMenu
 							key={ currentFocus.itemId }
 							item={ currentFocus }
+							room={ targetSelector.type === 'room' ? targetSelector :
+								MapNullable(globalState.getCharacterState(targetSelector.characterId), (c): ActionRoomSelector => ({ type: 'room', roomId: c.currentRoom })) }
 						/>
 					</div>
 				) :

@@ -263,17 +263,17 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 
 export function WardrobeRoomDeviceWearable({ roomDeviceWearable, room }: {
 	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
-	room: ActionRoomSelector;
+	room: ActionRoomSelector | null;
 	item: ItemPath;
 }): ReactElement | null {
 	const roomDeviceLink = roomDeviceWearable.roomDeviceLink;
 	const { globalState } = useWardrobeActionContext();
-	const roomDevice = useMemo(() => (roomDeviceLink != null
+	const roomDevice = useMemo(() => ((roomDeviceLink != null && room != null)
 		? globalState.getItems(room)?.find((it) => it.id === roomDeviceLink.device)
 		: undefined
 	), [globalState, room, roomDeviceLink]);
 
-	if (roomDeviceLink == null || roomDevice == null) {
+	if (roomDeviceLink == null || roomDevice == null || room == null) {
 		return (
 			<FieldsetToggle legend='Slots'>
 				<Column padding='medium'>

@@ -1,17 +1,17 @@
 import { produce, type Immutable } from 'immer';
-import { pick } from 'lodash-es';
-import { IDirectoryShardInfo, IDirectoryStatus, IsObject } from 'pandora-common';
+import { IDirectoryStatus, IsObject } from 'pandora-common';
 import { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { DirectoryConnectionState } from '../../networking/directoryConnector.ts';
 import { ShardConnectionState } from '../../networking/shardConnector.ts';
+import type { ClientGameLogicServicesConnectionInfo } from '../../services/clientGameLogicServices.ts';
 
 export interface DebugData {
 	editor?: true;
 	directoryState?: DirectoryConnectionState;
 	directoryStatus?: IDirectoryStatus;
 	shardState?: ShardConnectionState;
-	shardConnectionInfo?: Immutable<IDirectoryShardInfo>;
+	shardConnectionInfo?: Partial<Immutable<ClientGameLogicServicesConnectionInfo>>;
 }
 
 export interface DebugContext {
@@ -57,8 +57,8 @@ export function useDebugContext(): DebugContext {
 
 function SanitizeDebugData(debugData: DebugData): DebugData {
 	return produce(debugData, (draft) => {
-		if (IsObject(draft.shardConnectionInfo)) {
-			draft.shardConnectionInfo = pick(draft.shardConnectionInfo, 'id', 'publicURL', 'features', 'version');
+		if (IsObject(draft.shardConnectionInfo) && draft.shardConnectionInfo.shardConnection != null) {
+			draft.shardConnectionInfo.shardConnection.secret = '****';
 		}
 	});
 }

@@ -1,13 +1,15 @@
-import { IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import type { ClientGameLogicServicesConnectionInfo } from '../../../src/services/clientGameLogicServices.ts';
 
-export function MockConnectionInfo(overrides?: Partial<IDirectoryCharacterConnectionInfo>): IDirectoryCharacterConnectionInfo {
+export function MockConnectionInfo(overrides?: Partial<ClientGameLogicServicesConnectionInfo>): ClientGameLogicServicesConnectionInfo {
 	return {
-		id: '5099803df3f4948bd2f98391',
-		publicURL: 'http://shard-url:12345',
-		features: [],
-		version: '0.0.0',
 		characterId: 'c123',
-		secret: 'uXFqcVOH',
+		shardConnection: {
+			id: '5099803df3f4948bd2f98391',
+			publicURL: 'http://shard-url:12345',
+			features: [],
+			version: '0.0.0',
+			secret: 'uXFqcVOH',
+		},
 		...overrides,
 	};
 }

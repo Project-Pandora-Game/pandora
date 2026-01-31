@@ -29,7 +29,6 @@ describe('MongoDatabase extra tests', () => {
 				checkMD5: false,
 			},
 			instance: {
-				storageEngine: 'ephemeralForTest',
 				args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
 			},
 		});

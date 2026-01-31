@@ -229,6 +229,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 							}
 						})
 						.catch((err) => {
+							// Report back that space load failed
+							this.sendMessage('spaceError', { id: space.id });
+							// Log fatal error after the report, to allow us to recover if bad state is persistent
 							logger.fatal('Error processing prepareCharacters message', err);
 						}),
 				),

@@ -33,7 +33,6 @@ import { DialogInPortal, DraggableDialog } from '../dialog/dialog.tsx';
 import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { useNotificationHeader } from '../gameContext/notificationProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
-import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HeaderButton } from './HeaderButton.tsx';
 import './header.scss';
 import { LeaveButton } from './leaveButton.tsx';
@@ -42,7 +41,7 @@ import { NotificationMenu } from './notificationMenu.tsx';
 function LeftHeader({ onAnyClick }: {
 	onAnyClick?: () => void;
 }): ReactElement {
-	const connectionInfo = useShardConnectionInfo();
+	const selectedCharacter = useObservable(useService('accountManager').currentCharacter);
 
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
@@ -50,12 +49,12 @@ function LeftHeader({ onAnyClick }: {
 	const auth = useAuthTokenHeader();
 
 	useEffect(() => {
-		if (!auth || !connectionInfo)
+		if (!auth || !selectedCharacter)
 			return;
 
 		let valid = true;
 
-		fetch(new URL(`pandora/character/${encodeURIComponent(connectionInfo.characterId)}/preview`, GetDirectoryUrl()), {
+		fetch(new URL(`pandora/character/${encodeURIComponent(selectedCharacter.characterId)}/preview`, GetDirectoryUrl()), {
 			headers: {
 				Authorization: auth,
 			},
@@ -80,7 +79,7 @@ function LeftHeader({ onAnyClick }: {
 				}
 			})
 			.catch((err) => {
-				GetLogger('LeftHeader').warning(`Error getting preview for character ${connectionInfo.characterId}:`, err);
+				GetLogger('LeftHeader').warning(`Error getting preview for character ${selectedCharacter.characterId}:`, err);
 			});
 
 		return () => {
@@ -106,10 +105,10 @@ function LeftHeader({ onAnyClick }: {
 						{ characterName ?? `[Character ${characterData.id}]` }
 					</span>
 				</Button>
-			) : connectionInfo ? (
+			) : selectedCharacter ? (
 				<span className='headerText'>
 					<span className='label'>Current character:</span>
-					{ `[Character ${connectionInfo.characterId}]` }
+					{ `[Character ${selectedCharacter.characterId}]` }
 				</span>
 			) : (
 				<span className='headerText'>
@@ -397,7 +396,7 @@ function CollapsableHeader({ onAnyClick }: {
 	const [showMenu, setShowMenu] = useState(false);
 
 	const currentAccount = useCurrentAccount();
-	const connectionInfo = useShardConnectionInfo();
+	const selectedCharacter = useObservable(useService('accountManager').currentCharacter);
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 
@@ -429,9 +428,9 @@ function CollapsableHeader({ onAnyClick }: {
 						{ characterName ?? `[Character ${characterData.id}]` }
 					</span>
 				</Button>
-			) : connectionInfo ? (
+			) : selectedCharacter ? (
 				<span className='headerText'>
-					{ `[Character ${connectionInfo.characterId}]` }
+					{ `[Character ${selectedCharacter.characterId}]` }
 				</span>
 			) : currentAccount != null ? (
 				<span className='headerText'>

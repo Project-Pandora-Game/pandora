@@ -7,7 +7,7 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	GetLogger,
-	IDirectoryCharacterConnectionInfo,
+	IDirectoryCharacterAssignmentInfo,
 	Logger,
 	NOT_NARROWING_FALSE,
 	NOT_NARROWING_TRUE,
@@ -303,6 +303,15 @@ export class Character {
 	 */
 	public assignment: CharacterAssignment | null;
 
+	/**
+	 * If this is set, it is valid to return character assignment with no shard.
+	 * This in turn produces load screen on client as it waits for servers to get ready.
+	 * This should always be cleared when leaving synchronized context of this class,
+	 * in which case no character info should be returned at all if there is no active assignment,
+	 * in effect sending client to the character selection screen, letting us gracefully recover from assignment errors by letting user re-select the character.
+	 */
+	private _assignmentChangePending: boolean = false;
+
 	public get space(): Space | null {
 		if (this.assignment?.type === 'space-joined') {
 			return this.assignment.space;
@@ -489,14 +498,16 @@ export class Character {
 		}
 	}
 
-	public getShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
-		if (!this.currentShard || !this.connectSecret)
+	public getShardAssignmentInfo(): IDirectoryCharacterAssignmentInfo | null {
+		if (!this._assignmentChangePending && (!this.currentShard || !this.connectSecret))
 			return null;
 
 		return {
-			...this.currentShard.getInfo(),
 			characterId: this.baseInfo.id,
-			secret: this.connectSecret,
+			shardConnection: (this.currentShard && this.connectSecret) ? {
+				...this.currentShard.getInfo(),
+				secret: this.connectSecret,
+			} : null,
 		};
 	}
 
@@ -706,8 +717,8 @@ export class Character {
 
 		// If we are aiming to join a public space, then run early checks for being able to enter it to avoid leaving if it wouldn't be possible anyway
 		if (space != null) {
-			// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
-			const allowResult1 = space.checkAllowEnter(this, invite, { characterLimit: true });
+			// Must be allowed to join the space
+			const allowResult1 = space.checkAllowEnter(this, invite);
 
 			if (allowResult1 !== 'ok') {
 				return allowResult1;
@@ -834,6 +845,13 @@ export class Character {
 
 	@AsyncSynchronized('object')
 	public async switchSpace(space: Space | null, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
-		return await this._switchSpace(space, invite);
+		Assert(!this._assignmentChangePending);
+
+		this._assignmentChangePending = true;
+		try {
+			return await this._switchSpace(space, invite);
+		} finally {
+			this._assignmentChangePending = false;
+		}
 	}
 }

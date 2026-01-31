@@ -289,7 +289,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenCalledTimes(1);
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
-				character: character.getShardConnectionInfo(), // Note: is actually null because of no shard
+				character: character.getShardAssignmentInfo(), // Note: is actually null because of no shard
 			}, expect.anything());
 
 			// Cleanup

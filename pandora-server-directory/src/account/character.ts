@@ -824,6 +824,9 @@ export class Character {
 
 			// Actually add the character to the space
 			if (!await space.addCharacter(this, invite)) {
+				// Load us into personal space if actual join failed
+				await this._unassign();
+				await this._assignToShard('auto');
 				return 'failed';
 			}
 			Assert(NOT_NARROWING_FALSE || this.space === space);

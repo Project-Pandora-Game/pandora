@@ -30,7 +30,7 @@ import { useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus } 
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { ColoredName } from '../common/coloredName.tsx';
-import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.tsx';
+import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 

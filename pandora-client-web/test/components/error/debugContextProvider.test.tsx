@@ -16,10 +16,14 @@ describe('DebugContextProvider', () => {
 		const { result, rerender } = renderHook(useDebugContext, { wrapper: DebugContextProvider });
 		const debugData = MockDebugData({
 			shardConnectionInfo: {
-				id: '5099803df3f4948bd2f98391',
-				publicURL: 'http://shard-url:12345',
-				features: [],
-				version: '0.0.0',
+				characterId: 'c1',
+				shardConnection: {
+					id: '5099803df3f4948bd2f98391',
+					publicURL: 'http://shard-url:12345',
+					features: [],
+					version: '0.0.0',
+					secret: '****',
+				},
 			},
 		});
 		act(() => result.current.setDebugData(debugData));
@@ -57,10 +61,11 @@ describe('DebugContextProvider', () => {
 		}));
 		rerender();
 		expect(result.current.debugData.shardConnectionInfo).toStrictEqual({
-			id: connectionInfo.id,
-			publicURL: connectionInfo.publicURL,
-			features: connectionInfo.features,
-			version: connectionInfo.version,
+			...connectionInfo,
+			shardConnection: {
+				...connectionInfo.shardConnection,
+				secret: '****',
+			},
 		});
 	});
 });

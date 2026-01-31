@@ -128,8 +128,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceSearch: this.handleSpaceSearch.bind(this),
 			spaceGetInfo: this.handleSpaceGetInfo.bind(this),
 			spaceCreate: this.handleSpaceCreate.bind(this),
-			spaceEnter: this.handleSpaceEnter.bind(this),
-			spaceLeave: this.handleSpaceLeave.bind(this),
+			spaceSwitch: this.handleSpaceSwitch.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
 			spaceDropRole: this.handleSpaceDropRole.bind(this),
@@ -566,7 +565,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: space };
 		}
 
-		const result = await character.joinSpace(space);
+		const result = await character.switchSpace(space);
 		Assert(result !== 'noAccess');
 		Assert(result !== 'spaceFull');
 		Assert(result !== 'invalidInvite');
@@ -574,21 +573,25 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleSpaceEnter({ id, invite }: IClientDirectoryArgument['spaceEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceEnter'] {
+	private async handleSpaceSwitch({ id, invite }: IClientDirectoryArgument['spaceSwitch'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSwitch'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
 		const character = connection.character;
 
-		const space = await SpaceManager.loadSpace(id);
+		if (id != null) {
+			const space = await SpaceManager.loadSpace(id);
 
-		if (!space) {
-			return { result: 'notFound' };
+			if (!space) {
+				return { result: 'notFound' };
+			}
+
+			const result = await character.switchSpace(space, invite);
+			return { result };
+		} else {
+			const result = await character.switchSpace(null);
+			return { result };
 		}
-
-		const result = await character.joinSpace(space, invite);
-
-		return { result };
 	}
 
 	private async handleSpaceUpdate(spaceConfig: IClientDirectoryArgument['spaceUpdate'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceUpdate'] {
@@ -623,15 +626,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		const result = await connection.character.space.adminAction(connection.character.baseInfo, action, targets);
-
-		return { result };
-	}
-
-	private async handleSpaceLeave(_: IClientDirectoryArgument['spaceLeave'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceLeave'] {
-		if (!connection.isLoggedIn() || !connection.character)
-			throw new BadMessageError();
-
-		const result = await connection.character.leaveSpace();
 
 		return { result };
 	}

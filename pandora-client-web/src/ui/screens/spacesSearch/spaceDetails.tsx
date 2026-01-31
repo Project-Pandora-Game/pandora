@@ -1,16 +1,12 @@
 import classNames from 'classnames';
 import {
 	AssertNever,
-	EMPTY,
 	GetLogger,
 	SpaceId,
 	SpaceInvite,
-	SpaceInviteId,
 	SpaceListExtendedInfo,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo } from 'react';
-import { useLocation } from 'react-router';
-import { toast } from 'react-toastify';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
@@ -22,8 +18,8 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { PersistentToast } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
@@ -34,12 +30,11 @@ import './spacesSearch.scss';
 
 const SpaceJoinProgress = new PersistentToast();
 
-export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLeave, closeText = 'Close' }: {
+export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Close' }: {
 	info: SpaceListExtendedInfo;
 	hasFullInfo: boolean;
 	hide?: () => void;
 	invite?: SpaceInvite;
-	redirectBeforeLeave?: boolean;
 	closeText?: string;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
@@ -71,7 +66,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			// Hide at this point and navigate to room view to let user see the load progress
 			hide?.();
 			navigate('/room');
-			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
+			return directoryConnector.awaitResponse('spaceSwitch', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
 			if (resp == null)
@@ -80,6 +75,9 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			switch (resp.result) {
 				case 'ok':
 					SpaceJoinProgress.show('success', 'Space joined!');
+					break;
+				case 'failed':
+					SpaceJoinProgress.show('error', 'Error joining the space, try again later');
 					break;
 				case 'notFound':
 					SpaceJoinProgress.show('error', 'Space not found');
@@ -93,8 +91,11 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 				case 'noAccess':
 					SpaceJoinProgress.show('error', 'No access');
 					break;
-				case 'failed':
-					SpaceJoinProgress.show('error', 'Failed to join space');
+				case 'inRoomDevice':
+					SpaceJoinProgress.show('error', 'You must exit the room device before leaving the current space');
+					break;
+				case 'restricted':
+					SpaceJoinProgress.show('error', 'An item is preventing you from leaving the current space');
 					break;
 				default:
 					AssertNever(resp.result);
@@ -236,7 +237,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 				) : info.isAllowed ? (
 					<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='allowlisted' />
 				) : null }
-				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
+				<GuardedJoinButton spaceId={ info.id }>
 					<Button
 						disabled={ processing }
 						onClick={ join }>
@@ -248,10 +249,12 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	);
 }
 
-function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }: { children: ReactNode; spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }): ReactElement {
+function GuardedJoinButton({ children, spaceId }: { children: ReactNode; spaceId: SpaceId; }): ReactElement {
 	const space = useSpaceInfoOptional();
 
-	const player = usePlayer();
+	const { player, globalState } = usePlayerState();
+	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
+	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
 	const gameState = useGameStateOptional();
 
 	if (!player || !gameState) {
@@ -274,36 +277,6 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 		);
 	}
 
-	return <GuardedJoinButtonWithLeave spaceId={ spaceId } inviteId={ inviteId } redirectBeforeLeave={ redirectBeforeLeave } />;
-}
-
-// TODO: remove some of this when we automate leave process was added
-function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: { spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }) {
-	const { pathname } = useLocation();
-	const navigate = useNavigatePandora();
-	const directoryConnector = useDirectoryConnector();
-	const { player, globalState } = usePlayerState();
-	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
-	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
-
-	const [leave, processing] = useAsyncEvent(
-		(e: React.MouseEvent<HTMLButtonElement>) => {
-			e.stopPropagation();
-			return directoryConnector.awaitResponse('spaceLeave', EMPTY);
-		},
-		(resp) => {
-			if (resp.result !== 'ok') {
-				toast(`Failed to leave space:\n${resp.result}`, TOAST_OPTIONS_ERROR);
-			}
-		},
-		{
-			errorHandler: (error) => {
-				GetLogger('LeaveSpace').warning('Error while leaving space', error);
-				toast(`Error while leaving space:\n${error instanceof Error ? error.message : String(error)}`, TOAST_OPTIONS_ERROR);
-			},
-		},
-	);
-
 	if (roomDeviceLink) {
 		return (
 			<Button disabled>
@@ -320,20 +293,5 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 		);
 	}
 
-	if (redirectBeforeLeave && !pathname.startsWith('/space/join')) {
-		return (
-			<Button onClick={ () => {
-				navigate(`/space/join/${encodeURIComponent(spaceId)}${inviteId ? `?invite=${encodeURIComponent(inviteId)}` : ''}`);
-			} }>
-				Go To Invite URL
-			</Button>
-		);
-	}
-
-	return (
-		<Button onClick={ leave } disabled={ processing || !canLeave || roomDeviceLink != null }>
-			Leave current space
-		</Button>
-	);
-
+	return <>{ children }</>;
 }

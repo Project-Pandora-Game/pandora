@@ -1,4 +1,4 @@
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import {
 	Assert,
 	CheckPropertiesNotNullable,
@@ -10,13 +10,13 @@ import {
 	IClientDirectory,
 	IClientDirectoryAuthMessage,
 	IConnectionBase,
-	IDirectoryCharacterConnectionInfo,
 	IDirectoryClient,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	KnownObject,
 	MessageHandler,
 	Service,
+	type IDirectoryCharacterAssignmentInfo,
 	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
@@ -84,7 +84,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 
 	public readonly authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
-	private _activeCharacterInfo: IDirectoryCharacterConnectionInfo | null = null;
+	private _activeCharacterInfo: Immutable<IDirectoryCharacterAssignmentInfo> | null = null;
 
 	/** Handlers for server messages. Dependent services are expected to fill those in. */
 	public readonly messageHandlers: Partial<MessageHandlers<IDirectoryClient>> = {
@@ -262,11 +262,11 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 		this.logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	public setActiveCharacterInfo(character: IDirectoryCharacterConnectionInfo | null): void {
+	public setActiveCharacterInfo(character: Immutable<IDirectoryCharacterAssignmentInfo> | null): void {
 		Assert(this._connector != null);
 		this._activeCharacterInfo = character;
 		const extraHeaders = {
-			[HTTP_HEADER_CLIENT_REQUEST_SHARD]: character?.id || undefined,
+			[HTTP_HEADER_CLIENT_REQUEST_SHARD]: character?.shardConnection?.id || undefined,
 		};
 		this._connector.setExtraHeaders(extraHeaders);
 	}
@@ -281,9 +281,9 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			return {
 				username: token.username,
 				token: token.value,
-				character: characterInfo ? {
+				character: characterInfo?.shardConnection ? {
 					id: characterInfo.characterId,
-					secret: characterInfo.secret,
+					secret: characterInfo.shardConnection.secret,
 				} : null,
 			};
 		} else {

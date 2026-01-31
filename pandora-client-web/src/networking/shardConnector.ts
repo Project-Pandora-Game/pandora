@@ -14,6 +14,7 @@ import {
 	Service,
 	ShardClientSchema,
 	TypedEventEmitter,
+	type CharacterId,
 	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
@@ -24,7 +25,7 @@ import { Socket } from 'socket.io-client';
 import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { PersistentToast } from '../persistentToast.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../services/clientGameLogicServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesConnectionInfo, ClientGameLogicServicesDependencies } from '../services/clientGameLogicServices.ts';
 import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
 /** State of connection to Shard */
@@ -75,7 +76,7 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 		return this._state;
 	}
 
-	public get connectionInfo(): Immutable<IDirectoryCharacterConnectionInfo> {
+	public get connectionInfo(): Immutable<ClientGameLogicServicesConnectionInfo> {
 		return this.serviceDeps.connectionInfo;
 	}
 
@@ -132,14 +133,15 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 		return this._connector.awaitResponse(messageType, message, timeout);
 	}
 
-	public connectionInfoMatches(info: Immutable<IDirectoryCharacterConnectionInfo>): boolean {
-		const { id, publicURL, version, characterId, secret } = this.connectionInfo;
-		return id === info.id &&
-			publicURL === info.publicURL &&
-			// features === info.features &&
-			version === info.version &&
-			characterId === info.characterId &&
-			secret === info.secret;
+	public connectionInfoMatches(characterId: CharacterId, connectionInfo: Immutable<IDirectoryCharacterConnectionInfo>): boolean {
+		const currentConnectionInfo = this.connectionInfo;
+		const { id, secret, publicURL, version } = currentConnectionInfo.shardConnection;
+
+		return currentConnectionInfo.characterId === characterId &&
+			id === connectionInfo.id &&
+			publicURL === connectionInfo.publicURL &&
+			version === connectionInfo.version &&
+			secret === connectionInfo.secret;
 	}
 
 	/**
@@ -155,7 +157,7 @@ export class ShardConnector extends Service<ShardConnectorServiceConfig> impleme
 		Assert(this._messageHandler != null); // Should be filled during `load` - way before connect attempt.
 
 		// Find which public URL we should actually use
-		const { publicURL, secret, characterId } = this.connectionInfo;
+		const { characterId, shardConnection: { publicURL, secret } } = this.connectionInfo;
 		const publicURLOptions = publicURL.split(';').map((a) => a.trim());
 		const finalUrl = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
 

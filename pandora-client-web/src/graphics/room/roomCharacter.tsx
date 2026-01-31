@@ -298,7 +298,7 @@ export const RoomCharacter = memo(function RoomCharacter({
 	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);
 
 	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {
-		if (hitArea == null)
+		if (hitArea == null || roomDeviceLink != null || characterDisplayStyle === 'hidden')
 			return null;
 
 		const roomHitArea = new Rectangle(
@@ -334,7 +334,7 @@ export const RoomCharacter = memo(function RoomCharacter({
 				onDrag?.(pos, start);
 			},
 		};
-	}, [hitArea, onDrag, onPointerDown, onPointerUp, onHitscanSelect, position, scale, character]));
+	}, [hitArea, onDrag, onPointerDown, onPointerUp, onHitscanSelect, position, scale, character, roomDeviceLink, characterDisplayStyle]));
 
 	if (roomDeviceLink != null || characterDisplayStyle === 'hidden')
 		return null;

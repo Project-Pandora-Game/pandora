@@ -7,6 +7,7 @@ import {
 	LIMIT_ITEM_NAME_LENGTH,
 	LIMIT_ITEM_NAME_PATTERN,
 	SplitContainerPath,
+	type ActionRoomSelector,
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
@@ -44,10 +45,13 @@ import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDevi
 
 export function WardrobeItemConfigMenu({
 	item,
+	room,
 }: {
 	item: ItemPath;
+	/** The room the item (or the character the item is on) is located in */
+	room: ActionRoomSelector | null;
 }): ReactElement {
-	const { targetSelector, currentRoomSelector, focuser } = useWardrobeContext();
+	const { targetSelector, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const wornItemRef = useRef(wornItem);
 	const openItemDialogs = useObservable(RoomItemDialogs);
@@ -166,13 +170,13 @@ export function WardrobeItemConfigMenu({
 						)
 					}
 					{
-						!isRoomInventory ? (
+						(!isRoomInventory && room != null) ? (
 							<WardrobeActionButton
 								action={ {
 									type: 'transfer',
 									source: targetSelector,
 									item,
-									target: currentRoomSelector,
+									target: room,
 									container: [],
 								} }
 								onExecute={ close }
@@ -221,7 +225,7 @@ export function WardrobeItemConfigMenu({
 					<WardrobeRoomDeviceSlots roomDevice={ wornItem } item={ item } />
 				) : null }
 				{ wornItem.isType('roomDeviceWearablePart') ? (
-					<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ currentRoomSelector } />
+					<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } room={ room } />
 				) : null }
 				{ Array.from(wornItem.getModules().entries())
 					.map(([moduleName, m]) => (

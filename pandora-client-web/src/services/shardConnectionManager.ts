@@ -1,4 +1,4 @@
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
 import {
 	Assert,
@@ -6,6 +6,8 @@ import {
 	GetLogger,
 	Service,
 	ServiceManager,
+	type CharacterId,
+	type IDirectoryCharacterAssignmentInfo,
 	type IDirectoryCharacterConnectionInfo,
 	type IService,
 	type Satisfies,
@@ -15,7 +17,7 @@ import {
 } from 'pandora-common';
 import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from './clientGameLogicServices.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesConnectionInfo, ClientGameLogicServicesDependencies } from './clientGameLogicServices.ts';
 import type { ClientServices } from './clientServices.ts';
 
 type ShardConnectionManagerServiceConfig = Satisfies<{
@@ -51,28 +53,31 @@ class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig
 	}
 
 	@AsyncSynchronized('object')
-	private async _handleActiveCharacterChanged(character: IDirectoryCharacterConnectionInfo | null): Promise<void> {
-		if (character) {
-			await this._connectToShard(character);
+	private async _handleActiveCharacterChanged(character: Immutable<IDirectoryCharacterAssignmentInfo> | null): Promise<void> {
+		if (character?.shardConnection != null) {
+			await this._connectToShard(character.characterId, character.shardConnection);
 		} else {
 			this._disconnectFromShard();
 		}
 	}
 
-	private async _connectToShard(info: IDirectoryCharacterConnectionInfo): Promise<void> {
+	private async _connectToShard(characterId: CharacterId, connectionInfo: Immutable<IDirectoryCharacterConnectionInfo>): Promise<void> {
 		const currentShardConnector = this._gameLogicServices.value?.services.shardConnector;
-		if (currentShardConnector != null && currentShardConnector.connectionInfoMatches(info)) {
+		if (currentShardConnector != null && currentShardConnector.connectionInfoMatches(characterId, connectionInfo)) {
 			return;
 		}
 		this._disconnectFromShard();
-		this.logger.debug('Requesting connect to shard: ', info);
+		this.logger.debug(`Requesting connect to shard for character ${characterId}: `, connectionInfo);
 
 		const { GenerateClientGameLogicServices } = await import('./clientGameLogicServices.ts');
 
 		const gameLogicServices = GenerateClientGameLogicServices({
 			...this.serviceDeps,
 			shardConnectionManager: this,
-			connectionInfo: freeze(cloneDeep(info), true),
+			connectionInfo: freeze<ClientGameLogicServicesConnectionInfo>({
+				characterId,
+				shardConnection: cloneDeep(connectionInfo),
+			}, true),
 		});
 
 		await gameLogicServices.load();

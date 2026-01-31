@@ -7,7 +7,6 @@ import {
 	type SpacePublicSetting,
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { Navigate } from 'react-router';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
 import closedDoor from '../../../assets/icons/closed-door.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
@@ -22,7 +21,6 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import './spacesSearch.scss';
@@ -47,31 +45,25 @@ const TIPS: readonly string[] = [
 
 export function SpacesSearch(): ReactElement {
 	const navigate = useNavigatePandora();
-	const spaceInfo = useSpaceInfo();
 	const list = useSpacesList();
 
 	const directoryStatus = useObservable(useDirectoryConnector().directoryStatus);
 
 	const [showTips, setShowTips] = useState(false);
 
-	const [index, setIndex] = useReducer((oldState: number) => {
+	const [tipsIndex, updateSelectedTip] = useReducer((oldState: number) => {
 		return (oldState + 1) % TIPS.length;
 	}, Math.floor(Math.random() * TIPS.length));
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setIndex();
+			updateSelectedTip();
 		}, 8000);
 
 		return () => {
 			clearInterval(interval);
 		};
 	}, []);
-
-	// Spaces search is only accessible when inside player's personal space
-	if (spaceInfo.id != null) {
-		return <Navigate to='/room' />;
-	}
 
 	return (
 		<Column padding='medium'>
@@ -92,7 +84,7 @@ export function SpacesSearch(): ReactElement {
 			</GridContainer>
 			<Row wrap alignX='end'>
 				<button className='infoBox' onClick={ () => setShowTips(true) } >
-					<span className='icon'>🛈</span> Tip: { TIPS[index] }
+					<span className='icon'>🛈</span> Tip: { TIPS[tipsIndex] }
 				</button>
 			</Row>
 			{ !list ? (

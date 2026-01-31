@@ -8,7 +8,7 @@ import { useAccountSettings, useCurrentAccount } from '../../services/accountLog
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
 import { AutoCompleteHint } from '../../ui/components/chat/chatInput.tsx';
-import { ChatInputContext, IChatInputHandler } from '../../ui/components/chat/chatInputContext.tsx';
+import { ChatInputContext, IChatInputHandler } from '../../ui/components/chat/chatInputContext.ts';
 import { RenderChatPart } from '../../ui/components/chat/chatMessageText.tsx';
 import { AutocompleteDisplayData } from '../../ui/components/chat/commandsProcessor.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';

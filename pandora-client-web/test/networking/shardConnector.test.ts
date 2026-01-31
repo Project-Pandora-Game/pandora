@@ -24,12 +24,14 @@ describe('ShardConnector', () => {
 
 	describe('connectionInfoMatches()', () => {
 		it('should return true on matching connection info', () => {
-			expect(mockShardConnector.connectionInfoMatches(MockConnectionInfo()))
+			const info = MockConnectionInfo();
+			expect(mockShardConnector.connectionInfoMatches(info.characterId, info.shardConnection))
 				.toBe(true);
 		});
 
 		it('should return false on different connection info', () => {
-			expect(mockShardConnector.connectionInfoMatches(MockConnectionInfo({ characterId: 'c94359873489' })))
+			const differentInfo = MockConnectionInfo({ characterId: 'c94359873489' });
+			expect(mockShardConnector.connectionInfoMatches(differentInfo.characterId, differentInfo.shardConnection))
 				.toBe(false);
 		});
 	});

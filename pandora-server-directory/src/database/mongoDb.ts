@@ -1456,7 +1456,7 @@ async function MongoDbServerStart(version: MongoDbVersion, dbPath?: string): Pro
 			},
 			instance: {
 				dbPath,
-				storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
+				storageEngine: 'wiredTiger',
 				args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
 			},
 			spawn: {

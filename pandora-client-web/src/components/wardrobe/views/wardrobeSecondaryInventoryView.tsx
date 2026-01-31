@@ -11,6 +11,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import roomIcon from '../../../assets/icons/room.svg';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Column } from '../../common/container/container.tsx';
@@ -20,7 +21,7 @@ import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes.ts';
 import { useWardrobeContainerAccessCheck } from '../wardrobeUtils.ts';
-import { InventoryItemViewDropArea, ViewStorageButton } from './wardrobeItemView.tsx';
+import { InventoryItemViewDropArea, ViewStorageButton, ViewStorageButtonPlaceholder } from './wardrobeItemView.tsx';
 
 export function SecondaryInventoryView({ header, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
 	header?: ReactNode;
@@ -184,6 +185,23 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 				<InventoryAssetPreview asset={ asset } small={ true } />
 				<WardrobeItemName item={ item } />
 				<div className='quickActions'>
+					{ ((item.isType('roomDevice') && item.isDeployed()) ||
+						(item.isType('personal') && item.deployment?.deployed)) ? (
+							<div className='icon' title='Item is visible in the room'>
+								<img
+									src={ roomIcon }
+									alt='Item is visible in the room'
+								/>
+							</div>
+						) :
+						item.isType('roomDeviceWearablePart') ? (
+							<div className='icon' title='Part of a room-level item the character is in'>
+								<img
+									src={ roomIcon }
+									alt='Part of a room-level item the character is in'
+								/>
+							</div>
+						) : null }
 					{ storageModuleName != null && storageModule != null ? (
 						<ViewStorageButton
 							showContent={ showContent }
@@ -197,6 +215,10 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 								},
 							] }
 						/>
+					) : (!asset.isType('bodypart')) ? (
+						// For non-bodyparts display placeholder so the above icon is nicely aligned
+						// For bodyparts do not display it, as they can't be in room and usually don't have storage
+						<ViewStorageButtonPlaceholder />
 					) : null }
 					{ wardrobeExtraActionButtons ? (
 						<WardrobeActionButton action={ {

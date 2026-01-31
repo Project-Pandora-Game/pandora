@@ -855,6 +855,10 @@ export class Character {
 			return await this._switchSpace(space, invite);
 		} finally {
 			this._assignmentChangePending = false;
+			// If changing this flag can change the state, re-send it
+			if (!this.currentShard || !this.connectSecret) {
+				this.assignedClient?.sendConnectionStateUpdate();
+			}
 		}
 	}
 }

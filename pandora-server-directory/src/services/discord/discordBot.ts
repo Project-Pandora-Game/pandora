@@ -67,7 +67,7 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 		}
 
 		await new Promise((resolve, reject) => {
-			this._client?.once('ready', resolve);
+			this._client?.once('clientReady', resolve);
 			this._client?.once('error', reject);
 		});
 

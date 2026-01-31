@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
+import { GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 import listIcon from '../../assets/icons/list.svg';
@@ -124,7 +124,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onLeave = useCallback(() => {
-		directoryConnector.awaitResponse('spaceLeave', EMPTY)
+		directoryConnector.awaitResponse('spaceSwitch', { id: null })
 			.then((result) => {
 				if (result.result !== 'ok') {
 					toast(`Failed to leave space:\n${result.result}`, TOAST_OPTIONS_ERROR);

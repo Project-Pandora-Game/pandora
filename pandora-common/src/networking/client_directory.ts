@@ -299,17 +299,14 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: null,
 	},
-	spaceEnter: {
+	spaceSwitch: {
 		request: z.object({
-			id: SpaceIdSchema,
+			/** Id of the space to switch to, or `null` if switching to personal space */
+			id: SpaceIdSchema.nullable(),
 			invite: SpaceInviteIdSchema.optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'failed' | 'spaceFull' | 'notFound' | 'noAccess' | 'invalidInvite'; }>(),
-	},
-	spaceLeave: {
-		request: z.object({}),
 		response: z.object({
-			result: z.enum(['ok', 'failed', 'restricted', 'inRoomDevice']),
+			result: z.literal(['ok', 'failed', 'spaceFull', 'notFound', 'noAccess', 'invalidInvite', 'restricted', 'inRoomDevice']),
 		}),
 	},
 	//#endregion
@@ -351,6 +348,9 @@ export const ClientDirectorySchema = {
 				'ok',
 				'spaceOwnershipLimitReached',
 				'accountListNotAllowed', // Some accounts cannot be included in some lists upon space creation
+				// The creation succeeded, but joining the just-created space failed
+				'restricted',
+				'inRoomDevice',
 			])
 				.or(ShardErrorSchema),
 		}),

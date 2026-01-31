@@ -833,6 +833,10 @@ export class Character {
 
 			// Request the space to load
 			const shard = await space.connect();
+
+			// Inform client about connection update (connect doesn't do that in all code paths)
+			this.assignedClient?.sendConnectionStateUpdate();
+
 			if (shard === 'failed' || shard === 'noShardFound')
 				return 'failed';
 

@@ -1180,6 +1180,28 @@ export class Space {
 		this.pendingMessages.length = 0;
 	}
 
+	/**
+	 * Called when Shard reports an error related to the space (e.g. crash during load).
+	 * In that case force the space to unload so it doesn't break more things and remove all online characters from it,
+	 * allowing them to continue using Pandora if the space is in a persistently errored state.
+	 */
+	@AsyncSynchronized('object')
+	public async onError(): Promise<void> {
+		this.logger.error('Space onError triggered');
+
+		// Disconnect from shard first
+		const result = await this._setShard(null);
+		Assert(result);
+		// Clear pending action messages when the space gets disconnected (this is not triggered on simple reassignment)
+		this.pendingMessages.length = 0;
+		// Remove all online characters (we can keep offline ones safely, as those won't trigger load)
+		for (const character of Array.from(this.characters)) {
+			if (character.isOnline()) {
+				await this._removeCharacter(character, 'error', null);
+			}
+		}
+	}
+
 	@AsyncSynchronized('object')
 	public shardReconnect(shard: Shard, accessId: string, characterAccessIds: ReadonlyMap<CharacterId, string>): Promise<void> {
 		this.touch();

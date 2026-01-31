@@ -119,7 +119,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!space)
 			throw new BadMessageError();
 
-		await space.disconnect();
+		await space.onError();
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {

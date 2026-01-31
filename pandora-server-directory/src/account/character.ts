@@ -9,6 +9,7 @@ import {
 	GetLogger,
 	IDirectoryCharacterConnectionInfo,
 	Logger,
+	NOT_NARROWING_FALSE,
 	NOT_NARROWING_TRUE,
 	SpaceId,
 	SpaceInviteId,
@@ -491,6 +492,7 @@ export class Character {
 	public getShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
 		if (!this.currentShard || !this.connectSecret)
 			return null;
+
 		return {
 			...this.currentShard.getInfo(),
 			characterId: this.baseInfo.id,
@@ -600,36 +602,6 @@ export class Character {
 		return 'ok';
 	}
 
-	private async _assignToSpace(space: Space): Promise<'ok' | 'failed'> {
-		Assert(this.assignment == null);
-
-		// Generate new access id for new shard (so the assignment works well when interleaved with space's `_setShard` assignment step)
-		if (!await this.generateAccessId())
-			return 'failed';
-
-		const targetShard = space.assignedShard;
-		// We are ready to connect to shard, but check again if we can to avoid race conditions
-		if (targetShard != null && !targetShard.allowConnect())
-			return 'failed';
-
-		// Track the space
-		this.assignment = {
-			type: 'space-tracking',
-			space,
-		};
-		space.trackingCharacters.add(this);
-
-		// Assign ourselves to the shard, if there is one
-		if (targetShard != null) {
-			targetShard.characters.set(this.baseInfo.id, this);
-			await targetShard.update('characters');
-			this.assignedClient?.sendConnectionStateUpdate();
-			this.logger.debug('Connected to shard', targetShard.id);
-		}
-
-		return 'ok';
-	}
-
 	private async _unassign(): Promise<void> {
 		// If there is no assignment, there is nothing to do
 		if (this.assignment == null)
@@ -723,102 +695,145 @@ export class Character {
 		}
 	}
 
-	@AsyncSynchronized('object')
-	public async joinSpace(space: Space, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite'> {
-		// Only loaded characters can request join into a space
+	private async _switchSpace(space: Space | null, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
+		// Only loaded characters can request leaving a space
 		if (!this.isOnline())
 			return 'failed';
 
-		// Must not be in a different space (TODO: Shift the automatic leaving logic here)
-		if (this.space != null)
-			return 'failed';
+		// Short-circuit no change
+		if (this.space === space)
+			return 'ok';
 
-		// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
-		const allowResult1 = space.checkAllowEnter(this, invite, { characterLimit: true });
+		// If we are aiming to join a public space, then run early checks for being able to enter it to avoid leaving if it wouldn't be possible anyway
+		if (space != null) {
+			// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
+			const allowResult1 = space.checkAllowEnter(this, invite, { characterLimit: true });
 
-		if (allowResult1 !== 'ok') {
-			return allowResult1;
+			if (allowResult1 !== 'ok') {
+				return allowResult1;
+			}
 		}
 
-		// Must connect to the same shard as the space to check character-based join requirements
-		await this._unassign();
-		const assignResult = await this._assignToSpace(space);
+		// If we are in a public space, leave it first
+		const oldAssignment = this.assignment;
+		if (oldAssignment?.type === 'space-joined') {
+			const oldSpace = oldAssignment.space;
+			const shardForLeaveCheck = oldSpace.assignedShard;
 
-		if (assignResult !== 'ok')
-			return assignResult;
+			// If we have no connection, fail (this is most likely an intermittent failure during a space moving shards, unless there are no shards or the space is failing to load)
+			if (shardForLeaveCheck?.shardConnection == null)
+				return 'failed';
 
-		// The space must be loaded on a shard for this to work, request that
-		const shard = await space.connect();
-		if (shard === 'failed' || shard === 'noShardFound')
-			return 'failed';
+			// Must be allowed to leave the space based on character restrictions (ask shard)
+			const restrictionResult = await shardForLeaveCheck.shardConnection?.awaitResponse('spaceCheckCanLeave', {
+				character: this.baseInfo.id,
+			}).catch(() => undefined);
 
-		// If we have no connection, fail (this is most likely an intermittent failure during space moving shards, unless there are no shards or the space is failing to load)
-		if (shard?.shardConnection == null)
-			return 'failed';
+			// Check if the query was successful
+			if (restrictionResult == null || restrictionResult.result === 'targetNotFound') {
+				// Fail on intermittent failures (no connection to shard, the request failed, the shard doesn't recognize this client (e.g. was disconnected during this request))
+				return 'failed';
+			}
 
-		// Must be allowed to join the space (second check to prevent race conditions)
-		const allowResult2 = space.checkAllowEnter(this, invite);
+			switch (restrictionResult.result) {
+				case 'ok':
+					// NOOP (fallthough)
+					break;
+				case 'restricted':
+					return 'restricted';
+				case 'inRoomDevice':
+					return 'inRoomDevice';
+				default:
+					AssertNever(restrictionResult.result);
+			}
 
-		if (allowResult2 !== 'ok') {
-			return allowResult2;
+			// Actually remove the character from the space
+			await oldSpace.removeCharacter(this, 'leave', this.baseInfo, () => {
+				// Update assignment to make this switch atomic instead of loading into personal space, when switching between two public spaces
+				Assert(this.space == null);
+
+				if (this.assignment != null) {
+					Assert(this.assignment.type === 'shard');
+					const oldShard = this.assignment.shard;
+
+					this.assignment = null;
+					this.assignedClient?.sendConnectionStateUpdate();
+
+					Assert(oldShard.characters.get(this.baseInfo.id) === this);
+					oldShard.characters.delete(this.baseInfo.id);
+					// We intentionally do not trigger update of the shard - that will be done by `removeCharacter` after leaving this hook.
+				}
+			});
+
+			// Clean up old space, if it has no more characters
+			await oldSpace.cleanupIfEmpty();
+		} else {
+			// If in personal space, simply unload
+			await this._unassign();
 		}
 
-		// Actually add the character to the space
-		await space.addCharacter(this, invite);
+		Assert(this.space == null);
+		Assert(this.assignment == null);
+
+		if (space != null) {
+			// If we are joining a public space, then run checks for being able to enter it
+
+			// Must be allowed to join the space (second check to prevent race conditions)
+			const allowResult2 = space.checkAllowEnter(this, invite);
+			if (allowResult2 !== 'ok') {
+				// Load us into personal space if second access check failed
+				await this._assignToShard('auto');
+				return allowResult2;
+			}
+
+			// Prepare for connection to the shard and start tracking the space (do not actually connect yet)
+
+			// Generate new access id for new shard (so the assignment works well when interleaved with space's `_setShard` assignment step)
+			if (!await this.generateAccessId())
+				return 'failed';
+
+			const targetShard = space.assignedShard;
+			// We are ready to connect to shard, but check again if we can to avoid race conditions
+			if (targetShard != null && !targetShard.allowConnect())
+				return 'failed';
+
+			// Track the space
+			this.assignment = {
+				type: 'space-tracking',
+				space,
+			};
+			space.trackingCharacters.add(this);
+
+			// Assign ourselves to the shard, if there is one
+			if (targetShard != null) {
+				targetShard.characters.set(this.baseInfo.id, this);
+				// We intentionally delay updating the shard to prevent load into personal space if switching two spaces
+				this.logger.debug('Connecting to shard', targetShard.id);
+			}
+
+			// Actually add the character to the space
+			if (!await space.addCharacter(this, invite)) {
+				return 'failed';
+			}
+			Assert(NOT_NARROWING_FALSE || this.space === space);
+
+			// Request the space to load
+			const shard = await space.connect();
+			if (shard === 'failed' || shard === 'noShardFound')
+				return 'failed';
+
+		} else {
+			// If we loading into personal space, simply load onto any shard
+			const loadResult = await this._assignToShard('auto');
+			if (loadResult !== 'ok')
+				return 'failed';
+		}
 
 		return 'ok';
 	}
 
 	@AsyncSynchronized('object')
-	public async leaveSpace(): Promise<'ok' | 'failed' | 'restricted' | 'inRoomDevice'> {
-		// Only loaded characters can request leaving a space
-		if (!this.isOnline())
-			return 'failed';
-
-		// Must be in a space (otherwise success)
-		const oldAssignment = this.assignment;
-		if (oldAssignment?.type !== 'space-joined')
-			return 'ok';
-
-		const oldSpace = oldAssignment.space;
-		const shard = oldSpace.assignedShard;
-
-		// If we have no connection, fail (this is most likely an intermittent failure during a space moving shards, unless there are no shards or the space is failing to load)
-		if (shard?.shardConnection == null)
-			return 'failed';
-
-		// Must be allowed to leave the space based on character restrictions (ask shard)
-		const restrictionResult = await shard.shardConnection?.awaitResponse('spaceCheckCanLeave', {
-			character: this.baseInfo.id,
-		}).catch(() => undefined);
-
-		// Check if the query was successful
-		if (restrictionResult == null || restrictionResult.result === 'targetNotFound') {
-			// Fail on intermittent failures (no connection to shard, the request failed, the shard doesn't recognize this client (e.g. was disconnected during this request))
-			return 'failed';
-		}
-
-		switch (restrictionResult.result) {
-			case 'ok':
-				// NOOP (fallthough)
-				break;
-			case 'restricted':
-				return 'restricted';
-			case 'inRoomDevice':
-				return 'inRoomDevice';
-			default:
-				AssertNever(restrictionResult.result);
-		}
-
-		// Actually remove the character from the space
-		await oldSpace.removeCharacter(this, 'leave', this.baseInfo);
-
-		Assert(this.space == null);
-		Assert(this.assignment == null || this.assignment.type === 'shard');
-
-		// Check if the space can be cleaned up
-		await oldSpace.cleanupIfEmpty();
-
-		return 'ok';
+	public async switchSpace(space: Space | null, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
+		return await this._switchSpace(space, invite);
 	}
 }

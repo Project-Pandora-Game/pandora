@@ -179,6 +179,8 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					noShardFound: 'No Shard is available to process your request, try again later',
 					spaceOwnershipLimitReached: 'You have reached the limit of how many spaces you can own',
 					accountListNotAllowed: 'Some of the accounts listed in the "Rights management" tab cannot be added',
+					inRoomDevice: 'You must exit the room device before leaving the current space',
+					restricted: 'An item is preventing you from leaving the current space',
 				};
 
 				setCommitProcess(

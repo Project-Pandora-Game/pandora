@@ -655,7 +655,7 @@ export class Space {
 		// Finally delete the space from the database
 		await GetDatabase().deleteSpace(this.id);
 		// Note, that at this point there could still be pending connections or characters tracking it
-		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
+		// Ignore those - the requests will fail and once the space is not requestesd for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
 	public checkAllowEnter(character: Character, inviteId?: SpaceInviteId, ignore: { characterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
@@ -946,10 +946,10 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async addCharacter(character: Character, invite?: SpaceInviteId): Promise<void> {
+	public async addCharacter(character: Character, invite?: SpaceInviteId): Promise<boolean> {
 		// Ignore if space is invalidated
 		if (!this.isValid) {
-			return;
+			return false;
 		}
 
 		Assert(character.assignment?.type === 'space-tracking' && character.assignment.space === this);
@@ -958,7 +958,7 @@ export class Space {
 
 		if (this.isBanned(character.baseInfo.account)) {
 			this.logger.warning(`Refusing to add banned character id ${character.baseInfo.id}`);
-			return;
+			return false;
 		}
 
 		this.logger.debug(`Character ${character.baseInfo.id} entered`);
@@ -997,6 +997,8 @@ export class Space {
 			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
 			this._useInvite(character, invite),
 		]);
+
+		return true;
 	}
 
 	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
@@ -1010,12 +1012,32 @@ export class Space {
 		await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
 	}
 
+	/**
+	 * Remove a character from this space. This function can be called from anywhere safely.
+	 * @param character - The character to remove. If the character is not in this space, this function is a NOOP
+	 * @param reason - Why is the character being removed.
+	 * @param source - Who is removing the character. Usually the character itself, but in case of moderator actions the character that did it.
+	 * In case of automatic actions or errors, this can be `null` to signify it is being done by Pandora itself.
+	 * @param processAssignmentUpdate - An optional hook that is called right after character is removed from the space (but before data is synced to the Shard),
+	 * to allow performing atomic changes to assignment without observable intermediate states. This should generally be used only by the {@link Character} class.
+	 * @returns Promise of removal. When this fulfills the character is no longer in the space.
+	 */
 	@AsyncSynchronized('object')
-	public async removeCharacter(character: Character, reason: SpaceLeaveReason, source: CharacterInfo | null): Promise<void> {
-		return await this._removeCharacter(character, reason, source);
+	public async removeCharacter(character: Character, reason: SpaceLeaveReason, source: CharacterInfo | null, processAssignmentUpdate?: () => void): Promise<void> {
+		return await this._removeCharacter(character, reason, source, processAssignmentUpdate);
 	}
 
-	private async _removeCharacter(character: Character, reason: SpaceLeaveReason, source: CharacterInfo | null): Promise<void> {
+	/**
+	 * Remove a character from this space. This function expects synchronization on the space object.
+	 * @param character - The character to remove. If the character is not in this space, this function is a NOOP
+	 * @param reason - Why is the character being removed.
+	 * @param source - Who is removing the character. Usually the character itself, but in case of moderator actions the character that did it.
+	 * In case of automatic actions or errors, this can be `null` to signify it is being done by Pandora itself.
+	 * @param processAssignmentUpdate - An optional hook that is called right after character is removed from the space (but before data is synced to the Shard),
+	 * to allow performing atomic changes to assignment without observable intermediate states. This should generally be used only by the {@link Character} class.
+	 * @returns Promise of removal. When this fulfills the character is no longer in the space.
+	 */
+	private async _removeCharacter(character: Character, reason: SpaceLeaveReason, source: CharacterInfo | null, processAssignmentUpdate?: () => void): Promise<void> {
 		// Ignore if the character has already been removed
 		if (!this.characters.has(character))
 			return;
@@ -1042,6 +1064,8 @@ export class Space {
 			type: 'shard',
 			shard: this._assignedShard,
 		};
+		// Run assignment hook. Shard update **must** be triggered after this is run.
+		processAssignmentUpdate?.();
 
 		// Report the leave
 		let action: ChatActionId | undefined;

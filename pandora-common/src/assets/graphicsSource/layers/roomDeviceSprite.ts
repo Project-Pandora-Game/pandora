@@ -5,6 +5,8 @@ import { LayerNormalDataSchema, RoomDeviceLayerImageOverrideSchema } from '../..
 
 export const GraphicsSourceRoomDeviceLayerSpriteSchema = RectangleSchema.extend({
 	type: z.literal('sprite'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	name: z.string().optional(),
 	/**
 	 * Offset of this sprite relative to cage's origin point

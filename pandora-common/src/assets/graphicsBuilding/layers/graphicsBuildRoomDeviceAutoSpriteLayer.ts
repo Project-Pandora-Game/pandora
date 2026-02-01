@@ -152,6 +152,7 @@ export async function LoadRoomDeviceAutoSpriteLayer(
 			width: layer.width,
 			height: layer.height,
 			type: 'sprite',
+			enableCond: layer.enableCond,
 			name: `${layer.name || '[unnamed]'}:${graphicalLayer.name || `#${i + 1}`}`,
 			offsetOverrides: layer.offsetOverrides,
 			clipToRoom: layer.clipToRoom,

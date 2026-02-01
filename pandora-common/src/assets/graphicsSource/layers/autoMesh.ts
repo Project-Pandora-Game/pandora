@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
-import { AttributeNameSchema, BoneNameSchema } from '../../graphics/conditions.ts';
+import { AttributeNameSchema, BoneNameSchema, ConditionSchema } from '../../graphics/conditions.ts';
 import { LayerImageOverrideSchema, LayerMirrorSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
@@ -59,6 +59,8 @@ export type GraphicsSourceAutoMeshLayerVariable = z.infer<typeof GraphicsSourceA
 
 export const GraphicsSourceAutoMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('autoMesh'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	name: z.string(),
 	points: z.string(),
 	automeshTemplate: z.string(),

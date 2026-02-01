@@ -7,7 +7,7 @@ import { ConditionsCombineAnd, type Condition } from '../../graphics/conditions.
 import type { GraphicsAlphaImageMeshLayer } from '../../graphics/layers/alphaImageMesh.ts';
 import { LayerMirror, MirrorPriority, type LayerImageOverride } from '../../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../../graphics/layers/mesh.ts';
-import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../../graphics/mirroring.ts';
+import { MakeMirroredPoints, MirrorBoneLike, MirrorCondition, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../../graphics/mirroring.ts';
 import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../../graphics/points.ts';
 import { CharacterPoseTransforms } from '../../graphics/transform/characterPoseTransforms.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../../graphicsSource/layers/alphaImageMesh.ts';
@@ -336,6 +336,7 @@ async function LoadAssetImageLayerSingle(
 		width: layer.width,
 		height: layer.height,
 		type: layer.type,
+		enableCond: CloneDeepMutable(layer.enableCond),
 		priority: layer.priority,
 		points: layer.points,
 		pointType: layer.pointType?.slice(),
@@ -385,6 +386,7 @@ export async function LoadAssetImageLayer(
 	if (layer.mirror !== LayerMirror.NONE) {
 		const resultMirror = await LoadAssetImageLayerSingle(
 			produce(layer, (d) => {
+				d.enableCond = MirrorCondition(d.enableCond);
 				d.priority = MirrorPriority(d.priority);
 				d.pointType = d.pointType?.map(MirrorBoneLike);
 				if (d.type === 'mesh' && d.colorizationKey != null) {

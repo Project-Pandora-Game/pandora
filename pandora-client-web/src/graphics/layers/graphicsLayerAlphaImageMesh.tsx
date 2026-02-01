@@ -17,6 +17,7 @@ import { GraphicsMaskLayer } from '../graphicsMaskLayer.ts';
 import { useGraphicsSettings } from '../graphicsSettings.tsx';
 import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
+import { EvaluateCondition } from '../utility.ts';
 import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
 export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMesh({
@@ -50,6 +51,9 @@ export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImage
 		uvs: uv,
 		indices: triangles,
 	}), [vertices, uv, triangles]);
+
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return <Container>{ children }</Container>;
 
 	return (
 		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh }>

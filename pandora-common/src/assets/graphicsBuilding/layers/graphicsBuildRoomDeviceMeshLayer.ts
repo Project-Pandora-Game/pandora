@@ -68,6 +68,7 @@ export async function LoadAssetRoomDeviceMeshLayer(
 
 	const result: RoomDeviceGraphicsLayerMesh = {
 		type: 'mesh',
+		enableCond: CloneDeepMutable(layer.enableCond),
 		geometry: CloneDeepMutable(layer.geometry),
 		colorizationKey: layer.colorizationKey,
 		normalMap: CloneDeepMutable(layer.normalMap),

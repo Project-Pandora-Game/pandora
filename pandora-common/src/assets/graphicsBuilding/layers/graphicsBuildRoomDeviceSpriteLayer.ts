@@ -89,6 +89,7 @@ export async function LoadAssetRoomDeviceSpriteLayer(
 		width: layer.width,
 		height: layer.height,
 		type: 'sprite',
+		enableCond: CloneDeepMutable(layer.enableCond),
 		offsetOverrides: CloneDeepMutable(layer.offsetOverrides),
 		clipToRoom: layer.clipToRoom,
 		colorizationKey: layer.colorizationKey,

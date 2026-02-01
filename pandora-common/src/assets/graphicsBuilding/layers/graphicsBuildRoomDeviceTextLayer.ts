@@ -14,6 +14,7 @@ export function LoadAssetRoomDeviceTextLayer(
 
 	const result: RoomDeviceGraphicsLayerText = {
 		type: 'text',
+		enableCond: CloneDeepMutable(layer.enableCond),
 		dataModule: layer.dataModule,
 		offset: CloneDeepMutable(layer.offset),
 		size: CloneDeepMutable(layer.size),

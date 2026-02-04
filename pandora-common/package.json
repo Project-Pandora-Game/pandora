@@ -76,6 +76,6 @@
 		"zod": "4.3.6"
 	},
 	"peerDependencies": {
-		"zod": "^4.3.6"
+		"zod": "4.3.6"
 	}
 }

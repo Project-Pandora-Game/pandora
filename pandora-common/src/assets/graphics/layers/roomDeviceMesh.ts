@@ -34,6 +34,8 @@ export type GraphicsMeshGeometry = z.infer<typeof GraphicsMeshGeometrySchema>;
 
 export const RoomDeviceGraphicsLayerMeshSchema = z.object({
 	type: z.literal('mesh'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	/** Geometry for the mesh */
 	geometry: GraphicsMeshGeometrySchema,
 	/** Name of colorization key used to color this sprite layer */

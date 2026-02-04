@@ -91,6 +91,9 @@ export const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDevi
 		return result;
 	}, [layer]);
 
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
+
 	return (
 		layer.normalMap != null ? (
 			<GraphicsLayerMeshNormals

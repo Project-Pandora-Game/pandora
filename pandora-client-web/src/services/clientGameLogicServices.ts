@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { BaseServicesDefinition, Satisfies, ServiceManager, type IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { BaseServicesDefinition, Satisfies, ServiceManager, type CharacterId, type IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import { ShardConnectorServiceProvider, type ShardConnector } from '../networking/shardConnector.ts';
 import type { ClientServices } from './clientServices.ts';
 import { GameStateManagerServiceProvider, type IGameStateManager } from './gameLogic/gameStateManager.ts';
@@ -16,8 +16,13 @@ export type ClientGameLogicServices = Satisfies<
 	BaseServicesDefinition
 >;
 
+export type ClientGameLogicServicesConnectionInfo = {
+	readonly characterId: CharacterId;
+	readonly shardConnection: Immutable<IDirectoryCharacterConnectionInfo>;
+};
+
 export type ClientGameLogicServicesDependencies = ClientServices & {
-	connectionInfo: Immutable<IDirectoryCharacterConnectionInfo>;
+	connectionInfo: ClientGameLogicServicesConnectionInfo;
 };
 
 /**

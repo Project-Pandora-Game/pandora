@@ -11,7 +11,7 @@ import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.t
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useChatInput } from '../../ui/components/chat/chatInputContext.tsx';
+import { useChatInput } from '../../ui/components/chat/chatInputContext.ts';
 import { COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
 import { useDirectMessageCommandContext } from './directMessageCommandContext.tsx';
 import { DIRECT_MESSAGE_COMMANDS } from './directMessageCommands.tsx';

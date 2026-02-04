@@ -35,6 +35,8 @@ export type RoomDeviceGraphicsCharacterPositionOverride = z.infer<typeof RoomDev
 
 export const RoomDeviceGraphicsLayerSlotSchema = z.object({
 	type: z.literal('slot'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	/**
 	 * Is the name of the character slot that is drawn on this layer.
 	 */

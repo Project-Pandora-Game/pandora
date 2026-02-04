@@ -1,10 +1,12 @@
 import * as z from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
-import { BoneNameSchema } from '../../graphics/conditions.ts';
+import { BoneNameSchema, ConditionSchema } from '../../graphics/conditions.ts';
 import { LayerImageSettingSchema, LayerMirrorSchema, LayerNormalDataSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	name: z.string(),
 	priority: LayerPrioritySchema,
 	points: z.string(),

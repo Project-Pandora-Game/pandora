@@ -1,4 +1,4 @@
-import { freeze } from 'immer';
+import { freeze, Immutable } from 'immer';
 import {
 	Assert,
 	AsyncSynchronized,
@@ -6,10 +6,10 @@ import {
 	EMPTY,
 	GetLogger,
 	IDirectoryAccountInfo,
-	IDirectoryCharacterConnectionInfo,
 	Service,
 	type CharacterId,
 	type IClientDirectoryArgument,
+	type IDirectoryCharacterAssignmentInfo,
 	type IService,
 	type Satisfies,
 	type SecondFactorData,
@@ -31,7 +31,7 @@ type AccountManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector'>;
 	events: {
 		logout: undefined;
-		accountChanged: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; };
+		accountChanged: { account: IDirectoryAccountInfo | null; character: Immutable<IDirectoryCharacterAssignmentInfo> | null; };
 	};
 }, ServiceConfigBase>;
 
@@ -41,6 +41,8 @@ type AccountManagerServiceConfig = Satisfies<{
 export interface IAccountManager extends IService<AccountManagerServiceConfig> {
 	/** Currently logged in account data or null if not logged in */
 	readonly currentAccount: ReadonlyObservable<IDirectoryAccountInfo | null>;
+	/** Currently selected character */
+	readonly currentCharacter: ReadonlyObservable<Immutable<IDirectoryCharacterAssignmentInfo> | null>;
 	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
 	readonly lastSelectedCharacter: ReadonlyObservable<CharacterId | undefined>;
 	/** Handler for second factor authentication */
@@ -64,11 +66,15 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 	private readonly logger = GetLogger('AccountManager');
 
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
+	private readonly _currentCharacter = new Observable<Immutable<IDirectoryCharacterAssignmentInfo> | null>(null);
 	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
-	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
 	public get currentAccount(): ReadonlyObservable<IDirectoryAccountInfo | null> {
 		return this._currentAccount;
+	}
+
+	public get currentCharacter(): ReadonlyObservable<Immutable<IDirectoryCharacterAssignmentInfo> | null> {
+		return this._currentCharacter;
 	}
 
 	public get lastSelectedCharacter(): ReadonlyObservable<CharacterId | undefined> {
@@ -132,7 +138,7 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		directoryConnector.authToken.value = undefined;
 	}
 
-	private async handleAccountChange({ account, character }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; }): Promise<void> {
+	private async handleAccountChange({ account, character }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterAssignmentInfo | null; }): Promise<void> {
 		const { directoryConnector } = this.serviceDeps;
 
 		// Update current account
@@ -146,15 +152,15 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		// Update current character
 		if (character != null) {
 			this._lastSelectedCharacter.value = character.characterId;
-			this._shardConnectionInfo = character;
+			this._currentCharacter.value = freeze(character, true);
 			directoryConnector.setActiveCharacterInfo(character);
 		} else {
 			directoryConnector.setActiveCharacterInfo(null);
 
 			// If we already have a character and we are requested to unload it, clear the last character
-			if (this._shardConnectionInfo != null) {
+			if (this._currentCharacter.value != null) {
 				this._lastSelectedCharacter.value = undefined;
-				this._shardConnectionInfo = null;
+				this._currentCharacter.value = null;
 			}
 		}
 
@@ -171,7 +177,7 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		const { directoryConnector } = this.serviceDeps;
 
 		const characterId = this._lastSelectedCharacter.value;
-		if (characterId == null || this._shardConnectionInfo != null) {
+		if (characterId == null || this.currentCharacter.value != null) {
 			return;
 		}
 		// Try to directly connect to the last selected character

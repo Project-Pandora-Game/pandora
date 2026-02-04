@@ -97,7 +97,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: SpaceId; invite
 			</button>
 			{ open ? (
 				<ModalDialog>
-					<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => setOpen(false) } redirectBeforeLeave />
+					<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => setOpen(false) } />
 				</ModalDialog>
 			) : null }
 		</>

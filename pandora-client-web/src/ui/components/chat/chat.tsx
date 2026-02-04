@@ -19,7 +19,7 @@ import { useGameState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext } from './chatInput.tsx';
-import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced } from './chatInputContext.tsx';
+import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced } from './chatInputContext.ts';
 import { ChatMessage } from './chatMessage.tsx';
 import { COMMANDS } from './commands.ts';
 

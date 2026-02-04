@@ -20,6 +20,8 @@ export type GraphicsSourceRoomDeviceAutoSpriteLayerVariable = z.infer<typeof Gra
 
 export const GraphicsSourceRoomDeviceAutoSpriteLayerSchema = RectangleSchema.extend({
 	type: z.literal('autoSprite'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	name: z.string(),
 	/**
 	 * Offset of this sprite relative to cage's origin point

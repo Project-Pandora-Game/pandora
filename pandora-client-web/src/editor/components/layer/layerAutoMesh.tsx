@@ -13,6 +13,8 @@ import {
 	SortPathStrings,
 	type Asset,
 	type AutoMeshLayerGenerateVariableValue,
+	type GraphicsBuildContext,
+	type GraphicsBuildContextAssetData,
 	type GraphicsSourceAutoMeshGraphicalLayer,
 	type GraphicsSourceAutoMeshLayerVariable,
 } from 'pandora-common';
@@ -339,7 +341,9 @@ function LayerAutomeshPartsDiable({ layer }: { layer: EditorAssetGraphicsWornLay
 	);
 }
 
-function LayerAutomeshGraphicalLayers({ layer }: { layer: EditorAssetGraphicsWornLayer<'autoMesh'>; }): ReactElement {
+function LayerAutomeshGraphicalLayers({ layer }: {
+	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
+}): ReactElement {
 	const { graphicalLayers } = useObservable(layer.definition);
 
 	const addGraphicalLayer = useCallback(() => {
@@ -495,11 +499,15 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 
 	const { variables } = useObservable(layer.definition);
 
+	const buildContext = useMemo(() => (asset != null && (asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')) ?
+		EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager) :
+		null
+	), [asset, assetManager, layer.assetGraphics]);
+
 	const addVariable = useCallback((newVariable: GraphicsSourceAutoMeshLayerVariable) => {
-		if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
+		if (buildContext == null)
 			return;
 
-		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -529,62 +537,100 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 			d.imageMap = newImages;
 
 		});
-	}, [asset, assetManager, layer, variables]);
+	}, [buildContext, layer, variables]);
 
-	const reorderVariable = useCallback((startIndex: number, shift: number | null) => {
-		if (asset == null ||
-			!(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')) ||
+	const reorderVariable = useCallback((startIndex: number, shift: number) => {
+		if (buildContext == null ||
 			startIndex < 0 ||
 			startIndex >= variables.length ||
-			shift != null && (startIndex + shift) < 0 ||
-			shift != null && (startIndex + shift) >= variables.length
+			(startIndex + shift) < 0 ||
+			(startIndex + shift) >= variables.length
 		) {
 			return;
 		}
 
-		const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
-		for (const variable of variables) {
+		const reorderedVariables = variables.toSpliced(startIndex, 1);
+		reorderedVariables.splice(startIndex + shift, 0, variables[startIndex]);
+
+		for (const variable of reorderedVariables) {
 			const values = AutoMeshLayerGenerateVariableData(variable, buildContext);
 			Assert(values.length > 0, 'Generating variable variants returned empty result');
 			existingVariants.push(values);
 		}
 
 		layer.modifyDefinition((d) => {
-			const shifted = d.variables.splice(startIndex, 1);
-			if (shift != null) {
-				d.variables.splice(startIndex + shift, 0, ...shifted);
-			}
+			d.variables = castDraft(reorderedVariables);
 
 			// Update all images
 			const newImages: Record<string, string[]> = {};
 
 			for (const combination of (existingVariants.length > 0 ? GenerateMultipleListsFullJoin(existingVariants) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]])) {
-				const oldIdParts = combination.map((c) => c.id);
-				const newIdParts = oldIdParts.slice();
+				const newIdParts = combination.map((c) => c.id);
+				// Get original id by reordering parts in reverse
+				const oldIdParts = newIdParts.slice();
 				{
-					const shiftedPart = newIdParts.splice(startIndex, 1);
+					const shiftedPart = oldIdParts.splice(startIndex + shift, 1);
 					if (shift != null) {
-						newIdParts.splice(startIndex + shift, 0, ...shiftedPart);
+						oldIdParts.splice(startIndex, 0, ...shiftedPart);
 					}
 				}
 				const oldId = oldIdParts.join(':');
 				const newId = newIdParts.join(':');
-				// If removing, take only first variant
-				if (newImages[newId] != null) {
-					continue;
+				if (Object.hasOwn(d.imageMap, oldId)) {
+					Assert(!Object.hasOwn(newImages, newId));
+					newImages[newId] = d.imageMap[oldId];
 				}
-				newImages[newId] = d.imageMap[oldId];
 			}
 
 			d.imageMap = newImages;
 
 		});
-	}, [asset, assetManager, layer, variables]);
+	}, [buildContext, layer, variables]);
+
+	const removeVariable = useCallback((startIndex: number, keepId: string) => {
+		if (buildContext == null ||
+			startIndex < 0 ||
+			startIndex >= variables.length
+		) {
+			return;
+		}
+
+		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
+
+		const updatedVariables = variables.toSpliced(startIndex, 1);
+		for (const variable of updatedVariables) {
+			const values = AutoMeshLayerGenerateVariableData(variable, buildContext);
+			Assert(values.length > 0, 'Generating variable variants returned empty result');
+			existingVariants.push(values);
+		}
+
+		layer.modifyDefinition((d) => {
+			d.variables = castDraft(updatedVariables);
+
+			// Update all images
+			const newImages: Record<string, string[]> = {};
+
+			for (const combination of (existingVariants.length > 0 ? GenerateMultipleListsFullJoin(existingVariants) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]])) {
+				const newIdParts = combination.map((c) => c.id);
+				// Get original id by using the variant specified in "keepId"
+				const oldIdParts = newIdParts.toSpliced(startIndex, 0, keepId);
+				const oldId = oldIdParts.join(':');
+				const newId = newIdParts.join(':');
+				if (Object.hasOwn(d.imageMap, oldId)) {
+					Assert(!Object.hasOwn(newImages, newId));
+					newImages[newId] = d.imageMap[oldId];
+				}
+			}
+
+			d.imageMap = newImages;
+
+		});
+	}, [buildContext, layer, variables]);
 
 	const updateVariable = useCallback((index: number, newValue: Immutable<GraphicsSourceAutoMeshLayerVariable>) => {
-		if (asset == null ||
+		if (buildContext == null ||
 			index < 0 ||
 			index >= variables.length
 		) {
@@ -596,9 +642,9 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 
 			// TODO: Figure out how to update all images
 		});
-	}, [asset, layer, variables]);
+	}, [buildContext, layer, variables]);
 
-	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')))
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart') || asset.isType('roomDevice')) || buildContext == null)
 		return null;
 
 	return (
@@ -609,11 +655,12 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 						<LayerAutomeshVariableItem key={ index }
 							index={ index }
 							variable={ v }
+							buildContext={ buildContext }
 							update={ (newValue) => {
 								updateVariable(index, newValue);
 							} }
-							remove={ () => {
-								reorderVariable(index, null);
+							remove={ (keepId) => {
+								removeVariable(index, keepId);
 							} }
 							reorder={ (shift) => {
 								reorderVariable(index, shift);
@@ -639,13 +686,16 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 	);
 }
 
-function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }: {
+function LayerAutomeshVariableItem({ variable, buildContext, index, update, remove, reorder }: {
 	variable: Immutable<GraphicsSourceAutoMeshLayerVariable>;
+	buildContext: GraphicsBuildContext<Immutable<GraphicsBuildContextAssetData>>;
 	index: number;
 	update: (newValue: Immutable<GraphicsSourceAutoMeshLayerVariable>) => void;
-	remove: () => void;
+	remove: (keepId: string) => void;
 	reorder: (shift: number) => void;
 }): ReactElement {
+	const [removeDialog, setRemoveDialog] = useState(false);
+
 	return (
 		<Row alignY='center' className='editor-highlightedArea' padding='small'>
 			{
@@ -718,9 +768,36 @@ function LayerAutomeshVariableItem({ variable, index, update, remove, reorder }:
 				src={ crossIcon }
 				className='smallIconButton'
 				alt='Remove entry'
-				onClick={ remove }
+				onClick={ () => {
+					setRemoveDialog(true);
+				} }
 				slim
 			/>
+			{ removeDialog ? (
+				<ModalDialog>
+					<Column>
+						<div>Select which variant of this variable to keep</div>
+						<Column className='editor-highlightedArea' padding='medium'>
+							{ AutoMeshLayerGenerateVariableData(variable, buildContext).map((variant) => (
+								<Button
+									key={ variant.id }
+									onClick={ () => {
+										remove(variant.id);
+										setRemoveDialog(false);
+									} }
+								>
+									{ variant.name } ({ variant.id })
+								</Button>
+							)) }
+						</Column>
+						<Button onClick={ () => {
+							setRemoveDialog(false);
+						} }>
+							Cancel
+						</Button>
+					</Column>
+				</ModalDialog>
+			) : null }
 		</Row>
 	);
 }

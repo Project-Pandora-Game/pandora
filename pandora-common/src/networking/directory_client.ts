@@ -51,10 +51,12 @@ export type IDirectoryShardInfo = {
 	version: string;
 };
 
-export type IDirectoryCharacterConnectionInfo = {
+export type IDirectoryCharacterConnectionInfo = IDirectoryShardInfo & { secret: string; };
+
+export type IDirectoryCharacterAssignmentInfo = {
 	characterId: CharacterId;
-	secret: string;
-} & IDirectoryShardInfo;
+	shardConnection: IDirectoryCharacterConnectionInfo | null;
+};
 
 export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'spaceList' | 'storedOutfits' | 'storedPosePresets';
 
@@ -106,7 +108,7 @@ export const DirectoryClientSchema = {
 	connectionState: {
 		request: ZodCast<{
 			account: IDirectoryAccountInfo | null;
-			character: IDirectoryCharacterConnectionInfo | null;
+			character: IDirectoryCharacterAssignmentInfo | null;
 		}>(),
 		response: null,
 	},

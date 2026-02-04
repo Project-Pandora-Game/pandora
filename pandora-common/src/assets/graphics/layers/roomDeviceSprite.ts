@@ -5,6 +5,8 @@ import { LayerNormalDataSchema, RoomDeviceLayerImageOverrideSchema } from './com
 
 export const RoomDeviceGraphicsLayerSpriteSchema = RectangleSchema.extend({
 	type: z.literal('sprite'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	offsetOverrides: z.object({
 		offset: CoordinatesSchema,
 		condition: ConditionSchema,

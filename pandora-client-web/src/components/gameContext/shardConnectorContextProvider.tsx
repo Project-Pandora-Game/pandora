@@ -1,6 +1,5 @@
-import type { Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { AppearanceAction, IClientShardNormalResult, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents } from 'pandora-common';
+import { AppearanceAction, IClientShardNormalResult, IShardClientChangeEvents } from 'pandora-common';
 import {
 	useEffect,
 	useRef,
@@ -99,9 +98,4 @@ export function useAppearanceActionEvent(action: AppearanceAction, handler: (res
 		}
 		return await gameState.doImmediateAction(action);
 	}, handler);
-}
-
-export function useShardConnectionInfo(): Immutable<IDirectoryCharacterConnectionInfo> | null {
-	const shardConnector = useShardConnector();
-	return shardConnector?.connectionInfo ?? null;
 }

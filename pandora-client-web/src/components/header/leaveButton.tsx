@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
+import { GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 import listIcon from '../../assets/icons/list.svg';
@@ -9,6 +9,7 @@ import peopleIcon from '../../assets/icons/people-arrows.svg';
 import { PlayerCharacter } from '../../character/player.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useLogout } from '../../networking/account_manager.ts';
+import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -19,7 +20,6 @@ import { Column, Row } from '../common/container/container.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider.tsx';
-import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HeaderButton } from './HeaderButton.tsx';
 import './leaveButton.scss';
 
@@ -117,13 +117,14 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	spaceId: SpaceId;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const navigate = useNavigatePandora();
 	const globalState = useGlobalState(useGameState());
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
 	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockSpaceLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onLeave = useCallback(() => {
-		directoryConnector.awaitResponse('spaceLeave', EMPTY)
+		directoryConnector.awaitResponse('spaceSwitch', { id: null })
 			.then((result) => {
 				if (result.result !== 'ok') {
 					toast(`Failed to leave space:\n${result.result}`, TOAST_OPTIONS_ERROR);
@@ -155,6 +156,12 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
+			<Button onClick={ () => {
+				navigate('/spaces/search');
+				closeDialog();
+			} } >
+				<img src={ listIcon } />List other spaces
+			</Button>
 			<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
 				<img src={ logoutIcon } />Leave space
 			</Button>
@@ -164,7 +171,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 
 function CharacterLeave(): ReactElement {
 	const accountManager = useService('accountManager');
-	const connectionInfo = useShardConnectionInfo();
+	const selectedCharacter = useObservable(accountManager.currentCharacter);
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 	const closeDialog = useContext(leaveButtonContext);
@@ -180,10 +187,10 @@ function CharacterLeave(): ReactElement {
 		<fieldset>
 			<legend>Character</legend>
 			{
-				connectionInfo ? (
+				selectedCharacter ? (
 					<>
-						<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
-						<span className='unimportant'>Id: { connectionInfo.characterId }</span>
+						<span>Name: { characterName ?? `[Character ${selectedCharacter.characterId}]` }</span>
+						<span className='unimportant'>Id: { selectedCharacter.characterId }</span>
 						<Button onClick={ onClick }>
 							<img src={ peopleIcon } />Change character
 						</Button>

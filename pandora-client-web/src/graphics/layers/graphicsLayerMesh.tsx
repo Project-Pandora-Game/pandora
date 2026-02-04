@@ -21,7 +21,7 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 	state,
 	debugConfig,
 	characterBlinking,
-}: GraphicsLayerProps<'mesh'>): ReactElement {
+}: GraphicsLayerProps<'mesh'>): ReactElement | null {
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
@@ -52,6 +52,9 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 		pixiState.clockwiseFrontFace = cullClockwise;
 		return pixiState;
 	}, [cullClockwise]);
+
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
 
 	return (
 		layer.normalMap != null ? (
@@ -91,7 +94,7 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
 	roomMask?: PixiMaskSource;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
-}): ReactElement {
+}): ReactElement | null {
 	const evaluator = useStandaloneConditionEvaluator();
 
 	const { image, normalMapImage } = useMemo<Immutable<RoomDeviceLayerImageSetting> | Immutable<RoomDeviceLayerImageOverride>>(() => {
@@ -161,6 +164,9 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
 	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
+
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
 
 	if (geometryData.type === '2d') {
 		return (

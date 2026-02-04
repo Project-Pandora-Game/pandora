@@ -3,9 +3,12 @@ import { EMPTY_ARRAY, PANDORA_FONTS, type Item, type RoomDeviceGraphicsLayerText
 import { ItemModuleText } from 'pandora-common/assets/modules/text';
 import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useLayoutEffect, useMemo, useRef } from 'react';
+import { useNullableObservable } from '../../observable.ts';
+import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
 import { usePixiAppOptional } from '../reconciler/appContext.ts';
+import { EvaluateCondition } from '../utility.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
 export const GraphicsLayerText = memo(function GraphicsLayerText({
@@ -14,8 +17,12 @@ export const GraphicsLayerText = memo(function GraphicsLayerText({
 	poseEvaluator,
 	wornItems,
 	state,
-}: GraphicsLayerProps<'text'>): ReactElement {
+	characterBlinking,
+}: GraphicsLayerProps<'text'>): ReactElement | null {
 	const app = usePixiAppOptional();
+
+	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const dataModule = item?.getModules().get(layer.dataModule);
 	const textModule = (dataModule != null && dataModule instanceof ItemModuleText) ? dataModule : undefined;
@@ -76,6 +83,9 @@ export const GraphicsLayerText = memo(function GraphicsLayerText({
 		};
 	}, [app, textModule, color, layer, pivot]);
 
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
+
 	return (
 		<Container
 			position={ position }
@@ -97,7 +107,8 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 	item: Item;
 	layer: Immutable<RoomDeviceGraphicsLayerText>;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
-}): ReactElement {
+}): ReactElement | null {
+	const evaluator = useStandaloneConditionEvaluator();
 	const app = usePixiAppOptional();
 
 	const dataModule = item?.getModules().get(layer.dataModule);
@@ -156,6 +167,9 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 			app.renderer.canvasText.returnTexture(textTexture);
 		};
 	}, [app, textModule, color, layer, pivot]);
+
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
 
 	return (
 		<Container

@@ -50,6 +50,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
 import { MakeActionSpaceContext } from '../../services/gameLogic/gameStateHooks.ts';
+import { ChatFocusMode, ChatMessageShouldDim, GetChatFocusModeForced } from '../../ui/components/chat/chatInputContext.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chatMessage.tsx';
 import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessageTypes.ts';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
@@ -501,7 +502,14 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					const showChat = () => {
 						this.emit('uiNavigate', '/room');
 					};
-					if (message.type === 'chat') {
+					const focusModeSetting = ChatFocusMode.value;
+					const focusModeForced = GetChatFocusModeForced(this.player.getRestrictionManager(this.globalState.currentState, this.getCurrentSpaceContext()));
+					const focusMode = focusModeForced ?? focusModeSetting;
+					const dim = ChatMessageShouldDim(message);
+
+					if (focusMode && dim) {
+						// No notification
+					} else if (message.type === 'chat') {
 						if (message.from.id !== this.player.id) {
 							notificationHandler.notify({
 								type: message.to != null ? 'chatMessagesWhisper' : 'chatMessagesMessage',

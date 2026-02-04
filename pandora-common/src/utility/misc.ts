@@ -98,6 +98,18 @@ export function ParseNotNullable<T>(value: Nullable<T>): NonNullable<T> {
 	return value;
 }
 
+export function MapNullable<T, O>(value: T | null, callback: ((value: NonNullable<T>) => O)): O | null;
+export function MapNullable<T, O>(value: T | undefined, callback: ((value: NonNullable<T>) => O)): O | undefined;
+export function MapNullable<T, O>(value: T | null | undefined, callback: ((value: NonNullable<T>) => O)): O | null | undefined;
+export function MapNullable<T, O>(value: T | null | undefined, callback: ((value: NonNullable<T>) => O)): O | null | undefined {
+	if (value === null)
+		return null;
+	if (value === undefined)
+		return undefined;
+
+	return callback(value);
+}
+
 /**
  * Checks if the passed value is an array, typing it as a readonly array.
  * @param value - The value to check

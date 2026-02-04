@@ -245,6 +245,7 @@ export async function LoadAssetAutoMeshLayer(
 				y: layer.y,
 				width: layer.width,
 				height: layer.height,
+				enableCond: layer.enableCond,
 				type: 'mesh',
 				name: `${layer.name || '[unnamed]'}:${templatePart.id}:${graphicalLayer.name || `#${i + 1}`}`,
 				priority: templatePart.priority,

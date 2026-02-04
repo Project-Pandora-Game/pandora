@@ -1,10 +1,12 @@
 import * as z from 'zod';
-import { BoneNameSchema } from '../../graphics/conditions.ts';
 import { RectangleSchema } from '../../graphics/common.ts';
+import { BoneNameSchema, ConditionSchema } from '../../graphics/conditions.ts';
 import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAlphaImageMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('alphaImageMesh'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	name: z.string(),
 	priority: LayerPrioritySchema,
 	points: z.string(),

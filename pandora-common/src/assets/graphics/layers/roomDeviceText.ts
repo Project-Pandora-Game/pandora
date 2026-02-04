@@ -1,8 +1,11 @@
 import * as z from 'zod';
 import { CoordinatesSchema, SizeSchema } from '../common.ts';
+import { ConditionSchema } from '../conditions.ts';
 
 export const RoomDeviceGraphicsLayerTextSchema = z.object({
 	type: z.literal('text'),
+	/** If configured, then this condition needs to be satisfied for this layer to display. */
+	enableCond: ConditionSchema.optional(),
 	/** Module from which text is used. Must be a 'text' type module. */
 	dataModule: z.string(),
 	/**

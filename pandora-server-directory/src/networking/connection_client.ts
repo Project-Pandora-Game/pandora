@@ -151,7 +151,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	public sendConnectionStateUpdate(): void {
 		this.sendMessage('connectionState', {
 			account: this.account ? this.account.getAccountInfo() : null,
-			character: this.character ? this.character.getShardConnectionInfo() : null,
+			character: this.character ? this.character.getShardAssignmentInfo() : null,
 		});
 	}
 }

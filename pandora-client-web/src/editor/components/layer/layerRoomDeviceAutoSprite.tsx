@@ -384,49 +384,88 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 		});
 	}, [buildContext, layer, variables]);
 
-	const reorderVariable = useCallback((startIndex: number, shift: number | null) => {
+	const reorderVariable = useCallback((startIndex: number, shift: number) => {
 		if (buildContext == null ||
 			startIndex < 0 ||
 			startIndex >= variables.length ||
-			shift != null && (startIndex + shift) < 0 ||
-			shift != null && (startIndex + shift) >= variables.length
+			(startIndex + shift) < 0 ||
+			(startIndex + shift) >= variables.length
 		) {
 			return;
 		}
 
 		const existingVariants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
+		const reorderedVariables = variables.toSpliced(startIndex, 1);
+		reorderedVariables.splice(startIndex + shift, 0, variables[startIndex]);
 
-		for (const variable of variables) {
+		for (const variable of reorderedVariables) {
 			const values = RoomDeviceAutoSpriteLayerGenerateVariableData(variable, buildContext);
 			Assert(values.length > 0, 'Generating variable variants returned empty result');
 			existingVariants.push(values);
 		}
 
 		layer.modifyDefinition((d) => {
-			const shifted = d.variables.splice(startIndex, 1);
-			if (shift != null) {
-				d.variables.splice(startIndex + shift, 0, ...shifted);
-			}
+			d.variables = castDraft(reorderedVariables);
 
 			// Update all images
 			const newImages: Record<string, string[]> = {};
 
 			for (const combination of (existingVariants.length > 0 ? GenerateMultipleListsFullJoin(existingVariants) : [[GRAPHICS_ROOM_DEVICE_AUTO_SPRITE_LAYER_DEFAULT_VARIANT]])) {
-				const oldIdParts = combination.map((c) => c.id);
-				const newIdParts = oldIdParts.slice();
+				const newIdParts = combination.map((c) => c.id);
+				// Get original id by reordering parts in reverse
+				const oldIdParts = newIdParts.slice();
 				{
-					const shiftedPart = newIdParts.splice(startIndex, 1);
+					const shiftedPart = oldIdParts.splice(startIndex + shift, 1);
 					if (shift != null) {
-						newIdParts.splice(startIndex + shift, 0, ...shiftedPart);
+						oldIdParts.splice(startIndex, 0, ...shiftedPart);
 					}
 				}
 				const oldId = oldIdParts.join(':');
 				const newId = newIdParts.join(':');
-				// If removing, take only first variant
-				if (newImages[newId] != null) {
-					continue;
+				if (Object.hasOwn(d.imageMap, oldId)) {
+					Assert(!Object.hasOwn(newImages, newId));
+					newImages[newId] = d.imageMap[oldId];
 				}
-				newImages[newId] = d.imageMap[oldId];
+			}
+
+			d.imageMap = newImages;
+
+		});
+	}, [buildContext, layer, variables]);
+
+	const removeVariable = useCallback((startIndex: number, keepId: string) => {
+		if (buildContext == null ||
+			startIndex < 0 ||
+			startIndex >= variables.length
+		) {
+			return;
+		}
+
+		const existingVariants: RoomDeviceAutoSpriteLayerGenerateVariableValue[][] = [];
+
+		const updatedVariables = variables.toSpliced(startIndex, 1);
+		for (const variable of updatedVariables) {
+			const values = RoomDeviceAutoSpriteLayerGenerateVariableData(variable, buildContext);
+			Assert(values.length > 0, 'Generating variable variants returned empty result');
+			existingVariants.push(values);
+		}
+
+		layer.modifyDefinition((d) => {
+			d.variables = castDraft(updatedVariables);
+
+			// Update all images
+			const newImages: Record<string, string[]> = {};
+
+			for (const combination of (existingVariants.length > 0 ? GenerateMultipleListsFullJoin(existingVariants) : [[GRAPHICS_ROOM_DEVICE_AUTO_SPRITE_LAYER_DEFAULT_VARIANT]])) {
+				const newIdParts = combination.map((c) => c.id);
+				// Get original id by using the variant specified in "keepId"
+				const oldIdParts = newIdParts.toSpliced(startIndex, 0, keepId);
+				const oldId = oldIdParts.join(':');
+				const newId = newIdParts.join(':');
+				if (Object.hasOwn(d.imageMap, oldId)) {
+					Assert(!Object.hasOwn(newImages, newId));
+					newImages[newId] = d.imageMap[oldId];
+				}
 			}
 
 			d.imageMap = newImages;
@@ -460,11 +499,12 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 						<LayerRoomDeviceAutoSpriteVariableItem key={ index }
 							index={ index }
 							variable={ v }
+							buildContext={ buildContext }
 							update={ (newValue) => {
 								updateVariable(index, newValue);
 							} }
-							remove={ () => {
-								reorderVariable(index, null);
+							remove={ (keepId) => {
+								removeVariable(index, keepId);
 							} }
 							reorder={ (shift) => {
 								reorderVariable(index, shift);
@@ -490,13 +530,16 @@ function LayerRoomDeviceAutoSpriteVariables({ layer }: {
 	);
 }
 
-function LayerRoomDeviceAutoSpriteVariableItem({ variable, index, remove, reorder }: {
+function LayerRoomDeviceAutoSpriteVariableItem({ variable, buildContext, index, remove, reorder }: {
 	variable: Immutable<GraphicsSourceRoomDeviceAutoSpriteLayerVariable>;
+	buildContext: GraphicsBuildContext<Immutable<GraphicsBuildContextRoomDeviceData>>;
 	index: number;
 	update: (newValue: Immutable<GraphicsSourceRoomDeviceAutoSpriteLayerVariable>) => void;
-	remove: () => void;
+	remove: (keepId: string) => void;
 	reorder: (shift: number) => void;
 }): ReactElement {
+	const [removeDialog, setRemoveDialog] = useState(false);
+
 	return (
 		<Row alignY='center' className='editor-highlightedArea' padding='small'>
 			{
@@ -512,9 +555,36 @@ function LayerRoomDeviceAutoSpriteVariableItem({ variable, index, remove, reorde
 				src={ crossIcon }
 				className='smallIconButton'
 				alt='Remove entry'
-				onClick={ remove }
+				onClick={ () => {
+					setRemoveDialog(true);
+				} }
 				slim
 			/>
+			{ removeDialog ? (
+				<ModalDialog>
+					<Column>
+						<div>Select which variant of this variable to keep</div>
+						<Column className='editor-highlightedArea' padding='medium'>
+							{ RoomDeviceAutoSpriteLayerGenerateVariableData(variable, buildContext).map((variant) => (
+								<Button
+									key={ variant.id }
+									onClick={ () => {
+										remove(variant.id);
+										setRemoveDialog(false);
+									} }
+								>
+									{ variant.name } ({ variant.id })
+								</Button>
+							)) }
+						</Column>
+						<Button onClick={ () => {
+							setRemoveDialog(false);
+						} }>
+							Cancel
+						</Button>
+					</Column>
+				</ModalDialog>
+			) : null }
 		</Row>
 	);
 }

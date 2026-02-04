@@ -1,9 +1,10 @@
-import { AssertNotNullable, type CharacterId, type IChatType } from 'pandora-common';
+import { AssertNotNullable, type CharacterId, type CharacterRestrictionsManager, type IChatType } from 'pandora-common';
 import { createContext, RefObject, useContext } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { IMessageParseOptions } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerRestrictionManager } from '../../../components/gameContext/playerContextProvider.tsx';
 import { Observable } from '../../../observable.ts';
+import { IsActionMessage, type ChatMessagePreprocessed } from './chatMessageTypes.ts';
 import type { AutocompleteDisplayData } from './commandsProcessor.ts';
 
 export type ChatInputHandlerEditing = {
@@ -44,8 +45,29 @@ export const ChatFocusMode = new Observable<boolean>(false);
 export const ChatActionLog = new Observable<boolean>(false);
 
 export function useChatFocusModeForced(): boolean | null {
-	return usePlayerRestrictionManager().getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
+	return GetChatFocusModeForced(usePlayerRestrictionManager());
 }
+
+export function GetChatFocusModeForced(playerRestrictionManager: CharacterRestrictionsManager): boolean | null {
+	// eslint-disable-next-line react/destructuring-assignment
+	return playerRestrictionManager.getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
+}
+
+export function ChatMessageShouldDim(message: ChatMessagePreprocessed): boolean {
+	if (IsActionMessage(message)) {
+		const differentRoom = message.rooms != null && !message.rooms.includes(message.receivedRoomId);
+		return differentRoom;
+	} else if (message.type === 'actionLog') {
+		return false;
+	} else if (message.type === 'deleted') {
+		return false;
+	} else {
+		const isPrivate = 'to' in message && message.to;
+		const differentRoom = message.room !== message.receivedRoomId;
+		return !isPrivate && differentRoom;
+	}
+}
+
 export function useChatActionLogDisabled(): boolean {
 	return usePlayerRestrictionManager().getModifierEffectsByType('setting_chat_action_log').length > 0;
 }

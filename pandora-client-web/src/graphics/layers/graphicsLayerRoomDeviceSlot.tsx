@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import { useCallback, useMemo, type ReactElement } from 'react';
 import type { Character } from '../../character/character.ts';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
-import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import type { PointLike } from '../common/point.ts';
@@ -14,6 +14,7 @@ import { GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL } from '../room/roomCharacter.tsx';
 import { CalculateCharacterDeviceSlotPosition, useRoomCharacterOffsets } from '../room/roomCharacterPosition.ts';
+import { EvaluateCondition } from '../utility.ts';
 import { MASK_SIZE } from './graphicsLayerAlphaImageMesh.tsx';
 
 export function GraphicsLayerRoomDeviceSlot({ item, layer, charactersInDevice, characters }: {
@@ -24,11 +25,15 @@ export function GraphicsLayerRoomDeviceSlot({ item, layer, charactersInDevice, c
 }): ReactElement | null {
 	const characterId = item.isType('roomDevice') ? item.slotOccupancy.get(layer.slot) : undefined;
 	const characterState = useMemo(() => (characterId != null ? charactersInDevice.find((c) => c.id === characterId) : undefined), [charactersInDevice, characterId]);
+	const evaluator = useStandaloneConditionEvaluator();
 
 	if (!characterId)
 		return null;
 
 	const character = characters.find((c) => c.id === characterId);
+
+	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+		return null;
 
 	if (!character || !characterState || !item.isType('roomDevice'))
 		return null;

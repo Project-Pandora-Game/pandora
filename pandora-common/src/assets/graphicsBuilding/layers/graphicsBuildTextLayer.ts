@@ -1,5 +1,6 @@
 import { type Immutable } from 'immer';
 import type { Logger } from '../../../logging/logger.ts';
+import { CloneDeepMutable } from '../../../utility/misc.ts';
 import type { GraphicsLayer } from '../../graphics/layer.ts';
 import type { GraphicsTextLayer } from '../../graphics/layers/text.ts';
 import type { GraphicsSourceTextLayer } from '../../graphicsSource/index.ts';
@@ -18,6 +19,7 @@ export function LoadAssetTextLayer(
 		width: layer.width,
 		height: layer.height,
 		type: 'text',
+		enableCond: CloneDeepMutable(layer.enableCond),
 		priority: layer.priority,
 		angle: layer.angle,
 		dataModule: layer.dataModule,

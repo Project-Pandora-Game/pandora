@@ -14,6 +14,7 @@ export function LoadAssetRoomDeviceSlotLayer(
 
 	const result: RoomDeviceGraphicsLayerSlot = {
 		type: 'slot',
+		enableCond: CloneDeepMutable(layer.enableCond),
 		slot: layer.slot,
 		characterPosition: CloneDeepMutable(layer.characterPosition),
 		characterPositionOverrides: CloneDeepMutable(layer.characterPositionOverrides),

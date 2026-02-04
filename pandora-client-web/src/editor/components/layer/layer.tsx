@@ -1,19 +1,24 @@
-import { produce, type Immutable } from 'immer';
+import { castDraft, produce, type Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { Assert, AssertNever, type GraphicsSourceLayer, type GraphicsSourceRoomDeviceLayer } from 'pandora-common';
-import { ReactElement, useCallback } from 'react';
+import { Assert, AssertNever, type AtomicCondition, type GraphicsSourceLayer, type GraphicsSourceRoomDeviceLayer } from 'pandora-common';
+import { ReactElement, useCallback, useId, useMemo } from 'react';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
 import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { EditorAssetGraphicsRoomDeviceLayerContainer, type EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { EditorAssetGraphicsWornLayerContainer, type EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
+import { EditorConditionInput, GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
 import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
 import { LayerMeshUI } from './layerMesh.tsx';
@@ -50,6 +55,8 @@ export function LayerUI(): ReactElement {
 		<div className='editor-setupui' key={ `${asset.id}/${selectedLayer.index}` }>
 			<LayerName layer={ selectedLayer } />
 			<LayerQuickActions layer={ selectedLayer } />
+			<hr />
+			<LayerEnableCondition layer={ selectedLayer } />
 			{ (selectedLayer instanceof EditorAssetGraphicsWornLayerContainer) ? (
 				(selectedLayer.type === 'mesh' || selectedLayer.type === 'alphaImageMesh') ? (
 					<LayerMeshUI layer={ selectedLayer } />
@@ -157,6 +164,79 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAsse
 				/>
 			</Column>
 		</>
+	);
+}
+
+function LayerEnableCondition({ layer }: { layer: EditorAssetGraphicsWornLayer | EditorAssetGraphicsRoomDeviceLayer; }): ReactElement | null {
+	const id = useId();
+	const assetManager = useAssetManager();
+	let asset = assetManager.getAssetById(layer.assetGraphics.id);
+	if (!asset || (!asset.isType('bodypart') && !asset.isType('personal') && !asset.isType('roomDevice'))) {
+		asset = undefined;
+	}
+
+	const { enableCond } = useObservable<Immutable<GraphicsSourceLayer> | Immutable<GraphicsSourceRoomDeviceLayer>>(layer.definition);
+
+	const conditionMetadata = useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]);
+
+	const characterState = useEditorCharacterState();
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const wornItem = characterState.items
+		.find((i) => i.asset.id === layer.assetGraphics.id || (i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === layer.assetGraphics.id));
+
+	const evaluateCondition = useCallback((c: Immutable<AtomicCondition>) => {
+		if (layer instanceof EditorAssetGraphicsWornLayerContainer) {
+			if ('module' in c && wornItem == null)
+				return undefined;
+
+			return evaluator.evalCondition(c, wornItem ?? null);
+
+		} else if (layer instanceof EditorAssetGraphicsRoomDeviceLayerContainer) {
+			// Editor evaluation not supported
+			return undefined;
+		}
+
+		AssertNever(layer);
+	}, [evaluator, layer, wornItem]);
+
+	return (
+		<Column gap='tiny'>
+			<Row alignY='center' gap='tiny'>
+				<Checkbox
+					id={ id + ':cond-enable' }
+					checked={ enableCond != null }
+					onChange={ (newValue) => {
+						layer.modifyDefinition((d) => {
+							if (newValue) {
+								d.enableCond = [[]];
+							} else {
+								delete d.enableCond;
+							}
+						});
+					} }
+				/>
+				<label htmlFor={ id + ':cond-enable' }>
+					Conditionally enable layer
+				</label>
+				<ContextHelpButton>
+					If this option is enabled, the layer is only made visible if the condition specified is true.<br />
+					If the condition is unsatisfied, the result is as if this layer didn't exist.
+				</ContextHelpButton>
+			</Row>
+			{ enableCond != null ? (
+				<EditorConditionInput
+					condition={ enableCond }
+					update={ (newConditions) => {
+						layer.modifyDefinition((d) => {
+							d.enableCond = castDraft(newConditions);
+						});
+					} }
+					conditionEvalutator={ evaluateCondition }
+					metadata={ conditionMetadata }
+				/>
+			) : null }
+		</Column>
 	);
 }
 

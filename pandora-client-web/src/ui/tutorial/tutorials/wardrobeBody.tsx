@@ -599,7 +599,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						type: 'elementQuery',
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton.allowed',
 						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'move'),
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'moveItem'),
 					}],
 					highlight: [{
 						query: '.wardrobeAssetList .listContainer',
@@ -618,7 +618,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton:not(.invisible)',
 						inset: true,
 						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'move'),
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'moveItem'),
 					}],
 				},
 			],

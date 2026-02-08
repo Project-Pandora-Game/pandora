@@ -65,7 +65,7 @@
 		"@types/express": "5.0.6",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "24.10.11",
+		"@types/node": "24.10.12",
 		"@types/nodemailer": "7.0.9",
 		"@types/semver": "7.7.1",
 		"@types/wtfnode": "0.10.0",

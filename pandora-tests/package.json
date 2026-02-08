@@ -21,7 +21,7 @@
 		"@playwright/test": "1.58.2",
 		"@types/express": "5.0.6",
 		"@types/mailparser": "3.4.6",
-		"@types/node": "24.10.11",
+		"@types/node": "24.10.12",
 		"express": "5.2.1",
 		"mailparser": "3.9.3",
 		"nyc": "17.1.0",

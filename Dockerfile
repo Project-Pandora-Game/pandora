@@ -1,4 +1,4 @@
-FROM docker.io/node:24.13.0-alpine AS builder
+FROM docker.io/node:24.13.1-alpine AS builder
 
 # Update and enable corepack
 RUN npm install -g corepack@latest
@@ -34,7 +34,7 @@ RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
 	pnpm deploy --filter=pandora-server-shard --prod /app/deploy/shard
 
 # Directory production image
-FROM docker.io/node:24.13.0-alpine AS pandora-server-directory
+FROM docker.io/node:24.13.1-alpine AS pandora-server-directory
 
 WORKDIR /app
 
@@ -43,7 +43,7 @@ COPY --from=builder /app/deploy/directory /app
 CMD ["node", "--enable-source-maps", "dist/index.js"]
 
 # Shard production image
-FROM docker.io/node:24.13.0-alpine AS pandora-server-shard
+FROM docker.io/node:24.13.1-alpine AS pandora-server-shard
 
 WORKDIR /app
 

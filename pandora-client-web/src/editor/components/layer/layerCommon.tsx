@@ -42,7 +42,7 @@ export function LayerHeightAndWidthSetting({ layer }: {
 				<ContextHelpButton>
 					<p>
 						These two values define width and height of the layer.<br />
-						By default they are have the same value as the character canvas.<br />
+						By default they have the same value as the character canvas.<br />
 					</p>
 				</ContextHelpButton>
 			</Row>

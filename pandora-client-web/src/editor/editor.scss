@@ -183,6 +183,7 @@
 
 	&.attributeList {
 		max-height: 80vh;
+		min-width: min(50vw, 20em);
 	}
 }
 

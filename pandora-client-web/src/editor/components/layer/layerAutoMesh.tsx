@@ -908,25 +908,27 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 						) :
 						selectedType === 'attribute' ? (
 							<Column className='editor-highlightedArea attributeList' padding='small' overflowY='scroll'>
-								{
-									[...assetManager.attributes.entries()]
-										.map(([a, definition]) => (
-											<button
-												key={ a }
-												className='inventoryViewItem listMode small allowed'
-												data-attribute-id={ a }
-												onClick={ () => {
-													addVariable({
-														type: 'attribute',
-														attribute: a,
-													});
-													close();
-												} }>
-												<InventoryAttributePreview attribute={ a } />
-												<span className='itemName'>{ definition.name }</span>
-											</button>
-										))
-								}
+								<Column>
+									{
+										[...assetManager.attributes.entries()]
+											.map(([a, definition]) => (
+												<button
+													key={ a }
+													className='inventoryViewItem listMode small allowed'
+													data-attribute-id={ a }
+													onClick={ () => {
+														addVariable({
+															type: 'attribute',
+															attribute: a,
+														});
+														close();
+													} }>
+													<InventoryAttributePreview attribute={ a } />
+													<span className='itemName'>{ definition.name }</span>
+												</button>
+											))
+									}
+								</Column>
 							</Column>
 						) :
 						selectedType === 'view' ? (

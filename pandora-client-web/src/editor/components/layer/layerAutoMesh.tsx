@@ -19,7 +19,6 @@ import {
 	type GraphicsSourceAutoMeshLayerVariable,
 } from 'pandora-common';
 import { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
-import { createPortal } from 'react-dom';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -40,13 +39,6 @@ import { EditorAssetGraphicsManager, useEditorPointTemplates } from '../../asset
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
-
-type TooltipState = {
-	id: string;
-	text: string;
-	x: number;
-	y: number;
-} | null;
 
 export function LayerAutoMeshUI({ layer }: {
 	layer: EditorAssetGraphicsWornLayer<'autoMesh'>;
@@ -818,7 +810,6 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 }): ReactElement {
 	const assetManager = useAssetManagerEditor();
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
-	const [tooltip, setTooltip] = useState<TooltipState>(null);
 
 	const buildContext = EditorBuildAssetGraphicsWornContext(layer.assetGraphics, asset, assetManager, EditorAssetGraphicsManager);
 
@@ -922,16 +913,6 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 										.map(([a, definition]) => (
 											<button
 												key={ a }
-												onMouseEnter={ (e) => {
-													const rect = e.currentTarget.getBoundingClientRect();
-													setTooltip({
-														id: a,
-														text: definition.name,
-														x: rect.left + rect.width / 2,
-														y: rect.top - 8,
-													});
-												} }
-												onMouseLeave={ () => setTooltip(null) }
 												className='inventoryViewItem listMode small allowed'
 												data-attribute-id={ a }
 												onClick={ () => {
@@ -946,19 +927,6 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 											</button>
 										))
 								}
-								{ tooltip &&
-									createPortal(
-										<div
-											className='editor-tooltip'
-											style={ {
-												top: tooltip.y,
-												left: tooltip.x,
-											} }
-										>
-											{ tooltip.text }
-										</div>,
-										document.body,
-									) }
 							</Column>
 						) :
 						selectedType === 'view' ? (

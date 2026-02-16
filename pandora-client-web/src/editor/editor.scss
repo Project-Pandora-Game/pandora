@@ -196,19 +196,3 @@
 		overflow: unset;
 	}
 }
-
-.editor-tooltip {
-  	position: absolute;
-	top: 100%;
-	bottom: 110%;
-	left: 50%;
-	transform: translateX(-50%, -100%);
-	background: black;
-	color: white;
-	padding: 6px 10px;
-	border-radius: 6px;
-	font-size: 12px;
-	white-space: nowrap;
-	z-index: 9999;
-	pointer-events: none;
-}

@@ -9,7 +9,8 @@ import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema }
 import { ChatCharacterStatusSchema, ChatMessageSchema } from '../chat/chat.ts';
 import { AppearanceActionSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema } from '../gameLogic/index.ts';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
-import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space.ts';
+import { SpaceIdSchema } from '../space/space.ts';
+import { SpaceClientInfoSchema } from '../space/spaceData.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { ZodCast } from '../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';

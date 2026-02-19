@@ -36,6 +36,7 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 				ghostManagement: null,
 				owners: [editor.character.data.accountId],
 				ownerInvites: [],
+				spaceSwitchStatus: [],
 			},
 		});
 

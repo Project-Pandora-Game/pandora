@@ -6,8 +6,10 @@ import { CharacterSelfInfoSchema } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, LIMIT_SPACE_SEARCH_COUNT } from '../inputLimits.ts';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
+import { SpaceIdSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceInviteCreateSchema, type SpaceInvite } from '../space/spaceData.ts';
 import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../space/spaceSearch.ts';
+import { SpaceSwitchCommandSchema } from '../space/spaceSwitch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
@@ -299,14 +301,68 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: null,
 	},
+	// Simple, single-person, instant space switch
 	spaceSwitch: {
 		request: z.object({
 			/** Id of the space to switch to, or `null` if switching to personal space */
 			id: SpaceIdSchema.nullable(),
+			/** Invite link we are using to join */
 			invite: SpaceInviteIdSchema.optional(),
 		}),
 		response: z.object({
 			result: z.literal(['ok', 'failed', 'spaceFull', 'notFound', 'noAccess', 'invalidInvite', 'restricted', 'inRoomDevice']),
+		}),
+	},
+	// Group space switch - this message starts it
+	spaceSwitchStart: {
+		request: z.object({
+			/** Id of the space to switch to, can not be a personal space */
+			id: SpaceIdSchema,
+			/** Characters being invited along; can be empty */
+			characters: CharacterIdSchema.array(),
+		}),
+		response: z.object({
+			result: z.literal([
+				'ok',
+				'failed', // Generic, usually transient failure - try again later
+				'pendingSwitchExists', // There already is a switch by you - abort it first
+				'notFound', // Target space or some character to invite was not found
+				'noAccess', // No access to the target space
+				'notAllowed', // Not allowed to invite some of the characters
+			]),
+		}),
+	},
+	// Group space switch - this message interacts with ongoing switch
+	spaceSwitchCommand: {
+		request: z.object({
+			/** Initiator of switch, used to identify this switch group */
+			initiator: CharacterIdSchema,
+			/** Command to perform on the ongoing switch */
+			command: SpaceSwitchCommandSchema,
+		}),
+		response: z.object({
+			result: z.literal([
+				'ok',
+				'notFound', // The space or space switch group was not found (e.g. if it disappeared before client got update)
+				'failed', // Generic, usually transient failure - try again later
+				'noAccess', // Some character does not have access to target space, only in response to "go" when re-check discovered this issue
+				'notAllowed', // You cannot do this action (e.g. you are not the initiator, or you are trying to set something that initiator can't)
+				'restricted', // You cannot do this action (e.g. restricted by modifier)
+			]),
+		}),
+	},
+	// Group space switch - do the switch
+	spaceSwitchGo: {
+		request: z.object({}),
+		response: z.object({
+			result: z.literal([
+				'ok',
+				'notFound', // The space or space switch group was not found (e.g. if it disappeared before client got update)
+				'failed', // Generic, usually transient failure - try again later
+				'spaceFull', // Target space is full
+				'notReady', // Some character is not ready
+				'noAccess', // Some character does not have access to target space
+			]),
 		}),
 	},
 	//#endregion

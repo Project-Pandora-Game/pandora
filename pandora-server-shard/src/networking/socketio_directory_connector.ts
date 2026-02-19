@@ -95,6 +95,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 			stop: Stop,
 			spaceCheckCanLeave: this.handleSpaceCheckCanLeave.bind(this),
+			spaceSwitchPermissionCheck: this.handleSpaceSwitchPermissionCheck.bind(this),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -335,6 +336,25 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		}
 
 		return { result: 'ok' };
+	}
+
+	private handleSpaceSwitchPermissionCheck({ actor: actorId, target: targetId }: IDirectoryShardArgument['spaceSwitchPermissionCheck']): IDirectoryShardResult['spaceSwitchPermissionCheck'] {
+		const actor = CharacterManager.getCharacter(actorId);
+		const target = CharacterManager.getCharacter(targetId);
+
+		// We must know the actor and character must be in the same space
+		if (actor == null || target == null || target.getOrLoadSpace() !== actor.getOrLoadSpace())
+			return { result: 'notFound' };
+
+		const checkResult = target.checkSpaceSwitchStatus(actor);
+
+		if (checkResult.permission == null)
+			return { result: 'notFound' };
+
+		return {
+			result: 'ok',
+			permission: checkResult.permission,
+		};
 	}
 }
 

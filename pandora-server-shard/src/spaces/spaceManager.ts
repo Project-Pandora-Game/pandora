@@ -54,16 +54,11 @@ export const SpaceManager = new class SpaceManager {
 		}
 
 		logger.debug(`Adding space ${data.id}`);
-		space = new PublicSpace({
-			...data,
-			id: definition.id,
-			config: definition.config,
-			accessId: definition.accessId,
-			owners: definition.owners,
-			ownerInvites: definition.ownerInvites,
-		});
+		space = new PublicSpace(definition, data);
 		this._spaces.set(id, space);
 		spacesMetric.set(this._spaces.size);
+
+		space.onLoad();
 		return space;
 	}
 

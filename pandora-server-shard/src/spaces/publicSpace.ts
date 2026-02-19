@@ -1,18 +1,23 @@
+import type { Immutable } from 'immer';
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick } from 'lodash-es';
 import {
 	AccountId,
+	Assert,
 	AssertNever,
 	AsyncSynchronized,
 	GameStateUpdate,
 	GetLogger,
 	IShardSpaceDefinition,
+	KnownObject,
 	SPACE_SHARD_UPDATEABLE_PROPERTIES,
 	SpaceData,
 	SpaceDataSchema,
 	SpaceDataShardUpdate,
 	SpaceDirectoryConfig,
 	SpaceId,
+	type SpaceSwitchShardStatusUpdate,
+	type SpaceSwitchStatus,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
@@ -35,14 +40,24 @@ export class PublicSpace extends Space {
 		return this.data.ownerInvites;
 	}
 
+	public override get spaceSwitchStatus(): Immutable<SpaceSwitchStatus[]> {
+		return this.data.spaceSwitchStatus;
+	}
+
 	public override get config(): SpaceDirectoryConfig {
 		return this.data.config;
 	}
 
-	constructor(data: SpaceData) {
+	constructor(shardData: IShardSpaceDefinition, data: Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'>) {
+		Assert(shardData.id === data.id);
 		super(data.id, data.spaceState, GetLogger('Space', `[PublicSpace ${data.id}]`));
 		this.id = data.id;
-		this.data = data;
+		this.data = shardData;
+	}
+
+	/** Actions to do once space is fully loaded */
+	public onLoad(): void {
+		this.checkSpaceSwitchStatusUpdates();
 	}
 
 	public update(data: IShardSpaceDefinition): void {
@@ -56,6 +71,9 @@ export class PublicSpace extends Space {
 		this.data.config = data.config;
 		this.data.owners = data.owners;
 		this.data.ownerInvites = data.ownerInvites;
+		this.data.spaceSwitchStatus = data.spaceSwitchStatus;
+
+		this.checkSpaceSwitchStatusUpdates();
 
 		const update: GameStateUpdate = {
 			info: this.getInfo(),
@@ -65,6 +83,37 @@ export class PublicSpace extends Space {
 		update.characterModifierEffects = this.getAndApplyCharacterModifierEffectsUpdate();
 
 		this.sendUpdateToAllCharacters(update);
+	}
+
+	public override checkSpaceSwitchStatusUpdates(): void {
+		for (const status of this.spaceSwitchStatus) {
+			let updateCharacters: SpaceSwitchShardStatusUpdate['characters'] | undefined;
+			const initiator = this.getCharacterById(status.initiator);
+			for (const [characterId, currentStatus] of KnownObject.entries(status.characters)) {
+				const character = this.getCharacterById(characterId);
+				if (character == null || initiator == null) {
+					// If initiator or character is not found, invalidate its checks
+					updateCharacters ??= {};
+					updateCharacters[characterId] = { permission: null, restriction: null };
+				} else {
+					const checkResult = character.checkSpaceSwitchStatus(initiator);
+					if (currentStatus.permission !== checkResult.permission || currentStatus.restriction !== checkResult.restriction) {
+						updateCharacters ??= {};
+						updateCharacters[characterId] = checkResult;
+					}
+				}
+			}
+
+			if (updateCharacters != null) {
+				DirectoryConnector.sendMessage('spaceSwitchStatusUpdate', {
+					id: this.id,
+					status: {
+						initiator: status.initiator,
+						characters: updateCharacters,
+					},
+				});
+			}
+		}
 	}
 
 	protected override _tick(): void {

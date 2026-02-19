@@ -1,7 +1,8 @@
 import * as z from 'zod';
 import { AccountIdSchema } from '../account/account.ts';
 import { LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
-import { SpaceBaseInfoSchema, SpaceIdSchema, SpacePublicSettingSchema } from './space.ts';
+import { SpaceIdSchema, SpacePublicSettingSchema } from './space.ts';
+import { SpaceBaseInfoSchema } from './spaceData.ts';
 
 /** The ordering for how should spaces be returned */
 export const SpaceSearchSortSchema = z.enum(['activity', 'a-z', 'z-a']);

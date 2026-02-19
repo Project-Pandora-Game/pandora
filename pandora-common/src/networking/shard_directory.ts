@@ -2,7 +2,9 @@ import { Immutable } from 'immer';
 import * as z from 'zod';
 import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
-import { ShardFeatureSchema, SpaceData, SpaceDataShardUpdateSchema, SpaceIdSchema } from '../space/space.ts';
+import { ShardFeatureSchema, SpaceIdSchema } from '../space/space.ts';
+import { SpaceDataShardUpdateSchema, type SpaceData } from '../space/spaceData.ts';
+import { SpaceSwitchShardStatusUpdateSchema } from '../space/spaceSwitch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { ZodCast } from '../validation.ts';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard.ts';
@@ -51,6 +53,13 @@ export const ShardDirectorySchema = {
 	spaceError: {
 		request: z.object({
 			id: SpaceIdSchema,
+		}),
+		response: null,
+	},
+	spaceSwitchStatusUpdate: {
+		request: z.object({
+			id: SpaceIdSchema,
+			status: SpaceSwitchShardStatusUpdateSchema,
 		}),
 		response: null,
 	},

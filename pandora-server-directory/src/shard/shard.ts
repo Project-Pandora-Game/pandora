@@ -1,5 +1,5 @@
 import { isEqual, last, uniq } from 'lodash-es';
-import { Assert, AsyncSynchronized, CharacterId, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction } from 'pandora-common';
+import { Assert, AsyncSynchronized, CharacterId, CloneDeepMutable, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction } from 'pandora-common';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Character } from '../account/character.ts';
@@ -411,6 +411,7 @@ export class Shard {
 			config: s.getConfig(),
 			owners: Array.from(s.owners),
 			ownerInvites: Array.from(s.ownerInvites),
+			spaceSwitchStatus: CloneDeepMutable(s.spaceSwitchStatus),
 		}));
 	}
 

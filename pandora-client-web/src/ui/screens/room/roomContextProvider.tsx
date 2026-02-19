@@ -8,6 +8,7 @@ import { CharacterContextMenu } from '../../../graphics/room/contextMenus/charac
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu.tsx';
 import { ItemContextMenu } from '../../../graphics/room/contextMenus/itemContextMenu.tsx';
 import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions.tsx';
+import { SpaceSwitchDialogProvider } from '../spaceJoin/spaceSwitchDialog.tsx';
 import { IRoomContextMenuFocus, IRoomSceneMode, RoomScreenContext } from './roomContext.tsx';
 import { RoomItemDialogsProviderEnabler } from './roomItemDialog.tsx';
 import { RoomConstructionModeCheckProvider, RoomScreenSceneModeCheckProvider } from './roomPermissionChecks.tsx';
@@ -53,6 +54,7 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 				<RoomScreenSceneModeCheckProvider />
 				<RoomConstructionModeCheckProvider />
 				<RoomItemDialogsProviderEnabler />
+				<SpaceSwitchDialogProvider />
 				{ children }
 				{ contextMenuFocus == null ? (
 					null

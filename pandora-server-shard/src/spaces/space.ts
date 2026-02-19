@@ -28,6 +28,7 @@ import {
 	IClientMessage,
 	IShardClient,
 	IsNotNullable,
+	KnownObject,
 	Logger,
 	ServerRoom,
 	SpaceCharacterModifierEffectCalculateUpdate,
@@ -35,6 +36,7 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 	SpaceLoadData,
+	SpaceSwitchResolveCharacterStatusToClientStatus,
 	type AppearanceActionProcessingResultValid,
 	type ChatMessage,
 	type ChatMessageAction,
@@ -48,6 +50,8 @@ import {
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
 	type SpaceStateBundle,
+	type SpaceSwitchClientStatus,
+	type SpaceSwitchStatus,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import type { Character } from '../character/character.ts';
@@ -88,6 +92,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public abstract get owners(): readonly AccountId[];
 	public abstract get ownerInvites(): readonly AccountId[];
+	public abstract get spaceSwitchStatus(): Immutable<SpaceSwitchStatus[]>;
 	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
@@ -138,6 +143,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this.runWithSuppressedUpdates(() => {
 			this._gameState.reloadAssetManager(manager);
 		});
+
+		this.checkSpaceSwitchStatusUpdates();
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
@@ -249,6 +256,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		if (this._suppressUpdates)
 			return;
 
+		this.checkSpaceSwitchStatusUpdates();
 		this.sendUpdateToAllCharacters({
 			globalState: newState.exportToClientDeltaBundle(oldState),
 			characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
@@ -256,6 +264,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public onCharacterModifiersChanged(): void {
+		this.checkSpaceSwitchStatusUpdates();
 		this.sendUpdateToAllCharacters({
 			characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
 		});
@@ -268,6 +277,19 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			...this.config,
 			owners: this.owners.slice(),
 			ownerInvites: this.ownerInvites.slice(),
+			spaceSwitchStatus: this.spaceSwitchStatus.map((status) => {
+				const clientStatus: SpaceSwitchClientStatus = {
+					targetSpace: status.targetSpace,
+					initiator: status.initiator,
+					characters: {},
+				};
+
+				for (const [id, characterStatus] of KnownObject.entries(status.characters)) {
+					clientStatus.characters[id] = SpaceSwitchResolveCharacterStatusToClientStatus(characterStatus);
+				}
+
+				return clientStatus;
+			}),
 		};
 	}
 
@@ -312,6 +334,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this._lastSentModifierEffects = newEffects;
 		return update;
 	}
+
+	/**
+	 * Run checks for when space switch status might need updates, after space's state changes.
+	 * If update is needed, send update request to Directory.
+	 */
+	public abstract checkSpaceSwitchStatusUpdates(): void;
 
 	public getActionSpaceContext(): ActionSpaceContext {
 		return {
@@ -424,6 +452,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				globalState: newState.exportToClientBundle(),
 				space: this.getLoadData(character.id),
 			});
+			this.checkSpaceSwitchStatusUpdates();
 		});
 
 		this.logger.debug(`Character ${character.id} added`);
@@ -472,6 +501,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 			// Update anyone remaining in the space
 			this._gameState.setState(newState);
+			this.checkSpaceSwitchStatusUpdates();
 			this.sendUpdateToAllCharacters({
 				globalState: newState.exportToClientDeltaBundle(originalState),
 				characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),

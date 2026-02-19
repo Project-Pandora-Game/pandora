@@ -129,6 +129,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceGetInfo: this.handleSpaceGetInfo.bind(this),
 			spaceCreate: this.handleSpaceCreate.bind(this),
 			spaceSwitch: this.handleSpaceSwitch.bind(this),
+			spaceSwitchStart: this.handleSpaceSwitchStart.bind(this),
+			spaceSwitchCommand: this.handleSpaceSwitchCommand.bind(this),
+			spaceSwitchGo: this.handleSpaceSwitchGo.bind(this),
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
 			spaceDropRole: this.handleSpaceDropRole.bind(this),
@@ -592,6 +595,60 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			const result = await character.switchSpace(null);
 			return { result };
 		}
+	}
+
+	private async handleSpaceSwitchStart({ id, characters }: IClientDirectoryArgument['spaceSwitchStart'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSwitchStart'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		const character = connection.character;
+		const currentSpace = character.space;
+		const targetSpace = await SpaceManager.loadSpace(id);
+
+		if (currentSpace == null) {
+			return { result: 'failed' };
+		}
+		if (targetSpace == null) {
+			return { result: 'notFound' };
+		}
+
+		const result = await currentSpace.spaceSwitchStart(character, characters, targetSpace);
+		return { result };
+	}
+
+	private async handleSpaceSwitchCommand({ initiator, command }: IClientDirectoryArgument['spaceSwitchCommand'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSwitchCommand'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		const character = connection.character;
+		const currentSpace = character.space;
+
+		if (currentSpace == null) {
+			return { result: 'failed' };
+		}
+
+		const result = await currentSpace.spaceSwitchCommand(character, initiator, command);
+		return { result };
+	}
+
+	private async handleSpaceSwitchGo(_: IClientDirectoryArgument['spaceSwitchGo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSwitchGo'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		const character = connection.character;
+		const currentSpace = character.space;
+
+		if (currentSpace == null) {
+			return { result: 'failed' };
+		}
+
+		const coordinator = await currentSpace.spaceSwitchGo(character);
+		if (typeof coordinator === 'string')
+			return { result: coordinator };
+
+		const result = await coordinator.run();
+
+		return { result };
 	}
 
 	private async handleSpaceUpdate(spaceConfig: IClientDirectoryArgument['spaceUpdate'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceUpdate'] {

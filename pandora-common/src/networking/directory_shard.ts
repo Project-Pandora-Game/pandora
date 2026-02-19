@@ -3,7 +3,9 @@ import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
 import { CharacterIdSchema } from '../character/index.ts';
 import { ChatMessageDirectoryActionSchema } from '../chat/chat.ts';
-import { SpaceDataSchema, SpaceIdSchema } from '../space/space.ts';
+import { SpaceIdSchema } from '../space/space.ts';
+import { SpaceDataSchema } from '../space/spaceData.ts';
+import { SpaceSwitchCharacterStatusPermissionSchema, SpaceSwitchStatusSchema } from '../space/spaceSwitch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
@@ -32,6 +34,8 @@ export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 	accessId: true,
 	owners: true,
 	ownerInvites: true,
+}).extend({
+	spaceSwitchStatus: SpaceSwitchStatusSchema.array(),
 });
 export type IShardSpaceDefinition = z.infer<typeof ShardSpaceDefinitionSchema>;
 
@@ -62,6 +66,21 @@ export const DirectoryShardSchema = {
 		response: z.object({
 			result: z.enum(['ok', 'targetNotFound', 'restricted', 'inRoomDevice']),
 		}),
+	},
+	spaceSwitchPermissionCheck: {
+		request: z.object({
+			actor: CharacterIdSchema,
+			target: CharacterIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				permission: SpaceSwitchCharacterStatusPermissionSchema,
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
 	},
 	//#endregion
 } as const satisfies Immutable<SocketInterfaceDefinition>;

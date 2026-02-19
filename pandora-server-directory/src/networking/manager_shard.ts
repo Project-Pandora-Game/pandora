@@ -33,6 +33,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			characterAutomod: this.handleCharacterAutomod.bind(this),
 			characterError: this.handleCharacterError.bind(this),
 			spaceError: this.handleSpaceError.bind(this),
+			spaceSwitchStatusUpdate: this.handleSpaceSwitchStatusUpdate.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 
 			// Database
@@ -120,6 +121,19 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			throw new BadMessageError();
 
 		await space.onError();
+	}
+
+	private async handleSpaceSwitchStatusUpdate({ id, status }: IShardDirectoryArgument['spaceSwitchStatusUpdate'], connection: IConnectionShard): Promise<void> {
+		const shard = connection.shard;
+		if (!shard)
+			throw new BadMessageError();
+		const space = shard.getConnectedSpace(id);
+		if (!space) {
+			await shard.update('spaces');
+			throw new BadMessageError();
+		}
+
+		await space.spaceSwitchShardUpdate(status);
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {

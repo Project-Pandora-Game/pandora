@@ -41,6 +41,7 @@ import {
 	type ChatMessage,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
+	type SpaceSwitchCharacterStatus,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -208,6 +209,7 @@ export class Character {
 			} else {
 				AssertNever(type);
 			}
+			this.loadedSpace?.checkSpaceSwitchStatusUpdates();
 		});
 		this.gameLogicCharacter.characterModifiers.on('modifiersChanged', () => {
 			this._emitSomethingChanged('characterModifiers');
@@ -535,6 +537,55 @@ export class Character {
 		);
 
 		return action(processingContext);
+	}
+
+	public checkSpaceSwitchStatus(initiator: Character): Pick<SpaceSwitchCharacterStatus, 'permission' | 'restriction'> {
+		const result: ReturnType<typeof this.checkSpaceSwitchStatus> = {
+			permission: null,
+			restriction: null,
+		};
+
+		// Check if initiator has appropriate permission for space switch
+		if (this.id === initiator.id) {
+			result.permission = 'accept-enforce';
+		} else {
+			const check = initiator.checkAction((ctx) => {
+				const player = ctx.getPlayerRestrictionManager();
+				const checkTarget = ctx.getCharacter(this.id);
+				if (checkTarget == null)
+					return ctx.invalid();
+
+				player.checkInteractWithTarget(ctx, checkTarget.appearance);
+				ctx.addInteraction(checkTarget.character, 'interact');
+
+				return ctx.finalize();
+			});
+
+			if (check.valid) {
+				result.permission = 'prompt';
+				// TODO: Implement auto-accept modifier
+			} else {
+				result.permission = 'rejected';
+			}
+		}
+
+		// Check restrictions
+		const restrictionManager = this.getRestrictionManager();
+		const inPublicSpace = this.getCurrentPublicSpaceId() != null;
+
+		if (restrictionManager.getRoomDeviceLink() != null) {
+			result.restriction = 'inRoomDevice';
+		} else if (restrictionManager.forceAllowRoomLeave()) {
+			// Skips any checks if force-allow is enabled
+			result.restriction = 'ok';
+		} else if (restrictionManager.getEffects().blockSpaceLeave && inPublicSpace) {
+			// The character must not have leave-restricting effect (this doesn't affect personal spaces)
+			result.restriction = 'restricted';
+		} else {
+			result.restriction = 'ok';
+		}
+
+		return result;
 	}
 
 	@AsyncSynchronized()

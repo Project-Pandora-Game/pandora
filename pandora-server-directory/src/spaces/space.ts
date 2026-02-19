@@ -1,13 +1,15 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, type ChatMessageDirectoryAction, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ConnectionManagerClient } from '../networking/manager_client.ts';
 import { Shard } from '../shard/shard.ts';
 import { ShardManager } from '../shard/shardManager.ts';
+import { SpaceManager } from './spaceManager.ts';
+import { SpaceSwitchCoordinator } from './spaceSwitch.ts';
 
 export class Space {
 	/** Time when this space was last requested */
@@ -17,6 +19,7 @@ export class Space {
 	private readonly config: SpaceDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
 	private readonly _ownerInvites: Set<AccountId>;
+	private readonly _spaceSwitchStatus: SpaceSwitchStatus[] = [];
 	private _invites: SpaceInvite[];
 	private _activity: SpaceActivitySavedData;
 	private _deletionPending = false;
@@ -38,6 +41,10 @@ export class Space {
 
 	public get ownerInvites(): ReadonlySet<AccountId> {
 		return this._ownerInvites;
+	}
+
+	public get spaceSwitchStatus(): Immutable<SpaceSwitchStatus[]> {
+		return this._spaceSwitchStatus;
 	}
 
 	public get invites(): Immutable<SpaceInvite[]> {
@@ -1099,7 +1106,8 @@ export class Space {
 			});
 		}
 
-		await this._assignedShard?.update('characters');
+		this._cleanupSpaceSwitchStatus();
+		await this._assignedShard?.update('characters', 'spaces');
 		ConnectionManagerClient.onSpaceListChange();
 
 		if (invitesChanged)
@@ -1392,5 +1400,238 @@ export class Space {
 	@AsyncSynchronized('object')
 	private async _syncActivityData(): Promise<void> {
 		await GetDatabase().updateSpace(this.id, { activity: cloneDeep(this._activity) }, null);
+	}
+
+	/**
+	 * Starts a space switch group
+	 */
+	@AsyncSynchronized('object')
+	public async spaceSwitchStart(initiator: Character, invitedCharacterIds: CharacterId[], targetSpace: Space): Promise<'ok' | 'failed' | 'pendingSwitchExists' | 'notFound' | 'noAccess' | 'notAllowed'> {
+		if (!this.characters.has(initiator))
+			return 'failed';
+
+		if (this._spaceSwitchStatus.some((s) => s.initiator === initiator.baseInfo.id)) {
+			return 'pendingSwitchExists';
+		}
+		const invitedCharacters = Array.from(this.characters).filter((c) => c === initiator || invitedCharacterIds.includes(c.baseInfo.id));
+
+		if (invitedCharacterIds.some((id) => !invitedCharacters.some((c) => c.baseInfo.id === id))) {
+			return 'notFound';
+		}
+
+		// Check that we can switch to the target space
+		if (targetSpace.checkAllowEnter(initiator, undefined, { characterLimit: true }) !== 'ok')
+			return 'noAccess';
+
+		// Check that all invited characters are not banned
+		if (invitedCharacters.some((c) => targetSpace.isBanned(c.baseInfo.account)))
+			return 'noAccess';
+
+		// Check that we are either target space admin or all characters can join by themselves
+		if (!targetSpace.isAdmin(initiator.baseInfo.account) && invitedCharacters.some((c) => targetSpace.checkAllowEnter(c, undefined, { characterLimit: true }) !== 'ok'))
+			return 'noAccess';
+
+		// Check that we are allowed to move each character, otherwise reject altogether
+		const switchStatus: SpaceSwitchStatus = {
+			initiator: initiator.baseInfo.id,
+			targetSpace: targetSpace.id,
+			characters: {},
+		};
+		const shard = this.assignedShard;
+		if (shard == null)
+			return 'failed';
+
+		let error: Awaited<ReturnType<typeof this.spaceSwitchStart>> = 'ok';
+
+		try {
+			await Promise.all(invitedCharacters.map(async (c) => {
+				const result = await shard.shardConnection?.awaitResponse('spaceSwitchPermissionCheck', { actor: initiator.baseInfo.id, target: c.baseInfo.id });
+				if (result == null) {
+					error = 'failed';
+				} else if (result.result === 'notFound') {
+					error = 'notFound';
+				} else if (result.result === 'ok') {
+					switchStatus.characters[c.baseInfo.id] = {
+						accepted: result.permission === 'accept' || result.permission === 'accept-enforce',
+						permission: result.permission,
+						restriction: null,
+					};
+				} else {
+					AssertNever(result);
+				}
+			}));
+		} catch (e) {
+			this.logger.warning('Error checking space switch start character statuses:', e);
+			return 'failed';
+		}
+
+		if (error !== 'ok')
+			return error;
+
+		if (invitedCharacters.some((c) => !Object.hasOwn(switchStatus.characters, c.baseInfo.id)))
+			return 'failed';
+
+		if (Object.values(switchStatus.characters).some((s) => s.permission === 'rejected'))
+			return 'notAllowed';
+
+		this._spaceSwitchStatus.push(switchStatus);
+		this._cleanupSpaceSwitchStatus();
+		await this._assignedShard?.update('spaces');
+
+		return 'ok';
+	}
+
+	/**
+	 * Performs a command on space switch group
+	 */
+	@AsyncSynchronized('object')
+	public async spaceSwitchCommand(character: Character, initiator: CharacterId, command: SpaceSwitchCommand): Promise<'ok' | 'notFound' | 'failed' | 'noAccess' | 'notAllowed' | 'restricted'> {
+		if (!this.characters.has(character))
+			return 'failed';
+
+		const status = this._spaceSwitchStatus.find((s) => s.initiator === initiator);
+		if (status == null || !Object.hasOwn(status.characters, character.baseInfo.id))
+			return 'notFound';
+
+		if (command.command === 'abort') {
+			if (character.baseInfo.id !== status.initiator)
+				return 'noAccess';
+
+			const index = this._spaceSwitchStatus.indexOf(status);
+			Assert(index >= 0);
+			this._spaceSwitchStatus.splice(index, 1);
+			this._cleanupSpaceSwitchStatus();
+			await this._assignedShard?.update('spaces');
+
+			return 'ok';
+		} else if (command.command === 'removeCharacter') {
+			if (character.baseInfo.id !== status.initiator)
+				return 'noAccess';
+			// Cannot remove initiator (use abort instead)
+			if (command.character === status.initiator)
+				return 'failed';
+
+			delete status.characters[command.character];
+
+			this._cleanupSpaceSwitchStatus();
+			await this._assignedShard?.update('spaces');
+
+			return 'ok';
+		} else if (command.command === 'setAccepted') {
+			// Cannot update initiator (use abort instead)
+			if (character.baseInfo.id === status.initiator)
+				return 'failed';
+
+			const characterStatus = status.characters[character.baseInfo.id];
+			if (characterStatus.permission == null)
+				return 'failed'; // No data - transient failure
+			if (characterStatus.permission === 'rejected')
+				return 'ok'; // Silently fail if rejected
+			if (characterStatus.permission === 'accept-enforce' && !command.accepted)
+				return 'restricted'; // Cannot un-accepted if enforced
+
+			characterStatus.accepted = command.accepted;
+			this._cleanupSpaceSwitchStatus();
+			await this._assignedShard?.update('spaces');
+
+			return 'ok';
+		} else if (command.command === 'reject') {
+			// Cannot remove initiator (use abort instead)
+			if (character.baseInfo.id === status.initiator)
+				return 'failed';
+
+			const characterStatus = status.characters[character.baseInfo.id];
+			if (characterStatus.permission == null)
+				return 'failed'; // No data - transient failure
+			if (characterStatus.permission === 'accept-enforce')
+				return 'restricted'; // Cannot reject if enforced
+
+			delete status.characters[character.baseInfo.id];
+			this._cleanupSpaceSwitchStatus();
+			await this._assignedShard?.update('spaces');
+
+			return 'ok';
+		}
+
+		AssertNever(command);
+	}
+
+	/**
+	 * Actually do a prepared space switch
+	 */
+	@AsyncSynchronized('object')
+	public async spaceSwitchGo(character: Character): Promise<SpaceSwitchCoordinator | 'notFound' | 'failed' | 'notReady'> {
+		if (!this.characters.has(character))
+			return 'failed';
+
+		const status = this._spaceSwitchStatus.find((s) => s.initiator === character.baseInfo.id);
+		if (status == null || !Object.hasOwn(status.characters, character.baseInfo.id))
+			return 'notFound';
+
+		// Check that everyone is ready
+		if (Object.values(status.characters).some((c) => SpaceSwitchResolveCharacterStatusToClientStatus(c) !== 'ready'))
+			return 'notReady';
+
+		const characters = Array.from(this.characters).filter((c) => Object.hasOwn(status.characters, c.baseInfo.id));
+		const initiator = characters.find((c) => c.baseInfo.id === status.initiator);
+
+		if (initiator == null)
+			return 'failed';
+
+		const targetSpace = await SpaceManager.loadSpace(status.targetSpace);
+
+		if (targetSpace == null)
+			return 'notFound';
+
+		return new SpaceSwitchCoordinator(characters, initiator, this, targetSpace);
+	}
+
+	/**
+	 * Updates space switch group with data from shard
+	 */
+	@AsyncSynchronized('object')
+	public async spaceSwitchShardUpdate(update: SpaceSwitchShardStatusUpdate): Promise<void> {
+		const status = this._spaceSwitchStatus.find((s) => s.initiator === update.initiator);
+
+		if (status != null) {
+			for (const [characterId, characterUpdate] of KnownObject.entries(update.characters)) {
+				if (Object.hasOwn(status.characters, characterId)) {
+					const characterStatus = status.characters[characterId];
+					characterStatus.permission = characterUpdate.permission;
+					characterStatus.restriction = characterUpdate.restriction;
+
+					// Set accept status if forced by permission
+					if (characterStatus.permission === 'rejected') {
+						characterStatus.accepted = false;
+					} else if (characterStatus.permission === 'accept-enforce') {
+						characterStatus.accepted = true;
+					}
+				}
+			}
+		}
+
+		this._cleanupSpaceSwitchStatus();
+		await this._assignedShard?.update('spaces');
+	}
+
+	private _cleanupSpaceSwitchStatus(): void {
+		for (let i = this._spaceSwitchStatus.length - 1; i >= 0; i--) {
+			const status = this._spaceSwitchStatus[i];
+			const currentCharacters = Array.from(this.characters);
+
+			const initiatorCharacter = currentCharacters.find((c) => c.baseInfo.id === status.initiator);
+			if (initiatorCharacter == null ||
+				!Object.hasOwn(status.characters, status.initiator) ||
+				status.characters[status.initiator].permission !== 'accept-enforce'
+			) {
+				this._spaceSwitchStatus.splice(i, 1);
+				continue;
+			}
+			for (const characterId of KnownObject.keys(status.characters)) {
+				if (!currentCharacters.some((c) => c.baseInfo.id === characterId)) {
+					delete status.characters[characterId];
+				}
+			}
+		}
 	}
 }

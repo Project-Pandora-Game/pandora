@@ -1,4 +1,5 @@
-import { AccountId, EMPTY_ARRAY, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { AccountId, EMPTY_ARRAY, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle, type SpaceSwitchStatus } from 'pandora-common';
 import { Character } from '../character/character.ts';
 import { Space } from './space.ts';
 
@@ -10,6 +11,10 @@ export class PersonalSpace extends Space {
 	}
 
 	public override get ownerInvites(): readonly AccountId[] {
+		return EMPTY_ARRAY;
+	}
+
+	public override get spaceSwitchStatus(): Immutable<SpaceSwitchStatus[]> {
 		return EMPTY_ARRAY;
 	}
 
@@ -37,5 +42,9 @@ export class PersonalSpace extends Space {
 
 	protected override _onDataModified(_data: 'spaceState'): void {
 		this._character.onPersonalSpaceChanged();
+	}
+
+	public override checkSpaceSwitchStatusUpdates(): void {
+		// Nothing to do: Personal space does not support coordinated space switching
 	}
 }

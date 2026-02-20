@@ -1,5 +1,5 @@
 import { maxBy } from 'lodash-es';
-import { Assert, CreateManuallyResolvedPromise, GetLogger, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, type ManuallyResolvedPromise } from 'pandora-common';
+import { Assert, CreateManuallyResolvedPromise, GetLogger, LIMIT_SPACE_MAX_CHARACTER_NUMBER, type ManuallyResolvedPromise } from 'pandora-common';
 import { Character } from '../account/character.ts';
 import type { Space } from './space.ts';
 
@@ -26,6 +26,16 @@ export class SpaceSwitchCoordinator {
 	public readonly originalSpace: Space;
 	public readonly newSpace: Space;
 
+	private _assumeInvite: boolean = false;
+	public get assumeInvite(): boolean {
+		return this._assumeInvite;
+	}
+
+	private _ignoreCharacterLimit: boolean = false;
+	public get ignoreCharacterLimit(): boolean {
+		return this._ignoreCharacterLimit;
+	}
+
 	private _canceled: boolean = false;
 	public get canceled(): boolean {
 		return this._canceled;
@@ -47,8 +57,19 @@ export class SpaceSwitchCoordinator {
 
 	public async run(): Promise<'ok' | SpaceSwitchCoordinatorError> {
 		Assert(this._syncStage === null);
-		// TODO: Automatic invite if initiated by admin
 		try {
+			// Check if we can assume invitation and if we can ignore character limit
+			const initiatorAllowEnter = this.newSpace.checkAllowEnter(this.initiator);
+			if (initiatorAllowEnter !== 'ok') {
+				if (initiatorAllowEnter === 'invalidInvite')
+					return 'failed';
+				return initiatorAllowEnter;
+			}
+
+			this._assumeInvite = this.newSpace.canCreateInvite(this.initiator, 'joinMe') === 'ok';
+			// Ignore character limit if initiator is admin - convenience as they could change it after joining
+			this._ignoreCharacterLimit = this.newSpace.isAdmin(this.initiator.baseInfo.account);
+
 			const unfinishedCharacters = new Set(this.characters);
 
 			// Start sync
@@ -57,12 +78,10 @@ export class SpaceSwitchCoordinator {
 					this._doStage('enterPrecheck', unfinishedCharacters, () => {
 						this._doStage('beforeLeave', unfinishedCharacters, () => {
 							// Do final check for being able to fit all characters into target space
-							let maxUsers = this.newSpace.getConfig().maxUsers;
-							if (this.newSpace.isOwner(this.initiator.baseInfo.account)) {
-								maxUsers += LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
-							}
+							const maxUsers = this.ignoreCharacterLimit ? LIMIT_SPACE_MAX_CHARACTER_NUMBER : this.newSpace.getConfig().maxUsers;
 							if (this.newSpace.characterCount + unfinishedCharacters.size > maxUsers) {
 								this._addError('spaceFull');
+								resolve();
 								return;
 							}
 

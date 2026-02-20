@@ -805,21 +805,43 @@ export class Space {
 		return true;
 	}
 
+	public canCreateInvite(source: Character, inviteType: SpaceInvite['type']): 'ok' | 'requireAdmin' | 'tooManyInvites' {
+		const account = source.baseInfo.account;
+
+		switch (inviteType) {
+			case 'joinMe': {
+				// If the room is not marked as public, then only admins can invite inside
+				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
+				if (!isPublic && !this.isAdmin(account))
+					return 'requireAdmin';
+
+				return 'ok';
+			}
+			case 'spaceBound':
+				if (!this.isAdmin(account))
+					return 'requireAdmin';
+				if (this._invites.filter((i) => i.type === 'spaceBound').length >= LIMIT_SPACE_BOUND_INVITES)
+					return 'tooManyInvites';
+
+				return 'ok';
+		}
+		AssertNever(inviteType);
+	}
+
 	@AsyncSynchronized('object')
 	public async createInvite(source: Character, data: SpaceInviteCreate): Promise<SpaceInvite | 'tooManyInvites' | 'invalidData' | 'requireAdmin'> {
 		this._cleanupInvites();
 
 		const now = Date.now();
 		const account = source.baseInfo.account;
+		const canCreate = this.canCreateInvite(source, data.type);
+		if (canCreate !== 'ok')
+			return canCreate;
 
 		switch (data.type) {
 			case 'joinMe': {
 				if (data.accountId == null)
 					return 'invalidData';
-				// If the room is not marked as public, then only admins can invite inside
-				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
-				if (!isPublic && !this.isAdmin(account))
-					return 'requireAdmin';
 
 				let dropCount = this._invites.filter((i) => i.type === 'joinMe' && i.createdBy.accountId === account.id).length - LIMIT_JOIN_ME_INVITES + 1;
 				if (dropCount > 0)
@@ -830,11 +852,6 @@ export class Space {
 				break;
 			}
 			case 'spaceBound':
-				if (!this.isAdmin(account))
-					return 'requireAdmin';
-				if (this._invites.filter((i) => i.type === 'spaceBound').length >= LIMIT_SPACE_BOUND_INVITES)
-					return 'tooManyInvites';
-
 				if (data.expires)
 					data.expires = Math.max(data.expires, now);
 
@@ -1426,7 +1443,7 @@ export class Space {
 			return { result: 'noAccess', problematicCharacter: initiator.baseInfo.id };
 
 		// Check that characters can join the target space, with or without invitation (this also handles invited character being banned)
-		const canInvite = targetSpace.isAdmin(initiator.baseInfo.account); // TODO: This is wrong
+		const canInvite = targetSpace.canCreateInvite(initiator, 'joinMe') === 'ok';
 		const noAccessCharacter = invitedCharacters.find((c) => targetSpace.checkAllowEnter(c, { ignoreCharacterLimit: true, assumeValidInvite: canInvite }) !== 'ok');
 		if (noAccessCharacter != null)
 			return { result: 'noAccess', problematicCharacter: noAccessCharacter.baseInfo.id };
@@ -1467,7 +1484,7 @@ export class Space {
 		if (precheckError || invitedCharacters.some((c) => !Object.hasOwn(switchStatus.characters, c.baseInfo.id)))
 			return { result: 'failed' };
 
-		const notAllowedCharacter = KnownObject.entries(switchStatus.characters).find(([,s]) => s.permission === 'rejected');
+		const notAllowedCharacter = KnownObject.entries(switchStatus.characters).find(([, s]) => s.permission === 'rejected');
 		if (notAllowedCharacter != null)
 			return { result: 'notAllowed', problematicCharacter: notAllowedCharacter[0] };
 

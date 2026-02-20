@@ -730,7 +730,11 @@ export class Character {
 		// If we are aiming to join a public space, then run early checks for being able to enter it to avoid leaving if it wouldn't be possible anyway
 		if (space != null) {
 			// Must be allowed to join the space
-			const allowResult1 = space.checkAllowEnter(this, { inviteId: invite });
+			const allowResult1 = space.checkAllowEnter(this, {
+				inviteId: invite,
+				assumeValidInvite: coordinator?.assumeInvite ?? false,
+				ignoreCharacterLimit: coordinator?.ignoreCharacterLimit ?? false,
+			});
 
 			if (allowResult1 !== 'ok') {
 				return allowResult1;
@@ -825,7 +829,11 @@ export class Character {
 			// If we are joining a public space, then run checks for being able to enter it
 
 			// Must be allowed to join the space (second check to prevent race conditions)
-			const allowResult2 = space.checkAllowEnter(this, { inviteId: invite });
+			const allowResult2 = space.checkAllowEnter(this, {
+				inviteId: invite,
+				assumeValidInvite: coordinator?.assumeInvite ?? false,
+				ignoreCharacterLimit: coordinator?.ignoreCharacterLimit ?? false,
+			});
 			if (allowResult2 !== 'ok') {
 				// Load us into personal space if second access check failed
 				await this._assignToShard('auto');

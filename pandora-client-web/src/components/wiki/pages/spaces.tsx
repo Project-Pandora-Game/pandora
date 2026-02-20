@@ -261,13 +261,8 @@ export function WikiSpaces(): ReactElement {
 				You will automatically end up in the personal space when your selected character is not in any other space. Restraining
 				effects (also from <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>)
 				will not prevent you from leaving the personal space.<br />
-				There are a few actions that you cannot do in other spaces, only in your personal one:
+				Starting one of Pandora's tutorials can only be done in your personal space.
 			</p>
-			<ul>
-				<li>Seeing a list of other spaces.</li>
-				<li>Setting a character preview as an icon for the character selection screen.</li>
-				<li>Starting one of Pandora's tutorials.</li>
-			</ul>
 
 			<h4 id='SP_Room_inventory'>Room inventory</h4>
 			<p>

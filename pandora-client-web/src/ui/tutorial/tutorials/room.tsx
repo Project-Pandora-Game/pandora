@@ -102,7 +102,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The "Leave" button allows you to leave the current space, change to another character, or completely log out of your account.<br />
+							The "Leave" button allows you to switch or leave the current space, change to another character, or completely log out of your account.<br />
 							Note that if you want to avoid having to log in again the next time, you should not use the "Logout" button, but rather use
 							"Change character" to disconnect from your current space instantly, without leaving it, and then simply close the browser tab or window.
 						</p>

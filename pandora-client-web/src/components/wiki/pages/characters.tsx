@@ -78,12 +78,14 @@ export function WikiCharacters(): ReactElement {
 				This activates a special move mode where one character moves with the other one: Either as if they were glued together
 				(keep relative position) or by following as if on a leash (keep distance). The distance can be configured in the menu.
 				The default values are set based on the current distance between you and the character you want to follow or lead around.
-				The character being lead or following can no longer be moved until anyone stops this movement mode.
+				The character being lead or following can no longer move or be moved (except inside the leashing radius of the according mode) until anyone stops this movement mode.
 			</p>
 			<ul>
 				<li>You can lead several characters at the same time, but you cannot chain following characters.</li>
-				<li>A character can follow another character within the same space, but Pandora will not allow to automatically follow into another space.</li>
+				<li>A character can follow another character within the rooms of the same space</li>
 				<li>A character that has access to a role-restricted pathway can lead another character into the linked room that they would not have been able to move to on their own.</li>
+				<li>When trying to switch spaces from within a space, you can initiate a joint space switch with all characters following you.</li>
+				<li>Other characters following you into another space need to confirm this switch, unless they use a character modifier that makes them automatically accept the request.</li>
 				<li>While having the according <Link to='#CH_Character_permissions'>permission</Link>, other characters are also able to move your character.</li>
 				<li>Space admins are always permitted to move other characters inside their rooms.</li>
 				<li>

@@ -156,15 +156,17 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Button onClick={ () => {
-				navigate('/spaces/search');
-				closeDialog();
-			} } >
-				<img src={ listIcon } />List other spaces
-			</Button>
-			<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
-				<img src={ logoutIcon } />Leave space
-			</Button>
+			<Column>
+				<Button onClick={ () => {
+					navigate('/spaces/search');
+					closeDialog();
+				} } >
+					<img src={ listIcon } />List other spaces
+				</Button>
+				<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
+					<img src={ logoutIcon } />Leave space
+				</Button>
+			</Column>
 		</>
 	);
 }

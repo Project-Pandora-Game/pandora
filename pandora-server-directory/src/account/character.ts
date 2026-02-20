@@ -25,6 +25,7 @@ import type { Shard } from '../shard/shard.ts';
 import { ShardManager } from '../shard/shardManager.ts';
 import type { Space } from '../spaces/space.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
+import type { SpaceSwitchCoordinator } from '../spaces/spaceSwitch.ts';
 import type { Account } from './account.ts';
 
 function GenerateConnectSecret(): string {
@@ -706,10 +707,21 @@ export class Character {
 		}
 	}
 
-	private async _switchSpace(space: Space | null, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
+	private async _switchSpace(space: Space | null, invite?: SpaceInviteId, coordinator?: SpaceSwitchCoordinator): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
 		// Only loaded characters can request leaving a space
 		if (!this.isOnline())
 			return 'failed';
+
+		if (coordinator != null) {
+			Assert(coordinator.newSpace === space);
+
+			if (coordinator.originalSpace !== this.space)
+				return 'failed';
+
+			await coordinator.switchSynchronize(this, 'syncLock');
+			if (coordinator.canceled)
+				return 'failed';
+		}
 
 		// Short-circuit no change
 		if (this.space === space)
@@ -718,11 +730,17 @@ export class Character {
 		// If we are aiming to join a public space, then run early checks for being able to enter it to avoid leaving if it wouldn't be possible anyway
 		if (space != null) {
 			// Must be allowed to join the space
-			const allowResult1 = space.checkAllowEnter(this, invite);
+			const allowResult1 = space.checkAllowEnter(this, { inviteId: invite });
 
 			if (allowResult1 !== 'ok') {
 				return allowResult1;
 			}
+		}
+
+		if (coordinator != null) {
+			await coordinator.switchSynchronize(this, 'enterPrecheck');
+			if (coordinator.canceled)
+				return 'failed';
 		}
 
 		// If we are in a public space, leave it first
@@ -758,6 +776,12 @@ export class Character {
 					AssertNever(restrictionResult.result);
 			}
 
+			if (coordinator != null) {
+				await coordinator.switchSynchronize(this, 'beforeLeave');
+				if (coordinator.canceled)
+					return 'failed';
+			}
+
 			// Actually remove the character from the space
 			await oldSpace.removeCharacter(this, 'leave', this.baseInfo, () => {
 				// Update assignment to make this switch atomic instead of loading into personal space, when switching between two public spaces
@@ -779,22 +803,39 @@ export class Character {
 			// Clean up old space, if it has no more characters
 			await oldSpace.cleanupIfEmpty();
 		} else {
+			if (coordinator != null) {
+				await coordinator.switchSynchronize(this, 'beforeLeave');
+				if (coordinator.canceled)
+					return 'failed';
+			}
+
 			// If in personal space, simply unload
 			await this._unassign();
 		}
 
 		Assert(this.space == null);
 		Assert(this.assignment == null);
+		if (coordinator != null) {
+			await coordinator.switchSynchronize(this, 'left');
+			if (coordinator.canceled)
+				return 'failed';
+		}
 
 		if (space != null) {
 			// If we are joining a public space, then run checks for being able to enter it
 
 			// Must be allowed to join the space (second check to prevent race conditions)
-			const allowResult2 = space.checkAllowEnter(this, invite);
+			const allowResult2 = space.checkAllowEnter(this, { inviteId: invite });
 			if (allowResult2 !== 'ok') {
 				// Load us into personal space if second access check failed
 				await this._assignToShard('auto');
 				return allowResult2;
+			}
+
+			if (coordinator != null) {
+				await coordinator.switchSynchronize(this, 'beforeEnter');
+				if (coordinator.canceled)
+					return 'failed';
 			}
 
 			// Prepare for connection to the shard and start tracking the space (do not actually connect yet)
@@ -841,6 +882,12 @@ export class Character {
 				return 'failed';
 
 		} else {
+			if (coordinator != null) {
+				await coordinator.switchSynchronize(this, 'beforeEnter');
+				if (coordinator.canceled)
+					return 'failed';
+			}
+
 			// If we loading into personal space, simply load onto any shard
 			const loadResult = await this._assignToShard('auto');
 			if (loadResult !== 'ok')
@@ -851,12 +898,12 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async switchSpace(space: Space | null, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
+	public async switchSpace(space: Space | null, invite?: SpaceInviteId, coordinator?: SpaceSwitchCoordinator): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' | 'restricted' | 'inRoomDevice'> {
 		Assert(!this._assignmentChangePending);
 
 		this._assignmentChangePending = true;
 		try {
-			return await this._switchSpace(space, invite);
+			return await this._switchSpace(space, invite, coordinator);
 		} finally {
 			this._assignmentChangePending = false;
 			// If changing this flag can change the state, re-send it

@@ -321,16 +321,23 @@ export const ClientDirectorySchema = {
 			/** Characters being invited along; can be empty */
 			characters: CharacterIdSchema.array(),
 		}),
-		response: z.object({
-			result: z.literal([
-				'ok',
-				'failed', // Generic, usually transient failure - try again later
-				'pendingSwitchExists', // There already is a switch by you - abort it first
-				'notFound', // Target space or some character to invite was not found
-				'noAccess', // No access to the target space
-				'notAllowed', // Not allowed to invite some of the characters
-			]),
-		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal([
+					'ok',
+					'failed', // Generic, usually transient failure - try again later
+					'pendingSwitchExists', // There already is a switch by you - abort it first
+					'notFound', // Target space or some character to invite was not found
+				]),
+			}),
+			z.object({
+				result: z.literal([
+					'noAccess', // No access to the target space
+					'notAllowed', // Not allowed to invite some of the characters
+				]),
+				problematicCharacter: CharacterIdSchema,
+			}),
+		]),
 	},
 	// Group space switch - this message interacts with ongoing switch
 	spaceSwitchCommand: {

@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type IClientDirectoryPromiseResult, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -665,7 +665,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestesd for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, inviteId?: SpaceInviteId, ignore: { characterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
+	public checkAllowEnter(character: Character, opts: { inviteId?: SpaceInviteId; assumeValidInvite?: boolean; ignoreCharacterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'spaceFull';
@@ -676,7 +676,7 @@ export class Space {
 			return 'ok';
 
 		// If the space is full, you cannot enter it (some checks ignore space being full)
-		if (!ignore.characterLimit) {
+		if (!opts.ignoreCharacterLimit) {
 			let maxUsers = this.config.maxUsers;
 			if (this.isOwner(character.baseInfo.account)) {
 				maxUsers += LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
@@ -702,8 +702,10 @@ export class Space {
 			return 'ok';
 
 		// If invite is presented, check it
-		if (inviteId != null) {
-			const invite = this._getValidInvite(character, inviteId);
+		if (opts.assumeValidInvite) {
+			return 'ok';
+		} else if (opts.inviteId != null) {
+			const invite = this._getValidInvite(character, opts.inviteId);
 			// The invite must exist
 			if (!invite)
 				return 'invalidInvite';
@@ -1406,30 +1408,28 @@ export class Space {
 	 * Starts a space switch group
 	 */
 	@AsyncSynchronized('object')
-	public async spaceSwitchStart(initiator: Character, invitedCharacterIds: CharacterId[], targetSpace: Space): Promise<'ok' | 'failed' | 'pendingSwitchExists' | 'notFound' | 'noAccess' | 'notAllowed'> {
+	public async spaceSwitchStart(initiator: Character, invitedCharacterIds: CharacterId[], targetSpace: Space): IClientDirectoryPromiseResult['spaceSwitchStart'] {
 		if (!this.characters.has(initiator))
-			return 'failed';
+			return { result: 'failed' };
 
 		if (this._spaceSwitchStatus.some((s) => s.initiator === initiator.baseInfo.id)) {
-			return 'pendingSwitchExists';
+			return { result: 'pendingSwitchExists' };
 		}
 		const invitedCharacters = Array.from(this.characters).filter((c) => c === initiator || invitedCharacterIds.includes(c.baseInfo.id));
 
 		if (invitedCharacterIds.some((id) => !invitedCharacters.some((c) => c.baseInfo.id === id))) {
-			return 'notFound';
+			return { result: 'notFound' };
 		}
 
 		// Check that we can switch to the target space
-		if (targetSpace.checkAllowEnter(initiator, undefined, { characterLimit: true }) !== 'ok')
-			return 'noAccess';
+		if (targetSpace.checkAllowEnter(initiator, { ignoreCharacterLimit: true }) !== 'ok')
+			return { result: 'noAccess', problematicCharacter: initiator.baseInfo.id };
 
-		// Check that all invited characters are not banned
-		if (invitedCharacters.some((c) => targetSpace.isBanned(c.baseInfo.account)))
-			return 'noAccess';
-
-		// Check that we are either target space admin or all characters can join by themselves
-		if (!targetSpace.isAdmin(initiator.baseInfo.account) && invitedCharacters.some((c) => targetSpace.checkAllowEnter(c, undefined, { characterLimit: true }) !== 'ok'))
-			return 'noAccess';
+		// Check that characters can join the target space, with or without invitation (this also handles invited character being banned)
+		const canInvite = targetSpace.isAdmin(initiator.baseInfo.account); // TODO: This is wrong
+		const noAccessCharacter = invitedCharacters.find((c) => targetSpace.checkAllowEnter(c, { ignoreCharacterLimit: true, assumeValidInvite: canInvite }) !== 'ok');
+		if (noAccessCharacter != null)
+			return { result: 'noAccess', problematicCharacter: noAccessCharacter.baseInfo.id };
 
 		// Check that we are allowed to move each character, otherwise reject altogether
 		const switchStatus: SpaceSwitchStatus = {
@@ -1439,17 +1439,16 @@ export class Space {
 		};
 		const shard = this.assignedShard;
 		if (shard == null)
-			return 'failed';
+			return { result: 'failed' };
 
-		let error: Awaited<ReturnType<typeof this.spaceSwitchStart>> = 'ok';
+		let precheckError = false;
 
 		try {
 			await Promise.all(invitedCharacters.map(async (c) => {
 				const result = await shard.shardConnection?.awaitResponse('spaceSwitchPermissionCheck', { actor: initiator.baseInfo.id, target: c.baseInfo.id });
-				if (result == null) {
-					error = 'failed';
-				} else if (result.result === 'notFound') {
-					error = 'notFound';
+				if (result == null || result.result === 'notFound') {
+					// Fold notFound here, as we check it before already, so it is transient - re-run should result in proper notFound above.
+					precheckError = true;
 				} else if (result.result === 'ok') {
 					switchStatus.characters[c.baseInfo.id] = {
 						accepted: result.permission === 'accept' || result.permission === 'accept-enforce',
@@ -1462,23 +1461,21 @@ export class Space {
 			}));
 		} catch (e) {
 			this.logger.warning('Error checking space switch start character statuses:', e);
-			return 'failed';
+			return { result: 'failed' };
 		}
 
-		if (error !== 'ok')
-			return error;
+		if (precheckError || invitedCharacters.some((c) => !Object.hasOwn(switchStatus.characters, c.baseInfo.id)))
+			return { result: 'failed' };
 
-		if (invitedCharacters.some((c) => !Object.hasOwn(switchStatus.characters, c.baseInfo.id)))
-			return 'failed';
-
-		if (Object.values(switchStatus.characters).some((s) => s.permission === 'rejected'))
-			return 'notAllowed';
+		const notAllowedCharacter = KnownObject.entries(switchStatus.characters).find(([,s]) => s.permission === 'rejected');
+		if (notAllowedCharacter != null)
+			return { result: 'notAllowed', problematicCharacter: notAllowedCharacter[0] };
 
 		this._spaceSwitchStatus.push(switchStatus);
 		this._cleanupSpaceSwitchStatus();
 		await this._assignedShard?.update('spaces');
 
-		return 'ok';
+		return { result: 'ok' };
 	}
 
 	/**

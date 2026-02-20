@@ -22,7 +22,7 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { PersistentToast } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
+import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceCharacters, useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from '../spaceConfiguration/spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from '../spaceConfiguration/spaceOwnershipRemoval.tsx';
 import { SpaceRoleDropButton } from '../spaceConfiguration/spaceRoleDrop.tsx';
@@ -182,6 +182,7 @@ function GuardedJoinButton({ info, hide, invite }: {
 	const confirm = useConfirmDialog();
 	const navigate = useNavigatePandora();
 	const space = useSpaceInfoOptional();
+	const spaceCharacters = useSpaceCharacters();
 
 	const { player, globalState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
@@ -299,16 +300,23 @@ function GuardedJoinButton({ info, hide, invite }: {
 					SpaceJoinProgress.show('error', 'You are already attempting to switch spaces. Cancel the pending switch first.');
 					break;
 				case 'notFound':
-					SpaceJoinProgress.show('error', 'Space not found');
+					SpaceJoinProgress.show('error', 'Space or one of invited characters were not found.');
 					break;
 				case 'noAccess':
-					SpaceJoinProgress.show('error', 'No access');
+					if (resp.problematicCharacter === player.id) {
+						SpaceJoinProgress.show('error', 'You cannot join this space.');
+					} else {
+						const character = spaceCharacters.find((c) => c.id === resp.problematicCharacter);
+						SpaceJoinProgress.show('error', `Cannot join this space, because ${ character?.data.name ?? '[UNKNOWN]' } (${resp.problematicCharacter}) cannot join this space.`);
+					}
 					break;
-				case 'notAllowed':
-					SpaceJoinProgress.show('error', 'You are missing permission(s) to invite the selected characters');
+				case 'notAllowed': {
+					const character = spaceCharacters.find((c) => c.id === resp.problematicCharacter);
+					SpaceJoinProgress.show('error', `You are missing permission to invite ${ character?.data.name ?? '[UNKNOWN]' } (${resp.problematicCharacter}).`);
 					break;
+				}
 				default:
-					AssertNever(resp.result);
+					AssertNever(resp);
 			}
 		},
 		{

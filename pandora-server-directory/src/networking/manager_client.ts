@@ -516,7 +516,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Check if the account is allowed to see the details
 		if (!space.checkExtendedInfoVisibleTo(connection.account)) {
 			// Show details if the character can enter anyway (an invite is presented, it might still succeed)
-			const allowResult = space.checkAllowEnter(connection.character, invite, { characterLimit: true });
+			const allowResult = space.checkAllowEnter(connection.character, { inviteId: invite, ignoreCharacterLimit: true });
 
 			if (allowResult !== 'ok') {
 				return { result: 'noAccess' };
@@ -612,8 +612,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const result = await currentSpace.spaceSwitchStart(character, characters, targetSpace);
-		return { result };
+		return await currentSpace.spaceSwitchStart(character, characters, targetSpace);
 	}
 
 	private async handleSpaceSwitchCommand({ initiator, command }: IClientDirectoryArgument['spaceSwitchCommand'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceSwitchCommand'] {

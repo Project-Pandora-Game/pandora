@@ -114,10 +114,10 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 					toast('Space or invitation not found', TOAST_OPTIONS_ERROR);
 					break;
 				case 'noAccess':
-					toast('No access', TOAST_OPTIONS_ERROR);
+					toast(<>Cannot join this space, because at least one of the involved characters cannot enter it.<br />To see which character is causing the issue cancel this switch and start it over.</>, TOAST_OPTIONS_ERROR);
 					break;
 				case 'spaceFull':
-					toast('Space is full', TOAST_OPTIONS_ERROR);
+					toast('Not all invited characters can fit into the target space.', TOAST_OPTIONS_ERROR);
 					break;
 				case 'notReady':
 					toast('All invited characters must be ready before switching spaces', TOAST_OPTIONS_ERROR);

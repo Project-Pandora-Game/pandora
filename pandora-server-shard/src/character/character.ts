@@ -545,6 +545,8 @@ export class Character {
 			restriction: null,
 		};
 
+		const restrictionManager = this.getRestrictionManager();
+
 		// Check if initiator has appropriate permission for space switch
 		if (this.id === initiator.id) {
 			result.permission = 'accept-enforce';
@@ -562,15 +564,23 @@ export class Character {
 			});
 
 			if (check.valid) {
-				result.permission = 'prompt';
-				// TODO: Implement auto-accept modifier
+				let autoApprove = false;
+				let enforce = false;
+
+				for (const e of restrictionManager.getModifierEffectsByType('misc_space_switch_auto_approve')) {
+					if (e.config.characters.length === 0 || e.config.characters.includes(initiator.id)) {
+						autoApprove = true;
+						enforce ||= e.config.enforce;
+					}
+				}
+
+				result.permission = enforce ? 'accept-enforce' : autoApprove ? 'accept' : 'prompt';
 			} else {
 				result.permission = 'rejected';
 			}
 		}
 
 		// Check restrictions
-		const restrictionManager = this.getRestrictionManager();
 		const inPublicSpace = this.getCurrentPublicSpaceId() != null;
 
 		if (restrictionManager.getRoomDeviceLink() != null) {

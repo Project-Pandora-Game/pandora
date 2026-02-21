@@ -62,14 +62,7 @@ export type SpaceSwitchCharacterClientStatus = z.infer<typeof SpaceSwitchCharact
 /**
  * The summary status of a space switch group, seen by client.
  */
-export const SpaceSwitchClientStatusSchema = z.object({
-	/** The space we are switching to; cannot change. */
-	targetSpace: SpaceIdSchema,
-	/** The character that started this switch. Also acts as unique identifier of this switch group. */
-	initiator: CharacterIdSchema,
-	/** Characters involved in this switch. Must include `initiator` as well. */
-	characters: z.record(CharacterIdSchema, SpaceSwitchCharacterClientStatusSchema),
-});
+export const SpaceSwitchClientStatusSchema = SpaceSwitchStatusSchema;
 export type SpaceSwitchClientStatus = z.infer<typeof SpaceSwitchClientStatusSchema>;
 
 /** Translates server per-character status to simpler client-visible status. */

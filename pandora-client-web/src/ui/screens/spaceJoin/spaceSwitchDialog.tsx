@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever, CHARACTER_SETTINGS_DEFAULT, GetLogger, KnownObject, type SpaceSwitchClientStatus, type SpaceSwitchCommand } from 'pandora-common';
+import { AssertNever, CHARACTER_SETTINGS_DEFAULT, GetLogger, KnownObject, SpaceSwitchResolveCharacterStatusToClientStatus, type SpaceSwitchClientStatus, type SpaceSwitchCommand } from 'pandora-common';
 import { Fragment, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -71,19 +71,16 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 					// Nothing to show
 					break;
 				case 'failed':
-					toast('Error joining the space, try again later', TOAST_OPTIONS_ERROR);
+					toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
 					break;
 				case 'notFound':
 					toast('Invitation not found', TOAST_OPTIONS_ERROR);
 					break;
-				case 'noAccess':
-					toast('No access', TOAST_OPTIONS_ERROR);
-					break;
 				case 'notAllowed':
-					toast('No access', TOAST_OPTIONS_ERROR);
+					toast('You are not allowed to do this action.', TOAST_OPTIONS_ERROR);
 					break;
 				case 'restricted':
-					toast('An item is preventing you from leaving the current space', TOAST_OPTIONS_ERROR);
+					toast('An item or a character modifier is preventing you from doing this action.', TOAST_OPTIONS_ERROR);
 					break;
 				default:
 					AssertNever(resp.result);
@@ -174,6 +171,7 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 				<div>Ready status of invited characters:</div>
 				<GridContainer padding='medium' templateColumns='minmax(max-content, 1fr) minmax(max-content, 1fr) auto' alignItemsX='start' alignItemsY='center'>
 					{ KnownObject.entries(status.characters).map(([id, characterStatus]) => {
+						const resolvedStatus = SpaceSwitchResolveCharacterStatusToClientStatus(characterStatus);
 						const character = charactersData.find((c) => c.id === id);
 
 						return (
@@ -184,13 +182,13 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 									<div>[UNKNOWN] ({ id })</div>
 								) }
 								<div>
-									{ characterStatus === 'loading' ? <i>Loading...</i> :
-										characterStatus === 'leaveRestricted' ? '❌ Cannot leave because of a worn item' :
-										characterStatus === 'inRoomDevice' ? '❌ Cannot leave while in a room device' :
-										characterStatus === 'rejected' ? '❌ Missing permission to invite' :
-										characterStatus === 'wait' ? '⏳ Waiting for confirmation' :
-										characterStatus === 'ready' ? '✅ Ready' :
-										AssertNever(characterStatus) }
+									{ resolvedStatus === 'loading' ? <i>Loading...</i> :
+										resolvedStatus === 'leaveRestricted' ? '❌ Cannot leave because of a worn item' :
+										resolvedStatus === 'inRoomDevice' ? '❌ Cannot leave while in a room device' :
+										resolvedStatus === 'rejected' ? '❌ Missing permission to invite' :
+										resolvedStatus === 'wait' ? '⏳ Waiting for confirmation' :
+										resolvedStatus === 'ready' ? '✅ Ready' :
+										AssertNever(resolvedStatus) }
 								</div>
 								{ status.initiator === playerId && id !== playerId ? (
 									<IconButton
@@ -224,7 +222,7 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 							onClick={ () => {
 								doTheSwitch();
 							} }
-							disabled={ processing || Object.values(status.characters).some((s) => s !== 'ready') }
+							disabled={ processing || Object.values(status.characters).some((s) => SpaceSwitchResolveCharacterStatusToClientStatus(s) !== 'ready') }
 						>
 							Go!
 						</Button>
@@ -235,26 +233,26 @@ function SpaceSwitchDialog({ status, initiator }: SpaceSwitchDialogProps): React
 							onClick={ () => {
 								doCommand({ command: 'reject' });
 							} }
-							disabled={ processing }
+							disabled={ processing || ownStatus?.permission === 'accept-enforce' }
 						>
 							Reject
 						</Button>
-						<SelectionIndicator padding='tiny' selected={ ownStatus === 'wait' } active={ ownStatus != null && ownStatus !== 'ready' }>
+						<SelectionIndicator padding='tiny' selected={ ownStatus != null && !ownStatus.accepted } active={ ownStatus != null && SpaceSwitchResolveCharacterStatusToClientStatus(ownStatus) !== 'ready' }>
 							<Button
 								onClick={ () => {
 									doCommand({ command: 'setAccepted', accepted: false });
 								} }
-								disabled={ processing }
+								disabled={ processing || ownStatus == null || ownStatus.permission === 'accept-enforce' }
 							>
 								Wait
 							</Button>
 						</SelectionIndicator>
-						<SelectionIndicator padding='tiny' selected={ ownStatus === 'ready' }>
+						<SelectionIndicator padding='tiny' selected={ ownStatus != null && ownStatus.accepted }>
 							<Button
 								onClick={ () => {
 									doCommand({ command: 'setAccepted', accepted: true });
 								} }
-								disabled={ processing }
+								disabled={ processing || ownStatus == null || ownStatus.permission === 'rejected' }
 							>
 								Accept
 							</Button>

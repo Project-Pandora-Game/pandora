@@ -28,7 +28,6 @@ import {
 	IClientMessage,
 	IShardClient,
 	IsNotNullable,
-	KnownObject,
 	Logger,
 	ServerRoom,
 	SpaceCharacterModifierEffectCalculateUpdate,
@@ -36,7 +35,6 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 	SpaceLoadData,
-	SpaceSwitchResolveCharacterStatusToClientStatus,
 	type AppearanceActionProcessingResultValid,
 	type ChatMessage,
 	type ChatMessageAction,
@@ -50,7 +48,6 @@ import {
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
 	type SpaceStateBundle,
-	type SpaceSwitchClientStatus,
 	type SpaceSwitchStatus,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
@@ -277,19 +274,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			...this.config,
 			owners: this.owners.slice(),
 			ownerInvites: this.ownerInvites.slice(),
-			spaceSwitchStatus: this.spaceSwitchStatus.map((status) => {
-				const clientStatus: SpaceSwitchClientStatus = {
-					targetSpace: status.targetSpace,
-					initiator: status.initiator,
-					characters: {},
-				};
-
-				for (const [id, characterStatus] of KnownObject.entries(status.characters)) {
-					clientStatus.characters[id] = SpaceSwitchResolveCharacterStatusToClientStatus(characterStatus);
-				}
-
-				return clientStatus;
-			}),
+			spaceSwitchStatus: CloneDeepMutable(this.spaceSwitchStatus),
 		};
 	}
 

@@ -1499,7 +1499,7 @@ export class Space {
 	 * Performs a command on space switch group
 	 */
 	@AsyncSynchronized('object')
-	public async spaceSwitchCommand(character: Character, initiator: CharacterId, command: SpaceSwitchCommand): Promise<'ok' | 'notFound' | 'failed' | 'noAccess' | 'notAllowed' | 'restricted'> {
+	public async spaceSwitchCommand(character: Character, initiator: CharacterId, command: SpaceSwitchCommand): Promise<'ok' | 'failed' | 'notFound' | 'notAllowed' | 'restricted'> {
 		if (!this.characters.has(character))
 			return 'failed';
 
@@ -1509,7 +1509,7 @@ export class Space {
 
 		if (command.command === 'abort') {
 			if (character.baseInfo.id !== status.initiator)
-				return 'noAccess';
+				return 'notAllowed';
 
 			const index = this._spaceSwitchStatus.indexOf(status);
 			Assert(index >= 0);
@@ -1520,7 +1520,7 @@ export class Space {
 			return 'ok';
 		} else if (command.command === 'removeCharacter') {
 			if (character.baseInfo.id !== status.initiator)
-				return 'noAccess';
+				return 'notAllowed';
 			// Cannot remove initiator (use abort instead)
 			if (command.character === status.initiator)
 				return 'failed';

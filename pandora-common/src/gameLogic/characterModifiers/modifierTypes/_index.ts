@@ -27,6 +27,7 @@ import { effect_hearing } from './effect_hearing.ts';
 import { effect_slow_wardrobe_actions } from './effect_slow_wardrobe_actions.ts';
 import { effect_speech_garble } from './effect_speech_garble.ts';
 import { hearing_selective_deprivation } from './hearing_selective_deprivation.ts';
+import { misc_space_switch_auto_approve } from './misc_space_switch_auto_approve.ts';
 import { setting_chat_action_log } from './setting_chat_action_log.ts';
 import { setting_room_focus } from './setting_room_focus.ts';
 import { speech_ban_words } from './speech_ban_words.ts';
@@ -64,6 +65,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_slow_wardrobe_actions,
 	effect_speech_garble,
 	hearing_selective_deprivation,
+	misc_space_switch_auto_approve,
 	setting_chat_action_log,
 	setting_room_focus,
 	speech_ban_words,

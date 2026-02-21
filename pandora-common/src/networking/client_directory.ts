@@ -350,9 +350,8 @@ export const ClientDirectorySchema = {
 		response: z.object({
 			result: z.literal([
 				'ok',
-				'notFound', // The space or space switch group was not found (e.g. if it disappeared before client got update)
 				'failed', // Generic, usually transient failure - try again later
-				'noAccess', // Some character does not have access to target space, only in response to "go" when re-check discovered this issue
+				'notFound', // The space or space switch group was not found (e.g. if it disappeared before client got update)
 				'notAllowed', // You cannot do this action (e.g. you are not the initiator, or you are trying to set something that initiator can't)
 				'restricted', // You cannot do this action (e.g. restricted by modifier)
 			]),

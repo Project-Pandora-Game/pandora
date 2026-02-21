@@ -21,7 +21,7 @@ import { useDirectoryConnector } from '../../../components/gameContext/directory
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { PersistentToast } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceCharacters, useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from '../spaceConfiguration/spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from '../spaceConfiguration/spaceOwnershipRemoval.tsx';
@@ -177,11 +177,12 @@ function GuardedJoinButton({ info, hide, invite }: {
 	hide?: () => void;
 	invite?: SpaceInvite;
 }): ReactElement {
-	const spaceId = info.id;
-	const directoryConnector = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const navigate = useNavigatePandora();
-	const space = useSpaceInfoOptional();
+	const directoryConnector = useDirectoryConnector();
+
+	const { alwaysUseSpaceSwitchFlow } = useAccountSettings();
+	const currentSpace = useSpaceInfoOptional();
 	const spaceCharacters = useSpaceCharacters();
 
 	const { player, globalState } = usePlayerState();
@@ -339,7 +340,7 @@ function GuardedJoinButton({ info, hide, invite }: {
 		);
 	}
 
-	if (space?.id === null) {
+	if (currentSpace?.id === null) {
 		return (
 			<Button
 				disabled={ processing }
@@ -350,7 +351,7 @@ function GuardedJoinButton({ info, hide, invite }: {
 		);
 	}
 
-	if (space?.id === spaceId) {
+	if (currentSpace?.id === info.id) {
 		return (
 			<Button disabled>
 				You are already inside this space
@@ -374,7 +375,7 @@ function GuardedJoinButton({ info, hide, invite }: {
 		);
 	}
 
-	if (followingCharacters.length > 0) {
+	if (currentSpace?.id != null && (followingCharacters.length > 0 || alwaysUseSpaceSwitchFlow)) {
 		return (
 			<Button
 				disabled={ processing }

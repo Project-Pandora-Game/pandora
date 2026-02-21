@@ -146,6 +146,11 @@ export const AccountSettingsSchema = z.object({
 	 * Setting this to `null` disables the limit.
 	 */
 	chatMaxShownMessages: z.int().positive().nullable(),
+	/**
+	 * If set, the "space switch flow" (`SpaceSwitchStatus`) will always be used when moving from one space to another,
+	 * even if not inviting anyone along.
+	 */
+	alwaysUseSpaceSwitchFlow: z.boolean(),
 	notificationGlobalSettings: ClientNotificationGlobalSettingsSchema,
 	notificationTypeSettings: NotificationTypesSettingsSchema,
 	/**
@@ -190,6 +195,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
 	chatMaxShownMessages: 100,
+	alwaysUseSpaceSwitchFlow: false,
 	notificationGlobalSettings: {
 		sound: {
 			sound: '',

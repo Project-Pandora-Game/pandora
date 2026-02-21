@@ -13,6 +13,7 @@ import { Column, Row } from '../common/container/container.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
 import { useConfirmDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { ContextHelpButton } from '../help/contextHelpButton.tsx';
 import { SelectAccountSettings, ToggleAccountSetting, useAccountSettingDriver } from './helpers/accountSettings.tsx';
 import { NumberSettingInput } from './helpers/settingsInputs.tsx';
 
@@ -28,6 +29,7 @@ export function InterfaceSettings(): ReactElement | null {
 			<ChatroomSettings />
 			<RoomGraphicsSettings />
 			<WardrobeSettings />
+			<SpaceSearchSettings />
 			<TutorialSettings />
 		</>
 	);
@@ -404,6 +406,32 @@ const ITEM_DISPLAY_NAME_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeItemDi
 	original: 'Original name',
 	custom_with_original_in_brackets: 'Custom name (Original name)',
 };
+
+function SpaceSearchSettings(): ReactElement {
+	return (
+		<fieldset>
+			<legend>Space search UI</legend>
+			<Column gap='large'>
+				<ToggleAccountSetting
+					setting='alwaysUseSpaceSwitchFlow'
+					label={ (
+						<Row alignY='center'>
+							Always use space switch ready check when moving between spaces
+							<ContextHelpButton>
+								Enabling this setting will always create a space invitation confirmation dialog
+								when moving from any space (except your personal one) to a different space,
+								even if there are no characters following you, which would usually cause the confirmation dialog.
+
+								This is useful if you want to make sure you missed nothing that happened in your currnet space,
+								while you were looking at the space search.
+							</ContextHelpButton>
+						</Row>
+					) }
+				/>
+			</Column>
+		</fieldset>
+	);
+}
 
 function TutorialSettings(): ReactElement {
 	const { tutorialCompleted } = useAccountSettings();

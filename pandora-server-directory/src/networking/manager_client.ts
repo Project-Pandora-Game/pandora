@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, throttle } from 'lodash-es';
 import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
@@ -27,6 +27,8 @@ const {
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
+/** Time (in ms) of how often to send space list update notification, at most */
+export const SPACE_LIST_CHANGE_UPDATE_INTERVAL = 30_000;
 
 /**
  * The constant time in milliseconds for the login, register, ...
@@ -1173,13 +1175,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
-	public onSpaceListChange(): void {
+	private readonly _throttledOnSpaceListChange = throttle(() => {
 		for (const connection of this.connectedClients) {
-			// Only send updates to connections that can see the list (have character, but aren't in a public space)
-			if (connection.character && !connection.character.space) {
+			// Only send updates to connections that can see the list (have character)
+			if (connection.character) {
 				connection.sendMessage('somethingChanged', { changes: ['spaceList'] });
 			}
 		}
+	}, SPACE_LIST_CHANGE_UPDATE_INTERVAL);
+
+	public onSpaceListChange(): void {
+		this._throttledOnSpaceListChange();
 	}
 
 	public onShardListChange(): void {

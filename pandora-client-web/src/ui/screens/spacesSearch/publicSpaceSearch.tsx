@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { GetLogger, LIMIT_SPACE_SEARCH_COUNT, SPACE_ACTIVITY_SCORE_THRESHOLD, SpaceSearchArgumentsSchema, SpaceSearchSortSchema, ZodMatcher, type SpaceSearchArguments, type SpaceSearchResult, type SpaceSearchResultEntry, type SpaceSearchSort } from 'pandora-common';
 import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
-import { Navigate } from 'react-router';
 import * as z from 'zod';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
@@ -13,7 +12,6 @@ import { useDirectoryConnector } from '../../../components/gameContext/directory
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput, useStateSettingDriver, useValueMapDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import { SPACE_SEARCH_PUBLIC_ICONS, SPACE_SEARCH_PUBLIC_LABELS } from './spacesSearch.tsx';
@@ -38,17 +36,6 @@ generateSpaceSearchCountOptions: for (let i = 10; ; i *= 10) {
 }
 
 export function PublicSpaceSearch(): ReactElement {
-	const spaceInfo = useSpaceInfoOptional();
-
-	// Spaces search is only accessible when inside player's personal space
-	if (spaceInfo?.id != null) {
-		return <Navigate to='/room' />;
-	}
-
-	return <PublicSpaceSearchInner />;
-}
-
-function PublicSpaceSearchInner(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const navigate = useNavigatePandora();
 	const isNarrowScreen = useIsNarrowScreen();

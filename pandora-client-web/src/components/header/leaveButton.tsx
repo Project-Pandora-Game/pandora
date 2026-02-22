@@ -96,12 +96,14 @@ function SpaceLeave(): ReactElement {
 				) : player ? (
 					<>
 						<span>Currently in { player.name }'s personal space</span>
-						<Button onClick={ () => {
-							navigate('/spaces/search');
-							closeDialog();
-						} } >
-							<img src={ listIcon } />List other spaces
-						</Button>
+						<Column alignX='end'>
+							<Button onClick={ () => {
+								navigate('/spaces/search');
+								closeDialog();
+							} } >
+								<img src={ listIcon } />List other spaces
+							</Button>
+						</Column>
 					</>
 				) : (
 					<span>No character selected</span>
@@ -156,7 +158,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Column gap='none'>
+			<Row reverse alignX='space-between' wrap='reverse'>
 				<Button onClick={ () => {
 					navigate('/spaces/search');
 					closeDialog();
@@ -166,7 +168,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 				<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
 					<img src={ logoutIcon } />Leave space
 				</Button>
-			</Column>
+			</Row>
 		</>
 	);
 }
@@ -193,9 +195,11 @@ function CharacterLeave(): ReactElement {
 					<>
 						<span>Name: { characterName ?? `[Character ${selectedCharacter.characterId}]` }</span>
 						<span className='unimportant'>Id: { selectedCharacter.characterId }</span>
-						<Button onClick={ onClick }>
-							<img src={ peopleIcon } />Change character
-						</Button>
+						<Column alignX='end'>
+							<Button onClick={ onClick }>
+								<img src={ peopleIcon } />Change character
+							</Button>
+						</Column>
 					</>
 				) : (
 					<span>No character selected</span>
@@ -226,9 +230,11 @@ function AccountLeave(): ReactElement {
 						<span>Display name: { currentAccount.displayName }</span>
 						<span>Username: { currentAccount.username }</span>
 						<span className='unimportant'>Id: { currentAccount.id }</span>
-						<Button onClick={ onClick }>
-							<img src={ onoffIcon } />Logout
-						</Button>
+						<Column alignX='end'>
+							<Button onClick={ onClick }>
+								<img src={ onoffIcon } />Logout
+							</Button>
+						</Column>
 					</>
 				) : (
 					<span>Not logged in</span>

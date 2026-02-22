@@ -4,7 +4,7 @@
 	fieldset {
 		display: flex;
 		flex-flow: column;
-		width: min(30em, 80vw);
+		width: min(32em, 80vw);
 		user-select: text;
 		border-color: common.$theme-separator;
 
@@ -24,7 +24,6 @@
 
 		button {
 			margin-top: common.spacing('medium');
-			margin-left: auto;
 			width: 14em;
 			user-select: none;
 		}

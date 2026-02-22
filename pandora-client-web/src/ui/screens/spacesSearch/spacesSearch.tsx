@@ -41,6 +41,7 @@ const TIPS: readonly string[] = [
 	`Cannot move a character because the name is covered? Enter move mode in the "Room"-tab's character menu.`,
 	`A double-click/double-tap inside the room will reset the camera to fit the room to the screen.`,
 	`You can whisper to multiple characters at once. Check the "Chat" section of the wiki to find out how.`,
+	`You can auto-approve space switch requests from specific characters with a character modifier.`,
 ];
 
 export function SpacesSearch(): ReactElement {

@@ -156,7 +156,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Column>
+			<Column gap='none'>
 				<Button onClick={ () => {
 					navigate('/spaces/search');
 					closeDialog();

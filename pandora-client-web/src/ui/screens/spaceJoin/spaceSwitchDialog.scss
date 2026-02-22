@@ -1,6 +1,24 @@
+@use '../../../styles/common';
+
 .SpaceSwitchDialog {
 	.characterRemoveButton {
 		width: 2em;
 		height: 2em;
+	}
+
+	.SpaceInviteEmbedText, .SpaceInviteEmbed {
+		border: 1px solid common.$theme-separator;
+
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+	}
+
+	table {
+		border-collapse: collapse;
+
+		td {
+			border: none;
+		}
 	}
 }

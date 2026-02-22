@@ -144,6 +144,10 @@ table {
 		&.noPadding {
 			padding: 0;
 		}
+
+		&.align-start {
+			text-align: start;
+		}
 	}
 
 	th {

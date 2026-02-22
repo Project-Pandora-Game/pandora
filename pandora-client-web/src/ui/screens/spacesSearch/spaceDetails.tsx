@@ -30,12 +30,14 @@ import './spacesSearch.scss';
 
 const SpaceJoinProgress = new PersistentToast();
 
-export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Close' }: {
+export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Close', viewOnly = false }: {
 	info: SpaceListExtendedInfo;
 	hasFullInfo: boolean;
-	hide?: () => void;
+	hide: () => void;
 	invite?: SpaceInvite;
 	closeText?: string;
+	/** If set, the dialog will not offer any options regarded to switching - only display details */
+	viewOnly?: boolean;
 }): ReactElement {
 	const contacts = useAccountContacts('friend');
 	const blockedAccounts = useAccountContacts('blocked');
@@ -148,26 +150,33 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Clo
 					</div>
 				)
 			}
-			<Row padding='medium' className='buttons' alignX='space-between' alignY='center' wrap>
-				{
-					hide && (
-						<Button onClick={ (e) => {
-							e.stopPropagation();
-							hide();
-						} }>
-							{ closeText }
-						</Button>
-					)
-				}
-				{ userIsOwner ? (
-					<SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } />
-				) : info.isAdmin ? (
-					<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='admin' />
-				) : info.isAllowed ? (
-					<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='allowlisted' />
-				) : null }
-				<GuardedJoinButton info={ info } hide={ hide } invite={ invite } />
-			</Row>
+			{ viewOnly ? (
+				<Row padding='medium' className='buttons' alignX='center' alignY='center' wrap>
+					<Button onClick={ (e) => {
+						e.stopPropagation();
+						hide();
+					} }>
+						{ closeText }
+					</Button>
+				</Row>
+			) : (
+				<Row padding='medium' className='buttons' alignX='space-between' alignY='center' wrap>
+					<Button onClick={ (e) => {
+						e.stopPropagation();
+						hide();
+					} }>
+						{ closeText }
+					</Button>
+					{ userIsOwner ? (
+						<SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } />
+					) : info.isAdmin ? (
+						<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='admin' />
+					) : info.isAllowed ? (
+						<SpaceRoleDropButton buttonClassName='slim' id={ info.id } name={ info.name } role='allowlisted' />
+					) : null }
+					<GuardedJoinButton info={ info } hide={ hide } invite={ invite } />
+				</Row>
+			) }
 		</div>
 	);
 }

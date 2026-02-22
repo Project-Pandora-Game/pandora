@@ -418,12 +418,15 @@ function SpaceSearchSettings(): ReactElement {
 						<Row alignY='center'>
 							Always use space switch ready check when moving between spaces
 							<ContextHelpButton>
-								Enabling this setting will always create a space invitation confirmation dialog
-								when moving from any space (except your personal one) to a different space,
-								even if there are no characters following you, which would usually cause the confirmation dialog.
-
-								This is useful if you want to make sure you missed nothing that happened in your currnet space,
-								while you were looking at the space search.
+								<p>
+									Enabling this setting will always create a space switch confirmation dialog
+									when moving from any space (except your personal one) to a different space,<br />
+									even if there are no characters following you, which would usually cause the confirmation dialog.
+								</p>
+								<p>
+									This is useful if you want to make sure that you missed nothing happening in your current space,
+									while you were looking at the space search.
+								</p>
 							</ContextHelpButton>
 						</Row>
 					) }

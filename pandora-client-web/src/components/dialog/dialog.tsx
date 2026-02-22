@@ -177,7 +177,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 export interface DraggableDialogProps {
 	children?: ReactNode;
 	className?: string;
-	title: string;
+	title: ReactNode;
 	/**
 	 * Whether this dialog should have a modal containing overlay on top of which it is positioned.
 	 * @default false

@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { AssertNever, SpaceId, type SpaceExtendedInfoResponse, type SpaceInviteId } from 'pandora-common';
+import { AssertNever, SpaceId, type CharacterId, type SpaceExtendedInfoResponse, type SpaceInviteId } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
@@ -14,9 +14,15 @@ export const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['
 	noCharacter: 'You need to have a character selected to view invite details',
 };
 
-export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceInviteId; }): ReactElement {
+export function SpaceInviteEmbed({ spaceId, invite, invitedBy, viewOnly = false }: {
+	spaceId: SpaceId;
+	invite?: SpaceInviteId;
+	invitedBy?: CharacterId;
+	/** If set, the dialog will not offer any options regarded to switching - only display details */
+	viewOnly?: boolean;
+}): ReactElement {
 	const [open, setOpen] = React.useState(false);
-	const info = useSpaceExtendedInfo(spaceId, invite);
+	const info = useSpaceExtendedInfo(spaceId, { invite, invitedBy });
 
 	if (info == null) {
 		return (
@@ -97,7 +103,13 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: SpaceId; invite
 			</button>
 			{ open ? (
 				<ModalDialog>
-					<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => setOpen(false) } />
+					<SpaceDetails
+						info={ info.data }
+						hasFullInfo
+						invite={ info.invite }
+						hide={ () => setOpen(false) }
+						viewOnly={ viewOnly }
+					/>
 				</ModalDialog>
 			) : null }
 		</>

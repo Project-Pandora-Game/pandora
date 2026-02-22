@@ -502,11 +502,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleSpaceGetInfo({ id, invite }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
+	private async handleSpaceGetInfo({ id, invite, invitedBy }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
 		if (!connection.isLoggedIn() || !connection.character) {
 			return { result: 'noCharacter' };
 		}
 
+		const character = connection.character;
 		const space = await SpaceManager.loadSpace(id);
 
 		if (!space) {
@@ -515,8 +516,29 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Check if the account is allowed to see the details
 		if (!space.checkExtendedInfoVisibleTo(connection.account)) {
+			// If we are invited by someone, check if we can assume valid invitation
+			let assumeValidInvite = false;
+			if (invitedBy != null) {
+				const currentSpace = character.space;
+				if (currentSpace != null) {
+					const invitation = currentSpace.spaceSwitchStatus.find((s) => s.initiator === invitedBy);
+					const invitationInitiator = Array.from(currentSpace.characters).find((c) => c.baseInfo.id === invitedBy);
+					if (invitation != null &&
+						// We are invited to the target space
+						Object.hasOwn(invitation.characters, character.baseInfo.id) &&
+						invitation.targetSpace === space.id &&
+						// Initiator is present, can see the space themselves, and can invite
+						invitationInitiator != null &&
+						space.checkAllowEnter(invitationInitiator, { ignoreCharacterLimit: true }) === 'ok' &&
+						space.canCreateInvite(invitationInitiator, 'joinMe') === 'ok'
+					) {
+						assumeValidInvite = true;
+					}
+				}
+			}
+
 			// Show details if the character can enter anyway (an invite is presented, it might still succeed)
-			const allowResult = space.checkAllowEnter(connection.character, { inviteId: invite, ignoreCharacterLimit: true });
+			const allowResult = space.checkAllowEnter(connection.character, { inviteId: invite, assumeValidInvite, ignoreCharacterLimit: true });
 
 			if (allowResult !== 'ok') {
 				return { result: 'noAccess' };

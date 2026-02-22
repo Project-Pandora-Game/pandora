@@ -50,7 +50,7 @@ export function SpaceJoin(): ReactElement {
 }
 
 function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceInviteId; }): ReactElement {
-	const info = useSpaceExtendedInfo(spaceId, invite);
+	const info = useSpaceExtendedInfo(spaceId, { invite });
 	const navigate = useNavigatePandora();
 
 	if (info === undefined) {

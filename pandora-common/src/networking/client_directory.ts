@@ -396,7 +396,10 @@ export const ClientDirectorySchema = {
 	spaceGetInfo: {
 		request: z.object({
 			id: SpaceIdSchema,
+			/** Use invitation link to get access to info if we otherwise wouldn't be able to */
 			invite: SpaceInviteIdSchema.optional(),
+			/** Use ongoing space invitation to get access to info if we otherwise wouldn't be able to */
+			invitedBy: CharacterIdSchema.optional(),
 		}),
 		response: ZodCast<SpaceExtendedInfoResponse>(),
 	},

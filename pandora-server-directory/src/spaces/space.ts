@@ -1332,7 +1332,7 @@ export class Space {
 			Assert(character.assignment.space === this);
 			shard.characters.set(character.baseInfo.id, character);
 		}
-		await shard.update('spaces', 'characters');
+		await shard.update('spaces', 'characters', this.pendingMessages.length > 0 ? 'messages' : null);
 		for (const character of this.trackingCharacters) {
 			Assert(character.assignment?.type === 'space-tracking' || character.assignment?.type === 'space-joined');
 			Assert(character.assignment.space === this);

@@ -308,12 +308,16 @@ export class Shard {
 	private updateReasons = new Set<keyof IDirectoryShardUpdate>();
 	private updatePending: ManuallyResolvedPromise<void> | null = null;
 
-	public update(...reasons: (keyof IDirectoryShardUpdate)[]): Promise<void> {
+	public update(...reasons: (keyof IDirectoryShardUpdate | null)[]): Promise<void> {
 		Assert(this._registered);
 		if (this.stopping)
 			return Promise.resolve();
 
-		reasons.forEach((r) => this.updateReasons.add(r));
+		for (const r of reasons) {
+			if (r != null) {
+				this.updateReasons.add(r);
+			}
+		}
 		if (this.updatePending == null) {
 			this.updatePending = CreateManuallyResolvedPromise();
 			setTimeout(() => {

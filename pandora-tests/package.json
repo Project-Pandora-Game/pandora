@@ -24,7 +24,7 @@
 		"@types/node": "24.10.13",
 		"express": "5.2.1",
 		"mailparser": "3.9.3",
-		"nyc": "17.1.0",
+		"nyc": "18.0.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",

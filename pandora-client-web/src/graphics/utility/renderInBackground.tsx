@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { ForwardingErrorBoundary } from '../../components/error/forwardingErrorBoundary.tsx';
 import { DEFAULT_BACKGROUND_COLOR, ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
 import { GraphicsSuspenseContext, GraphicsSuspenseManager } from '../graphicsSuspense/graphicsSuspense.tsx';
+import { PixiAppContext } from '../reconciler/appContext.ts';
 import { CreatePixiRoot } from '../reconciler/reconciler.ts';
 import { PixiTicker, PixiTickerContext } from '../reconciler/tick.ts';
 
@@ -31,15 +32,32 @@ export async function RenderGraphicsTreeInBackground(
 	try {
 		const { promise: errorPromise, reject: errorHandler } = CreateManuallyResolvedPromise<void>();
 
+		// Get ourselves an App for rendering
+		appManager = await WaitForApplicationManager();
+
+		app = await new Promise<Application>((resolve) => {
+			AssertNotNullable(appManager);
+			const cleanup = appManager.on('applicationReady', (readyApp) => {
+				cleanup();
+				resolve(readyApp);
+			});
+			if (appManager.app != null) {
+				cleanup();
+				resolve(appManager.app);
+			}
+		});
+
 		// Render tree into the stage
 		root.render((
-			<PixiTickerContext.Provider value={ ticker }>
-				<GraphicsSuspenseContext.Provider value={ suspenseManager }>
-					<ForwardingErrorBoundary errorHandler={ errorHandler }>
-						{ graphics }
-					</ForwardingErrorBoundary>
-				</GraphicsSuspenseContext.Provider>
-			</PixiTickerContext.Provider>
+			<PixiAppContext.Provider value={ app }>
+				<PixiTickerContext.Provider value={ ticker }>
+					<GraphicsSuspenseContext.Provider value={ suspenseManager }>
+						<ForwardingErrorBoundary errorHandler={ errorHandler }>
+							{ graphics }
+						</ForwardingErrorBoundary>
+					</GraphicsSuspenseContext.Provider>
+				</PixiTickerContext.Provider>
+			</PixiAppContext.Provider>
 		), true);
 
 		// Flush the render
@@ -62,21 +80,6 @@ export async function RenderGraphicsTreeInBackground(
 			}),
 			errorPromise,
 		]);
-
-		// Get ourselves an App for rendering
-		appManager = await WaitForApplicationManager();
-
-		app = await new Promise<Application>((resolve) => {
-			AssertNotNullable(appManager);
-			const cleanup = appManager.on('applicationReady', (readyApp) => {
-				cleanup();
-				resolve(readyApp);
-			});
-			if (appManager.app != null) {
-				cleanup();
-				resolve(appManager.app);
-			}
-		});
 
 		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.canvas to be an HTMLCanvasElement');
 

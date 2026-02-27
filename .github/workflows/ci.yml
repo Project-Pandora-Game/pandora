@@ -116,7 +116,7 @@ jobs:
       - name: Collect coverage
         run: pnpm run -C pandora-tests coverage:report --reporter=text
       - name: Save test report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report

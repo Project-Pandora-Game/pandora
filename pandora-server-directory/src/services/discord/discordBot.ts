@@ -161,7 +161,7 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 				logger.warning(`Unknown command used: '${interaction.commandName}'`);
 
 				await interaction.reply({
-					ephemeral: true,
+					flags: [Discord.MessageFlags.Ephemeral],
 					content: `Error: I don't recognize the command "${interaction.commandName}"`,
 				});
 				return;
@@ -172,9 +172,9 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 			} catch (error) {
 				logger.error(`Error executing command "${interaction.commandName}":`, error);
 				if (interaction.replied || interaction.deferred) {
-					await interaction.followUp({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
+					await interaction.followUp({ content: 'Error: Something went wrong while executing your command!', flags: [Discord.MessageFlags.Ephemeral] });
 				} else {
-					await interaction.reply({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
+					await interaction.reply({ content: 'Error: Something went wrong while executing your command!', flags: [Discord.MessageFlags.Ephemeral] });
 				}
 			}
 
@@ -188,7 +188,7 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 				logger.warning(`Unknown button used: '${interaction.customId}'`);
 
 				await interaction.reply({
-					ephemeral: true,
+					flags: [Discord.MessageFlags.Ephemeral],
 					content: `Error: I don't recognize the button you pressed!`,
 				});
 				return;
@@ -201,9 +201,9 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 			} catch (error) {
 				logger.error(`Error executing button handler "${interaction.customId}":`, error);
 				if (interaction.replied || interaction.deferred) {
-					await interaction.followUp({ content: 'Error: Something went wrong while processing your action!', ephemeral: true });
+					await interaction.followUp({ content: 'Error: Something went wrong while processing your action!', flags: [Discord.MessageFlags.Ephemeral] });
 				} else {
-					await interaction.reply({ content: 'Error: Something went wrong while processing your action!', ephemeral: true });
+					await interaction.reply({ content: 'Error: Something went wrong while processing your action!', flags: [Discord.MessageFlags.Ephemeral] });
 				}
 			}
 

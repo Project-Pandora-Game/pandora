@@ -4,6 +4,7 @@ import {
 	ButtonStyle,
 	ChannelType,
 	EmbedBuilder,
+	MessageFlags,
 	PermissionFlagsBits,
 	SlashCommandBuilder,
 	SlashCommandSubcommandBuilder,
@@ -36,7 +37,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 	async execute(interaction) {
 		if (!interaction.isChatInputCommand()) {
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Error: Unknown subcommand.`,
 			});
 			return;
@@ -48,7 +49,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 		if (!member || !member.permissions.has(PermissionFlagsBits.Administrator)) {
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Error: Only administrators can use this inside the server. Sorry.`,
 			});
 			return;
@@ -68,7 +69,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 			if (interaction.channel.type !== ChannelType.GuildText) {
 				await interaction.reply({
-					ephemeral: true,
+					flags: [MessageFlags.Ephemeral],
 					content: `Error: This command can only be used in a standard text channel.`,
 				});
 				return;
@@ -85,12 +86,12 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			});
 
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Done! :white_check_mark:`,
 			});
 		} else {
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Error: Unknown subcommand.`,
 			});
 		}
@@ -105,7 +106,7 @@ export const DISCORD_BUTTON_REGISTER: DiscordButtonDescriptor = {
 		if (!BETA_KEY_ENABLED || !DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID || !DISCORD_BETA_ACCESS_ROLE_ID) {
 			logger.verbose('Registration press ignored - registrations not enabled');
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Error: Beta registrations are not enabled.`,
 			});
 			return;
@@ -116,7 +117,7 @@ export const DISCORD_BUTTON_REGISTER: DiscordButtonDescriptor = {
 		if (!member) {
 			logger.verbose('Registration press ignored - done outside of server');
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Error: This action can only be done from inside Project Pandora's server.`,
 			});
 			return;
@@ -129,7 +130,7 @@ export const DISCORD_BUTTON_REGISTER: DiscordButtonDescriptor = {
 
 		if (registerResult.isNew) {
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Hello ${userMention(member.user.id)}!\n` +
 					`Here is your beta registration key. It can be used only once and expires in ${FormatTimeInterval(BETA_REGISTRATION_COOLDOWN, 'two-most-significant')}.\n` +
 					'```\n' +
@@ -143,7 +144,7 @@ export const DISCORD_BUTTON_REGISTER: DiscordButtonDescriptor = {
 			});
 		} else {
 			await interaction.reply({
-				ephemeral: true,
+				flags: [MessageFlags.Ephemeral],
 				content: `Hello ${userMention(member.user.id)}!\n` +
 					`You have already recently requested a beta key. Your current key will expire on <t:${Math.floor(registerResult.expires / 1000)}>.\n` +
 					`Your current key is:\n` +

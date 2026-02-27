@@ -1,5 +1,6 @@
 import {
 	ActionRowBuilder,
+	ApplicationCommandOptionType,
 	ButtonBuilder,
 	ButtonStyle,
 	ChannelType,
@@ -7,6 +8,7 @@ import {
 	MessageFlags,
 	PermissionFlagsBits,
 	SlashCommandBuilder,
+	SlashCommandStringOption,
 	SlashCommandSubcommandBuilder,
 	userMention,
 	type MessageActionRowComponentBuilder,
@@ -33,6 +35,16 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			new SlashCommandSubcommandBuilder()
 				.setName('add-registration-form')
 				.setDescription('Send a registration form message'),
+		)
+		.addSubcommand(
+			new SlashCommandSubcommandBuilder()
+				.setName('say')
+				.setDescription('Send specific message')
+				.addStringOption(new SlashCommandStringOption()
+					.setName('msg')
+					.setDescription('The message to send')
+					.setRequired(true),
+				),
 		),
 	async execute(interaction) {
 		if (!interaction.isChatInputCommand()) {
@@ -88,6 +100,30 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			await interaction.reply({
 				flags: [MessageFlags.Ephemeral],
 				content: `Done! :white_check_mark:`,
+			});
+		} else if (subcommand === 'say') {
+			const msg = interaction.options.get('msg', true);
+			Assert(msg.type === ApplicationCommandOptionType.String);
+			Assert(typeof msg.value === 'string');
+			Assert(interaction.guild != null);
+
+			if (interaction.channel == null || interaction.channel.type !== ChannelType.GuildText) {
+				await interaction.reply({
+					flags: [MessageFlags.Ephemeral],
+					content: `Error: This command can only be used in a standard text channel.`,
+				});
+				return;
+			}
+
+			logger.info(`Sending message "${msg.value}", triggered by ${interaction.user.username} (${interaction.user.id})`);
+
+			await interaction.channel.send({
+				content: msg.value,
+			});
+
+			await interaction.reply({
+				content: `:white_check_mark: Ok!`,
+				flags: [MessageFlags.Ephemeral],
 			});
 		} else {
 			await interaction.reply({

@@ -473,7 +473,8 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 				let found = false;
 				const acc: ChatMessagePreprocessed[] = [];
 				for (const m of nextMessages) {
-					if ((m.type !== 'chat' && m.type !== 'ooc' && m.type !== 'me' && m.type !== 'emote') || m.id !== message.id)
+					// User can only change own messages, so both message id and the "from" id must match
+					if ((m.type !== 'chat' && m.type !== 'ooc' && m.type !== 'me' && m.type !== 'emote') || m.id !== message.id || m.from.id !== message.from)
 						acc.push(m);
 					else if (!found) {
 						found = true;

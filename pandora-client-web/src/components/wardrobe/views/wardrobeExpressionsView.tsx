@@ -2,7 +2,7 @@ import {
 	AssetFrameworkCharacterState,
 	type ItemId,
 } from 'pandora-common';
-import { ReactElement, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useMemo, useState } from 'react';
 import { Character } from '../../../character/character.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
@@ -16,8 +16,7 @@ export function WardrobeExpressionGui({ characterState }: {
 	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { focuser, targetSelector } = useWardrobeContext();
-	useEffect(() => focuser.disable('Expressions cannot focus container!'), [focuser]);
+	const { targetSelector } = useWardrobeContext();
 
 	const [focusedItemId, setFocusedItemId] = useState<ItemId | null>(null);
 

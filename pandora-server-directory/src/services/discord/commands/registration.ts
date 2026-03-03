@@ -107,10 +107,10 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			Assert(typeof msg.value === 'string');
 			Assert(interaction.guild != null);
 
-			if (interaction.channel == null || interaction.channel.type !== ChannelType.GuildText) {
+			if (interaction.channel == null || !interaction.channel.isSendable()) {
 				await interaction.reply({
 					flags: [MessageFlags.Ephemeral],
-					content: `Error: This command can only be used in a standard text channel.`,
+					content: `Error: This command can only be used in a text channel.`,
 				});
 				return;
 			}

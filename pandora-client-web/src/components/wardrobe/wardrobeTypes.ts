@@ -70,7 +70,6 @@ export class WardrobeFocuser {
 	private readonly _stack: { container: ItemContainerPath; itemId: ItemId | null; inRoom: RoomId | null; }[] = [];
 	private readonly _current = new Observable<WardrobeFocus>({ container: [], itemId: null });
 	private readonly _inRoom = new Observable<RoomId | null>(null);
-	private _disabled: string | null = null;
 	private _disabledContainers: string | null = null;
 
 	public get current(): ReadonlyObservable<Immutable<WardrobeFocus>> {
@@ -91,9 +90,6 @@ export class WardrobeFocuser {
 	}
 
 	public previous(): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
-
 		const popped = this._stack.pop();
 		if (popped == null) {
 			return;
@@ -103,8 +99,6 @@ export class WardrobeFocuser {
 	}
 
 	public focus(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
 		if (this._disabledContainers && newFocus.container.length > 0)
 			throw new Error(this._disabledContainers);
 
@@ -120,8 +114,6 @@ export class WardrobeFocuser {
 
 	/** Set a new focus without pushing entry on the history stack */
 	public focusReplace(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
 		if (this._disabledContainers && newFocus.container.length > 0)
 			throw new Error(this._disabledContainers);
 
@@ -130,9 +122,6 @@ export class WardrobeFocuser {
 	}
 
 	public focusItemId(itemId: ItemId | null): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
-
 		const current = this._current.value;
 		if (current.itemId === itemId) {
 			return;
@@ -145,14 +134,6 @@ export class WardrobeFocuser {
 			container: [...item.container, { item: item.itemId, module: moduleName }],
 			itemId: null,
 		}, target);
-	}
-
-	public disable(message: string): () => void {
-		const old = this._disabled;
-		this._disabled = message;
-		return () => {
-			this._disabled = old;
-		};
 	}
 
 	public disableContainers(message: string): () => void {

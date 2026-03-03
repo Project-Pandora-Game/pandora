@@ -304,10 +304,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 				continue;
 
 			const override = overrides[key];
-			if (override == null)
-				continue;
-
-			result[key] = LimitColorAlpha(override.color, def.minAlpha) ?? value;
+			result[key] = LimitColorAlpha(override?.color ?? value, def.minAlpha);
 		}
 		return this.changeColor(result);
 	}

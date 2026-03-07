@@ -41,13 +41,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Build (pandora-server-directory)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: pandora-server-directory
           tags: pandora/server-directory:latest
       - name: Build (pandora-server-shard)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: pandora-server-shard

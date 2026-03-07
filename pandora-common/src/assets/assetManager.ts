@@ -10,7 +10,7 @@ import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemF
 import type { AssetsPosePresets } from './state/characterStatePose.ts';
 
 export class AssetManager {
-	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
+	protected readonly _assets: ReadonlyMap<AssetId, Asset | AssetId>;
 	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
 	protected readonly _backgrounds: readonly Immutable<RoomBackgroundInfo>[];
 
@@ -28,11 +28,17 @@ export class AssetManager {
 	public readonly posePresets: Immutable<AssetsPosePresets>;
 
 	public getAllAssets(): Asset[] {
-		return [...this._assets.values()];
+		return [...this._assets.values()].filter((a) => typeof a !== 'string');
 	}
 
 	public getAssetById(id: AssetId): Asset | undefined {
-		return this._assets.get(id);
+		const asset = this._assets.get(id);
+		if (typeof asset === 'string') {
+			// Aliased/migrated asset
+			Assert(asset !== id, `Asset ${id} is aliased to itself`);
+			return this.getAssetById(asset);
+		}
+		return asset;
 	}
 
 	public getAllBones(): BoneDefinition[] {
@@ -135,14 +141,19 @@ export class AssetManager {
 		//#endregion
 
 		//#region Load assets
-		const assets = new Map<AssetId, Asset>();
+		const assets = new Map<AssetId, Asset | AssetId>();
 
 		for (const [id, definition] of Object.entries(fullData.assets)) {
 			if (!id.startsWith('a/')) {
 				throw new Error(`Asset without valid prefix: ${id}`);
 			}
-			const asset = new Asset(id as AssetId, definition);
-			assets.set(id as AssetId, asset);
+			if (typeof definition === 'string') {
+				// Asset alias
+				assets.set(id as AssetId, definition);
+			} else {
+				const asset = new Asset(id as AssetId, definition);
+				assets.set(id as AssetId, asset);
+			}
 		}
 
 		this._assets = assets;

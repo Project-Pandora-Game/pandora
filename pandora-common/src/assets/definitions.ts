@@ -479,7 +479,8 @@ export type CharacterModifierInbuiltTemplates = {
 };
 
 export interface AssetsDefinitionFile {
-	assets: Record<AssetId, AssetDefinition>;
+	/** Map of asset id to either its definition, or a different asset id it should be migrated to. */
+	assets: Record<AssetId, AssetDefinition | AssetId>;
 	bones: Record<string, BoneDefinitionCompressed>;
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];

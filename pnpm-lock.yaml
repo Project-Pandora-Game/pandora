@@ -94,13 +94,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.16.0)
+        version: 6.1.5(pixi.js@8.17.0)
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.16.0)
+        version: 6.0.3(pixi.js@8.17.0)
       pixi.js:
-        specifier: 8.16.0
-        version: 8.16.0
+        specifier: 8.17.0
+        version: 8.17.0
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -4879,8 +4879,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.16.0:
-    resolution: {integrity: sha512-gu2xw3sZGAn3cWBtk0HqTQT+v19YAfiaYXwUGgWoJl5NKz4cEZJUgWrwkmdfDszGyYBAGqOvJNbd2M9+vzLLMg==}
+  pixi.js@8.17.0:
+    resolution: {integrity: sha512-A6AhxbNG8Abo5xyNRJx//ETefTCcwWx2sw9e/E57YCGQ8MuvS5o2mbofBOPCdf1J+z6VKd7MZjictS9EkMXiuw==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -11681,16 +11681,16 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.16.0):
+  pixi-filters@6.1.5(pixi.js@8.17.0):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.16.0
+      pixi.js: 8.17.0
 
-  pixi-viewport@6.0.3(pixi.js@8.16.0):
+  pixi-viewport@6.0.3(pixi.js@8.17.0):
     dependencies:
-      pixi.js: 8.16.0
+      pixi.js: 8.17.0
 
-  pixi.js@8.16.0:
+  pixi.js@8.17.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0

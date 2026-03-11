@@ -320,8 +320,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1006.0
-        version: 3.1006.0
+        specifier: 3.1007.0
+        version: 3.1007.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.19
         version: 3.972.19
@@ -598,8 +598,8 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-sesv2@3.1006.0':
-    resolution: {integrity: sha512-WPUqvsEhBNjy3iEm8HhxrIb9Zy2IjWemh4tPwpA4pcTnJy1znzGkr6PGO3Cs9NKt6A4IZ0YFyIBKN9Vht7O84g==}
+  '@aws-sdk/client-sesv2@3.1007.0':
+    resolution: {integrity: sha512-/tXjFXBbtsmWjE6cR2iQM+IBhJqM5DLpOPkZ52AhKGGGHAUXLHBpoRNpD7uKyhI10r9vZwTNSpi2ZYKtWsQk0Q==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.19':
@@ -6412,7 +6412,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-sesv2@3.1006.0':
+  '@aws-sdk/client-sesv2@3.1007.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0

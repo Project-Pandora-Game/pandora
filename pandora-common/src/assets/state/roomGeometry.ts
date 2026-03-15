@@ -7,6 +7,7 @@ import { HexColorStringSchema } from '../../validation.ts';
 import { RoomIdSchema } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
 import type { CardinalDirection } from '../graphics/common.ts';
+import { CharacterViewSchema } from '../graphics/conditions.ts';
 import { CharacterSize } from '../graphics/graphics.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
@@ -169,11 +170,18 @@ export const RoomPositionSchema: z.ZodType<RoomPosition> = z.tuple([z.number().i
 	.readonly();
 export type RoomPosition = readonly [x: number, y: number, yOffset: number];
 
+export const FollowRotationSchema = z.object({
+	sameRotation: z.boolean(),
+	currentTargetView: CharacterViewSchema,
+});
+export type FollowRotation = z.infer<typeof FollowRotationSchema>;
+
 export const CharacterRoomPositionFollowSchema = z.discriminatedUnion('followType', [
 	z.object({
 		followType: z.literal('relativeLock'),
 		target: CharacterIdSchema,
 		delta: RoomPositionSchema,
+		rotation: FollowRotationSchema.optional(),
 	}),
 	z.object({
 		followType: z.literal('leash'),
@@ -317,9 +325,37 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 				if (following.followType === 'relativeLock') {
 					// In relative lock always maintain relative position
 					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
+					const posFollowing: Draft<CharacterRoomPositionFollow> = CloneDeepMutable(following);
 					position.room = targetCharacterRoom.id;
+
+					// If rotation is locked, we check if the target turned around, and if so
+					// we negate the delta vector so the whole group turns around
+					if (following.rotation != null) {
+						if (following.rotation.currentTargetView !== followTarget.requestedPose.view) {
+							const posRotation: Draft<FollowRotation> = CloneDeepMutable(following.rotation);
+
+							for (let i = 0; i < 2; i++) {
+								posFollowing.delta[i] *= -1;
+							}
+
+							posRotation.currentTargetView = followTarget.requestedPose.view;
+
+							posFollowing.rotation = posRotation;
+							position.following = posFollowing;
+						}
+
+						const neededView = following.rotation.sameRotation ? followTarget.actualPose.view : (
+							followTarget.requestedPose.view === 'front' ? 'back' : 'front'
+						);
+						if (character.requestedPose.view !== neededView) {
+							character = character.produceWithPose({
+								'view': neededView,
+							}, 'pose');
+						}
+					}
+
 					for (let i = 0; i <= 2; i++) {
-						position.position[i] = followTarget.position.position[i] + following.delta[i];
+						position.position[i] = followTarget.position.position[i] + posFollowing.delta[i];
 					}
 					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
 					position.position[0] = clamp(position.position[0], minX, maxX);
@@ -328,7 +364,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 						character = character.produceWithSpacePosition(position);
 					}
 				} else if (following.followType === 'leash') {
-					// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
+					// Leash works by pulling characters closer together if they are too far apart, keeping direction vector
 					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
 					position.room = targetCharacterRoom.id;
 					const deltaVector: Writable<RoomPosition> = CloneDeepMutable(position.position);
@@ -357,10 +393,13 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 				if (originalRoom?.id !== targetCharacterRoom.id) {
 					const link = originalRoom?.getLinkToRoom(targetCharacterRoom);
 					if (link != null && link.targetView !== 'keep') {
-						character = character.produceWithPose({
-							view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
-								link.targetView,
-						}, 'pose');
+						// If we're following with rotation locked, don't apply room link rotation
+						if (!(following.followType === 'relativeLock' && following.rotation != null)) {
+							character = character.produceWithPose({
+								view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
+									link.targetView,
+							}, 'pose');
+						}
 					}
 				}
 			}

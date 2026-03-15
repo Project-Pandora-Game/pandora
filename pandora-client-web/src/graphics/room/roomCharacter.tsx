@@ -222,7 +222,8 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 		}
 	}, [onDragMove, onDragStart]);
 
-	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') && roomSceneMode.characterId === character.id;
+	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') &&
+		(roomSceneMode.characterId === character.id || roomSceneMode.characterId === characterState.position.following?.target);
 	const enableMenu = !isFocused;
 
 	return (

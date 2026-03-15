@@ -62,7 +62,7 @@
 		"delaunator": "5.0.1",
 		"immer": "11.1.4",
 		"lodash-es": "4.17.23",
-		"nanoid": "5.1.6"
+		"nanoid": "5.1.7"
 	},
 	"devDependencies": {
 		"@jest/globals": "30.3.0",

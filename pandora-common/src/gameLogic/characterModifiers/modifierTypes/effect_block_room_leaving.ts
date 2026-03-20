@@ -4,7 +4,8 @@ import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 export const effect_block_room_leaving = DefineCharacterModifier({
 	typeId: 'effect_block_room_leaving',
 	visibleName: 'Effect: Block leaving the current room',
-	description: 'This modifier prevents the player from leaving the room they are currently in.',
+	description: `This modifier prevents the player from leaving the room they are currently in.
+	Please be aware that they still can leave the space they are in.`,
 	strictnessCategory: 'normal',
 	config: {},
 

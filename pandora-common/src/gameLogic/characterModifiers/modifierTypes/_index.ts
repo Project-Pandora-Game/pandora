@@ -21,6 +21,7 @@ import { effect_blind } from './effect_blind.ts';
 import { effect_block_hands } from './effect_block_hands.ts';
 import { effect_block_room_movement } from './effect_block_room_movement.ts';
 import { effect_block_space_leaving } from './effect_block_space_leaving.ts';
+import { effect_block_room_leaving } from './effect_block_room_leaving.ts';
 import { effect_blur_vision } from './effect_blur_vision.ts';
 import { effect_delayed_bound_usage } from './effect_delayed_bound_usage.ts';
 import { effect_hearing } from './effect_hearing.ts';
@@ -59,6 +60,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_block_hands,
 	effect_block_room_movement,
 	effect_block_space_leaving,
+	effect_block_room_leaving,
 	effect_blur_vision,
 	effect_delayed_bound_usage,
 	effect_hearing,

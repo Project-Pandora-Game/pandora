@@ -611,8 +611,7 @@ function CharacterFollowDialog(): ReactElement {
 	const id = useId();
 	const characterData = useCharacterData(character);
 	const [playerFollows, setPlayerFollows] = useState(false);
-	const [lockRotation, setLockRotation] = useState(true);
-	const [followData, setFollowData] = useState<Immutable<CharacterRoomPositionFollow>>(() => CalculateFollowDefault(playerFollows, 'relativeLock', lockRotation));
+	const [followData, setFollowData] = useState<Immutable<CharacterRoomPositionFollow>>(() => CalculateFollowDefault(playerFollows, 'relativeLock', true));
 
 	function CalculateFollowDefault(playerFollowsTarget: boolean, type: CharacterRoomPositionFollow['followType'], rotationLocked: boolean): Immutable<CharacterRoomPositionFollow> {
 		const follower = playerFollowsTarget ? playerState : characterState;
@@ -627,11 +626,10 @@ function CharacterFollowDialog(): ReactElement {
 					follower.position.position[1] - target.position.position[1],
 					follower.position.position[2] - target.position.position[2],
 				],
-				rotation:
-					rotationLocked ? {
-						sameRotation: follower.requestedPose.view === target.requestedPose.view,
-						currentTargetView: target.requestedPose.view,
-					} : undefined,
+				rotation: rotationLocked ? {
+					sameRotation: follower.requestedPose.view === target.requestedPose.view,
+					currentTargetView: target.requestedPose.view,
+				} : undefined,
 			};
 		} else if (type === 'leash') {
 			const delta = [
@@ -671,7 +669,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ !playerFollows }
 					onChange={ (checked) => {
 						setPlayerFollows(!checked);
-						setFollowData(CalculateFollowDefault(!checked, followData.followType, lockRotation));
+						setFollowData(CalculateFollowDefault(!checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
 					radioButtion
 				/>
@@ -683,7 +681,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ playerFollows }
 					onChange={ (checked) => {
 						setPlayerFollows(checked);
-						setFollowData(CalculateFollowDefault(checked, followData.followType, lockRotation));
+						setFollowData(CalculateFollowDefault(checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
 					radioButtion
 				/>
@@ -697,7 +695,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ followData.followType === 'relativeLock' }
 					onChange={ (checked) => {
 						if (checked) {
-							setFollowData(CalculateFollowDefault(playerFollows, 'relativeLock', lockRotation));
+							setFollowData(CalculateFollowDefault(playerFollows, 'relativeLock', true));
 						}
 					} }
 					radioButtion
@@ -764,15 +762,16 @@ function CharacterFollowDialog(): ReactElement {
 						<Row alignY='center'>
 							<Checkbox
 								id={ id + ':lockRotation' }
-								checked={ lockRotation }
+								checked={ followData.rotation != null }
 								onChange={ (checked) => {
-									setLockRotation(checked);
-									setFollowData(produce(followData, (d) => {
-										d.rotation = {
-											sameRotation: playerState.requestedPose.view === characterState.requestedPose.view,
-											currentTargetView: playerFollows ? characterState.requestedPose.view : playerState.requestedPose.view,
-										};
-									}));
+									if (checked) {
+										setFollowData(produce(followData, (d) => {
+											d.rotation = {
+												sameRotation: playerState.requestedPose.view === characterState.requestedPose.view,
+												currentTargetView: playerFollows ? characterState.requestedPose.view : playerState.requestedPose.view,
+											};
+										}));
+									}
 								} }
 								radioButtion
 							/>
@@ -781,12 +780,13 @@ function CharacterFollowDialog(): ReactElement {
 						<Row alignY='center'>
 							<Checkbox
 								id={ id + ':freeRotation' }
-								checked={ !lockRotation }
+								checked={ followData.rotation == null }
 								onChange={ (checked) => {
-									setLockRotation(!checked);
-									setFollowData(produce(followData, (d) => {
-										delete d.rotation;
-									}));
+									if (checked) {
+										setFollowData(produce(followData, (d) => {
+											delete d.rotation;
+										}));
+									}
 								} }
 								radioButtion
 							/>

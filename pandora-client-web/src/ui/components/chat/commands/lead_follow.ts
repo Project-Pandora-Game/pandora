@@ -38,14 +38,11 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 										y ?? (follower.position.position[1] - target.position.position[1]),
 										offset ?? (follower.position.position[2] - target.position.position[2]),
 									],
-									...(
+									rotation:
 										(lock_rotation ?? true) ? {
-											rotation: {
-												sameRotation: follower.requestedPose.view === target.requestedPose.view,
-												currentTargetView: target.requestedPose.view,
-											},
-										} : {}
-									),
+											sameRotation: follower.requestedPose.view === target.requestedPose.view,
+											currentTargetView: target.requestedPose.view,
+										} : undefined,
 								},
 							},
 						});

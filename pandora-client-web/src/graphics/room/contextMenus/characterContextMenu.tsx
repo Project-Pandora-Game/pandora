@@ -627,14 +627,11 @@ function CharacterFollowDialog(): ReactElement {
 					follower.position.position[1] - target.position.position[1],
 					follower.position.position[2] - target.position.position[2],
 				],
-				...(
+				rotation:
 					rotationLocked ? {
-						rotation: {
-							sameRotation: follower.requestedPose.view === target.requestedPose.view,
-							currentTargetView: target.requestedPose.view,
-						},
-					} : {}
-				),
+						sameRotation: follower.requestedPose.view === target.requestedPose.view,
+						currentTargetView: target.requestedPose.view,
+					} : undefined,
 			};
 		} else if (type === 'leash') {
 			const delta = [

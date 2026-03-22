@@ -171,7 +171,13 @@ export const RoomPositionSchema: z.ZodType<RoomPosition> = z.tuple([z.number().i
 export type RoomPosition = readonly [x: number, y: number, yOffset: number];
 
 export const FollowRotationSchema = z.object({
+	/** Whether we're facing the same way as the target or not */
 	sameRotation: z.boolean(),
+
+	/**
+	 * The current way the target is facing.
+	 * We need to keep track of it to detect when the target turned around when there is a mismatch (as opposed to the following character)
+	 */
 	currentTargetView: CharacterViewSchema,
 });
 export type FollowRotation = z.infer<typeof FollowRotationSchema>;
@@ -181,6 +187,8 @@ export const CharacterRoomPositionFollowSchema = z.discriminatedUnion('followTyp
 		followType: z.literal('relativeLock'),
 		target: CharacterIdSchema,
 		delta: RoomPositionSchema,
+
+		/** If present, the character turns around (front/back) with the target; otherwise it does it freely */
 		rotation: FollowRotationSchema.optional(),
 	}),
 	z.object({
@@ -334,9 +342,8 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 						if (following.rotation.currentTargetView !== followTarget.requestedPose.view) {
 							const posRotation: Draft<FollowRotation> = CloneDeepMutable(following.rotation);
 
-							for (let i = 0; i < 2; i++) {
-								posFollowing.delta[i] *= -1;
-							}
+							posFollowing.delta[0] *= -1;
+							posFollowing.delta[1] *= -1;
 
 							posRotation.currentTargetView = followTarget.requestedPose.view;
 

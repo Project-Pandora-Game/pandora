@@ -15,13 +15,13 @@ import { block_equipping_items_self } from './block_equipping_items_self.ts';
 import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
 import { block_lock_unlock_self } from './block_lock_unlock_self.ts';
 import { block_managing_room_map } from './block_managing_room_map.ts';
+import { block_prevent_room_leaving } from './block_prevent_room_leaving.ts';
 import { block_removing_items_others } from './block_removing_items_others.ts';
 import { block_removing_items_self } from './block_removing_items_self.ts';
 import { effect_blind } from './effect_blind.ts';
 import { effect_block_hands } from './effect_block_hands.ts';
 import { effect_block_room_movement } from './effect_block_room_movement.ts';
 import { effect_block_space_leaving } from './effect_block_space_leaving.ts';
-import { effect_block_room_leaving } from './effect_block_room_leaving.ts';
 import { effect_blur_vision } from './effect_blur_vision.ts';
 import { effect_delayed_bound_usage } from './effect_delayed_bound_usage.ts';
 import { effect_hearing } from './effect_hearing.ts';
@@ -54,13 +54,13 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_lock_unlock_others,
 	block_lock_unlock_self,
 	block_managing_room_map,
+	block_prevent_room_leaving,
 	block_removing_items_others,
 	block_removing_items_self,
 	effect_blind,
 	effect_block_hands,
 	effect_block_room_movement,
 	effect_block_space_leaving,
-	effect_block_room_leaving,
 	effect_blur_vision,
 	effect_delayed_bound_usage,
 	effect_hearing,

@@ -333,25 +333,21 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 				if (following.followType === 'relativeLock') {
 					// In relative lock always maintain relative position
 					const position: Draft<CharacterSpacePosition> = CloneDeepMutable(character.position);
-					const posFollowing: Draft<CharacterRoomPositionFollow> = CloneDeepMutable(following);
+					Assert(position.following != null && position.following.followType === 'relativeLock');
+
 					position.room = targetCharacterRoom.id;
 
 					// If rotation is locked, we check if the target turned around, and if so
 					// we negate the delta vector so the whole group turns around
-					if (following.rotation != null) {
-						if (following.rotation.currentTargetView !== followTarget.requestedPose.view) {
-							const posRotation: Draft<FollowRotation> = CloneDeepMutable(following.rotation);
+					if (position.following.rotation != null) {
+						if (position.following.rotation.currentTargetView !== followTarget.requestedPose.view) {
+							position.following.delta[0] *= -1;
+							position.following.delta[1] *= -1;
 
-							posFollowing.delta[0] *= -1;
-							posFollowing.delta[1] *= -1;
-
-							posRotation.currentTargetView = followTarget.requestedPose.view;
-
-							posFollowing.rotation = posRotation;
-							position.following = posFollowing;
+							position.following.rotation.currentTargetView = followTarget.requestedPose.view;
 						}
 
-						const neededView = following.rotation.sameRotation ? followTarget.actualPose.view : (
+						const neededView = position.following.rotation.sameRotation ? followTarget.actualPose.view : (
 							followTarget.actualPose.view === 'front' ? 'back' : 'front'
 						);
 						if (character.requestedPose.view !== neededView) {
@@ -362,7 +358,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					}
 
 					for (let i = 0; i <= 2; i++) {
-						position.position[i] = followTarget.position.position[i] + posFollowing.delta[i];
+						position.position[i] = followTarget.position.position[i] + position.following.delta[i];
 					}
 					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
 					position.position[0] = clamp(position.position[0], minX, maxX);

@@ -215,7 +215,7 @@ export class AssetManager {
 
 	public loadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, logger?: Logger): Item {
 		Assert(this._assets.get(asset.id) === asset);
-		Assert(asset.id === bundle.asset);
+		// Asset id and bundle id can differ, if we are migrating asset.
 		return LoadItemFromBundle(asset, bundle, {
 			assetManager: this,
 			doLoadTimeCleanup: true,

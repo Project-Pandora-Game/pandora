@@ -222,8 +222,18 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 		}
 	}, [onDragMove, onDragStart]);
 
-	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') && roomSceneMode.characterId === character.id;
+	/** This character has special mode focusing it */
+	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') &&
+		roomSceneMode.characterId === character.id;
+	/** This character is following someone who has special mode focusing it */
+	const isFollowTargetFocused = characterState.position.following != null &&
+		(roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') &&
+		roomSceneMode.characterId === characterState.position.following.target;
+
 	const enableMenu = !isFocused;
+	// If this character has move menu open, we make transitions quick to allow for fine-grained positioning.
+	// If this character is following someone who has quick transitions, we make these transitions quick as well to make it look nice.
+	const quickTransitions = isFocused || isFollowTargetFocused;
 
 	return (
 		<RoomCharacter
@@ -233,7 +243,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 			visionFilters={ visionFilters }
 			debugConfig={ debugConfig }
 			showName={ enableMenu }
-			quickTransitions={ isFocused }
+			quickTransitions={ quickTransitions }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
 			hitArea={ hitArea }

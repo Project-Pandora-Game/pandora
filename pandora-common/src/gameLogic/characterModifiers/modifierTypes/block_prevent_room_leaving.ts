@@ -4,13 +4,13 @@ import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 export const block_prevent_room_leaving = DefineCharacterModifier({
 	typeId: 'block_prevent_room_leaving',
 	visibleName: 'Block: Prevent leaving the current room',
-	description: `This modifier prevents the player from leaving the room they are currently in.
-	Please be aware that they still can leave the space they are in.`,
+	description: `This modifier prevents the character from leaving the room they are currently in.
+	Please be aware that this effect does not prevent the character from leaving the current space itself.`,
 	strictnessCategory: 'normal',
 	config: {},
 
 	checkCharacterAction(config, action, player) {
-		if (action.type !== 'moveCharacter')
+		if (action.type !== 'moveCharacter' || action.target.characterId !== player.appearance.id)
 			return 'allow';
 
 		if (action.moveTo.type === 'normal') {

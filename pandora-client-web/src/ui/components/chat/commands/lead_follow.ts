@@ -40,8 +40,8 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 									],
 									rotation:
 										(lock_rotation ?? true) ? {
-											sameRotation: follower.requestedPose.view === target.requestedPose.view,
-											currentTargetView: target.requestedPose.view,
+											sameRotation: follower.actualPose.view === target.actualPose.view,
+											currentTargetView: target.actualPose.view,
 										} : undefined,
 								},
 							},

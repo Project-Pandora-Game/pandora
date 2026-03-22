@@ -352,7 +352,7 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 						}
 
 						const neededView = following.rotation.sameRotation ? followTarget.actualPose.view : (
-							followTarget.requestedPose.view === 'front' ? 'back' : 'front'
+							followTarget.actualPose.view === 'front' ? 'back' : 'front'
 						);
 						if (character.requestedPose.view !== neededView) {
 							character = character.produceWithPose({

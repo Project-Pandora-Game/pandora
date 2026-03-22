@@ -627,8 +627,8 @@ function CharacterFollowDialog(): ReactElement {
 					follower.position.position[2] - target.position.position[2],
 				],
 				rotation: rotationLocked ? {
-					sameRotation: follower.requestedPose.view === target.requestedPose.view,
-					currentTargetView: target.requestedPose.view,
+					sameRotation: follower.actualPose.view === target.actualPose.view,
+					currentTargetView: target.actualPose.view,
 				} : undefined,
 			};
 		} else if (type === 'leash') {
@@ -767,8 +767,8 @@ function CharacterFollowDialog(): ReactElement {
 									if (checked) {
 										setFollowData(produce(followData, (d) => {
 											d.rotation = {
-												sameRotation: playerState.requestedPose.view === characterState.requestedPose.view,
-												currentTargetView: playerFollows ? characterState.requestedPose.view : playerState.requestedPose.view,
+												sameRotation: playerState.actualPose.view === characterState.actualPose.view,
+												currentTargetView: playerFollows ? characterState.actualPose.view : playerState.actualPose.view,
 											};
 										}));
 									}

@@ -1,4 +1,4 @@
-import { CloneDeepMutable, CommandSelectorNumber, type CommandRunner, type IEmpty } from 'pandora-common';
+import { CloneDeepMutable, CommandSelectorNamedValue, CommandSelectorNumber, type CommandRunner, type IEmpty } from 'pandora-common';
 import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CommandSelectorCharacter, CreateClientCommand } from '../commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from '../commandsProcessor.ts';
@@ -10,10 +10,14 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 			relative: {
 				description: 'Keep relative position of the characters',
 				handler: forkCtx
+					.argumentOptional('lock_rotation', CommandSelectorNamedValue([
+						{ value: true, name: 'true', description: 'Rotate together (default)' },
+						{ value: false, name: 'false', description: 'Rotate freely' },
+					]))
 					.argumentOptional('x', CommandSelectorNumber())
 					.argumentOptional('y', CommandSelectorNumber())
 					.argumentOptional('offset', CommandSelectorNumber())
-					.handler(({ gameState, globalState, player }, { character, x, y, offset }) => {
+					.handler(({ gameState, globalState, player }, { lock_rotation, character, x, y, offset }) => {
 						const follower = globalState.getCharacterState((type === 'follow' ? player : character).id);
 						const target = globalState.getCharacterState((type === 'follow' ? character : player).id);
 						if (follower == null || target == null)
@@ -34,6 +38,11 @@ function MakeLeadFollowHandler(type: 'lead' | 'follow'): CommandRunner<ICommandE
 										y ?? (follower.position.position[1] - target.position.position[1]),
 										offset ?? (follower.position.position[2] - target.position.position[2]),
 									],
+									rotation:
+										(lock_rotation ?? true) ? {
+											sameRotation: follower.actualPose.view === target.actualPose.view,
+											currentTargetView: target.actualPose.view,
+										} : undefined,
 								},
 							},
 						});

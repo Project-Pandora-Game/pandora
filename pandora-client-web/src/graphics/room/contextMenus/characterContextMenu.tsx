@@ -611,9 +611,9 @@ function CharacterFollowDialog(): ReactElement {
 	const id = useId();
 	const characterData = useCharacterData(character);
 	const [playerFollows, setPlayerFollows] = useState(false);
-	const [followData, setFollowData] = useState<Immutable<CharacterRoomPositionFollow>>(() => CalculateFollowDefault(playerFollows, 'relativeLock'));
+	const [followData, setFollowData] = useState<Immutable<CharacterRoomPositionFollow>>(() => CalculateFollowDefault(playerFollows, 'relativeLock', true));
 
-	function CalculateFollowDefault(playerFollowsTarget: boolean, type: CharacterRoomPositionFollow['followType']): Immutable<CharacterRoomPositionFollow> {
+	function CalculateFollowDefault(playerFollowsTarget: boolean, type: CharacterRoomPositionFollow['followType'], rotationLocked: boolean): Immutable<CharacterRoomPositionFollow> {
 		const follower = playerFollowsTarget ? playerState : characterState;
 		const target = playerFollowsTarget ? characterState : playerState;
 
@@ -626,6 +626,10 @@ function CharacterFollowDialog(): ReactElement {
 					follower.position.position[1] - target.position.position[1],
 					follower.position.position[2] - target.position.position[2],
 				],
+				rotation: rotationLocked ? {
+					sameRotation: follower.actualPose.view === target.actualPose.view,
+					currentTargetView: target.actualPose.view,
+				} : undefined,
 			};
 		} else if (type === 'leash') {
 			const delta = [
@@ -665,7 +669,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ !playerFollows }
 					onChange={ (checked) => {
 						setPlayerFollows(!checked);
-						setFollowData(CalculateFollowDefault(!checked, followData.followType));
+						setFollowData(CalculateFollowDefault(!checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
 					radioButtion
 				/>
@@ -677,7 +681,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ playerFollows }
 					onChange={ (checked) => {
 						setPlayerFollows(checked);
-						setFollowData(CalculateFollowDefault(checked, followData.followType));
+						setFollowData(CalculateFollowDefault(checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
 					radioButtion
 				/>
@@ -691,7 +695,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ followData.followType === 'relativeLock' }
 					onChange={ (checked) => {
 						if (checked) {
-							setFollowData(CalculateFollowDefault(playerFollows, 'relativeLock'));
+							setFollowData(CalculateFollowDefault(playerFollows, 'relativeLock', true));
 						}
 					} }
 					radioButtion
@@ -704,7 +708,7 @@ function CharacterFollowDialog(): ReactElement {
 					checked={ followData.followType === 'leash' }
 					onChange={ (checked) => {
 						if (checked) {
-							setFollowData(CalculateFollowDefault(playerFollows, 'leash'));
+							setFollowData(CalculateFollowDefault(playerFollows, 'leash', true));
 						}
 					} }
 					radioButtion
@@ -753,6 +757,40 @@ function CharacterFollowDialog(): ReactElement {
 									}));
 								} }
 							/>
+						</Row>
+						<hr className='fill-x' />
+						<Row alignY='center'>
+							<Checkbox
+								id={ id + ':lockRotation' }
+								checked={ followData.rotation != null }
+								onChange={ (checked) => {
+									if (checked) {
+										setFollowData(produce(followData, (d) => {
+											d.rotation = {
+												sameRotation: playerState.actualPose.view === characterState.actualPose.view,
+												currentTargetView: playerFollows ? characterState.actualPose.view : playerState.actualPose.view,
+											};
+										}));
+									}
+								} }
+								radioButtion
+							/>
+							<label htmlFor={ id + ':lockRotation' }>Rotate together</label>
+						</Row>
+						<Row alignY='center'>
+							<Checkbox
+								id={ id + ':freeRotation' }
+								checked={ followData.rotation == null }
+								onChange={ (checked) => {
+									if (checked) {
+										setFollowData(produce(followData, (d) => {
+											delete d.rotation;
+										}));
+									}
+								} }
+								radioButtion
+							/>
+							<label htmlFor={ id + ':freeRotation' }>Rotate freely</label>
 						</Row>
 					</>
 				) :

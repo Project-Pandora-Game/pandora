@@ -340,11 +340,11 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 					// If rotation is locked, we check if the target turned around, and if so
 					// we negate the delta vector so the whole group turns around
 					if (position.following.rotation != null) {
-						if (position.following.rotation.currentTargetView !== followTarget.requestedPose.view) {
+						if (position.following.rotation.currentTargetView !== followTarget.actualPose.view) {
 							position.following.delta[0] *= -1;
 							position.following.delta[1] *= -1;
 
-							position.following.rotation.currentTargetView = followTarget.requestedPose.view;
+							position.following.rotation.currentTargetView = followTarget.actualPose.view;
 						}
 
 						const neededView = position.following.rotation.sameRotation ? followTarget.actualPose.view : (

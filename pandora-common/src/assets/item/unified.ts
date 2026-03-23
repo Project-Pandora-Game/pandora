@@ -173,7 +173,7 @@ export function ItemTemplateMeasureCost(template: ItemTemplate): number {
 }
 
 export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T> {
-	Assert(asset.id === bundle.asset);
+	// Asset id and bundle id can differ, if we are migrating asset.
 	const type = asset.type;
 	switch (type) {
 		case 'bodypart':

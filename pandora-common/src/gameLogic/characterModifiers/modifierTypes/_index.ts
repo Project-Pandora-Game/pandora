@@ -15,6 +15,7 @@ import { block_equipping_items_self } from './block_equipping_items_self.ts';
 import { block_lock_unlock_others } from './block_lock_unlock_others.ts';
 import { block_lock_unlock_self } from './block_lock_unlock_self.ts';
 import { block_managing_room_map } from './block_managing_room_map.ts';
+import { block_prevent_room_leaving } from './block_prevent_room_leaving.ts';
 import { block_removing_items_others } from './block_removing_items_others.ts';
 import { block_removing_items_self } from './block_removing_items_self.ts';
 import { effect_blind } from './effect_blind.ts';
@@ -53,6 +54,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_lock_unlock_others,
 	block_lock_unlock_self,
 	block_managing_room_map,
+	block_prevent_room_leaving,
 	block_removing_items_others,
 	block_removing_items_self,
 	effect_blind,

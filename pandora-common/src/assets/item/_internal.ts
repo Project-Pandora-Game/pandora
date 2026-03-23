@@ -68,7 +68,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	}
 
 	protected static _parseBundle<Type extends AssetType = AssetType>(asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): ItemBaseProps<Type> {
-		Assert(asset.id === bundle.asset);
+		// Asset id and bundle id can differ, if we are migrating asset.
 		return {
 			assetManager: context.assetManager,
 			id: bundle.id,

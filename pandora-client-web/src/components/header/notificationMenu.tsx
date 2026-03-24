@@ -4,7 +4,7 @@ import { CLIENT_NOTIFICATION_TYPES } from 'pandora-common';
 import type { ReactElement } from 'react';
 import crossIcon from '../../assets/icons/cross.svg';
 import deleteIcon from '../../assets/icons/delete.svg';
-import type { NotificationEntry } from '../../services/notificationHandler.tsx';
+import { useCurrentTimeMinutes, type NotificationEntry } from '../../services/notificationHandler.tsx';
 import { useService } from '../../services/serviceProvider.tsx';
 import { NotificationPermissionRequest } from '../../ui/components/notifications/notificationPermissionRequest.tsx';
 import { Button, IconButton } from '../common/button/button.tsx';
@@ -19,11 +19,19 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 	clearNotifications: () => void;
 }): ReactElement {
 	const notificationHandler = useService('notificationHandler');
+	const currentTime = useCurrentTimeMinutes();
+
+	const timeString = currentTime.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'UTC',
+		hour12: false,
+	});
 
 	return (
 		<DialogInPortal priority={ 6 } location='mainOverlay'>
 			<Column className={ classNames('OverlayNotificationMenu', visible ? null : 'hide') } inert={ !visible } padding='medium'>
-				<Row alignX='space-between'>
+				<Row alignX='space-between' alignY='center'>
 					<IconButton
 						onClick={ clearNotifications }
 						theme='default'
@@ -32,6 +40,7 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 						alt='Clear notifications'
 						disabled={ notifications.length === 0 }
 					/>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◴ { timeString }</span>
 					<Button
 						onClick={ close }
 						theme='default'

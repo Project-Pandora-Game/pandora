@@ -29,31 +29,21 @@ export function useCurrentUtcTimeMinutes(): Date {
 	});
 
 	useEffect(() => {
-		function tick() {
+		const delay = time.getTime() + 60_000 - Date.now();
+		if (delay > 0) {
+			const id = setTimeout(() => {
+				const now = new Date();
+				now.setUTCSeconds(0, 0);
+				setTime(now);
+			}, delay);
+			return () => clearTimeout(id);
+		} else {
 			const now = new Date();
 			now.setUTCSeconds(0, 0);
 			setTime(now);
+			return undefined;
 		}
-
-		function schedule() {
-			const nextMinute = new Date();
-			nextMinute.setUTCSeconds(0, 0);
-			const delay = nextMinute.getTime() + 60_000 - Date.now();
-
-			if (delay > 0) {
-				return setTimeout(() => {
-					tick();
-					schedule();
-				}, delay);
-			} else {
-				tick();
-				return setTimeout(schedule, 0);
-			}
-		}
-
-		const id = schedule();
-		return () => clearTimeout(id);
-	}, []);
+	}, [time]);
 
 	return time;
 }

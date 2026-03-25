@@ -14,7 +14,7 @@ import {
 	type ServiceInitArgs,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import type * as z from 'zod';
 import audioAlert from '../audio/alert.mp3';
@@ -264,41 +264,4 @@ export function useNotificationSuppress(hook: NotificationSuppressionHook): void
 	useEffect(() => {
 		return service.addSuppressionHook(hook);
 	}, [service, hook]);
-}
-
-export function useCurrentTimeMinutes(): Date {
-	const [time, setTime] = useState<Date>(() => {
-		const now = new Date();
-		now.setUTCSeconds(0, 0);
-		return now;
-	});
-
-	useEffect(() => {
-		function tick() {
-			const now = new Date();
-			now.setUTCSeconds(0, 0);
-			setTime(now);
-		}
-
-		function schedule() {
-			const nextMinute = new Date();
-			nextMinute.setUTCSeconds(0, 0);
-			const delay = nextMinute.getTime() + 60_000 - Date.now();
-
-			if (delay > 0) {
-				return setTimeout(() => {
-					tick();
-					schedule();
-				}, delay);
-			} else {
-				tick();
-				return setTimeout(schedule, 0);
-			}
-		}
-
-		const id = schedule();
-		return () => clearTimeout(id);
-	}, []);
-
-	return time;
 }

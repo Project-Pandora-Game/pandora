@@ -21,7 +21,7 @@ export function useCurrentTime(precision: number = 1000): number {
 /**
  * @returns A Date object representing the current UTC minute, updated automatically at each minute boundary.
  */
-export function useCurrentTimeMinutes(): Date {
+export function useCurrentUtcTimeMinutes(): Date {
 	const [time, setTime] = useState<Date>(() => {
 		const now = new Date();
 		now.setUTCSeconds(0, 0);

@@ -6,7 +6,7 @@ import crossIcon from '../../assets/icons/cross.svg';
 import deleteIcon from '../../assets/icons/delete.svg';
 import { type NotificationEntry } from '../../services/notificationHandler.tsx';
 import { useService } from '../../services/serviceProvider.tsx';
-import { useCurrentTimeMinutes } from '../../common/useCurrentTime.ts';
+import { useCurrentUtcTimeMinutes } from '../../common/useCurrentTime.ts';
 import { NotificationPermissionRequest } from '../../ui/components/notifications/notificationPermissionRequest.tsx';
 import { Button, IconButton } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
@@ -20,7 +20,7 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 	clearNotifications: () => void;
 }): ReactElement {
 	const notificationHandler = useService('notificationHandler');
-	const currentTime = useCurrentTimeMinutes();
+	const currentTime = useCurrentUtcTimeMinutes();
 
 	const timeString = currentTime.toLocaleTimeString([], {
 		hour: '2-digit',

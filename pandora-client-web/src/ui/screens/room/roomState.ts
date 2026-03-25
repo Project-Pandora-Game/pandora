@@ -3,6 +3,8 @@ import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { useObservable } from '../../../observable.ts';
 
+export const SettingDisplayCharacterList = BrowserStorage.createSession('graphics.display-character-list', true, z.boolean());
+
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
 export const SettingDisplayRoomLinks = BrowserStorage.createSession('graphics.display-room-links', true, z.boolean());

@@ -1,4 +1,4 @@
-import { AccountId, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus } from 'pandora-common';
+import { AccountId, AssertNever, FriendSortKeySchema, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus, type FriendSortKey } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router';
 import statusIconAway from '../../assets/icons/state-away.svg';
@@ -8,6 +8,7 @@ import statusIconOffline from '../../assets/icons/state-offline.svg';
 import statusIconOnline from '../../assets/icons/state-online.svg';
 import statusIconLookingSub from '../../assets/icons/state-sub.svg';
 import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
+import { BrowserStorage } from '../../browserStorage.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useObservable, useObservableMultiple } from '../../observable.ts';
@@ -174,25 +175,72 @@ function IncomingRequestActions({ id, displayName }: { id: AccountId; displayNam
 	);
 }
 
+const FRIEND_SORT_STORAGE = BrowserStorage.createSession<FriendSortKey>(
+	'contacts.friendSort',
+	'since',
+	FriendSortKeySchema,
+);
+
 function ShowFriends() {
 	const friends = useAccountContacts('friend');
 	const status = useFriendStatus();
+	const [sortKey, setSortKey] = React.useState<FriendSortKey>(() => FRIEND_SORT_STORAGE.value);
+
+	const handleSort = useCallback((key: FriendSortKey) => {
+		FRIEND_SORT_STORAGE.value = key;
+		setSortKey(key);
+	}, [setSortKey]);
+
 	const friendsWithStatus = useMemo(() => {
-		return friends.map((friend) => {
+		const data = friends.map((friend) => {
 			const stat = status.find((s) => s.id === friend.id);
-			return (
-				<FriendRow key={ friend.id }
-					id={ friend.id }
-					displayName={ friend.displayName }
-					// We hide the label coloring if account is offline, as we can't get it without loading the account from DB
-					labelColor={ ((stat?.status !== 'offline') ? stat?.labelColor : null) ?? 'transparent' }
-					time={ friend.time }
-					status={ stat?.status ?? 'offline' }
-					characters={ stat?.characters }
-				/>
-			);
+			return {
+				id: friend.id,
+				displayName: friend.displayName,
+				labelColor: ((stat?.status !== 'offline') ? stat?.labelColor : null) ?? 'transparent',
+				time: friend.time,
+				status: stat?.status ?? 'offline' as AccountOnlineStatus,
+				characters: stat?.characters,
+			};
 		});
-	}, [friends, status]);
+
+		switch (sortKey) {
+			case 'id':
+				data.sort((a, b) => a.id - b.id);
+				break;
+			case 'name':
+				data.sort((a, b) => a.displayName.localeCompare(b.displayName));
+				break;
+			case 'status':
+				data.sort((a, b) => {
+					const aStatus = a.status === 'offline' ? 1 : 0;
+					const bStatus = b.status === 'offline' ? 1 : 0;
+					if (aStatus !== bStatus) return aStatus - bStatus;
+					return a.time - b.time;
+				});
+				break;
+			case 'since':
+				data.sort((a, b) => a.time - b.time);
+				break;
+			default:
+				AssertNever(sortKey);
+		}
+
+		return data.map((friend) => (
+			<FriendRow key={ friend.id } { ...friend } />
+		));
+	}, [friends, status, sortKey]);
+
+	const SortHeader = useCallback(({ label, col }: { label: string; col: FriendSortKey; }) => (
+		<th key={ col }
+			className={ `sortable${sortKey === col ? ' active' : ''}` }
+			onClick={ () => handleSort(col) }
+			tabIndex={ 0 }
+			aria-sort={ sortKey === col ? 'ascending' : 'none' }
+		>
+			{ label }{ sortKey === col ? ' ▾' : ' ⇅' }
+		</th>
+	), [sortKey, handleSort]);
 
 	return (
 		<Scrollable direction='vertical'>
@@ -207,11 +255,11 @@ function ShowFriends() {
 				</colgroup>
 				<thead>
 					<tr>
-						<th>ID</th>
-						<th>Name</th>
-						<th>Status</th>
+						<SortHeader label='ID' col='id' />
+						<SortHeader label='Name' col='name' />
+						<SortHeader label='Status' col='status' />
 						<th>Online Characters</th>
-						<th>Since</th>
+						<SortHeader label='Since' col='since' />
 						<th>Actions</th>
 					</tr>
 				</thead>

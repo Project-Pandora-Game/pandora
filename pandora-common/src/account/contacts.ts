@@ -52,3 +52,6 @@ export const AccountContactsUpdateDataSchema = z.object({
 	friendStatus: ZodCast<IAccountFriendStatus | { id: AccountId; status: null; }>(),
 });
 export type AccountContactsUpdateData = z.infer<typeof AccountContactsUpdateDataSchema>;
+
+export const FriendSortKeySchema = z.enum(['id', 'name', 'status', 'since']);
+export type FriendSortKey = z.infer<typeof FriendSortKeySchema>;

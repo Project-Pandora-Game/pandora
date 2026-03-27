@@ -320,8 +320,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1017.0
-        version: 3.1017.0
+        specifier: 3.1018.0
+        version: 3.1018.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.26
         version: 3.972.26
@@ -598,12 +598,8 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-sesv2@3.1017.0':
-    resolution: {integrity: sha512-2QV52p4F1CwcG6ce8EvdKCWMCfeMrQFjtQe6OilkH+kcmW8b6c424x/Qhd5fPqSnXllOc/9Iv2V1xcefgKTYaA==}
-    engines: {node: '>=20.0.0'}
-
-  '@aws-sdk/core@3.973.24':
-    resolution: {integrity: sha512-vvf82RYQu2GidWAuQq+uIzaPz9V0gSCXVqdVzRosgl5rXcspXOpSD3wFreGGW6AYymPr97Z69kjVnLePBxloDw==}
+  '@aws-sdk/client-sesv2@3.1018.0':
+    resolution: {integrity: sha512-L5/hJ8dDNoQVwmGTKYZEMAP+8NQjjUG/vHG/bk3FhRHMKW3Ss0CZ9FAVV39Aw4wyCq0kcKVovT6Su66fBGRGzw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.25':
@@ -650,20 +646,12 @@ packages:
     resolution: {integrity: sha512-CWl5UCM57WUFaFi5kB7IBY1UmOeLvNZAZ2/OZ5l20ldiJ3TiIz1pC65gYj8X0BCPWkeR1E32mpsCk1L1I4n+lA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/middleware-recursion-detection@3.972.8':
-    resolution: {integrity: sha512-BnnvYs2ZEpdlmZ2PNlV2ZyQ8j8AEkMTjN79y/YA475ER1ByFYrkVR85qmhni8oeTaJcDqbx364wDpitDAA/wCA==}
-    engines: {node: '>=20.0.0'}
-
   '@aws-sdk/middleware-recursion-detection@3.972.9':
     resolution: {integrity: sha512-/Wt5+CT8dpTFQxEJ9iGy/UGrXr7p2wlIOEHvIr/YcHYByzoLjrqkYqXdJjd9UIgWjv7eqV2HnFJen93UTuwfTQ==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/middleware-sdk-s3@3.972.25':
-    resolution: {integrity: sha512-4xJL7O+XkhbSkT4yAYshkAww+mxJvtGQneNHH0MOpe+w8Vo2z87M9z06UO3G6zPM2c3Ef2yKczvZpTgdArMHfg==}
-    engines: {node: '>=20.0.0'}
-
-  '@aws-sdk/middleware-user-agent@3.972.25':
-    resolution: {integrity: sha512-QxiMPofvOt8SwSynTOmuZfvvPM1S9QfkESBxB22NMHTRXCJhR5BygLl8IXfC4jELiisQgwsgUby21GtXfX3f/g==}
+  '@aws-sdk/middleware-sdk-s3@3.972.26':
+    resolution: {integrity: sha512-5q7UGSTtt7/KF0Os8wj2VZtlLxeWJVb0e2eDrDJlWot2EIxUNKDDMPFq/FowUqrwZ40rO2bu6BypxaKNvQhI+g==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/middleware-user-agent@3.972.26':
@@ -678,12 +666,8 @@ packages:
     resolution: {integrity: sha512-1dq9ToC6e070QvnVhhbAs3bb5r6cQ10gTVc6cyRV5uvQe7P138TV2uG2i6+Yok4bAkVAcx5AqkTEBUvWEtBlsQ==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/region-config-resolver@3.972.9':
-    resolution: {integrity: sha512-eQ+dFU05ZRC/lC2XpYlYSPlXtX3VT8sn5toxN2Fv7EXlMoA2p9V7vUBKqHunfD4TRLpxUq8Y8Ol/nCqiv327Ng==}
-    engines: {node: '>=20.0.0'}
-
-  '@aws-sdk/signature-v4-multi-region@3.996.13':
-    resolution: {integrity: sha512-7j8rOFHHq4e9McCSuWBmBSADriW5CjPUem4inckRh/cyQGaijBwDbkNbVTgDVDWqFo29SoVVUfI6HCOnck6HZw==}
+  '@aws-sdk/signature-v4-multi-region@3.996.14':
+    resolution: {integrity: sha512-4nZSrBr1NO+48HCM/6BRU8mnRjuHZjcpziCvLXZk5QVftwWz5Mxqbhwdz4xf7WW88buaTB8uRO2MHklSX1m0vg==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/token-providers@3.1018.0':
@@ -709,15 +693,6 @@ packages:
   '@aws-sdk/util-user-agent-browser@3.972.8':
     resolution: {integrity: sha512-B3KGXJviV2u6Cdw2SDY2aDhoJkVfY/Q/Trwk2CMSkikE1Oi6gRzxhvhIfiRpHfmIsAhV4EA54TVEX8K6CbHbkA==}
 
-  '@aws-sdk/util-user-agent-node@3.973.11':
-    resolution: {integrity: sha512-1qdXbXo2s5MMLpUvw00284LsbhtlQ4ul7Zzdn5n+7p4WVgCMLqhxImpHIrjSoc72E/fyc4Wq8dLtUld2Gsh+lA==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      aws-crt: '>=1.0.0'
-    peerDependenciesMeta:
-      aws-crt:
-        optional: true
-
   '@aws-sdk/util-user-agent-node@3.973.12':
     resolution: {integrity: sha512-8phW0TS8ntENJgDcFewYT/Q8dOmarpvSxEjATu2GUBAutiHr++oEGCiBUwxslCMNvwW2cAPZNT53S/ym8zm/gg==}
     engines: {node: '>=20.0.0'}
@@ -726,10 +701,6 @@ packages:
     peerDependenciesMeta:
       aws-crt:
         optional: true
-
-  '@aws-sdk/xml-builder@3.972.15':
-    resolution: {integrity: sha512-PxMRlCFNiQnke9YR29vjFQwz4jq+6Q04rOVFeTDR2K7Qpv9h9FOWOxG+zJjageimYbWqE3bTuLjmryWHAWbvaA==}
-    engines: {node: '>=20.0.0'}
 
   '@aws-sdk/xml-builder@3.972.16':
     resolution: {integrity: sha512-iu2pyvaqmeatIJLURLqx9D+4jKAdTH20ntzB6BFwjyN7V960r4jK32mx0Zf7YbtOYAbmbtQfDNuL60ONinyw7A==}
@@ -6380,22 +6351,22 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-sesv2@3.1017.0':
+  '@aws-sdk/client-sesv2@3.1018.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
-      '@aws-sdk/core': 3.973.24
+      '@aws-sdk/core': 3.973.25
       '@aws-sdk/credential-provider-node': 3.972.26
       '@aws-sdk/middleware-host-header': 3.972.8
       '@aws-sdk/middleware-logger': 3.972.8
-      '@aws-sdk/middleware-recursion-detection': 3.972.8
-      '@aws-sdk/middleware-user-agent': 3.972.25
-      '@aws-sdk/region-config-resolver': 3.972.9
-      '@aws-sdk/signature-v4-multi-region': 3.996.13
+      '@aws-sdk/middleware-recursion-detection': 3.972.9
+      '@aws-sdk/middleware-user-agent': 3.972.26
+      '@aws-sdk/region-config-resolver': 3.972.10
+      '@aws-sdk/signature-v4-multi-region': 3.996.14
       '@aws-sdk/types': 3.973.6
       '@aws-sdk/util-endpoints': 3.996.5
       '@aws-sdk/util-user-agent-browser': 3.972.8
-      '@aws-sdk/util-user-agent-node': 3.973.11
+      '@aws-sdk/util-user-agent-node': 3.973.12
       '@smithy/config-resolver': 4.4.13
       '@smithy/core': 3.23.12
       '@smithy/fetch-http-handler': 5.3.15
@@ -6424,22 +6395,6 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - aws-crt
-
-  '@aws-sdk/core@3.973.24':
-    dependencies:
-      '@aws-sdk/types': 3.973.6
-      '@aws-sdk/xml-builder': 3.972.15
-      '@smithy/core': 3.23.12
-      '@smithy/node-config-provider': 4.3.12
-      '@smithy/property-provider': 4.2.12
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/signature-v4': 5.3.12
-      '@smithy/smithy-client': 4.12.7
-      '@smithy/types': 4.13.1
-      '@smithy/util-base64': 4.3.2
-      '@smithy/util-middleware': 4.2.12
-      '@smithy/util-utf8': 4.2.2
-      tslib: 2.8.1
 
   '@aws-sdk/core@3.973.25':
     dependencies:
@@ -6574,14 +6529,6 @@ snapshots:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
 
-  '@aws-sdk/middleware-recursion-detection@3.972.8':
-    dependencies:
-      '@aws-sdk/types': 3.973.6
-      '@aws/lambda-invoke-store': 0.2.4
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/types': 4.13.1
-      tslib: 2.8.1
-
   '@aws-sdk/middleware-recursion-detection@3.972.9':
     dependencies:
       '@aws-sdk/types': 3.973.6
@@ -6590,9 +6537,9 @@ snapshots:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
 
-  '@aws-sdk/middleware-sdk-s3@3.972.25':
+  '@aws-sdk/middleware-sdk-s3@3.972.26':
     dependencies:
-      '@aws-sdk/core': 3.973.24
+      '@aws-sdk/core': 3.973.25
       '@aws-sdk/types': 3.973.6
       '@aws-sdk/util-arn-parser': 3.972.3
       '@smithy/core': 3.23.12
@@ -6605,17 +6552,6 @@ snapshots:
       '@smithy/util-middleware': 4.2.12
       '@smithy/util-stream': 4.5.20
       '@smithy/util-utf8': 4.2.2
-      tslib: 2.8.1
-
-  '@aws-sdk/middleware-user-agent@3.972.25':
-    dependencies:
-      '@aws-sdk/core': 3.973.24
-      '@aws-sdk/types': 3.973.6
-      '@aws-sdk/util-endpoints': 3.996.5
-      '@smithy/core': 3.23.12
-      '@smithy/protocol-http': 5.3.12
-      '@smithy/types': 4.13.1
-      '@smithy/util-retry': 4.2.12
       tslib: 2.8.1
 
   '@aws-sdk/middleware-user-agent@3.972.26':
@@ -6680,17 +6616,9 @@ snapshots:
       '@smithy/types': 4.13.1
       tslib: 2.8.1
 
-  '@aws-sdk/region-config-resolver@3.972.9':
+  '@aws-sdk/signature-v4-multi-region@3.996.14':
     dependencies:
-      '@aws-sdk/types': 3.973.6
-      '@smithy/config-resolver': 4.4.13
-      '@smithy/node-config-provider': 4.3.12
-      '@smithy/types': 4.13.1
-      tslib: 2.8.1
-
-  '@aws-sdk/signature-v4-multi-region@3.996.13':
-    dependencies:
-      '@aws-sdk/middleware-sdk-s3': 3.972.25
+      '@aws-sdk/middleware-sdk-s3': 3.972.26
       '@aws-sdk/types': 3.973.6
       '@smithy/protocol-http': 5.3.12
       '@smithy/signature-v4': 5.3.12
@@ -6737,15 +6665,6 @@ snapshots:
       bowser: 2.14.1
       tslib: 2.8.1
 
-  '@aws-sdk/util-user-agent-node@3.973.11':
-    dependencies:
-      '@aws-sdk/middleware-user-agent': 3.972.25
-      '@aws-sdk/types': 3.973.6
-      '@smithy/node-config-provider': 4.3.12
-      '@smithy/types': 4.13.1
-      '@smithy/util-config-provider': 4.2.2
-      tslib: 2.8.1
-
   '@aws-sdk/util-user-agent-node@3.973.12':
     dependencies:
       '@aws-sdk/middleware-user-agent': 3.972.26
@@ -6753,12 +6672,6 @@ snapshots:
       '@smithy/node-config-provider': 4.3.12
       '@smithy/types': 4.13.1
       '@smithy/util-config-provider': 4.2.2
-      tslib: 2.8.1
-
-  '@aws-sdk/xml-builder@3.972.15':
-    dependencies:
-      '@smithy/types': 4.13.1
-      fast-xml-parser: 5.5.8
       tslib: 2.8.1
 
   '@aws-sdk/xml-builder@3.972.16':

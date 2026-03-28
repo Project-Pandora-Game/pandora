@@ -44,4 +44,42 @@
 			}
 		}
 	}
+
+	th.sortable {
+		cursor: pointer;
+		user-select: none;
+		white-space: nowrap;
+
+		&.active {
+			background: common.$theme-tablist-tab-hover-background;
+			color: common.$theme-tablist-tab-hover-text;
+
+			@include common.forcedColors {
+				background: SelectedItem;
+				color: SelectedItemText;
+			}
+		}
+
+		&:focus-visible {
+			border-color: common.$theme-tablist-tab-selected-visiblefocus-outline;
+			z-index: 1;
+
+			@include common.forcedColors {
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
+		}
+
+		&:hover:not(.active) {
+			background: common.$theme-tablist-tab-hover-background;
+			color: common.$theme-tablist-tab-hover-text;
+
+			@include common.forcedColors {
+				background: ButtonFace;
+				color: ButtonText;
+				border-color: common.$forcedColors-accentColorFallback;
+				border-color: AccentColor;
+			}
+		}
+	}
 }

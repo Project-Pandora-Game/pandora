@@ -1,6 +1,7 @@
 import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
+	useId,
 	useMemo,
 	useState,
 	type ReactNode,
@@ -50,9 +51,10 @@ import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.ts
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingRoomCharacterListDisplayOffline, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
+	const id = useId();
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
@@ -60,6 +62,7 @@ export function RoomControls(): ReactElement | null {
 	const gameState = useGameStateOptional();
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
+	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
 
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
@@ -110,12 +113,24 @@ export function RoomControls(): ReactElement | null {
 			</Row>
 			{ multipleRooms ? null : '\u00a0' }
 			<SpaceVisibilityWarning />
-			<span>
-				{ characterCount > 1 ?
-				`These ${characterCount} characters are ` :
-				 'This character is ' }
-				in the space <b>{ spaceConfig.name }</b>:
-			</span>
+			<Row alignX='space-between' wrap>
+				<span>
+					{ characterCount > 1 ?
+					`These ${characterCount} characters are ` :
+					'This character is ' }
+					in the space <b>{ spaceConfig.name }</b>:
+				</span>
+				<span>
+					<Checkbox
+						id={ id + ':room-character-list-offline' }
+						checked={ listOfflineCharacters }
+						onChange={ (newValue) => {
+							SettingRoomCharacterListDisplayOffline.value = newValue;
+						} }
+					/>
+					<label htmlFor={ id + ':room-character-list-offline' }> List offline characters</label>
+				</span>
+			</Row>
 			<DisplayRooms
 				player={ player }
 				playerState={ playerState }
@@ -560,7 +575,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 function DisplayCharacter({ char, globalState }: {
 	char: Character<ICharacterRoomData>;
 	globalState: AssetFrameworkGlobalState;
-}): ReactElement {
+}): ReactElement | null {
 	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { targets, setTargets } = useChatInput();
@@ -576,6 +591,7 @@ function DisplayCharacter({ char, globalState }: {
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(globalState, char.id);
+	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
 	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 	const isBlocked = blockedAccounts.some((a) => a.id === data.accountId);
 
@@ -611,6 +627,9 @@ function DisplayCharacter({ char, globalState }: {
 			},
 		});
 	}, [char, openContextMenu]);
+
+	if (data.onlineStatus === 'offline' && !listOfflineCharacters)
+		return null;
 
 	return (
 		<fieldset className='character'>

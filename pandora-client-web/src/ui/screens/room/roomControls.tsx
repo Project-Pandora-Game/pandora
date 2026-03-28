@@ -571,7 +571,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 function DisplayCharacter({ char, globalState }: {
 	char: Character<ICharacterRoomData>;
 	globalState: AssetFrameworkGlobalState;
-}): ReactElement {
+}): ReactElement | null {
 	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { targets, setTargets } = useChatInput();
@@ -624,110 +624,106 @@ function DisplayCharacter({ char, globalState }: {
 		});
 	}, [char, openContextMenu]);
 
+	if (data.onlineStatus === 'offline' && !listCharacter)
+		return null;
+
 	return (
-		<>
-			{
-				data.onlineStatus !== 'offline' || (data.onlineStatus === 'offline' && listCharacter) ? (
-					<fieldset className='character'>
-						<legend className={ char.isPlayer() ? 'player' : '' }>
-							<button onClick={ openMenu }>
-								<span>
-									<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
-									<span><b>{ data.name }</b></span>
-									<span> ({ data.id })</span>
-								</span>
-							</button>
-							<span>
-								<span>{ data.accountDisplayName } ({ data.accountId })</span>
-							</span>
-							{
-								icons.length > 0 ? (
-									<span>
-										{ icons }
-									</span>
-								) : null
-							}
-							{
-								data.onlineStatus === 'online' ? (
-									null // No need to show online status
-								) : (
-									<span className={ `status status-${data.onlineStatus}` }>
-										<img
-											className='indicator'
-											src={ FRIEND_STATUS_ICONS[data.onlineStatus] }
-											alt={ FRIEND_STATUS_NAMES[data.onlineStatus] }
-										/>
-										{ FRIEND_STATUS_NAMES[data.onlineStatus] }
-									</span>
-								)
-							}
-							<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
-						</legend>
-						<Column>
-							<Row wrap>
-								<Button className='slim' onClick={ () => {
-									navigate(`/wardrobe/character/${data.id}`);
-								} }>
-									Wardrobe
-								</Button>
-								<Button className='slim' onClick={ () => {
-									navigate(`/profiles/character/${data.id}`, {
-										state: {
-											back: location.pathname,
-										},
-									});
-								} }>
-									Profile
-								</Button>
-								{ !isPlayer ? (
-									<Button className='slim' onClick={ () => {
-										setTargets([data.id]);
-									} }>
-										Whisper
-									</Button>
-								) : null }
-								{ !isPlayer && targets != null && !targets.some((t) => t.id === data.id) ? (
-									<Button className='slim' onClick={ () => {
-										setTargets([...targets.map((t) => t.id), data.id]);
-									} }>
-										Add to whisper group
-									</Button>
-								) : null }
-								{ !isPlayer && targets != null && targets.some((t) => t.id === data.id) ? (
-									<Button className='slim' onClick={ () => {
-										setTargets(targets.map((t) => t.id).filter((t) => t !== data.id));
-									} }>
-										Remove from whisper group
-									</Button>
-								) : null }
-								{ isPlayer && (
-									<Button className='slim' onClick={ showRestrictionOverrideContext }>
-										{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
-									</Button>
-								) }
-								{ (state != null && playerRoom != null && state.currentRoom !== playerRoom.id) ? (
-									<GameLogicActionButton
-										action={ {
-											type: 'moveCharacter',
-											target: { type: 'character', characterId: char.id },
-											moveTo: {
-												type: 'normal',
-												room: playerRoom.id,
-												position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
-											},
-										} }
-										disabled={ state.position.following != null }
-										className='slim'
-									>
-										Move to my current room
-									</GameLogicActionButton>
-								) : null }
-							</Row>
-						</Column>
-					</fieldset>
-				) :
-				null
-			}
-		</>
+		<fieldset className='character'>
+			<legend className={ char.isPlayer() ? 'player' : '' }>
+				<button onClick={ openMenu }>
+					<span>
+						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
+						<span><b>{ data.name }</b></span>
+						<span> ({ data.id })</span>
+					</span>
+				</button>
+				<span>
+					<span>{ data.accountDisplayName } ({ data.accountId })</span>
+				</span>
+				{
+					icons.length > 0 ? (
+						<span>
+							{ icons }
+						</span>
+					) : null
+				}
+				{
+					data.onlineStatus === 'online' ? (
+						null // No need to show online status
+					) : (
+						<span className={ `status status-${data.onlineStatus}` }>
+							<img
+								className='indicator'
+								src={ FRIEND_STATUS_ICONS[data.onlineStatus] }
+								alt={ FRIEND_STATUS_NAMES[data.onlineStatus] }
+							/>
+							{ FRIEND_STATUS_NAMES[data.onlineStatus] }
+						</span>
+					)
+				}
+				<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
+			</legend>
+			<Column>
+				<Row wrap>
+					<Button className='slim' onClick={ () => {
+						navigate(`/wardrobe/character/${data.id}`);
+					} }>
+						Wardrobe
+					</Button>
+					<Button className='slim' onClick={ () => {
+						navigate(`/profiles/character/${data.id}`, {
+							state: {
+								back: location.pathname,
+							},
+						});
+					} }>
+						Profile
+					</Button>
+					{ !isPlayer ? (
+						<Button className='slim' onClick={ () => {
+							setTargets([data.id]);
+						} }>
+							Whisper
+						</Button>
+					) : null }
+					{ !isPlayer && targets != null && !targets.some((t) => t.id === data.id) ? (
+						<Button className='slim' onClick={ () => {
+							setTargets([...targets.map((t) => t.id), data.id]);
+						} }>
+							Add to whisper group
+						</Button>
+					) : null }
+					{ !isPlayer && targets != null && targets.some((t) => t.id === data.id) ? (
+						<Button className='slim' onClick={ () => {
+							setTargets(targets.map((t) => t.id).filter((t) => t !== data.id));
+						} }>
+							Remove from whisper group
+						</Button>
+					) : null }
+					{ isPlayer && (
+						<Button className='slim' onClick={ showRestrictionOverrideContext }>
+							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
+						</Button>
+					) }
+					{ (state != null && playerRoom != null && state.currentRoom !== playerRoom.id) ? (
+						<GameLogicActionButton
+							action={ {
+								type: 'moveCharacter',
+								target: { type: 'character', characterId: char.id },
+								moveTo: {
+									type: 'normal',
+									room: playerRoom.id,
+									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
+								},
+							} }
+							disabled={ state.position.following != null }
+							className='slim'
+						>
+							Move to my current room
+						</GameLogicActionButton>
+					) : null }
+				</Row>
+			</Column>
+		</fieldset>
 	);
 }

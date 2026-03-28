@@ -41,7 +41,7 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 						alt='Clear notifications'
 						disabled={ notifications.length === 0 }
 					/>
-					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◴ { timeString }</span>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
 					<Button
 						onClick={ close }
 						theme='default'

@@ -1,6 +1,8 @@
+import classNames from 'classnames';
 import { AccountId, AssertNever, FriendSortKeySchema, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus, type FriendSortKey } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router';
+import * as z from 'zod';
 import statusIconAway from '../../assets/icons/state-away.svg';
 import statusIconDND from '../../assets/icons/state-dnd.svg';
 import statusIconLookingDom from '../../assets/icons/state-dom.svg';
@@ -175,21 +177,27 @@ function IncomingRequestActions({ id, displayName }: { id: AccountId; displayNam
 	);
 }
 
-const FRIEND_SORT_STORAGE = BrowserStorage.createSession<FriendSortKey>(
+const FRIEND_SORT_STORAGE = BrowserStorage.createSession(
 	'contacts.friendSort',
-	'since',
-	FriendSortKeySchema,
+	{ by: 'since', reverse: false },
+	z.object({
+		by: FriendSortKeySchema,
+		reverse: z.boolean(),
+	}),
 );
 
 function ShowFriends() {
 	const friends = useAccountContacts('friend');
 	const status = useFriendStatus();
-	const [sortKey, setSortKey] = React.useState<FriendSortKey>(() => FRIEND_SORT_STORAGE.value);
+	const sortConfig = useObservable(FRIEND_SORT_STORAGE);
 
 	const handleSort = useCallback((key: FriendSortKey) => {
-		FRIEND_SORT_STORAGE.value = key;
-		setSortKey(key);
-	}, [setSortKey]);
+		const current = FRIEND_SORT_STORAGE.value;
+		FRIEND_SORT_STORAGE.value = {
+			by: key,
+			reverse: current.by === key && !current.reverse,
+		};
+	}, []);
 
 	const friendsWithStatus = useMemo(() => {
 		const data = friends.map((friend) => {
@@ -199,12 +207,12 @@ function ShowFriends() {
 				displayName: friend.displayName,
 				labelColor: ((stat?.status !== 'offline') ? stat?.labelColor : null) ?? 'transparent',
 				time: friend.time,
-				status: stat?.status ?? 'offline' as AccountOnlineStatus,
+				status: stat?.status ?? 'offline' satisfies AccountOnlineStatus,
 				characters: stat?.characters,
 			};
 		});
 
-		switch (sortKey) {
+		switch (sortConfig.by) {
 			case 'id':
 				data.sort((a, b) => a.id - b.id);
 				break;
@@ -223,24 +231,34 @@ function ShowFriends() {
 				data.sort((a, b) => a.time - b.time);
 				break;
 			default:
-				AssertNever(sortKey);
+				AssertNever(sortConfig.by);
+		}
+
+		if (sortConfig.reverse) {
+			data.reverse();
 		}
 
 		return data.map((friend) => (
 			<FriendRow key={ friend.id } { ...friend } />
 		));
-	}, [friends, status, sortKey]);
+	}, [friends, status, sortConfig]);
 
 	const SortHeader = useCallback(({ label, col }: { label: string; col: FriendSortKey; }) => (
 		<th key={ col }
-			className={ `sortable${sortKey === col ? ' active' : ''}` }
+			className={ classNames('sortable', sortConfig.by === col ? 'active' : null) }
 			onClick={ () => handleSort(col) }
+			onKeyUp={ (ev) => {
+				if (ev.key === ' ' || ev.key === 'Enter') {
+					ev.preventDefault();
+					handleSort(col);
+				}
+			} }
 			tabIndex={ 0 }
-			aria-sort={ sortKey === col ? 'ascending' : 'none' }
+			aria-sort={ sortConfig.by === col ? (sortConfig.reverse ? 'descending' : 'ascending') : 'none' }
 		>
-			{ label }{ sortKey === col ? ' ▾' : ' ⇅' }
+			{ label }{ sortConfig.by === col ? (sortConfig.reverse ? ' ▲' : ' ▼') : ' ↕' }
 		</th>
-	), [sortKey, handleSort]);
+	), [sortConfig, handleSort]);
 
 	return (
 		<Scrollable direction='vertical'>

@@ -44,7 +44,7 @@
 		"@octokit/rest": "22.0.1",
 		"argon2": "0.44.0",
 		"async-lock": "1.4.1",
-		"discord.js": "14.25.1",
+		"discord.js": "14.26.0",
 		"express": "5.2.1",
 		"immer": "11.1.4",
 		"json-diff": "1.0.6",

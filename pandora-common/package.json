@@ -61,7 +61,7 @@
 		"async-lock": "1.4.1",
 		"delaunator": "5.1.0",
 		"immer": "11.1.4",
-		"lodash-es": "4.17.23",
+		"lodash-es": "4.18.1",
 		"nanoid": "5.1.7"
 	},
 	"devDependencies": {

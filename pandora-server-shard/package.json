@@ -43,7 +43,7 @@
 		"express": "5.2.1",
 		"immer": "11.1.4",
 		"json-diff": "1.0.6",
-		"lodash-es": "4.17.23",
+		"lodash-es": "4.18.1",
 		"mongodb": "7.1.1",
 		"nanoid": "5.1.7",
 		"pandora-common": "workspace:*",

@@ -102,32 +102,32 @@ importers:
         specifier: 8.17.1
         version: 8.17.1
       react:
-        specifier: 19.2.4
-        version: 19.2.4
+        specifier: 19.2.5
+        version: 19.2.5
       react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: 19.2.5
+        version: 19.2.5(react@19.2.5)
       react-hook-form:
         specifier: 7.72.1
-        version: 7.72.1(react@19.2.4)
+        version: 7.72.1(react@19.2.5)
       react-reconciler:
         specifier: 0.33.0
-        version: 0.33.0(react@19.2.4)
+        version: 0.33.0(react@19.2.5)
       react-reverse-portal:
         specifier: 2.3.0
-        version: 2.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 2.3.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-rnd:
         specifier: 10.5.3
-        version: 10.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 10.5.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-router:
         specifier: 7.14.0
-        version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-switch:
         specifier: 7.1.0
-        version: 7.1.0(patch_hash=a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 7.1.0(patch_hash=a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-toastify:
         specifier: 10.0.6
-        version: 10.0.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 10.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       socket.io-client:
         specifier: 4.8.3
         version: 4.8.3
@@ -146,7 +146,7 @@ importers:
         version: 6.9.1
       '@testing-library/react':
         specifier: 16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@testing-library/user-event':
         specifier: 14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
@@ -5034,10 +5034,10 @@ packages:
       react: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  react-dom@19.2.4:
-    resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
+  react-dom@19.2.5:
+    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
     peerDependencies:
-      react: ^19.2.4
+      react: ^19.2.5
 
   react-draggable@4.5.0:
     resolution: {integrity: sha512-VC+HBLEZ0XJxnOxVAZsdRi8rD04Iz3SiiKOoYzamjylUcju/hP9np/aZdLHf/7WOD268WMoNJMvYfB5yAK45cw==}
@@ -5110,8 +5110,8 @@ packages:
       react: '>=18'
       react-dom: '>=18'
 
-  react@19.2.4:
-    resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
+  react@19.2.5:
+    resolution: {integrity: sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA==}
     engines: {node: '>=0.10.0'}
 
   readable-stream@2.3.8:
@@ -8029,12 +8029,12 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@babel/runtime': 7.29.2
       '@testing-library/dom': 10.4.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
     optionalDependencies:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -11843,26 +11843,26 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  re-resizable@6.11.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  re-resizable@6.11.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
-  react-dom@19.2.4(react@19.2.4):
+  react-dom@19.2.5(react@19.2.5):
     dependencies:
-      react: 19.2.4
+      react: 19.2.5
       scheduler: 0.27.0
 
-  react-draggable@4.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-draggable@4.5.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       clsx: 2.1.1
       prop-types: 15.8.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
-  react-hook-form@7.72.1(react@19.2.4):
+  react-hook-form@7.72.1(react@19.2.5):
     dependencies:
-      react: 19.2.4
+      react: 19.2.5
 
   react-is@16.13.1: {}
 
@@ -11870,9 +11870,9 @@ snapshots:
 
   react-is@18.3.1: {}
 
-  react-reconciler@0.33.0(react@19.2.4):
+  react-reconciler@0.33.0(react@19.2.5):
     dependencies:
-      react: 19.2.4
+      react: 19.2.5
       scheduler: 0.27.0
 
   react-refresh-typescript@2.0.12(react-refresh@0.18.0)(typescript@5.9.3):
@@ -11882,40 +11882,40 @@ snapshots:
 
   react-refresh@0.18.0: {}
 
-  react-reverse-portal@2.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-reverse-portal@2.3.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
-  react-rnd@10.5.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-rnd@10.5.3(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      re-resizable: 6.11.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      react-draggable: 4.5.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      re-resizable: 6.11.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      react-draggable: 4.5.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       tslib: 2.6.2
 
-  react-router@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       cookie: 1.1.1
-      react: 19.2.4
+      react: 19.2.5
       set-cookie-parser: 2.7.2
     optionalDependencies:
-      react-dom: 19.2.4(react@19.2.4)
+      react-dom: 19.2.5(react@19.2.5)
 
-  react-switch@7.1.0(patch_hash=a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-switch@7.1.0(patch_hash=a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       prop-types: 15.8.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
-  react-toastify@10.0.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  react-toastify@10.0.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
       clsx: 2.1.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
-  react@19.2.4: {}
+  react@19.2.5: {}
 
   readable-stream@2.3.8:
     dependencies:

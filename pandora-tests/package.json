@@ -23,7 +23,7 @@
 		"@types/mailparser": "3.4.6",
 		"@types/node": "24.12.2",
 		"express": "5.2.1",
-		"mailparser": "3.9.6",
+		"mailparser": "3.9.8",
 		"nyc": "18.0.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",

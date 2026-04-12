@@ -70,6 +70,7 @@ function useCharacterMenuContext() {
 function AdminActionContextMenuInner(): ReactElement {
 	const { character, spaceInfo, setMenu, close } = useCharacterMenuContext();
 	const isCharacterAdmin = IsSpaceAdmin(spaceInfo, { id: character.data.accountId });
+	const isCharacterOwner = spaceInfo.owners.includes(character.data.accountId);
 	const isAllowed = spaceInfo.allow.includes(character.data.accountId);
 	const connector = useDirectoryConnector();
 
@@ -149,6 +150,11 @@ function AdminActionContextMenuInner(): ReactElement {
 	}, null);
 
 	const [demote, demoteProcessing] = useAsyncEvent(async () => {
+		if (isCharacterOwner) {
+			toast('You cannot demote a space\'s owner.', TOAST_OPTIONS_WARNING);
+			return;
+		}
+
 		const result = await connector.awaitResponse('spaceAdminAction', { action: 'demote', targets: [character.data.accountId] });
 
 		if (result.result !== 'ok') {

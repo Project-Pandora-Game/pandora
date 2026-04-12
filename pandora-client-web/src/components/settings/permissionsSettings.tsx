@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_SETTINGS_DEFAULT, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
@@ -26,12 +26,14 @@ import toggle from '../../assets/icons/toggle.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useFunctionBind } from '../../common/useFunctionBind.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useGameStateOptional, useGlobalState } from '../../services/gameLogic/gameStateHooks.ts';
+import { useGameStateOptional, useGlobalState, useResolveCharacterName, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
 import { CharacterListInputActions } from '../../ui/components/characterListInput/characterListInput.tsx';
 import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
+import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../common/usageMeter/usageMeter.tsx';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog.tsx';
@@ -39,6 +41,7 @@ import type { GameState, PermissionPromptData } from '../gameContext/gameStateCo
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HoverElement } from '../hoverElement/hoverElement.tsx';
+import './settings.scss';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -50,6 +53,7 @@ export function PermissionsSettings(): ReactElement | null {
 		<>
 			<InteractionPermissions />
 			<ItemLimitsPermissions />
+			<PerCharacterPermissionsSection />
 		</>
 	);
 }
@@ -723,5 +727,277 @@ function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => vo
 				Deny always
 			</Button>
 		</>
+	);
+}
+
+function ResolvedNamePreview({ characterId }: { characterId: CharacterId | null; }): ReactElement {
+	const resolvedName = useResolveCharacterName(characterId ?? 'c0');
+
+	return <span>{ characterId == null ? '...' : (resolvedName ?? '[unknown]') }</span>;
+}
+
+function PerCharacterPermissionsSection(): ReactElement {
+	const [selectedCharacter, setSelectedCharacter] = useState<CharacterId | null>(null);
+
+	const rawCharacters = useSpaceCharacters();
+	const spaceCharacters = useMemo(() =>
+		rawCharacters.slice().sort((a, b) => {
+			if (a.isPlayer() !== b.isPlayer()) return a.isPlayer() ? -1 : 1;
+			return a.name.localeCompare(b.name);
+		}),
+	[rawCharacters]);
+
+	const [inputValue, setInputValue] = useState('');
+	const parsedInput = useMemo(() => {
+		const r = CharacterIdSchema.safeParse(/^[0-9]+$/.test(inputValue) ? `c${inputValue}` : inputValue);
+		return r.success ? r.data : null;
+	}, [inputValue]);
+
+	return (
+		<fieldset>
+			<legend>Permission overview for a specific character</legend>
+			<span><i>Check and adjust every permission for the character selected by their ID below:</i></span>
+			<Column padding='small' gap='large'>
+				<Row alignY='center'>
+					<Column gap='large'>
+						<label>Name:</label>
+						<label>Character ID:</label>
+					</Column>
+					<Column gap='small'>
+						<ResolvedNamePreview characterId={ parsedInput } />
+						<Row alignY='center'>
+							<TextInput
+								value={ inputValue }
+								onChange={ setInputValue }
+							/>
+							<Button
+								slim
+								disabled={ parsedInput == null }
+								onClick={ () => {
+									if (parsedInput != null) {
+										setSelectedCharacter(parsedInput);
+										setInputValue('');
+									}
+								} }
+							>
+								Select
+							</Button>
+						</Row>
+					</Column>
+				</Row>
+				<fieldset>
+					<legend>Quick selection</legend>
+					<Column alignX='start'>
+						{ spaceCharacters.map((c) => (
+							<Button
+								key={ c.id }
+								slim
+								onClick={ () => {
+									setInputValue('');
+									setSelectedCharacter(c.id);
+								} }
+							>
+								{ c.name } ({ c.id }) { c.isPlayer() ? '[You]' : '' }
+							</Button>
+						)) }
+					</Column>
+				</fieldset>
+			</Column>
+			{ selectedCharacter != null && (
+				<PerCharacterPermissionsDialog
+					characterId={ selectedCharacter }
+					hide={ () => setSelectedCharacter(null) }
+				/>
+			) }
+		</fieldset>
+	);
+}
+
+function PerCharacterPermissionsDialog({
+	characterId,
+	hide,
+}: {
+	characterId: CharacterId;
+	hide: () => void;
+}): ReactElement {
+	const resolvedName = useResolveCharacterName(characterId);
+	const setConfig = usePermissionConfigSetAny();
+
+	// Set non-default value for a single permission
+	const setOverride = useCallback(
+		(group: PermissionGroup, id: string, value: PermissionType | null) => {
+			setConfig(group, id, characterId, value as PermissionConfigChangeType);
+		},
+		[setConfig, characterId],
+	);
+
+	// Reset all permissions for this character
+	const resetAll = useCallback(() => {
+		for (const id of INTERACTION_IDS) {
+			setConfig('interaction', id, characterId, null);
+		}
+		for (const group of KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS)) {
+			setConfig('assetPreferences', group, characterId, null);
+		}
+		for (const typeId of KnownObject.keys(CHARACTER_MODIFIER_TYPE_DEFINITION)) {
+			setConfig('characterModifierType', typeId, characterId, null);
+		}
+	}, [setConfig, characterId]);
+
+	return (
+		<ModalDialog>
+			<PermissionConfigDialogEscaper hide={ hide } />
+			<Row alignX='center'>
+				<h2>Permissions for { resolvedName ?? '[unknown]' } ({ characterId })</h2>
+			</Row>
+			<Column padding='medium' gap='large'>
+
+				<FieldsetToggle legend='Interaction permissions'>
+					<Column gap='none' className='permission-list'>
+						{ INTERACTION_IDS.map((id) => (
+							<PerCharacterPermissionRow
+								key={ id }
+								visibleName={ INTERACTION_CONFIG[id].visibleName }
+								icon={ INTERACTION_CONFIG[id].icon }
+								permissionGroup='interaction'
+								permissionId={ id }
+								characterId={ characterId }
+								setOverride={ setOverride }
+							/>
+						)) }
+					</Column>
+				</FieldsetToggle>
+
+				<FieldsetToggle legend='Item limits' open={ false }>
+					<Column gap='none' className='permission-list'>
+						{ KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => {
+							const config = ASSET_PREFERENCES_PERMISSIONS[group];
+							if (config == null) return null;
+							return (
+								<PerCharacterPermissionRow
+									key={ group }
+									visibleName={ config.visibleName }
+									icon={ config.icon }
+									permissionGroup='assetPreferences'
+									permissionId={ group }
+									characterId={ characterId }
+									setOverride={ setOverride }
+								/>
+							);
+						}) }
+					</Column>
+				</FieldsetToggle>
+
+				<FieldsetToggle legend='Character modifier permissions' open={ false }>
+					<Column gap='none' className='permission-list'>
+						{ KnownObject.keys(CHARACTER_MODIFIER_TYPE_DEFINITION).map((typeId) => (
+							<PerCharacterPermissionRow
+								key={ typeId }
+								visibleName={ CHARACTER_MODIFIER_TYPE_DEFINITION[typeId].visibleName }
+								icon=''
+								permissionGroup='characterModifierType'
+								permissionId={ typeId }
+								characterId={ characterId }
+								setOverride={ setOverride }
+							/>
+						)) }
+					</Column>
+				</FieldsetToggle>
+
+				<Row alignX='space-between' alignY='center' padding='small'>
+					<ButtonConfirm
+						slim
+						onClick={ resetAll }
+						title='Reset all to default'
+						content={ `Reset every permission granted to ${resolvedName ?? characterId} to the default value?` }
+					>
+						Reset all to default
+					</ButtonConfirm>
+					<Button onClick={ hide }>Close</Button>
+				</Row>
+			</Column>
+		</ModalDialog>
+	);
+}
+
+function PerCharacterPermissionRow({
+	visibleName,
+	icon,
+	permissionGroup,
+	permissionId,
+	characterId,
+	setOverride,
+}: {
+	visibleName: string;
+	icon: string;
+	permissionGroup: PermissionGroup;
+	permissionId: string;
+	characterId: CharacterId;
+	setOverride: (group: PermissionGroup, id: string, value: PermissionType | null) => void;
+}): ReactElement {
+	const permissionData = usePermissionData(permissionGroup, permissionId);
+
+	if (permissionData == null) {
+		return (
+			<Row alignY='center' padding='small'>
+				{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+				<span className='flex-1'>{ visibleName }</span>
+				<span>Loading…</span>
+			</Row>
+		);
+	}
+
+	if (permissionData.result !== 'ok') {
+		return (
+			<Row alignY='center' padding='small'>
+				{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+				<span className='flex-1'>{ visibleName }</span>
+				<span>Error: { permissionData.result }</span>
+			</Row>
+		);
+	}
+
+	const { permissionSetup, permissionConfig } = permissionData;
+	const defaultConfig = MakePermissionConfigFromDefault(permissionSetup.defaultConfig);
+	const defaultPermission: PermissionType = permissionConfig?.allowOthers ?? defaultConfig.allowOthers;
+	const characterOverride: PermissionType | undefined = permissionConfig?.characterOverrides[characterId];
+
+	return (
+		<Row alignY='center' padding='small' gap='small'>
+			{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+
+			<span className='flex-1'>{ visibleName } </span>
+
+			{ PermissionTypeSchema.options.map((type) => {
+				const isActive = (characterOverride ?? defaultPermission) === type;
+				const isBase = type === defaultPermission;
+				return (
+					<SelectionIndicator key={ type } padding='tiny' selected={ isActive }>
+						<Button
+							slim
+							className={ isBase ? 'permission-base-highlight' : undefined }
+							onClick={ () => {
+								if (type === defaultPermission) {
+									setOverride(permissionGroup, permissionId, null);
+								} else {
+									setOverride(permissionGroup, permissionId, type);
+								}
+							} }
+						>
+							{ type }
+						</Button>
+					</SelectionIndicator>
+				);
+			}) }
+
+			<Button
+				slim
+				style={ characterOverride != null ? undefined : { visibility: 'hidden' } }
+				title={ `Remove non-default permission and change it back to '${defaultPermission}'` }
+				onClick={ () => setOverride(permissionGroup, permissionId, null) }
+			>
+				↩ reset
+			</Button>
+		</Row>
 	);
 }

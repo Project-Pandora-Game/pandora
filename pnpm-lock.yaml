@@ -94,13 +94,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.17.1)
+        version: 6.1.5(pixi.js@8.18.1)
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.17.1)
+        version: 6.0.3(pixi.js@8.18.1)
       pixi.js:
-        specifier: 8.17.1
-        version: 8.17.1
+        specifier: 8.18.1
+        version: 8.18.1
       react:
         specifier: 19.2.5
         version: 19.2.5
@@ -2181,10 +2181,9 @@ packages:
   '@webgpu/types@0.1.69':
     resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==}
 
-  '@xmldom/xmldom@0.8.11':
-    resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
+  '@xmldom/xmldom@0.8.12':
+    resolution: {integrity: sha512-9k/gHF6n/pAi/9tqr3m3aqkuiNosYTurLLUtc7xQ9sxB/wm7WPygCv8GYa6mS0fLJEHhqMC1ATYhz++U/lRHqg==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -4878,8 +4877,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.17.1:
-    resolution: {integrity: sha512-OB4TpZHrP5RYy+7FqmFrAc0IHRhfOoNIfF4sVeinvK3aG1r2pYrSMneJAKi9+WvGKC70Dj7GEpZ2OZGB6o/xdg==}
+  pixi.js@8.18.1:
+    resolution: {integrity: sha512-6LUPWYgulZhp/w4kam2XHXB0QedISZIqrJbRdHLLQ3csn5a38uzKxAp6B5j6s89QFYaIJbg95kvgTRcbgpO1ow==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -8528,7 +8527,7 @@ snapshots:
 
   '@webgpu/types@0.1.69': {}
 
-  '@xmldom/xmldom@0.8.11': {}
+  '@xmldom/xmldom@0.8.12': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -11682,21 +11681,21 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.17.1):
+  pixi-filters@6.1.5(pixi.js@8.18.1):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.17.1
+      pixi.js: 8.18.1
 
-  pixi-viewport@6.0.3(pixi.js@8.17.1):
+  pixi-viewport@6.0.3(pixi.js@8.18.1):
     dependencies:
-      pixi.js: 8.17.1
+      pixi.js: 8.18.1
 
-  pixi.js@8.17.1:
+  pixi.js@8.18.1:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0
       '@webgpu/types': 0.1.69
-      '@xmldom/xmldom': 0.8.11
+      '@xmldom/xmldom': 0.8.12
       earcut: 3.0.2
       eventemitter3: 5.0.4
       gifuct-js: 2.1.2

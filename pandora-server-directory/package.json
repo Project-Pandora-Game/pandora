@@ -49,7 +49,7 @@
 		"immer": "11.1.4",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.18.1",
-		"mongodb": "7.1.1",
+		"mongodb": "7.2.0",
 		"mongodb-memory-server-core": "11.0.1",
 		"nanoid": "5.1.9",
 		"nodemailer": "8.0.5",

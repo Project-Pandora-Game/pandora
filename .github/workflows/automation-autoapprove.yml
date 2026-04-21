@@ -16,12 +16,12 @@ jobs:
     steps:
       - name: Auto-approve (Lead Developer)
         if: contains(fromJSON('["ace-1331", "ClaudiaMia", "elliesec", "Jomshir98", "Sekkmer"]'), github.event.pull_request.user.login)
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v3.2.1
         with:
           review-message: "PR is from a Lead Developer."
 
       - name: Auto-approve (Renovate)
         if: github.event.pull_request.user.login == 'renovate[bot]'
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v3.2.1
         with:
           review-message: "Automated dependency update."

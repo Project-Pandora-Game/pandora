@@ -95,7 +95,7 @@ export abstract class ConnectionBase<
 		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 			this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		}
-		this.socket.emit(messageType as string, message);
+		this.socket.emit(messageType, message);
 	}
 
 	public awaitResponse<K extends SocketInterfaceRespondedMessages<OutboundT>>(

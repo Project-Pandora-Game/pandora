@@ -50,17 +50,17 @@ describe('ConnectionBase', () => {
 			jest.clearAllMocks();
 		});
 		it('should emit message with type', () => {
-			void mock.awaitResponse('type' as never, 'message' as never, 1 as never);
+			void mock.awaitResponse('type' as never, 'message' as never, 1);
 			expect(mockEmitTCB.mock.calls.length).toBe(1);
 			expect(mockEmitCB.mock.calls.length).toBe(0);
 		});
 		it('should call timeout', () => {
-			void mock.awaitResponse('type' as never, 'message' as never, 1 as never);
+			void mock.awaitResponse('type' as never, 'message' as never, 1);
 			expect(mockTimeout.mock.calls.length).toBe(1);
 		});
 
 		it('should debug messages in debug set', () => {
-			void mock.awaitResponse('debuggedType' as never, 'message' as never, 1 as never);
+			void mock.awaitResponse('debuggedType' as never, 'message' as never, 1);
 			expect(mockLogMessage.mock.calls.length).toBe(1);
 		});
 	});

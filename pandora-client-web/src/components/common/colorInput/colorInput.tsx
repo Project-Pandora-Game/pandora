@@ -337,9 +337,9 @@ export class Color {
 	public toHex(): HexRGBAColorString {
 		const [r, g, b] = this.rgb;
 		if (this.alpha === Color.maxAlpha) {
-			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
+			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}`;
 		}
-		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}` as HexRGBAColorString;
+		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}`;
 	}
 
 	/** Mix this color with another color, in ratios this:other (1-otherRatio):otherRatio */

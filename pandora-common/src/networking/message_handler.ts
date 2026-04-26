@@ -61,10 +61,11 @@ export class MessageHandler<T extends SocketInterfaceDefinition, Context = undef
 		message: SocketInterfaceRequest<T>[K],
 		context: Context,
 	): Promise<SocketInterfaceResponse<T>[K]> {
-		const handler = this._messageHandlers.get(messageType) as (MessageHandlerFunction<T, Context, K> | undefined);
+		const handler: MessageHandlerFunction<T, Context, K> | undefined = this._messageHandlers.get(messageType);
 		if (!handler) {
 			throw new Error(`Unknown messageType '${messageType}'`);
 		}
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 		return (await handler(message, context)) as SocketInterfaceResponse<T>[K];
 	}
 }

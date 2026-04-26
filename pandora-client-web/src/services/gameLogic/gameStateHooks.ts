@@ -48,10 +48,10 @@ export function useSpaceCharacters(): readonly Character<ICharacterRoomData>[] {
 	return useNullableObservable(context?.characters) ?? EMPTY_ARRAY;
 }
 
-export function useResolveCharacterName(characterId: CharacterId): string | null {
+export function useResolveCharacterName(characterId: CharacterId | null): string | null {
 	// Look through space characters to see if we find matching one
 	const characters = useSpaceCharacters();
-	const character = characters.find((c) => c.id === characterId);
+	const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
 
 	const data = useCharacterDataOptional(character ?? null);
 

@@ -134,7 +134,7 @@ export function DialogInPortal({ children, priority, location = 'global', onMoun
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center', contentOverflow = 'auto', id, className, allowClickBubbling = false }: CommonProps & {
+export function ModalDialog({ children, priority, position = 'center', rawContent = false, contentOverflow = 'auto', id, className, allowClickBubbling = false }: CommonProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -142,6 +142,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	 */
 	priority?: number;
 	position?: 'center' | 'top';
+	rawContent?: boolean;
 	/**
 	 * What overflow style should be used for the dialog content
 	 * @default 'auto'
@@ -164,9 +165,19 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	return (
 		<DialogInPortal priority={ priority }>
 			<DraggableDialogPriorityContext.Provider value={ (priority ?? 0) + 1 }>
-				<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
-					<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
-						{ children }
+				<div
+					id={ id }
+					className={ classNames('dialog', position, className) }
+					onClick={ clickSink }
+					onPointerDown={ clickSink }
+					onPointerUp={ clickSink }
+				>
+					<div className='dialog-window'>
+						{ rawContent ? children : (
+							<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
+								{ children }
+							</div>
+						) }
 					</div>
 				</div>
 			</DraggableDialogPriorityContext.Provider>
@@ -216,6 +227,39 @@ const INITIAL_POSITION_OFFSET: PointLike = { x: 15, y: 30 };
 let OpenDraggableDialogCount = 0;
 /** Mark that gets consumed by reset. Used to handle edge-case where multiple dialogs get opened in a single render. */
 let ShouldResetIndex = false;
+
+export function DialogHeader({ title, close, toggleShade, shaded = false, headerExtraBeforeTitle, headerExtraAfterTitle }: {
+	title: ReactNode;
+	close?: () => void;
+	/** If set displays a button to toggle dialog's shading */
+	toggleShade?: () => void;
+	/** Whether the dialog is currently shaded */
+	shaded?: boolean;
+	/** Content inserted before title in the header. */
+	headerExtraBeforeTitle?: ReactNode;
+	/** Content inserted after title in the header. */
+	headerExtraAfterTitle?: ReactNode;
+}) {
+	return (
+		<header className='dialog-header'>
+			{ headerExtraBeforeTitle }
+			<span className='drag-handle dialog-title'>
+				{ title }
+			</span>
+			{ headerExtraAfterTitle }
+			{ toggleShade != null ? (
+				<div className={ classNames('dialog-shade', shaded ? 'active' : null) } title='Shade this dialog' onClick={ toggleShade }>
+					{ shaded ? '▼' : '▲' }
+				</div>
+			) : null }
+			{ close != null ? (
+				<div className='dialog-close' onClick={ close }>
+					<img src={ crossIcon } alt='Close dialog' crossOrigin='anonymous' />
+				</div>
+			) : null }
+		</header>
+	);
+}
 
 export function DraggableDialog({
 	children,
@@ -403,25 +447,14 @@ export function DraggableDialog({
 					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
-					<header className='dialog-header'>
-						{ headerExtraBeforeTitle }
-						<span className='drag-handle dialog-title'>
-							{ title }
-						</span>
-						{ headerExtraAfterTitle }
-						{
-							allowShade ? (
-								<div className={ classNames('dialog-shade', shaded ? 'active' : null) } title='Shade this dialog' onClick={ toggleShade }>
-									{ shaded ? '▼' : '▲' }
-								</div>
-							) : null
-						}
-						{ hiddenClose !== true ? (
-							<div className='dialog-close' onClick={ close }>
-								<img src={ crossIcon } alt='Close dialog' crossOrigin='anonymous' />
-							</div>
-						) : null }
-					</header>
+					<DialogHeader
+						title={ title }
+						headerExtraBeforeTitle={ headerExtraBeforeTitle }
+						headerExtraAfterTitle={ headerExtraAfterTitle }
+						close={ hiddenClose ? undefined : close }
+						toggleShade={ allowShade ? toggleShade : undefined }
+						shaded={ shaded }
+					/>
 					{
 						rawContent ? (shaded ? null : children) : (
 							<div className='dialog-content'>

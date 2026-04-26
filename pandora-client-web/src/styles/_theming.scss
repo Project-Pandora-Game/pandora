@@ -540,6 +540,9 @@ $theme-settings-fieldset-legend-text: #eee;
 // Used for highlighting "current connection" in security settings
 $theme-settings-table-row-highlight-background: color-mix(in srgb, #2d373d, $theme-accent-color 35%);
 
+// Used for highlighting default permission in permission settings
+$theme-settings-permission-button-default-highlight: #999;
+
 //#endregion
 
 //#region Login & Registration

@@ -120,6 +120,11 @@ function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminActi
 					return false;
 				}
 
+				if (['demote'].includes(action) && gameState.currentSpace.value.config.owners.includes(target.data.accountId)) {
+					toast('You cannot demote a space\'s owner.', TOAST_OPTIONS_WARNING);
+					return false;
+				}
+
 				const result = await directoryConnector.awaitResponse('spaceAdminAction', {
 					action,
 					targets: [target.data.accountId],

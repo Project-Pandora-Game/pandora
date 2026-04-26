@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_SETTINGS_DEFAULT, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeSchema } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_SETTINGS_DEFAULT, CharacterId, CharacterIdSchema, CompareCharacterIds, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
@@ -355,9 +355,14 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Row alignX='space-between' alignY='center'>
 					<span>Allow others:</span>
 					<Row>
-						<PermissionAllowOthersSelector type='no' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
-						<PermissionAllowOthersSelector type='yes' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
-						<PermissionAllowOthersSelector type='prompt' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						{ PermissionTypeSchema.options.map((type) => (
+							<PermissionAllowOthersSelector key={ type }
+								type={ type }
+								setConfig={ setDefault }
+								effectiveConfig={ effectiveConfig }
+								permissionSetup={ permissionSetup }
+							/>
+						)) }
 					</Row>
 				</Row>
 			</Column>
@@ -427,7 +432,7 @@ function PermissionConfigOverrideType({ type, content, setConfig }: {
 	return (
 		<>
 			<Row>
-				<span className='flex-1'>{ capitalize(type as string) }:</span>
+				<span className='flex-1'>{ capitalize(type) }:</span>
 				<ButtonConfirm slim onClick={ () => setConfig('clearOverridesWith', type) }
 					title='Clear all overrides'
 					content={ `Are you sure you want to clear all overrides with ${type}?` }
@@ -732,7 +737,7 @@ function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => vo
 }
 
 function ResolvedNamePreview({ characterId }: { characterId: CharacterId | null; }): ReactElement {
-	const resolvedName = useResolveCharacterName(characterId ?? 'c0');
+	const resolvedName = useResolveCharacterName(characterId);
 
 	return <span>{ characterId == null ? '...' : (resolvedName ?? '[unknown]') }</span>;
 }
@@ -742,10 +747,12 @@ function PerCharacterPermissionsSection(): ReactElement {
 
 	const rawCharacters = useSpaceCharacters();
 	const spaceCharacters = useMemo(() =>
-		rawCharacters.slice().sort((a, b) => {
-			if (a.isPlayer() !== b.isPlayer()) return a.isPlayer() ? -1 : 1;
-			return a.name.localeCompare(b.name);
-		}),
+		rawCharacters
+			.filter((c) => !c.isPlayer())
+			.sort((a, b) => {
+				return a.name.localeCompare(b.name) ||
+					CompareCharacterIds(a.id, b.id);
+			}),
 	[rawCharacters]);
 
 	const [inputValue, setInputValue] = useState('');
@@ -787,21 +794,18 @@ function PerCharacterPermissionsSection(): ReactElement {
 				<fieldset>
 					<legend>Quick selection</legend>
 					<Column alignX='start'>
-						{ spaceCharacters
-							.filter((c) => !c.isPlayer())
-							.map((c) => (
-								<Button
-									key={ c.id }
-									slim
-									onClick={ () => {
-										setInputValue('');
-										setSelectedCharacter(c.id);
-									} }
-								>
-									{ c.name } ({ c.id })
-								</Button>
-							))
-						}
+						{ spaceCharacters.map((c) => (
+							<Button
+								key={ c.id }
+								slim
+								onClick={ () => {
+									setInputValue('');
+									setSelectedCharacter(c.id);
+								} }
+							>
+								{ c.name } ({ c.id })
+							</Button>
+						)) }
 					</Column>
 				</fieldset>
 			</Column>
@@ -826,12 +830,9 @@ function PerCharacterPermissionsDialog({
 	const setConfig = usePermissionConfigSetAny();
 
 	// Set non-default value for a single permission
-	const setOverride = useCallback(
-		(group: PermissionGroup, id: string, value: PermissionType | null) => {
-			setConfig(group, id, characterId, value as PermissionConfigChangeType);
-		},
-		[setConfig, characterId],
-	);
+	const setOverride = useCallback((group: PermissionGroup, id: string, value: PermissionType | null) => {
+		setConfig(group, id, characterId, value);
+	}, [setConfig, characterId]);
 
 	// Reset all permissions for this character
 	const resetAll = useCallback(() => {
@@ -885,8 +886,7 @@ function PerCharacterPermissionsDialog({
 
 					<FieldsetToggle legend='Item limits'>
 						<Column gap='none' className='permission-list'>
-							{ KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => {
-								const config = ASSET_PREFERENCES_PERMISSIONS[group];
+							{ KnownObject.entries(ASSET_PREFERENCES_PERMISSIONS).map(([group, config]) => {
 								if (config == null) return null;
 								return (
 									<PerCharacterPermissionRow

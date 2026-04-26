@@ -133,6 +133,7 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 		new ForkTsCheckerWebpackPlugin({
 			async: false,
 			typescript: {
+				memoryLimit: 4 * 1024, // In MB
 				configOverwrite: {
 					compilerOptions: {
 						skipLibCheck: !env.prod,

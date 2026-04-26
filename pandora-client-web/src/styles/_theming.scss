@@ -223,7 +223,6 @@ $theme-dialog-button-active-background: #ccc;
 $theme-dialog-button-active-text: #000;
 $theme-dialog-button-active-imgfilter: invert(100%);
 $theme-dialog-button-active-hover-background: color-mix(in srgb, #aaa, $theme-accent-color 35%);
-$theme-dialog-button-default: #999;
 
 $theme-hoverdialog-background: $theme-dialog-background;
 $theme-hoverdialog-text: $theme-dialog-text;
@@ -540,6 +539,9 @@ $theme-settings-fieldset-legend-text: #eee;
 
 // Used for highlighting "current connection" in security settings
 $theme-settings-table-row-highlight-background: color-mix(in srgb, #2d373d, $theme-accent-color 35%);
+
+// Used for highlighting default permission in permission settings
+$theme-settings-permission-button-default-highlight: #999;
 
 //#endregion
 

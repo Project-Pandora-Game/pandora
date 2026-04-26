@@ -33,10 +33,11 @@ import { CharacterListInputActions } from '../../ui/components/characterListInpu
 import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
+import { GridContainer } from '../common/container/gridContainer.tsx';
 import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../common/usageMeter/usageMeter.tsx';
-import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog.tsx';
+import { ButtonConfirm, DialogHeader, DraggableDialog, ModalDialog } from '../dialog/dialog.tsx';
 import type { GameState, PermissionPromptData } from '../gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -758,13 +759,11 @@ function PerCharacterPermissionsSection(): ReactElement {
 			<legend>Permission overview for a specific character</legend>
 			<span><i>Check and adjust every permission for the character selected by their ID below:</i></span>
 			<Column padding='small' gap='large'>
-				<Row alignY='center'>
-					<Column gap='large'>
+				<Column alignX='start'>
+					<GridContainer templateColumns='auto auto' templateRows='auto auto' alignItemsY='center'>
 						<label>Name:</label>
-						<label>Character ID:</label>
-					</Column>
-					<Column gap='small'>
 						<ResolvedNamePreview characterId={ parsedInput } />
+						<label>Character ID:</label>
 						<Row alignY='center'>
 							<TextInput
 								value={ inputValue }
@@ -783,23 +782,26 @@ function PerCharacterPermissionsSection(): ReactElement {
 								Select
 							</Button>
 						</Row>
-					</Column>
-				</Row>
+					</GridContainer>
+				</Column>
 				<fieldset>
 					<legend>Quick selection</legend>
 					<Column alignX='start'>
-						{ spaceCharacters.map((c) => (
-							<Button
-								key={ c.id }
-								slim
-								onClick={ () => {
-									setInputValue('');
-									setSelectedCharacter(c.id);
-								} }
-							>
-								{ c.name } ({ c.id }) { c.isPlayer() ? '[You]' : '' }
-							</Button>
-						)) }
+						{ spaceCharacters
+							.filter((c) => !c.isPlayer())
+							.map((c) => (
+								<Button
+									key={ c.id }
+									slim
+									onClick={ () => {
+										setInputValue('');
+										setSelectedCharacter(c.id);
+									} }
+								>
+									{ c.name } ({ c.id })
+								</Button>
+							))
+						}
 					</Column>
 				</fieldset>
 			</Column>
@@ -845,77 +847,79 @@ function PerCharacterPermissionsDialog({
 	}, [setConfig, characterId]);
 
 	return (
-		<ModalDialog>
-			<PermissionConfigDialogEscaper hide={ hide } />
-			<Row alignX='center'>
-				<h2>Permissions for { resolvedName ?? '[unknown]' } ({ characterId })</h2>
-			</Row>
-			<Column padding='medium' gap='large'>
-
-				<FieldsetToggle legend='Interaction permissions'>
-					<Column gap='none' className='permission-list'>
-						{ INTERACTION_IDS.map((id) => (
-							<PerCharacterPermissionRow
-								key={ id }
-								visibleName={ INTERACTION_CONFIG[id].visibleName }
-								icon={ INTERACTION_CONFIG[id].icon }
-								permissionGroup='interaction'
-								permissionId={ id }
-								characterId={ characterId }
-								setOverride={ setOverride }
-							/>
-						)) }
-					</Column>
-				</FieldsetToggle>
-
-				<FieldsetToggle legend='Item limits' open={ false }>
-					<Column gap='none' className='permission-list'>
-						{ KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => {
-							const config = ASSET_PREFERENCES_PERMISSIONS[group];
-							if (config == null) return null;
-							return (
-								<PerCharacterPermissionRow
-									key={ group }
-									visibleName={ config.visibleName }
-									icon={ config.icon }
-									permissionGroup='assetPreferences'
-									permissionId={ group }
-									characterId={ characterId }
-									setOverride={ setOverride }
-								/>
-							);
-						}) }
-					</Column>
-				</FieldsetToggle>
-
-				<FieldsetToggle legend='Character modifier permissions' open={ false }>
-					<Column gap='none' className='permission-list'>
-						{ KnownObject.keys(CHARACTER_MODIFIER_TYPE_DEFINITION).map((typeId) => (
-							<PerCharacterPermissionRow
-								key={ typeId }
-								visibleName={ CHARACTER_MODIFIER_TYPE_DEFINITION[typeId].visibleName }
-								icon=''
-								permissionGroup='characterModifierType'
-								permissionId={ typeId }
-								characterId={ characterId }
-								setOverride={ setOverride }
-							/>
-						)) }
-					</Column>
-				</FieldsetToggle>
-
-				<Row alignX='space-between' alignY='center' padding='small'>
+		<ModalDialog rawContent>
+			<DialogHeader
+				title={ `Permissions for ${ resolvedName ?? '[unknown]' } (${ characterId })` }
+				close={ hide }
+			/>
+			<div className='dialog-content overflow-auto' >
+				<Column alignX='start' padding='medium'>
 					<ButtonConfirm
-						slim
+						theme='danger'
 						onClick={ resetAll }
 						title='Reset all to default'
 						content={ `Reset every permission granted to ${resolvedName ?? characterId} to the default value?` }
 					>
 						Reset all to default
 					</ButtonConfirm>
-					<Button onClick={ hide }>Close</Button>
-				</Row>
-			</Column>
+				</Column>
+
+				<PermissionConfigDialogEscaper hide={ hide } />
+				<Column padding='medium' gap='large'>
+
+					<FieldsetToggle legend='Interaction permissions'>
+						<Column gap='none' className='permission-list'>
+							{ INTERACTION_IDS.map((id) => (
+								<PerCharacterPermissionRow
+									key={ id }
+									visibleName={ INTERACTION_CONFIG[id].visibleName }
+									icon={ INTERACTION_CONFIG[id].icon }
+									permissionGroup='interaction'
+									permissionId={ id }
+									characterId={ characterId }
+									setOverride={ setOverride }
+								/>
+							)) }
+						</Column>
+					</FieldsetToggle>
+
+					<FieldsetToggle legend='Item limits'>
+						<Column gap='none' className='permission-list'>
+							{ KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => {
+								const config = ASSET_PREFERENCES_PERMISSIONS[group];
+								if (config == null) return null;
+								return (
+									<PerCharacterPermissionRow
+										key={ group }
+										visibleName={ config.visibleName }
+										icon={ config.icon }
+										permissionGroup='assetPreferences'
+										permissionId={ group }
+										characterId={ characterId }
+										setOverride={ setOverride }
+									/>
+								);
+							}) }
+						</Column>
+					</FieldsetToggle>
+
+					<FieldsetToggle legend='Character modifier permissions'>
+						<Column gap='none' className='permission-list'>
+							{ KnownObject.keys(CHARACTER_MODIFIER_TYPE_DEFINITION).map((typeId) => (
+								<PerCharacterPermissionRow
+									key={ typeId }
+									visibleName={ CHARACTER_MODIFIER_TYPE_DEFINITION[typeId].visibleName }
+									icon=''
+									permissionGroup='characterModifierType'
+									permissionId={ typeId }
+									characterId={ characterId }
+									setOverride={ setOverride }
+								/>
+							)) }
+						</Column>
+					</FieldsetToggle>
+				</Column>
+			</div>
 		</ModalDialog>
 	);
 }
@@ -969,10 +973,9 @@ function PerCharacterPermissionRow({
 			<span className='flex-1'>{ visibleName } </span>
 
 			{ PermissionTypeSchema.options.map((type) => {
-				const isActive = (characterOverride ?? defaultPermission) === type;
 				const isBase = type === defaultPermission;
 				return (
-					<SelectionIndicator key={ type } padding='tiny' selected={ isActive }>
+					<SelectionIndicator key={ type } padding='tiny' selected={ characterOverride === type } active={ characterOverride == null && isBase }>
 						<Button
 							slim
 							className={ isBase ? 'permission-base-highlight' : undefined }

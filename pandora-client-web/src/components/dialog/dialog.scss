@@ -12,15 +12,17 @@
 	isolation: isolate;
 	overflow: hidden;
 
-	.dialog-content {
+	.dialog-window {
 		max-width: calc(100% - 1em);
 		max-height: calc(100% - 1em);
 
-		padding: 1em;
 		border: 1px solid common.$theme-dialog-border;
 		border-radius: 1em;
 		background: common.$theme-dialog-background;
 		color: common.$theme-dialog-text;
+		display: flex;
+		flex-flow: column;
+		isolation: isolate;
 
 		@include common.forcedColors {
 			background: Canvas;
@@ -29,7 +31,15 @@
 		}
 	}
 
-	&.max-size .dialog-content {
+	.dialog-content {
+		padding: 1em;
+		display: flex;
+		flex-flow: column;
+		flex: 1;
+		overflow: auto;
+	}
+
+	&.max-size .dialog-window {
 		width: calc(100% - 1em);
 		height: calc(100% - 1em);
 	}
@@ -37,7 +47,7 @@
 	&.top {
 		justify-content: start;
 
-		.dialog-content {
+		.dialog-window {
 			margin-top: 4em;
 			max-height: calc(100% - 4.5em);
 		}
@@ -83,6 +93,35 @@
 		border-color: common.$forcedColors-separator;
 	}
 
+	>.dialog-content {
+		padding: 1em;
+		display: flex;
+		flex-flow: column;
+		flex: 1;
+		overflow: auto;
+	}
+
+	&.shaded {
+		// Override manual sizing to allow dialog to shrink
+		height: auto !important;
+		min-height: unset !important;
+		overflow: hidden;
+
+		>.dialog-content, .resize-handle-wrapper {
+			display: none;
+		}
+	}
+
+	&.dialogHighlight {
+		outline: solid 3px common.$theme-dialog-border-highlight;
+	}
+}
+
+.dialog-confirm {
+	max-width: min(95vw, 50em);
+}
+
+.dialog .dialog-window, .dialog-draggable {
 	>header {
 		@include common.center-flex;
 		overflow: hidden;
@@ -177,39 +216,15 @@
 		}
 	}
 
-	>.dialog-header {
+	> .dialog-header {
 		display: flex;
 
-		>.drag-handle{
+		> .drag-handle {
 			flex: 12;
-			cursor: move;
 		}
-	}
-
-	>.dialog-content {
-		padding: 1em;
-		display: flex;
-		flex-flow: column;
-		flex: 1;
-		overflow: auto;
-	}
-
-	&.shaded {
-		// Override manual sizing to allow dialog to shrink
-		height: auto !important;
-		min-height: unset !important;
-		overflow: hidden;
-
-		>.dialog-content, .resize-handle-wrapper {
-			display: none;
-		}
-	}
-
-	&.dialogHighlight {
-		outline: solid 3px common.$theme-dialog-border-highlight;
 	}
 }
 
-.dialog-confirm {
-	max-width: min(95vw, 50em);
+.dialog-draggable > .dialog-header > .drag-handle {
+	cursor: move;
 }

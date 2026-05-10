@@ -9,7 +9,7 @@ WORKDIR /app
 ENV CI=true
 
 # Files required by pnpm to fetch dependencies
-COPY .npmrc package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 # Copy patches folder (if we have any patches)
 COPY ./patches ./patches
 

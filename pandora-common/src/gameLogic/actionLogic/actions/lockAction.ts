@@ -1,7 +1,6 @@
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import type { LockItemActionContext } from '../../../assets/item/lock.ts';
-import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import { LockActionSchema } from '../../locks/lockLogic.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -30,8 +29,7 @@ export function ActionLockAction({
 	const { container, itemId } = action.item;
 	const manipulator = targetManipulator.getContainer(container);
 
-	// Player doing the action must be able to interact with the lock
-	processingContext.checkCanUseItem(target, action.item, ItemInteractionType.MODIFY);
+	// Permissions and interaction type are checked by the actual action handler, as they can differ from action to action
 
 	if (!manipulator.modifyItem(itemId, (lock) => {
 		if (!lock.isType('lock'))

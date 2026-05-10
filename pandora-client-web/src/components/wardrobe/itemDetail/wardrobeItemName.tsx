@@ -9,15 +9,18 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 
 export function WardrobeItemName({
 	item,
+	forceDisplayType,
 }: {
 	item: Item;
+	forceDisplayType?: ItemDisplayNameType;
 }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
+	const displayType = forceDisplayType ?? wardrobeItemDisplayNameType;
 
-	const isCustomName = wardrobeItemDisplayNameType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
+	const isCustomName = displayType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
 	return (
 		<span className={ classNames('itemName', isCustomName ? 'custom' : null) }>
-			{ ResolveItemDisplayName(item, wardrobeItemDisplayNameType) }
+			{ ResolveItemDisplayName(item, displayType) }
 		</span>
 	);
 }

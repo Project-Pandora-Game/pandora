@@ -50,7 +50,7 @@ export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: Wa
 					<img width='21' height='33' src={ openLock } />
 					<Row padding='medium' alignY='center'>
 						<span>
-							Lock:&#x20;<WardrobeItemName item={ m.lock } /> (unlocked)
+							Lock:&#x20;<WardrobeItemName item={ m.lock } forceDisplayType='custom_with_original_in_brackets' /> (unlocked)
 						</span>
 					</Row>
 				</Row>
@@ -108,7 +108,7 @@ export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: Wa
 				<img width='21' height='33' src={ closedLock } />
 				<Row padding='medium' alignY='center'>
 					<span>
-						Locked with:&#x20;<WardrobeItemName item={ m.lock } />
+						Locked with:&#x20;<WardrobeItemName item={ m.lock } forceDisplayType='custom_with_original_in_brackets' />
 					</span>
 				</Row>
 			</Row>

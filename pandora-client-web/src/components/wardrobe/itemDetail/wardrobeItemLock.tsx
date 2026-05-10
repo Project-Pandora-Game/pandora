@@ -6,7 +6,6 @@ import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
 import { WardrobeLockSlotActionButton, type WardrobeLockSlotActionButtonContext } from '../modules/wardrobeModuleLockSlot.tsx';
 import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked } from '../views/wardrobeLockLogic.tsx';
-import { WardrobeItemName } from './wardrobeItemName.tsx';
 
 export function WardrobeItemLockDetails({ lock, targetSelector, itemPath }: {
 	lock: ItemLock;
@@ -26,7 +25,7 @@ export function WardrobeItemLockDetails({ lock, targetSelector, itemPath }: {
 						<img width='21' height='33' src={ openLock } />
 						<Row padding='medium' alignY='center'>
 							<span>
-								Lock:&#x20;<WardrobeItemName item={ lock } /> (unlocked)
+								Unlocked
 							</span>
 						</Row>
 					</Row>
@@ -47,7 +46,7 @@ export function WardrobeItemLockDetails({ lock, targetSelector, itemPath }: {
 					<img width='21' height='33' src={ closedLock } />
 					<Row padding='medium' alignY='center'>
 						<span>
-							Locked with:&#x20;<WardrobeItemName item={ lock } />
+							Locked
 						</span>
 					</Row>
 				</Row>

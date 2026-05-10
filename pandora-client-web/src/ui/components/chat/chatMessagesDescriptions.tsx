@@ -56,6 +56,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionCustomize action={ action } { ...props } />;
 		case 'moduleAction':
 			return <DescribeGameLogicActionModuleAction action={ action } { ...props } />;
+		case 'lockAction':
+			return <DescribeGameLogicActionLockAction action={ action } { ...props } />;
 		case 'point':
 			return <DescribeGameLogicActionPoint action={ action } { ...props } />;
 		case 'restrictionOverrideChange':
@@ -206,22 +208,8 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 			actionDescription = <>[ERROR]</>;
 			break;
 		case 'lockSlot':
-			switch (action.action.lockAction.action) {
-				case 'lock':
-					actionDescription = <>Lock the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
-					break;
-				case 'unlock':
-					actionDescription = <>Unlock the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
-					break;
-				case 'showPassword':
-					actionDescription = <>Remember the password of the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
-					break;
-				case 'updateFingerprint':
-					actionDescription = <>Update the registered fingerprints of the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ action.module }</code> }" lock slot</>;
-					break;
-				default:
-					AssertNever(action.action.lockAction);
-			}
+			// Nothing possible here
+			actionDescription = <>[ERROR]</>;
 			break;
 		case 'text':
 			actionDescription = <>Change text of the "{ moduleName ?? <code>{ action.module }</code> }" module</>;
@@ -236,6 +224,54 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
 		</>
 	);
+}
+
+function DescribeGameLogicActionLockAction({ action, globalState }: DescribeGameLogicActionProps<'lockAction'>): ReactElement {
+	let actionDescription: ReactElement;
+	let locationDescription: ReactElement;
+	switch (action.lockAction.action) {
+		case 'lock':
+			actionDescription = <>Lock</>;
+			break;
+		case 'unlock':
+			actionDescription = <>Unlock</>;
+			break;
+		case 'showPassword':
+			actionDescription = <>Remember the password of</>;
+			break;
+		case 'updateFingerprint':
+			actionDescription = <>Update the registered fingerprints of</>;
+			break;
+		default:
+			AssertNever(action.lockAction);
+	}
+
+	const container = SplitContainerPath(action.item.container);
+	if (container != null) {
+		const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, container.itemPath.container);
+		const slotItem = EvalItemPath(globalState.getItems(action.target) ?? [], container.itemPath) ?? container.itemPath.itemId;
+
+		const moduleName = (slotItem && typeof slotItem !== 'string' ? slotItem : null)?.getModules().get(container.module)?.config.name ?? null;
+
+		locationDescription = (
+			<>
+				the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ container.module }</code> }" lock slot of <DescribeItem item={ slotItem } globalState={ globalState } />
+				{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ container.itemPath.container } globalState={ globalState } />
+			</>
+		);
+	} else {
+		const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+		const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+
+		locationDescription = (
+			<>
+				<DescribeItem item={ item } globalState={ globalState } />
+				{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+			</>
+		);
+	}
+
+	return (<>{ actionDescription } { locationDescription }.</>);
 }
 
 function DescribeGameLogicActionPoint({ action, globalState }: DescribeGameLogicActionProps<'point'>): ReactElement {

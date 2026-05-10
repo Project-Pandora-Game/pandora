@@ -1,9 +1,11 @@
 import type { Immutable } from 'immer';
 
 import { ItemInteractionType } from '../../character/restrictionTypes.ts';
-import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import type { AppearanceActionProcessingContext } from '../../gameLogic/actionLogic/appearanceActionProcessingContext.ts';
+import type { ActionHandlerMessageTemplate, ActionTarget, ItemContainerPath } from '../appearanceTypes.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
+import type { ModuleActionData, ModuleActionProblem } from '../modules.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base.ts';
@@ -18,6 +20,19 @@ declare module './_internal.ts' {
 	interface InternalItemTypeMap {
 		lock: ItemLock;
 	}
+}
+
+/** Context for performing lock actions */
+export interface LockItemActionContext {
+	processingContext: AppearanceActionProcessingContext;
+	/** The physical target of the action */
+	target: ActionTarget;
+	/** The path to the container the lock is in */
+	container: ItemContainerPath;
+
+	messageHandler: (message: ActionHandlerMessageTemplate) => void;
+	addProblem: (problem: ModuleActionProblem) => void;
+	addData: (data: ModuleActionData) => void;
 }
 
 interface ItemLockProps extends ItemBaseProps<'lock'> {
@@ -95,7 +110,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.lockLogic.isLocked();
 	}
 
-	public lockAction(context: AppearanceModuleActionContext, action: LockAction): ItemLock | null {
+	public lockAction(context: LockItemActionContext, action: LockAction): ItemLock | null {
 		switch (action.action) {
 			case 'lock':
 				return this.lock(context, action);
@@ -109,11 +124,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
+	public lock({ messageHandler, addProblem, processingContext, target, container }: LockItemActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Locking the lock modifies it
-		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
-		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
+		player.checkUseItemDirect(processingContext, target, container, this, ItemInteractionType.MODIFY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, container);
 
 		const result = this.lockLogic.lock({
 			player,
@@ -147,11 +162,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public unlock({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
+	public unlock({ messageHandler, addProblem, processingContext, target, container }: LockItemActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Unlocking the lock modifies it
-		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
-		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
+		player.checkUseItemDirect(processingContext, target, container, this, ItemInteractionType.MODIFY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, container);
 
 		const result = this.lockLogic.unlock({
 			player,
@@ -185,11 +200,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public showPassword({ addProblem, addData, processingContext, target, module }: AppearanceModuleActionContext): ItemLock | null {
+	public showPassword({ addProblem, addData, processingContext, target, container }: LockItemActionContext): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Showing password requires permission access to the lock
-		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
-		const permissionTarget = processingContext.resolvePermissionTarget(target, module);
+		player.checkUseItemDirect(processingContext, target, container, this, ItemInteractionType.ACCESS_ONLY);
+		const permissionTarget = processingContext.resolvePermissionTarget(target, container);
 
 		const result = this.lockLogic.showPassword({
 			player,
@@ -224,10 +239,10 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public updateFingerprint({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): ItemLock | null {
+	public updateFingerprint({ messageHandler, addProblem, processingContext, target, container }: LockItemActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Updating the registered fingerprints on the lock modifies it
-		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+		player.checkUseItemDirect(processingContext, target, container, this, ItemInteractionType.MODIFY);
 
 		const result = this.lockLogic.updateFingerprint(action);
 

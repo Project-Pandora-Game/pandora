@@ -182,9 +182,17 @@ function WardrobeLockSlotLockDescription({ lock }: {
 function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const actionContext = useMemo((): WardrobeLockSlotActionButtonContext => ({
 		target,
-		item,
-		moduleName,
-	}), [target, item, moduleName]);
+		lock: {
+			container: [
+				...item.container,
+				{
+					item: item.itemId,
+					module: moduleName,
+				},
+			],
+			itemId: lock.id,
+		},
+	}), [target, item, moduleName, lock.id]);
 
 	return (
 		<WardrobeLockLogicLocked
@@ -199,9 +207,17 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const actionContext = useMemo((): WardrobeLockSlotActionButtonContext => ({
 		target,
-		item,
-		moduleName,
-	}), [target, item, moduleName]);
+		lock: {
+			container: [
+				...item.container,
+				{
+					item: item.itemId,
+					module: moduleName,
+				},
+			],
+			itemId: lock.id,
+		},
+	}), [target, item, moduleName, lock.id]);
 
 	return (
 		<WardrobeLockLogicUnlocked
@@ -214,8 +230,7 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 
 interface WardrobeLockSlotActionButtonContext {
 	target: ActionTargetSelector;
-	item: ItemPath;
-	moduleName: string;
+	lock: ItemPath;
 }
 
 function WardrobeLockSlotActionButton({
@@ -229,18 +244,14 @@ function WardrobeLockSlotActionButton({
 	slim,
 	iconButton,
 }: WardrobeLockLogicExecuteButtonProps<WardrobeLockSlotActionButtonContext>): ReactElement {
-	const { target, item, moduleName } = actionContext;
+	const { target, lock } = actionContext;
 
 	const action = useMemo((): AppearanceAction => ({
-		type: 'moduleAction',
+		type: 'lockAction',
 		target,
-		item,
-		module: moduleName,
-		action: {
-			moduleType: 'lockSlot',
-			lockAction,
-		},
-	}), [lockAction, item, moduleName, target]);
+		item: lock,
+		lockAction,
+	}), [lockAction, lock, target]);
 
 	const onCurrentAttempt = useCallback((currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']): void => {
 		onCurrentlyAttempting?.(currentAttempt != null);

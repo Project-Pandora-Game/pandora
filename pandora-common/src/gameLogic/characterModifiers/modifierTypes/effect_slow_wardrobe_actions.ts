@@ -78,6 +78,8 @@ This effect uses the same system as if the character was restrained and had to a
 			} else {
 				shouldSlow = false;
 			}
+		} else if (action.type === 'lockAction') {
+			shouldSlow = config.affectModulesLocks;
 		} else if (action.type === 'roomDeviceEnter' || action.type === 'roomDeviceLeave') {
 			shouldSlow = config.affectRoomDeviceEnterLeave;
 		} else if (action.type === 'actionAttemptInterrupt') {

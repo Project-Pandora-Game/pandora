@@ -49,14 +49,12 @@ export function WardrobeCheckResultForConfirmationWarnings(
 	// Warn if locking a lock that won't be unlockable
 	if (
 		result.valid &&
-		action.type === 'moduleAction' &&
-		action.action.moduleType === 'lockSlot' &&
-		action.action.lockAction.action === 'lock'
+		action.type === 'lockAction' &&
+		action.lockAction.action === 'lock'
 	) {
-		const unlockLockAction = LockLogic.makeUnlockActionFromLockAction(action.action.lockAction);
+		const unlockLockAction = LockLogic.makeUnlockActionFromLockAction(action.lockAction);
 		const reverseAction = produce(action, (d) => {
-			Assert(d.action.moduleType === 'lockSlot');
-			d.action.lockAction = unlockLockAction;
+			d.lockAction = unlockLockAction;
 		});
 
 		const reverseResult = ApplyAction(result.createChainProcessingContext(), reverseAction);

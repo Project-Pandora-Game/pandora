@@ -3,8 +3,7 @@ import * as z from 'zod';
 import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
-import { LockActionSchema } from '../../gameLogic/locks/lockLogic.ts';
-import { AssertNever, Satisfies } from '../../utility/misc.ts';
+import { Satisfies } from '../../utility/misc.ts';
 import { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -36,7 +35,6 @@ export type IModuleItemTemplateLockSlot = z.infer<typeof ModuleItemTemplateLockS
 
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
-	lockAction: z.lazy(() => LockActionSchema),
 });
 export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
@@ -180,48 +178,8 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 		return false;
 	}
 
-	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot<TProperties, TStaticData> | null {
-		if (this.lock == null)
-			return null;
-
-		if (this.lock == null)
-			return null;
-
-		const lock = this.lock;
-		const result = lock.lockAction({
-			...context,
-			messageHandler: (message) => {
-				// Add this container step to the message
-				message.itemContainerPath ??= [];
-				message.itemContainerPath?.unshift({
-					id: context.item.id,
-					assetId: context.item.asset.id,
-					module: context.moduleName,
-					itemName: context.item.name ?? '',
-				});
-				message.item ??= lock.getChatDescriptor();
-				context.messageHandler(message);
-			},
-		}, lockAction);
-		if (result == null)
-			return result;
-
-		return this.withProps({
-			lock: result,
-		});
-	}
-
-	public getActionInteractionType({ lockAction }: ItemModuleLockSlotAction): ItemInteractionType {
-		switch (lockAction.action) {
-			case 'lock':
-			case 'unlock':
-			case 'updateFingerprint':
-				return this.interactionType;
-			case 'showPassword':
-				return ItemInteractionType.ACCESS_ONLY;
-			default:
-				AssertNever(lockAction);
-		}
+	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleLockSlotAction): ItemModuleLockSlot<TProperties, TStaticData> | null {
+		return null;
 	}
 
 	public readonly contentsPhysicallyEquipped: boolean = true;

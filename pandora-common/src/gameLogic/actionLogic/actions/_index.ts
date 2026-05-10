@@ -9,9 +9,10 @@ import { ActionColor, AppearanceActionColor } from './color.ts';
 import { ActionCreate, AppearanceActionCreateSchema } from './create.ts';
 import { ActionAppearanceCustomize, AppearanceActionCustomize } from './customize.ts';
 import { ActionDelete, AppearanceActionDeleteSchema } from './delete.ts';
+import { ActionLockAction, AppearanceActionLockAction } from './lockAction.ts';
 import { ActionModuleAction, AppearanceActionModuleAction } from './moduleAction.ts';
-import { ActionMoveItem, AppearanceActionMoveItem } from './moveItem.ts';
 import { ActionMoveCharacter, AppearanceActionMoveCharacter } from './moveCharacter.ts';
+import { ActionMoveItem, AppearanceActionMoveItem } from './moveItem.ts';
 import { ActionPoint, AppearanceActionPoint } from './point.ts';
 import { ActionPose, AppearanceActionPose } from './pose.ts';
 import { ActionAppearanceRandomize, AppearanceActionRandomize } from './randomize.ts';
@@ -35,6 +36,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionColor,
 	AppearanceActionCustomize,
 	AppearanceActionModuleAction,
+	AppearanceActionLockAction,
 	AppearanceActionPoint,
 	AppearanceActionRestrictionOverrideChange,
 	AppearanceActionRandomize,
@@ -91,6 +93,8 @@ function ApplyActionBase(
 			return ActionAppearanceCustomize({ ...arg, action });
 		case 'moduleAction':
 			return ActionModuleAction({ ...arg, action });
+		case 'lockAction':
+			return ActionLockAction({ ...arg, action });
 		case 'point':
 			return ActionPoint({ ...arg, action });
 		case 'body':

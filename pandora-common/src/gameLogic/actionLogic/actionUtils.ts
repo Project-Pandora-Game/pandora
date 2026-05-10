@@ -30,19 +30,16 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'spaceConfigure':
 		case 'spaceRoomLayout':
 		case 'actionAttemptInterrupt':
+		case 'moduleAction':
 			break;
 
-		case 'moduleAction':
-			switch (action.action.moduleType) {
-				case 'lockSlot':
-					// Lock and unlock actions should have password hidden
-					if (action.action.lockAction.action === 'lock' || action.action.lockAction.action === 'unlock') {
-						action.action.lockAction.password = undefined;
-					}
-					if (action.action.lockAction.action === 'lock') {
-						action.action.lockAction.timerOptions = undefined;
-					}
-					break;
+		case 'lockAction':
+			// Lock and unlock actions should have password hidden
+			if (action.lockAction.action === 'lock' || action.lockAction.action === 'unlock') {
+				action.lockAction.password = undefined;
+			}
+			if (action.lockAction.action === 'lock') {
+				action.lockAction.timerOptions = undefined;
 			}
 			break;
 		default:

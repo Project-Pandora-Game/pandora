@@ -5,6 +5,8 @@ import type { Asset } from '../asset.ts';
 import type { AssetType } from '../definitions.ts';
 
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
+import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
+import { LockLogic } from '../../gameLogic/locks/lockLogic.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits.ts';
 import { Assert, AssertNever } from '../../utility/misc.ts';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation.ts';
@@ -13,7 +15,6 @@ import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateS
 import { PartialAppearancePoseSchema } from '../state/characterStatePose.ts';
 import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base.ts';
 
-import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion.ts';
 import { ItemBodypart } from './bodypart.ts';
 import { ItemLock } from './lock.ts';
@@ -61,6 +62,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate> = z.object({
 	requireFreeHandsToUse: z.boolean().optional(),
 	modules: z.record(z.string(), z.lazy(() => ItemModuleTemplateSchema)).optional(),
 	personalData: PersonalItemTemplateDataSchema.optional().catch(undefined),
+	lockData: LockDataBundleSchema.optional(),
 });
 
 export const AssetFrameworkOutfitSchema = z.object({
@@ -137,6 +139,11 @@ export function CreateItemBundleFromTemplate(template: Immutable<ItemTemplate>, 
 				position: [0, 0, 0],
 			};
 		}
+	}
+
+	// Lock specific data
+	if (template.lockData != null && asset.isType('lock')) {
+		bundle.lockData = LockLogic.makeDataFromTemplate(asset.definition.lockSetup, template.lockData);
 	}
 
 	return bundle;

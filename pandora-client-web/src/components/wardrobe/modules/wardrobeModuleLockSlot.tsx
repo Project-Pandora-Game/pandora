@@ -15,6 +15,7 @@ import openLock from '../../../assets/icons/lock_open.svg';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
+import { WardrobeTemplateLockDataNotice } from '../templateDetail/wardrobeTemplateLock.tsx';
 import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../views/wardrobeLockLogic.tsx';
 import type { WardrobeExecuteCheckedResult } from '../wardrobeActionContext.tsx';
 import { WardrobeActionButton } from '../wardrobeComponents.tsx';
@@ -145,6 +146,9 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 					Lock: { lock.definition.name } (unlocked)
 				</Row>
 			</Row>
+			{ template?.lock?.lockData != null ? (
+				<WardrobeTemplateLockDataNotice />
+			) : null }
 			<Row wrap>
 				<button
 					className='wardrobeActionButton allowed'

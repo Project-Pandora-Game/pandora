@@ -13,6 +13,7 @@ import * as z from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import infoIcon from '../../../assets/icons/info.svg';
+import openLock from '../../../assets/icons/lock_open.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
@@ -23,6 +24,7 @@ import { FormCreateStringValidator } from '../../common/form/form.tsx';
 import { WardrobeAssetDetailContent } from '../assetDetail/wardrobeAssetDetail.tsx';
 import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules.tsx';
 import { WardrobeTemplateColorization } from './wardrobeTemplateColor.tsx';
+import { WardrobeTemplateLockDataNotice } from './wardrobeTemplateLock.tsx';
 import { WardrobeTemplatePersonalItemDeployment } from './wardrobeTemplatePersonalDeployment.tsx';
 
 export function WardrobeTemplateEditMenu({
@@ -132,6 +134,21 @@ export function WardrobeTemplateEditMenu({
 						template={ template }
 						updateTemplate={ updateTemplate }
 					/>
+				) : null }
+				{ asset.isType('lock') ? (
+					<FieldsetToggle legend='Lock'>
+						<Column padding='medium'>
+							<Row padding='medium' wrap>
+								<img width='21' height='33' src={ openLock } />
+								<Row padding='medium' alignY='center'>
+									<span>Unlocked</span>
+								</Row>
+							</Row>
+							{ template.lockData != null ? (
+								<WardrobeTemplateLockDataNotice />
+							) : null }
+						</Column>
+					</FieldsetToggle>
 				) : null }
 				{
 					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (

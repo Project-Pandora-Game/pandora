@@ -1,7 +1,38 @@
 import * as z from 'zod';
-import { CharacterIdSchema } from '../../character/characterTypes.ts';
+import { CharacterIdSchema, type CharacterId } from '../../character/characterTypes.ts';
 
-export const LockDataBundleSchema = z.object({
+export interface LockDataBundle {
+	locked?: {
+		/** Id of the character that locked the item */
+		id: CharacterId;
+		/** Name of the character that locked the item */
+		name: string;
+		/** Time the item was locked */
+		time: number;
+		/** Time the timer on the lock will expire, if lock includes a timer */
+		lockedUntil?: number;
+		/** Whether the character that locked it is allowed to unlock the timer early */
+		disallowEarlyUnlock?: boolean;
+	};
+	/** Data applicable only to locks with fingerprint */
+	fingerprint?: {
+		/** Registered prints on the lock */
+		registered: readonly CharacterId[];
+	};
+	hidden?: {
+		side: 'server';
+		/** Password used to lock the item */
+		password?: string;
+		/** Id of the character who set the password last time */
+		passwordSetBy?: CharacterId;
+	} | {
+		side: 'client';
+		/** Whether the item has a password */
+		hasPassword?: boolean;
+	};
+}
+
+export const LockDataBundleSchema: z.ZodType<LockDataBundle> = z.object({
 	locked: z.object({
 		/** Id of the character that locked the item */
 		id: CharacterIdSchema,
@@ -34,4 +65,16 @@ export const LockDataBundleSchema = z.object({
 		}),
 	]).optional(),
 });
-export type LockDataBundle = z.infer<typeof LockDataBundleSchema>;
+
+export interface LockTemplateData {
+	/** Data applicable only to locks with fingerprint */
+	fingerprint?: {
+		/** Registered prints on the lock */
+		registered: readonly CharacterId[];
+	};
+}
+export const LockTemplateDataSchema: z.ZodType<LockTemplateData> = z.object({
+	fingerprint: z.object({
+		registered: CharacterIdSchema.array().readonly(),
+	}).optional(),
+});

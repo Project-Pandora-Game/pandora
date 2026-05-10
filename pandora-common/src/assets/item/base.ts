@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import * as z from 'zod';
 
 import type { CharacterId } from '../../character/index.ts';
-import type { LockDataBundle } from '../../gameLogic/locks/lockData.ts';
+import type { LockDataBundle, LockTemplateData } from '../../gameLogic/locks/lockData.ts';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -78,6 +78,8 @@ export type ItemTemplate = {
 	modules?: Record<string, ItemModuleTemplate>;
 	/** Personal item specific template data */
 	personalData?: PersonalItemTemplateData;
+	/** Lock specific data */
+	lockData?: LockTemplateData;
 };
 
 export type IItemLoadContext = {

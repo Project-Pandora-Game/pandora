@@ -8,7 +8,7 @@ import type { Asset } from '../asset.ts';
 import type { ModuleActionData, ModuleActionProblem } from '../modules.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base.ts';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base.ts';
 import type { AppearanceItems } from './items.ts';
 
 import { AssertNever, MemoizeNoArg } from '../../utility/misc.ts';
@@ -68,6 +68,13 @@ export class ItemLock extends ItemBase<'lock'> {
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			lockLogic,
 		});
+	}
+
+	public override exportToTemplate(): ItemTemplate {
+		return {
+			...super.exportToTemplate(),
+			lockData: this.lockLogic.exportToTemplate(),
+		};
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {

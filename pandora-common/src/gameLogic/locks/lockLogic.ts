@@ -7,7 +7,7 @@ import type { CharacterRestrictionsManager } from '../../character/restrictionsM
 import type { Logger } from '../../logging/logger.ts';
 import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc.ts';
 import type { AppearanceActionContext } from '../actionLogic/appearanceActions.ts';
-import type { LockDataBundle } from './lockData.ts';
+import type { LockDataBundle, LockTemplateData } from './lockData.ts';
 import type { LockSetup } from './lockSetup.ts';
 
 export const LockTimerOptionsSchema = z.object({
@@ -127,6 +127,12 @@ export class LockLogic {
 				return true;
 		}
 		AssertNever(this.lockSetup.blockSelf);
+	}
+
+	public exportToTemplate(): LockTemplateData {
+		return {
+			fingerprint: CloneDeepMutable(this.lockData.fingerprint),
+		};
 	}
 
 	public exportToClientBundle(): LockDataBundle {
@@ -449,6 +455,12 @@ export class LockLogic {
 		}
 
 		return new LockLogic(lockSetup, bundle);
+	}
+
+	public static makeDataFromTemplate(lockSetup: Immutable<LockSetup>, template: Immutable<LockTemplateData>): LockDataBundle {
+		return {
+			fingerprint: lockSetup.fingerprint != null ? CloneDeepMutable(template.fingerprint) : undefined,
+		};
 	}
 
 	private static _isEqualPassword(_lockSetup: Immutable<LockSetup>, lhs?: string, rhs?: string): boolean {

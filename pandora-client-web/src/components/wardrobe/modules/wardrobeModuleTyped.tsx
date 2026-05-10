@@ -3,7 +3,7 @@ import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import type { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
+import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
 import { ReactElement, useMemo } from 'react';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Column, Row } from '../../common/container/container.tsx';
@@ -64,8 +64,13 @@ export function WardrobeModuleConfigTyped({ target, item, moduleName, m }: Wardr
 }
 
 export function WardrobeModuleTemplateConfigTyped({ definition, template, onTemplateChange }: WardrobeModuleTemplateProps<'typed'>): ReactElement {
+	const selectedVariant =
+		(template?.variant != null && definition.variantMigration != null && Object.hasOwn(definition.variantMigration, template.variant) ? definition.variantMigration[template.variant] : undefined) ??
+		template?.variant ??
+		ItemModuleTyped.getDefaultVariant(definition).id;
+
 	const rows = useMemo(() => definition.variants.map((v) => {
-		const isSelected = template?.variant === v.id;
+		const isSelected = selectedVariant === v.id;
 
 		return (
 			<button
@@ -86,7 +91,7 @@ export function WardrobeModuleTemplateConfigTyped({ definition, template, onTemp
 				{ v.name }
 			</button>
 		);
-	}), [definition, template, onTemplateChange]);
+	}), [definition, selectedVariant, onTemplateChange]);
 
 	return (
 		<Column padding='medium' gap='medium'>

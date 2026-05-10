@@ -194,7 +194,7 @@ export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknow
 			assetManager: context.assetManager,
 			config,
 			// Use the default variant if not found
-			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant<TProperties, TStaticData>(config),
+			activeVariant: activeVariant ?? ItemModuleTyped.getDefaultVariant<TProperties, TStaticData>(config),
 			data: {
 				selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
 				selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
@@ -264,7 +264,7 @@ export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknow
 		return null;
 	}
 
-	private static _getDefaultVariant<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>): Immutable<IModuleTypedOption<TProperties>> {
+	public static getDefaultVariant<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>): Immutable<IModuleTypedOption<TProperties>> {
 		return config.variants.find((v) => v.default) ?? config.variants[0];
 	}
 }

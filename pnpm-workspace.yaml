@@ -1,3 +1,20 @@
+overrides:
+  superstatic>re2: '-'
+patchedDependencies:
+  react-switch: patches/react-switch.patch
+allowBuilds:
+  argon2: true
+  unrs-resolver: true
+  core-js-pure: false
+
+updateNotifier: false
+strictPeerDependencies: true
+allowUnusedPatches: false
+verifyDepsBeforeRun: error
+injectWorkspacePackages: false
+forceLegacyDeploy: true
+nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
+
 packages:
   - pandora-common
   - pandora-server-directory

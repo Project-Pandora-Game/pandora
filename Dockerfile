@@ -28,10 +28,10 @@ RUN pnpm -r --filter pandora-common --filter 'pandora-server-*' run build
 
 # Shrinkwrap for deployment
 RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
-	pnpm deploy --filter=pandora-server-directory --prod /app/deploy/directory
+	pnpm pm deploy --filter=pandora-server-directory --prod /app/deploy/directory
 
 RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
-	pnpm deploy --filter=pandora-server-shard --prod /app/deploy/shard
+	pnpm pm deploy --filter=pandora-server-shard --prod /app/deploy/shard
 
 # Directory production image
 FROM docker.io/node:24.15.0-alpine AS pandora-server-directory

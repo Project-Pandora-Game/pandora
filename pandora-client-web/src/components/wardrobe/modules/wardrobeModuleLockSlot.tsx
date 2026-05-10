@@ -228,12 +228,12 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 	);
 }
 
-interface WardrobeLockSlotActionButtonContext {
+export interface WardrobeLockSlotActionButtonContext {
 	target: ActionTargetSelector;
 	lock: ItemPath;
 }
 
-function WardrobeLockSlotActionButton({
+export function WardrobeLockSlotActionButton({
 	disabled,
 	onFailure,
 	lockAction,

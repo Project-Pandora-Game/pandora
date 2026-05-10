@@ -39,6 +39,7 @@ import { WardrobeActionButton } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { useWardrobeTargetItem } from '../wardrobeUtils.ts';
 import { WardrobeItemColorization } from './wardrobeItemColor.tsx';
+import { WardrobeItemLockDetails } from './wardrobeItemLock.tsx';
 import { WardrobeItemName } from './wardrobeItemName.tsx';
 import { WardrobePersonalItemDeployment } from './wardrobeItemPersonalDeployment.tsx';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice.tsx';
@@ -217,6 +218,9 @@ export function WardrobeItemConfigMenu({
 				) : null }
 				{ wornItem.isType('personal') ? (
 					<WardrobePersonalItemDeployment targetSelector={ targetSelector } itemPath={ item } item={ wornItem } />
+				) : null }
+				{ wornItem.isType('lock') ? (
+					<WardrobeItemLockDetails targetSelector={ targetSelector } itemPath={ item } lock={ wornItem } />
 				) : null }
 				{ wornItem.isType('roomDevice') ? (
 					<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />

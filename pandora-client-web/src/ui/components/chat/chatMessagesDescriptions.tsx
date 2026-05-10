@@ -250,23 +250,24 @@ function DescribeGameLogicActionLockAction({ action, globalState }: DescribeGame
 	if (container != null) {
 		const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, container.itemPath.container);
 		const slotItem = EvalItemPath(globalState.getItems(action.target) ?? [], container.itemPath) ?? container.itemPath.itemId;
+		const lock = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
 		const moduleName = (slotItem && typeof slotItem !== 'string' ? slotItem : null)?.getModules().get(container.module)?.config.name ?? null;
 
 		locationDescription = (
 			<>
-				the lock in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ container.module }</code> }" lock slot of <DescribeItem item={ slotItem } globalState={ globalState } />
+				<DescribeItem item={ lock } globalState={ globalState } /> in the "{ moduleName?.replace(/lock slot\s*(:\s*)?/i, '') ?? <code>{ container.module }</code> }" lock slot of <DescribeItem item={ slotItem } globalState={ globalState } />
 				{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ container.itemPath.container } globalState={ globalState } />
 			</>
 		);
 	} else {
 		const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
-		const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
+		const lock = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? action.item.itemId;
 
 		locationDescription = (
 			<>
-				<DescribeItem item={ item } globalState={ globalState } />
-				{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+				<DescribeItem item={ lock } globalState={ globalState } />
+				{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />
 			</>
 		);
 	}

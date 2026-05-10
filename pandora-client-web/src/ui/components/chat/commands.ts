@@ -13,6 +13,7 @@ import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lea
 import { COMMAND_MOVETO } from './commands/moveto.ts';
 import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
+import { COMMAND_WARDROBE } from './commands/wardrobe.ts';
 import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
@@ -291,6 +292,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				});
 			}),
 	},
+	COMMAND_WARDROBE,
 	//#region Commands for gambling and playing games
 	{
 		key: ['coinflip'],

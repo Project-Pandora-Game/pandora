@@ -128,7 +128,7 @@ function Stringify(value: unknown, allowArray = true): string | undefined {
  *
  * Output is always in milliseconds.
  */
-export function EnvTimeInterval(): z.ZodType<number, number | `${number}${'s' | 'm' | 'h' | 'd' | 'w' | ''}`> {
+export function EnvTimeInterval(): z.ZodType<number> {
 	return z.preprocess((arg, ctx) => {
 		if (typeof arg !== 'string') {
 			return arg;

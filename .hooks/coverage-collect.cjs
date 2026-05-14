@@ -53,6 +53,7 @@ async function collectCoverage() {
 		'--report-dir', COVERAGE_OUTPUT,
 		'--reporter=html',
 		'--reporter=json',
+		'--reporter=lcov',
 		'--reporter=text-summary',
 	], {
 		shell: true,

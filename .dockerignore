@@ -26,6 +26,9 @@
 /*/node_modules
 /*/dist
 /*/coverage
+# SonarQube
+/.sonar
+/.scannerwork
 
 # pandora-server-directory
 /pandora-server-directory/localDb

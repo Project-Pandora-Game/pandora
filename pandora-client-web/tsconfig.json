@@ -8,6 +8,7 @@
 		"types": [
 			"offscreencanvas"
 		],
+		"rootDir": "./src",
 		"jsx": "react-jsx",
 		"module": "ESNext",
 		"moduleResolution": "bundler",

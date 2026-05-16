@@ -4,7 +4,7 @@
 		"types": [
 			"@types/node",
 		],
-		"rootDir": ".."
+		"rootDir": "..",
 	},
 	"include": [
 		"../src/**/*.d.ts",

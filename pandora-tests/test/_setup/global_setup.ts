@@ -7,7 +7,7 @@ import zlib, { zstdDecompressSync } from 'node:zlib';
 import type { EnvInputJson } from 'pandora-common';
 import { resolve } from 'path';
 import * as tar from 'tar';
-import type { WEBPACK_CONFIG } from '../../../pandora-client-web/src/config/definition.ts';
+import type { WEBPACK_CONFIG } from 'pandora-client-web/src/config/definition.ts';
 import {
 	PNPM_EXECUTABLE,
 	TEST_ASSETS_DIR,

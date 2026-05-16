@@ -550,6 +550,9 @@ importers:
       nyc:
         specifier: 18.0.0
         version: 18.0.0
+      pandora-client-web:
+        specifier: workspace:*
+        version: link:../pandora-client-web
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common

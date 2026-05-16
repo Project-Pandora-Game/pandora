@@ -1,0 +1,55 @@
+diff --git a/lib/environment/canvas/ICanvas.d.ts b/lib/environment/canvas/ICanvas.d.ts
+index f48357aa773d5412c53bc841b5e77f5aaf7df9e9..0b935c244bae8dfa6e949c59299ba4726932372d 100644
+--- a/lib/environment/canvas/ICanvas.d.ts
++++ b/lib/environment/canvas/ICanvas.d.ts
+@@ -17,7 +17,7 @@ export type PredefinedColorSpace = 'srgb' | 'display-p3';
+  * @category environment
+  * @advanced
+  */
+-export type RenderingContext = ICanvasRenderingContext2D | ImageBitmapRenderingContext | WebGLRenderingContext | WebGL2RenderingContext;
++export type RenderingContext = globalThis.RenderingContext | ICanvasRenderingContext2D;
+ /**
+  * The context 2D settings for creating a rendering context.
+  * @category environment
+@@ -34,7 +34,7 @@ export interface ICanvasRenderingContext2DSettings {
+  * @category environment
+  * @advanced
+  */
+-export type ContextSettings = ICanvasRenderingContext2DSettings | ImageBitmapRenderingContextSettings | WebGLContextAttributes;
++export type ContextSettings = ICanvasRenderingContext2DSettings | ImageBitmapRenderingContextSettings | WebGLContextAttributes | GPUCanvasConfiguration;
+ /**
+  * The parent node of the canvas.
+  * @category environment
+@@ -102,12 +102,11 @@ export interface ICanvas extends PixiMixins.ICanvas, Partial<EventTarget> {
+      * @param {ContextSettings} options - The options for creating context.
+      * @returns {RenderingContext | null} The created context, or null if contextId is not supported.
+      */
+-    getContext(contextId: '2d', options?: ICanvasRenderingContext2DSettings): ICanvasRenderingContext2D | null;
++    getContext(contextId: '2d', options?: CanvasRenderingContext2DSettings): CanvasRenderingContext2D | null;
+     getContext(contextId: 'bitmaprenderer', options?: ImageBitmapRenderingContextSettings): ImageBitmapRenderingContext | null;
+-    getContext(contextId: 'webgl' | 'experimental-webgl', options?: WebGLContextAttributes): WebGLRenderingContext | null;
+-    getContext(contextId: 'webgl2' | 'experimental-webgl2', options?: WebGLContextAttributes): WebGL2RenderingContext | null;
+-    getContext(contextId: 'webgpu'): GPUCanvasContext | null;
+-    getContext(contextId: ContextIds, options?: ContextSettings): RenderingContext | null;
++    getContext(contextId: 'webgl', options?: WebGLContextAttributes): WebGLRenderingContext | null;
++    getContext(contextId: 'webgl2', options?: WebGLContextAttributes): WebGL2RenderingContext | null;
++    getContext(contextId: string, options?: any): globalThis.RenderingContext | null;
+     /**
+      * Get the content of the canvas as data URL.
+      * @param {string} [type] - A string indicating the image format. The default type is `image/png`;
+diff --git a/lib/events/FederatedPointerEvent.d.ts b/lib/events/FederatedPointerEvent.d.ts
+index 51756e39e53fa27fb739c4ae5907c3390d1ffdcb..421eb598f2f556d33d6d6407123e8f57465052e4 100644
+--- a/lib/events/FederatedPointerEvent.d.ts
++++ b/lib/events/FederatedPointerEvent.d.ts
+@@ -46,6 +46,11 @@ import { FederatedMouseEvent } from './FederatedMouseEvent';
+  * @standard
+  */
+ export declare class FederatedPointerEvent extends FederatedMouseEvent implements PointerEvent {
++    /**
++     * Persistent identifier of the source device.
++     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/persistentDeviceId}
++     */
++    persistentDeviceId: number;
+     /**
+      * The unique identifier of the pointer.
+      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}

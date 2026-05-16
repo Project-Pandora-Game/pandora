@@ -1,0 +1,12 @@
+{
+	"name": "@webgpu/types",
+	"version": "0.1.70",
+	"private": true,
+	"types": "./index.d.ts",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"default": "./index.js"
+		}
+	}
+}

@@ -1,0 +1,13 @@
+diff --git a/dist/legacy/compiler/ts-compiler.js b/dist/legacy/compiler/ts-compiler.js
+index 78ae1661d520674794502580c961c983550cadf8..42c02f95344fa2d19c3aa83d19ea687ad715bffe 100644
+--- a/dist/legacy/compiler/ts-compiler.js
++++ b/dist/legacy/compiler/ts-compiler.js
+@@ -108,7 +108,7 @@ class TsCompiler {
+         return importedModulePaths;
+     }
+     fixupCompilerOptionsForModuleKind(compilerOptions, isEsm) {
+-        const moduleResolution = this._ts.ModuleResolutionKind.Node10 ?? this._ts.ModuleResolutionKind.NodeJs;
++        const moduleResolution = compilerOptions.moduleResolution ?? this._ts.ModuleResolutionKind.Node10 ?? this._ts.ModuleResolutionKind.NodeJs;
+         if (!isEsm) {
+             return {
+                 ...compilerOptions,

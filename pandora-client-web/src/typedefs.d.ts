@@ -18,6 +18,12 @@ declare module '*.wav' {
 	export = url;
 }
 
+declare module '*.css' {
+}
+
+declare module '*.scss' {
+}
+
 declare interface Navigator {
 	getAutoplayPolicy?(type: 'mediaelement' | 'audiocontext' | HTMLMediaElement | AudioContext): 'allowed' | 'allowed-muted' | 'disallowed';
 }

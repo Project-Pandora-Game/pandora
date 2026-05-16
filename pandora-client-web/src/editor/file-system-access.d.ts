@@ -21,11 +21,3 @@ declare interface DirectoryPickerOptions {
 	id: string;
 	startIn: StartInDirectory;
 }
-
-/** extends the base interface from the DOM library */
-declare interface FileSystemDirectoryHandle extends FileSystemHandle {
-	keys(): AsyncIterableIterator<string>;
-	values(): AsyncIterableIterator<FileSystemHandle>;
-	entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
-	[Symbol.asyncIterator]: FileSystemDirectoryHandle['entries'];
-}

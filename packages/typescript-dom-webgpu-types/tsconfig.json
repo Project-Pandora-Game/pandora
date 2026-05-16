@@ -1,0 +1,9 @@
+{
+	"extends": "../../pandora-common/tsconfig.base.json",
+	"compilerOptions": {
+		"noEmit": true
+	},
+	"include": [
+		"./index.d.ts"
+	]
+}

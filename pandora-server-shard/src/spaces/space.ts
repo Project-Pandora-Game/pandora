@@ -501,6 +501,20 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this.logger.debug(`Character ${character.id} removed`);
 	}
 
+	public clearRoomDeviceSlotsOccupiedByCharacter(characterId: CharacterId): void {
+		const newState = this._gameState.currentState.clearInvalidRoomDeviceSlotOccupancy(characterId);
+		if (newState !== this._gameState.currentState) {
+			this._gameState.setState(newState);
+		}
+	}
+
+	public clearInvalidRoomDeviceSlotOccupancy(): void {
+		const newState = this._gameState.currentState.clearInvalidRoomDeviceSlotOccupancy();
+		if (newState !== this._gameState.currentState) {
+			this._gameState.setState(newState);
+		}
+	}
+
 	public sendUpdateToAllCharacters(data: GameStateUpdate): void {
 		this.sendMessage('gameStateUpdate', data);
 	}

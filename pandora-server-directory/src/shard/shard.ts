@@ -1,5 +1,5 @@
 import { isEqual, last, uniq } from 'lodash-es';
-import { Assert, AsyncSynchronized, CharacterId, CloneDeepMutable, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction } from 'pandora-common';
+import { Assert, AsyncSynchronized, CharacterId, CloneDeepMutable, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction, type SpaceCharacterRemoval } from 'pandora-common';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Character } from '../account/character.ts';
@@ -94,6 +94,7 @@ export class Shard {
 			characters: this.makeCharacterSetupList(),
 			spaces: this.makeSpacesSetupList(),
 			messages: this.makeDirectoryActionMessages(),
+			spaceCharacterRemovals: this.makeSpaceCharacterRemovals(),
 		};
 	}
 
@@ -185,6 +186,7 @@ export class Shard {
 			characters: this.makeCharacterSetupList(),
 			spaces: this.makeSpacesSetupList(),
 			messages: this.makeDirectoryActionMessages(),
+			spaceCharacterRemovals: this.makeSpaceCharacterRemovals(),
 		};
 	}
 
@@ -369,6 +371,9 @@ export class Shard {
 		if (updateReasons.includes('messages')) {
 			update.messages = this.makeDirectoryActionMessages();
 		}
+		if (updateReasons.includes('spaceCharacterRemovals')) {
+			update.spaceCharacterRemovals = this.makeSpaceCharacterRemovals();
+		}
 
 		try {
 			await this.shardConnection.awaitResponse('update', update, 10_000);
@@ -382,6 +387,19 @@ export class Shard {
 						const index = space.pendingMessages.indexOf(lastMessage);
 						if (index >= 0) {
 							space.pendingMessages.splice(0, index + 1);
+						}
+					}
+				}
+			}
+			if (update.spaceCharacterRemovals) {
+				for (const space of this.spaces.values()) {
+					if (!update.spaceCharacterRemovals[space.id])
+						continue;
+					const lastRemoval = last(update.spaceCharacterRemovals[space.id]);
+					if (lastRemoval !== undefined) {
+						const index = space.pendingCharacterRemovals.indexOf(lastRemoval);
+						if (index >= 0) {
+							space.pendingCharacterRemovals.splice(0, index + 1);
 						}
 					}
 				}
@@ -424,6 +442,16 @@ export class Shard {
 		for (const space of this.spaces.values()) {
 			if (space.pendingMessages.length > 0) {
 				result[space.id] = space.pendingMessages.slice();
+			}
+		}
+		return result;
+	}
+
+	private makeSpaceCharacterRemovals(): Record<SpaceId, SpaceCharacterRemoval[]> {
+		const result: Record<SpaceId, SpaceCharacterRemoval[]> = {};
+		for (const space of this.spaces.values()) {
+			if (space.pendingCharacterRemovals.length > 0) {
+				result[space.id] = space.pendingCharacterRemovals.slice();
 			}
 		}
 		return result;

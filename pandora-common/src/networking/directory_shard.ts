@@ -3,7 +3,7 @@ import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
 import { CharacterIdSchema } from '../character/index.ts';
 import { ChatMessageDirectoryActionSchema } from '../chat/chat.ts';
-import { SpaceIdSchema } from '../space/space.ts';
+import { SpaceIdSchema, SpaceLeaveReasonSchema } from '../space/space.ts';
 import { SpaceDataSchema } from '../space/spaceData.ts';
 import { SpaceSwitchCharacterStatusPermissionSchema, SpaceSwitchStatusSchema } from '../space/spaceSwitch.ts';
 import { Satisfies } from '../utility/misc.ts';
@@ -39,12 +39,20 @@ export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 });
 export type IShardSpaceDefinition = z.infer<typeof ShardSpaceDefinitionSchema>;
 
+export const SpaceCharacterRemovalSchema = z.object({
+	character: CharacterIdSchema,
+	reason: SpaceLeaveReasonSchema,
+});
+export type SpaceCharacterRemoval = z.infer<typeof SpaceCharacterRemovalSchema>;
+
 export const DirectoryShardUpdateSchema = z.object({
 	/** List of characters connected to this shard (both outside and in room) */
 	characters: ShardCharacterDefinitionSchema.array(),
 	/** List of spaces which are loaded on this shard */
 	spaces: ShardSpaceDefinitionSchema.array(),
 	messages: z.record(SpaceIdSchema, ChatMessageDirectoryActionSchema.array()),
+	/** Characters that were intentionally removed from loaded spaces and need room-state cleanup */
+	spaceCharacterRemovals: z.record(SpaceIdSchema, SpaceCharacterRemovalSchema.array()),
 });
 export type IDirectoryShardUpdate = z.infer<typeof DirectoryShardUpdateSchema>;
 

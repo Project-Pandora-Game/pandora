@@ -1,3 +1,13 @@
+diff --git a/lib/Shaders.d.ts b/lib/Shaders.d.ts
+index 2aed566102cbf0dd92b0a9b9e08ca844722a0b6c..a48b8f5081dc4f14c374a515bfee55b65afb1709 100644
+--- a/lib/Shaders.d.ts
++++ b/lib/Shaders.d.ts
+@@ -1,5 +1,3 @@
+-/// <reference types="@webgpu/types" />
+-
+ declare module '*.wgsl'
+ {
+     const shader: 'string';
 diff --git a/lib/environment/canvas/ICanvas.d.ts b/lib/environment/canvas/ICanvas.d.ts
 index f48357aa773d5412c53bc841b5e77f5aaf7df9e9..0b935c244bae8dfa6e949c59299ba4726932372d 100644
 --- a/lib/environment/canvas/ICanvas.d.ts

@@ -6,10 +6,10 @@ settings:
 
 overrides:
   superstatic>re2: '-'
-  '@webgpu/types': link:./packages/typescript-dom-webgpu-types
+  '@webgpu/types': '-'
 
 patchedDependencies:
-  pixi.js@8.18.1: 715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a
+  pixi.js@8.18.1: 01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174
   react-switch: a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6
   ts-jest@29.4.9: 393928a5d8be7635b45d5a1df86a33883ee2fea22189b7b373854f7581faaaa1
 
@@ -95,13 +95,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a))
+        version: 6.1.5(pixi.js@8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a))
+        version: 6.0.3(pixi.js@8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi.js:
         specifier: 8.18.1
-        version: 8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a)
+        version: 8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
       react:
         specifier: 19.2.6
         version: 19.2.6
@@ -11237,20 +11237,19 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a)):
+  pixi-filters@6.1.5(pixi.js@8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a)
+      pixi.js: 8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi-viewport@6.0.3(pixi.js@8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a)):
+  pixi-viewport@6.0.3(pixi.js@8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
-      pixi.js: 8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a)
+      pixi.js: 8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi.js@8.18.1(patch_hash=715a0ad1aef84a63252f9365cd6503ad42aa7ab8e03be1b9b4b134e54faa9b4a):
+  pixi.js@8.18.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174):
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0
-      '@webgpu/types': link:packages/typescript-dom-webgpu-types
       '@xmldom/xmldom': 0.8.13
       earcut: 3.0.2
       eventemitter3: 5.0.4

@@ -1,6 +1,6 @@
 overrides:
   superstatic>re2: '-'
-  '@webgpu/types': 'link:./packages/typescript-dom-webgpu-types'
+  '@webgpu/types': '-'
 patchedDependencies:
   pixi.js@8.18.1: patches/pixi.js@8.18.1.patch
   react-switch: patches/react-switch.patch

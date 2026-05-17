@@ -10,12 +10,13 @@ import {
 	GetLogger,
 	MergeAssetProperties,
 	PseudoRandom,
+	type AppearancePose,
 	type AssetGraphicsDefinition,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import type { FederatedPointerEvent, Filter, EventMode as PixiEventMode, Rectangle } from 'pixi.js';
-import { memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
+import { Fragment, memo, ReactElement, useCallback, useEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
@@ -26,11 +27,11 @@ import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck
 import type { PointLike } from './common/point.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
-import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
+import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, ReverseArrayIf, useComputedLayerPriority } from './def.ts';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
 import { GraphicsCharacterDefaultLayerBuilder } from './layers/graphicsLayer.tsx';
-import { SwapCullingDirectionObservable } from './layers/graphicsLayerCommon.tsx';
+import { SwapCullingDirection, SwapCullingDirectionObservable } from './layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from './reconciler/tick.ts';
 
 const logger = GetLogger('GraphicsCharacter');
@@ -193,7 +194,13 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 
 	const effectiveCharacterState = (Number.isFinite(movementTransitionDuration) && movementTransitionDuration > 0) ? producedEffectiveCharacterState : characterState;
 	const items = effectiveCharacterState.items;
-	const poseEvaluator = useCharacterPoseEvaluator(effectiveCharacterState.assetManager, effectiveCharacterState.actualPose);
+
+	const { view } = effectiveCharacterState.actualPose;
+
+	const poseEvaluatorFront = useCharacterPoseEvaluator(effectiveCharacterState.assetManager, useMemo((): Immutable<AppearancePose> => ({ ...effectiveCharacterState.actualPose, view: 'front' }), [effectiveCharacterState.actualPose]), view === 'back');
+	const sortOrderFront = useComputedLayerPriority(poseEvaluatorFront.pose);
+	const poseEvaluatorBack = useCharacterPoseEvaluator(effectiveCharacterState.assetManager, useMemo((): Immutable<AppearancePose> => ({ ...effectiveCharacterState.actualPose, view: 'back' }), [effectiveCharacterState.actualPose]), view === 'back');
+	const sortOrderBack = useComputedLayerPriority(poseEvaluatorBack.pose);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
@@ -294,22 +301,30 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 		return result;
 	}, [items, assetPreferenceIsVisible, graphicsGetter, layerStateOverrideGetter, layerFilter]);
 
-	const effectivePose = effectiveCharacterState.actualPose;
-	const { view } = effectivePose;
-	const sortOrder = useComputedLayerPriority(effectivePose);
-
-	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
+	const priorityLayersFront = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
 		const result = new Map<LayerPriority, ReactElement[]>();
 		const actualLayerBuilder = layerBuilder ?? GraphicsCharacterDefaultLayerBuilder;
 		for (const layerState of layers) {
 			const priority = layerState.layer.priority;
-			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
+			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority);
 			const lowerLayer = result.get(priority);
 
-			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, characterBlinking, debugConfig));
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluatorFront, characterBlinking, debugConfig));
 		}
 		return result;
-	}, [layerBuilder, poseEvaluator, layers, view, characterBlinking, debugConfig]);
+	}, [layerBuilder, poseEvaluatorFront, layers, characterBlinking, debugConfig]);
+	const priorityLayersBack = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
+		const result = new Map<LayerPriority, ReactElement[]>();
+		const actualLayerBuilder = layerBuilder ?? GraphicsCharacterDefaultLayerBuilder;
+		for (const layerState of layers) {
+			const priority = layerState.layer.priority;
+			const reverse = !PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority);
+			const lowerLayer = result.get(priority);
+
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluatorBack, characterBlinking, debugConfig));
+		}
+		return result;
+	}, [layerBuilder, poseEvaluatorBack, layers, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
@@ -340,10 +355,14 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			onTransitionTick={ onTransitionTick }
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
+				<Container zIndex={ 0 }>
+					{ ReverseArrayIf(
+						view === 'back',
+						<SwapCullingDirection key='back'>{ sortOrderBack.flatMap((priority) => priorityLayersBack.get(priority) ?? null) }</SwapCullingDirection>,
+						<Fragment key='front'>{ sortOrderFront.flatMap((priority) => priorityLayersFront.get(priority) ?? null) }</Fragment>,
+					) }
+				</Container>
 				<SwapCullingDirectionObservable swap={ swapCullingScale }>
-					<Container zIndex={ 0 }>
-						{ sortOrder.flatMap((priority) => priorityLayers.get(priority) ?? null) }
-					</Container>
 					{ children }
 				</SwapCullingDirectionObservable>
 			</GraphicsSuspense>

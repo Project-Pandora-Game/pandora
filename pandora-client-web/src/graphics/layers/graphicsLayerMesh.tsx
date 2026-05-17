@@ -33,7 +33,7 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose, imageUvPose.view === 'back');
 
 	const verticesData = useLayerVerticesTransformData(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
 	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;

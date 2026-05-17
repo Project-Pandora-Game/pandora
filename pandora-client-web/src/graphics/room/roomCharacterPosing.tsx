@@ -473,7 +473,7 @@ function PosingToolIKHandle({
 		};
 	}, [assetManager, ikHandle, yOffsetExtra, pivot]);
 
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const handlePosition = useMemo(() => evaluator.evalTransform([ikHandle.x, ikHandle.y], ikHandle.transforms ?? EMPTY_ARRAY), [ikHandle, evaluator]);
 
 	const onMove = useEvent((x: number, y: number): void => {
@@ -689,7 +689,7 @@ function PosingToolBone({
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
 	const graphicsRef = useRef<PIXI.Graphics>(null);
 
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 
 	const [posX, posY, angle] = useMemo((): [number, number, number] => {
 		let rotation = evaluator.getBoneLikeValue(definition.name) + (definition.baseRotation ?? 0);

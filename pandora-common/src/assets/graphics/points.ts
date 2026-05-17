@@ -34,7 +34,7 @@ export const PointDefinitionSchema = z.object({
 	pos: CoordinatesCompressedSchema,
 	mirror: z.boolean(),
 	pointType: z.string(),
-	transforms: TransformDefinitionSchema.array(),
+	transforms: TransformDefinitionSchema.array().optional(),
 	skinning: PointSkinningDefinitionSchema.optional(),
 });
 export type PointDefinition = z.infer<typeof PointDefinitionSchema>;

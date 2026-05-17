@@ -30,7 +30,7 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 	} = useObservable(layer.definition);
 
 	const characterState = useEditorCharacterState();
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 	const wornItem = characterState.items
 		.filter((i) => i.isType('roomDeviceWearablePart'))

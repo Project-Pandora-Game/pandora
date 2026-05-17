@@ -34,7 +34,7 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	/** Appearance condition evaluator for the character */
 	evaluator: CharacterPoseEvaluator;
 } {
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 
 	let baseScale = 1;
 	if (evaluator.pose.legs.pose === 'sitting') {
@@ -45,10 +45,11 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		standing: 600,
 		sitting: 0,
 		kneeling: 242,
+		heel_kneeling: 0, // TODO
 	};
 	const legEffectCharacterOffsetBase = evaluator.pose.legs.pose === 'sitting' ? 135 : legEffectMap.standing;
 	const legEffect = legEffectMap[evaluator.pose.legs.pose]
-		+ (evaluator.pose.legs.pose !== 'kneeling' ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+		+ ((evaluator.pose.legs.pose !== 'kneeling' && evaluator.pose.legs.pose !== 'heel_kneeling') ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 
@@ -101,7 +102,7 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 		rotationAngle,
 	} = useRoomCharacterOffsets(characterState);
 
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const graphicsManager = useObservable(GraphicsManagerInstance);

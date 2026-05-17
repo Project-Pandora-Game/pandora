@@ -1,6 +1,7 @@
 import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import type { Logger } from '../../../logging/logger.ts';
+import { Vector2 } from '../../../math/vector2.ts';
 import { BitField } from '../../../utility/bitfield.ts';
 import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../../utility/misc.ts';
 import { ConditionsCombineAnd, type Condition } from '../../graphics/conditions.ts';
@@ -185,7 +186,7 @@ async function LoadAssetImageLayerSingle(
 		// Calculate which points are relevant to the image, excluding those that aren't
 		const pointFilter = new BitField(calculatedPoints.length);
 		for (const pose of uvPoses) {
-			const poseEvaluator = new CharacterPoseTransforms(context.assetManager, pose);
+			const poseEvaluator = new CharacterPoseTransforms(context.assetManager, pose, pose.view === 'back');
 
 			// Rectangle corners for nicer calculation
 			const x1 = Math.floor(layer.x + imageBoundingBox[0] * layer.width);
@@ -197,10 +198,20 @@ async function LoadAssetImageLayerSingle(
 			for (const trianglePoints of triangles) {
 				const [a, b, c] = trianglePoints.map((pi) => {
 					const point = calculatedPoints[pi];
-					return poseEvaluator.evalTransform(
-						point.pos,
-						point.transforms,
-					);
+					const pos = new Vector2(point.pos[0], point.pos[1]);
+					if (point.skinning) {
+						poseEvaluator.skinPoint(
+							pos,
+							point.skinning,
+							point.transforms,
+						);
+					} else if (point.transforms != null) {
+						poseEvaluator.evalTransformVec(
+							pos,
+							point.transforms,
+						);
+					}
+					return [pos.x, pos.y] as const;
 				});
 
 				if (TriangleRectangleOverlap([a, b, c], [x1, y1, x2, y2])) {

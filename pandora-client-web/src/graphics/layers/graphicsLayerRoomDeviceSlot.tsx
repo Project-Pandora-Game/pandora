@@ -68,7 +68,7 @@ function GraphicsLayerRoomDeviceSlotCharacter({ item, layer, character, characte
 		rotationAngle,
 	} = useRoomCharacterOffsets(characterState);
 
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {

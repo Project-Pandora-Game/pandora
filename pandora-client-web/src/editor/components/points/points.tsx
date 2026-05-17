@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { Assert, GetLogger, PointTemplateSourceSchema, Vector2 } from 'pandora-common';
+import { Assert, EMPTY_ARRAY, GetLogger, PointTemplateSourceSchema, Vector2 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -104,7 +104,7 @@ export function PointsHelperMathUi(): ReactElement | null {
 	const selectedPointDefinition = useNullableObservable(selectedPoint?.definition);
 
 	const characterState = useEditorCharacterState();
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const selectedPointFinal = useMemo((): (readonly [number, number]) | undefined => {
 		if (selectedPointDefinition == null)
 			return undefined;
@@ -121,7 +121,7 @@ export function PointsHelperMathUi(): ReactElement | null {
 
 		return evaluator.evalTransform(
 			selectedPointDefinition.pos,
-			selectedPointDefinition.transforms,
+			selectedPointDefinition.transforms ?? EMPTY_ARRAY,
 		);
 	}, [selectedPointDefinition, evaluator]);
 
@@ -349,7 +349,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				/>
 			</div>
 			<div>List of transformations for this point:</div>
-			<PointTransformationsTextarea transforms={ transforms } setTransforms={ (newTransforms) => {
+			<PointTransformationsTextarea transforms={ transforms ?? EMPTY_ARRAY } setTransforms={ (newTransforms) => {
 				point.setTransforms(newTransforms);
 			} } />
 			<div>

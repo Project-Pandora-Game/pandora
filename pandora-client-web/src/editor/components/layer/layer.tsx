@@ -180,7 +180,7 @@ function LayerEnableCondition({ layer }: { layer: EditorAssetGraphicsWornLayer |
 	const conditionMetadata = useMemo(() => asset != null ? GetEditorConditionInputMetadataForAsset(asset) : undefined, [asset]);
 
 	const characterState = useEditorCharacterState();
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 	const wornItem = characterState.items
 		.find((i) => i.asset.id === layer.assetGraphics.id || (i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === layer.assetGraphics.id));

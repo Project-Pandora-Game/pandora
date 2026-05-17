@@ -106,7 +106,7 @@ export function MirrorPoint(point: PointDefinitionCalculated): PointDefinitionCa
 	return {
 		...point,
 		pos: [CharacterSize.WIDTH - point.pos[0], point.pos[1]],
-		transforms: point.transforms.map(MirrorTransform),
+		transforms: point.transforms?.map(MirrorTransform),
 		skinning: point.skinning?.map((s) => ({ ...s, bone: s.bone && MirrorBoneLike(s.bone) })),
 		pointType: MirrorBoneLike(point.pointType),
 		isMirror: true,

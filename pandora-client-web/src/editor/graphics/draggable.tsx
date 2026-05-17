@@ -163,7 +163,7 @@ export class DraggablePoint {
 	public mirrorSwap(): void {
 		this.modifyPoint((p) => {
 			p.pos[0] = CharacterSize.WIDTH - p.pos[0];
-			p.transforms = p.transforms.map(MirrorTransform);
+			p.transforms = p.transforms?.map(MirrorTransform);
 			p.pointType = MirrorBoneLike(p.pointType);
 		});
 	}
@@ -199,7 +199,7 @@ export function DraggableBone({
 	characterState: AssetFrameworkCharacterState;
 	type: 'setup' | 'result';
 }): ReactElement {
-	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {

@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { AssetIdSchema } from '../base.ts';
-import type { BoneType } from './conditions.ts';
+import type { BoneType, PoseCondition } from './conditions.ts';
 import { InversePosingHandleSchema } from './inversePosing.ts';
 import { GraphicsLayerSchema, RoomDeviceGraphicsLayerSchema } from './layer.ts';
 import { PointTemplateSchema } from './points.ts';
@@ -13,6 +13,14 @@ export const CharacterSize = {
 /** The maximum number of bones that can exist (includes mirrored bones as well). Used for various optimizations. */
 export const MAX_BONE_COUNT = 32;
 
+export interface BoneDefinitionPoseTransform {
+	axis: [x: number, y: number, z: number];
+	mirrorAxis?: [x: number, y: number, z: number];
+	/** In degrees */
+	rotation: number;
+	condition: PoseCondition;
+}
+
 export interface BoneDefinition {
 	name: string;
 	x: number;
@@ -20,6 +28,7 @@ export interface BoneDefinition {
 	baseRotation?: number;
 	/** Offset relative to `x` and `y` which should be applied to UI handle. Happens before `parent` or `rotation` shifts. */
 	uiPositionOffset?: readonly [x: number, y: number];
+	poseTransforms?: BoneDefinitionPoseTransform[];
 	mirror?: BoneDefinition;
 	isMirror: boolean;
 	parent?: BoneDefinition;

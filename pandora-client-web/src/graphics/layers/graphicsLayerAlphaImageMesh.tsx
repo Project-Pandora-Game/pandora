@@ -40,7 +40,7 @@ export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImage
 		imageUvPose,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose, imageUvPose.view === 'back');
 
 	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;

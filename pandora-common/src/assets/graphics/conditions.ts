@@ -25,7 +25,7 @@ export type ArmSegmentOrder = z.infer<typeof ArmSegmentOrderSchema>;
 export const LegSideOrderSchema = z.enum(['left', 'right']);
 export type LegSideOrder = z.infer<typeof LegSideOrderSchema>;
 
-export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
+export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling', 'heel_kneeling']);
 export type LegsPose = z.infer<typeof LegsPoseSchema>;
 
 export const CONDITION_EQ_OPERATORS = ['=', '!='] as const;

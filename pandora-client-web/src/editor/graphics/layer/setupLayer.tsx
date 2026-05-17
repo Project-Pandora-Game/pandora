@@ -143,7 +143,7 @@ export function SetupMeshLayerSelected({
 
 	const { points, triangles } = useLayerMeshPoints(definition);
 
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
@@ -151,7 +151,7 @@ export function SetupMeshLayerSelected({
 		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose, imageUvPose.view === 'back');
 	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const asset = layer.assetGraphics;
@@ -246,7 +246,7 @@ export function SetupAlphaImageMeshLayerSelected({
 
 	const { points, triangles } = useLayerMeshPoints(definition);
 
-	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
+	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose, characterState.actualPose.view === 'back');
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
 
 	const {
@@ -254,7 +254,7 @@ export function SetupAlphaImageMeshLayerSelected({
 		imageUvPose,
 	} = useLayerImageSource(evaluator, definition, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, imageUvPose, imageUvPose.view === 'back');
 	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {
@@ -365,7 +365,7 @@ export function SetupAutomeshLayerSelected({
 		pointType,
 	});
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, APPEARANCE_POSE_DEFAULT);
+	const evaluatorUvPose = useCharacterPoseEvaluator(characterState.assetManager, APPEARANCE_POSE_DEFAULT, APPEARANCE_POSE_DEFAULT.view === 'back');
 	const uv = useLayerVertices(evaluatorUvPose, points, definition, true).vertices;
 
 	const images = useMemo((): readonly string[] => {

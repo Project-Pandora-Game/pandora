@@ -41,29 +41,32 @@ export class CharacterPoseEvaluator extends CharacterPoseTransforms {
 	}
 }
 
-const poseEvaluatorInstanceCache = new WeakMap<AssetManager, WeakMap<Immutable<AppearancePose>, CharacterPoseEvaluator>>();
-function GetCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>): CharacterPoseEvaluator {
+const poseEvaluatorInstanceCache = new WeakMap<AssetManager, WeakMap<Immutable<AppearancePose>, [CharacterPoseEvaluator, CharacterPoseEvaluator]>>();
+function GetCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>, inverseProjection: boolean): CharacterPoseEvaluator {
 	let assetManagerCache = poseEvaluatorInstanceCache.get(assetManager);
 	if (assetManagerCache === undefined) {
 		assetManagerCache = new WeakMap();
 		poseEvaluatorInstanceCache.set(assetManager, assetManagerCache);
 	}
 
-	let cacheEntry: CharacterPoseEvaluator | undefined = assetManagerCache.get(pose);
+	let cacheEntry: [CharacterPoseEvaluator, CharacterPoseEvaluator] | undefined = assetManagerCache.get(pose);
 	if (cacheEntry === undefined) {
-		cacheEntry = new CharacterPoseEvaluator(assetManager, pose);
+		cacheEntry = [
+			new CharacterPoseEvaluator(assetManager, pose, false),
+			new CharacterPoseEvaluator(assetManager, pose, true),
+		];
 		assetManagerCache.set(pose, cacheEntry);
 	}
 
-	return cacheEntry;
+	return cacheEntry[inverseProjection ? 1 : 0];
 }
 /**
  * Gets an pose evaluator for the character
  * @param characterState - Character state
  * @returns The requested appearance condition evaluator
  */
-export function useCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>): CharacterPoseEvaluator {
-	return useMemo(() => GetCharacterPoseEvaluator(assetManager, pose), [assetManager, pose]);
+export function useCharacterPoseEvaluator(assetManager: AssetManager, pose: Immutable<AppearancePose>, inverseProjection: boolean): CharacterPoseEvaluator {
+	return useMemo(() => GetCharacterPoseEvaluator(assetManager, pose, inverseProjection), [assetManager, pose, inverseProjection]);
 }
 
 export class AppearanceConditionEvaluator {

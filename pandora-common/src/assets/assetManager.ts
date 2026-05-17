@@ -5,7 +5,7 @@ import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc.ts'
 import { Asset } from './asset.ts';
 import type { AssetId } from './base.ts';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type AssetsTileTextureInfo, type CharacterModifierInbuiltTemplates } from './definitions.ts';
-import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics/index.ts';
+import { BoneDefinition, BoneDefinitionCompressed, CharacterSize, MirrorAtomicPoseCondition, type BoneDefinitionPoseTransform } from './graphics/index.ts';
 import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item/index.ts';
 import type { AssetsPosePresets } from './state/characterStatePose.ts';
 
@@ -168,6 +168,12 @@ export class AssetManager {
 			y,
 			uiPositionOffset: (mirror && bone.uiPositionOffset != null) ? [-bone.uiPositionOffset[0], bone.uiPositionOffset[1]] : bone.uiPositionOffset,
 			baseRotation: bone.baseRotation,
+			poseTransforms: bone.poseTransforms?.map((t): BoneDefinitionPoseTransform => mirror ? {
+				axis: CloneDeepMutable(t.mirrorAxis ? t.mirrorAxis : t.axis),
+				mirrorAxis: t.mirrorAxis ? CloneDeepMutable(t.axis) : undefined,
+				rotation: t.rotation,
+				condition: t.condition.map(MirrorAtomicPoseCondition),
+			} : CloneDeepMutable(t)),
 			mirror,
 			isMirror: mirror !== undefined,
 			parent,

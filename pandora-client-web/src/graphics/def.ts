@@ -23,6 +23,10 @@ export type LayerState = {
 	wornItems: AppearanceItems<WearableAssetType>;
 };
 
+export function ReverseArrayIf<T>(condition: boolean, ...arr: T[]): T[] {
+	return condition ? arr.reverse() : arr;
+}
+
 export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm, legs }: Immutable<AppearancePose>): readonly LayerPriority[] {
 	function ReverseIf(condition: boolean, ...arr: ((LayerPriority | null)[] | null)[]): (LayerPriority | null)[] {
 		return condition ? arr.reverse().flat() : arr.flat();

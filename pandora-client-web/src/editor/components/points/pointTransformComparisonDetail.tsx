@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { APPEARANCE_POSE_DEFAULT, Assert, AssetManager, CloneDeepMutable, Vector2, type BoneDefinition, type PointDefinition, type TransformDefinition } from 'pandora-common';
+import { APPEARANCE_POSE_DEFAULT, Assert, AssetManager, CloneDeepMutable, EMPTY_ARRAY, Vector2, type BoneDefinition, type PointDefinition, type TransformDefinition } from 'pandora-common';
 import { memo, useState, type ReactElement, type ReactNode } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -15,13 +15,13 @@ type PoseComparisonResult = {
 	maxError: number;
 };
 
-function ComparePointTransforms(assetManager: AssetManager, point: Immutable<PointDefinition>, baseTransforms: Immutable<TransformDefinition[]>): PoseComparisonResult {
+function ComparePointTransforms(assetManager: AssetManager, point: Immutable<PointDefinition>, baseTransforms: Immutable<TransformDefinition[]> | undefined): PoseComparisonResult {
 	const poseVariablesSet = new Set<PointTransformVariable>();
 
-	for (const transform of point.transforms) {
+	for (const transform of (point.transforms ?? EMPTY_ARRAY)) {
 		CollectVariablesFromTransform(transform, poseVariablesSet);
 	}
-	for (const transform of baseTransforms) {
+	for (const transform of (baseTransforms ?? EMPTY_ARRAY)) {
 		CollectVariablesFromTransform(transform, poseVariablesSet);
 	}
 	for (const skinBone of point.skinning ?? []) {
@@ -44,7 +44,7 @@ function ComparePointTransforms(assetManager: AssetManager, point: Immutable<Poi
 	const errorVec = new Vector2();
 
 	for (const pose of GeneratePossiblePosesRecursive(poseVariables, CloneDeepMutable(APPEARANCE_POSE_DEFAULT), 5)) {
-		const evaluator = new CharacterPoseEvaluator(assetManager, pose);
+		const evaluator = new CharacterPoseEvaluator(assetManager, pose, pose.view === 'back');
 
 		skinResult.set(point.pos[0], point.pos[1]);
 		if (point.skinning) {
@@ -53,7 +53,7 @@ function ComparePointTransforms(assetManager: AssetManager, point: Immutable<Poi
 				point.skinning,
 				point.transforms,
 			);
-		} else {
+		} else if (point.transforms != null) {
 			evaluator.evalTransformVec(
 				skinResult,
 				point.transforms,
@@ -61,10 +61,12 @@ function ComparePointTransforms(assetManager: AssetManager, point: Immutable<Poi
 		}
 
 		oldResult.set(point.pos[0], point.pos[1]);
-		evaluator.evalTransformVec(
-			oldResult,
-			baseTransforms,
-		);
+		if (baseTransforms != null) {
+			evaluator.evalTransformVec(
+				oldResult,
+				baseTransforms,
+			);
+		}
 
 		const error = errorVec.assign(skinResult).substract(oldResult).getLengthSq();
 		totalError += error;
@@ -96,7 +98,7 @@ export const PointTransformComparsionDetail = memo(function PointTransformCompar
 	return (
 		<>
 			<div>Transformations to compare against:</div>
-			<PointTransformationsTextarea transforms={ baselineTransforms } setTransforms={ (newTransforms) => {
+			<PointTransformationsTextarea transforms={ baselineTransforms ?? EMPTY_ARRAY } setTransforms={ (newTransforms) => {
 				setBaselineTransforms(newTransforms);
 				setResult(null);
 			} } />

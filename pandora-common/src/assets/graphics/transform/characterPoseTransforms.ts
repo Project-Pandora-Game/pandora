@@ -20,10 +20,12 @@ const BONE_ROTATION_AXIS = /*@__PURE__*/ new Vector3(0, 0, 1);
 export class CharacterPoseTransforms {
 	public readonly assetManager: AssetManager;
 	public readonly pose: Immutable<AppearancePose>;
+	public readonly inverseProjection: boolean;
 
-	constructor(assetManager: AssetManager, pose: Immutable<AppearancePose>) {
+	constructor(assetManager: AssetManager, pose: Immutable<AppearancePose>, inverseProjection: boolean) {
 		this.assetManager = assetManager;
 		this.pose = pose;
+		this.inverseProjection = inverseProjection;
 	}
 
 	//#region Point transform
@@ -95,8 +97,14 @@ export class CharacterPoseTransforms {
 
 		const vec4 = TmpVec4.set(position.x, position.y, 0, 1);
 		vec4.multiplyByMatrix4x4(matrix);
-		position.x = vec4.x;
-		position.y = vec4.y;
+
+		// TODO: Make this a constant
+		const frustumNearDistance = 1815;
+		const cameraX = 500;
+		const cameraY = 432;
+		const scale = frustumNearDistance / (vec4.z + frustumNearDistance);
+		position.x = cameraX + scale * (vec4.x - cameraX);
+		position.y = cameraY + scale * (vec4.y - cameraY);
 	}
 
 	private readonly _boneTransformCache = new Map<BoneName, DualQuaternion>();
@@ -117,6 +125,24 @@ export class CharacterPoseTransforms {
 				TmpQ1.setFromAxisAngle(BONE_ROTATION_AXIS, this.getBoneLikeValue(bone) * DEG_TO_RAD * (boneDef.isMirror ? -1 : 1)),
 				TmpVec3.set(boneDef.x, boneDef.y, 0),
 			);
+
+			// Apply conditional transforms
+			if (boneDef.poseTransforms != null) {
+				for (let i = boneDef.poseTransforms.length - 1; i >= 0; i--) {
+					const transform = boneDef.poseTransforms[i];
+					if (transform.condition.every((c) => this.evalCondition(c))) {
+						const transformQ = TmpDQ3;
+						const axis = TmpVec3.set(transform.axis[0], transform.axis[1], transform.axis[2]);
+						if (this.inverseProjection) {
+							axis.x *= -1;
+							axis.z *= -1;
+						}
+						const q = TmpQ1.setFromAxisAngle(axis, transform.rotation * DEG_TO_RAD);
+						transformQ.fromRotationAroundPoint(q, TmpVec3.set(boneDef.x, boneDef.y, 0));
+						result.leftMultiply(transformQ);
+					}
+				}
+			}
 
 			// Apply parent transformation
 			if (boneDef.parent != null) {

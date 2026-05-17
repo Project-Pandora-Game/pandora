@@ -63,7 +63,7 @@ export function EvalLayerVerticesTransform(evaluator: CharacterPoseEvaluator, po
 					point.skinning,
 					point.transforms,
 				);
-			} else {
+			} else if (point.transforms != null) {
 				evaluator.evalTransformVec(
 					tmpVec,
 					point.transforms,
@@ -138,10 +138,12 @@ export function EvalLayerVerticesTransformData(evaluator: CharacterPoseEvaluator
 
 			tmpVec.set(point.pos[0], point.pos[1]);
 			// We intentionall skip skinning here, leaving it to vertex shader
-			evaluator.evalTransformVec(
-				tmpVec,
-				point.transforms,
-			);
+			if (point.transforms != null) {
+				evaluator.evalTransformVec(
+					tmpVec,
+					point.transforms,
+				);
+			}
 
 			result.vertices[2 * i] = tmpVec.x;
 			result.vertices[2 * i + 1] = tmpVec.y;

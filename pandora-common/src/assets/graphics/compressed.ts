@@ -1,5 +1,6 @@
 import type { CoordinatesCompressed } from './common.ts';
 import type { BoneType } from './conditions.ts';
+import type { BoneDefinitionPoseTransform } from './graphics.ts';
 
 export interface BoneDefinitionCompressed {
 	pos?: CoordinatesCompressed;
@@ -8,5 +9,6 @@ export interface BoneDefinitionCompressed {
 	mirror?: string;
 	parent?: string;
 	baseRotation?: number;
+	poseTransforms?: BoneDefinitionPoseTransform[];
 	type: BoneType;
 }

@@ -247,7 +247,7 @@ function SpaceSearchEntry({ baseInfo }: {
 				className={ classNames(
 					'spacesSearchListEntry',
 					isEmpty ? 'empty' : null,
-					isFull ? 'full' : null,
+					isFull ? baseInfo.isOwner ? 'fullCanJoin' : 'full' : null,
 					show ? 'selected' : null,
 				) }
 				onClick={ () => setShow(true) }

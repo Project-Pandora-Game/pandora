@@ -1,11 +1,12 @@
 import { ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { StaticRouter } from 'react-router';
-import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { WIKI_PAGES, WikiPageEntry } from '../wikiPageRegistry.ts';
-import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useEvent } from '../../../common/useEvent.ts';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import '../wiki.scss';
+import { WIKI_PAGES, WikiPageEntry } from '../wikiPageRegistry.ts';
 
 const PREVIEW_LENGTH = 250;
 const MAX_RESULTS = 50;
@@ -35,13 +36,15 @@ type SearchResult = {
 function ParsePageIntoSections(entry: WikiPageEntry): WikiSection[] {
 	const { pageName, urlChunk, Component } = entry;
 
-	const html = renderToStaticMarkup(
-		<StaticRouter location={ STATIC_RENDER_LOCATION }>
-			<Component />
-		</StaticRouter>,
-	);
-	const doc = new DOMParser().parseFromString(`<div id="root">${html}</div>`, 'text/html');
-	const root = doc.getElementById('root')!;
+	const root = document.createElement('div');
+	const reactRoot = createRoot(root);
+	flushSync(() => {
+		reactRoot.render(
+			<StaticRouter location={ STATIC_RENDER_LOCATION }>
+				<Component />
+			</StaticRouter>,
+		);
+	});
 	const anchors = Array.from(root.querySelectorAll('[id]'));
 
 	const BLOCK_TAGS = new Set(['P', 'LI', 'DT', 'DD', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE']);
@@ -115,6 +118,8 @@ function ParsePageIntoSections(entry: WikiPageEntry): WikiSection[] {
 		const nextTopIndex = cutPoints[i + 1]?.topIndex ?? topChildren.length;
 		sections.push({ title, page: urlChunk, pageName, anchor, content: sliceText(topIndex, nextTopIndex) });
 	}
+
+	reactRoot.unmount();
 
 	return sections;
 }

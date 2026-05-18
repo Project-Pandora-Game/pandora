@@ -1,5 +1,5 @@
-import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirectoryAccountInfo, PasswordSchema } from 'pandora-common';
-import React, { ReactElement, useEffect } from 'react';
+import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
@@ -9,6 +9,7 @@ import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { DEVELOPMENT } from '../../config/Environment.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
+import { CreatePasskeyCredential, IsPasskeySupported } from '../../crypto/passkey.ts';
 import type { AuthToken } from '../../networking/directoryConnector.ts';
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
@@ -30,6 +31,7 @@ export function SecuritySettings(): ReactElement | null {
 	return (
 		<>
 			<ConnectedClients />
+			<PasskeySettings />
 			<PasswordChange account={ account } />
 		</>
 	);
@@ -82,6 +84,236 @@ function ConnectedClientsList({ connections }: { connections: AccountConnectedCl
 				}
 			</tbody>
 		</table>
+	);
+}
+
+type AccountPasskeys = IClientDirectoryNormalResult['passkeyList']['passkeys'];
+
+function PasskeySettings(): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const directMessageManager = useService('directMessageManager');
+	const [passkeys, setPasskeys] = React.useState<AccountPasskeys | null>(null);
+	const [limit, setLimit] = React.useState(5);
+	const [password, setPassword] = React.useState('');
+	const passkeySupported = IsPasskeySupported();
+	const defaultPasskeyName = 'Security key';
+
+	const [load, loading] = useAsyncEvent(
+		async () => await directoryConnector.awaitResponse('passkeyList', {}),
+		(resp) => {
+			setPasskeys(resp.passkeys);
+			setLimit(resp.limit);
+		},
+	);
+
+	const [add, adding] = useAsyncEvent(async () => {
+		const passwordSha512 = await PrehashPassword(password);
+		const start = await directoryConnector.awaitResponse('passkeyRegisterStart', { passwordSha512 });
+		if (start.result !== 'ok')
+			return start.result;
+
+		const credential = await CreatePasskeyCredential(start);
+		const cryptoKey = await directMessageManager.exportPasskeyWrappedKey(credential.wrappingSecret);
+		const finish = await directoryConnector.awaitResponse('passkeyRegisterFinish', {
+			name: defaultPasskeyName,
+			credentialId: credential.credentialId,
+			publicKey: credential.publicKey,
+			clientDataJSON: credential.clientDataJSON,
+			authenticatorData: credential.authenticatorData,
+			transports: credential.transports,
+			prfSalt: start.prfSalt,
+			cryptoKey,
+		});
+		return finish.result;
+	}, (result) => {
+		switch (result) {
+			case 'ok':
+				toast('Passkey added', TOAST_OPTIONS_SUCCESS);
+				setPassword('');
+				load();
+				break;
+			case 'invalidPassword':
+				toast('Invalid password', TOAST_OPTIONS_ERROR);
+				setPassword('');
+				break;
+			case 'limitReached':
+				toast('Passkey limit reached', TOAST_OPTIONS_ERROR);
+				break;
+			case 'alreadyExists':
+				toast('This passkey is already registered', TOAST_OPTIONS_ERROR);
+				break;
+			case 'invalidCryptoKey':
+				toast('Passkey could not be linked to the current direct message key', TOAST_OPTIONS_ERROR);
+				break;
+			default:
+				toast('Failed to add passkey', TOAST_OPTIONS_ERROR);
+				break;
+		}
+	}, {
+		errorHandler: (error) => {
+			const detail = error instanceof Error ? error.message : String(error);
+			toast(`Failed to add passkey:\n${detail}`, TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	useEffect(() => {
+		if (passkeys == null) {
+			load();
+		}
+	}, [load, passkeys]);
+
+	return (
+		<fieldset>
+			<legend>Passkeys</legend>
+			<Column>
+				<span>{ passkeys == null ? 'Loading...' : `${passkeys.length}/${limit} passkeys registered` }</span>
+				<PasskeyList passkeys={ passkeys } reload={ load } />
+				<label htmlFor='passkey-add-password'>Current password</label>
+				<TextInput
+					id='passkey-add-password'
+					password
+					autoComplete='current-password'
+					value={ password }
+					onChange={ setPassword }
+					disabled={ loading || adding || (passkeys?.length ?? 0) >= limit }
+				/>
+				<Button onClick={ add } disabled={ !passkeySupported || loading || adding || password.length === 0 || (passkeys?.length ?? 0) >= limit }>
+					Add passkey
+				</Button>
+			</Column>
+		</fieldset>
+	);
+}
+
+function PasskeyList({ passkeys, reload }: { passkeys: AccountPasskeys | null; reload: () => void; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const confirm = useConfirmDialog();
+
+	if (passkeys == null)
+		return <span>Loading...</span>;
+
+	return (
+		<table>
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Created</th>
+					<th>Last used</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					passkeys.map((passkey) => (
+						<PasskeyRow
+							key={ passkey.credentialId }
+							passkey={ passkey }
+							reload={ reload }
+							confirm={ confirm }
+							directoryConnector={ directoryConnector }
+						/>
+					))
+				}
+			</tbody>
+		</table>
+	);
+}
+
+function PasskeyRow({
+	passkey,
+	reload,
+	confirm,
+	directoryConnector,
+}: {
+	passkey: AccountPasskeys[number];
+	reload: () => void;
+	confirm: ReturnType<typeof useConfirmDialog>;
+	directoryConnector: ReturnType<typeof useDirectoryConnector>;
+}): ReactElement {
+	const [editing, setEditing] = useState(false);
+	const [name, setName] = useState(passkey.name);
+	const [processing, setProcessing] = useState(false);
+
+	useEffect(() => {
+		if (!editing) {
+			setName(passkey.name);
+		}
+	}, [editing, passkey.name]);
+
+	const save = async () => {
+		const nextName = name.trim();
+		if (nextName.length === 0 || nextName.length > LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH) {
+			toast(`Passkey name must be 1-${LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH} characters`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		setProcessing(true);
+		try {
+			const { result } = await directoryConnector.awaitResponse('passkeyRename', {
+				credentialId: passkey.credentialId,
+				name: nextName,
+			});
+			if (result === 'ok') {
+				toast('Passkey renamed', TOAST_OPTIONS_SUCCESS);
+				setEditing(false);
+				reload();
+			} else {
+				toast('Passkey not found', TOAST_OPTIONS_ERROR);
+			}
+		} finally {
+			setProcessing(false);
+		}
+	};
+
+	const remove = () => {
+		void confirm(`Delete passkey "${passkey.name}"?`).then(async (confirmed) => {
+			if (!confirmed)
+				return;
+			const { result } = await directoryConnector.awaitResponse('passkeyDelete', { credentialId: passkey.credentialId });
+			if (result === 'ok') {
+				toast('Passkey deleted', TOAST_OPTIONS_SUCCESS);
+				reload();
+			} else {
+				toast('Passkey not found', TOAST_OPTIONS_ERROR);
+			}
+		});
+	};
+
+	return (
+		<tr>
+			<td>
+				{
+					editing ? (
+						<TextInput value={ name } onChange={ setName } maxLength={ LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } disabled={ processing } />
+					) : passkey.name
+				}
+			</td>
+			<td>{ new Date(passkey.created).toLocaleString() }</td>
+			<td>{ passkey.lastUsed == null ? 'Never' : new Date(passkey.lastUsed).toLocaleString() }</td>
+			<td>
+				{
+					editing ? (
+						<>
+							<Button className='slim' onClick={ () => void save() } disabled={ processing || name.trim() === passkey.name }>
+								Save
+							</Button>
+							<Button className='slim' onClick={ () => setEditing(false) } disabled={ processing }>
+								Cancel
+							</Button>
+						</>
+					) : (
+						<>
+							<Button className='slim' onClick={ () => setEditing(true) }>
+								Rename
+							</Button>
+							<Button className='slim' onClick={ remove }>
+								Delete
+							</Button>
+						</>
+					)
+				}
+			</td>
+		</tr>
 	);
 }
 

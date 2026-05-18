@@ -128,8 +128,12 @@ function BuildIndex(): WikiSection[] {
 	return WIKI_PAGES.flatMap(ParsePageIntoSections);
 }
 
+function NormalizeQuery(raw: string): string {
+	return raw.trim().replace(/\s+/g, ' ');
+}
+
 function Search(index: WikiSection[], query: string): SearchResult[] {
-	const q = query.trim().toLowerCase();
+	const q = query.toLowerCase();
 	if (!q)
 		return [];
 
@@ -166,7 +170,7 @@ function BuildPreview(content: string, matchIndex: number): string {
 }
 
 function HighlightMatch({ text, query }: { text: string; query: string; }): ReactElement {
-	if (!query.trim())
+	if (!query)
 		return <span>{ text }</span>;
 
 	const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -237,9 +241,11 @@ export function WikiSearch(): ReactElement {
 		};
 	}, []);
 
+	const normalizedQuery = NormalizeQuery(query);
+
 	const results = useMemo(
-		() => (index != null ? Search(index, query) : []),
-		[index, query],
+		() => (index != null ? Search(index, normalizedQuery) : []),
+		[index, normalizedQuery],
 	);
 
 	const isIndexing = index === null;
@@ -272,12 +278,12 @@ export function WikiSearch(): ReactElement {
 				{ isIndexing && (
 					<p>Indexing wiki content…</p>
 				) }
-				{ !isIndexing && query.trim() === '' && (
+				{ !isIndexing && normalizedQuery === '' && (
 					<p>Start typing to search across all wiki pages and sections.</p>
 				) }
-				{ !isIndexing && query.trim() !== '' && results.length === 0 && (
+				{ !isIndexing && normalizedQuery !== '' && results.length === 0 && (
 					<p>
-						No results found for <strong>"{ query }"</strong>.<br />
+						No results found for <strong>"{ normalizedQuery }"</strong>.<br />
 						Try a different keyword or explore the wiki directly with the navigation on the left.
 					</p>
 				) }
@@ -292,7 +298,7 @@ export function WikiSearch(): ReactElement {
 								<WikiSearchResult
 									key={ SectionKey(result.section) }
 									result={ result }
-									query={ query }
+									query={ normalizedQuery }
 									onClick={ handleResultClick }
 								/>
 							)) }

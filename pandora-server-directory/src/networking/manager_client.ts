@@ -1,11 +1,12 @@
 import { cloneDeep, throttle } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IAccountPasskeyCredential, IAccountPasskeyInfo, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryAccountInfo, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
+import { Base64UrlEncode, CreatePasskeyChallenge, CreatePasskeyPrfSalt, GetPasskeyClientChallenge, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -23,6 +24,7 @@ const {
 	PANDORA_DISABLE_REGISTRATION,
 	PANDORA_DISABLE_EMAIL_VERIFICATION,
 	PANDORA_DISABLE_PASSWORD_RESET,
+	PASSKEY_RP_ID,
 } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
@@ -37,6 +39,28 @@ export const SPACE_LIST_CHANGE_UPDATE_INTERVAL = 30_000;
 const CONSTANT_TIME = 1000;
 
 const logger = GetLogger('ConnectionManager-Client');
+
+type LoginOkResult = {
+	result: 'ok';
+	token: { value: string; expires: number; };
+	account: IDirectoryAccountInfo;
+};
+
+type PasskeyAssertionPurpose = 'login' | 'passwordChange';
+type PasskeyAssertionStart = {
+	rpId: string;
+	challenge: string;
+	credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+	prfSalt: string;
+	passkeys: IAccountPasskeyInfo[];
+};
+type PasskeyAssertionData = {
+	credentialId: string;
+	clientDataJSON: string;
+	authenticatorData: string;
+	signature: string;
+};
+type PasskeyAssertionVerification = { ok: true; passkey: IAccountPasskeyCredential; signCount: number; } | { ok: false; };
 
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_directory_client_connections',
@@ -103,10 +127,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			resendVerificationEmailAdvanced: WithConstantTime(this.handleResendVerificationEmailAdvanced.bind(this), CONSTANT_TIME),
 			passwordReset: WithConstantTime(this.handlePasswordReset.bind(this), CONSTANT_TIME),
 			passwordResetConfirm: WithConstantTime(this.handlePasswordResetConfirm.bind(this), CONSTANT_TIME),
+			passkeyLoginStart: WithConstantTime(this.handlePasskeyLoginStart.bind(this), CONSTANT_TIME),
+			passkeyLoginFinish: WithConstantTime(this.handlePasskeyLoginFinish.bind(this), CONSTANT_TIME),
 
 			// Account management
 			sudoAuthenticate: this.handleSudoAuthenticate.bind(this),
 			passwordChange: this.handlePasswordChange.bind(this),
+			passkeyPasswordChangeStart: this.handlePasskeyPasswordChangeStart.bind(this),
+			passkeyPasswordChangeFinish: this.handlePasskeyPasswordChangeFinish.bind(this),
 			logout: this.handleLogout.bind(this),
 			gitHubBind: this.handleGitHubBind.bind(this),
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
@@ -114,6 +142,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
 			queryConnections: this.handleQueryConnections.bind(this),
 			extendLoginToken: this.handleExtendLoginToken.bind(this),
+			passkeyList: this.handlePasskeyList.bind(this),
+			passkeyRegisterStart: this.handlePasskeyRegisterStart.bind(this),
+			passkeyRegisterFinish: this.handlePasskeyRegisterFinish.bind(this),
+			passkeyDelete: this.handlePasskeyDelete.bind(this),
+			passkeyRename: this.handlePasskeyRename.bind(this),
 
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
 			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
@@ -243,6 +276,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 		// Generate new auth token for new login
+		return await this.finishLogin(account, connection);
+	}
+
+	private async finishLogin(account: Account, connection: ClientConnection): Promise<LoginOkResult> {
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
 		await account.secure.onLogin();
@@ -252,6 +289,115 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
+		};
+	}
+
+	private createPasskeyAssertionStart(account: Account, purpose: PasskeyAssertionPurpose): PasskeyAssertionStart | undefined {
+		const passkeys = account.secure.listPasskeys();
+		const first = passkeys[0] != null ? account.secure.getPasskey(passkeys[0].credentialId) : undefined;
+		if (first == null)
+			return undefined;
+
+		return {
+			rpId: PASSKEY_RP_ID,
+			challenge: CreatePasskeyChallenge(account.id, purpose),
+			credentials: this.createPasskeyCredentialDescriptors(account, passkeys),
+			prfSalt: first.prfSalt,
+			passkeys,
+		};
+	}
+
+	private createPasskeyCredentialDescriptors(account: Account, passkeys: IAccountPasskeyInfo[]): { id: string; type: 'public-key'; transports?: string[]; }[] {
+		return passkeys.map((passkey) => ({
+			id: passkey.credentialId,
+			type: 'public-key',
+			transports: account.secure.getPasskey(passkey.credentialId)?.transports,
+		}));
+	}
+
+	private verifyPasskeyAssertionForAccount(account: Account, purpose: PasskeyAssertionPurpose, data: PasskeyAssertionData, auditAction: string): PasskeyAssertionVerification {
+		const passkey = account.secure.getPasskey(data.credentialId);
+		const challenge = GetPasskeyClientChallenge(data.clientDataJSON);
+		if (passkey == null || challenge == null)
+			return { ok: false };
+
+		const verification = VerifyPasskeyAssertion(passkey, {
+			accountId: account.id,
+			challenge,
+			clientDataJSON: data.clientDataJSON,
+			authenticatorData: data.authenticatorData,
+			signature: data.signature,
+			purpose,
+		});
+		if (!verification.ok) {
+			if (verification.reason === 'signCountRollback') {
+				AUDIT_LOG.warning(`[Account ${account.id}] rejected passkey ${auditAction} with sign counter rollback`);
+			}
+			return { ok: false };
+		}
+
+		return {
+			ok: true,
+			passkey,
+			signCount: verification.signCount,
+		};
+	}
+
+	private async handlePasskeyLoginStart({ username, secondFactor }: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginStart'] {
+		if (connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const secondFactorResponse = await LoginManager.testOptionalCaptcha(secondFactor);
+		if (secondFactorResponse != null)
+			return secondFactorResponse;
+
+		const account = await accountManager.loadAccountByUsername(username);
+		if (!account || !account.secure.isActivated() || account.secure.isDisabled()) {
+			LoginManager.loginFailed();
+			return { result: 'unknownCredentials' };
+		}
+
+		const passkeyStart = this.createPasskeyAssertionStart(account, 'login');
+		if (passkeyStart == null) {
+			LoginManager.loginFailed();
+			return { result: 'unknownCredentials' };
+		}
+
+		return {
+			result: 'ok',
+			rpId: passkeyStart.rpId,
+			challenge: passkeyStart.challenge,
+			credentials: passkeyStart.credentials,
+			prfSalt: passkeyStart.prfSalt,
+		};
+	}
+
+	private async handlePasskeyLoginFinish({ username, credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['passkeyLoginFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginFinish'] {
+		if (connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = await accountManager.loadAccountByUsername(username);
+		if (!account || !account.secure.isActivated() || account.secure.isDisabled()) {
+			LoginManager.loginFailed();
+			return { result: 'unknownCredentials' };
+		}
+
+		const verification = this.verifyPasskeyAssertionForAccount(account, 'login', {
+			credentialId,
+			clientDataJSON,
+			authenticatorData,
+			signature,
+		}, 'login');
+		if (!verification.ok) {
+			LoginManager.loginFailed();
+			return { result: 'unknownCredentials' };
+		}
+
+		await account.secure.markPasskeyUsed(credentialId, verification.signCount);
+		const login = await this.finishLogin(account, connection);
+		return {
+			...login,
+			cryptoKey: verification.passkey.cryptoKey,
 		};
 	}
 
@@ -424,6 +570,54 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			logger.debug(`${connection.id} failed to change their password`);
 			return { result };
 		}
+
+		return { result: 'ok' };
+	}
+
+	private handlePasskeyPasswordChangeStart(_: IClientDirectoryArgument['passkeyPasswordChangeStart'], connection: ClientConnection): IClientDirectoryResult['passkeyPasswordChangeStart'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = connection.account;
+		const passkeyStart = this.createPasskeyAssertionStart(account, 'passwordChange');
+		if (passkeyStart == null)
+			return { result: 'noPasskey' };
+
+		const { passkeys, ...start } = passkeyStart;
+		return {
+			result: 'ok',
+			...start,
+			cryptoKeys: passkeys.flatMap((passkey) => {
+				const credential = account.secure.getPasskey(passkey.credentialId);
+				return credential == null ? [] : [{
+					credentialId: passkey.credentialId,
+					cryptoKey: credential.cryptoKey,
+				}];
+			}),
+		};
+	}
+
+	private async handlePasskeyPasswordChangeFinish({ passwordSha512New, cryptoKey, credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['passkeyPasswordChangeFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyPasswordChangeFinish'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = connection.account;
+		const verification = this.verifyPasskeyAssertionForAccount(account, 'passwordChange', {
+			credentialId,
+			clientDataJSON,
+			authenticatorData,
+			signature,
+		}, 'password change');
+		if (!verification.ok) {
+			return { result: 'unknownCredential' };
+		}
+
+		const result = await account.secure.changePasswordWithPasskey(passwordSha512New, cryptoKey);
+		if (result !== 'ok')
+			return { result };
+
+		await account.secure.markPasskeyUsed(credentialId, verification.signCount);
+		AUDIT_LOG.verbose(`[Account ${account.id}] changed password using passkey`);
 
 		return { result: 'ok' };
 	}
@@ -1094,6 +1288,103 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		AUDIT_LOG.verbose(`${connection.id} extended login token for ${account.username}`);
 
 		return { result: token == null ? 'invalidPassword' : 'ok' };
+	}
+
+	private handlePasskeyList(_: IClientDirectoryArgument['passkeyList'], connection: ClientConnection): IClientDirectoryResult['passkeyList'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			passkeys: connection.account.secure.listPasskeys(),
+			limit: LIMIT_ACCOUNT_PASSKEY_COUNT,
+		};
+	}
+
+	private async handlePasskeyRegisterStart({ passwordSha512 }: IClientDirectoryArgument['passkeyRegisterStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterStart'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		if (!await connection.account.secure.verifyPassword(passwordSha512))
+			return { result: 'invalidPassword' };
+
+		const passkeys = connection.account.secure.listPasskeys();
+		if (passkeys.length >= LIMIT_ACCOUNT_PASSKEY_COUNT)
+			return { result: 'limitReached' };
+
+		const existingPasskey = passkeys[0] != null ? connection.account.secure.getPasskey(passkeys[0].credentialId) : undefined;
+		return {
+			result: 'ok',
+			rpId: PASSKEY_RP_ID,
+			challenge: CreatePasskeyChallenge(connection.account.id, 'register'),
+			user: {
+				id: Base64UrlEncode(Buffer.from(connection.account.id.toString(10), 'utf-8')),
+				name: connection.account.username,
+				displayName: connection.account.displayName,
+			},
+			excludeCredentials: passkeys.map((passkey) => ({
+				id: passkey.credentialId,
+				type: 'public-key',
+				transports: connection.account.secure.getPasskey(passkey.credentialId)?.transports,
+			})),
+			prfSalt: existingPasskey?.prfSalt ?? CreatePasskeyPrfSalt(),
+		};
+	}
+
+	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, prfSalt, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const challenge = GetPasskeyClientChallenge(clientDataJSON);
+		if (
+			challenge == null ||
+			!ValidatePasskeyRegistration({
+				accountId: connection.account.id,
+				challenge,
+				credentialId,
+				clientDataJSON,
+				authenticatorData,
+				publicKey,
+			})
+		) {
+			return { result: 'invalid' };
+		}
+
+		const result = await connection.account.secure.addPasskey({
+			credentialId,
+			name,
+			created: Date.now(),
+			publicKey,
+			signCount: 0,
+			transports,
+			prfSalt,
+			cryptoKey,
+		});
+		if (result === 'ok') {
+			AUDIT_LOG.verbose(`[Account ${connection.account.id}] added passkey`);
+		}
+		return { result };
+	}
+
+	private async handlePasskeyDelete({ credentialId }: IClientDirectoryArgument['passkeyDelete'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyDelete'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const result = await connection.account.secure.deletePasskey(credentialId);
+		if (result === 'ok') {
+			AUDIT_LOG.verbose(`[Account ${connection.account.id}] deleted passkey`);
+		}
+		return { result };
+	}
+
+	private async handlePasskeyRename({ credentialId, name }: IClientDirectoryArgument['passkeyRename'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRename'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const result = await connection.account.secure.renamePasskey(credentialId, name.trim());
+		if (result === 'ok') {
+			AUDIT_LOG.verbose(`[Account ${connection.account.id}] renamed passkey`);
+		}
+		return { result };
 	}
 
 	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {

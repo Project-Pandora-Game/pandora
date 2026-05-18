@@ -3,19 +3,46 @@ import * as z from 'zod';
 import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
 import type { IDirectoryStatus } from '../directory/status.ts';
+import { LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_IV_LENGTH, LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH, LIMIT_ACCOUNT_PASSKEY_AUTHENTICATOR_DATA_LENGTH, LIMIT_ACCOUNT_PASSKEY_CLIENT_DATA_LENGTH, LIMIT_ACCOUNT_PASSKEY_CREDENTIAL_ID_LENGTH, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, LIMIT_ACCOUNT_PASSKEY_PRF_SALT_LENGTH, LIMIT_ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH, LIMIT_ACCOUNT_PASSKEY_SIGNATURE_LENGTH, LIMIT_ACCOUNT_PASSKEY_TRANSPORT_COUNT, LIMIT_ACCOUNT_PASSKEY_TRANSPORT_LENGTH } from '../inputLimits.ts';
 import type { ShardFeature } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
-import { ZodCast, type HexColorString } from '../validation.ts';
+import { ZodBase64Regex, ZodCast, type HexColorString } from '../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
-// TODO: This needs reasonable size limits
+const ZodBase64UrlRegex = /^[A-Za-z0-9_-]*$/;
+export const AccountPasskeyCredentialIdSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(LIMIT_ACCOUNT_PASSKEY_CREDENTIAL_ID_LENGTH);
+export const AccountPasskeyPublicKeySchema = z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH);
+export const AccountPasskeyClientDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(LIMIT_ACCOUNT_PASSKEY_CLIENT_DATA_LENGTH);
+export const AccountPasskeyAuthenticatorDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(LIMIT_ACCOUNT_PASSKEY_AUTHENTICATOR_DATA_LENGTH);
+export const AccountPasskeySignatureSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(LIMIT_ACCOUNT_PASSKEY_SIGNATURE_LENGTH);
+export const AccountPasskeyPrfSaltSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(LIMIT_ACCOUNT_PASSKEY_PRF_SALT_LENGTH);
+export const AccountPasskeyTransportSchema = z.string().max(LIMIT_ACCOUNT_PASSKEY_TRANSPORT_LENGTH);
+export const AccountPasskeyNameSchema = z.string().trim().min(1).max(LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH);
+
 export const AccountCryptoKeySchema = z.object({
-	publicKey: z.string(),
-	salt: z.string(),
-	iv: z.string(),
-	encryptedPrivateKey: z.string(),
+	publicKey: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH),
+	salt: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH),
+	iv: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_IV_LENGTH),
+	encryptedPrivateKey: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH),
 });
 export type IAccountCryptoKey = z.infer<typeof AccountCryptoKeySchema>;
+
+export const AccountPasskeyInfoSchema = z.object({
+	credentialId: AccountPasskeyCredentialIdSchema,
+	name: AccountPasskeyNameSchema,
+	created: z.number(),
+	lastUsed: z.number().optional(),
+});
+export type IAccountPasskeyInfo = z.infer<typeof AccountPasskeyInfoSchema>;
+
+export const AccountPasskeyCredentialSchema = AccountPasskeyInfoSchema.extend({
+	publicKey: AccountPasskeyPublicKeySchema,
+	signCount: z.number().int().nonnegative(),
+	transports: AccountPasskeyTransportSchema.array().max(LIMIT_ACCOUNT_PASSKEY_TRANSPORT_COUNT).optional(),
+	prfSalt: AccountPasskeyPrfSaltSchema,
+	cryptoKey: AccountCryptoKeySchema,
+});
+export type IAccountPasskeyCredential = z.infer<typeof AccountPasskeyCredentialSchema>;
 
 export type IDirectoryAccountInfo = {
 	id: number;

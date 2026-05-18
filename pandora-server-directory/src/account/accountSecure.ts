@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { AccountTokenReason, DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
@@ -130,6 +130,29 @@ export default class AccountSecure {
 		return 'ok';
 	}
 
+	public async changePasswordWithPasskey(passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<'ok' | 'invalidCryptoKey'> {
+		if (
+			!this.isActivated() ||
+			this.#secure.cryptoKey == null ||
+			cryptoKey.publicKey !== this.#secure.cryptoKey.publicKey ||
+			!await this.#validateCryptoKey(cryptoKey)
+		) {
+			return 'invalidCryptoKey';
+		}
+
+		this.#secure.password = await GeneratePasswordHash(passwordNew);
+		this.#secure.cryptoKey = cloneDeep(cryptoKey);
+		// Invalidate all login tokens
+		this.#invalidateToken(AccountTokenReason.LOGIN);
+		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
+
+		await this.#updateDatabase();
+
+		this.#auditLog.info('Password changed using passkey');
+
+		return 'ok';
+	}
+
 	public async resetPassword(email: string): Promise<boolean> {
 		if (!this.verifyEmail(email))
 			return false;
@@ -153,6 +176,7 @@ export default class AccountSecure {
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
 		this.#secure.cryptoKey = undefined;
+		this.#secure.passkeys = undefined;
 
 		await this.#updateDatabase();
 
@@ -291,6 +315,65 @@ export default class AccountSecure {
 		this.#secure.cryptoKey = cloneDeep(key);
 		await this.#updateDatabase();
 		return 'ok';
+	}
+
+	public listPasskeys(): IAccountPasskeyInfo[] {
+		return (this.#secure.passkeys ?? []).map(({ credentialId, name, created, lastUsed }) => ({
+			credentialId,
+			name,
+			created,
+			lastUsed,
+		}));
+	}
+
+	public getPasskey(credentialId: string): IAccountPasskeyCredential | undefined {
+		return cloneDeep((this.#secure.passkeys ?? []).find((passkey) => passkey.credentialId === credentialId));
+	}
+
+	public async addPasskey(passkey: IAccountPasskeyCredential): Promise<'ok' | 'invalidCryptoKey' | 'limitReached' | 'alreadyExists'> {
+		if (this.#secure.cryptoKey == null || passkey.cryptoKey.publicKey !== this.#secure.cryptoKey.publicKey)
+			return 'invalidCryptoKey';
+
+		const passkeys = this.#secure.passkeys ?? [];
+		if (passkeys.some((stored) => stored.credentialId === passkey.credentialId))
+			return 'alreadyExists';
+		if (passkeys.length >= LIMIT_ACCOUNT_PASSKEY_COUNT)
+			return 'limitReached';
+
+		this.#secure.passkeys = [...passkeys, cloneDeep(passkey)];
+		await this.#updateDatabase();
+		return 'ok';
+	}
+
+	public async deletePasskey(credentialId: string): Promise<'ok' | 'notFound'> {
+		const passkeys = this.#secure.passkeys ?? [];
+		const filtered = passkeys.filter((passkey) => passkey.credentialId !== credentialId);
+		if (filtered.length === passkeys.length)
+			return 'notFound';
+
+		this.#secure.passkeys = filtered;
+		await this.#updateDatabase();
+		return 'ok';
+	}
+
+	public async renamePasskey(credentialId: string, name: string): Promise<'ok' | 'notFound'> {
+		const passkey = (this.#secure.passkeys ?? []).find((stored) => stored.credentialId === credentialId);
+		if (passkey == null)
+			return 'notFound';
+
+		passkey.name = name;
+		await this.#updateDatabase();
+		return 'ok';
+	}
+
+	public async markPasskeyUsed(credentialId: string, signCount: number): Promise<void> {
+		const passkey = (this.#secure.passkeys ?? []).find((stored) => stored.credentialId === credentialId);
+		if (passkey == null)
+			return;
+
+		passkey.signCount = signCount;
+		passkey.lastUsed = Date.now();
+		await this.#updateDatabase();
 	}
 
 	async #validateCryptoKey({ publicKey }: IAccountCryptoKey): Promise<boolean> {

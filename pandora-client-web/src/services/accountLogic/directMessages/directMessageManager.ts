@@ -72,8 +72,8 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		accountManager.on('logout', () => {
 			this.clear();
 		});
-		accountManager.on('accountChanged', ({ account }) => {
-			this.accountChanged(account)
+		accountManager.on('accountChanged', ({ account, passkeyUnlock }) => {
+			this.accountChanged(account, passkeyUnlock)
 				.catch((error) => {
 					this.logger.error('Error processing account change:', error);
 				});
@@ -95,7 +95,9 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		}
 
 		const cryptoPassword = await KeyExchange.generateKeyPassword(username, password);
-		const cryptoKey = await this.#crypto.export(cryptoPassword);
+		const crypto = this.#crypto;
+		Assert(crypto != null, 'Crypto not loaded');
+		const cryptoKey = await crypto.export(cryptoPassword);
 
 		return {
 			cryptoKey,
@@ -106,7 +108,28 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	@AsyncSynchronized()
-	private async accountChanged(account: IDirectoryAccountInfo | null) {
+	public async passwordChangeWithPasskey(username: string, password: string, passkeyCryptoKey: IAccountCryptoKey, wrappingSecret: string): Promise<{ cryptoKey: IAccountCryptoKey; onSuccess: () => void; }> {
+		if (this.#crypto == null || (await this.#crypto.exportPublicKey()) !== passkeyCryptoKey.publicKey) {
+			const loadResult = await this.loadKey(passkeyCryptoKey, wrappingSecret);
+			if (loadResult !== 'ok')
+				throw new Error('Failed to unlock direct message key with passkey');
+		}
+
+		const cryptoPassword = await KeyExchange.generateKeyPassword(username, password);
+		const crypto = this.#crypto;
+		Assert(crypto != null, 'Crypto not loaded');
+		const cryptoKey = await crypto.export(cryptoPassword);
+
+		return {
+			cryptoKey,
+			onSuccess: () => {
+				DmCryptoPassword.value = cryptoPassword;
+			},
+		};
+	}
+
+	@AsyncSynchronized()
+	private async accountChanged(account: IDirectoryAccountInfo | null, passkeyUnlock?: { cryptoKey: IAccountCryptoKey; wrappingSecret: string; }) {
 		if (!account) {
 			this.logger.debug('No account, clear');
 			this.clear();
@@ -123,7 +146,12 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 			this._cryptoState.value = 'notLoaded';
 
 			const cryptoPassword = DmCryptoPassword.value;
-			if (cryptoPassword != null) {
+			if (passkeyUnlock != null) {
+				const loadResult = await this.loadKey(passkeyUnlock.cryptoKey, passkeyUnlock.wrappingSecret);
+				if (loadResult !== 'ok') {
+					this._cryptoState.value = 'loadError';
+				}
+			} else if (cryptoPassword != null) {
 				if (account.cryptoKey) {
 					const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
 					if (loadResult !== 'ok') {
@@ -166,6 +194,11 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 			this.logger.error('Error loading crypto key:', error);
 		}
 		return 'error';
+	}
+
+	public async exportPasskeyWrappedKey(wrappingSecret: string): Promise<IAccountCryptoKey> {
+		Assert(this.#crypto != null, 'Crypto not loaded');
+		return await this.#crypto.export(wrappingSecret);
 	}
 
 	/** Update key stored on server. Mainly for the purpose of migrating off of old key formats. */

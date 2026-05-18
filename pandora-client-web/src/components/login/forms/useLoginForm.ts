@@ -1,7 +1,7 @@
 import { AssertNever, GetLogger, IsString, IsUsername, type Promisable } from 'pandora-common';
 import { type SubmitEvent, useState } from 'react';
 import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
-import { useLogin } from '../../../networking/account_manager.ts';
+import { useLogin, usePasskeyLogin } from '../../../networking/account_manager.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
 
@@ -18,17 +18,22 @@ export interface UseLoginFormReturn {
 	errorMessage: string;
 	errors: FieldErrors<UseLoginFormData>;
 	onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promisable<void>;
+	onPasskeyLogin: () => Promisable<void>;
 	isSubmitting: boolean;
+	isPasskeySubmitting: boolean;
 	register: UseFormRegister<UseLoginFormData>;
 }
 
 export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 	const [errorMessage, setErrorMessage] = useState('');
+	const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false);
 	const login = useLogin();
+	const passkeyLogin = usePasskeyLogin();
 	const { state: authData, setState: setAuthData } = useAuthFormData();
 	const {
 		formState: { errors, submitCount, isSubmitting },
 		handleSubmit,
+		getValues,
 		register,
 	} = useForm<UseLoginFormData>({ shouldUseNativeValidation: true, progressive: true });
 	const navigate = useNavigatePandora();
@@ -75,5 +80,32 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 		}
 	});
 
-	return { dirty, errorMessage, errors, register, onSubmit, isSubmitting };
+	const onPasskeyLogin = async () => {
+		const username = useAuthData ? authData.username : getValues('username');
+		if (!IsString(username) || !IsUsername(username)) {
+			setErrorMessage('Enter your username first');
+			return;
+		}
+
+		setIsPasskeySubmitting(true);
+		try {
+			const result = await passkeyLogin(username);
+			if (result === 'ok') {
+				setErrorMessage('');
+			} else if (result === 'unknownCredentials') {
+				setErrorMessage('No passkey is registered for this username');
+			} else if (typeof result === 'object' && result.result === 'accountDisabled') {
+				setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
+			} else {
+				setErrorMessage('Passkey sign in failed');
+			}
+		} catch (error) {
+			logger.warning('Passkey sign in failed:', error);
+			setErrorMessage('Passkey sign in failed');
+		} finally {
+			setIsPasskeySubmitting(false);
+		}
+	};
+
+	return { dirty, errorMessage, errors, register, onSubmit, onPasskeyLogin, isSubmitting, isPasskeySubmitting };
 }

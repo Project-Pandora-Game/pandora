@@ -1,9 +1,10 @@
 import { UserNameSchema } from 'pandora-common';
-import { ReactElement } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { IsPasskeySupported } from '../../../crypto/passkey.ts';
 import { Button } from '../../common/button/button.tsx';
 import { DivContainer } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
@@ -14,7 +15,12 @@ import { useLoginForm } from './useLoginForm.ts';
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();
 	const loggedIn = useCurrentAccount() != null;
-	const { dirty, errorMessage, errors, onSubmit, isSubmitting, register } = useLoginForm();
+	const { dirty, errorMessage, errors, onSubmit, onPasskeyLogin, isSubmitting, isPasskeySubmitting, register } = useLoginForm();
+	const [passkeySupported, setPasskeySupported] = useState(false);
+
+	useEffect(() => {
+		setPasskeySupported(IsPasskeySupported());
+	}, []);
 
 	if (loggedIn) {
 		return <div>Club membership was confirmed</div>;
@@ -73,7 +79,23 @@ export function LoginForm(): ReactElement {
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
+			<div className='login-actions'>
+				<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
+				{
+					passkeySupported ? (
+						<Button
+							type='button'
+							theme='semiTransparent'
+							disabled={ isSubmitting || isPasskeySubmitting }
+							onClick={ () => {
+								void onPasskeyLogin();
+							} }
+						>
+							Use passkey
+						</Button>
+					) : null
+				}
+			</div>
 			<FormLink to='/forgot_password'>Forgot your password?</FormLink>
 			<FormLink to='/register'>Not a member? <strong>Sign up</strong></FormLink>
 		</Form>

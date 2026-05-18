@@ -17,6 +17,12 @@ import { LoginResponse } from './directoryConnector.ts';
  * @returns Promise of the response from the directory
  */
 type LoginCallback = (username: string, password: string, verificationToken?: string) => Promise<LoginResponse>;
+/**
+ * Attempt to login to the directory with a discoverable passkey.
+ * @param username - The username whose passkeys should be offered
+ * @returns Promise of the response from the directory
+ */
+type PasskeyLoginCallback = (username: string) => Promise<LoginResponse>;
 
 /**
  * Attempt to create and connect to a new character
@@ -88,6 +94,13 @@ export function useLogin(): LoginCallback {
 	const accountManager = useService('accountManager');
 	return useCallback((username, password, verificationToken) => {
 		return accountManager.login(username, password, verificationToken);
+	}, [accountManager]);
+}
+
+export function usePasskeyLogin(): PasskeyLoginCallback {
+	const accountManager = useService('accountManager');
+	return useCallback((username) => {
+		return accountManager.loginWithPasskey(username);
 	}, [accountManager]);
 }
 

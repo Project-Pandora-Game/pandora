@@ -52,6 +52,10 @@ class EditorAccountManager extends Service<EditorAccountManagerServiceConfig> im
 		return Promise.reject(new Error('Login is not suppored inside Editor'));
 	}
 
+	public async loginWithPasskey(): Promise<LoginResponse> {
+		return Promise.reject(new Error('Passkey login is not suppored inside Editor'));
+	}
+
 	public logout(): void {
 		throw new Error('Logout is not suppored inside Editor');
 	}

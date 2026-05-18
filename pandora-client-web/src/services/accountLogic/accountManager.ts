@@ -22,7 +22,7 @@ import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
-import { GetPasskeyAssertion } from '../../crypto/passkey.ts';
+import { GetPasskeyAssertion, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
@@ -32,6 +32,10 @@ import { InitDirectMessageCryptoPassword } from './directMessages/directMessageM
 export type PasskeyDirectMessageUnlock = {
 	cryptoKey: IAccountCryptoKey;
 	wrappingSecret: string;
+};
+
+export type PasskeyLoginOptions = PasskeyAssertionOptions & {
+	secondFactor?: SecondFactorData;
 };
 
 type AccountManagerServiceConfig = Satisfies<{
@@ -63,7 +67,7 @@ export interface IAccountManager extends IService<AccountManagerServiceConfig> {
 	 * @returns Promise of response from Directory
 	 */
 	login(username: string, password: string, verificationToken?: string): Promise<LoginResponse>;
-	loginWithPasskey(username: string, secondFactor?: SecondFactorData): Promise<LoginResponse>;
+	loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse>;
 	logout(): void;
 
 	connectToCharacter(id: CharacterId): Promise<boolean>;
@@ -110,14 +114,18 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		return result;
 	}
 
-	public async loginWithPasskey(username: string, secondFactor?: SecondFactorData): Promise<LoginResponse> {
+	public async loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse> {
 		const { directoryConnector } = this.serviceDeps;
-		const start = await directoryConnector.awaitResponse('passkeyLoginStart', { username, secondFactor });
+		const { secondFactor, ...assertionOptions } = options ?? {};
+		const start = await directoryConnector.awaitResponse('passkeyLoginStart', { secondFactor });
 		if (start.result === 'secondFactorRequired' || start.result === 'secondFactorInvalid') {
 			if (this.secondFactorHandler) {
 				const nextSecondFactor = await this.secondFactorHandler(start);
 				if (nextSecondFactor) {
-					return this.loginWithPasskey(username, nextSecondFactor);
+					return this.loginWithPasskey({
+						...assertionOptions,
+						secondFactor: nextSecondFactor,
+					});
 				}
 			}
 			return 'invalidSecondFactor';
@@ -127,9 +135,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 			return start.result;
 		}
 
-		const assertion = await GetPasskeyAssertion(start);
+		const assertion = await GetPasskeyAssertion(start, assertionOptions);
 		const result = await directoryConnector.awaitResponse('passkeyLoginFinish', {
-			username,
 			credentialId: assertion.credentialId,
 			clientDataJSON: assertion.clientDataJSON,
 			authenticatorData: assertion.authenticatorData,

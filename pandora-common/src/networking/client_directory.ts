@@ -156,7 +156,6 @@ export const ClientDirectorySchema = {
 	},
 	passkeyLoginStart: {
 		request: z.object({
-			username: UserNameSchema,
 			secondFactor: SecondFactorDataSchema.optional(),
 		}),
 		response: ZodCast<{
@@ -169,7 +168,6 @@ export const ClientDirectorySchema = {
 	},
 	passkeyLoginFinish: {
 		request: z.object({
-			username: UserNameSchema,
 			credentialId: AccountPasskeyCredentialIdSchema,
 			clientDataJSON: AccountPasskeyClientDataSchema,
 			authenticatorData: AccountPasskeyAuthenticatorDataSchema,

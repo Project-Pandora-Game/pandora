@@ -24,7 +24,7 @@ describe('Login Form', () => {
 			});
 		});
 
-		TestFieldIsRendered('username', 'Username', 'text', 'username');
+		TestFieldIsRendered('username', 'Username', 'text', 'username webauthn');
 		TestFieldIsRendered('password', 'Password', 'password', 'current-password');
 		TestSubmitButtonIsRendered();
 

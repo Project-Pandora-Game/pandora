@@ -37,7 +37,6 @@ export const SPACE_LIST_CHANGE_UPDATE_INTERVAL = 30_000;
  * This is used to ensure the functions takes a consistent amount of time to execute, helping to prevent timing attacks.
  */
 const CONSTANT_TIME = 1000;
-
 const logger = GetLogger('ConnectionManager-Client');
 
 type LoginOkResult = {
@@ -343,7 +342,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handlePasskeyLoginStart({ username, secondFactor }: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginStart'] {
+	private async handlePasskeyLoginStart({ secondFactor }: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginStart'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -351,32 +350,20 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (secondFactorResponse != null)
 			return secondFactorResponse;
 
-		const account = await accountManager.loadAccountByUsername(username);
-		if (!account || !account.secure.isActivated() || account.secure.isDisabled()) {
-			LoginManager.loginFailed();
-			return { result: 'unknownCredentials' };
-		}
-
-		const passkeyStart = this.createPasskeyAssertionStart(account, 'login');
-		if (passkeyStart == null) {
-			LoginManager.loginFailed();
-			return { result: 'unknownCredentials' };
-		}
-
 		return {
 			result: 'ok',
-			rpId: passkeyStart.rpId,
-			challenge: passkeyStart.challenge,
-			credentials: passkeyStart.credentials,
-			prfSalt: passkeyStart.prfSalt,
+			rpId: PASSKEY_RP_ID,
+			challenge: CreatePasskeyChallenge(null, 'login'),
+			credentials: [],
+			prfSalt: CreatePasskeyPrfSalt(),
 		};
 	}
 
-	private async handlePasskeyLoginFinish({ username, credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['passkeyLoginFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginFinish'] {
+	private async handlePasskeyLoginFinish({ credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['passkeyLoginFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginFinish'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const account = await accountManager.loadAccountByUsername(username);
+		const account = await accountManager.loadAccountByPasskeyCredentialId(credentialId);
 		if (!account || !account.secure.isActivated() || account.secure.isDisabled()) {
 			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
@@ -1333,6 +1320,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, prfSalt, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
+
+		const existingCredentialAccount = await accountManager.loadAccountByPasskeyCredentialId(credentialId);
+		if (existingCredentialAccount != null && existingCredentialAccount !== connection.account)
+			return { result: 'alreadyExists' };
 
 		const challenge = GetPasskeyClientChallenge(clientDataJSON);
 		if (

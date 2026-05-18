@@ -164,6 +164,13 @@ const accountCollection = new ValidatedCollection(
 			// Ignore accounts without github data
 			sparse: true,
 		},
+		{
+			name: 'passkeyCredentialId',
+			unique: true,
+			key: { 'secure.passkeys.credentialId': 1 },
+			// Ignore accounts without passkeys
+			sparse: true,
+		},
 	],
 );
 
@@ -398,6 +405,10 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._accounts.findOne({ username }, {
 			collation: COLLATION_CASE_INSENSITIVE,
 		});
+	}
+
+	public async getAccountByPasskeyCredentialId(credentialId: string): Promise<DatabaseAccountWithSecure | null> {
+		return await this._accounts.findOne({ 'secure.passkeys.credentialId': credentialId });
 	}
 
 	public async getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {

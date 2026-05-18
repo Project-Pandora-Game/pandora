@@ -112,23 +112,18 @@ describe('passkey login flow', () => {
 		connection = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: () => Promise.resolve(undefined) });
 		new ClientConnection(server, connection.connect(), {});
 
-		const startLogin = await connection.awaitResponse('passkeyLoginStart', { username });
+		const startLogin = await connection.awaitResponse('passkeyLoginStart', {});
 		expect(startLogin.result).toBe('ok');
 		if (startLogin.result !== 'ok')
 			throw new Error('Passkey login did not start');
 		expect(startLogin).toMatchObject({
 			rpId: RP_ID,
-			credentials: [{
-				id: credentialId,
-				type: 'public-key',
-				transports: ['usb'],
-			}],
+			credentials: [],
 			prfSalt: startRegistration.prfSalt,
 		});
 
 		const assertion = CreateAssertionData(startLogin.challenge, keyPair.privateKey, 12);
 		await expect(connection.awaitResponse('passkeyLoginFinish', {
-			username,
 			credentialId,
 			clientDataJSON: assertion.clientDataJSON,
 			authenticatorData: assertion.authenticatorData,
@@ -190,6 +185,18 @@ describe('passkey login flow', () => {
 			created: expect.any(Number),
 			lastUsed: expect.any(Number),
 		}]);
+	});
+
+	it('starts resident passkey login without a username', async () => {
+		const startMissing = await connection.awaitResponse('passkeyLoginStart', {});
+
+		expect(startMissing).toEqual({
+			result: 'ok',
+			rpId: RP_ID,
+			challenge: expect.any(String),
+			credentials: [],
+			prfSalt: expect.any(String),
+		});
 	});
 });
 

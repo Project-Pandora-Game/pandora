@@ -126,6 +126,11 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
+	public getAccountByPasskeyCredentialId(credentialId: string): Promise<DatabaseAccountWithSecure | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.passkeys?.some((passkey) => passkey.credentialId === credentialId) === true);
+		return Promise.resolve(cloneDeep(acc ?? null));
+	}
+
 	/**
 	 * Get account by email hash
 	 * @param emailHash - Email hash to search for

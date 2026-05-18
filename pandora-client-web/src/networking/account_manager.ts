@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider.tsx';
 import { PrehashPassword } from '../crypto/helpers.ts';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
+import type { PasskeyLoginOptions } from '../services/accountLogic/accountManager.ts';
 import { useService } from '../services/serviceProvider.tsx';
 import { LoginResponse } from './directoryConnector.ts';
 
@@ -19,10 +20,9 @@ import { LoginResponse } from './directoryConnector.ts';
 type LoginCallback = (username: string, password: string, verificationToken?: string) => Promise<LoginResponse>;
 /**
  * Attempt to login to the directory with a discoverable passkey.
- * @param username - The username whose passkeys should be offered
  * @returns Promise of the response from the directory
  */
-type PasskeyLoginCallback = (username: string) => Promise<LoginResponse>;
+type PasskeyLoginCallback = (options?: PasskeyLoginOptions) => Promise<LoginResponse>;
 
 /**
  * Attempt to create and connect to a new character
@@ -99,8 +99,8 @@ export function useLogin(): LoginCallback {
 
 export function usePasskeyLogin(): PasskeyLoginCallback {
 	const accountManager = useService('accountManager');
-	return useCallback((username) => {
-		return accountManager.loginWithPasskey(username);
+	return useCallback((options) => {
+		return accountManager.loginWithPasskey(options);
 	}, [accountManager]);
 }
 

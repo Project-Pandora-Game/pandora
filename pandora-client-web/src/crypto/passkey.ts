@@ -70,25 +70,38 @@ export function IsPasskeySupported(): boolean {
 	return globalThis.PublicKeyCredential != null && navigator.credentials != null;
 }
 
-export async function GetPasskeyAssertion(start: PasskeyAssertionStart): Promise<PasskeyAssertionResult> {
-	const credential = await navigator.credentials.get({
-		publicKey: {
-			challenge: Base64UrlToArray(start.challenge),
-			rpId: start.rpId,
-			allowCredentials: start.credentials.map((allowedCredential) => ({
-				...allowedCredential,
-				id: Base64UrlToArray(allowedCredential.id),
-				transports: allowedCredential.transports as AuthenticatorTransport[] | undefined,
-			})),
-			userVerification: 'required',
-			extensions: {
-				prf: {
-					eval: {
-						first: Base64UrlToArray(start.prfSalt),
-					},
+export async function IsPasskeyConditionalMediationSupported(): Promise<boolean> {
+	if (!IsPasskeySupported() || PublicKeyCredential.isConditionalMediationAvailable == null)
+		return false;
+
+	return await PublicKeyCredential.isConditionalMediationAvailable();
+}
+
+export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?: PasskeyAssertionOptions): Promise<PasskeyAssertionResult> {
+	const publicKey: PublicKeyCredentialRequestOptions = {
+		challenge: Base64UrlToArray(start.challenge),
+		rpId: start.rpId,
+		userVerification: 'required',
+		extensions: {
+			prf: {
+				eval: {
+					first: Base64UrlToArray(start.prfSalt),
 				},
-			} satisfies PrfAuthenticationExtensionsClientInputs,
-		},
+			},
+		} satisfies PrfAuthenticationExtensionsClientInputs,
+	};
+	if (start.credentials.length > 0) {
+		publicKey.allowCredentials = start.credentials.map((allowedCredential) => ({
+			...allowedCredential,
+			id: Base64UrlToArray(allowedCredential.id),
+			transports: allowedCredential.transports as AuthenticatorTransport[] | undefined,
+		}));
+	}
+
+	const credential = await navigator.credentials.get({
+		publicKey,
+		mediation: options?.mediation,
+		signal: options?.signal,
 	});
 
 	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse))

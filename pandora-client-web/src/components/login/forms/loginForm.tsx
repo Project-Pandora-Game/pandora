@@ -1,10 +1,10 @@
 import { UserNameSchema } from 'pandora-common';
-import { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { IsPasskeySupported } from '../../../crypto/passkey.ts';
+import { IsPasskeyConditionalMediationSupported, IsPasskeySupported } from '../../../crypto/passkey.ts';
 import { Button } from '../../common/button/button.tsx';
 import { DivContainer } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
@@ -15,16 +15,56 @@ import { useLoginForm } from './useLoginForm.ts';
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();
 	const loggedIn = useCurrentAccount() != null;
-	const { dirty, errorMessage, errors, onSubmit, onPasskeyLogin, isSubmitting, isPasskeySubmitting, register } = useLoginForm();
-	const [passkeySupported, setPasskeySupported] = useState(false);
+	const authValid = auth != null && auth.expires >= Date.now();
+	const { dirty, errorMessage, errors, onSubmit, onPasskeyLogin, onConditionalPasskeyLogin, isSubmitting, isPasskeySubmitting, register } = useLoginForm();
+	const conditionalPasskeyAbort = useRef<AbortController | null>(null);
+	const [passkeySupport, setPasskeySupport] = useState({
+		supported: false,
+		conditional: false,
+	});
 
 	useEffect(() => {
-		setPasskeySupported(IsPasskeySupported());
+		const supported = IsPasskeySupported();
+		setPasskeySupport({ supported, conditional: false });
+		if (!supported)
+			return;
+
+		let active = true;
+		IsPasskeyConditionalMediationSupported()
+			.then((conditional) => {
+				if (active) {
+					setPasskeySupport({ supported, conditional });
+				}
+			})
+			.catch(() => {
+				if (active) {
+					setPasskeySupport({ supported, conditional: false });
+				}
+			});
+		return () => {
+			active = false;
+		};
 	}, []);
+
+	useEffect(() => {
+		if (!passkeySupport.conditional || loggedIn || authValid)
+			return;
+
+		const abortController = new AbortController();
+		conditionalPasskeyAbort.current = abortController;
+		void onConditionalPasskeyLogin(abortController.signal);
+
+		return () => {
+			abortController.abort();
+			if (conditionalPasskeyAbort.current === abortController) {
+				conditionalPasskeyAbort.current = null;
+			}
+		};
+	}, [authValid, loggedIn, onConditionalPasskeyLogin, passkeySupport.conditional]);
 
 	if (loggedIn) {
 		return <div>Club membership was confirmed</div>;
-	} else if (auth && auth.expires >= Date.now()) {
+	} else if (authValid) {
 		return (
 			<form>
 				<div className='input-container'>
@@ -54,7 +94,7 @@ export function LoginForm(): ReactElement {
 				<FormInput
 					type='text'
 					id='login-username'
-					autoComplete='username'
+					autoComplete='username webauthn'
 					readOnly={ isSubmitting }
 					register={ register }
 					name='username'
@@ -82,16 +122,17 @@ export function LoginForm(): ReactElement {
 			<div className='login-actions'>
 				<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
 				{
-					passkeySupported ? (
+					passkeySupport.supported ? (
 						<Button
 							type='button'
-							theme='semiTransparent'
+							theme={ passkeySupport.conditional ? 'transparent' : 'semiTransparent' }
 							disabled={ isSubmitting || isPasskeySubmitting }
 							onClick={ () => {
+								conditionalPasskeyAbort.current?.abort();
 								void onPasskeyLogin();
 							} }
 						>
-							Use passkey
+							Sign in with passkey
 						</Button>
 					) : null
 				}

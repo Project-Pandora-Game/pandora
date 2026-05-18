@@ -40,6 +40,11 @@ export interface PandoraDatabase extends ServerService {
 	 */
 	getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null>;
 	/**
+	 * Find and get account with matching passkey credential id
+	 * @returns The account data or `null` if not found
+	 */
+	getAccountByPasskeyCredentialId(credentialId: string): Promise<DatabaseAccountWithSecure | null>;
+	/**
 	 * Get account by email hash
 	 * @param emailHash - Email hash to search for
 	 */

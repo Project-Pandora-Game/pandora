@@ -321,8 +321,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1050.0
-        version: 3.1050.0
+        specifier: 3.1051.0
+        version: 3.1051.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.42
         version: 3.972.42
@@ -606,14 +606,9 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-sesv2@3.1050.0':
-    resolution: {integrity: sha512-kFITimNWmb84uDzWzFJ415MEbhYRVHF6fIbbAm+YcYpB6w1vl/Xkqb4QYpx5GkWuIIHESoWkE9WcrWgPtJ42FA==}
+  '@aws-sdk/client-sesv2@3.1051.0':
+    resolution: {integrity: sha512-rqPN+Kfm4o4JSnKMMauOzss/nIlOu0TB4L/9LSDWJyxUCIxODmfBT9/mKQGDZI26Ea29VMWpBC241cuZIaj/9g==}
     engines: {node: '>=20.0.0'}
-
-  '@aws-sdk/core@3.974.11':
-    resolution: {integrity: sha512-QpnINq5FZH6EOaDEkmHdT7eUunbvD27pDNQypaWjFyYz7Zl1q3UCMQErBZxpmfGfI7MvI2TlK8KTkgNpv8b1ug==}
-    engines: {node: '>=20.0.0'}
-    deprecated: Deprecated due to an error deserialization bug in JSON 1.0 protocol services, see https://github.com/aws/aws-sdk-js-v3/pull/8031. Newer version available.
 
   '@aws-sdk/core@3.974.12':
     resolution: {integrity: sha512-qrqgioqYFjwR6LatVNS1L2Vk++EwRIxqSQXPKNv5Ofux2D8UNgqMQ1znnMyEImXquVPTtbf71fc128pvmU6y9A==}
@@ -6306,7 +6301,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-sesv2@3.1050.0':
+  '@aws-sdk/client-sesv2@3.1051.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -6318,17 +6313,6 @@ snapshots:
       '@smithy/fetch-http-handler': 5.4.2
       '@smithy/node-http-handler': 4.7.2
       '@smithy/types': 4.14.1
-      tslib: 2.8.1
-
-  '@aws-sdk/core@3.974.11':
-    dependencies:
-      '@aws-sdk/types': 3.973.8
-      '@aws-sdk/xml-builder': 3.972.24
-      '@aws/lambda-invoke-store': 0.2.4
-      '@smithy/core': 3.24.2
-      '@smithy/signature-v4': 5.4.2
-      '@smithy/types': 4.14.1
-      bowser: 2.14.1
       tslib: 2.8.1
 
   '@aws-sdk/core@3.974.12':
@@ -6344,7 +6328,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-env@3.972.37':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/types': 3.973.8
       '@smithy/core': 3.24.2
       '@smithy/types': 4.14.1
@@ -6360,7 +6344,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-http@3.972.39':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/types': 3.973.8
       '@smithy/core': 3.24.2
       '@smithy/fetch-http-handler': 5.4.2
@@ -6380,7 +6364,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-ini@3.972.41':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/credential-provider-env': 3.972.37
       '@aws-sdk/credential-provider-http': 3.972.39
       '@aws-sdk/credential-provider-login': 3.972.41
@@ -6458,7 +6442,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-process@3.972.37':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/types': 3.973.8
       '@smithy/core': 3.24.2
       '@smithy/types': 4.14.1
@@ -6474,7 +6458,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-sso@3.972.41':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/nested-clients': 3.997.9
       '@aws-sdk/token-providers': 3.1048.0
       '@aws-sdk/types': 3.973.8
@@ -6494,7 +6478,7 @@ snapshots:
 
   '@aws-sdk/credential-provider-web-identity@3.972.41':
     dependencies:
-      '@aws-sdk/core': 3.974.11
+      '@aws-sdk/core': 3.974.12
       '@aws-sdk/nested-clients': 3.997.9
       '@aws-sdk/types': 3.973.8
       '@smithy/core': 3.24.2

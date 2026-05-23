@@ -164,6 +164,7 @@ export function WikiSpaces(): ReactElement {
 					As a space admin you can also create more powerful and configurable "space-bound" type invite links in the "Rights management"-tab of the
 					space configuration view that you can share with others. More details about invite links in the <Link to='#SP_Space_invites'>"Space invites"</Link> section.
 				</li>
+				<li>Alternatively, other users can follow you when you switch spaces by using the <Link to='/wiki/characters#CH_Character_movement'>"Lead / Follow"</Link> feature.</li>
 				<li>When a user's account is banned from a space, the user cannot join it.</li>
 				<li>Owners of a space can even join a space when it is already full. When they join they fill one of five temporary overshoot slots above the set maximum.</li>
 			</ul>
@@ -178,6 +179,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Space_invites'>Space invites</h4>
 			<p>
+				Aside from directly moving with other characters together into another space by leading them using the <Link to='/wiki/characters#CH_Character_movement'>"Lead / Follow"</Link> feature,
 				Pandora also has two different types of space invites: "space-bound" and "join-me" invite links.<br />
 				"Space-bound" invite links can only be created by space owners and admins in the "Rights management"-tab of the
 				space configuration view. They are highly configurable.

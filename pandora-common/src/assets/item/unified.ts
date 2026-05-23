@@ -32,7 +32,7 @@ export const ItemBundleSchema: z.ZodType<ItemBundle> = z.object({
 	asset: AssetIdSchema,
 	spawnedBy: CharacterIdSchema.optional(),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
-	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).transform((i) => i.trim()).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
@@ -56,7 +56,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate> = z.object({
 	asset: AssetIdSchema,
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
-	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).transform((i) => i.trim()).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),

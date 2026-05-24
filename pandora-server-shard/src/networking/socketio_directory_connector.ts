@@ -192,31 +192,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 	}
 
 	@AsyncSynchronized()
-	private async updateFromDirectory({ spaces, characters, messages }: Partial<IDirectoryShardUpdate>): Promise<void> {
-		// Invalidate old characters
-		if (characters) {
-			const characterIds = characters.map((c) => c.id);
-			await Promise.allSettled(
-				CharacterManager
-					.listCharacters()
-					.map((c) => c.id)
-					.filter((id) => !characterIds.includes(id))
-					.map((id) => CharacterManager.removeCharacter(id)),
-			);
-		}
-
-		// Invalidate old spaces
-		if (spaces) {
-			const spaceIds = spaces.map((r) => r.id);
-			await Promise.allSettled(
-				SpaceManager
-					.listSpaceIds()
-					.filter((id) => !spaceIds.includes(id))
-					.map((id) => SpaceManager.removeSpace(id)),
-			);
-		}
-
-		// Load and update existing spaces
+	private async updateFromDirectory({ spaces, characters, messages, spaceCharacterRemovals }: Partial<IDirectoryShardUpdate>): Promise<void> {
+		// Load and update existing spaces first, so character updates can link to them.
+		// Do not remove old spaces yet; room-device cleanup must still be able to touch a space that is
+		// about to unload in this same update.
 		if (spaces) {
 			await Promise.all(
 				spaces.map((space) =>
@@ -239,6 +218,18 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			);
 		}
 
+		// Invalidate old characters
+		if (characters) {
+			const characterIds = characters.map((c) => c.id);
+			await Promise.allSettled(
+				CharacterManager
+					.listCharacters()
+					.map((c) => c.id)
+					.filter((id) => !characterIds.includes(id))
+					.map((id) => CharacterManager.removeCharacter(id)),
+			);
+		}
+
 		// Load and update existing characters
 		if (characters) {
 			await Promise.all(
@@ -258,6 +249,37 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 							this.sendMessage('characterError', { id: character.id });
 						}),
 				),
+			);
+		}
+
+		if (spaceCharacterRemovals) {
+			for (const [spaceId, removals] of Object.entries(spaceCharacterRemovals)) {
+				const space = SpaceManager.getSpace(SpaceIdSchema.parse(spaceId));
+				if (!space) {
+					logger.warning('Ignoring character removals for non-existing space', spaceId);
+					continue;
+				}
+				for (const removal of removals) {
+					space.clearRoomDeviceSlotsOccupiedByCharacter(removal.character);
+				}
+			}
+		}
+
+		if (spaces) {
+			for (const space of spaces) {
+				SpaceManager.getSpace(space.id)?.clearInvalidRoomDeviceSlotOccupancy();
+			}
+		}
+
+		// Invalidate old spaces only after cleanup, so spaces that unload in this update can still
+		// persist cleaned room-device state while being removed.
+		if (spaces) {
+			const spaceIds = spaces.map((r) => r.id);
+			await Promise.allSettled(
+				SpaceManager
+					.listSpaceIds()
+					.filter((id) => !spaceIds.includes(id))
+					.map((id) => SpaceManager.removeSpace(id)),
 			);
 		}
 

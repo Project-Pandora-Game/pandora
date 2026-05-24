@@ -327,6 +327,50 @@ export class AssetFrameworkGlobalState {
 		);
 	}
 
+	public clearInvalidRoomDeviceSlotOccupancy(onlyCharacterId?: CharacterId): AssetFrameworkGlobalState {
+		let newSpace = this.space;
+
+		for (const room of this.space.rooms) {
+			let changed = false;
+			const newItems = room.items.map((item) => {
+				if (!item.isType('roomDevice'))
+					return item;
+
+				for (const [slot, occupant] of item.slotOccupancy) {
+					if ((onlyCharacterId == null || occupant === onlyCharacterId) && !this._isValidRoomDeviceSlotOccupancy(item, slot, occupant)) {
+						item = item.changeSlotOccupancy(slot, null) ?? item;
+						changed = true;
+					}
+				}
+
+				return item;
+			});
+
+			if (changed) {
+				newSpace = newSpace.produceRoom(room.id, (currentRoom) => currentRoom.produceWithItems(newItems)) ?? newSpace;
+			}
+		}
+
+		return newSpace === this.space ? this : this.withSpaceState(newSpace);
+	}
+
+	private _isValidRoomDeviceSlotOccupancy(roomDevice: Item<'roomDevice'>, slot: string, characterId: CharacterId): boolean {
+		const slotDefinition = roomDevice.asset.definition.slots[slot];
+		if (slotDefinition == null)
+			return false;
+
+		const character = this.characters.get(characterId);
+		if (character == null)
+			return false;
+
+		return character.items.some((item) =>
+			item.isType('roomDeviceWearablePart') &&
+			item.asset.id === slotDefinition.wearableAsset &&
+			item.roomDeviceLink?.device === roomDevice.id &&
+			item.roomDeviceLink.slot === slot,
+		);
+	}
+
 	public runAutomaticActions(): AssetFrameworkGlobalState {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		let result: AssetFrameworkGlobalState = this;

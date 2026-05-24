@@ -90,4 +90,5 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 };
 
 /** Reason for why a character left (was removed from) a space */
-export type SpaceLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'error' | 'kick' | 'ban' | 'automodKick';
+export const SpaceLeaveReasonSchema = z.enum(['leave', 'disconnect', 'destroy', 'error', 'kick', 'ban', 'automodKick']);
+export type SpaceLeaveReason = z.infer<typeof SpaceLeaveReasonSchema>;

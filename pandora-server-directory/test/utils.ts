@@ -139,6 +139,7 @@ export async function TestMockShard({
 			characters: [],
 			spaces: [],
 			messages: {},
+			spaceCharacterRemovals: {},
 		};
 		expect(registerResult).toStrictEqual(expectedRegisterResult);
 		expect(shard.registered).toBeTruthy();

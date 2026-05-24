@@ -1,18 +1,11 @@
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { PrivacyPolicyContent } from '../Eula/privacyPolicy.tsx';
-import { WikiChat } from './pages/chat.tsx';
-import { WikiCharacters } from './pages/characters.tsx';
-import { WikiContact } from './pages/contact.tsx';
-import { WikiHistory } from './pages/history.tsx';
-import { WikiIntroduction } from './pages/intro.tsx';
-import { WikiItems } from './pages/items.tsx';
-import { WikiNew } from './pages/new.tsx';
-import { WikiSafety } from './pages/safety.tsx';
-import { WikiSpaces } from './pages/spaces.tsx';
+import { WikiSearch } from './pages/search.tsx';
+import { WIKI_PAGES } from './wikiPageRegistry.ts';
 import './wiki.scss';
 
 export default function Wiki(): ReactElement {
@@ -20,53 +13,30 @@ export default function Wiki(): ReactElement {
 
 	return (
 		<UrlTabContainer className='wiki' tabsPosition='left'>
-			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
-			<UrlTab name='Introduction' default urlChunk='introduction'>
-				<WikiContent>
-					<WikiIntroduction />
-				</WikiContent>
-			</UrlTab>
-			<WikiContentTab name='New User Guide' urlChunk='new'>
-				<WikiNew />
-			</WikiContentTab>
-			<WikiContentTab name='Chat' urlChunk='chat'>
-				<WikiChat />
-			</WikiContentTab>
-			<WikiContentTab name='Spaces' urlChunk='spaces'>
-				<WikiSpaces />
-			</WikiContentTab>
-			<WikiContentTab name='Items' urlChunk='items'>
-				<WikiItems />
-			</WikiContentTab>
-			<WikiContentTab name='Characters' urlChunk='characters'>
-				<WikiCharacters />
-			</WikiContentTab>
-			<WikiContentTab name='Safety' urlChunk='safety'>
-				<WikiSafety />
-			</WikiContentTab>
-			<WikiContentTab name='Pandora History' urlChunk='history'>
-				<WikiHistory />
-			</WikiContentTab>
-			<WikiContentTab name='Contact' urlChunk='contact'>
-				<WikiContact />
-			</WikiContentTab>
-			<WikiContentTab name='Privacy Policy' urlChunk='privacy_policy'>
-				<PrivacyPolicyContent />
-			</WikiContentTab>
+			{ [
+				<Tab key='back' name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />,
+				<UrlTab key='search' name='Search' default urlChunk='search'>
+					<WikiContent>
+						<WikiSearch />
+					</WikiContent>
+				</UrlTab>,
+				...WIKI_PAGES.map(({ pageName, urlChunk, Component }) => (
+					<UrlTab key={ urlChunk } name={ pageName } urlChunk={ urlChunk }>
+						<WikiContent>
+							<Component />
+						</WikiContent>
+					</UrlTab>
+				)),
+				<UrlTab key='privacy_policy' name='Privacy Policy' urlChunk='privacy_policy'>
+					<WikiContent>
+						<PrivacyPolicyContent />
+					</WikiContent>
+				</UrlTab>,
+			] }
 		</UrlTabContainer>
 	);
 }
 
-function WikiContentTab({ name, urlChunk = name.toLowerCase(), children }: { name: string; urlChunk?: string; children: ReactNode; }): ReactNode {
-	return (
-		<UrlTab name={ name } urlChunk={ urlChunk }>
-			<WikiContent>
-				{ children }
-			</WikiContent>
-		</UrlTab>
-	);
-}
-
-export function WikiContent({ children }: ChildrenProps): ReactElement {
+function WikiContent({ children }: ChildrenProps): ReactElement {
 	return <Scrollable className='wiki-content'>{ children }</Scrollable>;
 }

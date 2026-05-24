@@ -132,6 +132,16 @@
 		}
 	}
 
+	&.fullCanJoin .userCount {
+		background: common.$theme-spacesearch-entry-spacefullcanjoin-highlight;
+		border-radius: 0.5em;
+
+		@include common.forcedColors {
+			background: transparent;
+			border: 2px solid #b6a700;
+		}
+	}
+
 	.icon {
 		grid-area: icon;
 		height: 80%;

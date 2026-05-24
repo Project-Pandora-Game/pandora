@@ -12,9 +12,9 @@ test.describe('Wiki', () => {
 	test('Selects default tab', async ({ page }) => {
 		await TestOpenPandora(page, { path: '/wiki' });
 
-		await page.waitForURL('/wiki/introduction');
-		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab active');
-		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
+		await page.waitForURL('/wiki/search');
+		await expect(page.getByRole('tab', { name: 'Search' })).toHaveClass('tab active');
+		await expect(page.getByRole('heading', { name: 'Search the Wiki' })).toBeVisible();
 	});
 
 	test('Loads specific tab directly based on url', async ({ page }) => {

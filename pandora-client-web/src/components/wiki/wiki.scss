@@ -1,5 +1,8 @@
 @use '../../styles/common';
 
+$opacity-muted: 0.65;
+$opacity-faded: 0.5;
+
 .wiki {
 	flex: 1;
 	overflow: hidden;
@@ -27,16 +30,147 @@
 			margin: 1.5em 0 0 0;
 		}
 	}
-}
 
-.maid-container {
-	overflow: hidden;
-	max-height: 100%;
-	width: 15vw;
+	.wiki-search {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5em;
+		padding: 1em;
+		box-sizing: border-box;
+		min-height: 100%;
 
-	img {
-		max-width: 100%;
-		max-height: 100%;
-		object-fit: contain;
+		.wiki-search-header {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25em;
+
+			h2 {
+				margin: 0;
+			}
+
+			p {
+				margin: 0;
+				opacity: $opacity-muted;
+			}
+		}
+
+		.wiki-search-input-wrap {
+			position: relative;
+			display: flex;
+			align-items: center;
+		}
+
+		.wiki-search-results {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5em;
+			flex: 1;
+
+			p {
+				margin: 0;
+				opacity: $opacity-muted;
+			}
+
+			.wiki-search-count {
+				opacity: $opacity-muted;
+			}
+		}
+
+		.wiki-search-list {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5em;
+		}
+
+		.wiki-search-result {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.35em;
+			width: 100%;
+			padding: 0.6em 0.75em;
+			border-radius: 4px;
+			border: 1px solid common.$theme-separator;
+			background: common.$theme-textbox-background;
+			color: common.$theme-textbox-text;
+			text-align: left;
+			cursor: pointer;
+
+			&:hover {
+				border-color: common.$theme-textbox-text;
+			}
+
+			&:focus-visible {
+				outline: 1px solid common.$theme-textbox-text;
+				outline-offset: 2px;
+			}
+
+			@include common.forcedColors {
+				border-color: common.$forcedColors-separator;
+
+				&:hover, &:focus-visible {
+					border-color: Highlight;
+				}
+			}
+
+			.wiki-search-location {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 0.3em;
+			}
+
+			.wiki-search-page-tag,
+			.wiki-search-section-tag {
+				display: inline-block;
+				padding: 0.15rem 0.5rem;
+				border-radius: 3px;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				white-space: nowrap;
+			}
+
+			.wiki-search-page-tag {
+				background: color-mix(in srgb, common.$theme-separator, common.$theme-accent-color 45%);
+
+				@include common.forcedColors {
+					background: CanvasText;
+					color: Canvas;
+				}
+			}
+
+			.wiki-search-section-tag {
+				border: 1px solid common.$theme-separator;
+
+				&::before {
+					content: '› ';
+					opacity: $opacity-muted;
+				}
+
+				@include common.forcedColors {
+					border-color: common.$forcedColors-separator;
+				}
+			}
+
+
+			.wiki-search-preview {
+				opacity: $opacity-muted;
+				word-break: break-word;
+				display: -webkit-box;
+				line-clamp: 3;
+				-webkit-line-clamp: 3;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
+			}
+
+			mark {
+				background: common.$themecolor-warning;
+				border-radius: 2px;
+				padding: 0 1px;
+			}
+		}
 	}
 }

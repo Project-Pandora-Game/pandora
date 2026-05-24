@@ -57,7 +57,7 @@ export function SpaceInviteEmbed({ spaceId, invite, invitedBy, viewOnly = false 
 				className={ classNames(
 					'SpaceInviteEmbed',
 					isEmpty ? 'empty' : null,
-					isFull ? 'full' : null,
+					isFull ? info.data.isOwner ? 'fullCanJoin' : 'full' : null,
 					open ? 'selected' : null,
 				) }
 				onClick={ () => setOpen(true) }

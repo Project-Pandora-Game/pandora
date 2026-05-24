@@ -178,8 +178,8 @@ export function WikiItems(): ReactElement {
 			<p>
 				The "Items" and "Body"-tabs in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> as
 				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen can open the "Saved items" view on the right pane which lets you access and manage all
-				your custom item collections stored on the Pandora server. A collection template can contain normal
-				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body parts, and even storage items with items stored inside.
+				your custom item collections stored on the Pandora server, such as clothing outfits. A collection template can contain normal
+				items, including locks, <Link to='#IT_Room-level_items'>room-level items</Link>, body parts, and even storage items with items stored inside.
 			</p>
 			<ul>
 				<li>
@@ -198,6 +198,9 @@ export function WikiItems(): ReactElement {
 				<li>
 					Collections stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
 					or even switch them off altogether, if your computer / mobile device and connection cannot handle loading many previews at once.
+				</li>
+				<li>
+					Items in collections are stored with most of their configuration, such as custom name, description, color, module states, or even character prints in case of a fingerprint lock.
 				</li>
 				<li>
 					Note on locks in use: Items with attached locks can be stored in a collection and reapplied with these locks, but the lock state and the lock configuration are intentionally not saved.

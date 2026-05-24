@@ -15,7 +15,7 @@ export const AppearanceActionCustomize = z.object({
 	/** Path to the item to change */
 	item: ItemPathSchema,
 	/** New custom name */
-	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN).optional(),
+	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN).transform((i) => i.trim()).optional(),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */

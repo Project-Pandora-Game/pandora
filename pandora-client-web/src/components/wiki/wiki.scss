@@ -32,12 +32,12 @@ $opacity-faded: 0.5;
 	}
 
 	.wiki-search {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5em;
-	padding: 1em;
-	box-sizing: border-box;
-	min-height: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5em;
+		padding: 1em;
+		box-sizing: border-box;
+		min-height: 100%;
 
 		.wiki-search-header {
 			display: flex;

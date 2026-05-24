@@ -1,3 +1,4 @@
+import { escapeRegExp } from 'lodash-es';
 import { ReactElement, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
@@ -173,8 +174,7 @@ function HighlightMatch({ text, query }: { text: string; query: string; }): Reac
 	if (!query)
 		return <span>{ text }</span>;
 
-	const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+	const parts = text.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'));
 	const lowerQuery = query.toLowerCase();
 
 	return (

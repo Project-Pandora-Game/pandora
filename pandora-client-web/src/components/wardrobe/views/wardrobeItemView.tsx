@@ -473,30 +473,6 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 						// For bodyparts do not display it, as they can't be in room and usually don't have storage
 						<ViewStorageButtonPlaceholder />
 					) : null }
-					{
-						singleItemContainer ? null : (
-							asset.isType('bodypart') ? (
-								<>
-									<WardrobeActionButton action={ {
-										type: 'moveItem',
-										target: targetSelector,
-										item,
-										shift: 1,
-									} } autohide hideReserveSpace>
-										▲
-									</WardrobeActionButton>
-									<WardrobeActionButton action={ {
-										type: 'moveItem',
-										target: targetSelector,
-										item,
-										shift: -1,
-									} } autohide hideReserveSpace>
-										▼
-									</WardrobeActionButton>
-								</>
-							) : null
-						)
-					}
 					{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
 					<button
 						className='wardrobeActionButton allowed'

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
 	AssertNotNullable,
@@ -29,6 +30,7 @@ import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphic
 import { WardrobeItemPreferences } from './wardrobeItemPreferences.tsx';
 import { WardrobeItemManipulation } from './wardrobeItems.tsx';
 import { WardrobeLocationStateSchema, type WardrobeLocationState } from './wardrobeNavigation.tsx';
+import { useIsPortrait } from '../../styles/mediaQueries.ts';
 
 export function WardrobeRouter(): ReactElement | null {
 	return (
@@ -154,12 +156,13 @@ function WardrobeRoom({ room }: {
 	const { globalState } = useWardrobeActionContext();
 	const { actionPreviewState, currentRoomSelector } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
+	const isPortrait = useIsPortrait();
 
 	const roomState = (globalPreviewState ?? globalState).space.getRoom(room.roomId);
 
 	return (
 		<div className='wardrobe'>
-			<div className='wardrobeMain'>
+			<div className={ classNames('wardrobeMain', isPortrait ? 'portrait' : null) }>
 				{
 					(spaceInfo != null && characters != null && roomState != null) ? (
 						<WardrobeRoomPreview
@@ -195,6 +198,7 @@ function WardrobeCharacter({ character }: {
 	const characterPreviewState = globalPreviewState?.characters.get(character.id);
 	const currentSpaceInfo = useSpaceInfo();
 	const inPersonalSpace = currentSpaceInfo.id == null;
+	const isPortrait = useIsPortrait();
 
 	const characterRestrictionManager = useCharacterRestrictionManager(character, globalState, spaceContext);
 	const characterModifierEffects = useMemo(() => characterRestrictionManager.getModifierEffects(), [characterRestrictionManager]);
@@ -213,7 +217,7 @@ function WardrobeCharacter({ character }: {
 	return (
 		<div className='wardrobe'>
 			<CharacterRestrictionOverrideWarningContent mode={ characterState.restrictionOverride } />
-			<div className='wardrobeMain'>
+			<div className={ classNames('wardrobeMain', isPortrait ? 'portrait' : null) }>
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }

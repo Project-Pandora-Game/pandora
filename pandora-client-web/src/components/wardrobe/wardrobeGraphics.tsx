@@ -38,6 +38,7 @@ import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextPr
 import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt.tsx';
 import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView.tsx';
 import { useWardrobeContext } from './wardrobeContext.tsx';
+import { useIsPortrait } from '../../styles/mediaQueries.ts';
 
 export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
 	character: Character;
@@ -144,14 +145,19 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 	Assert(roomState != null, 'Character room not found');
 	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
+	const isPortrait = useIsPortrait();
 
-	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, { worldWidth }) => {
+	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, { worldHeight, worldWidth }) => {
 		viewport
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.pinch({ noDrag: false, percent: 2 })
 			.decelerate({ friction: 0.7 })
-			.clampZoom({
+			.clampZoom(isPortrait ? {
+				maxHeight: worldHeight,
+				minHeight: worldHeight / 4,
+			} :
+			{
 				maxWidth: worldWidth,
 				minWidth: worldWidth / 4,
 			})
@@ -164,7 +170,7 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 			});
 		viewport.fit();
 		viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
-	}, []);
+	}, [isPortrait]);
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,

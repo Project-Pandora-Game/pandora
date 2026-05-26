@@ -106,6 +106,21 @@ $header-height: 2em;
 	}
 }
 
+.wardrobe .wardrobeMain.portrait {
+	flex-flow: column;
+
+	.characterPreview, .roomPreview {
+		height: 33vh;
+		width: 100%;
+	}
+
+	> .tab-container {
+		flex: 1;
+		min-height: 0;
+		overflow: hidden;
+	}
+}
+
 .wardrobe-pane {
 	display: flex;
 	flex: 1;
@@ -178,7 +193,7 @@ $drop-overlay-gap: 0.3em;
 	@include common.flex(column);
 	flex: 1;
 	overflow: hidden;
-	min-width: min(20em, 90vw);
+	min-width: min(18em, 90vw);
 
 	background: common.$theme-wardrobe-view-background;
 	color: common.$theme-wardrobe-view-text;

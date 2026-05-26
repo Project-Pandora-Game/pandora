@@ -174,14 +174,16 @@ function WardrobeRoom({ room }: {
 						/>
 					) : null
 				}
-				<TabContainer className='flex-1'>
-					<Tab name={ room.roomId === currentRoomSelector.roomId ? 'Current room\'s inventory' : `Room inventory (${ globalState.space.getRoom(room.roomId)?.displayName ?? '[unknown room]' })` }>
-						<div className='wardrobe-pane'>
-							<WardrobeItemManipulation />
-						</div>
-					</Tab>
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
-				</TabContainer>
+				<div className='wardrobeMainContent'>
+					<TabContainer className='flex-1'>
+						<Tab name={ room.roomId === currentRoomSelector.roomId ? 'Current room\'s inventory' : `Room inventory (${ globalState.space.getRoom(room.roomId)?.displayName ?? '[unknown room]' })` }>
+							<div className='wardrobe-pane'>
+								<WardrobeItemManipulation />
+							</div>
+						</Tab>
+						<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+					</TabContainer>
+				</div>
 			</div>
 		</div>
 	);
@@ -226,54 +228,56 @@ function WardrobeCharacter({ character }: {
 					showCharacterEffects={ showCharacterEffects }
 					isPreview={ characterPreviewState != null }
 				/>
-				<TabContainer className='flex-1' onTabOpen={ onTabOpen }>
-					<Tab name='Items'>
-						<div className='wardrobe-pane'>
-							<WardrobeItemManipulation />
-						</div>
-					</Tab>
-					<Tab name='Body'>
-						<div className='wardrobe-pane'>
-							<WardrobeBodyManipulation character={ character } characterState={ characterState } />
-						</div>
-					</Tab>
-					<Tab name='Pose & Expressions'>
-						<div className='wardrobe-pane'>
-							<div className='wardrobe-ui'>
-								<WardrobePoseGui character={ character } characterState={ characterState } />
-								<WardrobeExpressionGui character={ character } characterState={ characterState } />
+				<div className='wardrobeMainContent'>
+					<TabContainer className='flex-1' onTabOpen={ onTabOpen }>
+						<Tab name='Items'>
+							<div className='wardrobe-pane'>
+								<WardrobeItemManipulation />
 							</div>
-						</div>
-					</Tab>
-					<Tab
-						name='Effects & Modifiers'
-						badge={ characterModifierEffects.length > 0 ? `${characterModifierEffects.length}` : null }
-						badgeType='passive'
-					>
-						<div className='wardrobe-pane'>
-							<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
-						</div>
-					</Tab>
-					{
-						inPersonalSpace ? (
-							<Tab name='Randomization'>
-								<div className='wardrobe-pane'>
-									<WardrobeRandomizationGui character={ character } />
+						</Tab>
+						<Tab name='Body'>
+							<div className='wardrobe-pane'>
+								<WardrobeBodyManipulation character={ character } characterState={ characterState } />
+							</div>
+						</Tab>
+						<Tab name='Pose & Expressions'>
+							<div className='wardrobe-pane'>
+								<div className='wardrobe-ui'>
+									<WardrobePoseGui character={ character } characterState={ characterState } />
+									<WardrobeExpressionGui character={ character } characterState={ characterState } />
 								</div>
-							</Tab>
-						) : null
-					}
-					{
-						character.isPlayer() ? (
-							<Tab name='Item Limits'>
-								<div className='wardrobe-pane'>
-									<WardrobeItemPreferences />
-								</div>
-							</Tab>
-						) : null
-					}
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
-				</TabContainer>
+							</div>
+						</Tab>
+						<Tab
+							name='Effects & Modifiers'
+							badge={ characterModifierEffects.length > 0 ? `${characterModifierEffects.length}` : null }
+							badgeType='passive'
+						>
+							<div className='wardrobe-pane'>
+								<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
+							</div>
+						</Tab>
+						{
+							inPersonalSpace ? (
+								<Tab name='Randomization'>
+									<div className='wardrobe-pane'>
+										<WardrobeRandomizationGui character={ character } />
+									</div>
+								</Tab>
+							) : null
+						}
+						{
+							character.isPlayer() ? (
+								<Tab name='Item Limits'>
+									<div className='wardrobe-pane'>
+										<WardrobeItemPreferences />
+									</div>
+								</Tab>
+							) : null
+						}
+						<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+					</TabContainer>
+				</div>
 			</div>
 		</div>
 	);

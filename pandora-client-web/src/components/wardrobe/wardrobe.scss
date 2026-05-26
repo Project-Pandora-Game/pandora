@@ -31,6 +31,7 @@ $header-height: 2em;
 
 		.characterPreview, .roomPreview {
 			position: relative;
+			contain: size;
 			height: 100%;
 			width: max(min(20em, 90vw), 33vw);
 			flex-shrink: 0;
@@ -103,21 +104,32 @@ $header-height: 2em;
 				}
 			}
 		}
-	}
-}
 
-.wardrobe .wardrobeMain.portrait {
-	flex-flow: column;
+		.wardrobeMainContent {
+			display: flex;
+			flex-grow: 1;
+		}
 
-	.characterPreview, .roomPreview {
-		height: 33vh;
-		width: 100%;
-	}
+		&.portrait {
+			contain: size;
+			flex-flow: column;
 
-	> .tab-container {
-		flex: 1;
-		min-height: 0;
-		overflow: hidden;
+			.characterPreview, .roomPreview {
+				height: 33vh;
+				width: 100%;
+			}
+
+			.wardrobeMainContent {
+				contain: size;
+				overflow-x: auto;
+			}
+
+			> .tab-container {
+				flex-grow: 1;
+				min-height: 0;
+				overflow: hidden;
+			}
+		}
 	}
 }
 
@@ -170,7 +182,7 @@ $drop-overlay-gap: 0.3em;
 .inventoryViewGhost {
 	flex: 1;
 	overflow: auto;
-	min-width: min(20em, 90vw);
+	min-width: min(18em, 90vw);
 
 	border: 1px solid common.$theme-separator;
 

@@ -184,7 +184,7 @@ function SessionExpire({ token }: { token: AuthToken; }): ReactElement {
 	);
 }
 
-function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: () => boolean; }): ReactElement {
+export function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: () => boolean; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const [password, setPassword] = React.useState('');
 
@@ -212,22 +212,23 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 		<ModalDialog>
 			<Form dirty={ false } onSubmit={ onSubmit }>
 				<SessionExpire token={ token } />
-				<FormField>
-					<label htmlFor='extend-current-session-password'>Password</label>
-					<TextInput
-						password
-						id='extend-current-session-password'
-						autoComplete='current-password'
-						value={ password }
-						onChange={ setPassword }
-					/>
-				</FormField>
-				<br />
-				<Row>
-					<Button onClick={ hide } disabled={ processing }>Cancel</Button>
-					<Button type='submit' disabled={ processing }>Extend</Button>
-				</Row>
+				<p>
+					<FormField>
+						<label htmlFor='extend-current-session-password'>Password</label>
+						<TextInput
+							password
+							id='extend-current-session-password'
+							autoComplete='current-password'
+							value={ password }
+							onChange={ setPassword }
+						/>
+					</FormField>
+				</p>
 			</Form>
+			<Row alignX='space-between'>
+				<Button onClick={ hide } disabled={ processing }>Cancel</Button>
+				<Button type='submit' disabled={ processing }>Extend</Button>
+			</Row>
 		</ModalDialog>
 	);
 }

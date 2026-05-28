@@ -1,16 +1,19 @@
-import { IsAuthorized, IsObject } from 'pandora-common';
-import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
+import { FormatTimeInterval, IsAuthorized, IsObject } from 'pandora-common';
+import React, { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router';
 import { LoadIndicator } from '../components/LoadIndicator/LoadIndicator.tsx';
 import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
 import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
 import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';
-import { DivContainer } from '../components/common/container/container.tsx';
-import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider.tsx';
+import { Button } from '../components/common/button/button.tsx';
+import { Column, DivContainer, Row } from '../components/common/container/container.tsx';
+import { ModalDialog } from '../components/dialog/dialog.tsx';
+import { useAuthTokenIsValid, useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
 import { AuthPage } from '../components/login/authPage.tsx';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens.tsx';
+import { ExtendCurrentSessionDialog } from '../components/settings/securitySettings.tsx';
 import { Settings } from '../components/settings/settings.tsx';
 import { WardrobeRouter } from '../components/wardrobe/wardrobe.tsx';
 import { ShardConnectionState } from '../networking/shardConnector.ts';
@@ -26,6 +29,8 @@ import { PublicSpaceSearch } from '../ui/screens/spacesSearch/publicSpaceSearch.
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
 import { authPagePathsAndComponents } from './authRoutingData.ts';
 import { useNavigatePandora } from './navigate.ts';
+
+let autoLoginModalShown = false;
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management/index.tsx'));
@@ -78,6 +83,9 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 	const hasAuthToken = useAuthTokenIsValid();
 	const location = useLocation();
 	const navigate = useNavigatePandora();
+	const directoryConnector = useDirectoryConnector();
+	const authToken = useObservable(directoryConnector.authToken);
+	const [showExpiryWarning, setShowExpiryWarning] = React.useState(false);
 
 	useEffect(() => {
 		if (!isLoggedIn && !hasAuthToken) {
@@ -88,11 +96,19 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 				options = { state: { redirectState: location.state as unknown } };
 			}
 			navigate(path, options);
+		} else if (isLoggedIn && !autoLoginModalShown && authToken != null) {
+			const timeLeft = authToken.expires - Date.now();
+			const underTwentyFourHours = timeLeft < 24 * 60 * 60 * 1000;
+			autoLoginModalShown = true;
+			if (underTwentyFourHours) {
+				setShowExpiryWarning(true);
+			}
 		}
-	}, [isLoggedIn, hasAuthToken, navigate, location.pathname, location.state, preserveLocation]);
+	}, [isLoggedIn, hasAuthToken, authToken, navigate, location.pathname, location.state, preserveLocation]);
 
 	return (
 		<>
+			{ showExpiryWarning && <SessionExpiryWarningDialog onClose={ () => setShowExpiryWarning(false) } /> }
 			<Freeze freeze={ !isLoggedIn }>
 				<Element { ...props as TProps } />
 			</Freeze>
@@ -106,6 +122,43 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 				)
 			}
 		</>
+	);
+}
+
+function SessionExpiryWarningDialog({ onClose }: { onClose: () => void; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const authToken = useObservable(directoryConnector.authToken);
+	const [showExtend, setShowExtend] = React.useState(false);
+
+	if (!authToken) {
+		return <Navigate to='/' />;
+	}
+
+	const timeLeft = authToken.expires - Date.now();
+
+	const hide = () => {
+		onClose();
+		return true;
+	};
+
+	if (showExtend) {
+		return <ExtendCurrentSessionDialog token={ authToken } hide={ hide } />;
+	}
+
+	return (
+		<ModalDialog>
+			<Column>
+				<h3>Auto-login notice</h3>
+				<p>
+					Your session will expire in { FormatTimeInterval(timeLeft, 'two-most-significant') }.<br />
+					You will be automatically logged out at that point.
+				</p>
+				<Row alignX='space-between'>
+					<Button onClick={ hide }>Ignore</Button>
+					<Button onClick={ () => setShowExtend(true) }>Extend with password</Button>
+				</Row>
+			</Column>
+		</ModalDialog>
 	);
 }
 

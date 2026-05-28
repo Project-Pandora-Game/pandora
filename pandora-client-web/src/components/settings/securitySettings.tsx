@@ -224,11 +224,11 @@ export function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; 
 						/>
 					</FormField>
 				</p>
+				<Row alignX='space-between'>
+					<Button onClick={ hide } disabled={ processing }>Cancel</Button>
+					<Button type='submit' disabled={ processing }>Extend</Button>
+				</Row>
 			</Form>
-			<Row alignX='space-between'>
-				<Button onClick={ hide } disabled={ processing }>Cancel</Button>
-				<Button type='submit' disabled={ processing }>Extend</Button>
-			</Row>
 		</ModalDialog>
 	);
 }

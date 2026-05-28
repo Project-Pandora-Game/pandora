@@ -177,10 +177,13 @@ function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
 }
 
 function SessionExpire({ token }: { token: AuthToken; }): ReactElement {
-	const now = useCurrentTime(60_000);
+	const now = useCurrentTime();
 
 	return (
-		<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'two-most-significant') }</p>
+		<Column alignX='center'>
+			<span>Your session will expire in:</span>
+			{ FormatTimeInterval(token.expires - now, 'two-most-significant') }
+		</Column>
 	);
 }
 
@@ -211,23 +214,34 @@ export function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; 
 	return (
 		<ModalDialog>
 			<Form dirty={ false } onSubmit={ onSubmit }>
-				<SessionExpire token={ token } />
-				<p>
-					<FormField>
-						<label htmlFor='extend-current-session-password'>Password</label>
-						<TextInput
-							password
-							id='extend-current-session-password'
-							autoComplete='current-password'
-							value={ password }
-							onChange={ setPassword }
-						/>
-					</FormField>
-				</p>
-				<Row alignX='space-between'>
-					<Button onClick={ hide } disabled={ processing }>Cancel</Button>
-					<Button type='submit' disabled={ processing }>Extend</Button>
-				</Row>
+				<Column gap='x-large'>
+					<Column gap='medium'>
+						<SessionExpire token={ token } />
+						<FormField>
+							<label htmlFor='extend-current-session-username'>Username</label>
+							<TextInput
+								id='extend-current-session-username'
+								autoComplete='username'
+								value={ token.username }
+								readOnly
+							/>
+						</FormField>
+						<FormField>
+							<label htmlFor='extend-current-session-password'>Password</label>
+							<TextInput
+								password
+								id='extend-current-session-password'
+								autoComplete='current-password'
+								value={ password }
+								onChange={ setPassword }
+							/>
+						</FormField>
+					</Column>
+					<Row alignX='space-between' className='fill-x'>
+						<Button onClick={ hide } disabled={ processing }>Cancel</Button>
+						<Button type='submit' disabled={ processing }>Extend</Button>
+					</Row>
+				</Column>
 			</Form>
 		</ModalDialog>
 	);

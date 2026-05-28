@@ -17,6 +17,7 @@ import { InterfaceSettingsProvider } from './interfaceSettingsProvider.tsx';
 import { NotificationProvider } from './notificationProvider.tsx';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider.tsx';
 import { SecondFactorProvider } from './secondFactorProvider.tsx';
+import { SessionExpiryWarningProvider } from './sessionExpiryWarning.tsx';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider.tsx';
 
 export interface GameContextProviderProps extends ChildrenProps {
@@ -53,6 +54,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<RoomItemDialogsProvider />
 				<CharacterPreviewAutogenerationService />
 				<StoredPosePresetsLoaderService />
+				<SessionExpiryWarningProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

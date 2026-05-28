@@ -98,7 +98,7 @@ export function WikiIntroduction(): ReactElement {
 				You can freely move your character inside a room by dragging them by the name below the character.
 				Room to room movement is also possible with the cardinal direction squares on the floor, with the map in the "Room" tab, or with commands.
 				While permitted, you can also move other characters individually or together with your
-				character, such as by leashing them. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
+				character, such as by leashing them. That way, you can also move them to another space. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
@@ -186,11 +186,9 @@ export function WikiIntroduction(): ReactElement {
 			<ul>
 				<li>More customization options for items, for instance creating items with their configuration permanently frozen</li>
 				<li>Further improved UI with focus on better usability and potentially more design themes</li>
-				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>More space features that allow space admins to modify the space-wide rules to customize the experience for everyone inside</li>
 				<li>Key system for locks and more lock types in general</li>
 				<li>Visible locks on worn items with different lock designs</li>
-				<li>Showing and managing relationships between characters</li>
 				<li>More supporting features for roleplaying, for instance a new space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/issues'>GitHub</ExternalLink>
 			</ul>

@@ -17,6 +17,7 @@ import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterDataMultiple } from '../../../character/character.ts';
 import { PlayerCharacter } from '../../../character/player.ts';
+import { useCurrentUtcTimeMinutes } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { useAccountContacts, useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
@@ -51,7 +52,7 @@ import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.ts
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingRoomCharacterListDisplayOffline, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
@@ -63,6 +64,14 @@ export function RoomControls(): ReactElement | null {
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
+	const currentTime = useCurrentUtcTimeMinutes();
+
+	const timeString = currentTime.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'UTC',
+		hour12: false,
+	});
 
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
@@ -76,34 +85,37 @@ export function RoomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
-					>
-						<img src={ storageIcon } />
-						<div>Room<br />inventory</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => navigate('/space/configuration') }
-					>
-						<img src={ settingIcon } />
-						<div>Space<br />configuration</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowPhotoDialog(true) }
-					>
-						<img src={ photoIcon } />
-						<div>Photo<br />mode</div>
-					</Button>
-					{ showPhotoDialog ? (
-						<RoomPhotoDialog
-							close={ () => setShowPhotoDialog(false) }
-						/>
-					) : null }
-				</DivContainer>
+				<Column>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
+					<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+						>
+							<img src={ storageIcon } />
+							<div>Room<br />inventory</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => navigate('/space/configuration') }
+						>
+							<img src={ settingIcon } />
+							<div>Space<br />configuration</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowPhotoDialog(true) }
+						>
+							<img src={ photoIcon } />
+							<div>Photo<br />mode</div>
+						</Button>
+						{ showPhotoDialog ? (
+							<RoomPhotoDialog
+								close={ () => setShowPhotoDialog(false) }
+							/>
+						) : null }
+					</DivContainer>
+				</Column>
 				<DisplayRoomsGrid
 					player={ player }
 					playerState={ playerState }
@@ -155,6 +167,15 @@ export function PersonalSpaceControls(): ReactElement {
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
 	Assert(currentRoomState != null);
 
+	const currentTime = useCurrentUtcTimeMinutes();
+
+	const timeString = currentTime.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'UTC',
+		hour12: false,
+	});
+
 	return (
 		<Column padding='medium' className='controls'>
 			<span>
@@ -192,30 +213,31 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
-					<Button
-						slim
-						className='half-slim align-start'
-						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
-					>
-						<img src={ storageIcon } />
-						<div>Room<br />inventory</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowBackgrounds(true) }
-					>
-						<img src={ settingIcon } />
-						<div>Change<br />space layout</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowPhotoDialog(true) }
-					>
-						<img src={ photoIcon } />
-						<div>Photo<br />mode</div>
-					</Button>
-					{
+				<Column>
+					<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+						<Button
+							slim
+							className='half-slim align-start'
+							onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+						>
+							<img src={ storageIcon } />
+							<div>Room<br />inventory</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowBackgrounds(true) }
+						>
+							<img src={ settingIcon } />
+							<div>Change<br />space layout</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowPhotoDialog(true) }
+						>
+							<img src={ photoIcon } />
+							<div>Photo<br />mode</div>
+						</Button>
+						{
 						showBackgrounds ? (
 							<ModalDialog className='max-size'>
 								<Row alignX='end'>
@@ -232,13 +254,15 @@ export function PersonalSpaceControls(): ReactElement {
 								/>
 							</ModalDialog>
 						) : null
-					}
-					{ showPhotoDialog ? (
+						}
+						{ showPhotoDialog ? (
 						<RoomPhotoDialog
 							close={ () => setShowPhotoDialog(false) }
 						/>
 					) : null }
-				</DivContainer>
+					</DivContainer>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
+				</Column>
 				<DisplayRoomsGrid
 					player={ player }
 					playerState={ playerState }

@@ -1,15 +1,12 @@
 import { ReactElement } from 'react';
 import { Link } from 'react-router';
-import { Row } from '../../common/container/container.tsx';
 import { ExternalLink } from '../../common/link/externalLink.tsx';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider.tsx';
 
 export function WikiIntroduction(): ReactElement {
 	return (
 		<>
-			<Row alignX='end'>
-				<a href='/wiki/' target='_blank' rel='noopener noreferrer'>⧉ Open wiki in a separate window</a>
-			</Row>
+
 			<h2>Wiki: Introduction to Pandora's features with further information</h2>
 
 			<p>

@@ -10,7 +10,7 @@ import { ExtendCurrentSessionDialog } from '../settings/securitySettings.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 
 const TIME_LEFT_WARNING = 24 * 60 * 60_000;
-const TIME_LEFT_WARNING_HIGHLIGHT = 15 * 60_000;
+const TIME_LEFT_WARNING_HIGHLIGHT = 60 * 60_000;
 
 export function SessionExpiryWarningProvider(): ReactElement | null {
 	const isLoggedIn = useCurrentAccount() != null;

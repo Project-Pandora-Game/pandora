@@ -437,6 +437,10 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 						const previewSizeX = Math.ceil(previewScale * room.roomBackground.imageSize[0]);
 						const previewSizeY = Math.ceil(previewScale * room.roomBackground.imageSize[1]);
 
+						const avoid = Array.from(globalState.characters.values())
+							.filter((c) => c.id !== playerState.id && c.currentRoom === room.id)
+							.map((c) => c.position.position);
+
 						return (
 							<SelectionIndicator
 								key={ room.id }
@@ -458,7 +462,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 										moveTo: {
 											type: 'normal',
 											room: room.id,
-											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
+											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
 										},
 									} }
 								>
@@ -521,6 +525,10 @@ function DisplayRooms({ playerState, characters, globalState }: {
 							const isEmpty = !Array.from(globalState.characters.values())
 								.some((c) => c.currentRoom === room.id);
 
+							const avoid = Array.from(globalState.characters.values())
+								.filter((c) => c.id !== playerState.id && c.currentRoom === room.id)
+								.map((c) => c.position.position);
+
 							(isEmpty ? emptyRooms : result).push(
 								<fieldset key={ room.id } className='room'>
 									<legend><span>{ room.name || room.id }</span></legend>
@@ -534,7 +542,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 														moveTo: {
 															type: 'normal',
 															room: room.id,
-															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
+															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
 														},
 													} }
 													disabled={ playerState.position.following != null }
@@ -655,6 +663,10 @@ function DisplayCharacter({ char, globalState }: {
 	if (data.onlineStatus === 'offline' && !listOfflineCharacters)
 		return null;
 
+	const avoid = Array.from(globalState.characters.values())
+		.filter((c) => c.id !== char.id && c.currentRoom === playerRoomId)
+		.map((c) => c.position.position);
+
 	return (
 		<fieldset className='character'>
 			<legend className={ char.isPlayer() ? 'player' : '' }>
@@ -741,7 +753,7 @@ function DisplayCharacter({ char, globalState }: {
 								moveTo: {
 									type: 'normal',
 									room: playerRoom.id,
-									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
+									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction, avoid),
 								},
 							} }
 							disabled={ state.position.following != null }

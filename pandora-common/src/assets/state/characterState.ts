@@ -381,6 +381,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			Assert(fixup, 'DESYNC: Character is in different space or unknown room');
 			Assert(spaceState.rooms.length > 0);
 			roomState = spaceState.rooms[0];
+			// TODO: use list of positions to avoid -> spaceState: AssetFrameworkSpaceState, needs to be exchanged for global state
 			position = {
 				type: 'normal',
 				room: roomState.id,

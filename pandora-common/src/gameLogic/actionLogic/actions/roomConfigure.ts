@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { RoomDescriptionSchema, RoomIdSchema, RoomNameSchema } from '../../../assets/appearanceTypes.ts';
-import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
+import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema, type RoomPosition } from '../../../assets/state/roomGeometry.ts';
 import { RoomNeighborLinkNodesConfigSchema } from '../../../assets/state/roomLinkNodeDefinitions.ts';
 import { AssertNever } from '../../../utility/misc.ts';
 import { GameLogicRoomSettingsSchema } from '../../spaceSettings/roomSettings.ts';
@@ -57,14 +57,20 @@ export function ActionRoomConfigure({
 			return processingContext.invalid();
 
 		// Put characters into correct place if needed
+		const avoid: RoomPosition[] = [];
 		processingContext.manipulator.produceMapCharacters((c) => {
 			if (c.position.type === 'normal') {
-				if (c.position.room === room.id && !IsValidRoomPosition(room.roomBackground, c.position.position)) {
-					return c.produceWithSpacePosition({
-						type: 'normal',
-						room: room.id,
-						position: GenerateInitialRoomPosition(room),
-					});
+				if (c.position.room === room.id) {
+					if (!IsValidRoomPosition(room.roomBackground, c.position.position)) {
+						const position = GenerateInitialRoomPosition(room, undefined, avoid);
+						avoid.push(position);
+						return c.produceWithSpacePosition({
+							type: 'normal',
+							room: room.id,
+							position,
+						});
+					}
+					avoid.push(c.position.position);
 				}
 			} else {
 				AssertNever(c.position.type);
@@ -72,6 +78,7 @@ export function ActionRoomConfigure({
 
 			return c;
 		});
+
 	}
 
 	if (roomLinkNodes != null) {

@@ -245,12 +245,46 @@ export function FixRoomPosition(position: RoomPosition | readonly [x: number, y:
 
 /**
  * Generates an initial position for when character enters a room.
+ * Optionally tries to find a position that is at a good distance from the list of positions to avoid
+ * @param room
+ * @param entryDirection
+ * @param avoidRoomPositions
+ * @returns
+ */
+export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection, avoidRoomPositions?: RoomPosition[]): RoomPosition {
+	if (!avoidRoomPositions || avoidRoomPositions.length === 0) {
+		return GenerateInitialRoomPositionSimple(room, entryDirection);
+	}
+
+	let bestPosition: RoomPosition = [0, 0, 0];
+	let bestMinDistSq = -1;
+
+	for (let i = 0; i < 8; i++) {
+		const candidate = GenerateInitialRoomPositionSimple(room, entryDirection);
+
+		const minDistSq = Math.min(...avoidRoomPositions.map((avoid) => {
+			const dx = candidate[0] - avoid[0];
+			const dy = candidate[1] - avoid[1];
+			return dx * dx + dy * dy;
+		}));
+
+		if (minDistSq > bestMinDistSq) {
+			bestMinDistSq = minDistSq;
+			bestPosition = candidate;
+		}
+	}
+
+	return bestPosition;
+}
+
+/**
+ * Generates an initial position for when character enters a room.
  * This is either random in the left-near quadrant, or if a direction is specified then based on room link node.
  * @param room
  * @param entryDirection
  * @returns
  */
-export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection): RoomPosition {
+export function GenerateInitialRoomPositionSimple(room: AssetFrameworkRoomState, entryDirection?: CardinalDirection): RoomPosition {
 	// Absolute bounds of the background
 	const { minY } = GetRoomPositionBounds(room.roomBackground);
 

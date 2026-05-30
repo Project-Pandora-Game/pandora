@@ -26,6 +26,13 @@ export type ItemDisplayNameType = z.infer<typeof ItemDisplayNameTypeSchema>;
 export const CharacterHideSettingSchema = z.enum(['normal', 'ghost', 'silhouette', 'name-only', 'hidden']);
 export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
 
+/**
+ * A category of settings that is considered "advanced".
+ * Advanced category needs to be enabled first before accessing it, after reading its disclaimer.
+ */
+export type SettingsAdvancedCategory = 'access_tokens';
+export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum(['access_tokens']);
+
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema,
@@ -161,6 +168,8 @@ export const AccountSettingsSchema = z.object({
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
 	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
+	/** List of advanced settings that the user enabled */
+	enabledAdvancedSettings: SettingsAdvancedCategorySchema.array().max(SettingsAdvancedCategorySchema.options.length).readonly(),
 });
 
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
@@ -206,6 +215,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	notificationTypeSettings: {},
 	accessibilityForceSystemColors: false,
 	tutorialCompleted: EMPTY_ARRAY,
+	enabledAdvancedSettings: EMPTY_ARRAY,
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

@@ -59,10 +59,11 @@ export function CreateOutfitPreviewDollState(
 	if (currentRoom != null) {
 		previewSpaceState = previewSpaceState.withRooms([currentRoom]);
 	}
-	const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
+	let previewGlobalState = AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState);
+	const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewGlobalState, undefined);
+	previewGlobalState = previewGlobalState.withCharacter(previewCharacterState.id, previewCharacterState);
 	return [
 		previewCharacterState,
-		AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState)
-			.withCharacter(previewCharacterState.id, previewCharacterState),
+		previewGlobalState,
 	] as const;
 }

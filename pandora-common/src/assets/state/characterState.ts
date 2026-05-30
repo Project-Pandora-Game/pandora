@@ -9,7 +9,7 @@ import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearan
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
 import { BoneType } from '../graphics/index.ts';
-import type { RoomId } from '../index.ts';
+import type { AssetFrameworkGlobalState, RoomId } from '../index.ts';
 import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
@@ -359,15 +359,24 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		});
 	}
 
-	public static createDefault(assetManager: AssetManager, characterId: CharacterId, spaceState: AssetFrameworkSpaceState): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, undefined);
+	public static createDefault(assetManager: AssetManager, characterId: CharacterId, globalState: AssetFrameworkGlobalState): AssetFrameworkCharacterState {
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, globalState, undefined);
 	}
 
+	/**
+	 * Load a character state from saved character bundle, potentially fixing it to work correctly if it is outdated.
+	 * @param assetManager - Asset manager for loading assets
+	 * @param characterId - Id of the character that is being loaded
+	 * @param bundle - Bundle to load
+	 * @param globalState - Reference global state for load steps that need access to the space's state. This state is not modified during the load.
+	 * @param logger - Logger to log potential errors or warnings during load
+	 * @returns The loaded state. If the bundle is server one, this always succeeds.
+	 */
 	public static loadFromBundle(
 		assetManager: AssetManager,
 		characterId: CharacterId,
 		bundle: AppearanceBundle | undefined,
-		spaceState: AssetFrameworkSpaceState,
+		globalState: AssetFrameworkGlobalState,
 		logger: Logger | undefined,
 	): AssetFrameworkCharacterState {
 		const fixup = bundle?.clientOnly !== true;
@@ -376,16 +385,20 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		// Load space position
 		let position = freeze(bundle.position, true);
-		let roomState: AssetFrameworkRoomState | null = spaceState.getRoom(position.room);
-		if (spaceState.spaceId !== bundle.space || roomState == null) {
+		let roomState: AssetFrameworkRoomState | null = globalState.space.getRoom(position.room);
+		if (globalState.space.spaceId !== bundle.space || roomState == null) {
 			Assert(fixup, 'DESYNC: Character is in different space or unknown room');
-			Assert(spaceState.rooms.length > 0);
-			roomState = spaceState.rooms[0];
-			// TODO: use list of positions to avoid -> spaceState: AssetFrameworkSpaceState, needs to be exchanged for global state
+			Assert(globalState.space.rooms.length > 0);
+			roomState = globalState.space.rooms[0];
+			const roomId = roomState.id;
+			const avoid = Array.from(globalState.characters.values())
+				.filter((c) => c.id !== characterId && c.currentRoom === roomId)
+				.map((c) => c.position.position);
+
 			position = {
 				type: 'normal',
 				room: roomState.id,
-				position: GenerateInitialRoomPosition(roomState),
+				position: GenerateInitialRoomPosition(roomState, undefined, avoid),
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed
@@ -394,10 +407,14 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			const positionValid = position.type === 'normal' ? IsValidRoomPosition(roomState.roomBackground, position.position) :
 				AssertNever(position.type);
 			if (!positionValid) {
+				const roomId = roomState.id;
+				const avoid = Array.from(globalState.characters.values())
+					.filter((c) => c.id !== characterId && c.currentRoom === roomId)
+					.map((c) => c.position.position);
 				position = {
 					type: 'normal',
 					room: roomState.id,
-					position: GenerateInitialRoomPosition(roomState),
+					position: GenerateInitialRoomPosition(roomState, undefined, avoid),
 				};
 			}
 		}
@@ -462,12 +479,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				restrictionOverride: bundle.restrictionOverride,
 				attemptingAction: bundle.attemptingAction ?? null,
 				position,
-				space: spaceState.spaceId,
+				space: globalState.space.spaceId,
 			}).updateRoomStateLink(roomState, true),
 			true,
 		);
 
-		Assert(resultState.isValid(spaceState), 'State is invalid after load');
+		Assert(resultState.isValid(globalState.space), 'State is invalid after load');
 
 		return resultState;
 	}

@@ -404,7 +404,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					assetManager,
 					character.id,
 					appearance,
-					newState.space,
+					newState,
 					logger,
 				);
 			newState = newState.withCharacter(character.id, characterState);

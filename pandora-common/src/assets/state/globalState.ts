@@ -231,7 +231,7 @@ export class AssetFrameworkGlobalState {
 				} else if (characterData[0] === 'full') {
 					newCharacters.set(
 						characterId,
-						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData[1], space, logger),
+						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData[1], this, logger),
 					);
 				} else if (characterData[0] === 'delta') {
 					const originalCharacter = this.characters.get(characterId);
@@ -420,12 +420,15 @@ export class AssetFrameworkGlobalState {
 
 		const space = AssetFrameworkSpaceState.loadFromBundle(assetManager, bundle.space, spaceId, logger);
 
+		// Create temporary state that will allow us to load characters
+		const temporaryState = new AssetFrameworkGlobalState(assetManager, new Map(), space);
+
 		for (const [key, characterData] of Object.entries(bundle.characters)) {
 			AssertNotNullable(characterData);
 			const characterId = CharacterIdSchema.parse(key);
 			characters.set(
 				characterId,
-				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, space, logger),
+				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, temporaryState, logger),
 			);
 		}
 

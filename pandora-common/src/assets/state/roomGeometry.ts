@@ -258,17 +258,17 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 
 	if (entranceLink != null) {
 		// Random spread to use for the positioning
-		const spreadX = ROOM_NODE_RADIUS;
-		const spreadY = ROOM_NODE_RADIUS;
+		const spreadX = ROOM_NODE_RADIUS * 4;
+		const spreadY = ROOM_NODE_RADIUS * 2;
 
 		const startPointX = entranceLink.position[0] + (Math.random() - 0.5) * spreadX;
-		const startPointY = entranceLink.position[1] + (Math.random() - 0.5) * spreadY;
+		const startPointY = entranceLink.position[1] + (Math.random() - 0.5) * spreadY + 125;
 
 		return FixRoomPosition([startPointX, startPointY, 0], room.roomBackground);
 	} else {
 		// Random spread to use for the positioning
-		const spreadX = 1000;
-		const spreadY = 100;
+		const spreadX = 1800;
+		const spreadY = 200;
 
 		// Idea is to position new characters to the very left of still visible background
 		// and slightly up to avoid the name being out of bounds
@@ -276,12 +276,12 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 		const startPointX =
 			(-0.5 * (room.roomBackground.floorArea[0] / room.roomBackground.areaCoverage))
 			+ 0.5 * CharacterSize.WIDTH
-			+ (Math.random() - 0.5) * spreadX;
+			+ (Math.random() - 0.5) * spreadX + 100;
 
 		const startPointY =
 			minY
 			+ 200
-			+ (Math.random() - 0.5) * spreadY;
+			+ (Math.random() - 0.5) * spreadY + 50;
 
 		return FixRoomPosition([startPointX, startPointY, 0], room.roomBackground);
 	}
@@ -289,7 +289,7 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 }
 
 export function CharacterCanFollow(character: AssetFrameworkCharacterState, globalState: AssetFrameworkGlobalState): boolean {
-	// Noone must be following this character
+	// None must be following this character
 	if (Array.from(globalState.characters.values()).some((c) => c.position.type === 'normal' && c.position.following?.target === character.id))
 		return false;
 

@@ -258,8 +258,8 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 
 	if (entranceLink != null) {
 		// Random spread to use for the positioning
-		const spreadX = ROOM_NODE_RADIUS * 4;
-		const spreadY = ROOM_NODE_RADIUS * 2;
+		const spreadX = ROOM_NODE_RADIUS * (entranceLink.internalDirection === 'near' || entranceLink.internalDirection === 'far' ? 4 : 2);
+		const spreadY = ROOM_NODE_RADIUS * (entranceLink.internalDirection === 'near' || entranceLink.internalDirection === 'far' ? 2 : 4);
 
 		const startPointX = entranceLink.position[0] + (Math.random() - 0.5) * spreadX;
 		const startPointY = entranceLink.position[1] + (Math.random() - 0.5) * spreadY + 125;

@@ -16,7 +16,7 @@ import {
 } from '../../src/index.ts';
 
 /** Create a character state in a deterministic way */
-export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter, spaceState: AssetFrameworkSpaceState, additionalAssets?: (AssetId | Immutable<ItemTemplate>)[]): AssetFrameworkCharacterState {
+export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter, spaceState: AssetFrameworkGlobalState, additionalAssets?: (AssetId | Immutable<ItemTemplate>)[]): AssetFrameworkCharacterState {
 	const TEST_ASSETS: AssetId[] = [
 		'a/body/base',
 		'a/body/head',
@@ -58,13 +58,13 @@ export function TestCreateCharacterState(assetManager: AssetManager, logicCharac
 	const characterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, logicCharacter.id, baseBundle, spaceState, undefined);
 
 	// Check the character state actually matches the bundle
-	expect(characterState.isValid(spaceState)).toBe(true);
+	expect(characterState.isValid(spaceState.space)).toBe(true);
 	expect(characterState.exportToBundle()).toEqual(baseBundle);
 
 	return characterState;
 }
 
-export function TestCreateGlobalState(assetManager: AssetManager, spaceId: SpaceId | null = null, characters?: ((spaceState: AssetFrameworkSpaceState) => AssetFrameworkCharacterState)[]): AssetFrameworkGlobalState {
+export function TestCreateGlobalState(assetManager: AssetManager, spaceId: SpaceId | null = null, characters?: ((spaceState: AssetFrameworkGlobalState) => AssetFrameworkCharacterState)[]): AssetFrameworkGlobalState {
 	let state = AssetFrameworkGlobalState.createDefault(
 		assetManager,
 		AssetFrameworkSpaceState.createDefault(assetManager, spaceId),
@@ -73,7 +73,7 @@ export function TestCreateGlobalState(assetManager: AssetManager, spaceId: Space
 	const characterIds: CharacterId[] = [];
 	if (characters != null) {
 		for (const characterGenerator of characters) {
-			const character = characterGenerator(state.space);
+			const character = characterGenerator(state);
 			characterIds.push(character.id);
 			state = state.withCharacter(character.id, character);
 		}

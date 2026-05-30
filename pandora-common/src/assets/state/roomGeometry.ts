@@ -265,7 +265,8 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 		const minDistSq = Math.min(...avoidRoomPositions.map((avoid) => {
 			const dx = candidate[0] - avoid[0];
 			const dy = candidate[1] - avoid[1];
-			return dx * dx + dy * dy;
+			const dz = candidate[2] - avoid[2];
+			return dx * dx + dy * dy + dz * dz;
 		}));
 
 		if (minDistSq > bestMinDistSq) {

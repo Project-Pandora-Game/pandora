@@ -289,7 +289,7 @@ export function GenerateInitialRoomPosition(room: AssetFrameworkRoomState, entry
 }
 
 export function CharacterCanFollow(character: AssetFrameworkCharacterState, globalState: AssetFrameworkGlobalState): boolean {
-	// None must be following this character
+	// No one must be following this character
 	if (Array.from(globalState.characters.values()).some((c) => c.position.type === 'normal' && c.position.following?.target === character.id))
 		return false;
 

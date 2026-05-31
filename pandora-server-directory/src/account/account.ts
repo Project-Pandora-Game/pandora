@@ -357,10 +357,7 @@ export class Account implements ActorIdentity {
 	}
 
 	@AsyncSynchronized('object')
-	public async deleteCharacter(characterId: CharacterId, passwordSha512: string): Promise<true | 'invalidPassword' | 'failed'> {
-		if (!await this.secure.verifyPassword(passwordSha512))
-			return 'invalidPassword';
-
+	public async deleteCharacterAfterSudo(characterId: CharacterId): Promise<true | 'failed'> {
 		// If there is no such character, then implicit success
 		const character = this.characters.get(characterId);
 		if (character == null)

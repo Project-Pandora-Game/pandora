@@ -1,23 +1,21 @@
 import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
-import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
+import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../common/userInteraction/select/select.tsx';
-import { PrehashPassword } from '../../crypto/helpers.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { CharacterPreviewGenerationButton } from '../../ui/screens/room/characterPreviewGeneration.tsx';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
 import { Column, Row } from '../common/container/container.tsx';
-import { Form, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
+import { SudoModeButton, useSudoMode } from './sudoMode.tsx';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigatePandora();
@@ -123,62 +121,48 @@ function DeleteCharacter({ playerData }: { playerData: Readonly<ICharacterPrivat
 	);
 }
 
-interface CharacterDeleteFormData {
-	character: string;
-	password: string;
-}
-
 function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
 	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
-	const [invalidPassword, setInvalidPassword] = React.useState('');
+	const { sudoActive, clearSudoMode } = useSudoMode();
 	const [character, setCharacter] = React.useState('');
 
-	const {
-		formState: { errors, submitCount, isSubmitting },
-		reset,
-		handleSubmit,
-		register,
-		trigger,
-	} = useForm<CharacterDeleteFormData>({ shouldUseNativeValidation: true, progressive: true });
-
-	React.useEffect(() => {
-		if (invalidPassword) {
-			void trigger();
-		}
-	}, [invalidPassword, trigger]);
-
 	const onReset = React.useCallback(() => {
-		reset();
-		setInvalidPassword('');
 		setCharacter('');
 		setStage(0);
-	}, [reset, setStage]);
+	}, [setStage]);
 
-	const onSubmit = handleSubmit(async ({ password }) => {
+	const [deleteCharacter, isDeleting] = useAsyncEvent(async () => {
 		if (character !== playerData.name)
-			return;
+			return null;
 
 		const id = playerData.id;
-		const passwordSha512 = await PrehashPassword(password);
-		const { result } = await directoryConnector.awaitResponse('deleteCharacter', { id, passwordSha512 });
+		return await directoryConnector.awaitResponse('deleteCharacter', { id });
+	}, (response) => {
+		if (response == null)
+			return;
 
-		switch (result) {
+		switch (response.result) {
 			case 'ok':
 				toast('Character deleted', TOAST_OPTIONS_SUCCESS);
 				onReset();
 				navigate('/character/select');
 				return;
-			case 'invalidPassword':
-				setInvalidPassword(password);
-				toast('Invalid password', TOAST_OPTIONS_ERROR);
+			case 'sudoRequired':
+				clearSudoMode();
+				toast('Please confirm your password again.', TOAST_OPTIONS_ERROR);
 				return;
 			case 'failed':
 				toast('Failed to delete the character. Please try again later.', TOAST_OPTIONS_ERROR);
 				return;
 			default:
-				AssertNever(result);
+				AssertNever(response.result);
 		}
+	}, {
+		errorHandler: (error) => {
+			const detail = error instanceof Error ? error.message : String(error);
+			toast(`Failed to delete the character:\n${detail}`, TOAST_OPTIONS_ERROR);
+		},
 	});
 
 	const toStage2 = React.useCallback(() => {
@@ -233,34 +217,44 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 
 	return (
 		<ModalDialog>
-			<h3>
-				Delete character: { playerData.name } ({ playerData.id })?
-			</h3>
-			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
-				<FormField>
-					<label htmlFor='password'>Current password</label>
-					<FormInput
-						type='password'
-						id='password'
-						autoComplete='current-password'
-						register={ register }
-						name='password'
-						options={ {
-							required: 'Password is required',
-							validate: (pwd) => (invalidPassword === pwd) ? 'Invalid password' : true,
-						} }
-					/>
-					<FormFieldError error={ errors.password } />
-				</FormField>
+			<Column>
+				<h3>
+					Delete character: { playerData.name } ({ playerData.id })?
+				</h3>
+				{
+					sudoActive ? (
+						<span>
+							Deleting this character cannot be undone.
+						</span>
+					) : (
+						<span>
+							One more security check is required before deleting this character.
+						</span>
+					)
+				}
 				<Row>
 					<Button onClick={ onReset }>
 						Cancel
 					</Button>
-					<Button theme='danger' type='submit' disabled={ isSubmitting }>
-						Delete this character
-					</Button>
+					{
+						sudoActive ? (
+							<Button
+								theme='danger'
+								onClick={ () => {
+									deleteCharacter();
+								} }
+								disabled={ isDeleting }
+							>
+								Delete this character
+							</Button>
+						) : (
+							<SudoModeButton theme='danger'>
+								Continue deleting character
+							</SudoModeButton>
+						)
+					}
 				</Row>
-			</Form>
+			</Column>
 		</ModalDialog>
 	);
 }

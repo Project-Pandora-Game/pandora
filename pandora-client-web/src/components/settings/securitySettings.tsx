@@ -19,6 +19,7 @@ import { Column, Row } from '../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog, useConfirmDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { SudoModeButton, useSudoMode } from './sudoMode.tsx';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -233,7 +234,6 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 }
 
 interface PasswordChangeFormData {
-	oldPassword: string;
 	newPassword: string;
 	newPasswordConfirm: string;
 }
@@ -241,7 +241,7 @@ interface PasswordChangeFormData {
 function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directMessageManager = useService('directMessageManager');
-	const [invalidPassword, setInvalidPassword] = React.useState('');
+	const { sudoActive, clearSudoMode } = useSudoMode();
 
 	const {
 		formState: { errors, submitCount, isSubmitting },
@@ -249,22 +249,13 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 		getValues,
 		handleSubmit,
 		register,
-		trigger,
 	} = useForm<PasswordChangeFormData>({ shouldUseNativeValidation: true, progressive: true });
 
-	React.useEffect(() => {
-		if (invalidPassword) {
-			void trigger();
-		}
-	}, [invalidPassword, trigger]);
-
-	const onSubmit = handleSubmit(async ({ oldPassword, newPassword }) => {
-		const passwordSha512Old = await PrehashPassword(oldPassword);
+	const onSubmit = handleSubmit(async ({ newPassword }) => {
 		const passwordSha512New = await PrehashPassword(newPassword);
 		const { cryptoKey, onSuccess } = await directMessageManager.passwordChange(account.username, newPassword);
 
 		const resp = await directoryConnector.awaitResponse('passwordChange', {
-			passwordSha512Old,
 			passwordSha512New,
 			cryptoKey,
 		});
@@ -274,8 +265,12 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				onSuccess();
 				reset();
 				break;
-			case 'invalidPassword':
-				setInvalidPassword(oldPassword);
+			case 'sudoRequired':
+				clearSudoMode();
+				toast('Please confirm your password again.', TOAST_OPTIONS_ERROR);
+				break;
+			case 'invalidCryptoKey':
+				toast('Failed to change password: invalid encryption key', TOAST_OPTIONS_ERROR);
 				break;
 			default:
 				AssertNever(resp.result);
@@ -285,62 +280,57 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 	return (
 		<fieldset>
 			<legend>Password change</legend>
-			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
-				<FormField>
-					<label htmlFor='password-change-old'>Old password</label>
-					<FormInput
-						type='password'
-						id='password-change-old'
-						autoComplete='current-password'
-						register={ register }
-						name='oldPassword'
-						options={ {
-							required: 'Old password is required',
-							validate: (oldPassword) => (invalidPassword === oldPassword) ? 'Invalid password' : true,
-						} }
-					/>
-					<FormFieldError error={ errors.oldPassword } />
-				</FormField>
-				<FormField>
-					<label htmlFor='password-change-new'>New password</label>
-					<FormInput
-						type='password'
-						id='password-change-new'
-						autoComplete='new-password'
-						register={ register }
-						name='newPassword'
-						options={ {
-							required: 'New password is required',
-							validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
-						} }
-					/>
-					{
-						DEVELOPMENT ? (
-							<em>Running in development mode.<br />Password restrictions are disabled.</em>
-						) : null
-					}
-					<FormFieldError error={ errors.newPassword } />
-				</FormField>
-				<FormField>
-					<label htmlFor='password-change-new-confirm'>Confirm new password</label>
-					<FormInput
-						type='password'
-						id='password-change-new-confirm'
-						autoComplete='new-password'
-						register={ register }
-						name='newPasswordConfirm'
-						options={ {
-							required: 'New password confirmation is required',
-							validate: (newPasswordConfirm) => {
-								const newPassword = getValues('newPassword');
-								return (newPasswordConfirm === newPassword) || 'Passwords do not match';
-							},
-						} }
-					/>
-					<FormFieldError error={ errors.newPasswordConfirm } />
-				</FormField>
-				<Button type='submit' disabled={ isSubmitting }>Change password</Button>
-			</Form>
+			{
+				sudoActive ? (
+					<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
+						<FormField>
+							<label htmlFor='password-change-new'>New password</label>
+							<FormInput
+								type='password'
+								id='password-change-new'
+								autoComplete='new-password'
+								register={ register }
+								name='newPassword'
+								options={ {
+									required: 'New password is required',
+									validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
+								} }
+							/>
+							{
+								DEVELOPMENT ? (
+									<em>Running in development mode.<br />Password restrictions are disabled.</em>
+								) : null
+							}
+							<FormFieldError error={ errors.newPassword } />
+						</FormField>
+						<FormField>
+							<label htmlFor='password-change-new-confirm'>Confirm new password</label>
+							<FormInput
+								type='password'
+								id='password-change-new-confirm'
+								autoComplete='new-password'
+								register={ register }
+								name='newPasswordConfirm'
+								options={ {
+									required: 'New password confirmation is required',
+									validate: (newPasswordConfirm) => {
+										const newPassword = getValues('newPassword');
+										return (newPasswordConfirm === newPassword) || 'Passwords do not match';
+									},
+								} }
+							/>
+							<FormFieldError error={ errors.newPasswordConfirm } />
+						</FormField>
+						<Button type='submit' disabled={ isSubmitting }>Change password</Button>
+					</Form>
+				) : (
+					<Column>
+						<SudoModeButton>
+							Start password change
+						</SudoModeButton>
+					</Column>
+				)
+			}
 		</fieldset>
 	);
 }

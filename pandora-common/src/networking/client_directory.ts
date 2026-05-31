@@ -157,13 +157,23 @@ export const ClientDirectorySchema = {
 	//#endregion Before Login
 
 	//#region Account management
+	sudoAuthenticate: {
+		request: z.object({
+			passwordSha512: PasswordSha512Schema,
+		}),
+		response: ZodCast<{
+			result: 'ok';
+			expires: number;
+		} | {
+			result: 'invalidPassword';
+		}>(),
+	},
 	passwordChange: {
 		request: z.object({
-			passwordSha512Old: PasswordSha512Schema,
 			passwordSha512New: PasswordSha512Schema,
 			cryptoKey: AccountCryptoKeySchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'invalidCryptoKey'; }>(),
 	},
 	logout: {
 		request: z.discriminatedUnion('type', [
@@ -284,9 +294,8 @@ export const ClientDirectorySchema = {
 	deleteCharacter: {
 		request: z.object({
 			id: CharacterIdSchema,
-			passwordSha512: PasswordSha512Schema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword' | 'failed'; }>(),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'failed'; }>(),
 	},
 	//#endregion
 

@@ -114,13 +114,12 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<boolean> {
-		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
-			return false;
+	public async changePasswordAfterSudo(passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<'ok' | 'invalidCryptoKey'> {
+		if (!this.isActivated() || !await this.#validateCryptoKey(cryptoKey))
+			return 'invalidCryptoKey';
 
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
 		this.#secure.cryptoKey = cloneDeep(cryptoKey);
-		// Invalidate all login tokens
 		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 
@@ -128,7 +127,7 @@ export default class AccountSecure {
 
 		this.#auditLog.info('Password changed');
 
-		return true;
+		return 'ok';
 	}
 
 	public async resetPassword(email: string): Promise<boolean> {

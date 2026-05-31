@@ -105,6 +105,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			passwordResetConfirm: WithConstantTime(this.handlePasswordResetConfirm.bind(this), CONSTANT_TIME),
 
 			// Account management
+			sudoAuthenticate: this.handleSudoAuthenticate.bind(this),
 			passwordChange: this.handlePasswordChange.bind(this),
 			logout: this.handleLogout.bind(this),
 			gitHubBind: this.handleGitHubBind.bind(this),
@@ -393,13 +394,35 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private async handlePasswordChange({ passwordSha512Old, passwordSha512New, cryptoKey }: IClientDirectoryArgument['passwordChange'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordChange'] {
+	private async handleSudoAuthenticate({ passwordSha512 }: IClientDirectoryArgument['sudoAuthenticate'], connection: ClientConnection): IClientDirectoryPromiseResult['sudoAuthenticate'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey)) {
-			logger.debug(`${connection.id} failed to change their password`);
+		if (!await connection.account.secure.verifyPassword(passwordSha512)) {
+			logger.debug(`${connection.id} failed to enter sudo mode`);
 			return { result: 'invalidPassword' };
+		}
+
+		const expires = connection.enableSudo();
+		AUDIT_LOG.verbose(`${connection.id} entered sudo mode for ${connection.account.username}`);
+		return {
+			result: 'ok',
+			expires,
+		};
+	}
+
+	private async handlePasswordChange({ passwordSha512New, cryptoKey }: IClientDirectoryArgument['passwordChange'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordChange'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		if (!connection.hasSudo()) {
+			return { result: 'sudoRequired' };
+		}
+
+		const result = await connection.account.secure.changePasswordAfterSudo(passwordSha512New, cryptoKey);
+		if (result !== 'ok') {
+			logger.debug(`${connection.id} failed to change their password`);
+			return { result };
 		}
 
 		return { result: 'ok' };
@@ -440,11 +463,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleDeleteCharacter({ id, passwordSha512 }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {
+	private async handleDeleteCharacter({ id }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {
 		if (!connection.isLoggedIn() || connection.character?.baseInfo.id !== id)
 			throw new BadMessageError();
 
-		const result = await connection.account.deleteCharacter(id, passwordSha512);
+		if (!connection.hasSudo()) {
+			return { result: 'sudoRequired' };
+		}
+
+		const result = await connection.account.deleteCharacterAfterSudo(id);
 		if (result !== true)
 			return { result };
 

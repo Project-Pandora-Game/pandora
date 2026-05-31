@@ -224,7 +224,7 @@ describe('AccountSecure', () => {
 		});
 	});
 
-	describe('changePassword()', () => {
+	describe('changePasswordAfterSudo()', () => {
 		let account: AccountSecure;
 
 		beforeAll(async () => {
@@ -233,21 +233,14 @@ describe('AccountSecure', () => {
 
 		it('Fails on inactive account', async () => {
 			const inactiveAccount = await CreateAccountSecure('password', TEST_EMAIL, false);
-			await expect(inactiveAccount.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
+			await expect(inactiveAccount.changePasswordAfterSudo('newPassword', TEST_CRYPT)).resolves.toBe('invalidCryptoKey');
 			await expect(inactiveAccount.verifyPassword('password')).resolves.toBe(true);
 			await expect(inactiveAccount.verifyPassword('newPassword')).resolves.toBe(false);
 			expect(mockSaving).not.toHaveBeenCalled();
 		});
 
-		it('Fails if old password is incorrect', async () => {
-			await expect(account.changePassword('wrongPassword', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
-			await expect(account.verifyPassword('password')).resolves.toBe(true);
-			await expect(account.verifyPassword('newPassword')).resolves.toBe(false);
-			expect(mockSaving).not.toHaveBeenCalled();
-		});
-
 		it('Changes password', async () => {
-			await expect(account.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(true);
+			await expect(account.changePasswordAfterSudo('newPassword', TEST_CRYPT)).resolves.toBe('ok');
 			// Old password is no longer valid
 			await expect(account.verifyPassword('password')).resolves.toBe(false);
 			// New password is valid

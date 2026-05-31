@@ -4,6 +4,7 @@ import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { PrehashPassword } from '../../crypto/helpers.ts';
+import { GetPasskeyAssertion, IsPasskeySupported } from '../../crypto/passkey.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { Button, ButtonTheme } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
@@ -65,19 +66,23 @@ export function SudoModeButton({
 	const directoryConnector = useDirectoryConnector();
 	const [showPrompt, setShowPrompt] = React.useState(false);
 	const [password, setPassword] = React.useState('');
+	const passkeySupported = IsPasskeySupported();
+	const confirmIdentity = React.useCallback((expires: number) => {
+		SetSudoExpires(expires);
+		setPassword('');
+		setShowPrompt(false);
+		toast('Identity confirmed', TOAST_OPTIONS_SUCCESS);
+		onSudo?.();
+	}, [onSudo]);
 
-	const [authenticate, processing] = useAsyncEvent(async () => {
+	const [authenticateWithPassword, passwordProcessing] = useAsyncEvent(async () => {
 		return await directoryConnector.awaitResponse('sudoAuthenticate', {
 			passwordSha512: await PrehashPassword(password),
 		});
 	}, (response) => {
 		switch (response.result) {
 			case 'ok':
-				SetSudoExpires(response.expires);
-				setPassword('');
-				setShowPrompt(false);
-				toast('Identity confirmed', TOAST_OPTIONS_SUCCESS);
-				onSudo?.();
+				confirmIdentity(response.expires);
 				break;
 			case 'invalidPassword':
 				setPassword('');
@@ -90,6 +95,39 @@ export function SudoModeButton({
 			toast(`Failed to confirm identity:\n${detail}`, TOAST_OPTIONS_ERROR);
 		},
 	});
+
+	const [authenticateWithPasskey, passkeyProcessing] = useAsyncEvent(async () => {
+		const start = await directoryConnector.awaitResponse('sudoPasskeyStart', {});
+		if (start.result !== 'ok')
+			return start;
+
+		const assertion = await GetPasskeyAssertion(start);
+		return await directoryConnector.awaitResponse('sudoPasskeyFinish', {
+			credentialId: assertion.credentialId,
+			clientDataJSON: assertion.clientDataJSON,
+			authenticatorData: assertion.authenticatorData,
+			signature: assertion.signature,
+		});
+	}, (response) => {
+		switch (response.result) {
+			case 'ok':
+				confirmIdentity(response.expires);
+				break;
+			case 'noPasskey':
+				toast('No passkey is registered on this account', TOAST_OPTIONS_ERROR);
+				break;
+			case 'unknownCredential':
+				toast('Passkey confirmation failed', TOAST_OPTIONS_ERROR);
+				break;
+		}
+	}, {
+		errorHandler: (error) => {
+			const detail = error instanceof Error ? error.message : String(error);
+			toast(`Failed to confirm identity:\n${detail}`, TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	const processing = passwordProcessing || passkeyProcessing;
 
 	const hide = React.useCallback(() => {
 		if (processing)
@@ -104,8 +142,8 @@ export function SudoModeButton({
 		if (password.length === 0 || processing)
 			return;
 
-		authenticate();
-	}, [authenticate, password.length, processing]);
+		authenticateWithPassword();
+	}, [authenticateWithPassword, password.length, processing]);
 
 	return (
 		<>
@@ -138,6 +176,13 @@ export function SudoModeButton({
 										Confirm
 									</Button>
 								</Row>
+								{
+									passkeySupported ? (
+										<Button onClick={ authenticateWithPasskey } disabled={ processing }>
+											Use passkey
+										</Button>
+									) : null
+								}
 							</Column>
 						</Form>
 					</ModalDialog>

@@ -25,7 +25,6 @@ function CreateTestPasskey(credentialId: string) {
 		created: Date.now(),
 		publicKey: TEST_CRYPT.publicKey,
 		signCount: 0,
-		prfSalt: 'prfSalt',
 		cryptoKey: TEST_CRYPT,
 	};
 }
@@ -329,40 +328,6 @@ describe('AccountSecure', () => {
 			expect(mockSaving).toHaveBeenCalledTimes(1);
 		});
 
-		it('Changes password using a passkey without removing passkeys', async () => {
-			const passkeyAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
-			const passkey = CreateTestPasskey('credential-1');
-
-			await expect(passkeyAccount.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
-			await expect(passkeyAccount.addPasskey(passkey)).resolves.toBe('ok');
-			mockSaving.mockClear();
-
-			await expect(passkeyAccount.changePasswordWithPasskey('newPassword', {
-				...TEST_CRYPT,
-				salt: 'new-salt',
-				iv: 'new-iv',
-				encryptedPrivateKey: 'new-encrypted-private-key',
-			})).resolves.toBe('ok');
-
-			await expect(passkeyAccount.verifyPassword('password')).resolves.toBe(false);
-			await expect(passkeyAccount.verifyPassword('newPassword')).resolves.toBe(true);
-			expect(passkeyAccount.listPasskeys()).toEqual([{
-				credentialId: 'credential-1',
-				name: 'Test passkey credential-1',
-				created: passkey.created,
-			}]);
-			expect(mockSaving).toHaveBeenCalledTimes(1);
-		});
-
-		it('Rejects passkey password changes for a different direct message key', async () => {
-			const passkeyAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
-			await expect(passkeyAccount.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
-
-			await expect(passkeyAccount.changePasswordWithPasskey('newPassword', {
-				...TEST_CRYPT,
-				publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEH11RmS1YyTzcvbLlV5/4/pyveaTKb+mXeVRAXqaVkxNZjyDxr9S0T+/Rc9jAIqNda0X3z5I8hhu67E4LNLjxqA==',
-			})).resolves.toBe('invalidCryptoKey');
-		});
 	});
 
 	describe('Password reset', () => {

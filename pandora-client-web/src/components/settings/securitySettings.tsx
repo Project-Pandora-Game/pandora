@@ -92,9 +92,9 @@ type AccountPasskeys = IClientDirectoryNormalResult['passkeyList']['passkeys'];
 function PasskeySettings(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directMessageManager = useService('directMessageManager');
+	const { sudoActive, clearSudoMode } = useSudoMode();
 	const [passkeys, setPasskeys] = React.useState<AccountPasskeys | null>(null);
 	const [limit, setLimit] = React.useState(5);
-	const [password, setPassword] = React.useState('');
 	const passkeySupported = IsPasskeySupported();
 	const defaultPasskeyName = 'Security key';
 
@@ -107,8 +107,7 @@ function PasskeySettings(): ReactElement {
 	);
 
 	const [add, adding] = useAsyncEvent(async () => {
-		const passwordSha512 = await PrehashPassword(password);
-		const start = await directoryConnector.awaitResponse('passkeyRegisterStart', { passwordSha512 });
+		const start = await directoryConnector.awaitResponse('passkeyRegisterStart', {});
 		if (start.result !== 'ok')
 			return start.result;
 
@@ -121,7 +120,6 @@ function PasskeySettings(): ReactElement {
 			clientDataJSON: credential.clientDataJSON,
 			authenticatorData: credential.authenticatorData,
 			transports: credential.transports,
-			prfSalt: start.prfSalt,
 			cryptoKey,
 		});
 		return finish.result;
@@ -129,12 +127,11 @@ function PasskeySettings(): ReactElement {
 		switch (result) {
 			case 'ok':
 				toast('Passkey added', TOAST_OPTIONS_SUCCESS);
-				setPassword('');
 				load();
 				break;
-			case 'invalidPassword':
-				toast('Invalid password', TOAST_OPTIONS_ERROR);
-				setPassword('');
+			case 'sudoRequired':
+				clearSudoMode();
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 				break;
 			case 'limitReached':
 				toast('Passkey limit reached', TOAST_OPTIONS_ERROR);
@@ -167,25 +164,24 @@ function PasskeySettings(): ReactElement {
 			<legend>Passkeys</legend>
 			<Column>
 				<span>{ passkeys == null ? 'Loading...' : `${passkeys.length}/${limit} passkeys registered` }</span>
-				<PasskeyList passkeys={ passkeys } reload={ load } />
-				<label htmlFor='passkey-add-password'>Current password</label>
-				<TextInput
-					id='passkey-add-password'
-					password
-					autoComplete='current-password'
-					value={ password }
-					onChange={ setPassword }
-					disabled={ loading || adding || (passkeys?.length ?? 0) >= limit }
-				/>
-				<Button onClick={ add } disabled={ !passkeySupported || loading || adding || password.length === 0 || (passkeys?.length ?? 0) >= limit }>
-					Add passkey
-				</Button>
+				<PasskeyList passkeys={ passkeys } reload={ load } sudoActive={ sudoActive } clearSudoMode={ clearSudoMode } />
+				{
+					sudoActive ? (
+						<Button onClick={ add } disabled={ !passkeySupported || loading || adding || (passkeys?.length ?? 0) >= limit }>
+							Add passkey
+						</Button>
+					) : (
+						<SudoModeButton disabled={ !passkeySupported || loading }>
+							Manage passkeys
+						</SudoModeButton>
+					)
+				}
 			</Column>
 		</fieldset>
 	);
 }
 
-function PasskeyList({ passkeys, reload }: { passkeys: AccountPasskeys | null; reload: () => void; }): ReactElement {
+function PasskeyList({ passkeys, reload, sudoActive, clearSudoMode }: { passkeys: AccountPasskeys | null; reload: () => void; sudoActive: boolean; clearSudoMode: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 
@@ -211,6 +207,8 @@ function PasskeyList({ passkeys, reload }: { passkeys: AccountPasskeys | null; r
 							reload={ reload }
 							confirm={ confirm }
 							directoryConnector={ directoryConnector }
+							sudoActive={ sudoActive }
+							clearSudoMode={ clearSudoMode }
 						/>
 					))
 				}
@@ -224,11 +222,15 @@ function PasskeyRow({
 	reload,
 	confirm,
 	directoryConnector,
+	sudoActive,
+	clearSudoMode,
 }: {
 	passkey: AccountPasskeys[number];
 	reload: () => void;
 	confirm: ReturnType<typeof useConfirmDialog>;
 	directoryConnector: ReturnType<typeof useDirectoryConnector>;
+	sudoActive: boolean;
+	clearSudoMode: () => void;
 }): ReactElement {
 	const [editing, setEditing] = useState(false);
 	const [name, setName] = useState(passkey.name);
@@ -257,6 +259,9 @@ function PasskeyRow({
 				toast('Passkey renamed', TOAST_OPTIONS_SUCCESS);
 				setEditing(false);
 				reload();
+			} else if (result === 'sudoRequired') {
+				clearSudoMode();
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 			} else {
 				toast('Passkey not found', TOAST_OPTIONS_ERROR);
 			}
@@ -273,6 +278,9 @@ function PasskeyRow({
 			if (result === 'ok') {
 				toast('Passkey deleted', TOAST_OPTIONS_SUCCESS);
 				reload();
+			} else if (result === 'sudoRequired') {
+				clearSudoMode();
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 			} else {
 				toast('Passkey not found', TOAST_OPTIONS_ERROR);
 			}
@@ -301,7 +309,7 @@ function PasskeyRow({
 								Cancel
 							</Button>
 						</>
-					) : (
+					) : sudoActive ? (
 						<>
 							<Button className='slim' onClick={ () => setEditing(true) }>
 								Rename
@@ -310,6 +318,8 @@ function PasskeyRow({
 								Delete
 							</Button>
 						</>
+					) : (
+						<span>Locked</span>
 					)
 				}
 			</td>
@@ -499,7 +509,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				break;
 			case 'sudoRequired':
 				clearSudoMode();
-				toast('Please confirm your password again.', TOAST_OPTIONS_ERROR);
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 				break;
 			case 'invalidCryptoKey':
 				toast('Failed to change password: invalid encryption key', TOAST_OPTIONS_ERROR);

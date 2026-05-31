@@ -10,9 +10,9 @@ import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils.ts';
 
 const TEST_CRYPT = {
 	publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWDmwBlEMYi3nu7FsotmBDrHxxaX6rW8SaDQZkXPIAaofK4ZVD01Yac5yrMtX3/dWA8c720sGWQhhyyRkeEBB9Q==',
-	salt: 'salt',
-	iv: 'iv',
-	encryptedPrivateKey: 'encryptedPrivateKey',
+	salt: 'c2FsdA==',
+	iv: 'aXY=',
+	encryptedPrivateKey: 'ZW5jcnlwdGVkUHJpdmF0ZUtleQ==',
 };
 
 describe('ClientConnection', () => {

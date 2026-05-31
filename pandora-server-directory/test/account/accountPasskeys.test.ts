@@ -4,7 +4,6 @@ import type { IAccountPasskeyCredential } from 'pandora-common';
 import {
 	Base64UrlEncode,
 	CreatePasskeyChallenge,
-	CreatePasskeyPrfSalt,
 	ValidatePasskeyRegistration,
 	VerifyPasskeyAssertion,
 } from '../../src/account/accountPasskeys.ts';
@@ -169,7 +168,6 @@ function CreatePasskey(publicKey: Buffer): IAccountPasskeyCredential {
 		created: Date.now(),
 		publicKey: publicKey.toString('base64'),
 		signCount: 0,
-		prfSalt: CreatePasskeyPrfSalt(),
 		cryptoKey: {
 			publicKey: 'public-key',
 			salt: 'salt',

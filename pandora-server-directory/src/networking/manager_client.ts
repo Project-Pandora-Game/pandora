@@ -6,7 +6,7 @@ import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
-import { Base64UrlEncode, CreatePasskeyChallenge, CreatePasskeyPrfSalt, GetPasskeyClientChallenge, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
+import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyClientChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -45,14 +45,6 @@ type LoginOkResult = {
 	account: IDirectoryAccountInfo;
 };
 
-type PasskeyAssertionPurpose = 'login' | 'passwordChange';
-type PasskeyAssertionStart = {
-	rpId: string;
-	challenge: string;
-	credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
-	prfSalt: string;
-	passkeys: IAccountPasskeyInfo[];
-};
 type PasskeyAssertionData = {
 	credentialId: string;
 	clientDataJSON: string;
@@ -131,9 +123,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 			// Account management
 			sudoAuthenticate: this.handleSudoAuthenticate.bind(this),
+			sudoPasskeyStart: this.handleSudoPasskeyStart.bind(this),
+			sudoPasskeyFinish: this.handleSudoPasskeyFinish.bind(this),
 			passwordChange: this.handlePasswordChange.bind(this),
-			passkeyPasswordChangeStart: this.handlePasskeyPasswordChangeStart.bind(this),
-			passkeyPasswordChangeFinish: this.handlePasskeyPasswordChangeFinish.bind(this),
 			logout: this.handleLogout.bind(this),
 			gitHubBind: this.handleGitHubBind.bind(this),
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
@@ -291,21 +283,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private createPasskeyAssertionStart(account: Account, purpose: PasskeyAssertionPurpose): PasskeyAssertionStart | undefined {
-		const passkeys = account.secure.listPasskeys();
-		const first = passkeys[0] != null ? account.secure.getPasskey(passkeys[0].credentialId) : undefined;
-		if (first == null)
-			return undefined;
-
-		return {
-			rpId: PASSKEY_RP_ID,
-			challenge: CreatePasskeyChallenge(account.id, purpose),
-			credentials: this.createPasskeyCredentialDescriptors(account, passkeys),
-			prfSalt: first.prfSalt,
-			passkeys,
-		};
-	}
-
 	private createPasskeyCredentialDescriptors(account: Account, passkeys: IAccountPasskeyInfo[]): { id: string; type: 'public-key'; transports?: string[]; }[] {
 		return passkeys.map((passkey) => ({
 			id: passkey.credentialId,
@@ -314,7 +291,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}));
 	}
 
-	private verifyPasskeyAssertionForAccount(account: Account, purpose: PasskeyAssertionPurpose, data: PasskeyAssertionData, auditAction: string): PasskeyAssertionVerification {
+	private verifyPasskeyAssertionForAccount(account: Account, purpose: 'login' | 'sudo', data: PasskeyAssertionData, auditAction: string): PasskeyAssertionVerification {
 		const passkey = account.secure.getPasskey(data.credentialId);
 		const challenge = GetPasskeyClientChallenge(data.clientDataJSON);
 		if (passkey == null || challenge == null)
@@ -354,8 +331,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			rpId: PASSKEY_RP_ID,
 			challenge: CreatePasskeyChallenge(null, 'login'),
-			credentials: [],
-			prfSalt: CreatePasskeyPrfSalt(),
+			prfSalt: GetPasskeyPrfSalt(),
 		};
 	}
 
@@ -544,6 +520,45 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
+	private handleSudoPasskeyStart(_: IClientDirectoryArgument['sudoPasskeyStart'], connection: ClientConnection): IClientDirectoryResult['sudoPasskeyStart'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const passkeys = connection.account.secure.listPasskeys();
+		if (passkeys.length === 0)
+			return { result: 'noPasskey' };
+
+		return {
+			result: 'ok',
+			rpId: PASSKEY_RP_ID,
+			challenge: CreatePasskeyChallenge(connection.account.id, 'sudo'),
+			credentials: this.createPasskeyCredentialDescriptors(connection.account, passkeys),
+			prfSalt: GetPasskeyPrfSalt(),
+		};
+	}
+
+	private async handleSudoPasskeyFinish({ credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['sudoPasskeyFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['sudoPasskeyFinish'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const verification = this.verifyPasskeyAssertionForAccount(connection.account, 'sudo', {
+			credentialId,
+			clientDataJSON,
+			authenticatorData,
+			signature,
+		}, 'security confirmation');
+		if (!verification.ok)
+			return { result: 'unknownCredential' };
+
+		await connection.account.secure.markPasskeyUsed(credentialId, verification.signCount);
+		const expires = connection.enableSudo();
+		AUDIT_LOG.verbose(`${connection.id} confirmed identity with passkey for ${connection.account.username}`);
+		return {
+			result: 'ok',
+			expires,
+		};
+	}
+
 	private async handlePasswordChange({ passwordSha512New, cryptoKey }: IClientDirectoryArgument['passwordChange'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordChange'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
@@ -557,54 +572,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			logger.debug(`${connection.id} failed to change their password`);
 			return { result };
 		}
-
-		return { result: 'ok' };
-	}
-
-	private handlePasskeyPasswordChangeStart(_: IClientDirectoryArgument['passkeyPasswordChangeStart'], connection: ClientConnection): IClientDirectoryResult['passkeyPasswordChangeStart'] {
-		if (!connection.isLoggedIn())
-			throw new BadMessageError();
-
-		const account = connection.account;
-		const passkeyStart = this.createPasskeyAssertionStart(account, 'passwordChange');
-		if (passkeyStart == null)
-			return { result: 'noPasskey' };
-
-		const { passkeys, ...start } = passkeyStart;
-		return {
-			result: 'ok',
-			...start,
-			cryptoKeys: passkeys.flatMap((passkey) => {
-				const credential = account.secure.getPasskey(passkey.credentialId);
-				return credential == null ? [] : [{
-					credentialId: passkey.credentialId,
-					cryptoKey: credential.cryptoKey,
-				}];
-			}),
-		};
-	}
-
-	private async handlePasskeyPasswordChangeFinish({ passwordSha512New, cryptoKey, credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['passkeyPasswordChangeFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyPasswordChangeFinish'] {
-		if (!connection.isLoggedIn())
-			throw new BadMessageError();
-
-		const account = connection.account;
-		const verification = this.verifyPasskeyAssertionForAccount(account, 'passwordChange', {
-			credentialId,
-			clientDataJSON,
-			authenticatorData,
-			signature,
-		}, 'password change');
-		if (!verification.ok) {
-			return { result: 'unknownCredential' };
-		}
-
-		const result = await account.secure.changePasswordWithPasskey(passwordSha512New, cryptoKey);
-		if (result !== 'ok')
-			return { result };
-
-		await account.secure.markPasskeyUsed(credentialId, verification.signCount);
-		AUDIT_LOG.verbose(`[Account ${account.id}] changed password using passkey`);
 
 		return { result: 'ok' };
 	}
@@ -1287,18 +1254,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handlePasskeyRegisterStart({ passwordSha512 }: IClientDirectoryArgument['passkeyRegisterStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterStart'] {
+	private handlePasskeyRegisterStart(_: IClientDirectoryArgument['passkeyRegisterStart'], connection: ClientConnection): IClientDirectoryResult['passkeyRegisterStart'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.verifyPassword(passwordSha512))
-			return { result: 'invalidPassword' };
+		if (!connection.hasSudo())
+			return { result: 'sudoRequired' };
 
 		const passkeys = connection.account.secure.listPasskeys();
 		if (passkeys.length >= LIMIT_ACCOUNT_PASSKEY_COUNT)
 			return { result: 'limitReached' };
 
-		const existingPasskey = passkeys[0] != null ? connection.account.secure.getPasskey(passkeys[0].credentialId) : undefined;
 		return {
 			result: 'ok',
 			rpId: PASSKEY_RP_ID,
@@ -1313,13 +1279,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				type: 'public-key',
 				transports: connection.account.secure.getPasskey(passkey.credentialId)?.transports,
 			})),
-			prfSalt: existingPasskey?.prfSalt ?? CreatePasskeyPrfSalt(),
+			prfSalt: GetPasskeyPrfSalt(),
 		};
 	}
 
-	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, prfSalt, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
+	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (!connection.hasSudo())
+			return { result: 'sudoRequired' };
 
 		const existingCredentialAccount = await accountManager.loadAccountByPasskeyCredentialId(credentialId);
 		if (existingCredentialAccount != null && existingCredentialAccount !== connection.account)
@@ -1347,7 +1316,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			publicKey,
 			signCount: 0,
 			transports,
-			prfSalt,
 			cryptoKey,
 		});
 		if (result === 'ok') {
@@ -1360,6 +1328,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
+		if (!connection.hasSudo())
+			return { result: 'sudoRequired' };
+
 		const result = await connection.account.secure.deletePasskey(credentialId);
 		if (result === 'ok') {
 			AUDIT_LOG.verbose(`[Account ${connection.account.id}] deleted passkey`);
@@ -1370,6 +1341,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handlePasskeyRename({ credentialId, name }: IClientDirectoryArgument['passkeyRename'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRename'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (!connection.hasSudo())
+			return { result: 'sudoRequired' };
 
 		const result = await connection.account.secure.renamePasskey(credentialId, name.trim());
 		if (result === 'ok') {

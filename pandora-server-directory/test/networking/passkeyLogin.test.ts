@@ -27,13 +27,6 @@ const PASSKEY_WRAPPED_CRYPTO_KEY = {
 	encryptedPrivateKey: 'cGFzc2tleS1lbmNyeXB0ZWQtcHJpdmF0ZS1rZXk=',
 };
 
-const NEW_PASSWORD_CRYPTO_KEY = {
-	...ACCOUNT_CRYPTO_KEY,
-	salt: 'bmV3LXBhc3N3b3JkLXNhbHQ=',
-	iv: 'bmV3LXBhc3N3b3JkLWl2',
-	encryptedPrivateKey: 'bmV3LXBhc3N3b3JkLWVuY3J5cHRlZC1wcml2YXRlLWtleQ==',
-};
-
 describe('passkey login flow', () => {
 	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
 
@@ -68,13 +61,15 @@ describe('passkey login flow', () => {
 			},
 		});
 
-		await expect(connection.awaitResponse('passkeyRegisterStart', {
+		await expect(connection.awaitResponse('passkeyRegisterStart', {})).resolves.toEqual({ result: 'sudoRequired' });
+		await expect(connection.awaitResponse('sudoAuthenticate', {
 			passwordSha512: PrehashPassword('wrong-password'),
 		})).resolves.toEqual({ result: 'invalidPassword' });
-
-		const startRegistration = await connection.awaitResponse('passkeyRegisterStart', {
+		await expect(connection.awaitResponse('sudoAuthenticate', {
 			passwordSha512: PrehashPassword(password),
-		});
+		})).resolves.toMatchObject({ result: 'ok' });
+
+		const startRegistration = await connection.awaitResponse('passkeyRegisterStart', {});
 		expect(startRegistration).toMatchObject({
 			result: 'ok',
 			rpId: RP_ID,
@@ -95,7 +90,6 @@ describe('passkey login flow', () => {
 			clientDataJSON: registration.clientDataJSON,
 			authenticatorData: registration.authenticatorData,
 			transports: ['usb'],
-			prfSalt: startRegistration.prfSalt,
 			cryptoKey: PASSKEY_WRAPPED_CRYPTO_KEY,
 		})).resolves.toEqual({ result: 'ok' });
 
@@ -118,9 +112,9 @@ describe('passkey login flow', () => {
 			throw new Error('Passkey login did not start');
 		expect(startLogin).toMatchObject({
 			rpId: RP_ID,
-			credentials: [],
 			prfSalt: startRegistration.prfSalt,
 		});
+		expect(startLogin).not.toHaveProperty('credentials');
 
 		const assertion = CreateAssertionData(startLogin.challenge, keyPair.privateKey, 12);
 		await expect(connection.awaitResponse('passkeyLoginFinish', {
@@ -148,11 +142,16 @@ describe('passkey login flow', () => {
 			}],
 		});
 
-		const startPasswordChange = await connection.awaitResponse('passkeyPasswordChangeStart', {});
-		expect(startPasswordChange.result).toBe('ok');
-		if (startPasswordChange.result !== 'ok')
-			throw new Error('Passkey password change did not start');
-		expect(startPasswordChange).toMatchObject({
+		await expect(connection.awaitResponse('passkeyRename', {
+			credentialId,
+			name: 'Renamed passkey',
+		})).resolves.toEqual({ result: 'sudoRequired' });
+
+		const sudoStart = await connection.awaitResponse('sudoPasskeyStart', {});
+		expect(sudoStart.result).toBe('ok');
+		if (sudoStart.result !== 'ok')
+			throw new Error('Passkey security confirmation did not start');
+		expect(sudoStart).toMatchObject({
 			rpId: RP_ID,
 			credentials: [{
 				id: credentialId,
@@ -160,28 +159,27 @@ describe('passkey login flow', () => {
 				transports: ['usb'],
 			}],
 			prfSalt: startRegistration.prfSalt,
-			cryptoKeys: [{
-				credentialId,
-				cryptoKey: PASSKEY_WRAPPED_CRYPTO_KEY,
-			}],
 		});
 
-		const passwordChangeAssertion = CreateAssertionData(startPasswordChange.challenge, keyPair.privateKey, 13);
-		await expect(connection.awaitResponse('passkeyPasswordChangeFinish', {
-			passwordSha512New: PrehashPassword('new-test-password'),
-			cryptoKey: NEW_PASSWORD_CRYPTO_KEY,
+		const sudoAssertion = CreateAssertionData(sudoStart.challenge, keyPair.privateKey, 13);
+		await expect(connection.awaitResponse('sudoPasskeyFinish', {
 			credentialId,
-			clientDataJSON: passwordChangeAssertion.clientDataJSON,
-			authenticatorData: passwordChangeAssertion.authenticatorData,
-			signature: passwordChangeAssertion.signature,
+			clientDataJSON: sudoAssertion.clientDataJSON,
+			authenticatorData: sudoAssertion.authenticatorData,
+			signature: sudoAssertion.signature,
+		})).resolves.toMatchObject({
+			result: 'ok',
+			expires: expect.any(Number),
+		});
+
+		await expect(connection.awaitResponse('passkeyRename', {
+			credentialId,
+			name: 'Renamed passkey',
 		})).resolves.toEqual({ result: 'ok' });
 
-		await expect(account.secure.verifyPassword(PrehashPassword(password))).resolves.toBe(false);
-		await expect(account.secure.verifyPassword(PrehashPassword('new-test-password'))).resolves.toBe(true);
-		expect(account.secure.getCryptoKey()).toEqual(NEW_PASSWORD_CRYPTO_KEY);
 		expect(account.secure.listPasskeys()).toEqual([{
 			credentialId,
-			name: 'Integration test passkey',
+			name: 'Renamed passkey',
 			created: expect.any(Number),
 			lastUsed: expect.any(Number),
 		}]);
@@ -194,9 +192,9 @@ describe('passkey login flow', () => {
 			result: 'ok',
 			rpId: RP_ID,
 			challenge: expect.any(String),
-			credentials: [],
 			prfSalt: expect.any(String),
 		});
+		expect(startMissing).not.toHaveProperty('credentials');
 	});
 });
 

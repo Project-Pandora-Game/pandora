@@ -150,7 +150,7 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 				return;
 			case 'sudoRequired':
 				clearSudoMode();
-				toast('Please confirm your password again.', TOAST_OPTIONS_ERROR);
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 				return;
 			case 'failed':
 				toast('Failed to delete the character. Please try again later.', TOAST_OPTIONS_ERROR);

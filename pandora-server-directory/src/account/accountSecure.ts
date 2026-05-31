@@ -130,29 +130,6 @@ export default class AccountSecure {
 		return 'ok';
 	}
 
-	public async changePasswordWithPasskey(passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<'ok' | 'invalidCryptoKey'> {
-		if (
-			!this.isActivated() ||
-			this.#secure.cryptoKey == null ||
-			cryptoKey.publicKey !== this.#secure.cryptoKey.publicKey ||
-			!await this.#validateCryptoKey(cryptoKey)
-		) {
-			return 'invalidCryptoKey';
-		}
-
-		this.#secure.password = await GeneratePasswordHash(passwordNew);
-		this.#secure.cryptoKey = cloneDeep(cryptoKey);
-		// Invalidate all login tokens
-		this.#invalidateToken(AccountTokenReason.LOGIN);
-		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
-
-		await this.#updateDatabase();
-
-		this.#auditLog.info('Password changed using passkey');
-
-		return 'ok';
-	}
-
 	public async resetPassword(email: string): Promise<boolean> {
 		if (!this.verifyEmail(email))
 			return false;

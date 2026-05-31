@@ -132,7 +132,7 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		}
 		if (start.result !== 'ok') {
 			await this.handleAccountChange({ account: null, character: null });
-			return start.result;
+			return 'unknownCredentials';
 		}
 
 		const assertion = await GetPasskeyAssertion(start, assertionOptions);

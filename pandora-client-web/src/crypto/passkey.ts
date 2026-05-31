@@ -25,7 +25,7 @@ type AuthenticatorAttestationResponseWithAuthenticatorData = AuthenticatorAttest
 type PasskeyAssertionStart = {
 	rpId: string;
 	challenge: string;
-	credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+	credentials?: { id: string; type: 'public-key'; transports?: string[]; }[];
 	prfSalt: string;
 };
 type PasskeyRegisterStart = Extract<IClientDirectoryNormalResult['passkeyRegisterStart'], { result: 'ok'; }>;
@@ -90,8 +90,9 @@ export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?
 			},
 		} satisfies PrfAuthenticationExtensionsClientInputs,
 	};
-	if (start.credentials.length > 0) {
-		publicKey.allowCredentials = start.credentials.map((allowedCredential) => ({
+	const allowedCredentials = start.credentials ?? [];
+	if (allowedCredentials.length > 0) {
+		publicKey.allowCredentials = allowedCredentials.map((allowedCredential) => ({
 			...allowedCredential,
 			id: Base64UrlToArray(allowedCredential.id),
 			transports: allowedCredential.transports as AuthenticatorTransport[] | undefined,

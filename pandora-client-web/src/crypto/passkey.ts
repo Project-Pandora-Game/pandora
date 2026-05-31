@@ -77,6 +77,20 @@ export async function IsPasskeyConditionalMediationSupported(): Promise<boolean>
 	return await PublicKeyCredential.isConditionalMediationAvailable();
 }
 
+export async function SignalUnknownPasskeyCredential(rpId: string, credentialId: string): Promise<void> {
+	if (PublicKeyCredential.signalUnknownCredential == null)
+		return;
+
+	try {
+		await PublicKeyCredential.signalUnknownCredential({
+			credentialId,
+			rpId,
+		});
+	} catch {
+		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
+	}
+}
+
 export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?: PasskeyAssertionOptions): Promise<PasskeyAssertionResult> {
 	const publicKey: PublicKeyCredentialRequestOptions = {
 		challenge: Base64UrlToArray(start.challenge),

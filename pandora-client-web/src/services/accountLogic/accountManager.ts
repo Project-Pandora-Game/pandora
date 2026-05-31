@@ -22,7 +22,7 @@ import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
-import { GetPasskeyAssertion, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
+import { GetPasskeyAssertion, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
@@ -144,6 +144,9 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		});
 
 		if (result.result !== 'ok') {
+			if (result.result === 'unknownCredentials') {
+				await SignalUnknownPasskeyCredential(start.rpId, assertion.credentialId);
+			}
 			await this.handleAccountChange({ account: null, character: null });
 			return result.result;
 		}

@@ -592,15 +592,10 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							For demo purposes, please add several front hairs to your character at the same time to proceed.
+							For demo purposes, please add several front hairs to your character at the same time and then press "Next" to proceed.
 						</p>
 					),
-					conditions: [{
-						type: 'elementQuery',
-						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton.allowed',
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'moveItem'),
-					}],
+					conditions: [{ type: 'next' }],
 					highlight: [{
 						query: '.wardrobeAssetList .listContainer',
 					}],
@@ -608,17 +603,15 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Some body parts can be reordered with the up/down buttons in the left list, which
-							contains the current body parts of your character.
-							As usual, only hovering the button previews the change. Feel free to experiment before proceeding.
+							While most body parts have a fixed order, some, such as hairs, can be reordered with the four-way arrow buttons in the left list, or by using the
+							"wear on top"/"wear under" buttons in a body part's edit view when pressing on it. Feel free to experiment before proceeding.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [{
-						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton:not(.invisible)',
-						inset: true,
+						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton.allowed',
 						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'moveItem'),
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type !== 'delete'),
 					}],
 				},
 			],

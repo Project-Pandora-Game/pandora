@@ -405,6 +405,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					character.id,
 					appearance,
 					newState.space,
+					(room, forCharacter) => {
+						return Array.from(originalState.characters.values())
+							.filter((c) => c.id !== forCharacter && c.currentRoom === room.id)
+							.map((c) => c.position.position);
+					},
 					logger,
 				);
 			newState = newState.withCharacter(character.id, characterState);

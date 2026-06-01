@@ -10,13 +10,14 @@ allowBuilds:
   unrs-resolver: true
   core-js-pure: false
 
-updateNotifier: false
-strictPeerDependencies: true
 allowUnusedPatches: false
-verifyDepsBeforeRun: error
-injectWorkspacePackages: false
 forceLegacyDeploy: true
+injectWorkspacePackages: false
+minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
+strictPeerDependencies: true
+updateNotifier: false
+verifyDepsBeforeRun: error
 
 packages:
   - pandora-common

@@ -9,7 +9,7 @@ import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearan
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
 import { BoneType } from '../graphics/index.ts';
-import type { RoomId } from '../index.ts';
+import type { RoomId, RoomPosition } from '../index.ts';
 import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
@@ -360,14 +360,24 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	}
 
 	public static createDefault(assetManager: AssetManager, characterId: CharacterId, spaceState: AssetFrameworkSpaceState): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, undefined);
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, null, undefined);
 	}
 
+	/**
+	 * Load a character state from saved character bundle, potentially fixing it to work correctly if it is outdated.
+	 * @param assetManager - Asset manager for loading assets
+	 * @param characterId - Id of the character that is being loaded
+	 * @param bundle - Bundle to load
+	 * @param globalState - Reference global state for load steps that need access to the space's state. This state is not modified during the load.
+	 * @param logger - Logger to log potential errors or warnings during load
+	 * @returns The loaded state. If the bundle is server one, this always succeeds.
+	 */
 	public static loadFromBundle(
 		assetManager: AssetManager,
 		characterId: CharacterId,
 		bundle: AppearanceBundle | undefined,
 		spaceState: AssetFrameworkSpaceState,
+		getAvoidedRoomPositions: ((room: AssetFrameworkRoomState, forCharacter: CharacterId) => RoomPosition[]) | null,
 		logger: Logger | undefined,
 	): AssetFrameworkCharacterState {
 		const fixup = bundle?.clientOnly !== true;
@@ -384,7 +394,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			position = {
 				type: 'normal',
 				room: roomState.id,
-				position: GenerateInitialRoomPosition(roomState),
+				position: GenerateInitialRoomPosition(
+					roomState,
+					undefined,
+					getAvoidedRoomPositions?.(roomState, characterId),
+				),
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed

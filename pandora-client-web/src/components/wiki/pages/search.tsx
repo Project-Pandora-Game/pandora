@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { StaticRouter } from 'react-router';
 import { useEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Row } from '../../common/container/container.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import '../wiki.scss';
 import { WIKI_PAGES, WikiPageEntry } from '../wikiPageRegistry.ts';
@@ -257,6 +258,9 @@ export function WikiSearch(): ReactElement {
 	return (
 		<div className='wiki-search'>
 			<div className='wiki-search-header'>
+				<Row alignX='end'>
+					<a href='/wiki/' target='_blank' rel='noopener noreferrer'>⧉ Open wiki in a separate window</a>
+				</Row>
 				<h2>Search the Wiki</h2>
 				<p>Find a keyword across all sections of Pandora's wiki or browse it with the tabs on the left.</p>
 			</div>

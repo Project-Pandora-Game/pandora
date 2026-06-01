@@ -224,13 +224,17 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 				if (character == null || character.position.following != null)
 					return;
 
+				const avoid = Array.from(globalState.characters.values())
+					.filter((c) => c.id !== playerId && c.currentRoom === neighborRoom.id)
+					.map((c) => c.position.position);
+
 				execute({
 					type: 'moveCharacter',
 					target: { type: 'character', characterId: playerId },
 					moveTo: {
 						type: 'normal',
 						room: neighborRoom.id,
-						position: GenerateInitialRoomPosition(neighborRoom, neighborRoom.getLinkToRoom(room, true)?.direction),
+						position: GenerateInitialRoomPosition(neighborRoom, neighborRoom.getLinkToRoom(room, true)?.direction, avoid),
 					},
 				});
 			}

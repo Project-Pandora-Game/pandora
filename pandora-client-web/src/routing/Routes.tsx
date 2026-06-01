@@ -1,6 +1,6 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
-import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
-import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router';
+import { ComponentType, lazy, ReactElement, Suspense } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router';
 import { LoadIndicator } from '../components/LoadIndicator/LoadIndicator.tsx';
 import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
 import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
@@ -25,7 +25,6 @@ import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
 import { PublicSpaceSearch } from '../ui/screens/spacesSearch/publicSpaceSearch.tsx';
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
 import { authPagePathsAndComponents } from './authRoutingData.ts';
-import { useNavigatePandora } from './navigate.ts';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management/index.tsx'));
@@ -77,19 +76,16 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 	const isLoggedIn = useCurrentAccount() != null;
 	const hasAuthToken = useAuthTokenIsValid();
 	const location = useLocation();
-	const navigate = useNavigatePandora();
 
-	useEffect(() => {
-		if (!isLoggedIn && !hasAuthToken) {
-			let path = '/login';
-			let options: NavigateOptions = {};
-			if (preserveLocation) {
-				path = `/login?${new URLSearchParams({ redirect: location.pathname }).toString()}`;
-				options = { state: { redirectState: location.state as unknown } };
-			}
-			navigate(path, options);
+	if (!isLoggedIn && !hasAuthToken) {
+		let path = '/login';
+		let state: unknown;
+		if (preserveLocation) {
+			path = `/login?${new URLSearchParams({ redirect: location.pathname }).toString()}`;
+			state = { redirectState: location.state as unknown };
 		}
-	}, [isLoggedIn, hasAuthToken, navigate, location.pathname, location.state, preserveLocation]);
+		return <Navigate to={ path } state={ state } />;
+	}
 
 	return (
 		<>

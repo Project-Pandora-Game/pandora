@@ -9,7 +9,7 @@ import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearan
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
 import { BoneType } from '../graphics/index.ts';
-import type { AssetFrameworkGlobalState, RoomId } from '../index.ts';
+import type { RoomId, RoomPosition } from '../index.ts';
 import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
@@ -359,8 +359,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		});
 	}
 
-	public static createDefault(assetManager: AssetManager, characterId: CharacterId, globalState: AssetFrameworkGlobalState): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, globalState, undefined);
+	public static createDefault(assetManager: AssetManager, characterId: CharacterId, spaceState: AssetFrameworkSpaceState): AssetFrameworkCharacterState {
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, null, undefined);
 	}
 
 	/**
@@ -376,7 +376,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		assetManager: AssetManager,
 		characterId: CharacterId,
 		bundle: AppearanceBundle | undefined,
-		globalState: AssetFrameworkGlobalState,
+		spaceState: AssetFrameworkSpaceState,
+		getAvoidedRoomPositions: ((room: AssetFrameworkRoomState, forCharacter: CharacterId) => RoomPosition[]) | null,
 		logger: Logger | undefined,
 	): AssetFrameworkCharacterState {
 		const fixup = bundle?.clientOnly !== true;
@@ -385,20 +386,19 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		// Load space position
 		let position = freeze(bundle.position, true);
-		let roomState: AssetFrameworkRoomState | null = globalState.space.getRoom(position.room);
-		if (globalState.space.spaceId !== bundle.space || roomState == null) {
+		let roomState: AssetFrameworkRoomState | null = spaceState.getRoom(position.room);
+		if (spaceState.spaceId !== bundle.space || roomState == null) {
 			Assert(fixup, 'DESYNC: Character is in different space or unknown room');
-			Assert(globalState.space.rooms.length > 0);
-			roomState = globalState.space.rooms[0];
-			const roomId = roomState.id;
-			const avoid = Array.from(globalState.characters.values())
-				.filter((c) => c.id !== characterId && c.currentRoom === roomId)
-				.map((c) => c.position.position);
-
+			Assert(spaceState.rooms.length > 0);
+			roomState = spaceState.rooms[0];
 			position = {
 				type: 'normal',
 				room: roomState.id,
-				position: GenerateInitialRoomPosition(roomState, undefined, avoid),
+				position: GenerateInitialRoomPosition(
+					roomState,
+					undefined,
+					getAvoidedRoomPositions?.(roomState, characterId),
+				),
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed
@@ -407,14 +407,10 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			const positionValid = position.type === 'normal' ? IsValidRoomPosition(roomState.roomBackground, position.position) :
 				AssertNever(position.type);
 			if (!positionValid) {
-				const roomId = roomState.id;
-				const avoid = Array.from(globalState.characters.values())
-					.filter((c) => c.id !== characterId && c.currentRoom === roomId)
-					.map((c) => c.position.position);
 				position = {
 					type: 'normal',
 					room: roomState.id,
-					position: GenerateInitialRoomPosition(roomState, undefined, avoid),
+					position: GenerateInitialRoomPosition(roomState),
 				};
 			}
 		}
@@ -479,12 +475,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				restrictionOverride: bundle.restrictionOverride,
 				attemptingAction: bundle.attemptingAction ?? null,
 				position,
-				space: globalState.space.spaceId,
+				space: spaceState.spaceId,
 			}).updateRoomStateLink(roomState, true),
 			true,
 		);
 
-		Assert(resultState.isValid(globalState.space), 'State is invalid after load');
+		Assert(resultState.isValid(spaceState), 'State is invalid after load');
 
 		return resultState;
 	}

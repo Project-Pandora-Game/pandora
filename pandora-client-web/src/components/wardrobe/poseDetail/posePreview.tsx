@@ -1,7 +1,6 @@
 import type { Immutable } from 'immer';
 import {
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalState,
 	AssetFrameworkSpaceState,
 	AssetsPosePreset,
 	CharacterSize,
@@ -69,9 +68,8 @@ export async function GeneratePosePreview(
 	const pose = MergePartialAppearancePoses(preset, preset.optional);
 
 	const spaceState = AssetFrameworkSpaceState.createDefault(assetManager, null);
-	const previewGlobalState = AssetFrameworkGlobalState.createDefault(assetManager, spaceState);
 	const previewCharacterState = AssetFrameworkCharacterState
-		.createDefault(assetManager, 'c0', previewGlobalState)
+		.createDefault(assetManager, 'c0', spaceState)
 		.produceWithPose(preview.basePose ?? {}, 'pose')
 		.produceWithPose(pose, 'pose');
 

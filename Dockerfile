@@ -21,7 +21,7 @@ RUN corepack prepare
 COPY . ./
 
 RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
-	pnpm install -r --frozen-lockfile
+	pnpm install -r --frozen-lockfile --trust-lockfile
 
 # Build
 RUN pnpm -r --filter pandora-common --filter 'pandora-server-*' run build

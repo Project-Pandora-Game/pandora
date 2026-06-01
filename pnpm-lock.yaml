@@ -239,8 +239,8 @@ importers:
         specifier: 29.4.9
         version: 29.4.9(patch_hash=393928a5d8be7635b45d5a1df86a33883ee2fea22189b7b373854f7581faaaa1)(@babel/core@7.29.0)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.0))(jest-util@30.4.1)(jest@30.4.2(@types/node@24.12.4))(typescript@6.0.3)
       ts-loader:
-        specifier: 9.5.7
-        version: 9.5.7(typescript@6.0.3)(webpack@5.107.0)
+        specifier: 9.6.0
+        version: 9.6.0(loader-utils@2.0.4)(typescript@6.0.3)(webpack@5.107.0)
       ts-mockito:
         specifier: 2.6.1
         version: 2.6.1
@@ -5855,12 +5855,16 @@ packages:
       jest-util:
         optional: true
 
-  ts-loader@9.5.7:
-    resolution: {integrity: sha512-/ZNrKgA3K3PtpMYOC71EeMWIloGw3IYEa5/t1cyz2r5/PyUwTXGzYJvcD3kfUvmhlfpz1rhV8B2O6IVTQ0avsg==}
+  ts-loader@9.6.0:
+    resolution: {integrity: sha512-dsJO0S+T7grTDWTc4a0nTygXGjKncVUpx8Y+af8EvI/D5WgTJby5UEk5eoMCB9EcLQmnvitqh99MqtjtHgAwFQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
+      loader-utils: '*'
       typescript: '*'
-      webpack: ^5.0.0
+      webpack: ^4.0.0 || ^5.0.0
+    peerDependenciesMeta:
+      loader-utils:
+        optional: true
 
   ts-mixer@6.0.4:
     resolution: {integrity: sha512-ufKpbmrugz5Aou4wcr5Wc1UUFWOLhq+Fm6qa6P0w0K5Qw2yhaUoiWszhCVuNQyNwrlGiscHOmqYoAox1PtvgjA==}
@@ -12705,15 +12709,17 @@ snapshots:
       babel-jest: 30.4.1(@babel/core@7.29.0)
       jest-util: 30.4.1
 
-  ts-loader@9.5.7(typescript@6.0.3)(webpack@5.107.0):
+  ts-loader@9.6.0(loader-utils@2.0.4)(typescript@6.0.3)(webpack@5.107.0):
     dependencies:
       chalk: 4.1.2
-      enhanced-resolve: 5.21.2
+      enhanced-resolve: 5.21.5
       micromatch: 4.0.8
       semver: 7.8.0
       source-map: 0.7.6
       typescript: 6.0.3
       webpack: 5.107.0(postcss@8.5.14)(webpack-cli@7.0.2)
+    optionalDependencies:
+      loader-utils: 2.0.4
 
   ts-mixer@6.0.4: {}
 

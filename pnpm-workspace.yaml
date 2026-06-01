@@ -4,7 +4,6 @@ overrides:
 patchedDependencies:
   pixi.js@8.18.1: patches/pixi.js@8.18.1.patch
   react-switch: patches/react-switch.patch
-  ts-jest@29.4.9: patches/ts-jest@29.4.9.patch
 allowBuilds:
   argon2: true
   unrs-resolver: true

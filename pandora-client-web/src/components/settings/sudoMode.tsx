@@ -180,12 +180,20 @@ export function SudoDialog({ hide }: {
 				return;
 
 			const assertion = await GetPasskeyAssertion(start, { mediation: 'conditional', signal });
-			return await directoryConnector.awaitResponse('sudoPasskeyFinish', {
+			const response = await directoryConnector.awaitResponse('sudoPasskeyFinish', {
 				credentialId: assertion.credentialId,
 				clientDataJSON: assertion.clientDataJSON,
 				authenticatorData: assertion.authenticatorData,
 				signature: assertion.signature,
 			});
+			switch (response.result) {
+				case 'ok':
+					confirmIdentity(response.expires);
+					break;
+				case 'unknownCredential':
+					toast('Passkey confirmation failed', TOAST_OPTIONS_ERROR);
+					break;
+			}
 		})()
 			.catch((error) => {
 				if (signal.aborted || (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')))
@@ -200,7 +208,7 @@ export function SudoDialog({ hide }: {
 				conditionalPasskeyAbort.current = null;
 			}
 		};
-	}, [authValid, directoryConnector, passkeySupport.conditional]);
+	}, [authValid, confirmIdentity, directoryConnector, passkeySupport.conditional]);
 
 	if (!auth) {
 		return null;

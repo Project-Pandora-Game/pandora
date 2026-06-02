@@ -6,7 +6,7 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { IsPasskeyConditionalMediationSupported, IsPasskeySupported } from '../../../crypto/passkey.ts';
 import { Button } from '../../common/button/button.tsx';
-import { DivContainer } from '../../common/container/container.tsx';
+import { Column, DivContainer } from '../../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage.tsx';
 import { useAuthToken } from '../../gameContext/directoryConnectorContextProvider.tsx';
@@ -119,7 +119,7 @@ export function LoginForm(): ReactElement {
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<div className='login-actions'>
+			<Column className='fill-x'>
 				<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
 				{
 					passkeySupport.supported ? (
@@ -136,7 +136,7 @@ export function LoginForm(): ReactElement {
 						</Button>
 					) : null
 				}
-			</div>
+			</Column>
 			<FormLink to='/forgot_password'>Forgot your password?</FormLink>
 			<FormLink to='/register'>Not a member? <strong>Sign up</strong></FormLink>
 		</Form>

@@ -119,6 +119,9 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		const { secondFactor, ...assertionOptions } = options ?? {};
 		const start = await directoryConnector.awaitResponse('passkeyLoginStart', { secondFactor });
 		if (start.result === 'secondFactorRequired' || start.result === 'secondFactorInvalid') {
+			if (options?.mediation === 'conditional') {
+				throw new Error('Conditional sign in aborted, because server requested second factor during start');
+			}
 			if (this.secondFactorHandler) {
 				const nextSecondFactor = await this.secondFactorHandler(start);
 				if (nextSecondFactor) {

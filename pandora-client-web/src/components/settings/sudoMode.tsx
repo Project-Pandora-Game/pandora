@@ -1,11 +1,12 @@
 import { GetLogger } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { PrehashPassword } from '../../crypto/helpers.ts';
 import { GetPasskeyAssertion, IsPasskeyConditionalMediationSupported, IsPasskeySupported } from '../../crypto/passkey.ts';
+import { Observable, useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { Button, ButtonTheme } from '../common/button/button.tsx';
 import { Column } from '../common/container/container.tsx';
@@ -14,43 +15,18 @@ import { ModalDialog } from '../dialog/dialog.tsx';
 import { useAuthToken, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import './sudoMode.scss';
 
-let sudoExpires = 0;
-const sudoListeners = new Set<() => void>();
-
-function GetSudoSnapshot(): number {
-	return sudoExpires;
-}
-
-function SubscribeSudo(listener: () => void): () => void {
-	sudoListeners.add(listener);
-	return () => {
-		sudoListeners.delete(listener);
-	};
-}
-
-function SetSudoExpires(expires: number): void {
-	sudoExpires = expires;
-	for (const listener of sudoListeners) {
-		listener();
-	}
-}
-
-function ClearSudoMode(): void {
-	SetSudoExpires(0);
-}
+const SudoExpires = new Observable(0);
 
 export function useSudoMode(): {
 	sudoActive: boolean;
 	sudoExpires: number;
-	clearSudoMode: () => void;
 } {
-	const expires = useSyncExternalStore(SubscribeSudo, GetSudoSnapshot, GetSudoSnapshot);
+	const expires = useObservable(SudoExpires);
 	const now = useCurrentTime(1000);
 
 	return {
 		sudoActive: expires > now,
 		sudoExpires: expires,
-		clearSudoMode: ClearSudoMode,
 	};
 }
 
@@ -97,7 +73,7 @@ export function SudoDialog({ hide }: {
 	const conditionalPasskeyAbort = useRef<AbortController | null>(null);
 
 	const confirmIdentity = useCallback((expires: number) => {
-		SetSudoExpires(expires);
+		SudoExpires.value = expires;
 		setPassword('');
 		hide();
 		toast('Access confirmed', TOAST_OPTIONS_SUCCESS);

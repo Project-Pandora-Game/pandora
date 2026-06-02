@@ -10,8 +10,21 @@ export function ArrayToBase64(array: Iterable<number> | ArrayLike<number>): stri
 	return btoa(String.fromCharCode(...Array.from(array)));
 }
 
+export function ArrayToBase64Url(data: ArrayBuffer): string {
+	return ArrayToBase64(new Uint8Array(data))
+		.replaceAll('+', '-')
+		.replaceAll('/', '_')
+		.replaceAll('=', '');
+}
+
 export function Base64ToArray(str: string): Uint8Array<ArrayBuffer> {
 	return new Uint8Array(Array.from(atob(str).split(''), (c) => c.charCodeAt(0)));
+}
+
+export function Base64UrlToArray(data: string): Uint8Array<ArrayBuffer> {
+	const normalized = data.replaceAll('-', '+').replaceAll('_', '/');
+	const padding = '='.repeat((4 - normalized.length % 4) % 4);
+	return Base64ToArray(normalized + padding);
 }
 
 export async function HashSHA512Base64(text: string) {

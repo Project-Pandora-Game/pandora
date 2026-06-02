@@ -1,5 +1,5 @@
 import type { IClientDirectoryNormalResult } from 'pandora-common';
-import { ArrayToBase64 } from './helpers.ts';
+import { ArrayToBase64, ArrayToBase64Url, Base64UrlToArray } from './helpers.ts';
 
 type PasskeyAssertionStart = {
 	rpId: string;
@@ -269,17 +269,4 @@ function ParseCborInitialByte(byte: number): { major: number; additional: number
 		// eslint-disable-next-line no-bitwise -- CBOR stores additional info in the low 5 bits.
 		additional: byte & CBOR_ADDITIONAL_INFO_MASK,
 	};
-}
-
-function Base64UrlToArray(data: string): Uint8Array<ArrayBuffer> {
-	const normalized = data.replaceAll('-', '+').replaceAll('_', '/');
-	const padding = '='.repeat((4 - normalized.length % 4) % 4);
-	return new Uint8Array(Array.from(atob(normalized + padding), (c) => c.charCodeAt(0)));
-}
-
-function ArrayToBase64Url(data: ArrayBuffer): string {
-	return ArrayToBase64(new Uint8Array(data))
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replaceAll('=', '');
 }

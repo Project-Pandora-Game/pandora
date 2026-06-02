@@ -323,8 +323,8 @@ importers:
         specifier: 3.1057.0
         version: 3.1057.0
       '@aws-sdk/credential-provider-node':
-        specifier: 3.972.44
-        version: 3.972.44
+        specifier: 3.972.45
+        version: 3.972.45
       '@octokit/auth-oauth-app':
         specifier: 9.0.3
         version: 9.0.3
@@ -362,8 +362,8 @@ importers:
         specifier: 5.1.11
         version: 5.1.11
       nodemailer:
-        specifier: 8.0.8
-        version: 8.0.8
+        specifier: 8.0.9
+        version: 8.0.9
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -629,8 +629,8 @@ packages:
     resolution: {integrity: sha512-MZQv4SNjByk1iOKmrqmzcUF/uCB05wjvEHyXKxmGQTUANTIVayX6HPUF0bzkWLvtnkH7sAn9kUCfkXbSpj9sDA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/credential-provider-node@3.972.44':
-    resolution: {integrity: sha512-sDaBIT0yrNNIPfvlsiTCmANm07zKju+ipWODjEXgZlsjMeIJR3LVp7RDyAOzUoAsTbDfYKDWp+i5WrFiQP6rmQ==}
+  '@aws-sdk/credential-provider-node@3.972.45':
+    resolution: {integrity: sha512-3YCv52ExXIRz3LAVNysevd+s7akSpg9dl39v9LJ7dOQH+s5rHi3jMZYQyxwMmglxQGMuzYRfQ0o1VSP2UOlIRw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-node@3.972.47':
@@ -4496,8 +4496,8 @@ packages:
     resolution: {integrity: sha512-0PF8Yb1yZuQfQbq+5/pZJrtF6WQcjTd5/S4JOHs9PGFxuTqoB/icwuB44pOdURHJbRKX1PPoJZtY7R4VUoCC8w==}
     engines: {node: '>=6.0.0'}
 
-  nodemailer@8.0.8:
-    resolution: {integrity: sha512-p+XsnzXGdtIHXUu2ugxdfG+eX2nehsGhMjW9h0CWj1BhE30hrFz0kh0yIM0/VjUgVsRrDj+80ZO+I1nSkGE4tA==}
+  nodemailer@8.0.9:
+    resolution: {integrity: sha512-5ofa7BUN8+C+Hckh5V2GjeeOGRQBx0CJQA6KxrvuZfC8iU4/q7sLn8XrtEEhJkjV6HdyIiQs7Bba6bTao8JhkA==}
     engines: {node: '>=6.0.0'}
 
   nodemon@3.1.14:
@@ -6329,7 +6329,7 @@ snapshots:
       '@smithy/types': 4.14.2
       tslib: 2.8.1
 
-  '@aws-sdk/credential-provider-node@3.972.44':
+  '@aws-sdk/credential-provider-node@3.972.45':
     dependencies:
       '@aws-sdk/credential-provider-env': 3.972.41
       '@aws-sdk/credential-provider-http': 3.972.43
@@ -10943,7 +10943,7 @@ snapshots:
 
   nodemailer@8.0.5: {}
 
-  nodemailer@8.0.8: {}
+  nodemailer@8.0.9: {}
 
   nodemon@3.1.14:
     dependencies:

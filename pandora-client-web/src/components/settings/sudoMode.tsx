@@ -64,7 +64,7 @@ export function SudoModeButton({
 }
 
 export function SudoDialog({ hide }: {
-	hide: () => void;
+	hide: (success: boolean) => void;
 }): ReactElement | null {
 	const id = useId();
 	const auth = useAuthToken();
@@ -81,7 +81,7 @@ export function SudoDialog({ hide }: {
 	const confirmIdentity = useCallback((expires: number) => {
 		SudoExpires.value = expires;
 		setPassword('');
-		hide();
+		hide(true);
 		toast('Access confirmed', TOAST_OPTIONS_SUCCESS);
 	}, [hide]);
 
@@ -265,7 +265,12 @@ export function SudoDialog({ hide }: {
 						) : null }
 					</Column>
 					<hr className='fill-x' />
-					<Button onClick={ hide } disabled={ processing }>
+					<Button
+						onClick={ () => {
+							hide(false);
+						} }
+						disabled={ processing }
+					>
 						Cancel
 					</Button>
 				</Column>

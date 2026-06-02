@@ -1,8 +1,9 @@
 import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../common/userInteraction/select/select.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
@@ -15,7 +16,7 @@ import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
-import { SudoModeButton, useSudoMode } from './sudoMode.tsx';
+import { SudoDialog, useSudoMode } from './sudoMode.tsx';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigatePandora();
@@ -105,35 +106,54 @@ function Preview(): ReactElement {
 }
 
 function DeleteCharacter({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
-	const [stage, setStage] = React.useState(0);
+	const [dialogVisible, setDialogVisible] = useState(false);
+	const { sudoActive, clearSudoMode } = useSudoMode();
 
 	return (
 		<fieldset>
 			<legend>Character deletion</legend>
 			<Column>
-				<label>This action is irreversible, there is no going back. Please be certain.</label>
-				<Button theme='danger' onClick={ () => setStage(1) }>
+				<span>Permanently delete this character</span>
+				<Button theme='danger' onClick={ () => setDialogVisible(true) }>
 					Delete this character
 				</Button>
-				<DeleteCharacterDialog playerData={ playerData } stage={ stage } setStage={ setStage } />
+				{ dialogVisible ? (
+					sudoActive ? (
+						<DeleteCharacterDialog
+							playerData={ playerData }
+							close={ () => {
+								setDialogVisible(false);
+							} }
+							onSudoFailed={ clearSudoMode }
+						/>
+					) : (
+						<SudoDialog
+							hide={ (success) => {
+								if (!success) {
+									setDialogVisible(false);
+								}
+							} }
+						/>
+					)
+				) : null }
 			</Column>
 		</fieldset>
 	);
 }
 
-function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
+function DeleteCharacterDialog({ playerData, close, onSudoFailed }: {
+	playerData: Readonly<ICharacterPrivateData>;
+	close: () => void;
+	onSudoFailed: () => void;
+}): ReactElement | null {
 	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
-	const { sudoActive, clearSudoMode } = useSudoMode();
-	const [character, setCharacter] = React.useState('');
 
-	const onReset = React.useCallback(() => {
-		setCharacter('');
-		setStage(0);
-	}, [setStage]);
+	const [characterName, setCharacterName] = useState('');
+	const [confirmed, setConfirmed] = useState(false);
 
 	const [deleteCharacter, isDeleting] = useAsyncEvent(async () => {
-		if (character !== playerData.name)
+		if (characterName !== playerData.name || !confirmed)
 			return null;
 
 		const id = playerData.id;
@@ -145,11 +165,11 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 		switch (response.result) {
 			case 'ok':
 				toast('Character deleted', TOAST_OPTIONS_SUCCESS);
-				onReset();
+				close();
 				navigate('/character/select');
 				return;
 			case 'sudoRequired':
-				clearSudoMode();
+				onSudoFailed();
 				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 				return;
 			case 'failed':
@@ -159,61 +179,12 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 				AssertNever(response.result);
 		}
 	}, {
+		updateAfterUnmount: true,
 		errorHandler: (error) => {
 			const detail = error instanceof Error ? error.message : String(error);
 			toast(`Failed to delete the character:\n${detail}`, TOAST_OPTIONS_ERROR);
 		},
 	});
-
-	const toStage2 = React.useCallback(() => {
-		if (character !== playerData.name) {
-			toast('Invalid character name', TOAST_OPTIONS_ERROR);
-			return;
-		}
-		setStage(2);
-	}, [character, playerData.name, setStage]);
-
-	if (stage < 1)
-		return null;
-
-	if (stage < 2) {
-		return (
-			<ModalDialog>
-				<Column>
-					<h3>
-						Delete character: { playerData.name } ({ playerData.id })?
-					</h3>
-					<span>
-						This will permanently delete the character and all associated data.
-					</span>
-					<span>
-						This action is irreversible, there is no going back.
-					</span>
-					<br />
-					<label htmlFor='character'>Enter your character name:</label>
-					<TextInput
-						id='character'
-						aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
-						value={ character }
-						onChange={ setCharacter }
-					/>
-					<br />
-					<Row>
-						<Button onClick={ onReset }>
-							Cancel
-						</Button>
-						<Button
-							theme='danger'
-							onClick={ toStage2 }
-							disabled={ character !== playerData.name }
-						>
-							I have read and understood these effects
-						</Button>
-					</Row>
-				</Column>
-			</ModalDialog>
-		);
-	}
 
 	return (
 		<ModalDialog>
@@ -221,38 +192,39 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 				<h3>
 					Delete character: { playerData.name } ({ playerData.id })?
 				</h3>
-				{
-					sudoActive ? (
-						<span>
-							Deleting this character cannot be undone.
-						</span>
-					) : (
-						<span>
-							One more security check is required before deleting this character.
-						</span>
-					)
-				}
-				<Row>
-					<Button onClick={ onReset }>
+				<span>
+					This will permanently delete the character and all associated data.
+				</span>
+				<strong>
+					This action is irreversible, there is no going back.
+				</strong>
+				<br />
+				<label htmlFor='character'>Enter your character name:</label>
+				<TextInput
+					id='character'
+					aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
+					value={ characterName }
+					onChange={ setCharacterName }
+				/>
+				<br />
+				<label>
+					<Row>
+						<Checkbox checked={ confirmed } onChange={ setConfirmed } />
+						<span>I have read and understood these effects</span>
+					</Row>
+				</label>
+				<br />
+				<Row alignX='space-between' gap='large'>
+					<Button onClick={ close }>
 						Cancel
 					</Button>
-					{
-						sudoActive ? (
-							<Button
-								theme='danger'
-								onClick={ () => {
-									deleteCharacter();
-								} }
-								disabled={ isDeleting }
-							>
-								Delete this character
-							</Button>
-						) : (
-							<SudoModeButton theme='danger'>
-								Continue deleting character
-							</SudoModeButton>
-						)
-					}
+					<Button
+						theme='danger'
+						onClick={ deleteCharacter }
+						disabled={ characterName !== playerData.name || !confirmed || isDeleting }
+					>
+						Delete this character
+					</Button>
 				</Row>
 			</Column>
 		</ModalDialog>

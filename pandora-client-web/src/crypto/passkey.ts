@@ -1,27 +1,6 @@
 import type { IClientDirectoryNormalResult } from 'pandora-common';
 import { ArrayToBase64 } from './helpers.ts';
 
-type PrfAuthenticationExtensionsClientInputs = AuthenticationExtensionsClientInputs & {
-	prf?: {
-		eval?: {
-			first: BufferSource;
-		};
-	};
-};
-
-type PrfAuthenticationExtensionsClientOutputs = AuthenticationExtensionsClientOutputs & {
-	prf?: {
-		enabled?: boolean;
-		results?: {
-			first?: ArrayBuffer;
-		};
-	};
-};
-
-type AuthenticatorAttestationResponseWithAuthenticatorData = AuthenticatorAttestationResponse & {
-	getAuthenticatorData?: () => ArrayBuffer;
-};
-
 type PasskeyAssertionStart = {
 	rpId: string;
 	challenge: string;
@@ -102,7 +81,7 @@ export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?
 					first: Base64UrlToArray(start.prfSalt),
 				},
 			},
-		} satisfies PrfAuthenticationExtensionsClientInputs,
+		},
 	};
 	const allowedCredentials = start.credentials ?? [];
 	if (allowedCredentials.length > 0) {
@@ -122,7 +101,7 @@ export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?
 	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse))
 		throw new Error('Unexpected passkey assertion response');
 
-	const prf = credential.getClientExtensionResults() as PrfAuthenticationExtensionsClientOutputs;
+	const prf = credential.getClientExtensionResults();
 
 	return {
 		credentialId: ArrayToBase64Url(credential.rawId),
@@ -164,7 +143,7 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 						first: Base64UrlToArray(start.prfSalt),
 					},
 				},
-			} satisfies PrfAuthenticationExtensionsClientInputs,
+			},
 		},
 	});
 
@@ -176,7 +155,7 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 		throw new Error('Browser did not expose passkey public key');
 
 	const transports = credential.response.getTransports?.() as AuthenticatorTransport[] | undefined;
-	const prf = credential.getClientExtensionResults() as PrfAuthenticationExtensionsClientOutputs;
+	const prf = credential.getClientExtensionResults();
 	const wrappingSecret = GetPrfWrappingSecretOrNull(prf) ?? await GetPrfSecretForNewCredential(start, {
 		id: credential.rawId,
 		type: 'public-key',
@@ -206,18 +185,18 @@ async function GetPrfSecretForNewCredential(start: PasskeyRegisterStart, credent
 						first: Base64UrlToArray(start.prfSalt),
 					},
 				},
-			} satisfies PrfAuthenticationExtensionsClientInputs,
+			},
 		},
 	});
 
 	if (!(assertion instanceof PublicKeyCredential) || !(assertion.response instanceof AuthenticatorAssertionResponse))
 		throw new Error('Unexpected passkey PRF assertion response');
 
-	const prf = assertion.getClientExtensionResults() as PrfAuthenticationExtensionsClientOutputs;
+	const prf = assertion.getClientExtensionResults();
 	return GetPrfWrappingSecret(prf);
 }
 
-function GetPrfWrappingSecret(prf: PrfAuthenticationExtensionsClientOutputs): string {
+function GetPrfWrappingSecret(prf: AuthenticationExtensionsClientOutputs): string {
 	const wrappingSecret = GetPrfWrappingSecretOrNull(prf);
 	if (wrappingSecret == null)
 		throw new Error('Passkey PRF extension is required for passwordless DM key unlock');
@@ -225,14 +204,19 @@ function GetPrfWrappingSecret(prf: PrfAuthenticationExtensionsClientOutputs): st
 	return wrappingSecret;
 }
 
-function GetPrfWrappingSecretOrNull(prf: PrfAuthenticationExtensionsClientOutputs): string | null {
+function GetPrfWrappingSecretOrNull(prf: AuthenticationExtensionsClientOutputs): string | null {
 	const { prf: prfOutput } = prf;
 	const first = prfOutput?.results?.first;
-	return first == null ? null : ArrayToBase64(new Uint8Array(first));
+	if (first == null)
+		return null;
+	if (first instanceof ArrayBuffer)
+		return ArrayToBase64(new Uint8Array(first));
+
+	return ArrayToBase64(new Uint8Array(first.buffer, first.byteOffset, first.byteLength));
 }
 
 function GetAuthenticatorData(response: AuthenticatorAttestationResponse): ArrayBuffer {
-	const authenticatorData = (response as AuthenticatorAttestationResponseWithAuthenticatorData).getAuthenticatorData?.();
+	const authenticatorData = response.getAuthenticatorData?.();
 	if (authenticatorData != null) {
 		return authenticatorData;
 	}

@@ -1,5 +1,5 @@
 import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
@@ -19,7 +19,7 @@ import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog, useConfirmDialog } from '../dialog/dialog.tsx';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { useAuthToken, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { SudoModeButton, useSudoMode } from './sudoMode.tsx';
 
 export function SecuritySettings(): ReactElement | null {
@@ -480,8 +480,10 @@ interface PasswordChangeFormData {
 	newPasswordConfirm: string;
 }
 
-function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): ReactElement | null {
+	const id = useId();
 	const directoryConnector = useDirectoryConnector();
+	const auth = useAuthToken();
 	const directMessageManager = useService('directMessageManager');
 	const { sudoActive, clearSudoMode } = useSudoMode();
 
@@ -519,50 +521,63 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 		}
 	});
 
+	if (!auth)
+		return null;
+
 	return (
 		<fieldset>
 			<legend>Password change</legend>
 			{
 				sudoActive ? (
 					<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
-						<FormField>
-							<label htmlFor='password-change-new'>New password</label>
-							<FormInput
-								type='password'
-								id='password-change-new'
-								autoComplete='new-password'
-								register={ register }
-								name='newPassword'
-								options={ {
-									required: 'New password is required',
-									validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
-								} }
-							/>
-							{
-								DEVELOPMENT ? (
+						<Column>
+							<FormField>
+								<label htmlFor={ `${id}-username` }>Username</label>
+								<TextInput
+									id={ `${id}-username` }
+									autoComplete='username'
+									readOnly
+									value={ auth.username }
+								/>
+								<FormFieldError error={ undefined } />
+							</FormField>
+							<FormField>
+								<label htmlFor={ `${id}-new` }>New password</label>
+								<FormInput
+									type='password'
+									id={ `${id}-new` }
+									autoComplete='new-password'
+									register={ register }
+									name='newPassword'
+									options={ {
+										required: 'New password is required',
+										validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
+									} }
+								/>
+								{ DEVELOPMENT ? (
 									<em>Running in development mode.<br />Password restrictions are disabled.</em>
-								) : null
-							}
-							<FormFieldError error={ errors.newPassword } />
-						</FormField>
-						<FormField>
-							<label htmlFor='password-change-new-confirm'>Confirm new password</label>
-							<FormInput
-								type='password'
-								id='password-change-new-confirm'
-								autoComplete='new-password'
-								register={ register }
-								name='newPasswordConfirm'
-								options={ {
-									required: 'New password confirmation is required',
-									validate: (newPasswordConfirm) => {
-										const newPassword = getValues('newPassword');
-										return (newPasswordConfirm === newPassword) || 'Passwords do not match';
-									},
-								} }
-							/>
-							<FormFieldError error={ errors.newPasswordConfirm } />
-						</FormField>
+								) : null }
+								<FormFieldError error={ errors.newPassword } />
+							</FormField>
+							<FormField>
+								<label htmlFor={ `${id}-new-confirm` }>Confirm new password</label>
+								<FormInput
+									type='password'
+									id={ `${id}-new-confirm` }
+									autoComplete='new-password'
+									register={ register }
+									name='newPasswordConfirm'
+									options={ {
+										required: 'New password confirmation is required',
+										validate: (newPasswordConfirm) => {
+											const newPassword = getValues('newPassword');
+											return (newPasswordConfirm === newPassword) || 'Passwords do not match';
+										},
+									} }
+								/>
+								<FormFieldError error={ errors.newPasswordConfirm } />
+							</FormField>
+						</Column>
 						<Button type='submit' disabled={ isSubmitting }>Change password</Button>
 					</Form>
 				) : (

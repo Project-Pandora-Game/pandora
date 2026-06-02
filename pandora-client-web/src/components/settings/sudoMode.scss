@@ -1,0 +1,11 @@
+.SudoDialog {
+	.title {
+		align-self: safe center;
+		margin: 0;
+	}
+
+	.footer-tip {
+		min-width: min(80vw, 25em);
+		contain: inline-size;
+	}
+}

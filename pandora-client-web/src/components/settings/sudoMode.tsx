@@ -1,16 +1,18 @@
-import React, { ReactElement, ReactNode, useSyncExternalStore } from 'react';
+import { GetLogger } from 'pandora-common';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { PrehashPassword } from '../../crypto/helpers.ts';
-import { GetPasskeyAssertion, IsPasskeySupported } from '../../crypto/passkey.ts';
+import { GetPasskeyAssertion, IsPasskeyConditionalMediationSupported, IsPasskeySupported } from '../../crypto/passkey.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { Button, ButtonTheme } from '../common/button/button.tsx';
-import { Column, Row } from '../common/container/container.tsx';
+import { Column } from '../common/container/container.tsx';
 import { Form, FormField } from '../common/form/form.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { useAuthToken, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import './sudoMode.scss';
 
 let sudoExpires = 0;
 const sudoListeners = new Set<() => void>();
@@ -55,27 +57,55 @@ export function useSudoMode(): {
 export function SudoModeButton({
 	children = 'Continue',
 	disabled = false,
-	onSudo,
 	theme = 'default',
 }: {
 	children?: ReactNode;
 	disabled?: boolean;
-	onSudo?: () => void;
 	theme?: ButtonTheme;
 }): ReactElement {
-	const directoryConnector = useDirectoryConnector();
 	const [showPrompt, setShowPrompt] = React.useState(false);
-	const [password, setPassword] = React.useState('');
-	const passkeySupported = IsPasskeySupported();
-	const confirmIdentity = React.useCallback((expires: number) => {
+
+	return (
+		<>
+			<Button theme={ theme } disabled={ disabled } onClick={ () => setShowPrompt(true) }>
+				{ children }
+			</Button>
+			{ showPrompt ? (
+				<SudoDialog
+					hide={ () => {
+						setShowPrompt(false);
+					} }
+				/>
+			) : null }
+		</>
+	);
+}
+
+export function SudoDialog({ hide }: {
+	hide: () => void;
+}): ReactElement | null {
+	const id = useId();
+	const auth = useAuthToken();
+	const directoryConnector = useDirectoryConnector();
+	const authValid = auth != null && auth.expires >= Date.now();
+
+	const [password, setPassword] = useState('');
+	const [passkeySupport, setPasskeySupport] = useState({
+		supported: false,
+		conditional: false,
+	});
+	const conditionalPasskeyAbort = useRef<AbortController | null>(null);
+
+	const confirmIdentity = useCallback((expires: number) => {
 		SetSudoExpires(expires);
 		setPassword('');
-		setShowPrompt(false);
-		toast('Identity confirmed', TOAST_OPTIONS_SUCCESS);
-		onSudo?.();
-	}, [onSudo]);
+		hide();
+		toast('Access confirmed', TOAST_OPTIONS_SUCCESS);
+	}, [hide]);
 
-	const [authenticateWithPassword, passwordProcessing] = useAsyncEvent(async () => {
+	const [authenticateWithPassword, passwordProcessing] = useAsyncEvent(async (ev: React.SubmitEvent) => {
+		ev.preventDefault();
+
 		return await directoryConnector.awaitResponse('sudoAuthenticate', {
 			passwordSha512: await PrehashPassword(password),
 		});
@@ -97,6 +127,8 @@ export function SudoModeButton({
 	});
 
 	const [authenticateWithPasskey, passkeyProcessing] = useAsyncEvent(async () => {
+		conditionalPasskeyAbort.current?.abort();
+
 		const start = await directoryConnector.awaitResponse('sudoPasskeyStart', {});
 		if (start.result !== 'ok')
 			return start;
@@ -129,65 +161,125 @@ export function SudoModeButton({
 
 	const processing = passwordProcessing || passkeyProcessing;
 
-	const hide = React.useCallback(() => {
-		if (processing)
+	useEffect(() => {
+		const supported = IsPasskeySupported();
+		setPasskeySupport({ supported, conditional: false });
+		if (!supported)
 			return;
 
-		setPassword('');
-		setShowPrompt(false);
-	}, [processing]);
+		let active = true;
+		IsPasskeyConditionalMediationSupported()
+			.then((conditional) => {
+				if (active) {
+					setPasskeySupport({ supported, conditional });
+				}
+			}, () => {
+				if (active) {
+					setPasskeySupport({ supported, conditional: false });
+				}
+			});
 
-	const submit = React.useCallback((ev: React.SubmitEvent) => {
-		ev.preventDefault();
-		if (password.length === 0 || processing)
+		return () => {
+			active = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!passkeySupport.conditional || !authValid)
 			return;
 
-		authenticateWithPassword();
-	}, [authenticateWithPassword, password.length, processing]);
+		const abortController = new AbortController();
+		const signal = abortController.signal;
+		conditionalPasskeyAbort.current = abortController;
+
+		(async () => {
+			const start = await directoryConnector.awaitResponse('sudoPasskeyStart', {});
+			if (start.result !== 'ok' || start.credentials.length === 0 || signal.aborted)
+				return;
+
+			const assertion = await GetPasskeyAssertion(start, { mediation: 'conditional', signal });
+			return await directoryConnector.awaitResponse('sudoPasskeyFinish', {
+				credentialId: assertion.credentialId,
+				clientDataJSON: assertion.clientDataJSON,
+				authenticatorData: assertion.authenticatorData,
+				signature: assertion.signature,
+			});
+		})()
+			.catch((error) => {
+				if (signal.aborted || (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')))
+					return;
+
+				GetLogger('SudoDialog').warning('Conditional passkey confirm failed:', error);
+			});
+
+		return () => {
+			abortController.abort();
+			if (conditionalPasskeyAbort.current === abortController) {
+				conditionalPasskeyAbort.current = null;
+			}
+		};
+	}, [authValid, directoryConnector, passkeySupport.conditional]);
+
+	if (!auth) {
+		return null;
+	}
 
 	return (
-		<>
-			<Button theme={ theme } disabled={ disabled } onClick={ () => setShowPrompt(true) }>
-				{ children }
-			</Button>
-			{
-				showPrompt ? (
-					<ModalDialog priority={ 10 }>
-						<Form dirty={ false } onSubmit={ submit }>
-							<Column>
-								<h3>Confirm your identity</h3>
-								<FormField>
-									<label htmlFor='sudo-current-password'>Password</label>
-									<TextInput
-										password
-										id='sudo-current-password'
-										autoComplete='current-password'
-										autoFocus
-										value={ password }
-										onChange={ setPassword }
-										disabled={ processing }
-									/>
-								</FormField>
-								<Row>
-									<Button onClick={ hide } disabled={ processing }>
-										Cancel
-									</Button>
-									<Button type='submit' disabled={ processing || password.length === 0 }>
-										Confirm
-									</Button>
-								</Row>
-								{
-									passkeySupported ? (
-										<Button onClick={ authenticateWithPasskey } disabled={ processing }>
-											Use passkey
-										</Button>
-									) : null
-								}
-							</Column>
-						</Form>
-					</ModalDialog>
-				) : null
-			}
-		</>
+		<ModalDialog priority={ 10 } className='SudoDialog'>
+			<Form dirty={ false } onSubmit={ authenticateWithPassword }>
+				<Column gap='large'>
+					<h1 className='title'>Confirm access</h1>
+					<i className='footer-tip'>
+						You need to re-authenticate before performing this action.
+						After you confirm your identity, you will only be asked to do so again after a few minutes have passed.
+					</i>
+					<Column>
+						<FormField>
+							<label htmlFor={ `${id}-username` }>Username</label>
+							<TextInput
+								id={ `${id}-username` }
+								autoComplete='username'
+								readOnly
+								value={ auth.username }
+							/>
+						</FormField>
+						<FormField>
+							<label htmlFor={ `${id}-password` }>Password</label>
+							<TextInput
+								password
+								id={ `${id}-password` }
+								autoComplete='current-password webauthn'
+								autoFocus
+								value={ password }
+								onChange={ setPassword }
+								disabled={ processing }
+							/>
+						</FormField>
+					</Column>
+					<Column>
+						<Button type='submit' disabled={ processing || password.length === 0 }>
+							Confirm
+						</Button>
+						{ passkeySupport.supported ? (
+							<>
+								<hr className='fill-x' />
+								<Button
+									type='button'
+									theme='semiTransparent'
+									disabled={ processing }
+									onClick={ authenticateWithPasskey }
+								>
+									Confirm with passkey
+								</Button>
+							</>
+						) : null }
+					</Column>
+					<hr className='fill-x' />
+					<Button onClick={ hide } disabled={ processing }>
+						Cancel
+					</Button>
+				</Column>
+			</Form>
+		</ModalDialog>
 	);
 }

@@ -163,7 +163,7 @@ function PasskeySettings(): ReactElement {
 		<fieldset>
 			<legend>Passkeys</legend>
 			<Column>
-				<span>{ passkeys == null ? 'Loading...' : `${passkeys.length}/${limit} passkeys registered` }</span>
+				<span>{ passkeys == null ? 'Loading…' : `${passkeys.length}/${limit} passkeys registered` }</span>
 				<PasskeyList passkeys={ passkeys } reload={ load } sudoActive={ sudoActive } clearSudoMode={ clearSudoMode } />
 				{
 					sudoActive ? (

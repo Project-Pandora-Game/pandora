@@ -4,10 +4,10 @@ import {
 	SecondFactorResponse,
 	SecondFactorType,
 } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useService } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
-import { Row } from '../common/container/container.tsx';
+import { Column, Row } from '../common/container/container.tsx';
 import { Form } from '../common/form/form.tsx';
 import { FormFieldCaptcha } from '../common/form/formFieldCaptcha.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
@@ -21,9 +21,9 @@ type SecondFactorState = {
 
 export function SecondFactorProvider() {
 	const accountManager = useService('accountManager');
-	const [state, setState] = React.useState<SecondFactorState | null>(null);
+	const [state, setState] = useState<SecondFactorState | null>(null);
 
-	const secondFactorHandler = React.useCallback((response: SecondFactorResponse) => {
+	const secondFactorHandler = useCallback((response: SecondFactorResponse) => {
 		return new Promise<SecondFactorData | null>((resolve, reject) => {
 			setState({
 				types: response.types,
@@ -36,7 +36,7 @@ export function SecondFactorProvider() {
 		});
 	}, [setState]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		accountManager.secondFactorHandler = secondFactorHandler;
 		return () => {
 			state?.resolve(null);
@@ -52,18 +52,23 @@ export function SecondFactorProvider() {
 }
 
 function SecondFactorDialogImpl({ types, invalid, resolve }: SecondFactorState): ReactElement {
-	const [captcha, setCaptcha] = React.useState('');
+	const [captcha, setCaptcha] = useState('');
 
-	const elements = React.useMemo(() => types.map((type) => {
+	const elements = useMemo(() => types.map((type) => {
 		switch (type) {
 			case 'captcha':
-				return <FormFieldCaptcha key='captcha' setCaptchaToken={ setCaptcha } invalidCaptcha={ invalid != null && invalid.includes('captcha') } />;
+				return (
+					<FormFieldCaptcha key='captcha'
+						setCaptchaToken={ setCaptcha }
+						invalidCaptcha={ invalid != null && invalid.includes('captcha') }
+					/>
+				);
 			default:
 				AssertNever(type);
 		}
 	}), [types, invalid, setCaptcha]);
 
-	const onSubmit = React.useCallback(() => {
+	const onSubmit = useCallback(() => {
 		const data: SecondFactorData = {};
 		if (types.includes('captcha')) {
 			data.captcha = captcha;
@@ -71,19 +76,28 @@ function SecondFactorDialogImpl({ types, invalid, resolve }: SecondFactorState):
 		resolve(data);
 	}, [types, captcha, resolve]);
 
-	const onCancel = React.useCallback(() => {
+	const onCancel = useCallback(() => {
 		resolve(null);
 	}, [resolve]);
+
+	useEffect(() => {
+		// Auto-submit on captcha confirmation
+		if (types.length === 1 && types.includes('captcha') && captcha) {
+			onSubmit();
+		}
+	}, [types, captcha, onSubmit]);
 
 	return (
 		<ModalDialog>
 			<Form onSubmit={ onSubmit }>
-				<h3>Second factor required</h3>
-				{ elements }
-				<Row>
-					<Button type='submit'>Submit</Button>
-					<Button onClick={ onCancel }>Cancel</Button>
-				</Row>
+				<Column gap='large'>
+					<h3>Second factor required</h3>
+					{ elements }
+					<Row alignX='space-between'>
+						<Button onClick={ onCancel }>Cancel</Button>
+						<Button type='submit'>Submit</Button>
+					</Row>
+				</Column>
 			</Form>
 		</ModalDialog>
 	);

@@ -17,9 +17,14 @@ import './sudoMode.scss';
 
 const SudoExpires = new Observable(0);
 
+function ClearSudoMode(): void {
+	SudoExpires.value = 0;
+}
+
 export function useSudoMode(): {
 	sudoActive: boolean;
 	sudoExpires: number;
+	clearSudoMode: () => void;
 } {
 	const expires = useObservable(SudoExpires);
 	const now = useCurrentTime(1000);
@@ -27,6 +32,7 @@ export function useSudoMode(): {
 	return {
 		sudoActive: expires > now,
 		sudoExpires: expires,
+		clearSudoMode: ClearSudoMode,
 	};
 }
 

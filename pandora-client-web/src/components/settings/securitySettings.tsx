@@ -1,4 +1,4 @@
-import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import { AssertNever, FormatTimeInterval, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
 import React, { ReactElement, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -163,19 +163,19 @@ function PasskeySettings(): ReactElement {
 		<fieldset>
 			<legend>Passkeys</legend>
 			<Column>
-				<span>{ passkeys == null ? 'Loading…' : `${passkeys.length}/${limit} passkeys registered` }</span>
+				{ passkeys != null ? (
+					<Column alignX='end'><span>{ passkeys.length }/{ limit } passkeys registered</span></Column>
+				) : null }
 				<PasskeyList passkeys={ passkeys } reload={ load } sudoActive={ sudoActive } clearSudoMode={ clearSudoMode } />
-				{
-					sudoActive ? (
-						<Button onClick={ add } disabled={ !passkeySupported || loading || adding || (passkeys?.length ?? 0) >= limit }>
-							Add passkey
-						</Button>
-					) : (
-						<SudoModeButton disabled={ !passkeySupported || loading }>
-							Manage passkeys
-						</SudoModeButton>
-					)
-				}
+				{ sudoActive ? (
+					<Button onClick={ add } disabled={ !passkeySupported || loading || adding || (passkeys?.length ?? 0) >= limit }>
+						Add passkey
+					</Button>
+				) : (
+					<SudoModeButton disabled={ !passkeySupported || loading }>
+						Manage passkeys
+					</SudoModeButton>
+				) }
 			</Column>
 		</fieldset>
 	);
@@ -186,7 +186,7 @@ function PasskeyList({ passkeys, reload, sudoActive, clearSudoMode }: { passkeys
 	const confirm = useConfirmDialog();
 
 	if (passkeys == null)
-		return <span>Loading...</span>;
+		return <span>Loading…</span>;
 
 	return (
 		<table>
@@ -195,7 +195,9 @@ function PasskeyList({ passkeys, reload, sudoActive, clearSudoMode }: { passkeys
 					<th>Name</th>
 					<th>Created</th>
 					<th>Last used</th>
-					<th>Actions</th>
+					{ sudoActive ? (
+						<th>Actions</th>
+					) : null }
 				</tr>
 			</thead>
 			<tbody>
@@ -242,7 +244,7 @@ function PasskeyRow({
 		}
 	}, [editing, passkey.name]);
 
-	const save = async () => {
+	const save = () => {
 		const nextName = name.trim();
 		if (nextName.length === 0 || nextName.length > LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH) {
 			toast(`Passkey name must be 1-${LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH} characters`, TOAST_OPTIONS_ERROR);
@@ -250,79 +252,87 @@ function PasskeyRow({
 		}
 
 		setProcessing(true);
-		try {
-			const { result } = await directoryConnector.awaitResponse('passkeyRename', {
-				credentialId: passkey.credentialId,
-				name: nextName,
+		directoryConnector.awaitResponse('passkeyRename', {
+			credentialId: passkey.credentialId,
+			name: nextName,
+		})
+			.then(({ result }) => {
+				if (result === 'ok') {
+					toast('Passkey renamed', TOAST_OPTIONS_SUCCESS);
+					setEditing(false);
+					reload();
+				} else if (result === 'sudoRequired') {
+					clearSudoMode();
+					toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
+				} else {
+					toast('Passkey not found', TOAST_OPTIONS_ERROR);
+				}
+			})
+			.catch((err) => {
+				GetLogger('PasskeyRow').error('Error updating passkey:', err);
+				toast('Error updating passkey', TOAST_OPTIONS_ERROR);
+			})
+			.finally(() => {
+				setProcessing(false);
 			});
-			if (result === 'ok') {
-				toast('Passkey renamed', TOAST_OPTIONS_SUCCESS);
-				setEditing(false);
-				reload();
-			} else if (result === 'sudoRequired') {
-				clearSudoMode();
-				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
-			} else {
-				toast('Passkey not found', TOAST_OPTIONS_ERROR);
-			}
-		} finally {
-			setProcessing(false);
-		}
 	};
 
 	const remove = () => {
-		void confirm(`Delete passkey "${passkey.name}"?`).then(async (confirmed) => {
-			if (!confirmed)
-				return;
-			const { result } = await directoryConnector.awaitResponse('passkeyDelete', { credentialId: passkey.credentialId });
-			if (result === 'ok') {
-				toast('Passkey deleted', TOAST_OPTIONS_SUCCESS);
-				reload();
-			} else if (result === 'sudoRequired') {
-				clearSudoMode();
-				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
-			} else {
-				toast('Passkey not found', TOAST_OPTIONS_ERROR);
-			}
-		});
+		confirm(`Delete passkey "${passkey.name}"?`)
+			.then(async (confirmed) => {
+				if (!confirmed)
+					return;
+				const { result } = await directoryConnector.awaitResponse('passkeyDelete', { credentialId: passkey.credentialId });
+				if (result === 'ok') {
+					toast('Passkey deleted', TOAST_OPTIONS_SUCCESS);
+					reload();
+				} else if (result === 'sudoRequired') {
+					clearSudoMode();
+					toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
+				} else {
+					toast('Passkey not found', TOAST_OPTIONS_ERROR);
+				}
+			})
+			.catch((err) => {
+				GetLogger('PasskeyRow').error('Error deleting passkey:', err);
+				toast('Error deleting passkey', TOAST_OPTIONS_ERROR);
+			});
 	};
 
 	return (
 		<tr>
 			<td>
-				{
-					editing ? (
-						<TextInput value={ name } onChange={ setName } maxLength={ LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } disabled={ processing } />
-					) : passkey.name
-				}
+				{ editing ? (
+					<TextInput value={ name } onChange={ setName } maxLength={ LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } disabled={ processing } />
+				) : (
+					passkey.name
+				) }
 			</td>
 			<td>{ new Date(passkey.created).toLocaleString() }</td>
 			<td>{ passkey.lastUsed == null ? 'Never' : new Date(passkey.lastUsed).toLocaleString() }</td>
-			<td>
-				{
-					editing ? (
-						<>
-							<Button className='slim' onClick={ () => void save() } disabled={ processing || name.trim() === passkey.name }>
+			{ sudoActive ? (
+				<td>
+					{ editing ? (
+						<Row alignX='center' className='fill-x'>
+							<Button className='slim' onClick={ save } disabled={ processing || name.trim() === passkey.name }>
 								Save
 							</Button>
 							<Button className='slim' onClick={ () => setEditing(false) } disabled={ processing }>
 								Cancel
 							</Button>
-						</>
-					) : sudoActive ? (
-						<>
+						</Row>
+					) : (
+						<Row alignX='center' className='fill-x'>
 							<Button className='slim' onClick={ () => setEditing(true) }>
 								Rename
 							</Button>
 							<Button className='slim' onClick={ remove }>
 								Delete
 							</Button>
-						</>
-					) : (
-						<span>Locked</span>
-					)
-				}
-			</td>
+						</Row>
+					) }
+				</td>
+			) : null }
 		</tr>
 	);
 }

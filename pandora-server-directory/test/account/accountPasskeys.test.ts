@@ -161,6 +161,20 @@ describe('accountPasskeys', () => {
 		})).toEqual({ ok: false, reason: 'signCountRollback' });
 	});
 
+	it('rejects a zero sign counter after a passkey reported a counter', () => {
+		const keyPair = CreateP256KeyPair();
+		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
+
+		expect(VerifyPasskeyAssertion({
+			...CreatePasskey(keyPair.publicKey),
+			signCount: 7,
+		}, {
+			accountId: ACCOUNT_ID,
+			challenge,
+			...CreateAssertionData(challenge, keyPair.privateKey, 0),
+		})).toEqual({ ok: false, reason: 'signCountRollback' });
+	});
+
 	it('rejects assertions signed by a different key', () => {
 		const storedKeyPair = CreateP256KeyPair();
 		const attackerKeyPair = CreateP256KeyPair();

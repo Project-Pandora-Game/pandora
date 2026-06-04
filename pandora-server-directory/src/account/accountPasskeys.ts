@@ -213,7 +213,7 @@ export function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential, data:
 	if (!verify(algorithm, signedData, key, Base64UrlDecode(data.signature)))
 		return { ok: false };
 	const signCount = authenticatorData.readUInt32BE(WEBAUTHN_AUTHENTICATOR_DATA_SIGN_COUNT_OFFSET);
-	if (passkey.signCount !== 0 && signCount !== 0 && signCount <= passkey.signCount)
+	if (passkey.signCount !== 0 && signCount <= passkey.signCount)
 		return { ok: false, reason: 'signCountRollback' };
 
 	return {

@@ -260,7 +260,7 @@ function WardrobeTemplateNameAndDescriptionEdit({ asset, template, updateTemplat
 	const setDescription = useCallback((newDescription: string) => {
 		updateTemplate(produce(template, (d) => {
 			if (newDescription) {
-				d.description = newDescription.trim();
+				d.description = newDescription;
 			} else {
 				delete d.description;
 			}

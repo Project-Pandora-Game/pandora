@@ -36,7 +36,14 @@ class TextureData {
 	}
 
 	public isInUse(): boolean {
-		return this._pendingLoad || this._locks > 0 || this._listeners.size > 0;
+		return this._pendingLoad || // Texture is still being loaded, avoid GCing it to avoid parallel loads, as load can't really be canceled
+			this._locks > 0 || // Logic code is holding the texture with intent to use it
+			this._listeners.size > 0 || // Someone is waiting to pick up the texture after it loads
+			( // If someone is listening for changes on the texture's source, it is in use deep inside the engine (e.g. part of BindGroup)
+				this._loadedTextureSource != null &&
+				this._loadedTextureSource?.listenerCount('change') > 0
+			);
+
 	}
 
 	public registerListener(listener: TextureUpdateListener): () => void {

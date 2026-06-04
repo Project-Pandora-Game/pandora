@@ -151,6 +151,14 @@ export function WikiItems(): ReactElement {
 					Combination and password locks store the last used input value which can be knowingly or blindly used to lock the lock again later,
 					even while it was stored somewhere else, e.g. in a <Link to='/wiki/spaces#SP_Room_inventory'>room's inventory</Link>, in the meantime.
 				</li>
+				<li>
+					Timer locks can be considered the strictest locks, as they can only be unlocked by the character that locked it, before the set time passes.
+					There is even an option that no one can unlock it earlier.
+				</li>
+				<li>
+					Fingerprint locks can only be locked after registering one or more characters that can open it. If you use locks with specific
+					fingerprints often, consider saving the lock preconfigured as part of a <Link to='#IT_Saving_collections'>saved items</Link> collection.
+				</li>
 			</ul>
 
 			<h4 id='IT_Item_preferences_and_limits'>Item preferences and limits</h4>
@@ -225,14 +233,14 @@ export function WikiItems(): ReactElement {
 				from the top to bottom, so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				Now when you make a saved item collection from something you wear, you need to start from the bottom, not from the top,
+				Now when you make a <Link to='#IT_Saving_collections'>saved items</Link> collection from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
 				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
-				When you want to use a saved item collection to dress your character, you again need to start from the bottom, as you need to start with the item
+				When you want to use a saved items collection to dress your character, you again need to start from the bottom, as you need to start with the item
 				worn closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				In summary, the general dressing and undressing direction is top-down, but saved item collection related directions are the opposite:<br />
+				In summary, the general dressing and undressing direction is top-down, but saved items collection related directions are the opposite:<br />
 				🧑 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🏠 → 🧑&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🧑 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />

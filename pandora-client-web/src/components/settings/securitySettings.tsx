@@ -1,4 +1,4 @@
-import { AssertNever, FormatTimeInterval, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import { AssertNever, FormatTimeInterval, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
 import React, { ReactElement, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -94,7 +94,6 @@ function PasskeySettings(): ReactElement {
 	const directMessageManager = useService('directMessageManager');
 	const { sudoActive, clearSudoMode } = useSudoMode();
 	const [passkeys, setPasskeys] = React.useState<AccountPasskeys | null>(null);
-	const [limit, setLimit] = React.useState(5);
 	const passkeySupported = IsPasskeySupported();
 	const defaultPasskeyName = 'Security key';
 
@@ -102,7 +101,6 @@ function PasskeySettings(): ReactElement {
 		async () => await directoryConnector.awaitResponse('passkeyList', {}),
 		(resp) => {
 			setPasskeys(resp.passkeys);
-			setLimit(resp.limit);
 		},
 	);
 
@@ -164,13 +162,13 @@ function PasskeySettings(): ReactElement {
 			<legend>Passkeys</legend>
 			<Column>
 				{ passkeys != null ? (
-					<Column alignX='end'><span>{ passkeys.length }/{ limit } passkeys registered</span></Column>
-				) : null }
+						<Column alignX='end'><span>{ passkeys.length }/{ LIMIT_ACCOUNT_PASSKEY_COUNT } passkeys registered</span></Column>
+					) : null }
 				<PasskeyList passkeys={ passkeys } reload={ load } sudoActive={ sudoActive } clearSudoMode={ clearSudoMode } />
 				{ sudoActive ? (
-					<Button onClick={ add } disabled={ !passkeySupported || loading || adding || (passkeys?.length ?? 0) >= limit }>
-						Add passkey
-					</Button>
+						<Button onClick={ add } disabled={ !passkeySupported || loading || adding || (passkeys?.length ?? 0) >= LIMIT_ACCOUNT_PASSKEY_COUNT }>
+							Add passkey
+						</Button>
 				) : (
 					<SudoModeButton disabled={ !passkeySupported || loading }>
 						Manage passkeys

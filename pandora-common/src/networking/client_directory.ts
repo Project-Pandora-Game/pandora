@@ -306,7 +306,6 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: z.object({
 			passkeys: AccountPasskeyInfoSchema.array(),
-			limit: z.number(),
 		}),
 	},
 	passkeyRegisterStart: {

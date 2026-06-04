@@ -1259,7 +1259,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			passkeys: connection.account.secure.listPasskeys(),
-			limit: LIMIT_ACCOUNT_PASSKEY_COUNT,
 		};
 	}
 

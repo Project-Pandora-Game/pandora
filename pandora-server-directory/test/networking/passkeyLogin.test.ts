@@ -95,7 +95,6 @@ describe('passkey login flow', () => {
 		})).resolves.toEqual({ result: 'ok' });
 
 		await expect(connection.awaitResponse('passkeyList', {})).resolves.toMatchObject({
-			limit: 5,
 			passkeys: [{
 				credentialId,
 				name: 'Integration test passkey',

@@ -323,8 +323,8 @@ importers:
         specifier: 3.1057.0
         version: 3.1057.0
       '@aws-sdk/credential-provider-node':
-        specifier: 3.972.45
-        version: 3.972.45
+        specifier: 3.972.46
+        version: 3.972.46
       '@octokit/auth-oauth-app':
         specifier: 9.0.3
         version: 9.0.3
@@ -629,8 +629,8 @@ packages:
     resolution: {integrity: sha512-MZQv4SNjByk1iOKmrqmzcUF/uCB05wjvEHyXKxmGQTUANTIVayX6HPUF0bzkWLvtnkH7sAn9kUCfkXbSpj9sDA==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/credential-provider-node@3.972.45':
-    resolution: {integrity: sha512-3YCv52ExXIRz3LAVNysevd+s7akSpg9dl39v9LJ7dOQH+s5rHi3jMZYQyxwMmglxQGMuzYRfQ0o1VSP2UOlIRw==}
+  '@aws-sdk/credential-provider-node@3.972.46':
+    resolution: {integrity: sha512-cS4w0jzDRb1jOlkiJS3y80OxddHzkky/MN9k3NYs5jganNKVLjF0lpvjlwS118oGMr3cdAfOlVdo8gLurTSE7w==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-node@3.972.47':
@@ -6325,7 +6325,7 @@ snapshots:
       '@smithy/types': 4.14.2
       tslib: 2.8.1
 
-  '@aws-sdk/credential-provider-node@3.972.45':
+  '@aws-sdk/credential-provider-node@3.972.46':
     dependencies:
       '@aws-sdk/credential-provider-env': 3.972.41
       '@aws-sdk/credential-provider-http': 3.972.43

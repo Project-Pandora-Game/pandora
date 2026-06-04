@@ -38,7 +38,7 @@ import { Column } from '../../common/container/container.tsx';
 import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
-import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { ActionTargetToWardrobeUrl } from '../wardrobeNavigation.tsx';
@@ -533,6 +533,7 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 	container: ItemContainerPath;
 }): React.ReactNode {
 	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, container);
+	const [requestPermission, requestPermissionPending] = useWardrobePermissionRequestCallback();
 
 	useEffect(() => {
 		if (showContent && !containerAccessCheck.valid) {
@@ -547,8 +548,15 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 				showContent ? 'selected' : null,
 			) }
 			onClick={ () => {
-				setShowContent((v) => containerAccessCheck.valid && !v);
+				if (!containerAccessCheck.valid) {
+					if (containerAccessCheck.prompt != null) {
+						requestPermission(containerAccessCheck.prompt, Array.from(containerAccessCheck.requiredPermissions).map((p) => [p.group, p.id]));
+					}
+					return;
+				}
+				setShowContent((v) => !v);
 			} }
+			disabled={ requestPermissionPending }
 			title='View contents'
 		>
 			<img src={ storageIcon } alt='View contents' />

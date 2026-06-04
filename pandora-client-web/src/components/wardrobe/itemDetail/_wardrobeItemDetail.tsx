@@ -39,6 +39,7 @@ import { WardrobeItemLockDetails } from './wardrobeItemLock.tsx';
 import { WardrobeItemName } from './wardrobeItemName.tsx';
 import { WardrobePersonalItemDeployment } from './wardrobeItemPersonalDeployment.tsx';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice.tsx';
+import { useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -329,13 +330,19 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 		name: item.name ?? '',
 		description: item.description ?? '',
 	}), [targetSelector, itemPath, item.name, item.description]);
-	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const checkResult = useStaggeredAppearanceActionResult(action);
+	const [requestPermission, requestPermissionPending] = useWardrobePermissionRequestCallback();
 
-	const onClick = useCallback(() => {
-		if (!checkResult?.valid)
+	const onEdit = useCallback(() => {
+		if (checkResult == null || !checkResult.valid) {
+			if (checkResult?.prompt != null) {
+				requestPermission(checkResult.prompt, Array.from(checkResult.requiredPermissions).map((p) => [p.group, p.id]));
+			}
 			return;
+		}
+
 		onStartEdit();
-	}, [checkResult, onStartEdit]);
+	}, [checkResult, onStartEdit, requestPermission]);
 
 	return (
 		<FieldsetToggle legend='Item'>
@@ -352,13 +359,14 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 							<span>Asset name:</span>
 							<span className='name'>{ item.asset.definition.name }</span>
 						</Row>
-						<label>Description:</label>
+						<span>Description:</span>
 					</Column>
 					<Row alignY='start'>
 						<WardrobeActionButtonElement
 							className={ classNames('customizationQuickAction', 'slim') }
 							check={ checkResult }
-							onClick={ onClick }
+							onClick={ onEdit }
+							disabled={ requestPermissionPending }
 							title='Edit'
 						>
 							<img src={ editIcon } alt='Edit' />

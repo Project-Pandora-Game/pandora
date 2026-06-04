@@ -45,11 +45,25 @@ const COSE_KEY_LABEL_Y = -3;
 /** @see https://www.iana.org/assignments/cose/cose.xhtml */
 const COSE_KEY_TYPE_EC2 = 2;
 /** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_KEY_TYPE_OKP = 1;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_KEY_TYPE_RSA = 3;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_ED25519 = -19;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_EDDSA = -8;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
 const COSE_ALGORITHM_ES256 = -7;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_RS256 = -257;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ELLIPTIC_CURVE_ED25519 = 6;
 /** @see https://www.iana.org/assignments/cose/cose.xhtml */
 const COSE_ELLIPTIC_CURVE_P256 = 1;
 /** @see https://www.secg.org/sec1-v2.pdf section 2.3.5 */
 const COSE_P256_COORDINATE_BYTE_LENGTH = 32;
+/** @see https://www.rfc-editor.org/rfc/rfc8037#section-2 */
+const COSE_ED25519_PUBLIC_KEY_BYTE_LENGTH = 32;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
 const CBOR_MAJOR_TYPE_UNSIGNED_INTEGER = 0;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
@@ -195,7 +209,8 @@ export function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential, data:
 		format: 'der',
 		type: 'spki',
 	});
-	if (!verify('sha256', signedData, key, Base64UrlDecode(data.signature)))
+	const algorithm = key.asymmetricKeyType === 'ed25519' ? null : 'sha256';
+	if (!verify(algorithm, signedData, key, Base64UrlDecode(data.signature)))
 		return { ok: false };
 	const signCount = authenticatorData.readUInt32BE(WEBAUTHN_AUTHENTICATOR_DATA_SIGN_COUNT_OFFSET);
 	if (passkey.signCount !== 0 && signCount !== 0 && signCount <= passkey.signCount)
@@ -277,7 +292,7 @@ function ValidateRegistrationAuthenticatorData(authenticatorData: Buffer, creden
 		return false;
 	if (Base64UrlEncode(attestedCredential.credentialId) !== credentialId)
 		return false;
-	if (DeriveP256SpkiFromCose(attestedCredential.cosePublicKey)?.toString('base64') !== publicKey)
+	if (DeriveSpkiFromCose(attestedCredential.cosePublicKey)?.toString('base64') !== publicKey)
 		return false;
 
 	return true;
@@ -300,7 +315,7 @@ function ParseAttestedCredentialData(authenticatorData: Buffer): { credentialId:
 	};
 }
 
-function DeriveP256SpkiFromCose(cosePublicKey: Buffer): Buffer | undefined {
+function DeriveSpkiFromCose(cosePublicKey: Buffer): Buffer | undefined {
 	try {
 		const reader = new CborReader(cosePublicKey);
 		const mapSize = reader.readMapHeader();
@@ -309,6 +324,8 @@ function DeriveP256SpkiFromCose(cosePublicKey: Buffer): Buffer | undefined {
 		let crv: number | undefined;
 		let x: Buffer | undefined;
 		let y: Buffer | undefined;
+		let n: Buffer | undefined;
+		let e: Buffer | undefined;
 
 		for (let i = 0; i < mapSize; i++) {
 			const key = reader.readInt();
@@ -320,10 +337,22 @@ function DeriveP256SpkiFromCose(cosePublicKey: Buffer): Buffer | undefined {
 					alg = reader.readInt();
 					break;
 				case COSE_KEY_LABEL_CRV:
-					crv = reader.readInt();
+					{
+						const value = reader.readIntOrBytes();
+						if (typeof value === 'number')
+							crv = value;
+						else
+							n = value;
+					}
 					break;
 				case COSE_KEY_LABEL_X:
-					x = reader.readBytes();
+					{
+						const value = reader.readBytes();
+						if (kty === COSE_KEY_TYPE_RSA)
+							e = value;
+						else
+							x = value;
+					}
 					break;
 				case COSE_KEY_LABEL_Y:
 					y = reader.readBytes();
@@ -335,17 +364,49 @@ function DeriveP256SpkiFromCose(cosePublicKey: Buffer): Buffer | undefined {
 		}
 
 		if (
-			kty !== COSE_KEY_TYPE_EC2 ||
-			alg !== COSE_ALGORITHM_ES256 ||
-			crv !== COSE_ELLIPTIC_CURVE_P256 ||
-			x?.length !== COSE_P256_COORDINATE_BYTE_LENGTH ||
-			y?.length !== COSE_P256_COORDINATE_BYTE_LENGTH
+			kty === COSE_KEY_TYPE_OKP &&
+			(alg === COSE_ALGORITHM_ED25519 || alg === COSE_ALGORITHM_EDDSA) &&
+			crv === COSE_ELLIPTIC_CURVE_ED25519 &&
+			x?.length === COSE_ED25519_PUBLIC_KEY_BYTE_LENGTH
 		) {
-			return undefined;
+			return createPublicKey({
+				key: {
+					kty: 'OKP',
+					crv: 'Ed25519',
+					x: Base64UrlEncode(x),
+				},
+				format: 'jwk',
+			}).export({ format: 'der', type: 'spki' });
 		}
 
-		const p256SpkiPrefix = Buffer.from('3059301306072a8648ce3d020106082a8648ce3d03010703420004', 'hex');
-		return Buffer.concat([p256SpkiPrefix, x, y]);
+		if (
+			kty === COSE_KEY_TYPE_EC2 &&
+			alg === COSE_ALGORITHM_ES256 &&
+			crv === COSE_ELLIPTIC_CURVE_P256 &&
+			x?.length === COSE_P256_COORDINATE_BYTE_LENGTH &&
+			y?.length === COSE_P256_COORDINATE_BYTE_LENGTH
+		) {
+			const p256SpkiPrefix = Buffer.from('3059301306072a8648ce3d020106082a8648ce3d03010703420004', 'hex');
+			return Buffer.concat([p256SpkiPrefix, x, y]);
+		}
+
+		if (
+			kty === COSE_KEY_TYPE_RSA &&
+			alg === COSE_ALGORITHM_RS256 &&
+			n != null &&
+			e != null
+		) {
+			return createPublicKey({
+				key: {
+					kty: 'RSA',
+					n: Base64UrlEncode(n),
+					e: Base64UrlEncode(e),
+				},
+				format: 'jwk',
+			}).export({ format: 'der', type: 'spki' });
+		}
+
+		return undefined;
 	} catch {
 		return undefined;
 	}
@@ -375,11 +436,26 @@ class CborReader {
 		throw new Error('Expected CBOR integer');
 	}
 
+	public readIntOrBytes(): number | Buffer {
+		const { major, value } = this.#readTypeAndValue();
+		if (major === CBOR_MAJOR_TYPE_UNSIGNED_INTEGER)
+			return value;
+		if (major === CBOR_MAJOR_TYPE_NEGATIVE_INTEGER)
+			return -1 - value;
+		if (major === CBOR_MAJOR_TYPE_BYTE_STRING)
+			return this.#readBytes(value);
+		throw new Error('Expected CBOR integer or byte string');
+	}
+
 	public readBytes(): Buffer {
 		const { major, value } = this.#readTypeAndValue();
 		if (major !== CBOR_MAJOR_TYPE_BYTE_STRING)
 			throw new Error('Expected CBOR byte string');
-		const end = this.#offset + value;
+		return this.#readBytes(value);
+	}
+
+	#readBytes(length: number): Buffer {
+		const end = this.#offset + length;
 		if (end > this.#data.length)
 			throw new Error('CBOR byte string out of bounds');
 		const result = this.#data.subarray(this.#offset, end);

@@ -10,7 +10,13 @@ type PasskeyAssertionStart = {
 type PasskeyRegisterStart = Extract<IClientDirectoryNormalResult['passkeyRegisterStart'], { result: 'ok'; }>;
 
 /** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_ED25519 = -19;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_EDDSA = -8;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
 const COSE_ALGORITHM_ES256 = -7;
+/** @see https://www.iana.org/assignments/cose/cose.xhtml */
+const COSE_ALGORITHM_RS256 = -257;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
 const CBOR_MAJOR_TYPE_TEXT_STRING = 3;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
@@ -126,7 +132,10 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 				displayName: start.user.displayName,
 			},
 			pubKeyCredParams: [
+				{ type: 'public-key', alg: COSE_ALGORITHM_ED25519 },
+				{ type: 'public-key', alg: COSE_ALGORITHM_EDDSA },
 				{ type: 'public-key', alg: COSE_ALGORITHM_ES256 },
+				{ type: 'public-key', alg: COSE_ALGORITHM_RS256 },
 			],
 			authenticatorSelection: {
 				residentKey: 'required',

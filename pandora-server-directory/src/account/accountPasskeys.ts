@@ -82,6 +82,7 @@ const PASSKEY_PRF_SALT = Base64UrlEncode(createHash('sha256')
 	.update(`project-pandora:passkey-prf:${PASSKEY_RP_ID}`, 'utf-8')
 	.digest()
 	.subarray(0, PASSKEY_PRF_SALT_BYTE_LENGTH));
+const PASSKEY_RP_ID_HASH = createHash('sha256').update(PASSKEY_RP_ID, 'utf-8').digest();
 const challenges = new Map<string, ChallengeRecord>();
 
 export function CreatePasskeyChallenge(accountId: AccountId | null, purpose: ChallengePurpose): string {
@@ -247,8 +248,7 @@ function ParseClientData(data: string): { type: string; challenge: string; origi
 
 function ValidateRpIdHash(authenticatorData: Buffer): boolean {
 	const actual = authenticatorData.subarray(0, WEBAUTHN_AUTHENTICATOR_DATA_RP_ID_HASH_LENGTH);
-	const expected = createHash('sha256').update(PASSKEY_RP_ID, 'utf-8').digest();
-	return actual.length === expected.length && timingSafeEqual(actual, expected);
+	return actual.length === PASSKEY_RP_ID_HASH.length && timingSafeEqual(actual, PASSKEY_RP_ID_HASH);
 }
 
 function ValidateCommonAuthenticatorData(authenticatorData: Buffer): boolean {

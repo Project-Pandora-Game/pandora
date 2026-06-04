@@ -1,5 +1,5 @@
 import { cloneDeep, throttle } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IAccountPasskeyCredential, IAccountPasskeyInfo, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryAccountInfo, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IAccountPasskeyCredential, IAccountPasskeyInfo, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryAccountInfo, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import * as z from 'zod';
@@ -1291,6 +1291,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
+	@AsyncSynchronized()
 	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();

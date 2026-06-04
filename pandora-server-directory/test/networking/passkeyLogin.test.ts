@@ -60,6 +60,9 @@ describe('passkey login flow', () => {
 				id: account.id,
 				username,
 			},
+			passkeys: [],
+			passkeyRpId: RP_ID,
+			passkeyUserId: Base64UrlEncode(Buffer.from(account.id.toString(10), 'utf-8')),
 		});
 
 		await expect(connection.awaitResponse('passkeyRegisterStart', {})).resolves.toEqual({ result: 'sudoRequired' });
@@ -129,6 +132,13 @@ describe('passkey login flow', () => {
 				username,
 			},
 			cryptoKey: PASSKEY_WRAPPED_CRYPTO_KEY,
+			passkeys: [{
+				credentialId,
+				name: 'Integration test passkey',
+				lastUsed: expect.any(Number),
+			}],
+			passkeyRpId: RP_ID,
+			passkeyUserId: Base64UrlEncode(Buffer.from(account.id.toString(10), 'utf-8')),
 			token: {
 				value: expect.any(String),
 				expires: expect.any(Number),

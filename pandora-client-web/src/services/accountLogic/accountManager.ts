@@ -22,7 +22,7 @@ import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
-import { GetPasskeyAssertion, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
+import { GetPasskeyAssertion, SignalAllAcceptedPasskeyCredentials, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
@@ -157,6 +157,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		}
 
 		directoryConnector.authToken.value = { ...result.token, username: result.account.username };
+		void SignalAllAcceptedPasskeyCredentials(result.passkeyRpId, result.passkeyUserId, result.passkeys);
+		void SignalCurrentPasskeyUserDetails(result.passkeyRpId, result.passkeyUserId, result.account.username, result.account.displayName);
 		await this.handleAccountChange({
 			account: result.account,
 			character: null,
@@ -175,6 +177,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		switch (result.result) {
 			case 'ok':
 				directoryConnector.authToken.value = { ...result.token, username: result.account.username };
+				void SignalAllAcceptedPasskeyCredentials(result.passkeyRpId, result.passkeyUserId, result.passkeys);
+				void SignalCurrentPasskeyUserDetails(result.passkeyRpId, result.passkeyUserId, result.account.username, result.account.displayName);
 				await this.handleAccountChange({ account: result.account, character: null });
 				return 'ok';
 			case 'secondFactorRequired':

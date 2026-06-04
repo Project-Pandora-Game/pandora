@@ -43,6 +43,9 @@ type LoginOkResult = {
 	result: 'ok';
 	token: { value: string; expires: number; };
 	account: IDirectoryAccountInfo;
+	passkeys: IAccountPasskeyInfo[];
+	passkeyRpId: string;
+	passkeyUserId: string;
 };
 
 type PasskeyAssertionData = {
@@ -280,6 +283,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
+			passkeys: account.secure.listPasskeys(),
+			passkeyRpId: PASSKEY_RP_ID,
+			passkeyUserId: Base64UrlEncode(Buffer.from(account.id.toString(10), 'utf-8')),
 		};
 	}
 

@@ -76,6 +76,21 @@ export async function SignalUnknownPasskeyCredential(rpId: string, credentialId:
 	}
 }
 
+export async function SignalAllAcceptedPasskeyCredentials(rpId: string, userId: string, passkeys: { credentialId: string; }[]): Promise<void> {
+	if (PublicKeyCredential.signalAllAcceptedCredentials == null)
+		return;
+
+	try {
+		await PublicKeyCredential.signalAllAcceptedCredentials({
+			allAcceptedCredentialIds: passkeys.map((passkey) => passkey.credentialId),
+			rpId,
+			userId,
+		});
+	} catch {
+		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
+	}
+}
+
 export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?: PasskeyAssertionOptions): Promise<PasskeyAssertionResult> {
 	const publicKey: PublicKeyCredentialRequestOptions = {
 		challenge: Base64UrlToArray(start.challenge),

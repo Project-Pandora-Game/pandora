@@ -91,6 +91,22 @@ export async function SignalAllAcceptedPasskeyCredentials(rpId: string, userId: 
 	}
 }
 
+export async function SignalCurrentPasskeyUserDetails(rpId: string, userId: string, name: string, displayName: string): Promise<void> {
+	if (PublicKeyCredential.signalCurrentUserDetails == null)
+		return;
+
+	try {
+		await PublicKeyCredential.signalCurrentUserDetails({
+			displayName,
+			name,
+			rpId,
+			userId,
+		});
+	} catch {
+		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
+	}
+}
+
 export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?: PasskeyAssertionOptions): Promise<PasskeyAssertionResult> {
 	const publicKey: PublicKeyCredentialRequestOptions = {
 		challenge: Base64UrlToArray(start.challenge),

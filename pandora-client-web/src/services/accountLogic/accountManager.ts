@@ -22,7 +22,7 @@ import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
-import { GetPasskeyAssertion, SignalAllAcceptedPasskeyCredentials, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
+import { GetPasskeyAssertion, SignalAllAcceptedPasskeyCredentials, SignalCurrentPasskeyUserDetails, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';

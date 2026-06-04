@@ -80,7 +80,7 @@ export function WikiItems(): ReactElement {
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room or the space while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
+				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved item collection</Link>, like regular items.</li>
 				<li>While a character is inside a slot of a room device, you can see all the item's relevant config options also on the worn part of the device in their wardrobe - so no need to go to the room inventory for that.</li>
 				<li>
 					Warning: Room devices can get someone stuck in an empty private space, which would make
@@ -157,7 +157,7 @@ export function WikiItems(): ReactElement {
 				</li>
 				<li>
 					Fingerprint locks can only be locked after registering one or more characters that can open it. If you use locks with specific
-					fingerprints often, consider saving the lock preconfigured as part of a <Link to='#IT_Saving_collections'>saved items</Link> collection.
+					fingerprints often, consider saving the lock preconfigured as part of a <Link to='#IT_Saving_collections'>saved item</Link> collection.
 				</li>
 			</ul>
 
@@ -233,14 +233,14 @@ export function WikiItems(): ReactElement {
 				from the top to bottom, so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				Now when you make a <Link to='#IT_Saving_collections'>saved items</Link> collection from something you wear, you need to start from the bottom, not from the top,
+				Now when you make a <Link to='#IT_Saving_collections'>saved item</Link> collection from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
 				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
-				When you want to use a saved items collection to dress your character, you again need to start from the bottom, as you need to start with the item
+				When you want to use a saved item collection to dress your character, you again need to start from the bottom, as you need to start with the item
 				worn closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				In summary, the general dressing and undressing direction is top-down, but saved items collection related directions are the opposite:<br />
+				In summary, the general dressing and undressing direction is top-down, but saved item collection related directions are the opposite:<br />
 				🧑 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🏠 → 🧑&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🧑 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />

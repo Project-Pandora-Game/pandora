@@ -340,11 +340,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const account = await accountManager.loadAccountByPasskeyCredentialId(credentialId);
-		if (!account || !account.secure.isActivated() || account.secure.isDisabled()) {
+		if (!account) {
 			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
 		}
-
 		const verification = this.verifyPasskeyAssertionForAccount(account, 'login', {
 			credentialId,
 			clientDataJSON,
@@ -353,7 +352,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}, 'login');
 		if (!verification.ok) {
 			LoginManager.loginFailed();
-			return { result: 'unknownCredentials' };
+			return { result: 'failed' };
+		}
+
+		if (!account.secure.isActivated())
+			return { result: 'verificationRequired' };
+		const disabled = account.secure.isDisabled();
+		if (disabled) {
+			return {
+				result: 'accountDisabled',
+				reason: disabled.publicReason,
+			};
 		}
 
 		await account.secure.markPasskeyUsed(credentialId, verification.signCount);

@@ -172,7 +172,10 @@ export const ClientDirectorySchema = {
 			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
 			signature: AccountPasskeySignatureSchema,
 		}),
-		response: ZodCast<{ result: 'unknownCredentials'; } | {
+		response: ZodCast<{ result: 'unknownCredentials' | 'verificationRequired' | 'failed'; } | {
+			result: 'accountDisabled';
+			reason: string;
+		} | {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;

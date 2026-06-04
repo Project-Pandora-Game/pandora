@@ -151,6 +151,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 				await SignalUnknownPasskeyCredential(start.rpId, assertion.credentialId);
 			}
 			await this.handleAccountChange({ account: null, character: null });
+			if (result.result === 'accountDisabled')
+				return result;
 			return result.result;
 		}
 

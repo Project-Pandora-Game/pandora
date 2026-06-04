@@ -2,6 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/gl
 import { createHash, generateKeyPairSync, sign } from 'crypto';
 import { IDirectoryClient, IClientDirectory, MockConnection, MockServerSocket } from 'pandora-common';
 import { AccountToken } from '../../src/account/accountSecure.ts';
+import { accountManager } from '../../src/account/accountManager.ts';
 import { AccountTokenReason } from '../../src/database/databaseStructure.ts';
 import { ClientConnection } from '../../src/networking/connection_client.ts';
 import { PrehashPassword } from '../../src/database/mockDb.ts';
@@ -196,6 +197,78 @@ describe('passkey login flow', () => {
 		});
 		expect(startMissing).not.toHaveProperty('credentials');
 	});
+
+	it('separates failed passkey verification from unknown credentials', async () => {
+		const account = await TestMockAccount({ username: `passkey-failed-${Date.now()}` });
+		await account.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
+		const keyPair = CreateP256KeyPair();
+		const attackerKeyPair = CreateP256KeyPair();
+		const credentialId = Base64UrlEncode(Buffer.from(`failed-credential-${account.id}`, 'utf-8'));
+		await account.secure.addPasskey(CreatePasskey(credentialId, keyPair.publicKey));
+
+		const startLogin = await connection.awaitResponse('passkeyLoginStart', {});
+		expect(startLogin.result).toBe('ok');
+		if (startLogin.result !== 'ok')
+			throw new Error('Passkey login did not start');
+
+		await expect(connection.awaitResponse('passkeyLoginFinish', {
+			credentialId,
+			...CreateAssertionData(startLogin.challenge, attackerKeyPair.privateKey, 1),
+		})).resolves.toEqual({ result: 'failed' });
+	});
+
+	it('does not report disabled or inactive passkey accounts as unknown credentials', async () => {
+		const disabledAccount = await TestMockAccount({ username: `passkey-disabled-${Date.now()}` });
+		await disabledAccount.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
+		const disabledKeyPair = CreateP256KeyPair();
+		const disabledCredentialId = Base64UrlEncode(Buffer.from(`disabled-credential-${disabledAccount.id}`, 'utf-8'));
+		await disabledAccount.secure.addPasskey(CreatePasskey(disabledCredentialId, disabledKeyPair.publicKey));
+		await disabledAccount.secure.adminDisableAccount({
+			time: Date.now(),
+			publicReason: 'Disabled for test',
+			internalReason: 'Disabled for test',
+			disabledBy: 0,
+		});
+
+		const disabledStart = await connection.awaitResponse('passkeyLoginStart', {});
+		expect(disabledStart.result).toBe('ok');
+		if (disabledStart.result !== 'ok')
+			throw new Error('Disabled passkey login did not start');
+
+		await expect(connection.awaitResponse('passkeyLoginFinish', {
+			credentialId: disabledCredentialId,
+			...CreateAssertionData(disabledStart.challenge, disabledKeyPair.privateKey, 1),
+		})).resolves.toEqual({
+			result: 'accountDisabled',
+			reason: 'Disabled for test',
+		});
+
+		const inactiveAccount = await TestMockAccount({ username: `passkey-inactive-${Date.now()}` });
+		await inactiveAccount.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
+		const inactiveKeyPair = CreateP256KeyPair();
+		const inactiveCredentialId = Base64UrlEncode(Buffer.from(`inactive-credential-${inactiveAccount.id}`, 'utf-8'));
+		await inactiveAccount.secure.addPasskey(CreatePasskey(inactiveCredentialId, inactiveKeyPair.publicKey));
+		const db = await TestMockDb();
+		const inactiveData = await db.getAccountById(inactiveAccount.id);
+		expect(inactiveData).not.toBeNull();
+		if (inactiveData == null)
+			throw new Error('Inactive test account was not persisted');
+		await db.setAccountSecure(inactiveAccount.id, {
+			...inactiveData.secure,
+			activated: false,
+		});
+		accountManager.onDestroyAccounts();
+
+		const inactiveStart = await connection.awaitResponse('passkeyLoginStart', {});
+		expect(inactiveStart.result).toBe('ok');
+		if (inactiveStart.result !== 'ok')
+			throw new Error('Inactive passkey login did not start');
+
+		await expect(connection.awaitResponse('passkeyLoginFinish', {
+			credentialId: inactiveCredentialId,
+			...CreateAssertionData(inactiveStart.challenge, inactiveKeyPair.privateKey, 1),
+		})).resolves.toEqual({ result: 'verificationRequired' });
+	});
 });
 
 function CreateP256KeyPair() {
@@ -217,6 +290,18 @@ function CreateRegistrationData(challenge: string, credentialId: string, publicK
 		clientDataJSON: CreateClientData('webauthn.create', challenge),
 		authenticatorData: CreateRegistrationAuthenticatorData(credentialId, publicKey),
 		publicKey: publicKey.toString('base64'),
+	};
+}
+
+function CreatePasskey(credentialId: string, publicKey: Buffer) {
+	return {
+		credentialId,
+		name: 'Integration test passkey',
+		created: Date.now(),
+		publicKey: publicKey.toString('base64'),
+		signCount: 0,
+		transports: ['usb'],
+		cryptoKey: PASSKEY_WRAPPED_CRYPTO_KEY,
 	};
 }
 

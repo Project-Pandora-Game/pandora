@@ -73,6 +73,8 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			setErrorMessage('Invalid second factor');
 		} else if (result === 'verificationRequired') {
 			// NOOP
+		} else if (result === 'failed') {
+			setErrorMessage('Login failed');
 		} else if (result.result === 'accountDisabled') {
 			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
 		} else {

@@ -223,17 +223,11 @@ export function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential, data:
 }
 
 export function Base64UrlEncode(data: Buffer | Uint8Array): string {
-	return Buffer.from(data)
-		.toString('base64')
-		.replaceAll('+', '-')
-		.replaceAll('/', '_')
-		.replaceAll('=', '');
+	return Buffer.from(data).toString('base64url');
 }
 
 export function Base64UrlDecode(data: string): Buffer {
-	const normalized = data.replaceAll('-', '+').replaceAll('_', '/');
-	const padding = '='.repeat((4 - normalized.length % 4) % 4);
-	return Buffer.from(normalized + padding, 'base64');
+	return Buffer.from(data, 'base64url');
 }
 
 function ParseClientData(data: string): { type: string; challenge: string; origin: string; } | null {

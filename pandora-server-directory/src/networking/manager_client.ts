@@ -1469,7 +1469,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
-	private readonly _throttledOnSpaceListChange = throttle(() => {
+	public readonly _throttledOnSpaceListChange = throttle(() => {
 		for (const connection of this.connectedClients) {
 			// Only send updates to connections that can see the list (have character)
 			if (connection.character) {

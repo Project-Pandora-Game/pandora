@@ -7,7 +7,6 @@ import React, {
 	type ReactNode,
 } from 'react';
 import { useLocation } from 'react-router';
-import { toast } from 'react-toastify';
 import crossIcon from '../../../assets/icons/cross.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import listIcon from '../../../assets/icons/list.svg';
@@ -31,6 +30,7 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayer, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { HoverElement } from '../../../components/hoverElement/hoverElement.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
@@ -39,7 +39,6 @@ import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -58,6 +57,8 @@ import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, S
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
@@ -132,24 +133,21 @@ export function RoomControls(): ReactElement | null {
 								close={ () => setShowPhotoDialog(false) }
 							/>
 						) : null }
-						<span
-							className='construction-mode-wrapper'
-							title={ constructionModeTooltip }
-							onClick={ () => {
-								if (constructionModeTooltip != null) {
-									toast(constructionModeTooltip, TOAST_OPTIONS_WARNING);
-								}
-							} }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
 						>
-							<Button
-								className={ `half-slim align-start construction-mode-button${roomConstructionMode ? ' active' : ''}` }
-								onClick={ onRoomConstructionModeChange }
-								disabled={ !canModifyRoom || !canUseHands }
-							>
-								<img src={ toolsIcon } />
-								<div>Construction<br />mode</div>
-							</Button>
-						</span>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
 					</DivContainer>
 				</Column>
 				<DisplayRoomsGrid
@@ -193,6 +191,8 @@ export function RoomControls(): ReactElement | null {
 }
 
 export function PersonalSpaceControls(): ReactElement {
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const navigate = useNavigatePandora();
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
@@ -312,24 +312,21 @@ export function PersonalSpaceControls(): ReactElement {
 								close={ () => setShowPhotoDialog(false) }
 							/>
 						) : null }
-						<span
-							className='construction-mode-wrapper'
-							title={ constructionModeTooltip }
-							onClick={ () => {
-								if (constructionModeTooltip != null) {
-									toast(constructionModeTooltip, TOAST_OPTIONS_WARNING);
-								}
-							} }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
 						>
-							<Button
-								className={ `half-slim align-start construction-mode-button${roomConstructionMode ? ' active' : ''}` }
-								onClick={ onRoomConstructionModeChange }
-								disabled={ !canModifyRoom || !canUseHands }
-							>
-								<img src={ toolsIcon } />
-								<div>Construction<br />mode</div>
-							</Button>
-						</span>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
 					</DivContainer>
 					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
 				</Column>

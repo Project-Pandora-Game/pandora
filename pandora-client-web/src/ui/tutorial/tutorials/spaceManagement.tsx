@@ -1032,12 +1032,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					),
 					conditions: [{
 						type: 'elementQuery',
-						query: '.construction-mode-button.active',
+						query: '.Button.defaultActive',
 						filter: (e) => e.innerText.includes('Construction'),
 					}],
 					highlight: [
 						{
-							query: '.construction-mode-button',
+							query: '.Button',
 							filter: (e) => e.innerText.includes('Construction'),
 						},
 					],
@@ -1076,12 +1076,12 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
-						query: '.construction-mode-button.active',
+						query: '.Button.defaultActive',
 						filter: (e) => e.innerText.includes('Construction'),
 					}],
 					highlight: [
 						{
-							query: '.construction-mode-button',
+							query: '.Button',
 							filter: (e) => e.innerText.includes('Construction'),
 						},
 					],

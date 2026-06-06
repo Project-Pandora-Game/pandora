@@ -1,23 +1,22 @@
 import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
-import React, { ReactElement } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { ReactElement, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
-import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../common/userInteraction/select/select.tsx';
-import { PrehashPassword } from '../../crypto/helpers.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { CharacterPreviewGenerationButton } from '../../ui/screens/room/characterPreviewGeneration.tsx';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
 import { Column, Row } from '../common/container/container.tsx';
-import { Form, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
+import { SudoDialog, useSudoMode } from './securitySettings/sudoMode.tsx';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigatePandora();
@@ -107,160 +106,127 @@ function Preview(): ReactElement {
 }
 
 function DeleteCharacter({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
-	const [stage, setStage] = React.useState(0);
+	const [dialogVisible, setDialogVisible] = useState(false);
+	const { sudoActive, clearSudoMode } = useSudoMode();
 
 	return (
 		<fieldset>
 			<legend>Character deletion</legend>
 			<Column>
-				<label>This action is irreversible, there is no going back. Please be certain.</label>
-				<Button theme='danger' onClick={ () => setStage(1) }>
+				<span>Permanently delete this character</span>
+				<Button theme='danger' onClick={ () => setDialogVisible(true) }>
 					Delete this character
 				</Button>
-				<DeleteCharacterDialog playerData={ playerData } stage={ stage } setStage={ setStage } />
+				{ dialogVisible ? (
+					sudoActive ? (
+						<DeleteCharacterDialog
+							playerData={ playerData }
+							close={ () => {
+								setDialogVisible(false);
+							} }
+							onSudoFailed={ clearSudoMode }
+						/>
+					) : (
+						<SudoDialog
+							hide={ (success) => {
+								if (!success) {
+									setDialogVisible(false);
+								}
+							} }
+						/>
+					)
+				) : null }
 			</Column>
 		</fieldset>
 	);
 }
 
-interface CharacterDeleteFormData {
-	character: string;
-	password: string;
-}
-
-function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
+function DeleteCharacterDialog({ playerData, close, onSudoFailed }: {
+	playerData: Readonly<ICharacterPrivateData>;
+	close: () => void;
+	onSudoFailed: () => void;
+}): ReactElement | null {
 	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
-	const [invalidPassword, setInvalidPassword] = React.useState('');
-	const [character, setCharacter] = React.useState('');
 
-	const {
-		formState: { errors, submitCount, isSubmitting },
-		reset,
-		handleSubmit,
-		register,
-		trigger,
-	} = useForm<CharacterDeleteFormData>({ shouldUseNativeValidation: true, progressive: true });
+	const [characterName, setCharacterName] = useState('');
+	const [confirmed, setConfirmed] = useState(false);
 
-	React.useEffect(() => {
-		if (invalidPassword) {
-			void trigger();
-		}
-	}, [invalidPassword, trigger]);
-
-	const onReset = React.useCallback(() => {
-		reset();
-		setInvalidPassword('');
-		setCharacter('');
-		setStage(0);
-	}, [reset, setStage]);
-
-	const onSubmit = handleSubmit(async ({ password }) => {
-		if (character !== playerData.name)
-			return;
+	const [deleteCharacter, isDeleting] = useAsyncEvent(async () => {
+		if (characterName !== playerData.name || !confirmed)
+			return null;
 
 		const id = playerData.id;
-		const passwordSha512 = await PrehashPassword(password);
-		const { result } = await directoryConnector.awaitResponse('deleteCharacter', { id, passwordSha512 });
+		return await directoryConnector.awaitResponse('deleteCharacter', { id });
+	}, (response) => {
+		if (response == null)
+			return;
 
-		switch (result) {
+		switch (response.result) {
 			case 'ok':
 				toast('Character deleted', TOAST_OPTIONS_SUCCESS);
-				onReset();
+				close();
 				navigate('/character/select');
 				return;
-			case 'invalidPassword':
-				setInvalidPassword(password);
-				toast('Invalid password', TOAST_OPTIONS_ERROR);
+			case 'sudoRequired':
+				onSudoFailed();
+				toast('Please confirm your identity again.', TOAST_OPTIONS_ERROR);
 				return;
 			case 'failed':
 				toast('Failed to delete the character. Please try again later.', TOAST_OPTIONS_ERROR);
 				return;
 			default:
-				AssertNever(result);
+				AssertNever(response.result);
 		}
+	}, {
+		updateAfterUnmount: true,
+		errorHandler: (error) => {
+			const detail = error instanceof Error ? error.message : String(error);
+			toast(`Failed to delete the character:\n${detail}`, TOAST_OPTIONS_ERROR);
+		},
 	});
-
-	const toStage2 = React.useCallback(() => {
-		if (character !== playerData.name) {
-			toast('Invalid character name', TOAST_OPTIONS_ERROR);
-			return;
-		}
-		setStage(2);
-	}, [character, playerData.name, setStage]);
-
-	if (stage < 1)
-		return null;
-
-	if (stage < 2) {
-		return (
-			<ModalDialog>
-				<Column>
-					<h3>
-						Delete character: { playerData.name } ({ playerData.id })?
-					</h3>
-					<span>
-						This will permanently delete the character and all associated data.
-					</span>
-					<span>
-						This action is irreversible, there is no going back.
-					</span>
-					<br />
-					<label htmlFor='character'>Enter your character name:</label>
-					<TextInput
-						id='character'
-						aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
-						value={ character }
-						onChange={ setCharacter }
-					/>
-					<br />
-					<Row>
-						<Button onClick={ onReset }>
-							Cancel
-						</Button>
-						<Button
-							theme='danger'
-							onClick={ toStage2 }
-							disabled={ character !== playerData.name }
-						>
-							I have read and understood these effects
-						</Button>
-					</Row>
-				</Column>
-			</ModalDialog>
-		);
-	}
 
 	return (
 		<ModalDialog>
-			<h3>
-				Delete character: { playerData.name } ({ playerData.id })?
-			</h3>
-			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
-				<FormField>
-					<label htmlFor='password'>Current password</label>
-					<FormInput
-						type='password'
-						id='password'
-						autoComplete='current-password'
-						register={ register }
-						name='password'
-						options={ {
-							required: 'Password is required',
-							validate: (pwd) => (invalidPassword === pwd) ? 'Invalid password' : true,
-						} }
-					/>
-					<FormFieldError error={ errors.password } />
-				</FormField>
-				<Row>
-					<Button onClick={ onReset }>
+			<Column>
+				<h3>
+					Delete character: { playerData.name } ({ playerData.id })?
+				</h3>
+				<span>
+					This will permanently delete the character and all associated data.
+				</span>
+				<strong>
+					This action is irreversible, there is no going back.
+				</strong>
+				<br />
+				<label htmlFor='character'>Enter your character name:</label>
+				<TextInput
+					id='character'
+					aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
+					value={ characterName }
+					onChange={ setCharacterName }
+				/>
+				<br />
+				<label>
+					<Row>
+						<Checkbox checked={ confirmed } onChange={ setConfirmed } />
+						<span>I have read and understood these effects</span>
+					</Row>
+				</label>
+				<br />
+				<Row alignX='space-between' gap='large'>
+					<Button onClick={ close }>
 						Cancel
 					</Button>
-					<Button theme='danger' type='submit' disabled={ isSubmitting }>
+					<Button
+						theme='danger'
+						onClick={ deleteCharacter }
+						disabled={ characterName !== playerData.name || !confirmed || isDeleting }
+					>
 						Delete this character
 					</Button>
 				</Row>
-			</Form>
+			</Column>
 		</ModalDialog>
 	);
 }

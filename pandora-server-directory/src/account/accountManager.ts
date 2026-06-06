@@ -219,6 +219,20 @@ export class AccountManager implements ServerService {
 	 * Find an account between **currently loaded accounts**
 	 * @returns The account or `null` if not found
 	 */
+	public getAccountByPasskeyCredentialId(credentialId: string): Account | null {
+		for (const account of this._onlineAccounts) {
+			if (account.secure.getPasskey(credentialId) != null) {
+				account.touch();
+				return account;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Find an account between **currently loaded accounts**
+	 * @returns The account or `null` if not found
+	 */
 	public getAccountByEmailHash(emailHash: string): Account | null {
 		for (const account of this._onlineAccounts) {
 			if (account.secure.verifyEmailHash(emailHash)) {
@@ -258,6 +272,23 @@ export class AccountManager implements ServerService {
 			return account;
 		// Get it from database
 		const data = await GetDatabase().getAccountByUsername(username);
+		// Use the acquired DB data to load character
+		if (!data)
+			return null;
+		return await this._loadAccount(data);
+	}
+
+	/**
+	 * Find an account between loaded ones or try to load it from database
+	 * @returns The account or `null` if not found even in database
+	 */
+	public async loadAccountByPasskeyCredentialId(credentialId: string): Promise<Account | null> {
+		// Check if account is loaded and return it if it is
+		const account = this.getAccountByPasskeyCredentialId(credentialId);
+		if (account)
+			return account;
+		// Get it from database
+		const data = await GetDatabase().getAccountByPasskeyCredentialId(credentialId);
 		// Use the acquired DB data to load character
 		if (!data)
 			return null;

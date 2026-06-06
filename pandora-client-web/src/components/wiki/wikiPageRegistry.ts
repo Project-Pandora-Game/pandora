@@ -1,4 +1,5 @@
 import { ComponentType } from 'react';
+import { WikiAccountSecurity } from './pages/accountSecurity.tsx';
 import { WikiCharacters } from './pages/characters.tsx';
 import { WikiChat } from './pages/chat.tsx';
 import { WikiContact } from './pages/contact.tsx';
@@ -24,6 +25,7 @@ export const WIKI_PAGES: WikiPageEntry[] = [
 	{ pageName: 'Items', urlChunk: 'items', Component: WikiItems },
 	{ pageName: 'Characters', urlChunk: 'characters', Component: WikiCharacters },
 	{ pageName: 'Safety', urlChunk: 'safety', Component: WikiSafety },
+	{ pageName: 'Account Security', urlChunk: 'account_security', Component: WikiAccountSecurity },
 	{ pageName: 'Pandora History', urlChunk: 'history', Component: WikiHistory },
 	{ pageName: 'Contact', urlChunk: 'contact', Component: WikiContact },
 ];

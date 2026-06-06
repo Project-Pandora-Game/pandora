@@ -32,6 +32,7 @@ export class ScreenHandlerAuth extends TestScreenHandler {
 	@TestStep
 	public async loginSignUp(): Promise<void> {
 		await this.page.getByRole('link', { name: 'Not a member? Sign up', exact: true }).click();
+		await expect(this.page.getByRole('heading', { name: 'Sign up', exact: true })).toBeVisible();
 	}
 
 	@TestStep

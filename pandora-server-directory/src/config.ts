@@ -94,6 +94,8 @@ export const EnvParser = CreateEnvParser({
 		.map((x) => x.trim())
 		.filter(Boolean)
 		.map((x) => parseInt(x, 10)), z.array(z.number())).default([]),
+	/** If set with the mock database, creates development test accounts on startup */
+	PANDORA_DEV_TEST_ACCOUNTS: z.boolean().default(false),
 
 	//#endregion
 
@@ -133,8 +135,16 @@ export const EnvParser = CreateEnvParser({
 	PANDORA_DISABLE_EMAIL_VERIFICATION: z.boolean().default(false),
 	/** Killswitch for password reset */
 	PANDORA_DISABLE_PASSWORD_RESET: z.boolean().default(false),
+	/** WebAuthn relying party id. Must match the browser-visible site domain. */
+	PASSKEY_RP_ID: z.string().default('localhost'),
+	/** Comma-separated browser origins allowed to create/use passkeys. */
+	PASSKEY_ALLOWED_ORIGINS: z.string().default('http://localhost:6969,http://127.0.0.1:6969,http://localhost:10269,http://127.0.0.1:10269'),
 
 	//#endregion
 });
 
 export const ENV = EnvParser();
+
+if (ENV.LOG_PRODUCTION && ENV.PASSKEY_RP_ID === 'localhost') {
+	throw new Error('PASSKEY_RP_ID must be configured explicitly in production');
+}

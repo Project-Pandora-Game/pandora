@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { createHash } from 'crypto';
-import { PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { PASSWORD_PREHASH_SALT, TutorialIdSchema } from 'pandora-common';
 import { MockDatabase, PrehashPassword } from '../../src/database/mockDb.ts';
 import RunDbTests from './db.ts';
 
@@ -22,5 +22,14 @@ describe('MockDatabase', () => {
 
 	it('Inits with mock accounts', () => {
 		new MockDatabase();
+	});
+
+	it('creates active development test account with tutorials completed', async () => {
+		const db = new MockDatabase();
+
+		await db.addTestAccounts();
+
+		const testAccount = await db.getAccountByUsername('test');
+		expect(testAccount?.settings.tutorialCompleted).toEqual(TutorialIdSchema.options);
 	});
 });

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Account, CreateAccountData } from '../../src/account/account.ts';
+import { LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
 import AccountSecure, { AccountToken, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
 import { AccountTokenReason, DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
 import { MockDatabase } from '../../src/database/mockDb.ts';
@@ -16,6 +17,17 @@ const TEST_CRYPT = {
 	iv: 'iv',
 	encryptedPrivateKey: 'encryptedPrivateKey',
 };
+
+function CreateTestPasskey(credentialId: string) {
+	return {
+		credentialId,
+		name: `Test passkey ${credentialId}`,
+		created: Date.now(),
+		publicKey: TEST_CRYPT.publicKey,
+		signCount: 0,
+		cryptoKey: TEST_CRYPT,
+	};
+}
 
 async function CreateAccountSecure(password: string, email: string, activated: boolean): Promise<AccountSecure> {
 	const account = new Account({
@@ -68,6 +80,73 @@ describe('AccountSecure', () => {
 		it('should return true for activated account', async () => {
 			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
 			expect(active.isActivated()).toBe(true);
+		});
+	});
+
+	describe('Passkeys', () => {
+		it('Adds, lists, marks used, and deletes passkeys', async () => {
+			const secure = await CreateAccountSecure('password', TEST_EMAIL, true);
+			const passkey = CreateTestPasskey('credential-1');
+
+			await expect(secure.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
+			await expect(secure.addPasskey(passkey)).resolves.toBe('ok');
+			expect(secure.listPasskeys()).toEqual([{
+				credentialId: 'credential-1',
+				name: 'Test passkey credential-1',
+				created: passkey.created,
+			}]);
+			expect(secure.getPasskey('credential-1')).toEqual(passkey);
+
+			await expect(secure.renamePasskey('credential-1', 'Backup security key')).resolves.toBe('ok');
+			expect(secure.listPasskeys()).toEqual([{
+				credentialId: 'credential-1',
+				name: 'Backup security key',
+				created: passkey.created,
+			}]);
+			await expect(secure.renamePasskey('missing-credential', 'Missing security key')).resolves.toBe('notFound');
+
+			await secure.markPasskeyUsed('credential-1', 4);
+			expect(secure.getPasskey('credential-1')).toMatchObject({
+				credentialId: 'credential-1',
+				name: 'Backup security key',
+				signCount: 4,
+				lastUsed: expect.any(Number),
+			});
+
+			await expect(secure.deletePasskey('credential-1')).resolves.toBe('ok');
+			expect(secure.listPasskeys()).toEqual([]);
+			await expect(secure.deletePasskey('credential-1')).resolves.toBe('notFound');
+		});
+
+		it('Rejects duplicate passkeys and enforces the account limit', async () => {
+			const secure = await CreateAccountSecure('password', TEST_EMAIL, true);
+			const first = CreateTestPasskey('credential-1');
+
+			await expect(secure.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
+			await expect(secure.addPasskey(first)).resolves.toBe('ok');
+			await expect(secure.addPasskey(first)).resolves.toBe('alreadyExists');
+
+			for (let i = 2; i <= LIMIT_ACCOUNT_PASSKEY_COUNT; i++) {
+				await expect(secure.addPasskey(CreateTestPasskey(`credential-${i}`))).resolves.toBe('ok');
+			}
+
+			await expect(secure.addPasskey(CreateTestPasskey('credential-over-limit'))).resolves.toBe('limitReached');
+			expect(secure.listPasskeys()).toHaveLength(LIMIT_ACCOUNT_PASSKEY_COUNT);
+		});
+
+		it('Rejects passkeys that do not wrap the account direct message key', async () => {
+			const secure = await CreateAccountSecure('password', TEST_EMAIL, true);
+			const passkey = CreateTestPasskey('credential-1');
+
+			await expect(secure.addPasskey(passkey)).resolves.toBe('invalidCryptoKey');
+			await expect(secure.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
+			await expect(secure.addPasskey({
+				...passkey,
+				cryptoKey: {
+					...passkey.cryptoKey,
+					publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEH11RmS1YyTzcvbLlV5/4/pyveaTKb+mXeVRAXqaVkxNZjyDxr9S0T+/Rc9jAIqNda0X3z5I8hhu67E4LNLjxqA==',
+				},
+			})).resolves.toBe('invalidCryptoKey');
 		});
 	});
 
@@ -224,7 +303,7 @@ describe('AccountSecure', () => {
 		});
 	});
 
-	describe('changePassword()', () => {
+	describe('changePasswordAfterSudo()', () => {
 		let account: AccountSecure;
 
 		beforeAll(async () => {
@@ -233,21 +312,14 @@ describe('AccountSecure', () => {
 
 		it('Fails on inactive account', async () => {
 			const inactiveAccount = await CreateAccountSecure('password', TEST_EMAIL, false);
-			await expect(inactiveAccount.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
+			await expect(inactiveAccount.changePasswordAfterSudo('newPassword', TEST_CRYPT)).resolves.toBe('invalidCryptoKey');
 			await expect(inactiveAccount.verifyPassword('password')).resolves.toBe(true);
 			await expect(inactiveAccount.verifyPassword('newPassword')).resolves.toBe(false);
 			expect(mockSaving).not.toHaveBeenCalled();
 		});
 
-		it('Fails if old password is incorrect', async () => {
-			await expect(account.changePassword('wrongPassword', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
-			await expect(account.verifyPassword('password')).resolves.toBe(true);
-			await expect(account.verifyPassword('newPassword')).resolves.toBe(false);
-			expect(mockSaving).not.toHaveBeenCalled();
-		});
-
 		it('Changes password', async () => {
-			await expect(account.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(true);
+			await expect(account.changePasswordAfterSudo('newPassword', TEST_CRYPT)).resolves.toBe('ok');
 			// Old password is no longer valid
 			await expect(account.verifyPassword('password')).resolves.toBe(false);
 			// New password is valid
@@ -255,6 +327,7 @@ describe('AccountSecure', () => {
 			// Saves data
 			expect(mockSaving).toHaveBeenCalledTimes(1);
 		});
+
 	});
 
 	describe('Password reset', () => {
@@ -297,11 +370,19 @@ describe('AccountSecure', () => {
 				// Assertion: Not active before this test
 				expect(account.isActivated()).toBe(false);
 
+				await expect(account.setCryptoKey(TEST_CRYPT)).resolves.toBe('ok');
+				await expect(account.addPasskey(CreateTestPasskey('credential-1'))).resolves.toBe('ok');
+				expect(account.listPasskeys()).toHaveLength(1);
+				mockSaving.mockClear();
+
 				await expect(account.finishPasswordReset(resetToken, 'newPassword')).resolves.toBe(true);
 				// Old password is no longer valid
 				await expect(account.verifyPassword('password')).resolves.toBe(false);
 				// New password is valid
 				await expect(account.verifyPassword('newPassword')).resolves.toBe(true);
+				// Account DM key and passkeys are removed, because the reset cannot rewrap the old DM key
+				expect(account.getCryptoKey()).toBeUndefined();
+				expect(account.listPasskeys()).toEqual([]);
 				// Activates account
 				expect(account.isActivated()).toBe(true);
 				// Saves data

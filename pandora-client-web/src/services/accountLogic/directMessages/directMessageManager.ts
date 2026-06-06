@@ -1,5 +1,6 @@
 import {
 	AccountId,
+	AccountCryptoKeySchema,
 	Assert,
 	AsyncSynchronized,
 	EMPTY,
@@ -34,9 +35,25 @@ type DirectMessageManagerServiceConfig = Satisfies<{
 }, ServiceConfigBase>;
 
 const DmCryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
+const PasskeyDirectMessageUnlockSchema = z.object({
+	username: z.string(),
+	cryptoKey: AccountCryptoKeySchema,
+	wrappingSecret: z.string(),
+});
+const DmCryptoPasskeyUnlock = BrowserStorage.create<z.infer<typeof PasskeyDirectMessageUnlockSchema> | undefined>(
+	'crypto-handler-passkey-unlock',
+	undefined,
+	PasskeyDirectMessageUnlockSchema.optional(),
+);
 
 export async function InitDirectMessageCryptoPassword(username: string, password: string): Promise<void> {
 	DmCryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
+	DmCryptoPasskeyUnlock.value = undefined;
+}
+
+export function ClearDirectMessageCryptoUnlocks(): void {
+	DmCryptoPassword.value = undefined;
+	DmCryptoPasskeyUnlock.value = undefined;
 }
 
 export class DirectMessageManager extends Service<DirectMessageManagerServiceConfig> {
@@ -72,8 +89,8 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		accountManager.on('logout', () => {
 			this.clear();
 		});
-		accountManager.on('accountChanged', ({ account }) => {
-			this.accountChanged(account)
+		accountManager.on('accountChanged', ({ account, passkeyUnlock }) => {
+			this.accountChanged(account, passkeyUnlock)
 				.catch((error) => {
 					this.logger.error('Error processing account change:', error);
 				});
@@ -82,7 +99,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	public clear() {
-		DmCryptoPassword.value = undefined;
+		ClearDirectMessageCryptoUnlocks();
 		this._chats.value = [];
 		this.#crypto = undefined;
 		this._cryptoState.value = 'notLoaded';
@@ -95,18 +112,21 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		}
 
 		const cryptoPassword = await KeyExchange.generateKeyPassword(username, password);
-		const cryptoKey = await this.#crypto.export(cryptoPassword);
+		const crypto = this.#crypto;
+		Assert(crypto != null, 'Crypto not loaded');
+		const cryptoKey = await crypto.export(cryptoPassword);
 
 		return {
 			cryptoKey,
 			onSuccess: () => {
 				DmCryptoPassword.value = cryptoPassword;
+				DmCryptoPasskeyUnlock.value = undefined;
 			},
 		};
 	}
 
 	@AsyncSynchronized()
-	private async accountChanged(account: IDirectoryAccountInfo | null) {
+	private async accountChanged(account: IDirectoryAccountInfo | null, passkeyUnlock?: { cryptoKey: IAccountCryptoKey; wrappingSecret: string; }) {
 		if (!account) {
 			this.logger.debug('No account, clear');
 			this.clear();
@@ -123,7 +143,18 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 			this._cryptoState.value = 'notLoaded';
 
 			const cryptoPassword = DmCryptoPassword.value;
-			if (cryptoPassword != null) {
+			if (passkeyUnlock != null) {
+				const loadResult = await this.loadKey(passkeyUnlock.cryptoKey, passkeyUnlock.wrappingSecret);
+				if (loadResult !== 'ok') {
+					this._cryptoState.value = 'loadError';
+				} else {
+					DmCryptoPasskeyUnlock.value = {
+						username: account.username,
+						cryptoKey: passkeyUnlock.cryptoKey,
+						wrappingSecret: passkeyUnlock.wrappingSecret,
+					};
+				}
+			} else if (cryptoPassword != null) {
 				if (account.cryptoKey) {
 					const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
 					if (loadResult !== 'ok') {
@@ -133,6 +164,14 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 					if (!await this.regenerateKey(cryptoPassword)) {
 						this._cryptoState.value = 'generateError';
 					}
+				}
+			} else if (this.tryGetStoredPasskeyUnlock(account) != null) {
+				const storedPasskeyUnlock = this.tryGetStoredPasskeyUnlock(account);
+				Assert(storedPasskeyUnlock != null);
+				const loadResult = await this.loadKey(storedPasskeyUnlock.cryptoKey, storedPasskeyUnlock.wrappingSecret);
+				if (loadResult !== 'ok') {
+					DmCryptoPasskeyUnlock.value = undefined;
+					this._cryptoState.value = 'loadError';
 				}
 			} else {
 				this.logger.error('Failed to load crypto: We have an account, but no crypto password');
@@ -146,6 +185,20 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		} catch (error) {
 			this.logger.error('Failed to load DM info:', error);
 		}
+	}
+
+	private tryGetStoredPasskeyUnlock(account: IDirectoryAccountInfo): z.infer<typeof PasskeyDirectMessageUnlockSchema> | undefined {
+		const storedPasskeyUnlock = DmCryptoPasskeyUnlock.value;
+		if (
+			storedPasskeyUnlock == null ||
+			storedPasskeyUnlock.username !== account.username ||
+			account.cryptoKey == null ||
+			storedPasskeyUnlock.cryptoKey.publicKey !== account.cryptoKey.publicKey
+		) {
+			return undefined;
+		}
+
+		return storedPasskeyUnlock;
 	}
 
 	public async loadKey(cryptoKey: IAccountCryptoKey, password: string): Promise<'ok' | 'error' | 'selftestFailed'> {
@@ -166,6 +219,11 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 			this.logger.error('Error loading crypto key:', error);
 		}
 		return 'error';
+	}
+
+	public async exportPasskeyWrappedKey(wrappingSecret: string): Promise<IAccountCryptoKey> {
+		Assert(this.#crypto != null, 'Crypto not loaded');
+		return await this.#crypto.export(wrappingSecret);
 	}
 
 	/** Update key stored on server. Mainly for the purpose of migrating off of old key formats. */
@@ -226,6 +284,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 				return false;
 			}
 			DmCryptoPassword.value = password;
+			DmCryptoPasskeyUnlock.value = undefined;
 			this.#crypto = newCrypto;
 			this._cryptoState.value = 'ready';
 			await this._refreshChatCrypto();

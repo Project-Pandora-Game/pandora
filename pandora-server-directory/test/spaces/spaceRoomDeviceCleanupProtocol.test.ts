@@ -1,7 +1,8 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { Assert, AssertNever, type IDirectoryShardArgument, type IDirectoryShardUpdate, type SpaceDirectoryConfig } from 'pandora-common';
 import type { Character } from '../../src/account/character.ts';
 import { GetDatabase } from '../../src/database/databaseProvider.ts';
+import { ConnectionManagerClient } from '../../src/networking/manager_client.ts';
 import { ShardManager } from '../../src/shard/shardManager.ts';
 import { Space } from '../../src/spaces/space.ts';
 import { SpaceManager } from '../../src/spaces/spaceManager.ts';
@@ -35,6 +36,11 @@ describe('Space room device cleanup protocol', () => {
 
 	beforeEach(() => {
 		updates.length = 0;
+	});
+
+	afterEach(async () => {
+		await SpaceManager.onDestroy();
+		ConnectionManagerClient._throttledOnSpaceListChange.cancel();
 	});
 
 	afterAll(async () => {

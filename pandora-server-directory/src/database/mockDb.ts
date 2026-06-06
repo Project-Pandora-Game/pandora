@@ -19,6 +19,7 @@ import {
 	SpaceDataShardUpdate,
 	SpaceDirectoryData,
 	SpaceId,
+	TutorialIdSchema,
 	type ICharacterDataShard,
 	type SpaceSearchArguments,
 	type SpaceSearchResult,
@@ -80,13 +81,15 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public async addTestAccounts() {
-		await this.createAccount(await CreateAccountData(
+		const activeTestAccount = await CreateAccountData(
 			'test',
 			'test',
 			PrehashPassword('test'),
 			'test@project-pandora.com',
 			true,
-		));
+		);
+		activeTestAccount.settings.tutorialCompleted = [...TutorialIdSchema.options];
+		await this.createAccount(activeTestAccount);
 		await this.createAccount(await CreateAccountData(
 			'testinactive',
 			'testinactive',
@@ -120,6 +123,11 @@ export class MockDatabase implements PandoraDatabase {
 	public getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null> {
 		username = username.toLowerCase();
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.username.toLowerCase() === username);
+		return Promise.resolve(cloneDeep(acc ?? null));
+	}
+
+	public getAccountByPasskeyCredentialId(credentialId: string): Promise<DatabaseAccountWithSecure | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.passkeys?.some((passkey) => passkey.credentialId === credentialId) === true);
 		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 

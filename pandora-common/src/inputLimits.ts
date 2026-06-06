@@ -1,7 +1,6 @@
 import { TimeSpanMs } from './utility/formatting.ts';
 
 /* TODO list of things to potentially limit *
-- AccountCryptoKeySchema limits (or more thorough validation)
 - Space admin list
 - Space banned list
 - Space owner list
@@ -24,6 +23,20 @@ export const LIMIT_MAIL_LENGTH = 256;
 
 /** Space ownership limit for an account */
 export const LIMIT_SPACE_OWNED_COUNT = 5;
+
+/** Maximum number of passkeys registered to one account */
+export const LIMIT_ACCOUNT_PASSKEY_COUNT = 5;
+/** Maximum length of a user-visible passkey name */
+export const LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH = 80;
+
+/** Maximum length of a public key in account crypto key data */
+export const LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH = 512;
+/** Maximum length of a salt in account crypto key data */
+export const LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH = 128;
+/** Maximum length of an IV in account crypto key data */
+export const LIMIT_ACCOUNT_CRYPTO_IV_LENGTH = 64;
+/** Maximum length of an encrypted private key in account crypto key data */
+export const LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH = 2048;
 
 /** The maximum amount of characters inside a space */
 export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;

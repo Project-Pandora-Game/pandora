@@ -1,7 +1,7 @@
 import { AssertNever, GetLogger, IsString, IsUsername, type Promisable } from 'pandora-common';
-import { type SubmitEvent, useState } from 'react';
+import { type SubmitEvent, useCallback, useState } from 'react';
 import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
-import { useLogin } from '../../../networking/account_manager.ts';
+import { useLogin, usePasskeyLogin } from '../../../networking/account_manager.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
 
@@ -18,13 +18,18 @@ export interface UseLoginFormReturn {
 	errorMessage: string;
 	errors: FieldErrors<UseLoginFormData>;
 	onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promisable<void>;
+	onPasskeyLogin: () => Promisable<void>;
+	onConditionalPasskeyLogin: (signal: AbortSignal) => Promisable<void>;
 	isSubmitting: boolean;
+	isPasskeySubmitting: boolean;
 	register: UseFormRegister<UseLoginFormData>;
 }
 
 export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 	const [errorMessage, setErrorMessage] = useState('');
+	const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false);
 	const login = useLogin();
+	const passkeyLogin = usePasskeyLogin();
 	const { state: authData, setState: setAuthData } = useAuthFormData();
 	const {
 		formState: { errors, submitCount, isSubmitting },
@@ -68,6 +73,8 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			setErrorMessage('Invalid second factor');
 		} else if (result === 'verificationRequired') {
 			// NOOP
+		} else if (result === 'failed') {
+			setErrorMessage('Login failed');
 		} else if (result.result === 'accountDisabled') {
 			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
 		} else {
@@ -75,5 +82,42 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 		}
 	});
 
-	return { dirty, errorMessage, errors, register, onSubmit, isSubmitting };
+	const handlePasskeyLoginResult = useCallback((result: Awaited<ReturnType<typeof passkeyLogin>>): void => {
+		if (result === 'ok') {
+			setErrorMessage('');
+		} else if (result === 'unknownCredentials') {
+			setErrorMessage('No matching passkey was found');
+		} else if (typeof result === 'object' && result.result === 'accountDisabled') {
+			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
+		} else {
+			setErrorMessage('Passkey sign in failed');
+		}
+	}, []);
+
+	const onPasskeyLogin = useCallback(async () => {
+		setIsPasskeySubmitting(true);
+		try {
+			const result = await passkeyLogin();
+			handlePasskeyLoginResult(result);
+		} catch (error) {
+			logger.warning('Passkey sign in failed:', error);
+			setErrorMessage('Passkey sign in failed');
+		} finally {
+			setIsPasskeySubmitting(false);
+		}
+	}, [handlePasskeyLoginResult, passkeyLogin]);
+
+	const onConditionalPasskeyLogin = useCallback(async (signal: AbortSignal) => {
+		try {
+			const result = await passkeyLogin({ mediation: 'conditional', signal });
+			handlePasskeyLoginResult(result);
+		} catch (error) {
+			if (signal.aborted || (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')))
+				return;
+
+			logger.warning('Conditional passkey sign in failed:', error);
+		}
+	}, [handlePasskeyLoginResult, passkeyLogin]);
+
+	return { dirty, errorMessage, errors, register, onSubmit, onPasskeyLogin, onConditionalPasskeyLogin, isSubmitting, isPasskeySubmitting };
 }

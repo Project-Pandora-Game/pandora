@@ -3,19 +3,60 @@ import * as z from 'zod';
 import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
 import type { IDirectoryStatus } from '../directory/status.ts';
+import { LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_IV_LENGTH, LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } from '../inputLimits.ts';
 import type { ShardFeature } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
-import { ZodCast, type HexColorString } from '../validation.ts';
+import { ZodBase64Regex, ZodCast, type HexColorString } from '../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
-// TODO: This needs reasonable size limits
+const ZodBase64UrlRegex = /^[A-Za-z0-9_-]*$/;
+
+/** @see https://www.w3.org/TR/webauthn-3/#credential-id */
+const ACCOUNT_PASSKEY_CREDENTIAL_ID_LENGTH_MAX = 2048;
+/** @see https://www.w3.org/TR/webauthn-3/#sctn-public-key-easy */
+const ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH_MAX = 1024;
+/** @see https://www.w3.org/TR/webauthn-3/#dictdef-collectedclientdata */
+const ACCOUNT_PASSKEY_CLIENT_DATA_LENGTH_MAX = 4096;
+/** @see https://www.w3.org/TR/webauthn-3/#sctn-authenticator-data */
+const ACCOUNT_PASSKEY_AUTHENTICATOR_DATA_LENGTH_MAX = 8192;
+/** @see https://www.w3.org/TR/webauthn-3/#sctn-op-get-assertion */
+const ACCOUNT_PASSKEY_SIGNATURE_LENGTH_MAX = 1024;
+/** @see https://www.w3.org/TR/webauthn-3/#enumdef-authenticatortransport */
+const ACCOUNT_PASSKEY_TRANSPORT_LENGTH_MAX = 16;
+/** @see https://www.w3.org/TR/webauthn-3/#enumdef-authenticatortransport */
+export const ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX = 8;
+
+export const AccountPasskeyCredentialIdSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_CREDENTIAL_ID_LENGTH_MAX);
+export const AccountPasskeyPublicKeySchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH_MAX);
+export const AccountPasskeyClientDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_CLIENT_DATA_LENGTH_MAX);
+export const AccountPasskeyAuthenticatorDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_AUTHENTICATOR_DATA_LENGTH_MAX);
+export const AccountPasskeySignatureSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_SIGNATURE_LENGTH_MAX);
+export const AccountPasskeyTransportSchema = z.string().max(ACCOUNT_PASSKEY_TRANSPORT_LENGTH_MAX);
+export const AccountPasskeyNameSchema = z.string().trim().min(1).max(LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH);
+
 export const AccountCryptoKeySchema = z.object({
-	publicKey: z.string(),
-	salt: z.string(),
-	iv: z.string(),
-	encryptedPrivateKey: z.string(),
+	publicKey: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH),
+	salt: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH),
+	iv: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_IV_LENGTH),
+	encryptedPrivateKey: z.string().regex(ZodBase64Regex).min(1).max(LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH),
 });
 export type IAccountCryptoKey = z.infer<typeof AccountCryptoKeySchema>;
+
+export const AccountPasskeyInfoSchema = z.object({
+	credentialId: AccountPasskeyCredentialIdSchema,
+	name: AccountPasskeyNameSchema,
+	created: z.number(),
+	lastUsed: z.number().optional(),
+});
+export type IAccountPasskeyInfo = z.infer<typeof AccountPasskeyInfoSchema>;
+
+export const AccountPasskeyCredentialSchema = AccountPasskeyInfoSchema.extend({
+	publicKey: AccountPasskeyPublicKeySchema,
+	signCount: z.number().int().nonnegative(),
+	transports: AccountPasskeyTransportSchema.array().max(ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX).optional(),
+	cryptoKey: AccountCryptoKeySchema,
+});
+export type IAccountPasskeyCredential = z.infer<typeof AccountPasskeyCredentialSchema>;
 
 export type IDirectoryAccountInfo = {
 	id: number;

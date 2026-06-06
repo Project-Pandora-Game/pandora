@@ -5,6 +5,7 @@ import {
 	CharacterIdSchema,
 	EMPTY,
 	GetLogger,
+	IAccountCryptoKey,
 	IDirectoryAccountInfo,
 	Service,
 	type CharacterId,
@@ -21,17 +22,27 @@ import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
 import { PrehashPassword } from '../../crypto/helpers.ts';
+import { GetPasskeyAssertion, SignalAllAcceptedPasskeyCredentials, SignalCurrentPasskeyUserDetails, SignalUnknownPasskeyCredential, type PasskeyAssertionOptions } from '../../crypto/passkey.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import type { ClientServices } from '../clientServices.ts';
 import { InitDirectMessageCryptoPassword } from './directMessages/directMessageManager.ts';
 
+export type PasskeyDirectMessageUnlock = {
+	cryptoKey: IAccountCryptoKey;
+	wrappingSecret: string;
+};
+
+export type PasskeyLoginOptions = PasskeyAssertionOptions & {
+	secondFactor?: SecondFactorData;
+};
+
 type AccountManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector'>;
 	events: {
 		logout: undefined;
-		accountChanged: { account: IDirectoryAccountInfo | null; character: Immutable<IDirectoryCharacterAssignmentInfo> | null; };
+		accountChanged: { account: IDirectoryAccountInfo | null; character: Immutable<IDirectoryCharacterAssignmentInfo> | null; passkeyUnlock?: PasskeyDirectMessageUnlock; };
 	};
 }, ServiceConfigBase>;
 
@@ -56,6 +67,7 @@ export interface IAccountManager extends IService<AccountManagerServiceConfig> {
 	 * @returns Promise of response from Directory
 	 */
 	login(username: string, password: string, verificationToken?: string): Promise<LoginResponse>;
+	loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse>;
 	logout(): void;
 
 	connectToCharacter(id: CharacterId): Promise<boolean>;
@@ -102,6 +114,62 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		return result;
 	}
 
+	public async loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse> {
+		const { directoryConnector } = this.serviceDeps;
+		const { secondFactor, ...assertionOptions } = options ?? {};
+		const start = await directoryConnector.awaitResponse('passkeyLoginStart', { secondFactor });
+		if (start.result === 'secondFactorRequired' || start.result === 'secondFactorInvalid') {
+			if (options?.mediation === 'conditional') {
+				throw new Error('Conditional sign in aborted, because server requested second factor during start');
+			}
+			if (this.secondFactorHandler) {
+				const nextSecondFactor = await this.secondFactorHandler(start);
+				if (nextSecondFactor) {
+					return this.loginWithPasskey({
+						...assertionOptions,
+						secondFactor: nextSecondFactor,
+					});
+				}
+			}
+			return 'invalidSecondFactor';
+		}
+		if (start.result !== 'ok') {
+			await this.handleAccountChange({ account: null, character: null });
+			return 'unknownCredentials';
+		}
+
+		const assertion = await GetPasskeyAssertion(start, assertionOptions);
+		const result = await directoryConnector.awaitResponse('passkeyLoginFinish', {
+			credentialId: assertion.credentialId,
+			clientDataJSON: assertion.clientDataJSON,
+			authenticatorData: assertion.authenticatorData,
+			signature: assertion.signature,
+		});
+
+		if (result.result !== 'ok') {
+			if (result.result === 'unknownCredentials') {
+				await SignalUnknownPasskeyCredential(start.rpId, assertion.credentialId);
+			}
+			await this.handleAccountChange({ account: null, character: null });
+			if (result.result === 'accountDisabled')
+				return result;
+			return result.result;
+		}
+
+		directoryConnector.authToken.value = { ...result.token, username: result.account.username };
+		void SignalAllAcceptedPasskeyCredentials(result.passkeyRpId, result.passkeyUserId, result.passkeys);
+		void SignalCurrentPasskeyUserDetails(result.passkeyRpId, result.passkeyUserId, result.account.username, result.account.displayName);
+		await this.handleAccountChange({
+			account: result.account,
+			character: null,
+			passkeyUnlock: {
+				cryptoKey: result.cryptoKey,
+				wrappingSecret: assertion.wrappingSecret,
+			},
+		});
+		return 'ok';
+	}
+
 	private async loginDirect(data: IClientDirectoryArgument['login']): Promise<LoginResponse> {
 		const { directoryConnector } = this.serviceDeps;
 
@@ -109,6 +177,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		switch (result.result) {
 			case 'ok':
 				directoryConnector.authToken.value = { ...result.token, username: result.account.username };
+				void SignalAllAcceptedPasskeyCredentials(result.passkeyRpId, result.passkeyUserId, result.passkeys);
+				void SignalCurrentPasskeyUserDetails(result.passkeyRpId, result.passkeyUserId, result.account.username, result.account.displayName);
 				await this.handleAccountChange({ account: result.account, character: null });
 				return 'ok';
 			case 'secondFactorRequired':
@@ -138,7 +208,7 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 		directoryConnector.authToken.value = undefined;
 	}
 
-	private async handleAccountChange({ account, character }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterAssignmentInfo | null; }): Promise<void> {
+	private async handleAccountChange({ account, character, passkeyUnlock }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterAssignmentInfo | null; passkeyUnlock?: PasskeyDirectMessageUnlock; }): Promise<void> {
 		const { directoryConnector } = this.serviceDeps;
 
 		// Update current account
@@ -164,7 +234,7 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 			}
 		}
 
-		this.emit('accountChanged', { account, character });
+		this.emit('accountChanged', { account, character, passkeyUnlock });
 
 		// If we have account, but not character, then try doing auto-connect
 		if (account != null && character == null) {

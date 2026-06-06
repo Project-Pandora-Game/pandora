@@ -24,7 +24,7 @@ import { GraphicsSettings } from './graphicsSettings.tsx';
 import { InterfaceSettings } from './interfaceSettings.tsx';
 import { NotificationSettings } from './notificationSettings.tsx';
 import { PermissionsSettings } from './permissionsSettings.tsx';
-import { SecuritySettings } from './securitySettings.tsx';
+import { SecuritySettings } from './securitySettings/securitySettings.tsx';
 import './settings.scss';
 
 const SETTINGS_PAGES_SETUP = {

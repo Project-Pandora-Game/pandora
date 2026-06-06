@@ -42,6 +42,7 @@
 		"@aws-sdk/credential-provider-node": "3.972.47",
 		"@octokit/auth-oauth-app": "9.0.3",
 		"@octokit/rest": "22.0.1",
+		"@simplewebauthn/server": "13.3.1",
 		"argon2": "0.44.0",
 		"async-lock": "1.4.1",
 		"discord.js": "14.26.4",

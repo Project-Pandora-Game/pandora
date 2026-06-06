@@ -3,6 +3,7 @@ import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-comm
 import { accountManager } from './account/accountManager.ts';
 import { ENV } from './config.ts';
 import { GetDatabaseService } from './database/databaseProvider.ts';
+import { MockDatabase } from './database/mockDb.ts';
 import { SetupSignalHandling } from './lifecycle.ts';
 import { AddDiscordLogOutput, AddFileOutput } from './logging.ts';
 import { HttpServer } from './networking/httpServer.ts';
@@ -14,7 +15,7 @@ import { GitHubVerifier } from './services/github/githubVerify.ts';
 import { BetaKeyStore } from './shard/betaKeyStore.ts';
 import { ShardTokenStore } from './shard/shardTokenStore.ts';
 import { SpaceManager } from './spaces/spaceManager.ts';
-const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } = ENV;
+const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, PANDORA_DEV_TEST_ACCOUNTS } = ENV;
 
 {
 	const nodeLogger = GetLogger('Node');
@@ -39,7 +40,16 @@ async function Start(): Promise<void> {
 	logger.info(`${APP_NAME} starting...`);
 	await ServiceInit(GetEmailSender());
 	logger.verbose('Initializing database...');
-	await ServiceInit(GetDatabaseService());
+	const database = GetDatabaseService();
+	await ServiceInit(database);
+	if (PANDORA_DEV_TEST_ACCOUNTS) {
+		if (database instanceof MockDatabase) {
+			await database.addTestAccounts();
+			logger.info('Created mock development test accounts');
+		} else {
+			logger.warning('PANDORA_DEV_TEST_ACCOUNTS is only supported with DATABASE_TYPE="mock"; skipping test account creation');
+		}
+	}
 	await ServiceInit(ShardTokenStore);
 	await ServiceInit(BetaKeyStore);
 	logger.verbose('Initializing managers...');

@@ -12,7 +12,7 @@ import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../space/sp
 import { SpaceSwitchCommandSchema } from '../space/spaceSwitch.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
-import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
+import { ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX, AccountCryptoKeySchema, AccountPasskeyAuthenticatorDataSchema, AccountPasskeyClientDataSchema, AccountPasskeyCredentialIdSchema, AccountPasskeyInfoSchema, AccountPasskeyNameSchema, AccountPasskeyPublicKeySchema, AccountPasskeySignatureSchema, AccountPasskeyTransportSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo, type IAccountCryptoKey, type IAccountPasskeyInfo } from './directory_client.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
@@ -106,6 +106,9 @@ export const ClientDirectorySchema = {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
+			passkeys: IAccountPasskeyInfo[];
+			passkeyRpId: string;
+			passkeyUserId: string;
 		}>(),
 	},
 	register: {
@@ -154,16 +157,83 @@ export const ClientDirectorySchema = {
 		}),
 		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'failed'; }>(),
 	},
+	passkeyLoginStart: {
+		request: z.object({
+			secondFactor: SecondFactorDataSchema.optional(),
+		}),
+		response: ZodCast<{
+			result: 'ok';
+			rpId: string;
+			challenge: string;
+			prfSalt: string;
+		} | SecondFactorResponse>(),
+	},
+	passkeyLoginFinish: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+			clientDataJSON: AccountPasskeyClientDataSchema,
+			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			signature: AccountPasskeySignatureSchema,
+		}),
+		response: ZodCast<{ result: 'unknownCredentials' | 'verificationRequired' | 'failed'; } | {
+			result: 'accountDisabled';
+			reason: string;
+		} | {
+			result: 'ok';
+			token: { value: string; expires: number; };
+			account: IDirectoryAccountInfo;
+			cryptoKey: IAccountCryptoKey;
+			passkeys: IAccountPasskeyInfo[];
+			passkeyRpId: string;
+			passkeyUserId: string;
+		}>(),
+	},
 	//#endregion Before Login
 
 	//#region Account management
+	sudoAuthenticate: {
+		request: z.object({
+			passwordSha512: PasswordSha512Schema,
+		}),
+		response: ZodCast<{
+			result: 'ok';
+			expires: number;
+		} | {
+			result: 'invalidPassword';
+		}>(),
+	},
+	sudoPasskeyStart: {
+		request: z.object({}),
+		response: ZodCast<{
+			result: 'ok';
+			rpId: string;
+			challenge: string;
+			credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+			prfSalt: string;
+		} | {
+			result: 'noPasskey';
+		}>(),
+	},
+	sudoPasskeyFinish: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+			clientDataJSON: AccountPasskeyClientDataSchema,
+			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			signature: AccountPasskeySignatureSchema,
+		}),
+		response: ZodCast<{
+			result: 'ok';
+			expires: number;
+		} | {
+			result: 'unknownCredential';
+		}>(),
+	},
 	passwordChange: {
 		request: z.object({
-			passwordSha512Old: PasswordSha512Schema,
 			passwordSha512New: PasswordSha512Schema,
 			cryptoKey: AccountCryptoKeySchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'invalidCryptoKey'; }>(),
 	},
 	logout: {
 		request: z.discriminatedUnion('type', [
@@ -238,6 +308,75 @@ export const ClientDirectorySchema = {
 			result: z.enum(['ok', 'invalidPassword']),
 		}),
 	},
+	extendLoginPasskeyStart: {
+		request: z.object({}),
+		response: ZodCast<{
+			result: 'ok';
+			rpId: string;
+			challenge: string;
+			credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+			prfSalt: string;
+		} | {
+			result: 'noPasskey';
+		}>(),
+	},
+	extendLoginPasskeyFinish: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+			clientDataJSON: AccountPasskeyClientDataSchema,
+			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			signature: AccountPasskeySignatureSchema,
+		}),
+		response: ZodCast<{
+			result: 'ok';
+		} | {
+			result: 'unknownCredential';
+		}>(),
+	},
+	passkeyList: {
+		request: z.object({}),
+		response: z.object({
+			passkeys: AccountPasskeyInfoSchema.array(),
+		}),
+	},
+	passkeyRegisterStart: {
+		request: z.object({}),
+		response: ZodCast<{
+			result: 'ok';
+			rpId: string;
+			challenge: string;
+			user: { id: string; name: string; displayName: string; };
+			excludeCredentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+			prfSalt: string;
+		} | { result: 'sudoRequired' | 'limitReached'; }>(),
+	},
+	passkeyRegisterFinish: {
+		request: z.object({
+			name: AccountPasskeyNameSchema,
+			credentialId: AccountPasskeyCredentialIdSchema,
+			publicKeyAlgorithm: z.int().optional(),
+			publicKey: AccountPasskeyPublicKeySchema,
+			clientDataJSON: AccountPasskeyClientDataSchema,
+			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			attestationObject: AccountPasskeyAuthenticatorDataSchema,
+			transports: AccountPasskeyTransportSchema.array().max(ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX).optional(),
+			cryptoKey: AccountCryptoKeySchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'invalid' | 'invalidCryptoKey' | 'limitReached' | 'alreadyExists'; }>(),
+	},
+	passkeyDelete: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'notFound'; }>(),
+	},
+	passkeyRename: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+			name: AccountPasskeyNameSchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'notFound'; }>(),
+	},
 	//#endregion
 
 	getAccountInfo: {
@@ -284,9 +423,8 @@ export const ClientDirectorySchema = {
 	deleteCharacter: {
 		request: z.object({
 			id: CharacterIdSchema,
-			passwordSha512: PasswordSha512Schema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword' | 'failed'; }>(),
+		response: ZodCast<{ result: 'ok' | 'sudoRequired' | 'failed'; }>(),
 	},
 	//#endregion
 

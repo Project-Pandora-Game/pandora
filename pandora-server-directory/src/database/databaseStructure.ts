@@ -1,5 +1,6 @@
 import {
 	AccountCryptoKeySchema,
+	AccountPasskeyCredentialSchema,
 	AccountId,
 	AccountIdSchema,
 	AccountManagementDisableInfoSchema,
@@ -61,6 +62,7 @@ export const DatabaseAccountSecureSchema = z.object({
 	tokens: DatabaseAccountTokenSchema.array(),
 	github: GitHubInfoSchema.optional(),
 	cryptoKey: AccountCryptoKeySchema.optional(),
+	passkeys: AccountPasskeyCredentialSchema.array().optional(),
 });
 export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 

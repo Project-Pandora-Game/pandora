@@ -6,6 +6,8 @@ import type { Character } from '../account/character.ts';
 import { AccountTokenReason } from '../database/databaseStructure.ts';
 import { ConnectionManagerClient } from './manager_client.ts';
 
+const SUDO_TTL = 5 * 60_000;
+
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
 	/** The current account this connection is logged in as or `null` if it isn't */
@@ -22,12 +24,31 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 
 	private _loginTokenEventUnsubscribe: (() => void) | null = null;
 	private _loginToken: AccountToken | null = null;
+	private _sudoExpires = 0;
+
 	public get loginTokenId(): string | null {
 		return this._loginToken ? this._loginToken.getId() : null;
 	}
 
+	public get sudoExpires(): number {
+		return this.hasSudo() ? this._sudoExpires : 0;
+	}
+
 	public isLoggedIn(): this is { readonly account: Account; } {
 		return this.account !== null;
+	}
+
+	public enableSudo(now: number = Date.now()): number {
+		this._sudoExpires = now + SUDO_TTL;
+		return this._sudoExpires;
+	}
+
+	public clearSudo(): void {
+		this._sudoExpires = 0;
+	}
+
+	public hasSudo(now: number = Date.now()): boolean {
+		return this._sudoExpires > now;
 	}
 
 	constructor(server: IServerSocket<IDirectoryClient>, socket: IncomingSocket, auth: unknown) {
@@ -75,6 +96,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		if (this._account) {
 			Assert(this.rooms.has(this._account.associatedConnections));
 			this.setCharacter(null);
+			this.clearSudo();
 			this._account.touch();
 			this._account.associatedConnections.leave(this);
 			this._loginToken = null;

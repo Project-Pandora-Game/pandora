@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Assert, AssertNever } from 'pandora-common';
 import { GetDatabase } from '../../src/database/databaseProvider.ts';
+import { ConnectionManagerClient } from '../../src/networking/manager_client.ts';
 import { Shard } from '../../src/shard/shard.ts';
 import { ShardManager } from '../../src/shard/shardManager.ts';
 import { Space } from '../../src/spaces/space.ts';
@@ -34,6 +35,7 @@ describe('Space', () => {
 
 	afterAll(async () => {
 		await ShardManager.onDestroy();
+		ConnectionManagerClient._throttledOnSpaceListChange.cancel();
 	});
 
 	describe('constructor', () => {

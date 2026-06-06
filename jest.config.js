@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const path = require('path');
+import * as path from 'path';
 
 /**
  * Function that loads the target project config, deleting options not usable in the config
  * @param {string} dir - Path to the subproject
  */
-function loadProjectConfig(dir) {
+async function loadProjectConfig(dir) {
 	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
-	const config = require(`./${dir}/jest.config.js`);
+	const config = (await import(path.resolve(path.join('./', dir, 'jest.config.js')))).default;
 
 	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
 	const resultConfig = {
@@ -43,12 +42,13 @@ function loadProjectConfig(dir) {
  * https://jestjs.io/docs/configuration
  * @type { import('jest').Config }
  */
-module.exports = {
+export default {
 	projects: [
-		loadProjectConfig('pandora-common'),
-		loadProjectConfig('pandora-server-directory'),
-		loadProjectConfig('pandora-server-shard'),
-		loadProjectConfig('pandora-client-web'),
+		await loadProjectConfig('pandora-common'),
+		await loadProjectConfig('pandora-server-directory'),
+		await loadProjectConfig('pandora-server-shard'),
+		await loadProjectConfig('pandora-client-web'),
 	],
+	coverageProvider: 'v8',
 	errorOnDeprecated: true,
 };

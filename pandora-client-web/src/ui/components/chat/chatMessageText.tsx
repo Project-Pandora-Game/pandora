@@ -4,11 +4,13 @@ import type { ReactElement } from 'react';
 import { RenderedLink } from './links.tsx';
 
 export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index: number, allowLinkInNormal: boolean): ReactElement {
-	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
-		const url = new URL(contents);
-		return (
-			<RenderedLink key={ index } index={ index } url={ url } />
-		);
+	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents))) {
+		const url = URL.parse(contents);
+		if (url != null) {
+			return (
+				<RenderedLink key={ index } url={ url } text={ contents } />
+			);
+		}
 	}
 	switch (type) {
 		case 'normal':
@@ -20,10 +22,6 @@ export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index:
 	}
 }
 
-export function RenderChatPartToString([type, contents]: Immutable<IChatSegment>, allowLinkInNormal: boolean): string {
-	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
-		const url = new URL(contents);
-		return url.href;
-	}
+export function RenderChatPartToString([_type, contents]: Immutable<IChatSegment>, _allowLinkInNormal: boolean): string {
 	return contents;
 }

@@ -125,6 +125,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...assertion,
 		})).resolves.toMatchObject({ newCounter: 7 });
 	});
@@ -136,6 +137,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseEd25519PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...assertion,
 		})).resolves.toMatchObject({ newCounter: 7 });
 	});
@@ -148,6 +150,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseEd25519PublicKey(keyPair.publicKey, -19)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...assertion,
 		})).resolves.toMatchObject({ newCounter: 7 });
 	});
@@ -161,6 +164,7 @@ describe('accountPasskeys', () => {
 			signCount: 7,
 		}, {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...CreateAssertionData(challenge, keyPair.privateKey, 7),
 		})).resolves.toBeNull();
 	});
@@ -174,6 +178,7 @@ describe('accountPasskeys', () => {
 			signCount: 7,
 		}, {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...CreateAssertionData(challenge, keyPair.privateKey, 0),
 		})).resolves.toBeNull();
 	});
@@ -185,6 +190,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(storedKeyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...CreateAssertionData(challenge, attackerKeyPair.privateKey, 1),
 		})).resolves.toBeNull();
 	});
@@ -195,6 +201,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...CreateAssertionData(challenge, keyPair.privateKey, 1, { flags: 1 }),
 		})).resolves.toBeNull();
 	});
@@ -206,6 +213,7 @@ describe('accountPasskeys', () => {
 
 		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
+			purpose: 'login',
 			...assertion,
 			authenticatorData: Base64UrlEncode(Buffer.alloc(36)),
 		})).resolves.toBeNull();

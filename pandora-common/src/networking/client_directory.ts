@@ -308,6 +308,31 @@ export const ClientDirectorySchema = {
 			result: z.enum(['ok', 'invalidPassword']),
 		}),
 	},
+	extendLoginPasskeyStart: {
+		request: z.object({}),
+		response: ZodCast<{
+			result: 'ok';
+			rpId: string;
+			challenge: string;
+			credentials: { id: string; type: 'public-key'; transports?: string[]; }[];
+			prfSalt: string;
+		} | {
+			result: 'noPasskey';
+		}>(),
+	},
+	extendLoginPasskeyFinish: {
+		request: z.object({
+			credentialId: AccountPasskeyCredentialIdSchema,
+			clientDataJSON: AccountPasskeyClientDataSchema,
+			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			signature: AccountPasskeySignatureSchema,
+		}),
+		response: ZodCast<{
+			result: 'ok';
+		} | {
+			result: 'unknownCredential';
+		}>(),
+	},
 	passkeyList: {
 		request: z.object({}),
 		response: z.object({

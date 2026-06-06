@@ -1,12 +1,12 @@
 import { FormatTimeInterval } from 'pandora-common';
-import { useEffect, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { useObservable } from '../../observable.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { DraggableDialog } from '../dialog/dialog.tsx';
-import { ExtendCurrentSessionDialog } from '../settings/securitySettings.tsx';
+import { ExtendCurrentSessionDialog } from '../settings/securitySettings/extendSession.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 
 const TIME_LEFT_WARNING = 24 * 60 * 60_000;
@@ -39,11 +39,15 @@ export function SessionExpiryWarningProvider(): ReactElement | null {
 		}
 	}, [isLoggedIn, authToken]);
 
+	const onClose = useCallback(() => {
+		setShowExpiryWarning(false);
+	}, []);
+
 	if (!showExpiryWarning)
 		return null;
 
 	return (
-		<SessionExpiryWarningDialog onClose={ () => setShowExpiryWarning(false) } />
+		<SessionExpiryWarningDialog onClose={ onClose } />
 	);
 }
 
@@ -53,16 +57,16 @@ function SessionExpiryWarningDialog({ onClose }: { onClose: () => void; }): Reac
 	const [showExtend, setShowExtend] = useState(false);
 	const now = useCurrentTime();
 
+	const hide = useCallback(() => {
+		onClose();
+		return true;
+	}, [onClose]);
+
 	if (!authToken) {
 		return null;
 	}
 
 	const timeLeft = authToken.expires - now;
-
-	const hide = () => {
-		onClose();
-		return true;
-	};
 
 	if (showExtend) {
 		return <ExtendCurrentSessionDialog token={ authToken } hide={ hide } />;
@@ -85,7 +89,7 @@ function SessionExpiryWarningDialog({ onClose }: { onClose: () => void; }): Reac
 				</Column>
 				<Row alignX='space-between'>
 					<Button onClick={ hide }>Ignore</Button>
-					<Button onClick={ () => setShowExtend(true) }>Extend with password</Button>
+					<Button onClick={ () => setShowExtend(true) }>Extend session</Button>
 				</Row>
 			</Column>
 		</DraggableDialog>

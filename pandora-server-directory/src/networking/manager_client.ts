@@ -137,6 +137,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
 			queryConnections: this.handleQueryConnections.bind(this),
 			extendLoginToken: this.handleExtendLoginToken.bind(this),
+			extendLoginPasskeyStart: this.handleExtendLoginPasskeyStart.bind(this),
+			extendLoginPasskeyFinish: this.handleExtendLoginPasskeyFinish.bind(this),
 			passkeyList: this.handlePasskeyList.bind(this),
 			passkeyRegisterStart: this.handlePasskeyRegisterStart.bind(this),
 			passkeyRegisterFinish: this.handlePasskeyRegisterFinish.bind(this),
@@ -298,7 +300,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}));
 	}
 
-	private async verifyPasskeyAssertionForAccount(account: Account, purpose: 'login' | 'sudo', data: PasskeyAssertionData): Promise<PasskeyAssertionVerification> {
+	private async verifyPasskeyAssertionForAccount(account: Account, purpose: 'login' | 'sudo' | 'extendLogin', data: PasskeyAssertionData): Promise<PasskeyAssertionVerification> {
 		const passkey = account.secure.getPasskey(data.credentialId);
 		if (passkey == null)
 			return { ok: false };
@@ -1249,10 +1251,51 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const account = connection.account;
-		const token = await account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
-		AUDIT_LOG.verbose(`${connection.id} extended login token for ${account.username}`);
+		if (!await account.secure.verifyPassword(passwordSha512))
+			return { result: 'invalidPassword' };
+
+		const token = await account.secure.extendLoginToken(connection.loginTokenId);
+		AUDIT_LOG.verbose(`${connection.id} extended login token for ${account.username} using password`);
 
 		return { result: token == null ? 'invalidPassword' : 'ok' };
+	}
+
+	private handleExtendLoginPasskeyStart(_: IClientDirectoryArgument['extendLoginPasskeyStart'], connection: ClientConnection): IClientDirectoryResult['extendLoginPasskeyStart'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const passkeys = connection.account.secure.listPasskeys();
+		if (passkeys.length === 0)
+			return { result: 'noPasskey' };
+
+		return {
+			result: 'ok',
+			rpId: PASSKEY_RP_ID,
+			challenge: CreatePasskeyChallenge(connection.account.id, 'extendLogin'),
+			credentials: this.createPasskeyCredentialDescriptors(connection.account, passkeys),
+			prfSalt: GetPasskeyPrfSalt(),
+		};
+	}
+
+	private async handleExtendLoginPasskeyFinish({ credentialId, clientDataJSON, authenticatorData, signature }: IClientDirectoryArgument['extendLoginPasskeyFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['extendLoginPasskeyFinish'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const account = connection.account;
+		const verification = await this.verifyPasskeyAssertionForAccount(account, 'extendLogin', {
+			credentialId,
+			clientDataJSON,
+			authenticatorData,
+			signature,
+		});
+		if (!verification.ok)
+			return { result: 'unknownCredential' };
+
+		await account.secure.markPasskeyUsed(credentialId, verification.signCount);
+		const token = await account.secure.extendLoginToken(connection.loginTokenId);
+		AUDIT_LOG.verbose(`${connection.id} extended login token for ${account.username} using passkey`);
+
+		return { result: token == null ? 'unknownCredential' : 'ok' };
 	}
 
 	private handlePasskeyList(_: IClientDirectoryArgument['passkeyList'], connection: ClientConnection): IClientDirectoryResult['passkeyList'] {

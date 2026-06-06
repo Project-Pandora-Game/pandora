@@ -196,10 +196,7 @@ export default class AccountSecure {
 		return this.#findToken(AccountTokenReason.LOGIN, token);
 	}
 
-	public async extendLoginToken(password: string, loginTokenId: string | null): Promise<AccountToken | undefined> {
-		if (!await this.verifyPassword(password))
-			return undefined;
-
+	public async extendLoginToken(loginTokenId: string | null): Promise<AccountToken | undefined> {
 		const token = this.#tokens.find((t) => t.reason === AccountTokenReason.LOGIN && t.getId() === loginTokenId);
 		if (!token || !token.extend())
 			return undefined;

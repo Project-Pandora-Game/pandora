@@ -12,7 +12,7 @@ const PASSKEY_ORIGINS = Array.from(new Set(
 ));
 Object.freeze(PASSKEY_ORIGINS);
 
-type ChallengePurpose = 'register' | 'login' | 'sudo';
+type ChallengePurpose = 'register' | 'login' | 'extendLogin' | 'sudo';
 
 type ChallengeRecord = {
 	accountId: AccountId | null;
@@ -135,7 +135,7 @@ export async function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential,
 	clientDataJSON: string;
 	authenticatorData: string;
 	signature: string;
-	purpose?: Extract<ChallengePurpose, 'login' | 'sudo'>;
+	purpose: Exclude<ChallengePurpose, 'register'>;
 }): Promise<VerifiedAuthenticationResponse['authenticationInfo'] | null> {
 	try {
 		const result = await verifyAuthenticationResponse({
@@ -157,7 +157,7 @@ export async function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential,
 				transports: passkey.transports as (AuthenticatorTransportFuture[] | undefined),
 			},
 			expectedChallenge(challenge) {
-				return ConsumePasskeyChallenge(challenge, data.accountId, data.purpose ?? 'login');
+				return ConsumePasskeyChallenge(challenge, data.accountId, data.purpose);
 			},
 			expectedOrigin: PASSKEY_ORIGINS,
 			expectedRPID: PASSKEY_RP_ID,

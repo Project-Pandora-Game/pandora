@@ -1,25 +1,25 @@
-import { AssertNever, FormatTimeInterval, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
-import React, { ReactElement, useEffect, useId, useState } from 'react';
+import { AssertNever, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import React, { ReactElement, useCallback, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { useCurrentTime } from '../../common/useCurrentTime.ts';
-import { useAsyncEvent } from '../../common/useEvent.ts';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
-import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
-import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
-import { DEVELOPMENT } from '../../config/Environment.ts';
-import { PrehashPassword } from '../../crypto/helpers.ts';
-import { CreatePasskeyCredential, IsPasskeySupported } from '../../crypto/passkey.ts';
-import type { AuthToken } from '../../networking/directoryConnector.ts';
-import { useObservable } from '../../observable.ts';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useService } from '../../services/serviceProvider.tsx';
-import { Button } from '../common/button/button.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form.tsx';
-import { ModalDialog, useConfirmDialog } from '../dialog/dialog.tsx';
-import { useAuthToken, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { useKeyDownEvent } from '../../../common/useKeyDownEvent.ts';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { DEVELOPMENT } from '../../../config/Environment.ts';
+import { PrehashPassword } from '../../../crypto/helpers.ts';
+import { CreatePasskeyCredential, IsPasskeySupported } from '../../../crypto/passkey.ts';
+import type { AuthToken } from '../../../networking/directoryConnector.ts';
+import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useService } from '../../../services/serviceProvider.tsx';
+import { Button } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../../common/form/form.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { useAuthToken, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { ExtendCurrentSessionDialog, SessionExpireInfo } from './extendSession.tsx';
 import { SudoModeButton, useSudoMode } from './sudoMode.tsx';
 
 export function SecuritySettings(): ReactElement | null {
@@ -397,7 +397,7 @@ function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; proc
 
 	return (
 		<Column>
-			<SessionExpire token={ authToken } />
+			<SessionExpireInfo token={ authToken } />
 			<Row alignX='center'>
 				<ExtendCurrentSession token={ authToken } />
 				<Button className='slim' onClick={ logout } title='Logout from current session'>Logout</Button>
@@ -411,92 +411,27 @@ function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; proc
 function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
 	const [show, setShow] = React.useState(false);
 
-	const hide = React.useCallback(() => {
+	const hide = useCallback(() => {
 		setShow(false);
 		return true;
 	}, []);
 
 	useKeyDownEvent(hide, 'Escape');
 
-	if (!show)
-		return <Button onClick={ () => setShow(true) } title='Extend current session'>Extend Session</Button>;
-
 	return (
 		<>
-			<Button className='slim' onClick={ hide } title='Extend current session'>Extend Session</Button>
-			<ExtendCurrentSessionDialog token={ token } hide={ hide } />
+			<Button
+				onClick={ () => {
+					setShow((v) => !v);
+				} }
+				title='Extend current session'
+			>
+				Extend Session
+			</Button>
+			{ show ? (
+				<ExtendCurrentSessionDialog token={ token } hide={ hide } />
+			) : null }
 		</>
-	);
-}
-
-function SessionExpire({ token }: { token: AuthToken; }): ReactElement {
-	const now = useCurrentTime();
-
-	return (
-		<Column alignX='center'>
-			<span>Your session will expire in:</span>
-			{ FormatTimeInterval(token.expires - now, 'two-most-significant') }
-		</Column>
-	);
-}
-
-export function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: () => boolean; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [password, setPassword] = React.useState('');
-
-	const [extend, processing] = useAsyncEvent(
-		async () => {
-			const passwordSha512 = await PrehashPassword(password);
-			return await directory.awaitResponse('extendLoginToken', { passwordSha512 });
-		},
-		({ result }) => {
-			if (result === 'ok') {
-				toast('Session extended', TOAST_OPTIONS_SUCCESS);
-				hide();
-			} else {
-				toast('Invalid password', TOAST_OPTIONS_ERROR);
-				setPassword('');
-			}
-		},
-	);
-	const onSubmit = React.useCallback((ev: React.SubmitEvent) => {
-		ev.preventDefault();
-		extend();
-	}, [extend]);
-
-	return (
-		<ModalDialog>
-			<Form dirty={ false } onSubmit={ onSubmit }>
-				<Column gap='x-large'>
-					<Column gap='medium'>
-						<SessionExpire token={ token } />
-						<FormField>
-							<label htmlFor='extend-current-session-username'>Username</label>
-							<TextInput
-								id='extend-current-session-username'
-								autoComplete='username'
-								value={ token.username }
-								readOnly
-							/>
-						</FormField>
-						<FormField>
-							<label htmlFor='extend-current-session-password'>Password</label>
-							<TextInput
-								password
-								id='extend-current-session-password'
-								autoComplete='current-password'
-								value={ password }
-								onChange={ setPassword }
-							/>
-						</FormField>
-					</Column>
-					<Row alignX='space-between' className='fill-x'>
-						<Button onClick={ hide } disabled={ processing }>Cancel</Button>
-						<Button type='submit' disabled={ processing }>Extend</Button>
-					</Row>
-				</Column>
-			</Form>
-		</ModalDialog>
 	);
 }
 

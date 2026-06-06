@@ -16,7 +16,7 @@ import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
-import { SudoDialog, useSudoMode } from './sudoMode.tsx';
+import { SudoDialog, useSudoMode } from './securitySettings/sudoMode.tsx';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigatePandora();

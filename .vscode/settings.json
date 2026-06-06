@@ -60,4 +60,8 @@
 		"onglobalpointermove",
 		"Promisable"
 	],
+	"jest.jestCommandLine": "./node_modules/jest/bin/jest.js",
+	"jest.nodeEnv": {
+		"NODE_OPTIONS": "--no-warnings=ExperimentalWarning --experimental-vm-modules"
+	},
 }

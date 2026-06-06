@@ -68,3 +68,12 @@
 		}
 	}
 }
+
+.construction-mode-wrapper {
+    display: flex;
+    align-self: stretch;
+
+    .Button {
+        flex: 1;
+    }
+}

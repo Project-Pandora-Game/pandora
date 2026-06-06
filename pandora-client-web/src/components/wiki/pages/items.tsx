@@ -66,7 +66,7 @@ export function WikiItems(): ReactElement {
 				after clicking on them in the inventory list.
 			</p>
 			<p>
-				To move a deployed item on the room background, you need to enable the room construction mode with the according button in the "Room"-tab.
+				To move a deployed item on the room background, you need to enable the construction mode with the according button in the "Room"-tab.
 				While you are in this mode, every room-level item has a red icon below it. Clicking it and selecting "move" will turn the item into a move mode.
 				While in move mode, there are two icons under the item. You can drag the left one to move the item in all directions over the floor.
 				The right blue icon is used to lift the item up or down (alongside the z-axis) by dragging up or down. The set value can be reset by

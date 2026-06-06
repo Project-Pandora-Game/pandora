@@ -7,6 +7,7 @@ import React, {
 	type ReactNode,
 } from 'react';
 import { useLocation } from 'react-router';
+import { toast } from 'react-toastify';
 import crossIcon from '../../../assets/icons/cross.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import listIcon from '../../../assets/icons/list.svg';
@@ -38,6 +39,7 @@ import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -65,6 +67,22 @@ export function RoomControls(): ReactElement | null {
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
 	const currentTime = useCurrentUtcTimeMinutes();
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
 
 	const timeString = currentTime.toLocaleTimeString([], {
 		hour: '2-digit',
@@ -114,6 +132,24 @@ export function RoomControls(): ReactElement | null {
 								close={ () => setShowPhotoDialog(false) }
 							/>
 						) : null }
+						<span
+							className='construction-mode-wrapper'
+							title={ constructionModeTooltip }
+							onClick={ () => {
+								if (constructionModeTooltip != null) {
+									toast(constructionModeTooltip, TOAST_OPTIONS_WARNING);
+								}
+							} }
+						>
+							<Button
+								className={ `half-slim align-start construction-mode-button${roomConstructionMode ? ' active' : ''}` }
+								onClick={ onRoomConstructionModeChange }
+								disabled={ !canModifyRoom || !canUseHands }
+							>
+								<img src={ toolsIcon } />
+								<div>Construction<br />mode</div>
+							</Button>
+						</span>
 					</DivContainer>
 				</Column>
 				<DisplayRoomsGrid
@@ -162,6 +198,22 @@ export function PersonalSpaceControls(): ReactElement {
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
 
 	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
@@ -256,10 +308,28 @@ export function PersonalSpaceControls(): ReactElement {
 						) : null
 						}
 						{ showPhotoDialog ? (
-						<RoomPhotoDialog
-							close={ () => setShowPhotoDialog(false) }
-						/>
-					) : null }
+							<RoomPhotoDialog
+								close={ () => setShowPhotoDialog(false) }
+							/>
+						) : null }
+						<span
+							className='construction-mode-wrapper'
+							title={ constructionModeTooltip }
+							onClick={ () => {
+								if (constructionModeTooltip != null) {
+									toast(constructionModeTooltip, TOAST_OPTIONS_WARNING);
+								}
+							} }
+						>
+							<Button
+								className={ `half-slim align-start construction-mode-button${roomConstructionMode ? ' active' : ''}` }
+								onClick={ onRoomConstructionModeChange }
+								disabled={ !canModifyRoom || !canUseHands }
+							>
+								<img src={ toolsIcon } />
+								<div>Construction<br />mode</div>
+							</Button>
+						</span>
 					</DivContainer>
 					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
 				</Column>
@@ -319,17 +389,9 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
-
-	const onRoomConstructionModeChange = () => {
-		DeviceOverlayState.value = {
-			...DeviceOverlayState.value,
-			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
-		};
-	};
 
 	const onSelectionChange: NonNullable<SelectProps['onChange']> = (e) => {
 		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
@@ -337,28 +399,6 @@ function DeviceOverlaySelector(): ReactElement {
 
 	return (
 		<>
-			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } disabled={ !canModifyRoom || !canUseHands }>
-					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
-				</Button>
-				{
-					!canModifyRoom ? (
-						modifyRequiredRole !== 'none' ? (
-							<span className='error'>
-								Only { SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole] } can use this feature
-							</span>
-						) : (
-							<span className='error'>
-								This room cannot be modified by anyone
-							</span>
-						)
-					) : !canUseHands ? (
-						<span className='error'>
-							You must be able to use your hands to use this feature
-						</span>
-					) : null
-				}
-			</Row>
 			&nbsp;
 			<div >
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>

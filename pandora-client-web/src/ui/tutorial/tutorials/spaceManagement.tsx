@@ -71,7 +71,7 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 							<p>
 								To quickly recap: You can create room-level items only in a room's inventory. To make them show in the room,
 								you need to select the item in the room inventory and then press "Deploy the device". Afterwards,
-								in the room view, you need to toggle on "Enable room construction mode". This enables you to move
+								in the room view, you need to toggle on "Construction mode". This allows you to move
 								deployed room-level items for arranging them on the background, by clicking on the red icons.<br />
 								We will not dive deeper into this topic as part of this tutorial, though. Let's proceed instead.
 							</p>
@@ -1026,20 +1026,19 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 								now see a minimap showing part of the space's map centered around your current room and below that an ordered list of rooms alongside the characters inside.
 							</p>
 							<p>
-								To proceed to the final part of this tutorial, press the "Enable room construction mode" button.<br />
-								You may need to scroll down to see it.
+								To proceed to the final part of this tutorial, press the "Construction mode" button near the top.
 							</p>
 						</>
 					),
 					conditions: [{
 						type: 'elementQuery',
-						query: '.Button',
-						filter: (e) => e.innerText.includes('Disable room construction mode'),
+						query: '.construction-mode-button.active',
+						filter: (e) => e.innerText.includes('Construction'),
 					}],
 					highlight: [
 						{
-							query: '.Button',
-							filter: (e) => e.innerText.includes('Enable room construction mode'),
+							query: '.construction-mode-button',
+							filter: (e) => e.innerText.includes('Construction'),
 						},
 					],
 				},
@@ -1071,19 +1070,19 @@ export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Press the "Enable room construction mode" button.
+							Press the "Construction mode" button.
 						</p>
 					),
 					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
-						query: '.Button',
-						filter: (e) => e.innerText.includes('Disable room construction mode'),
+						query: '.construction-mode-button.active',
+						filter: (e) => e.innerText.includes('Construction'),
 					}],
 					highlight: [
 						{
-							query: '.Button',
-							filter: (e) => e.innerText.includes('Enable room construction mode'),
+							query: '.construction-mode-button',
+							filter: (e) => e.innerText.includes('Construction'),
 						},
 					],
 				},

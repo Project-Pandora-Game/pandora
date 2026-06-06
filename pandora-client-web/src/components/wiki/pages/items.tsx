@@ -66,7 +66,7 @@ export function WikiItems(): ReactElement {
 				after clicking on them in the inventory list.
 			</p>
 			<p>
-				To move a deployed item on the room background, you need to enable the room construction mode with the according button in the "Room"-tab.
+				To move a deployed item on the room background, you need to enable the construction mode with the according button in the "Room"-tab.
 				While you are in this mode, every room-level item has a red icon below it. Clicking it and selecting "move" will turn the item into a move mode.
 				While in move mode, there are two icons under the item. You can drag the left one to move the item in all directions over the floor.
 				The right blue icon is used to lift the item up or down (alongside the z-axis) by dragging up or down. The set value can be reset by
@@ -80,7 +80,7 @@ export function WikiItems(): ReactElement {
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room or the space while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
+				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved item collection</Link>, like regular items.</li>
 				<li>While a character is inside a slot of a room device, you can see all the item's relevant config options also on the worn part of the device in their wardrobe - so no need to go to the room inventory for that.</li>
 				<li>
 					Warning: Room devices can get someone stuck in an empty private space, which would make
@@ -150,6 +150,14 @@ export function WikiItems(): ReactElement {
 				<li>
 					Combination and password locks store the last used input value which can be knowingly or blindly used to lock the lock again later,
 					even while it was stored somewhere else, e.g. in a <Link to='/wiki/spaces#SP_Room_inventory'>room's inventory</Link>, in the meantime.
+				</li>
+				<li>
+					Timer locks can be considered the strictest locks, as they can only be unlocked by the character that locked it, before the set time passes.
+					There is even an option that no one can unlock it earlier.
+				</li>
+				<li>
+					Fingerprint locks can only be locked after registering one or more characters that can open it. If you use locks with specific
+					fingerprints often, consider saving the lock preconfigured as part of a <Link to='#IT_Saving_collections'>saved item</Link> collection.
 				</li>
 			</ul>
 
@@ -225,7 +233,7 @@ export function WikiItems(): ReactElement {
 				from the top to bottom, so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				Now when you make a saved item collection from something you wear, you need to start from the bottom, not from the top,
+				Now when you make a <Link to='#IT_Saving_collections'>saved item</Link> collection from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
 				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
 				When you want to use a saved item collection to dress your character, you again need to start from the bottom, as you need to start with the item

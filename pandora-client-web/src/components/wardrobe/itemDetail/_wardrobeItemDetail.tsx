@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import {
-	EMPTY_ARRAY,
 	GetLogger,
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
@@ -13,7 +12,6 @@ import {
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'react-toastify';
 import * as z from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -24,7 +22,7 @@ import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { RichTextDescription } from '../../../ui/components/richText/richText.tsx';
 import { OpenRoomItemDialog, RoomItemDialogs } from '../../../ui/screens/room/roomItemDialogList.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
@@ -33,9 +31,9 @@ import { FormCreateStringValidator } from '../../common/form/form.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { WardrobeAssetDetailContent } from '../assetDetail/wardrobeAssetDetail.tsx';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
-import { ActionProblemsContent } from '../wardrobeActionProblems.tsx';
+import { useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
-import { WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { WardrobeActionButton, WardrobeActionButtonElement } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { useWardrobeTargetItem } from '../wardrobeUtils.ts';
 import { WardrobeItemColorization } from './wardrobeItemColor.tsx';
@@ -321,8 +319,7 @@ function WardrobeItemNameAndDescription({ item, itemPath, showAssetInfo }: {
 
 function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showAssetInfo }: {
 	item: Item;
-	itemPath:
-	ItemPath;
+	itemPath: ItemPath;
 	onStartEdit: () => void;
 	showAssetInfo?: () => void;
 }): ReactElement {
@@ -334,16 +331,19 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 		name: item.name ?? '',
 		description: item.description ?? '',
 	}), [targetSelector, itemPath, item.name, item.description]);
-	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.valid;
+	const checkResult = useStaggeredAppearanceActionResult(action);
+	const [requestPermission, requestPermissionPending] = useWardrobePermissionRequestCallback();
 
-	const onClick = useCallback(() => {
-		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.getActionSlowdownTime() > 0)) {
-			toast(<ActionProblemsContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
+	const onEdit = useCallback(() => {
+		if (checkResult == null || !checkResult.valid) {
+			if (checkResult?.prompt != null) {
+				requestPermission(checkResult.prompt, Array.from(checkResult.requiredPermissions).map((p) => [p.group, p.id]));
+			}
 			return;
 		}
+
 		onStartEdit();
-	}, [checkResult, onStartEdit]);
+	}, [checkResult, onStartEdit, requestPermission]);
 
 	return (
 		<FieldsetToggle legend='Item'>
@@ -360,17 +360,18 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 							<span>Asset name:</span>
 							<span className='name'>{ item.asset.definition.name }</span>
 						</Row>
-						<label>Description:</label>
+						<span>Description:</span>
 					</Column>
 					<Row alignY='start'>
-						<IconButton
-							className='customizationQuickAction'
-							slim
-							onClick={ onClick }
-							disabled={ !available }
-							alt='Edit'
-							src={ editIcon }
-						/>
+						<WardrobeActionButtonElement
+							className={ classNames('customizationQuickAction', 'slim') }
+							check={ checkResult }
+							onClick={ onEdit }
+							disabled={ requestPermissionPending }
+							title='Edit'
+						>
+							<img src={ editIcon } alt='Edit' />
+						</WardrobeActionButtonElement>
 						{ showAssetInfo != null ? (
 							<IconButton
 								className='customizationQuickAction'
@@ -384,7 +385,7 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 				</Row>
 				{ item.description?.trim() ? (
 					<div className='description'>
-						{ item.description ?? '' }
+						<ItemDescription contents={ item.description } />
 					</div>
 				) : (
 					<i>None</i>
@@ -461,5 +462,11 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				</Row>
 			</Column>
 		</FieldsetToggle>
+	);
+}
+
+function ItemDescription({ contents }: { contents: string; }): ReactElement {
+	return (
+		<RichTextDescription content={ contents } />
 	);
 }

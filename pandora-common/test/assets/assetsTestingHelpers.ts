@@ -55,7 +55,7 @@ export function TestCreateCharacterState(assetManager: AssetManager, logicCharac
 	freeze(baseBundle, true);
 
 	// Load the state
-	const characterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, logicCharacter.id, baseBundle, spaceState, undefined);
+	const characterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, logicCharacter.id, baseBundle, spaceState, null, undefined);
 
 	// Check the character state actually matches the bundle
 	expect(characterState.isValid(spaceState)).toBe(true);

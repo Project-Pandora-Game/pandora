@@ -17,6 +17,7 @@ import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterDataMultiple } from '../../../character/character.ts';
 import { PlayerCharacter } from '../../../character/player.ts';
+import { useCurrentUtcTimeMinutes } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { useAccountContacts, useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
@@ -29,6 +30,7 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayer, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { HoverElement } from '../../../components/hoverElement/hoverElement.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
@@ -51,10 +53,12 @@ import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.ts
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingRoomCharacterListDisplayOffline, SettingDisplayCharacterName, SettingDisplayRoomLinks } from './roomState.ts';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
@@ -63,6 +67,30 @@ export function RoomControls(): ReactElement | null {
 	const globalState = useGlobalState(gameState);
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
+	const currentTime = useCurrentUtcTimeMinutes();
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
+
+	const timeString = currentTime.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'UTC',
+		hour12: false,
+	});
 
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 
@@ -76,34 +104,52 @@ export function RoomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
-					>
-						<img src={ storageIcon } />
-						<div>Room<br />inventory</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => navigate('/space/configuration') }
-					>
-						<img src={ settingIcon } />
-						<div>Space<br />configuration</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowPhotoDialog(true) }
-					>
-						<img src={ photoIcon } />
-						<div>Photo<br />mode</div>
-					</Button>
-					{ showPhotoDialog ? (
-						<RoomPhotoDialog
-							close={ () => setShowPhotoDialog(false) }
-						/>
-					) : null }
-				</DivContainer>
+				<Column>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
+					<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+						>
+							<img src={ storageIcon } />
+							<div>Room<br />inventory</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => navigate('/space/configuration') }
+						>
+							<img src={ settingIcon } />
+							<div>Space<br />configuration</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowPhotoDialog(true) }
+						>
+							<img src={ photoIcon } />
+							<div>Photo<br />mode</div>
+						</Button>
+						{ showPhotoDialog ? (
+							<RoomPhotoDialog
+								close={ () => setShowPhotoDialog(false) }
+							/>
+						) : null }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
+						>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
+					</DivContainer>
+				</Column>
 				<DisplayRoomsGrid
 					player={ player }
 					playerState={ playerState }
@@ -145,15 +191,42 @@ export function RoomControls(): ReactElement | null {
 }
 
 export function PersonalSpaceControls(): ReactElement {
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const navigate = useNavigatePandora();
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
 
 	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
 	Assert(currentRoomState != null);
+
+	const currentTime = useCurrentUtcTimeMinutes();
+
+	const timeString = currentTime.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: 'UTC',
+		hour12: false,
+	});
 
 	return (
 		<Column padding='medium' className='controls'>
@@ -192,30 +265,31 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row alignX='space-between'>
-				<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
-					<Button
-						slim
-						className='half-slim align-start'
-						onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
-					>
-						<img src={ storageIcon } />
-						<div>Room<br />inventory</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowBackgrounds(true) }
-					>
-						<img src={ settingIcon } />
-						<div>Change<br />space layout</div>
-					</Button>
-					<Button
-						className='half-slim align-start'
-						onClick={ () => setShowPhotoDialog(true) }
-					>
-						<img src={ photoIcon } />
-						<div>Photo<br />mode</div>
-					</Button>
-					{
+				<Column>
+					<DivContainer padding='small' direction={ multipleRooms ? 'column' : 'row' }>
+						<Button
+							slim
+							className='half-slim align-start'
+							onClick={ () => navigate(ActionTargetToWardrobeUrl({ type: 'room', roomId: playerState.currentRoom })) }
+						>
+							<img src={ storageIcon } />
+							<div>Room<br />inventory</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowBackgrounds(true) }
+						>
+							<img src={ settingIcon } />
+							<div>Change<br />space layout</div>
+						</Button>
+						<Button
+							className='half-slim align-start'
+							onClick={ () => setShowPhotoDialog(true) }
+						>
+							<img src={ photoIcon } />
+							<div>Photo<br />mode</div>
+						</Button>
+						{
 						showBackgrounds ? (
 							<ModalDialog className='max-size'>
 								<Row alignX='end'>
@@ -232,13 +306,30 @@ export function PersonalSpaceControls(): ReactElement {
 								/>
 							</ModalDialog>
 						) : null
-					}
-					{ showPhotoDialog ? (
-						<RoomPhotoDialog
-							close={ () => setShowPhotoDialog(false) }
-						/>
-					) : null }
-				</DivContainer>
+						}
+						{ showPhotoDialog ? (
+							<RoomPhotoDialog
+								close={ () => setShowPhotoDialog(false) }
+							/>
+						) : null }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
+						>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
+					</DivContainer>
+					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
+				</Column>
 				<DisplayRoomsGrid
 					player={ player }
 					playerState={ playerState }
@@ -295,17 +386,9 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
-
-	const onRoomConstructionModeChange = () => {
-		DeviceOverlayState.value = {
-			...DeviceOverlayState.value,
-			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
-		};
-	};
 
 	const onSelectionChange: NonNullable<SelectProps['onChange']> = (e) => {
 		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
@@ -313,28 +396,6 @@ function DeviceOverlaySelector(): ReactElement {
 
 	return (
 		<>
-			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } disabled={ !canModifyRoom || !canUseHands }>
-					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
-				</Button>
-				{
-					!canModifyRoom ? (
-						modifyRequiredRole !== 'none' ? (
-							<span className='error'>
-								Only { SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole] } can use this feature
-							</span>
-						) : (
-							<span className='error'>
-								This room cannot be modified by anyone
-							</span>
-						)
-					) : !canUseHands ? (
-						<span className='error'>
-							You must be able to use your hands to use this feature
-						</span>
-					) : null
-				}
-			</Row>
 			&nbsp;
 			<div >
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
@@ -413,6 +474,10 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 						const previewSizeX = Math.ceil(previewScale * room.roomBackground.imageSize[0]);
 						const previewSizeY = Math.ceil(previewScale * room.roomBackground.imageSize[1]);
 
+						const avoid = Array.from(globalState.characters.values())
+							.filter((c) => c.id !== playerState.id && c.currentRoom === room.id)
+							.map((c) => c.position.position);
+
 						return (
 							<SelectionIndicator
 								key={ room.id }
@@ -434,7 +499,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 										moveTo: {
 											type: 'normal',
 											room: room.id,
-											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
+											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
 										},
 									} }
 								>
@@ -497,6 +562,10 @@ function DisplayRooms({ playerState, characters, globalState }: {
 							const isEmpty = !Array.from(globalState.characters.values())
 								.some((c) => c.currentRoom === room.id);
 
+							const avoid = Array.from(globalState.characters.values())
+								.filter((c) => c.id !== playerState.id && c.currentRoom === room.id)
+								.map((c) => c.position.position);
+
 							(isEmpty ? emptyRooms : result).push(
 								<fieldset key={ room.id } className='room'>
 									<legend><span>{ room.name || room.id }</span></legend>
@@ -510,7 +579,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 														moveTo: {
 															type: 'normal',
 															room: room.id,
-															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
+															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
 														},
 													} }
 													disabled={ playerState.position.following != null }
@@ -631,6 +700,10 @@ function DisplayCharacter({ char, globalState }: {
 	if (data.onlineStatus === 'offline' && !listOfflineCharacters)
 		return null;
 
+	const avoid = Array.from(globalState.characters.values())
+		.filter((c) => c.id !== char.id && c.currentRoom === playerRoomId)
+		.map((c) => c.position.position);
+
 	return (
 		<fieldset className='character'>
 			<legend className={ char.isPlayer() ? 'player' : '' }>
@@ -717,7 +790,7 @@ function DisplayCharacter({ char, globalState }: {
 								moveTo: {
 									type: 'normal',
 									room: playerRoom.id,
-									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction),
+									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction, avoid),
 								},
 							} }
 							disabled={ state.position.following != null }

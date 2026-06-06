@@ -38,7 +38,7 @@ import { Column } from '../../common/container/container.tsx';
 import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
-import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeActionButtonElement, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { ActionTargetToWardrobeUrl } from '../wardrobeNavigation.tsx';
@@ -473,30 +473,6 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 						// For bodyparts do not display it, as they can't be in room and usually don't have storage
 						<ViewStorageButtonPlaceholder />
 					) : null }
-					{
-						singleItemContainer ? null : (
-							asset.isType('bodypart') ? (
-								<>
-									<WardrobeActionButton action={ {
-										type: 'moveItem',
-										target: targetSelector,
-										item,
-										shift: 1,
-									} } autohide hideReserveSpace>
-										▲
-									</WardrobeActionButton>
-									<WardrobeActionButton action={ {
-										type: 'moveItem',
-										target: targetSelector,
-										item,
-										shift: -1,
-									} } autohide hideReserveSpace>
-										▼
-									</WardrobeActionButton>
-								</>
-							) : null
-						)
-					}
 					{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
 					<button
 						className='wardrobeActionButton allowed'
@@ -557,6 +533,7 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 	container: ItemContainerPath;
 }): React.ReactNode {
 	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, container);
+	const [requestPermission, requestPermissionPending] = useWardrobePermissionRequestCallback();
 
 	useEffect(() => {
 		if (showContent && !containerAccessCheck.valid) {
@@ -571,8 +548,15 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 				showContent ? 'selected' : null,
 			) }
 			onClick={ () => {
-				setShowContent((v) => containerAccessCheck.valid && !v);
+				if (!containerAccessCheck.valid) {
+					if (containerAccessCheck.prompt != null) {
+						requestPermission(containerAccessCheck.prompt, Array.from(containerAccessCheck.requiredPermissions).map((p) => [p.group, p.id]));
+					}
+					return;
+				}
+				setShowContent((v) => !v);
 			} }
+			disabled={ requestPermissionPending }
 			title='View contents'
 		>
 			<img src={ storageIcon } alt='View contents' />

@@ -289,16 +289,3 @@
 		}
 	}
 }
-
-.room-construction-mode {
-	.error {
-		color: common.$themecolor-error;
-		font-weight: bold;
-		margin: auto 0;
-
-		@include common.forcedColors {
-			color: inherit;
-			text-decoration: underline common.$themecolor-error;
-		}
-	}
-}

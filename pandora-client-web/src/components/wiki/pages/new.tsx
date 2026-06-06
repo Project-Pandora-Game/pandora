@@ -202,12 +202,12 @@ export function WikiNew(): ReactElement {
 			</p>
 
 			<p>
-				To move the throne, you need to "Enable room construction mode" with the according button under the "personal space"-tab (or "Room" tab if you are in an online space). This turns
-				the blue button under the throne into a red action button. Clicking it lets you select "Move" in the context menu.<br />
+				To move the throne, you need to enable "construction mode" with the according button under the "personal space"-tab (or "Room" tab if you are in an online space). This
+				highlights that button, but also changes the blue icon under the throne into a red action button. Clicking it lets you select "Move" in the context menu.<br />
 				Now you can move the item around on the background by dragging the left icon to the desired position. Not important now,
 				but in case you were wondering, the right button is used to move the device up or down vertically, so along the z-axis.<br />
 				After you are done positioning the throne, you can exit move-mode by clicking the left button again. Afterwards, you can disable
-				room construction mode again.
+				the room construction mode again with another press on the button.
 				Disabling the construction mode also leaves the move-mode if you don't leave it first.
 			</p>
 

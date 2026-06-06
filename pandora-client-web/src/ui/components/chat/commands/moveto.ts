@@ -8,11 +8,11 @@ import {
 	GenerateInitialRoomPosition,
 	GetRoomPositionBounds,
 	ParseNotNullable,
-	type RoomPosition,
 	type CommandForkDescriptor,
 	type Coordinates,
 	type Promisable,
 	type RoomId,
+	type RoomPosition,
 	type Writable,
 } from 'pandora-common';
 import { toast } from 'react-toastify';
@@ -40,13 +40,17 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 					return false;
 				}
 
+				const avoid = Array.from(gameState.globalState.currentState.characters.values())
+					.filter((c) => c.id !== player.id && c.currentRoom === roomId)
+					.map((c) => c.position.position);
+
 				return CommandDoGameAction(gameState, {
 					type: 'moveCharacter',
 					target: { type: 'character', characterId: player.id },
 					moveTo: {
 						type: 'normal',
 						room: room.id,
-						position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction),
+						position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
 					},
 				});
 			}
@@ -117,9 +121,13 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 								return false;
 							}
 
+							const avoid = Array.from(gameState.globalState.currentState.characters.values())
+								.filter((c) => c.id !== player.id && c.currentRoom === targetRoom.id)
+								.map((c) => c.position.position);
+
 							const targetPosition: Writable<RoomPosition> = CloneDeepMutable(
 								targetRoom.id === playerAppearance.characterState.position.room ? playerAppearance.characterState.position.position :
-									GenerateInitialRoomPosition(targetRoom, targetRoom.getLinkToRoom(ParseNotNullable(playerAppearance.getCurrentRoom()), true)?.direction),
+									GenerateInitialRoomPosition(targetRoom, targetRoom.getLinkToRoom(ParseNotNullable(playerAppearance.getCurrentRoom()), true)?.direction, avoid),
 							);
 
 							if (distance != null) {

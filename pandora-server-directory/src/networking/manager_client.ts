@@ -122,8 +122,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			resendVerificationEmailAdvanced: WithConstantTime(this.handleResendVerificationEmailAdvanced.bind(this), CONSTANT_TIME),
 			passwordReset: WithConstantTime(this.handlePasswordReset.bind(this), CONSTANT_TIME),
 			passwordResetConfirm: WithConstantTime(this.handlePasswordResetConfirm.bind(this), CONSTANT_TIME),
-			passkeyLoginStart: WithConstantTime(this.handlePasskeyLoginStart.bind(this), CONSTANT_TIME),
-			passkeyLoginFinish: WithConstantTime(this.handlePasskeyLoginFinish.bind(this), CONSTANT_TIME),
+			passkeyLoginStart: this.handlePasskeyLoginStart.bind(this),
+			passkeyLoginFinish: this.handlePasskeyLoginFinish.bind(this),
 
 			// Account management
 			sudoAuthenticate: this.handleSudoAuthenticate.bind(this),

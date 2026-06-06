@@ -1,5 +1,5 @@
 import { SpaceIdSchema, SpaceInviteIdSchema } from 'pandora-common';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
 import { SpaceInviteEmbed } from '../../screens/spaceJoin/inviteEmbed.tsx';
 
@@ -7,7 +7,12 @@ const INVITE_PREFIX = '/space/join/';
 /**
  * A component for rendering a link and its embed in a profile or chat.
  */
-export function RenderedLink({ url, index }: { url: URL; index: number; }): ReactElement {
+export function RenderedLink({ url, text, textAfter }: {
+	url: URL;
+	text: string;
+	/** Text after the link's text, but before embed */
+	textAfter?: ReactNode;
+}): ReactElement {
 	switch (url.hostname) {
 		case 'project-pandora.com':
 		case 'www.project-pandora.com':
@@ -32,17 +37,21 @@ export function RenderedLink({ url, index }: { url: URL; index: number; }): Reac
 				return (
 					<>
 						<ExternalLink href={ url.href }>
-							{ url.href }
+							{ text }
 						</ExternalLink>
-						<SpaceInviteEmbed key={ index } spaceId={ parsedSpaceId.data } invite={ parsedInvite.data } />
+						{ textAfter }
+						<SpaceInviteEmbed spaceId={ parsedSpaceId.data } invite={ parsedInvite.data } />
 					</>
 				);
 			}
 			break;
 	}
 	return (
-		<UntrustedLink key={ index } href={ url.href }>
-			{ url.href }
-		</UntrustedLink>
+		<>
+			<UntrustedLink href={ url.href }>
+				{ text }
+			</UntrustedLink>
+			{ textAfter }
+		</>
 	);
 }

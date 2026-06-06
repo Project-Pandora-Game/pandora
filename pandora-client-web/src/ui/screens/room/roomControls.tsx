@@ -30,6 +30,7 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayer, usePlayerId, usePlayerRestrictionManager, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { HoverElement } from '../../../components/hoverElement/hoverElement.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
@@ -56,6 +57,8 @@ import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, S
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
@@ -65,6 +68,22 @@ export function RoomControls(): ReactElement | null {
 	const playerState = player != null ? globalState?.getCharacterState(player.id) : null;
 	const listOfflineCharacters = useObservable(SettingRoomCharacterListDisplayOffline);
 	const currentTime = useCurrentUtcTimeMinutes();
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
 
 	const timeString = currentTime.toLocaleTimeString([], {
 		hour: '2-digit',
@@ -114,6 +133,21 @@ export function RoomControls(): ReactElement | null {
 								close={ () => setShowPhotoDialog(false) }
 							/>
 						) : null }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
+						>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
 					</DivContainer>
 				</Column>
 				<DisplayRoomsGrid
@@ -157,11 +191,29 @@ export function RoomControls(): ReactElement | null {
 }
 
 export function PersonalSpaceControls(): ReactElement {
+	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
+
 	const navigate = useNavigatePandora();
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
+	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+
+	const onRoomConstructionModeChange = useCallback(() => {
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
+			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
+		};
+	}, [roomConstructionMode, canModifyRoom, canUseHands]);
+
+	const constructionModeTooltip = !canModifyRoom
+		? (modifyRequiredRole !== 'none'
+			? `Only ${SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole]} can use this feature`
+			: 'This room cannot be modified by anyone')
+		: !canUseHands
+			? 'You must be able to use your hands to use this feature'
+			: undefined;
 
 	const multipleRooms = globalState.space.rooms.length > 1;
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);
@@ -256,10 +308,25 @@ export function PersonalSpaceControls(): ReactElement {
 						) : null
 						}
 						{ showPhotoDialog ? (
-						<RoomPhotoDialog
-							close={ () => setShowPhotoDialog(false) }
-						/>
-					) : null }
+							<RoomPhotoDialog
+								close={ () => setShowPhotoDialog(false) }
+							/>
+						) : null }
+						<Button
+							ref={ setConstructionModeButtonRef }
+							theme={ roomConstructionMode ? 'defaultActive' : 'default' }
+							className='half-slim align-start'
+							onClick={ onRoomConstructionModeChange }
+							disabled={ !canModifyRoom || !canUseHands }
+						>
+							{ constructionModeTooltip ? (
+								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+									{ constructionModeTooltip }
+								</HoverElement>
+							) : null }
+							<img src={ toolsIcon } />
+							<div>Construction<br />mode</div>
+						</Button>
 					</DivContainer>
 					<span className='currentTime' title='Pandora Server Time (UTC)'>Pandora ◷ { timeString }</span>
 				</Column>
@@ -319,17 +386,9 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
-
-	const onRoomConstructionModeChange = () => {
-		DeviceOverlayState.value = {
-			...DeviceOverlayState.value,
-			roomConstructionMode: !roomConstructionMode && canModifyRoom && canUseHands,
-		};
-	};
 
 	const onSelectionChange: NonNullable<SelectProps['onChange']> = (e) => {
 		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
@@ -337,28 +396,6 @@ function DeviceOverlaySelector(): ReactElement {
 
 	return (
 		<>
-			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } disabled={ !canModifyRoom || !canUseHands }>
-					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
-				</Button>
-				{
-					!canModifyRoom ? (
-						modifyRequiredRole !== 'none' ? (
-							<span className='error'>
-								Only { SPACE_ROLE_TEXT_CUMULATIVE[modifyRequiredRole] } can use this feature
-							</span>
-						) : (
-							<span className='error'>
-								This room cannot be modified by anyone
-							</span>
-						)
-					) : !canUseHands ? (
-						<span className='error'>
-							You must be able to use your hands to use this feature
-						</span>
-					) : null
-				}
-			</Row>
 			&nbsp;
 			<div >
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>

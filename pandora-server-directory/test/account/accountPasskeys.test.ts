@@ -13,202 +13,189 @@ const ORIGIN = 'http://localhost:6969';
 const RP_ID = 'localhost';
 
 describe('accountPasskeys', () => {
-	it('validates a registration response and consumes the challenge', () => {
+	it('validates a registration response and consumes the challenge', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const credentialId = Base64UrlEncode(Buffer.from('credential-id', 'utf-8'));
 		const data = CreateRegistrationData(challenge, credentialId, keyPair.publicKey);
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge,
 			credentialId,
 			...data,
-		})).toBe(true);
+		})).resolves.not.toBeNull();
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge,
 			credentialId,
 			...data,
-		})).toBe(false);
+		})).resolves.toBeNull();
 	});
 
-	it('validates Ed25519, EdDSA, and RS256 registration responses', () => {
+	it('validates Ed25519, EdDSA, and RS256 registration responses', async () => {
 		for (const algorithm of [-19, -8]) {
 			const ed25519KeyPair = CreateEd25519KeyPair();
 			const ed25519Challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 			const ed25519CredentialId = Base64UrlEncode(Buffer.from(`ed25519-credential-id-${algorithm}`, 'utf-8'));
-			expect(ValidatePasskeyRegistration({
+			await expect(ValidatePasskeyRegistration({
 				accountId: ACCOUNT_ID,
-				challenge: ed25519Challenge,
 				credentialId: ed25519CredentialId,
 				...CreateRegistrationData(ed25519Challenge, ed25519CredentialId, ed25519KeyPair.publicKey, {
 					cosePublicKey: CreateCoseEd25519PublicKey(ed25519KeyPair.publicKey, algorithm),
 				}),
-			})).toBe(true);
+			})).resolves.not.toBeNull();
 		}
 
 		const rsaKeyPair = CreateRsaKeyPair();
 		const rsaChallenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const rsaCredentialId = Base64UrlEncode(Buffer.from('rsa-credential-id', 'utf-8'));
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge: rsaChallenge,
 			credentialId: rsaCredentialId,
 			...CreateRegistrationData(rsaChallenge, rsaCredentialId, rsaKeyPair.publicKey, {
 				cosePublicKey: CreateCoseRsaPublicKey(rsaKeyPair.publicKey),
 			}),
-		})).toBe(true);
+		})).resolves.not.toBeNull();
 	});
 
-	it('validates YubiKey EdDSA registration authenticator data', () => {
+	it('validates YubiKey EdDSA registration authenticator data', async () => {
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const data = CreateYubiKeyEdDsaRegistrationData(challenge);
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge,
 			...data,
-		})).toBe(true);
+		})).resolves.not.toBeNull();
 	});
 
-	it('rejects registration for a wrong origin', () => {
+	it('rejects registration for a wrong origin', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const credentialId = Base64UrlEncode(Buffer.from('credential-id', 'utf-8'));
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge,
 			credentialId,
 			...CreateRegistrationData(challenge, credentialId, keyPair.publicKey, { origin: 'https://evil.example' }),
-		})).toBe(false);
+		})).resolves.toBeNull();
 	});
 
-	it('rejects registration for a wrong RP ID hash', () => {
+	it('rejects registration for a wrong RP ID hash', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const credentialId = Base64UrlEncode(Buffer.from('credential-id', 'utf-8'));
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge,
 			credentialId,
 			...CreateRegistrationData(challenge, credentialId, keyPair.publicKey, { rpId: 'evil.example' }),
-		})).toBe(false);
+		})).resolves.toBeNull();
 	});
 
-	it('rejects registration when credential id and public key are not bound to authenticator data', () => {
+	it('rejects registration when credential id is not bound to authenticator data', async () => {
 		const keyPair = CreateP256KeyPair();
-		const attackerKeyPair = CreateP256KeyPair();
 		const challengeCredentialId = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
 		const credentialId = Base64UrlEncode(Buffer.from('credential-id', 'utf-8'));
 		const data = CreateRegistrationData(challengeCredentialId, credentialId, keyPair.publicKey);
 
-		expect(ValidatePasskeyRegistration({
+		await expect(ValidatePasskeyRegistration({
 			accountId: ACCOUNT_ID,
-			challenge: challengeCredentialId,
 			credentialId: Base64UrlEncode(Buffer.from('other-credential-id', 'utf-8')),
 			...data,
-		})).toBe(false);
-
-		const challengePublicKey = CreatePasskeyChallenge(ACCOUNT_ID, 'register');
-		expect(ValidatePasskeyRegistration({
-			accountId: ACCOUNT_ID,
-			challenge: challengePublicKey,
-			credentialId,
-			...CreateRegistrationData(challengePublicKey, credentialId, keyPair.publicKey),
-			publicKey: attackerKeyPair.publicKey.toString('base64'),
-		})).toBe(false);
+		})).resolves.toBeNull();
 	});
 
-	it('verifies a passkey assertion signature', () => {
+	it('verifies a passkey assertion signature', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 		const assertion = CreateAssertionData(challenge, keyPair.privateKey, 7);
 
-		expect(VerifyPasskeyAssertion(CreatePasskey(keyPair.publicKey), {
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...assertion,
-		})).toEqual({ ok: true, signCount: 7 });
+		})).resolves.toMatchObject({ newCounter: 7 });
 	});
 
-	it('verifies an Ed25519 passkey assertion signature', () => {
+	it('verifies an Ed25519 passkey assertion signature', async () => {
 		const keyPair = CreateEd25519KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 		const assertion = CreateAssertionData(challenge, keyPair.privateKey, 7, {}, null);
 
-		expect(VerifyPasskeyAssertion(CreatePasskey(keyPair.publicKey), {
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseEd25519PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...assertion,
-		})).toEqual({ ok: true, signCount: 7 });
+		})).resolves.toMatchObject({ newCounter: 7 });
 	});
 
-	it('rejects an assertion with a rolled back sign counter', () => {
+	// Not yet supported by our passkey library
+	it.failing('verifies an Ed25519 passkey assertion signature (Fully-Specified Algorithms)', async () => {
+		const keyPair = CreateEd25519KeyPair();
+		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
+		const assertion = CreateAssertionData(challenge, keyPair.privateKey, 7, {}, null);
+
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseEd25519PublicKey(keyPair.publicKey, -19)), {
+			accountId: ACCOUNT_ID,
+			...assertion,
+		})).resolves.toMatchObject({ newCounter: 7 });
+	});
+
+	it('rejects an assertion with a rolled back sign counter', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 
-		expect(VerifyPasskeyAssertion({
-			...CreatePasskey(keyPair.publicKey),
+		await expect(VerifyPasskeyAssertion({
+			...CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)),
 			signCount: 7,
 		}, {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...CreateAssertionData(challenge, keyPair.privateKey, 7),
-		})).toEqual({ ok: false, reason: 'signCountRollback' });
+		})).resolves.toBeNull();
 	});
 
-	it('rejects a zero sign counter after a passkey reported a counter', () => {
+	it('rejects a zero sign counter after a passkey reported a counter', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 
-		expect(VerifyPasskeyAssertion({
-			...CreatePasskey(keyPair.publicKey),
+		await expect(VerifyPasskeyAssertion({
+			...CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)),
 			signCount: 7,
 		}, {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...CreateAssertionData(challenge, keyPair.privateKey, 0),
-		})).toEqual({ ok: false, reason: 'signCountRollback' });
+		})).resolves.toBeNull();
 	});
 
-	it('rejects assertions signed by a different key', () => {
+	it('rejects assertions signed by a different key', async () => {
 		const storedKeyPair = CreateP256KeyPair();
 		const attackerKeyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 
-		expect(VerifyPasskeyAssertion(CreatePasskey(storedKeyPair.publicKey), {
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(storedKeyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...CreateAssertionData(challenge, attackerKeyPair.privateKey, 1),
-		})).toEqual({ ok: false });
+		})).resolves.toBeNull();
 	});
 
-	it('rejects assertions without user verification', () => {
+	it('rejects assertions without user verification', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 
-		expect(VerifyPasskeyAssertion(CreatePasskey(keyPair.publicKey), {
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...CreateAssertionData(challenge, keyPair.privateKey, 1, { flags: 1 }),
-		})).toEqual({ ok: false });
+		})).resolves.toBeNull();
 	});
 
-	it('rejects malformed assertion authenticator data', () => {
+	it('rejects malformed assertion authenticator data', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'login');
 		const assertion = CreateAssertionData(challenge, keyPair.privateKey, 1);
 
-		expect(VerifyPasskeyAssertion(CreatePasskey(keyPair.publicKey), {
+		await expect(VerifyPasskeyAssertion(CreatePasskey(CreateCoseP256PublicKey(keyPair.publicKey)), {
 			accountId: ACCOUNT_ID,
-			challenge,
 			...assertion,
 			authenticatorData: Base64UrlEncode(Buffer.alloc(36)),
-		})).toEqual({ ok: false });
+		})).resolves.toBeNull();
 	});
 });
 
@@ -276,9 +263,12 @@ function CreateRegistrationData(challenge: string, credentialId: string, publicK
 	flags?: number;
 	cosePublicKey?: Buffer;
 } = {}) {
+	const authenticatorData = CreateRegistrationAuthenticatorData(credentialId, publicKey, options.rpId, options.flags, options.cosePublicKey);
+
 	return {
 		clientDataJSON: CreateClientData('webauthn.create', challenge, options.origin),
-		authenticatorData: CreateRegistrationAuthenticatorData(credentialId, publicKey, options.rpId, options.flags, options.cosePublicKey),
+		attestationObject: Base64UrlEncode(CreateRegistrationAttestationData(authenticatorData)),
+		authenticatorData: Base64UrlEncode(authenticatorData),
 		publicKey: publicKey.toString('base64'),
 	};
 }
@@ -296,6 +286,7 @@ function CreateYubiKeyEdDsaRegistrationData(challenge: string) {
 
 	return {
 		clientDataJSON: CreateClientData('webauthn.create', challenge),
+		attestationObject: Base64UrlEncode(CreateRegistrationAttestationData(authenticatorData)),
 		authenticatorData: Base64UrlEncode(authenticatorData),
 		credentialId: Base64UrlEncode(authenticatorData.subarray(credentialIdStart, credentialIdEnd)),
 		publicKey: 'MCowBQYDK2VwAyEAgBetv33RDRcy2fA14ai9B5C6yHu4xv5ubCCSDglRgWA=',
@@ -337,7 +328,23 @@ function CreateAuthenticatorData(rpId = RP_ID, flags = 5, signCount = 0): string
 	return Base64UrlEncode(data);
 }
 
-function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Buffer, rpId = RP_ID, flags = 0x45, cosePublicKey = CreateCoseP256PublicKey(publicKey)): string {
+function CreateRegistrationAttestationData(authenticatorData: Buffer): Uint8Array {
+	const prefix = Uint8Array.from([
+		0xa3, // map(3)
+		0x63, 0x66, 0x6d, 0x74, // "fmt"
+		0x64, 0x6e, 0x6f, 0x6e, 0x65, // "none"
+		0x67, 0x61, 0x74, 0x74, 0x53, 0x74, 0x6d, 0x74, // "attStmt"
+		0xa0, // {}
+		0x68, 0x61, 0x75, 0x74, 0x68, 0x44, 0x61, 0x74, 0x61, // "authData"
+	]);
+
+	return new Uint8Array([
+		...prefix,
+		...CborByteString(authenticatorData),
+	]);
+}
+
+function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Buffer, rpId = RP_ID, flags = 0x45, cosePublicKey = CreateCoseP256PublicKey(publicKey)): Buffer {
 	const credentialIdBytes = Base64UrlDecode(credentialId);
 	const data = Buffer.alloc(37 + 16 + 2 + credentialIdBytes.length + cosePublicKey.length);
 	createHash('sha256').update(rpId, 'utf-8').digest().copy(data, 0);
@@ -345,7 +352,7 @@ function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Bu
 	credentialIdBytes.copy(data, 37 + 16 + 2);
 	data.writeUInt16BE(credentialIdBytes.length, 37 + 16);
 	cosePublicKey.copy(data, 37 + 16 + 2 + credentialIdBytes.length);
-	return Base64UrlEncode(data);
+	return data;
 }
 
 function CreateCoseP256PublicKey(publicKey: Buffer): Buffer {
@@ -362,7 +369,7 @@ function CreateCoseP256PublicKey(publicKey: Buffer): Buffer {
 	]);
 }
 
-function CreateCoseEd25519PublicKey(publicKey: Buffer, algorithm = -19): Buffer {
+function CreateCoseEd25519PublicKey(publicKey: Buffer, algorithm = -8): Buffer {
 	const jwk = createPublicKey({
 		key: publicKey,
 		format: 'der',

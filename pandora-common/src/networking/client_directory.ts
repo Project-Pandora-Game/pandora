@@ -329,9 +329,11 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			name: AccountPasskeyNameSchema,
 			credentialId: AccountPasskeyCredentialIdSchema,
+			publicKeyAlgorithm: z.int().optional(),
 			publicKey: AccountPasskeyPublicKeySchema,
 			clientDataJSON: AccountPasskeyClientDataSchema,
 			authenticatorData: AccountPasskeyAuthenticatorDataSchema,
+			attestationObject: AccountPasskeyAuthenticatorDataSchema,
 			transports: AccountPasskeyTransportSchema.array().max(ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX).optional(),
 			cryptoKey: AccountCryptoKeySchema,
 		}),

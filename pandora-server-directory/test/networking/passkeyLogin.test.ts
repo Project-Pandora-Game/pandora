@@ -1,11 +1,10 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { createHash, generateKeyPairSync, sign } from 'crypto';
-import { IDirectoryClient, IClientDirectory, MockConnection, MockServerSocket } from 'pandora-common';
+import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
 import { AccountToken } from '../../src/account/accountSecure.ts';
-import { accountManager } from '../../src/account/accountManager.ts';
 import { AccountTokenReason } from '../../src/database/databaseStructure.ts';
-import { ClientConnection } from '../../src/networking/connection_client.ts';
 import { PrehashPassword } from '../../src/database/mockDb.ts';
+import { ClientConnection } from '../../src/networking/connection_client.ts';
 import { TestMockAccount, TestMockDb } from '../utils.ts';
 
 void AccountToken;
@@ -90,8 +89,9 @@ describe('passkey login flow', () => {
 		await expect(connection.awaitResponse('passkeyRegisterFinish', {
 			name: 'Integration test passkey',
 			credentialId,
-			publicKey: keyPair.publicKey.toString('base64'),
+			publicKey: keyPair.publicKey.toString('base64url'),
 			clientDataJSON: registration.clientDataJSON,
+			attestationObject: registration.attestationObject,
 			authenticatorData: registration.authenticatorData,
 			transports: ['usb'],
 			cryptoKey: PASSKEY_WRAPPED_CRYPTO_KEY,
@@ -207,13 +207,31 @@ describe('passkey login flow', () => {
 		expect(startMissing).not.toHaveProperty('credentials');
 	});
 
+	it('works with valid key', async () => {
+		const account = await TestMockAccount({ username: `passkey-failed-${Date.now()}` });
+		await account.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
+		const keyPair = CreateP256KeyPair();
+		const credentialId = Base64UrlEncode(Buffer.from(`failed-credential-${account.id}`, 'utf-8'));
+		await account.secure.addPasskey(CreatePasskey(credentialId, CreateCoseP256PublicKey(keyPair.publicKey)));
+
+		const startLogin = await connection.awaitResponse('passkeyLoginStart', {});
+		expect(startLogin.result).toBe('ok');
+		if (startLogin.result !== 'ok')
+			throw new Error('Passkey login did not start');
+
+		await expect(connection.awaitResponse('passkeyLoginFinish', {
+			credentialId,
+			...CreateAssertionData(startLogin.challenge, keyPair.privateKey, 1),
+		})).resolves.toMatchObject({ result: 'ok' });
+	});
+
 	it('separates failed passkey verification from unknown credentials', async () => {
 		const account = await TestMockAccount({ username: `passkey-failed-${Date.now()}` });
 		await account.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
 		const keyPair = CreateP256KeyPair();
 		const attackerKeyPair = CreateP256KeyPair();
 		const credentialId = Base64UrlEncode(Buffer.from(`failed-credential-${account.id}`, 'utf-8'));
-		await account.secure.addPasskey(CreatePasskey(credentialId, keyPair.publicKey));
+		await account.secure.addPasskey(CreatePasskey(credentialId, CreateCoseP256PublicKey(keyPair.publicKey)));
 
 		const startLogin = await connection.awaitResponse('passkeyLoginStart', {});
 		expect(startLogin.result).toBe('ok');
@@ -231,7 +249,7 @@ describe('passkey login flow', () => {
 		await disabledAccount.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
 		const disabledKeyPair = CreateP256KeyPair();
 		const disabledCredentialId = Base64UrlEncode(Buffer.from(`disabled-credential-${disabledAccount.id}`, 'utf-8'));
-		await disabledAccount.secure.addPasskey(CreatePasskey(disabledCredentialId, disabledKeyPair.publicKey));
+		await disabledAccount.secure.addPasskey(CreatePasskey(disabledCredentialId, CreateCoseP256PublicKey(disabledKeyPair.publicKey)));
 		await disabledAccount.secure.adminDisableAccount({
 			time: Date.now(),
 			publicReason: 'Disabled for test',
@@ -252,21 +270,11 @@ describe('passkey login flow', () => {
 			reason: 'Disabled for test',
 		});
 
-		const inactiveAccount = await TestMockAccount({ username: `passkey-inactive-${Date.now()}` });
+		const inactiveAccount = await TestMockAccount({ username: `passkey-inactive-${Date.now()}`, activated: false });
 		await inactiveAccount.secure.setCryptoKey(ACCOUNT_CRYPTO_KEY);
 		const inactiveKeyPair = CreateP256KeyPair();
 		const inactiveCredentialId = Base64UrlEncode(Buffer.from(`inactive-credential-${inactiveAccount.id}`, 'utf-8'));
-		await inactiveAccount.secure.addPasskey(CreatePasskey(inactiveCredentialId, inactiveKeyPair.publicKey));
-		const db = await TestMockDb();
-		const inactiveData = await db.getAccountById(inactiveAccount.id);
-		expect(inactiveData).not.toBeNull();
-		if (inactiveData == null)
-			throw new Error('Inactive test account was not persisted');
-		await db.setAccountSecure(inactiveAccount.id, {
-			...inactiveData.secure,
-			activated: false,
-		});
-		accountManager.onDestroyAccounts();
+		await inactiveAccount.secure.addPasskey(CreatePasskey(inactiveCredentialId, CreateCoseP256PublicKey(inactiveKeyPair.publicKey)));
 
 		const inactiveStart = await connection.awaitResponse('passkeyLoginStart', {});
 		expect(inactiveStart.result).toBe('ok');
@@ -295,9 +303,11 @@ function CreateP256KeyPair() {
 }
 
 function CreateRegistrationData(challenge: string, credentialId: string, publicKey: Buffer) {
+	const authenticatorData = CreateRegistrationAuthenticatorData(credentialId, publicKey);
 	return {
 		clientDataJSON: CreateClientData('webauthn.create', challenge),
-		authenticatorData: CreateRegistrationAuthenticatorData(credentialId, publicKey),
+		authenticatorData: Base64UrlEncode(authenticatorData),
+		attestationObject: Base64UrlEncode(CreateRegistrationAttestationData(authenticatorData)),
 		publicKey: publicKey.toString('base64'),
 	};
 }
@@ -345,7 +355,31 @@ function CreateAuthenticatorData(signCount = 0): string {
 	return Base64UrlEncode(data);
 }
 
-function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Buffer): string {
+function CreateRegistrationAttestationData(authenticatorData: Buffer): Uint8Array {
+	const authData = new Uint8Array(authenticatorData);
+
+	const prefix = Uint8Array.from([
+		0xa3, // map(3)
+		0x63, 0x66, 0x6d, 0x74, // "fmt"
+		0x64, 0x6e, 0x6f, 0x6e, 0x65, // "none"
+		0x67, 0x61, 0x74, 0x74, 0x53, 0x74, 0x6d, 0x74, // "attStmt"
+		0xa0, // {}
+		0x68, 0x61, 0x75, 0x74, 0x68, 0x44, 0x61, 0x74, 0x61, // "authData"
+	]);
+
+	const authDataHeader =
+		authData.length < 24
+			? Uint8Array.of(0x40 + authData.length)
+			: Uint8Array.of(0x58, authData.length);
+
+	return new Uint8Array([
+		...prefix,
+		...authDataHeader,
+		...authData,
+	]);
+}
+
+function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Buffer): Buffer {
 	const credentialIdBytes = Base64UrlDecode(credentialId);
 	const cosePublicKey = CreateCoseP256PublicKey(publicKey);
 	const data = Buffer.alloc(37 + 16 + 2 + credentialIdBytes.length + cosePublicKey.length);
@@ -354,7 +388,7 @@ function CreateRegistrationAuthenticatorData(credentialId: string, publicKey: Bu
 	data.writeUInt16BE(credentialIdBytes.length, 37 + 16);
 	credentialIdBytes.copy(data, 37 + 16 + 2);
 	cosePublicKey.copy(data, 37 + 16 + 2 + credentialIdBytes.length);
-	return Base64UrlEncode(data);
+	return data;
 }
 
 function CreateCoseP256PublicKey(publicKey: Buffer): Buffer {

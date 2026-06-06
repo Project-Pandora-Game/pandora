@@ -114,8 +114,10 @@ function PasskeySettings(): ReactElement {
 		const finish = await directoryConnector.awaitResponse('passkeyRegisterFinish', {
 			name: defaultPasskeyName,
 			credentialId: credential.credentialId,
+			publicKeyAlgorithm: credential.publicKeyAlgorithm,
 			publicKey: credential.publicKey,
 			clientDataJSON: credential.clientDataJSON,
+			attestationObject: credential.attestationObject,
 			authenticatorData: credential.authenticatorData,
 			transports: credential.transports,
 			cryptoKey,

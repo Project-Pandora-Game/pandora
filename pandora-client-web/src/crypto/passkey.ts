@@ -1,4 +1,4 @@
-import type { IClientDirectoryNormalResult } from 'pandora-common';
+import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, type IClientDirectoryNormalResult } from 'pandora-common';
 import { ArrayToBase64, ArrayToBase64Url, Base64UrlToArray } from './helpers.ts';
 
 type PasskeyAssertionStart = {
@@ -9,14 +9,6 @@ type PasskeyAssertionStart = {
 };
 type PasskeyRegisterStart = Extract<IClientDirectoryNormalResult['passkeyRegisterStart'], { result: 'ok'; }>;
 
-/** @see https://www.iana.org/assignments/cose/cose.xhtml */
-const COSE_ALGORITHM_ED25519 = -19;
-/** @see https://www.iana.org/assignments/cose/cose.xhtml */
-const COSE_ALGORITHM_EDDSA = -8;
-/** @see https://www.iana.org/assignments/cose/cose.xhtml */
-const COSE_ALGORITHM_ES256 = -7;
-/** @see https://www.iana.org/assignments/cose/cose.xhtml */
-const COSE_ALGORITHM_RS256 = -257;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
 const CBOR_MAJOR_TYPE_TEXT_STRING = 3;
 /** @see https://www.rfc-editor.org/rfc/rfc8949.html#section-3.1 */
@@ -44,9 +36,11 @@ export type PasskeyAssertionResult = {
 
 export type PasskeyRegistrationResult = {
 	credentialId: string;
+	publicKeyAlgorithm?: number;
 	publicKey: string;
 	clientDataJSON: string;
 	authenticatorData: string;
+	attestationObject: string;
 	transports?: string[];
 	wrappingSecret: string;
 };
@@ -135,7 +129,7 @@ export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?
 		signal: options?.signal,
 	});
 
-	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse))
+	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse) || credential.type !== 'public-key')
 		throw new Error('Unexpected passkey assertion response');
 
 	const prf = credential.getClientExtensionResults();
@@ -162,12 +156,7 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 				name: start.user.name,
 				displayName: start.user.displayName,
 			},
-			pubKeyCredParams: [
-				{ type: 'public-key', alg: COSE_ALGORITHM_ED25519 },
-				{ type: 'public-key', alg: COSE_ALGORITHM_EDDSA },
-				{ type: 'public-key', alg: COSE_ALGORITHM_ES256 },
-				{ type: 'public-key', alg: COSE_ALGORITHM_RS256 },
-			],
+			pubKeyCredParams: ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS.map((alg): PublicKeyCredentialParameters => ({ type: 'public-key', alg })),
 			authenticatorSelection: {
 				residentKey: 'required',
 				userVerification: 'required',
@@ -187,7 +176,7 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 		},
 	});
 
-	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAttestationResponse))
+	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAttestationResponse) || credential.type !== 'public-key')
 		throw new Error('Unexpected passkey registration response');
 
 	const publicKey = credential.response.getPublicKey();
@@ -204,8 +193,10 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 
 	return {
 		credentialId: ArrayToBase64Url(credential.rawId),
-		publicKey: ArrayToBase64(new Uint8Array(publicKey)),
+		publicKeyAlgorithm: credential.response.getPublicKeyAlgorithm?.(),
+		publicKey: ArrayToBase64Url(publicKey),
 		clientDataJSON: ArrayToBase64Url(credential.response.clientDataJSON),
+		attestationObject: ArrayToBase64Url(credential.response.attestationObject),
 		authenticatorData: ArrayToBase64Url(GetAuthenticatorData(credential.response)),
 		transports,
 		wrappingSecret,

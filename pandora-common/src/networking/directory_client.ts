@@ -27,7 +27,7 @@ const ACCOUNT_PASSKEY_TRANSPORT_LENGTH_MAX = 16;
 export const ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX = 8;
 
 export const AccountPasskeyCredentialIdSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_CREDENTIAL_ID_LENGTH_MAX);
-export const AccountPasskeyPublicKeySchema = z.string().regex(ZodBase64Regex).min(1).max(ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH_MAX);
+export const AccountPasskeyPublicKeySchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_PUBLIC_KEY_LENGTH_MAX);
 export const AccountPasskeyClientDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_CLIENT_DATA_LENGTH_MAX);
 export const AccountPasskeyAuthenticatorDataSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_AUTHENTICATOR_DATA_LENGTH_MAX);
 export const AccountPasskeySignatureSchema = z.string().regex(ZodBase64UrlRegex).min(1).max(ACCOUNT_PASSKEY_SIGNATURE_LENGTH_MAX);

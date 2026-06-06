@@ -5,8 +5,8 @@ import promClient from 'prom-client';
 import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
+import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
-import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyClientChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -16,6 +16,7 @@ import { ShardTokenStore } from '../shard/shardTokenStore.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
 import { Sleep } from '../utility.ts';
 import type { ClientConnection } from './connection_client.ts';
+
 const {
 	BETA_KEY_ENABLED,
 	HCAPTCHA_SECRET_KEY,
@@ -297,31 +298,26 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}));
 	}
 
-	private verifyPasskeyAssertionForAccount(account: Account, purpose: 'login' | 'sudo', data: PasskeyAssertionData, auditAction: string): PasskeyAssertionVerification {
+	private async verifyPasskeyAssertionForAccount(account: Account, purpose: 'login' | 'sudo', data: PasskeyAssertionData): Promise<PasskeyAssertionVerification> {
 		const passkey = account.secure.getPasskey(data.credentialId);
-		const challenge = GetPasskeyClientChallenge(data.clientDataJSON);
-		if (passkey == null || challenge == null)
+		if (passkey == null)
 			return { ok: false };
 
-		const verification = VerifyPasskeyAssertion(passkey, {
+		const verification = await VerifyPasskeyAssertion(passkey, {
 			accountId: account.id,
-			challenge,
 			clientDataJSON: data.clientDataJSON,
 			authenticatorData: data.authenticatorData,
 			signature: data.signature,
 			purpose,
 		});
-		if (!verification.ok) {
-			if (verification.reason === 'signCountRollback') {
-				AUDIT_LOG.warning(`[Account ${account.id}] rejected passkey ${auditAction} with sign counter rollback`);
-			}
+		if (verification == null) {
 			return { ok: false };
 		}
 
 		return {
 			ok: true,
 			passkey,
-			signCount: verification.signCount,
+			signCount: verification.newCounter,
 		};
 	}
 
@@ -350,12 +346,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
 		}
-		const verification = this.verifyPasskeyAssertionForAccount(account, 'login', {
+		const verification = await this.verifyPasskeyAssertionForAccount(account, 'login', {
 			credentialId,
 			clientDataJSON,
 			authenticatorData,
 			signature,
-		}, 'login');
+		});
 		if (!verification.ok) {
 			LoginManager.loginFailed();
 			return { result: 'failed' };
@@ -556,12 +552,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const verification = this.verifyPasskeyAssertionForAccount(connection.account, 'sudo', {
+		const verification = await this.verifyPasskeyAssertionForAccount(connection.account, 'sudo', {
 			credentialId,
 			clientDataJSON,
 			authenticatorData,
 			signature,
-		}, 'security confirmation');
+		});
 		if (!verification.ok)
 			return { result: 'unknownCredential' };
 
@@ -1298,7 +1294,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	@AsyncSynchronized()
-	private async handlePasskeyRegisterFinish({ name, credentialId, publicKey, clientDataJSON, authenticatorData, transports, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
+	private async handlePasskeyRegisterFinish({ name, credentialId, publicKeyAlgorithm, publicKey, clientDataJSON, authenticatorData, attestationObject, transports, cryptoKey }: IClientDirectoryArgument['passkeyRegisterFinish'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyRegisterFinish'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -1309,28 +1305,28 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (existingCredentialAccount != null && existingCredentialAccount !== connection.account)
 			return { result: 'alreadyExists' };
 
-		const challenge = GetPasskeyClientChallenge(clientDataJSON);
-		if (
-			challenge == null ||
-			!ValidatePasskeyRegistration({
-				accountId: connection.account.id,
-				challenge,
-				credentialId,
-				clientDataJSON,
-				authenticatorData,
-				publicKey,
-			})
-		) {
+		const validatedRegistration = await ValidatePasskeyRegistration({
+			accountId: connection.account.id,
+			credentialId,
+			clientDataJSON,
+			attestationObject,
+			authenticatorData,
+			publicKeyAlgorithm,
+			publicKey,
+			transports,
+		});
+
+		if (validatedRegistration == null) {
 			return { result: 'invalid' };
 		}
 
 		const result = await connection.account.secure.addPasskey({
-			credentialId,
+			credentialId: validatedRegistration.credential.id,
 			name,
 			created: Date.now(),
-			publicKey,
-			signCount: 0,
-			transports,
+			publicKey: Base64UrlEncode(validatedRegistration.credential.publicKey),
+			signCount: validatedRegistration.credential.counter,
+			transports: validatedRegistration.credential.transports,
 			cryptoKey,
 		});
 		if (result === 'ok') {

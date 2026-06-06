@@ -1196,12 +1196,17 @@ $drop-overlay-gap: 0.3em;
 			border: 1px solid common.$theme-wardrobe-itemdescription-border;
 			background: common.$theme-wardrobe-itemdescription-background;
 			color: common.$theme-wardrobe-itemdescription-text;
+			user-select: text;
 
 			@include common.forcedColors {
 				background: Canvas;
 				color: CanvasText;
 				border-color: common.$forcedColors-separator;
 			}
+
+			a {
+            	text-decoration: underline;
+        	}
 		}
 	}
 

@@ -22,6 +22,7 @@ import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
+import { RenderedLink } from '../../../ui/components/chat/links.tsx';
 import { OpenRoomItemDialog, RoomItemDialogs } from '../../../ui/screens/room/roomItemDialogList.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
@@ -30,6 +31,7 @@ import { FormCreateStringValidator } from '../../common/form/form.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { WardrobeAssetDetailContent } from '../assetDetail/wardrobeAssetDetail.tsx';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
+import { useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
 import { WardrobeActionButton, WardrobeActionButtonElement } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
@@ -39,7 +41,6 @@ import { WardrobeItemLockDetails } from './wardrobeItemLock.tsx';
 import { WardrobeItemName } from './wardrobeItemName.tsx';
 import { WardrobePersonalItemDeployment } from './wardrobeItemPersonalDeployment.tsx';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice.tsx';
-import { useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -384,7 +385,7 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 				</Row>
 				{ item.description?.trim() ? (
 					<div className='description'>
-						{ item.description ?? '' }
+						<ItemDescription contents={ item.description } />
 					</div>
 				) : (
 					<i>None</i>
@@ -461,5 +462,20 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				</Row>
 			</Column>
 		</FieldsetToggle>
+	);
+}
+
+function ItemDescription({ contents }: { contents: string; }): ReactElement {
+	const segments = contents.split(/(https?:\/\/\S+)/);
+	return (
+		<>
+			{ segments.map((segment, index) => {
+				if ((/^https?:\/\//.exec(segment)) && URL.canParse(segment)) {
+					const url = new URL(segment);
+					return <RenderedLink key={ index } index={ index } url={ url } />;
+				}
+				return <span key={ index }>{ segment }</span>;
+			}) }
+		</>
 	);
 }

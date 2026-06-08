@@ -25,7 +25,7 @@
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
 	},
 	"dependencies": {
-		"js-yaml": "4.1.1"
+		"js-yaml": "4.2.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.39.4",

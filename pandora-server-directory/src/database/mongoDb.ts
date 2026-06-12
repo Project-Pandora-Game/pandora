@@ -42,6 +42,7 @@ import {
 	ZodCast,
 	ZodTemplateString,
 	type ICharacterDataShard,
+	type PandoraAccessToken,
 	type RoomGeometryConfig,
 	type SpaceSearchArguments,
 	type SpaceSearchResult,
@@ -169,6 +170,13 @@ const accountCollection = new ValidatedCollection(
 			unique: true,
 			key: { 'secure.passkeys.credentialId': 1 },
 			// Ignore accounts without passkeys
+			sparse: true,
+		},
+		{
+			name: 'accountAccessToken',
+			unique: true,
+			key: { 'secure.accessTokens.token': 1 },
+			// Ignore accounts without access tokens
 			sparse: true,
 		},
 	],
@@ -413,6 +421,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
 		return await this._accounts.findOne({ 'secure.emailHash': emailHash });
+	}
+
+	public async getAccountIdByAccessToken(token: PandoraAccessToken): Promise<AccountId | null> {
+		return (await this._accounts.find({ 'secure.accessTokens.token': token }, { singleBatch: true })
+			.project<Pick<DatabaseAccount, 'id'>>({ id: 1 })
+			.limit(1)
+			.next())
+			?.id ?? null;
 	}
 
 	@DbSynchronized()

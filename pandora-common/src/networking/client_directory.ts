@@ -810,7 +810,7 @@ export const ClientDirectorySchema = {
 	accessTokenUpdate: {
 		request: z.object({
 			id: PandoraAccessTokenIdSchema,
-			name: PandoraAccessTokenNameSchema.optional(),
+			name: PandoraAccessTokenNameSchema,
 			scopes: PandoraAccessTokenScopeListSchema,
 		}),
 		response: z.discriminatedUnion('result', [

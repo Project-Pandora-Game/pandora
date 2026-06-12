@@ -7,6 +7,7 @@ import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
+import { AccessTokensClientHandler } from '../account/secure/accessTokensClientHandler.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -186,6 +187,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			friendRequest: this.handleFriendRequest.bind(this),
 			unfriend: this.handleUnfriend.bind(this),
 			blockList: this.handleBlockList.bind(this),
+
+			// Access Tokens
+			accessTokensList: AccessTokensClientHandler.accessTokensList,
+			accessTokensCreate: AccessTokensClientHandler.accessTokensCreate,
+			accessTokenDelete: AccessTokensClientHandler.accessTokenDelete,
+			accessTokenUpdate: AccessTokensClientHandler.accessTokenUpdate,
+			accessTokenRegenerate: AccessTokensClientHandler.accessTokenRegenerate,
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),

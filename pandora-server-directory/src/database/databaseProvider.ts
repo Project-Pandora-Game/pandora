@@ -5,6 +5,7 @@ import type {
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShard,
 	ICharacterDataShardUpdate,
+	PandoraAccessToken,
 	ServerService,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
@@ -49,6 +50,11 @@ export interface PandoraDatabase extends ServerService {
 	 * @param emailHash - Email hash to search for
 	 */
 	getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null>;
+	/**
+	 * Get an account id by Access Token
+	 * @param token - The token to search for
+	 */
+	getAccountIdByAccessToken(token: PandoraAccessToken): Promise<AccountId | null>;
 
 	/**
 	 * Create account

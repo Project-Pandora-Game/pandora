@@ -243,7 +243,10 @@ const AsyncSynchronizedObjectLocks = new WeakMap<object, AsyncLock>();
  * @param options - Options passed directly to the `async-lock` library, or if `object` that the method synchronizes with all 'object' synchronized methods within instance
  * @param lockOptions - Options applied when this function acquires the lock (useful mainly in combination with the `object` target)
  */
-export function AsyncSynchronized(options?: AsyncLockOptions | 'object', lockOptions?: AsyncLockOptions) {
+export function AsyncSynchronized(options?: AsyncLockOptions): <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) => (this: This, ...args: Args) => Promise<Return>;
+export function AsyncSynchronized(lock: AsyncLock): <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) => (this: This, ...args: Args) => Promise<Return>;
+export function AsyncSynchronized(kind: 'object', lockOptions?: AsyncLockOptions): <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) => (this: This, ...args: Args) => Promise<Return>;
+export function AsyncSynchronized(options?: AsyncLockOptions | AsyncLock | 'object', lockOptions?: AsyncLockOptions): <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) => (this: This, ...args: Args) => Promise<Return> {
 	if (options === 'object') {
 		return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
 			return function (this: This, ...args: Args) {
@@ -259,6 +262,16 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object', lockOpt
 			};
 		};
 	}
+
+	if (options != null && options instanceof AsyncLock) {
+		return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
+			const lock = options;
+			return function (this: This, ...args: Args) {
+				return lock.acquire<Return>('', () => method.apply(this, args), lockOptions);
+			};
+		};
+	}
+
 	return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
 		const locks = new WeakMap<object, AsyncLock>();
 

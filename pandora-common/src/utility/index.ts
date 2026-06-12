@@ -1,5 +1,6 @@
 export * from './bitfield.ts';
 export * from './cards.ts';
+export * from './crc32.ts';
 export * from './deltas.ts';
 export * from './fonts.ts';
 export * from './formatting.ts';

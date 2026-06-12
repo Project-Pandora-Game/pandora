@@ -29,6 +29,9 @@ export const LIMIT_ACCOUNT_PASSKEY_COUNT = 5;
 /** Maximum length of a user-visible passkey name */
 export const LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH = 80;
 
+/** Maximum number of Pandora Access Tokens registered to one account */
+export const LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT = 25;
+
 /** Maximum length of a public key in account crypto key data */
 export const LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH = 512;
 /** Maximum length of a salt in account crypto key data */

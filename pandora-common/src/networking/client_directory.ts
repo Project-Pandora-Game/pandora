@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { PandoraAccessTokenIdSchema, PandoraAccessTokenInfoSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../account/accessTokens.ts';
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
@@ -762,7 +763,90 @@ export const ClientDirectorySchema = {
 		response: null,
 	},
 
-	//#region Management/admin endpoints; these require specific roles to be used
+	//#region Access Tokens
+	accessTokensList: {
+		request: z.object({}),
+		response: z.object({
+			tokens: PandoraAccessTokenInfoSchema.array(),
+		}),
+	},
+	accessTokensCreate: {
+		request: z.object({
+			name: PandoraAccessTokenNameSchema,
+			scopes: PandoraAccessTokenScopeListSchema,
+			expires: z.number().nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				token: PandoraAccessTokenSchema,
+				info: PandoraAccessTokenInfoSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('limitReached'),
+			}),
+		]),
+	},
+	accessTokenDelete: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	accessTokenUpdate: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+			name: PandoraAccessTokenNameSchema.optional(),
+			scopes: PandoraAccessTokenScopeListSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	accessTokenRegenerate: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+			expires: z.number().nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				token: PandoraAccessTokenSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
+	//#endregion
+
+	//#region Management/admin endpoints
+	// these require specific roles to be used
 
 	// Account role assignment
 	manageAccountGet: {

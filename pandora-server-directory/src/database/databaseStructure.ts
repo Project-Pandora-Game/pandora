@@ -1,9 +1,9 @@
 import {
 	AccountCryptoKeySchema,
-	AccountPasskeyCredentialSchema,
 	AccountId,
 	AccountIdSchema,
 	AccountManagementDisableInfoSchema,
+	AccountPasskeyCredentialSchema,
 	AccountSettingsCooldownsSchema,
 	AccountSettingsSchema,
 	ArrayToRecordKeys,
@@ -15,6 +15,7 @@ import {
 	IDirectoryDirectMessageInfo,
 	IShardTokenInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
+	PandoraAccessTokenDataSchema,
 	ZodArrayWithInvalidDrop,
 	ZodCast,
 	ZodTemplateString,
@@ -63,6 +64,8 @@ export const DatabaseAccountSecureSchema = z.object({
 	github: GitHubInfoSchema.optional(),
 	cryptoKey: AccountCryptoKeySchema.optional(),
 	passkeys: AccountPasskeyCredentialSchema.array().optional(),
+	/** Access tokens for this account */
+	accessTokens: ZodArrayWithInvalidDrop(PandoraAccessTokenDataSchema).optional().catch(undefined),
 });
 export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 

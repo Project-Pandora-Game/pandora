@@ -1,17 +1,18 @@
-import { Assert, AssertNever, GetLogger, IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
-import { ENV } from '../config.ts';
-import { GetDatabase } from '../database/databaseProvider.ts';
-import { AccountTokenReason, DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
-import GetEmailSender from '../services/email/index.ts';
-import type { Account } from './account.ts';
-const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION, RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED } = ENV;
-
 import * as argon2 from 'argon2';
 import { createHash, randomInt } from 'crypto';
 import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
+import { Assert, AssertNever, AsyncSynchronized, GetLogger, IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
+import { ENV } from '../config.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { AccountTokenReason, DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
 import { AUDIT_LOG } from '../logging.ts';
+import GetEmailSender from '../services/email/index.ts';
+import type { Account } from './account.ts';
+import { AccountSecureAccessTokenStore } from './secure/accessTokens.ts';
+
+const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION, RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED } = ENV;
 
 /**
  * Handles account security data
@@ -24,10 +25,13 @@ export default class AccountSecure {
 	readonly #auditLog: Logger;
 	#tokens: readonly AccountToken[];
 
+	public readonly accessTokens: AccountSecureAccessTokenStore;
+
 	constructor(account: Account, secure: DatabaseAccountSecure) {
 		this.#account = account;
 		this.#secure = secure;
 		this.#auditLog = AUDIT_LOG.prefixMessages(`[Account ${account.id}]`);
+		this.accessTokens = new AccountSecureAccessTokenStore(secure.accessTokens ?? [], this, this.#auditLog.prefixMessages(`[AccessTokenStore]`));
 
 		this.#tokens = this.#secure.tokens
 			.filter((t) => t.expires > Date.now())
@@ -94,7 +98,7 @@ export default class AccountSecure {
 		this.#invalidateToken(AccountTokenReason.ACTIVATION);
 		this.#secure.activated = true;
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 
 		this.#auditLog.verbose('Account activated');
 
@@ -123,7 +127,7 @@ export default class AccountSecure {
 		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 
 		this.#auditLog.info('Password changed');
 
@@ -155,7 +159,7 @@ export default class AccountSecure {
 		this.#secure.cryptoKey = undefined;
 		this.#secure.passkeys = undefined;
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 
 		this.#auditLog.info('Password reset');
 
@@ -185,7 +189,7 @@ export default class AccountSecure {
 		}
 
 		if (length !== this.#tokens.length)
-			await this.#updateDatabase();
+			await this.updateDatabase();
 	}
 
 	public cleanupTokens(): void {
@@ -205,7 +209,7 @@ export default class AccountSecure {
 		this.#tokens = [...this.#tokens]
 			.sort((a, b) => a.expires - b.expires);
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 
 		return token;
 	}
@@ -224,7 +228,7 @@ export default class AccountSecure {
 		if (!info) {
 			delete this.#secure.github;
 			await this.#account.roles.setGitHubStatus('none');
-			await this.#updateDatabase();
+			await this.updateDatabase();
 			return true;
 		}
 		if (this.#secure.github && this.#secure.github.id === info.id) {
@@ -232,7 +236,7 @@ export default class AccountSecure {
 			this.#secure.github.role = info.role;
 			this.#secure.github.date = Date.now();
 			await this.#account.roles.setGitHubStatus(info.role, info.teams);
-			await this.#updateDatabase();
+			await this.updateDatabase();
 			return true;
 		}
 
@@ -262,7 +266,7 @@ export default class AccountSecure {
 			this.#invalidateToken(AccountTokenReason.LOGIN);
 		}
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 		this.#account.onAccountInfoChange();
 	}
 
@@ -288,7 +292,7 @@ export default class AccountSecure {
 			return 'invalid';
 
 		this.#secure.cryptoKey = cloneDeep(key);
-		await this.#updateDatabase();
+		await this.updateDatabase();
 		return 'ok';
 	}
 
@@ -316,7 +320,7 @@ export default class AccountSecure {
 			return 'limitReached';
 
 		this.#secure.passkeys = [...passkeys, cloneDeep(passkey)];
-		await this.#updateDatabase();
+		await this.updateDatabase();
 		return 'ok';
 	}
 
@@ -327,7 +331,7 @@ export default class AccountSecure {
 			return 'notFound';
 
 		this.#secure.passkeys = filtered;
-		await this.#updateDatabase();
+		await this.updateDatabase();
 		return 'ok';
 	}
 
@@ -337,7 +341,7 @@ export default class AccountSecure {
 			return 'notFound';
 
 		passkey.name = name;
-		await this.#updateDatabase();
+		await this.updateDatabase();
 		return 'ok';
 	}
 
@@ -348,7 +352,7 @@ export default class AccountSecure {
 
 		passkey.signCount = signCount;
 		passkey.lastUsed = Date.now();
-		await this.#updateDatabase();
+		await this.updateDatabase();
 	}
 
 	async #validateCryptoKey({ publicKey }: IAccountCryptoKey): Promise<boolean> {
@@ -371,7 +375,7 @@ export default class AccountSecure {
 		const token = AccountToken.create(reason);
 		this.#tokens = [...tokens, token];
 
-		await this.#updateDatabase();
+		await this.updateDatabase();
 
 		return token;
 	}
@@ -406,7 +410,8 @@ export default class AccountSecure {
 		this.#auditLog.info(log);
 	}
 
-	#updateDatabase(): Promise<void> {
+	@AsyncSynchronized()
+	public updateDatabase(): Promise<void> {
 		this.#secure.tokens = this.#tokens
 			.filter((t) => t.validate())
 			.map((t) => ({
@@ -414,6 +419,11 @@ export default class AccountSecure {
 				expires: t.expires,
 				reason: t.reason,
 			}));
+
+		this.#secure.accessTokens = this.accessTokens._export();
+		if (this.#secure.accessTokens.length === 0)
+			delete this.#secure.accessTokens;
+
 		return GetDatabase().setAccountSecure(this.#account.id, cloneDeep(this.#secure));
 	}
 }

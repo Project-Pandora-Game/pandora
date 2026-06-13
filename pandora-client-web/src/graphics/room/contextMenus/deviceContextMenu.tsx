@@ -1,8 +1,12 @@
+import classNames from 'classnames';
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type AssetFrameworkRoomState, type ICharacterRoomData, type RoomId } from 'pandora-common';
+import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type ActionTargetSelector, type AssetFrameworkRoomState, type ICharacterRoomData, type ItemContainerPath, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import storageIcon from '../../../assets/icons/storage.svg';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -15,13 +19,15 @@ import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionCont
 import { ActionProblemsContent } from '../../../components/wardrobe/wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
+import { useWardrobeContainerAccessCheck } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
-import { useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
+import { DeviceOverlayState, useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
+import { useObservable } from '../../../observable.ts';
 
 function StoreDeviceMenu({ roomState, device, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -54,8 +60,17 @@ function StoreDeviceMenu({ roomState, device, close }: {
 	};
 
 	return (
-		<Button theme='transparent' onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
-			Store the device
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				available ? '' : 'text-strikethrough',
+			) }
+			onClick={ onClick }
+			disabled={ processing }
+		>
+			<img src={ forbiddenIcon } />
+			<span>Store the device</span>
 		</Button>
 	);
 }
@@ -99,8 +114,66 @@ function MoveDeviceMenu({ roomState, device, close }: {
 	};
 
 	return (
-		<Button theme='transparent' onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>
-			Move
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				available ? '' : 'text-strikethrough',
+			) }
+			onClick={ onClick }
+		>
+			<img src={ arrowAllIcon } />
+			<span>Move</span>
+		</Button>
+	);
+}
+
+function OpenDeviceStorageMenu({ roomState, device, close }: {
+	roomState: AssetFrameworkRoomState;
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const navigate = useNavigatePandora();
+
+	const storageModuleName = device.asset.definition.storageModule;
+
+	const target = useMemo((): ActionTargetSelector => ({
+		type: 'room',
+		roomId: roomState.id,
+	}), [roomState.id]);
+
+	const container = useMemo((): ItemContainerPath => (
+		storageModuleName != null ? [{ item: device.id, module: storageModuleName }] : []
+	), [storageModuleName, device.id]);
+
+	const checkResult = useWardrobeContainerAccessCheck(target, container);
+
+	if (storageModuleName == null || !device.getModules().has(storageModuleName))
+		return null;
+
+	return (
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+						checkResult.valid ? '' : 'text-strikethrough',
+			) }
+			onClick={ () => {
+				close();
+				navigate(
+					ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }),
+					{
+						state: {
+							initialFocus: {
+								container,
+								itemId: null,
+							},
+						} satisfies WardrobeLocationState,
+					},
+				);
+			} }>
+			<img src={ storageIcon } />
+			<span>Open storage</span>
 		</Button>
 	);
 }
@@ -288,6 +361,7 @@ function DeviceMainMenu({ roomState, device, position, close }: {
 	close: () => void;
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
+	const { canModifyRoom } = useObservable(DeviceOverlayState);
 
 	if (!slot) {
 		return (
@@ -300,8 +374,13 @@ function DeviceMainMenu({ roomState, device, position, close }: {
 				)) }
 				<hr />
 				<LeaveDeviceMenu roomState={ roomState } device={ device } close={ close } />
-				<MoveDeviceMenu roomState={ roomState } device={ device } close={ close } />
-				<StoreDeviceMenu roomState={ roomState } device={ device } close={ close } />
+				<OpenDeviceStorageMenu roomState={ roomState } device={ device } close={ close } />
+				{ canModifyRoom ? (
+					<>
+						<MoveDeviceMenu roomState={ roomState } device={ device } close={ close } />
+						<StoreDeviceMenu roomState={ roomState } device={ device } close={ close } />
+					</>
+				) : null }
 			</>
 		);
 	}

@@ -1,9 +1,10 @@
 import classNames from 'classnames';
-import { AppearanceAction, EvalItemPath, ItemId, type AssetFrameworkRoomState, type Item, type RoomId } from 'pandora-common';
+import { AppearanceAction, EvalItemPath, ItemId, type ActionTargetSelector, type AssetFrameworkRoomState, type Item, type ItemContainerPath, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import storageIcon from '../../../assets/icons/storage.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
@@ -14,6 +15,7 @@ import { useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../
 import { ActionProblemsContent } from '../../../components/wardrobe/wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
+import { useWardrobeContainerAccessCheck } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
@@ -130,6 +132,56 @@ function MoveItemMenu({ roomState, item, close }: {
 	);
 }
 
+function OpenItemStorageMenu({ roomState, item, close }: {
+	roomState: AssetFrameworkRoomState;
+	item: Item;
+	close: () => void;
+}) {
+	const navigate = useNavigatePandora();
+
+	const storageModuleName = item.asset.definition.storageModule;
+
+	const target = useMemo((): ActionTargetSelector => ({
+		type: 'room',
+		roomId: roomState.id,
+	}), [roomState.id]);
+
+	const container = useMemo((): ItemContainerPath => (
+		storageModuleName != null ? [{ item: item.id, module: storageModuleName }] : []
+	), [storageModuleName, item.id]);
+
+	const checkResult = useWardrobeContainerAccessCheck(target, container);
+
+	if (storageModuleName == null || !item.getModules().has(storageModuleName))
+		return null;
+
+	return (
+		<Button
+			theme='transparent'
+			className={ classNames(
+				'withIcon',
+				checkResult.valid ? '' : 'text-strikethrough',
+			) }
+			onClick={ () => {
+				close();
+				navigate(
+					ActionTargetToWardrobeUrl({ type: 'room', roomId: roomState.id }),
+					{
+						state: {
+							initialFocus: {
+								container,
+								itemId: null,
+							},
+						} satisfies WardrobeLocationState,
+					},
+				);
+			} }>
+			<img src={ storageIcon } />
+			<span>Open storage</span>
+		</Button>
+	);
+}
+
 function ItemMainMenu({ roomState, item, close }: {
 	roomState: AssetFrameworkRoomState;
 	item: Item;
@@ -138,6 +190,7 @@ function ItemMainMenu({ roomState, item, close }: {
 	return (
 		<>
 			<hr />
+			<OpenItemStorageMenu roomState={ roomState } item={ item } close={ close } />
 			<MoveItemMenu roomState={ roomState } item={ item } close={ close } />
 			<HideItemMenu roomState={ roomState } item={ item } close={ close } />
 			<WearItemMenu roomState={ roomState } item={ item } close={ close } />

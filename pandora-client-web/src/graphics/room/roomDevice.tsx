@@ -295,13 +295,29 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	// Overlay graphics
 	const defaultView = useObservable(DeviceOverlaySetting);
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
+	const { interactionVisibility } = item;
 
-	const canInteractNormally = Object.keys(asset.definition.slots).length > 0;
-	const enableMenu = !isBeingMoved && (canInteractNormally || showOverlaySetting === 'always');
+	const hasSlots = Object.keys(asset.definition.slots).length > 0;
+
+	const suppressedByOwner =
+		(interactionVisibility === 'hide' && !roomConstructionMode) ||
+    	interactionVisibility === 'hideInConstruction';
+
+	const canInteractNormally =
+	interactionVisibility === 'show' ?
+	true : suppressedByOwner ?
+	false : hasSlots;
+
+	const effectiveShowOverlaySetting =
+    suppressedByOwner ?
+	'never' : roomConstructionMode ?
+	'always' : defaultView;
+
+	const enableMenu = !isBeingMoved && (canInteractNormally || effectiveShowOverlaySetting === 'always');
 	const showMenuHelper = enableMenu && (
-		showOverlaySetting === 'always' ||
-		(showOverlaySetting === 'interactable' && canInteractNormally)
+		(interactionVisibility === 'show' && effectiveShowOverlaySetting !== 'never') ||
+		effectiveShowOverlaySetting === 'always' ||
+		(effectiveShowOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
 	const { held, hover } = useDefineHitscanTarget(useMemo((): HitscanTargetProps | null => {

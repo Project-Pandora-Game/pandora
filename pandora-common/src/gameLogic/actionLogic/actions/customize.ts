@@ -2,6 +2,7 @@ import { produce } from 'immer';
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
 import { PersonalItemDeploymentAutoDeploySchema } from '../../../assets/item/personal.ts';
+import { RoomDeviceInteractionVisibilitySchema } from '../../../assets/item/roomDevice.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../../../inputLimits.ts';
 import { AssertNotNullable } from '../../../utility/misc.ts';
@@ -20,6 +21,8 @@ export const AppearanceActionCustomize = z.object({
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */
 	requireFreeHandsToUse: z.boolean().optional(),
+	/** New visibility state of the interaction button in the room UI; only settable by permitted users */
+	interactionVisibility: RoomDeviceInteractionVisibilitySchema.optional(),
 	/** Sets whether personal item should auto-deploy to room when put into it. The asset must support room deployment for this to be allowed. */
 	personalItemAutoDeploy: PersonalItemDeploymentAutoDeploySchema.optional(),
 });
@@ -39,13 +42,14 @@ export function ActionAppearanceCustomize({
 		return processingContext.invalid();
 	}
 
-	// To customize deployed room devices, player must have appropriate space role
-	if (item.isType('roomDevice') && item.isDeployed()) {
+	// To customize deployed room devices, player must have an appropriate space role.
+	// Changing interactionVisibility always requires the role, even when not deployed
+	if (item.isType('roomDevice') && (item.isDeployed() || action.interactionVisibility !== undefined)) {
 		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveRoomSettings(action.target.type === 'room' ? action.target.roomId : null).roomDeviceDeploymentMinimumRole);
 	}
 
 	// Determinate the interaction type(s) based on what is edited
-	const isModify = action.requireFreeHandsToUse !== undefined;
+	const isModify = action.requireFreeHandsToUse !== undefined || action.interactionVisibility !== undefined;
 	const isCustomize = action.name !== undefined || action.description !== undefined;
 
 	// Player must be able to do the action
@@ -76,6 +80,11 @@ export function ActionAppearanceCustomize({
 		// Apply the new requireFreeHandsToUse value, if a new value is defined
 		if (action.requireFreeHandsToUse !== undefined && (it.isType('personal') || it.isType('roomDevice'))) {
 			it = it.customizeFreeHandUsage(action.requireFreeHandsToUse);
+		}
+
+		// Apply the new interactionVisibility value, if a new value is defined
+		if (action.interactionVisibility !== undefined && it.isType('roomDevice')) {
+			it = it.customizeInteractionVisibility(action.interactionVisibility);
 		}
 
 		// Apply `personalItemAutoDeploy`

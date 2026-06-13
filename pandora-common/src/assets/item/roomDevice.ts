@@ -50,10 +50,15 @@ export const RoomDeviceDeploymentChangeSchema = z.object({
 });
 export type RoomDeviceDeploymentChange = z.infer<typeof RoomDeviceDeploymentChangeSchema>;
 
+export const RoomDeviceInteractionVisibilitySchema = z.enum(['auto', 'show', 'hide', 'hideInConstruction']);
+export type RoomDeviceInteractionVisibility = z.infer<typeof RoomDeviceInteractionVisibilitySchema>;
+
 export const RoomDeviceBundleSchema = z.object({
 	deployment: RoomDeviceDeploymentSchema,
 	/** Which characters have which slots reserved */
 	slotOccupancy: z.record(z.string(), CharacterIdSchema),
+	/** Controls visibility of the interaction button in the room UI */
+	interactionVisibility: RoomDeviceInteractionVisibilitySchema,
 });
 export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
 
@@ -62,6 +67,7 @@ interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
 	readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
 	readonly requireFreeHandsToUse: boolean;
+	readonly interactionVisibility: RoomDeviceInteractionVisibility;
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDeviceProps {
@@ -69,6 +75,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
 	public readonly requireFreeHandsToUse: boolean;
+	public readonly interactionVisibility: RoomDeviceInteractionVisibility;
 
 	protected constructor(props: ItemRoomDeviceProps, overrideProps: Partial<ItemRoomDeviceProps> = {}) {
 		super(props, overrideProps);
@@ -76,6 +83,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		this.slotOccupancy = overrideProps?.slotOccupancy ?? props.slotOccupancy;
 		this.modules = overrideProps?.modules ?? props.modules;
 		this.requireFreeHandsToUse = overrideProps?.requireFreeHandsToUse ?? props.requireFreeHandsToUse;
+		this.interactionVisibility = overrideProps?.interactionVisibility ?? props.interactionVisibility;
 	}
 
 	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
@@ -102,9 +110,11 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 				yOffset: 0,
 			},
 			slotOccupancy: {},
+			interactionVisibility: 'auto',
 		};
 
 		const deployment = roomDeviceData.deployment;
+		const interactionVisibility = roomDeviceData.interactionVisibility;
 
 		const slotOccupancy = new Map<string, CharacterId>();
 		// Skip occupied slots if we are not deployed
@@ -124,6 +134,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			deployment,
 			slotOccupancy,
 			requireFreeHandsToUse,
+			interactionVisibility,
 		});
 	}
 
@@ -189,6 +200,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			roomDeviceData: {
 				deployment: this.deployment,
 				slotOccupancy,
+				interactionVisibility: this.interactionVisibility,
 			},
 			requireFreeHandsToUse: this.requireFreeHandsToUse,
 		};
@@ -292,6 +304,11 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	/** Returns a new item with the passed requireFreeHandsToUse attribute */
 	public customizeFreeHandUsage(requireFreeHandsToUse: boolean): ItemRoomDevice {
 		return this.withProps({ requireFreeHandsToUse });
+	}
+
+	/** Returns a new item with the passed interactionVisibility setting */
+	public customizeInteractionVisibility(interactionVisibility: RoomDeviceInteractionVisibility): ItemRoomDevice {
+		return this.withProps({ interactionVisibility });
 	}
 
 	@MemoizeNoArg

@@ -149,6 +149,7 @@ function CreateRoomDeviceItemBundle(slotOccupancy: Record<string, CharacterId>):
 				yOffset: 0,
 			},
 			slotOccupancy,
+			interactionVisibility: 'auto',
 		},
 	};
 }

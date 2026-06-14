@@ -5,9 +5,11 @@ import { useObservable } from '../../../observable.ts';
 
 export const SettingRoomCharacterListDisplayOffline = BrowserStorage.createSession('room.character-list.display-offline', true, z.boolean());
 
-export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
+export const SettingDisplayCharacterName = BrowserStorage.create('graphics.display-character-name', true, z.boolean());
 
-export const SettingDisplayRoomLinks = BrowserStorage.createSession('graphics.display-room-links', true, z.boolean());
+export const SettingDisplayRoomDeviceButtons = BrowserStorage.create('graphics.display-room-device-buttons', true, z.boolean());
+
+export const SettingDisplayRoomLinks = BrowserStorage.create('graphics.display-room-links', true, z.boolean());
 
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
 export const DeviceOverlayStateSchema = z.object({
@@ -18,7 +20,6 @@ export const DeviceOverlayStateSchema = z.object({
 	canUseHands: z.boolean(),
 });
 
-export const DeviceOverlaySetting = BrowserStorage.create('device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
 export const DeviceOverlayState = BrowserStorage.createSession('device-overlay-state', {
 	roomConstructionMode: false,
 	spaceId: undefined,

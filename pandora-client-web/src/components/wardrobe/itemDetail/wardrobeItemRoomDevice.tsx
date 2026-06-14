@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
 import { nanoid } from 'nanoid';
@@ -10,6 +11,7 @@ import {
 	RoomDeviceSlot,
 	type ActionRoomSelector,
 	type AppearanceAction,
+	type RoomDeviceInteractionVisibility,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { Character } from '../../../character/character.ts';
@@ -20,6 +22,7 @@ import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
 import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { ContextHelpButton } from '../../help/contextHelpButton.tsx';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
@@ -65,6 +68,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 		<FieldsetToggle legend='Deployment'>
 			<Column padding='medium'>
 				{ contents }
+				<WardrobeRoomDeviceInteractionVisibilityCustomize roomDevice={ roomDevice } item={ item } />
 			</Column>
 		</FieldsetToggle>
 	);
@@ -145,6 +149,85 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 				/>
 			</Row>
 		</Column>
+	);
+}
+
+const INTERACTION_VISIBILITY_OPTIONS: {
+	value: RoomDeviceInteractionVisibility;
+	label: string;
+	description: string;
+}[] = [
+	{
+		value: 'auto',
+		label: 'Auto',
+		description: 'Show the interaction button only when the device has a character slot (default)',
+	},
+	{
+		value: 'show',
+		label: 'Show',
+		description: 'Show the interaction button',
+	},
+	{
+		value: 'hide',
+		label: 'Hide',
+		description: 'Hide the interaction button',
+	},
+	{
+		value: 'hideAlways',
+		label: 'Always hide',
+		description: 'Hide the interaction button, even while in room construction mode',
+	},
+];
+
+function WardrobeRoomDeviceInteractionVisibilityCustomize({ roomDevice, item }: {
+	roomDevice: Item<'roomDevice'>;
+	item: ItemPath;
+}): ReactElement {
+	const { targetSelector } = useWardrobeContext();
+
+	const actions = useMemo<Record<RoomDeviceInteractionVisibility, AppearanceAction>>(
+		() => Object.fromEntries(
+			INTERACTION_VISIBILITY_OPTIONS.map(({ value }) => [
+				value,
+				{
+					type: 'customize',
+					target: targetSelector,
+					item,
+					interactionVisibility: value,
+				} satisfies AppearanceAction,
+			]),
+		) as Record<RoomDeviceInteractionVisibility, AppearanceAction>,
+		[targetSelector, item],
+	);
+
+	return (
+		<FieldsetToggle legend='Interaction button'>
+			<Row alignY='start'>
+				<Row className='flex-1' alignY='center' wrap>
+					{ INTERACTION_VISIBILITY_OPTIONS.map(({ value, label }) => (
+						<WardrobeActionButton
+							key={ value }
+							action={ actions[value] }
+							className={ classNames({ selected: roomDevice.interactionVisibility === value }) }
+							showActionBlockedExplanation={ roomDevice.interactionVisibility !== value }
+						>
+							{ label }
+						</WardrobeActionButton>
+					)) }
+				</Row>
+				<ContextHelpButton>
+					These options allow you to change whether this device's intereaction button appears in the room view.<br />
+					The options are:<br />
+					<ul>
+						{ INTERACTION_VISIBILITY_OPTIONS.map(({ value, label, description }) => (
+							<li key={ value }>
+								{ label }: { description }
+							</li>
+						)) }
+					</ul>
+				</ContextHelpButton>
+			</Row>
+		</FieldsetToggle>
 	);
 }
 

@@ -301,7 +301,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 
 	const suppressedByOwner =
 		(interactionVisibility === 'hide' && !roomConstructionMode) ||
-		interactionVisibility === 'hideInConstruction';
+		interactionVisibility === 'hideAlways';
 
 	const canInteractNormally =
 	interactionVisibility === 'show' ? true :

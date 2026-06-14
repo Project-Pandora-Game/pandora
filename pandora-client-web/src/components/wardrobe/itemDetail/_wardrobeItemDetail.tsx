@@ -319,7 +319,7 @@ const INTERACTION_VISIBILITY_OPTIONS: {
 		title: 'Always hide the interaction button',
 	},
 	{
-		value: 'hideInConstruction',
+		value: 'hideAlways',
 		label: 'Hide also in construction',
 		title: 'Hide the interaction button even when the room is in construction mode',
 	},

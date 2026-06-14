@@ -50,7 +50,21 @@ export const RoomDeviceDeploymentChangeSchema = z.object({
 });
 export type RoomDeviceDeploymentChange = z.infer<typeof RoomDeviceDeploymentChangeSchema>;
 
-export const RoomDeviceInteractionVisibilitySchema = z.enum(['auto', 'show', 'hide', 'hideInConstruction']);
+/**
+ * Defines when room device's interaction button is visible:
+ * - `auto` - Decide automatically based on whether the device has character slots or not
+ * - `show` - Show the button
+ * - `hide` - Do not show the button normally, but show it in construction mode
+ * - `hideAlways` - Always hide the button (even in construction mode)
+ */
+export const RoomDeviceInteractionVisibilitySchema = z.enum(['auto', 'show', 'hide', 'hideAlways']);
+/**
+ * Defines when room device's interaction button is visible:
+ * - `auto` - Decide automatically based on whether the device has character slots or not
+ * - `show` - Show the button
+ * - `hide` - Do not show the button normally, but show it in construction mode
+ * - `hideAlways` - Always hide the button (even in construction mode)
+ */
 export type RoomDeviceInteractionVisibility = z.infer<typeof RoomDeviceInteractionVisibilitySchema>;
 
 export const RoomDeviceBundleSchema = z.object({

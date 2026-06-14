@@ -19,7 +19,7 @@ import { Character, useCharacterData, useCharacterDataMultiple } from '../../../
 import { PlayerCharacter } from '../../../character/player.ts';
 import { useCurrentUtcTimeMinutes } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
-import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
+import { Switch } from '../../../common/userInteraction/switch.tsx';
 import { useAccountContacts, useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
 import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/accountContacts/accountContacts.tsx';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
@@ -53,7 +53,7 @@ import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.ts
 import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
+import { DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomDeviceButtons, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
@@ -386,56 +386,47 @@ function SpaceVisibilityWarning(): ReactElement | null {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const defaultView = useObservable(DeviceOverlaySetting);
+	const id = useId();
+	const showRoomDeviceButtons = useObservable(SettingDisplayRoomDeviceButtons);
 	const showName = useObservable(SettingDisplayCharacterName);
 	const showRoomLinks = useObservable(SettingDisplayRoomLinks);
-
-	const onSelectionChange: NonNullable<SelectProps['onChange']> = (e) => {
-		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
-	};
 
 	return (
 		<>
 			&nbsp;
-			<div >
-				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
-				{ ' ' }
-				<Select
-					id='chatroom-device-overlay'
-					value={ defaultView }
-					onChange={ onSelectionChange }
-				>
-					<option value='never'>
-						Never (enterable devices can still be interacted with)
-					</option>
-					<option value='interactable'>
-						For enterable devices only
-					</option>
-					<option value='always'>
-						For all devices
-					</option>
-				</Select>
-			</div>
-			<div>
-				<Checkbox
-					id='chatroom-character-name-display'
+			<Row alignY='center'>
+				<Switch
+					id={ id + ':chatroom-character-name-display' }
+					size='small'
 					checked={ showName }
 					onChange={ (newValue) => {
 						SettingDisplayCharacterName.value = newValue;
 					} }
 				/>
-				<label htmlFor='chatroom-character-name-display'> Show name under characters</label>
-			</div>
-			<div>
-				<Checkbox
-					id='chatroom-roomlink-display'
+				<label htmlFor={ id + ':chatroom-character-name-display' }> Show name under characters</label>
+			</Row>
+			<Row alignY='center'>
+				<Switch
+					id={ id + ':room-device-button-display' }
+					size='small'
+					checked={ showRoomDeviceButtons }
+					onChange={ (newValue) => {
+						SettingDisplayRoomDeviceButtons.value = newValue;
+					} }
+				/>
+				<label htmlFor={ id + ':room-device-button-display' }> Show room device buttons</label>
+			</Row>
+			<Row alignY='center'>
+				<Switch
+					id={ id + ':chatroom-roomlink-display' }
+					size='small'
 					checked={ showRoomLinks }
 					onChange={ (newValue) => {
 						SettingDisplayRoomLinks.value = newValue;
 					} }
 				/>
-				<label htmlFor='chatroom-roomlink-display'> Show directions to other rooms</label>
-			</div>
+				<label htmlFor={ id + ':chatroom-roomlink-display' } >Show directions to other rooms</label>
+			</Row>
 		</>
 	);
 }

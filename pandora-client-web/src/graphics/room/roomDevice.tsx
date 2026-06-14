@@ -22,7 +22,7 @@ import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
-import { DeviceOverlaySetting, SettingDisplayCharacterName, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
+import { SettingDisplayCharacterName, SettingDisplayRoomDeviceButtons, useIsRoomConstructionModeEnabled } from '../../ui/screens/room/roomState.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { useDefineHitscanTarget, type HitscanTargetProps } from '../common/hitscan/hitscanTarget.tsx';
@@ -293,7 +293,7 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
 
 	// Overlay graphics
-	const defaultView = useObservable(DeviceOverlaySetting);
+	const roomDeviceButtonsEnabled = useObservable(SettingDisplayRoomDeviceButtons);
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const { interactionVisibility } = item;
 
@@ -304,14 +304,15 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 		interactionVisibility === 'hideAlways';
 
 	const canInteractNormally =
-	interactionVisibility === 'show' ? true :
-	suppressedByOwner ? false :
-	hasSlots;
+		interactionVisibility === 'show' ? true :
+		suppressedByOwner ? false :
+		hasSlots;
 
 	const effectiveShowOverlaySetting =
-	suppressedByOwner ? 'never' :
-	roomConstructionMode ? 'always' :
-	defaultView;
+		suppressedByOwner ? 'never' :
+		!roomDeviceButtonsEnabled ? 'never' :
+		roomConstructionMode ? 'always' :
+		'interactable';
 
 	const enableMenu = !isBeingMoved && (canInteractNormally || effectiveShowOverlaySetting === 'always');
 	const showMenuHelper = enableMenu && (

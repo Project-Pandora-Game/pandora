@@ -67,7 +67,7 @@ export function WikiItems(): ReactElement {
 			</p>
 			<p>
 				To move a deployed item on the room background, you need to enable the construction mode with the according button in the "Room"-tab.
-				While you are in this mode, every room-level item has a red icon below it (expect if the interaction button was hidden in the item's configuration).
+				While you are in this mode, every room-level item has a red icon below it (except if the interaction button was hidden in the item's configuration).
 				Clicking it and selecting "move" will turn the item into a move mode.
 				While in move mode, there are two icons under the item. You can drag the left one to move the item in all directions over the floor.
 				The right blue icon is used to lift the item up or down (alongside the z-axis) by dragging up or down. The set value can be reset by
@@ -77,9 +77,9 @@ export function WikiItems(): ReactElement {
 				<li>Only space admins can color, place, move, and undeploy room device per default.</li>
 				<li>Currently, modules of room devices can be changed by anybody. This will be changed in the future.</li>
 				<li>
-					Room items with characters slots show a blue icon below by default.
-					Permitted space roles can change the visibility of those icons for each room-level item individually.
-					These icons can also optionally be hidden under the "Room"-tab by every user.
+					Room items with character slots show a blue icon below by default.
+					Users permitted to modify room-level items can change the visibility of those icons for each room-level item individually.
+					You can also hide these icons for yourself under the "Room"-tab".
 				</li>
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>

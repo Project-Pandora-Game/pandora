@@ -58,7 +58,7 @@ export const RoomDeviceBundleSchema = z.object({
 	/** Which characters have which slots reserved */
 	slotOccupancy: z.record(z.string(), CharacterIdSchema),
 	/** Controls visibility of the interaction button in the room UI */
-	interactionVisibility: RoomDeviceInteractionVisibilitySchema,
+	interactionVisibility: RoomDeviceInteractionVisibilitySchema.catch('auto'),
 });
 export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
 

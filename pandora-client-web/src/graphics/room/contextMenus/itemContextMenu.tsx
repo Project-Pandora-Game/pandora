@@ -43,7 +43,7 @@ function HideItemMenu({ roomState, item, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				available ? '' : 'text-strikethrough',
+				available ? null : 'text-strikethrough',
 			) }
 			onClick={ execute }
 			disabled={ processing }
@@ -80,7 +80,7 @@ function WearItemMenu({ roomState, item, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				available ? '' : 'text-strikethrough',
+				available ? null : 'text-strikethrough',
 			) }
 			onClick={ execute }
 			disabled={ processing }
@@ -122,7 +122,7 @@ function MoveItemMenu({ roomState, item, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				available ? '' : 'text-strikethrough',
+				available ? null : 'text-strikethrough',
 			) }
 			onClick={ onClick }
 		>
@@ -160,7 +160,7 @@ function OpenItemStorageMenu({ roomState, item, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				checkResult.valid ? '' : 'text-strikethrough',
+				checkResult.valid ? null : 'text-strikethrough',
 			) }
 			onClick={ () => {
 				close();

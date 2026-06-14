@@ -64,7 +64,7 @@ function StoreDeviceMenu({ roomState, device, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				available ? '' : 'text-strikethrough',
+				available ? null : 'text-strikethrough',
 			) }
 			onClick={ onClick }
 			disabled={ processing }
@@ -118,7 +118,7 @@ function MoveDeviceMenu({ roomState, device, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-				available ? '' : 'text-strikethrough',
+				available ? null : 'text-strikethrough',
 			) }
 			onClick={ onClick }
 		>
@@ -156,7 +156,7 @@ function OpenDeviceStorageMenu({ roomState, device, close }: {
 			theme='transparent'
 			className={ classNames(
 				'withIcon',
-						checkResult.valid ? '' : 'text-strikethrough',
+						checkResult.valid ? null : 'text-strikethrough',
 			) }
 			onClick={ () => {
 				close();

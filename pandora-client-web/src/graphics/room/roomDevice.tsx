@@ -301,17 +301,17 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
 
 	const suppressedByOwner =
 		(interactionVisibility === 'hide' && !roomConstructionMode) ||
-    	interactionVisibility === 'hideInConstruction';
+		interactionVisibility === 'hideInConstruction';
 
 	const canInteractNormally =
-	interactionVisibility === 'show' ?
-	true : suppressedByOwner ?
-	false : hasSlots;
+	interactionVisibility === 'show' ? true :
+	suppressedByOwner ? false :
+	hasSlots;
 
 	const effectiveShowOverlaySetting =
-    suppressedByOwner ?
-	'never' : roomConstructionMode ?
-	'always' : defaultView;
+	suppressedByOwner ? 'never' :
+	roomConstructionMode ? 'always' :
+	defaultView;
 
 	const enableMenu = !isBeingMoved && (canInteractNormally || effectiveShowOverlaySetting === 'always');
 	const showMenuHelper = enableMenu && (

@@ -43,14 +43,13 @@ export function ActionAppearanceCustomize({
 	}
 
 	// To customize deployed room devices, player must have an appropriate space role.
-	// Changing interactionVisibility always requires the role, even when not deployed
-	if (item.isType('roomDevice') && (item.isDeployed() || action.interactionVisibility !== undefined)) {
+	if (item.isType('roomDevice') && item.isDeployed()) {
 		processingContext.checkPlayerHasSpaceRole(processingContext.getEffectiveRoomSettings(action.target.type === 'room' ? action.target.roomId : null).roomDeviceDeploymentMinimumRole);
 	}
 
 	// Determinate the interaction type(s) based on what is edited
-	const isModify = action.requireFreeHandsToUse !== undefined || action.interactionVisibility !== undefined;
-	const isCustomize = action.name !== undefined || action.description !== undefined;
+	const isModify = action.requireFreeHandsToUse !== undefined;
+	const isCustomize = action.name !== undefined || action.description !== undefined || action.interactionVisibility !== undefined;
 
 	// Player must be able to do the action
 	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.ACCESS_ONLY);

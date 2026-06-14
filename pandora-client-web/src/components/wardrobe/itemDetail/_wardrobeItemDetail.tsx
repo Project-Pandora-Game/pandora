@@ -5,7 +5,6 @@ import {
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
 	LIMIT_ITEM_NAME_PATTERN,
-	RoomDeviceInteractionVisibility,
 	SplitContainerPath,
 	type ActionRoomSelector,
 	type AppearanceAction,
@@ -215,9 +214,6 @@ export function WardrobeItemConfigMenu({
 				{ (wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 					<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 				) : null }
-				{ wornItem.isType('roomDevice') ? (
-					<WardrobeRoomDeviceInteractionVisibilityCustomize wornItem={ wornItem } item={ item } />
-				) : null }
 				{ wornItem.isType('personal') ? (
 					<WardrobePersonalItemDeployment targetSelector={ targetSelector } itemPath={ item } item={ wornItem } />
 				) : null }
@@ -293,70 +289,6 @@ function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: I
 						alt='Allow using this item even with blocked hands'
 					/>
 				</WardrobeActionButton>
-			</Row>
-		</FieldsetToggle>
-	);
-}
-
-const INTERACTION_VISIBILITY_OPTIONS: {
-	value: RoomDeviceInteractionVisibility;
-	label: string;
-	title: string;
-}[] = [
-	{
-		value: 'auto',
-		label: 'Auto',
-		title: 'Show the interaction button only when the device has a character slot (default)',
-	},
-	{
-		value: 'show',
-		label: 'Show',
-		title: 'Always show the interaction button',
-	},
-	{
-		value: 'hide',
-		label: 'Hide',
-		title: 'Always hide the interaction button',
-	},
-	{
-		value: 'hideAlways',
-		label: 'Hide also in construction',
-		title: 'Hide the interaction button even when the room is in construction mode',
-	},
-];
-
-function WardrobeRoomDeviceInteractionVisibilityCustomize({ wornItem, item }: { wornItem: Item<'roomDevice'>; item: ItemPath; }): ReactElement {
-	const { targetSelector } = useWardrobeContext();
-
-	const actions = useMemo<Record<RoomDeviceInteractionVisibility, AppearanceAction>>(
-		() => Object.fromEntries(
-			INTERACTION_VISIBILITY_OPTIONS.map(({ value }) => [
-				value,
-				{
-					type: 'customize',
-					target: targetSelector,
-					item,
-					interactionVisibility: value,
-				} satisfies AppearanceAction,
-			]),
-		) as Record<RoomDeviceInteractionVisibility, AppearanceAction>,
-		[targetSelector, item],
-	);
-
-	return (
-		<FieldsetToggle legend='Interaction button'>
-			<Row alignY='center' wrap>
-				{ INTERACTION_VISIBILITY_OPTIONS.map(({ value, label, title }) => (
-					<WardrobeActionButton
-						key={ value }
-						action={ actions[value] }
-						className={ classNames({ selected: wornItem.interactionVisibility === value }) }
-						showActionBlockedExplanation={ wornItem.interactionVisibility !== value }
-						title={ title }
-					>
-						{ label }
-					</WardrobeActionButton>
-				)) }
 			</Row>
 		</FieldsetToggle>
 	);

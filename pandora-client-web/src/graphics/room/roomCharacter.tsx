@@ -182,7 +182,8 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 
 		const [newX, newY] = projectionResolver.inverseGivenZ(pos.x, (pos.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
 
-		setPositionThrottled(newX, newY);
+		// We force y to be at least 1. This allows for creation of rooms where there are room items always in front of the character.
+		setPositionThrottled(newX, Math.max(newY, 1));
 	});
 
 	const onPointerDown = useCallback(() => {

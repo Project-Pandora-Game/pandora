@@ -113,7 +113,8 @@ export function RoomCharacterMovementTool({
 
 			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
 
-			setPositionThrottled(newX, newY, yOffsetExtra);
+			// We force y to be at least 1. This allows for creation of rooms where there are room items always in front of the character.
+			setPositionThrottled(newX, Math.max(newY, 1), yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
 

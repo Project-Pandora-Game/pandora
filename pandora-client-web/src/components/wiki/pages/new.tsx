@@ -173,7 +173,8 @@ export function WikiNew(): ReactElement {
 			</p>
 			<p>
 				You can enter "safemode" via the button under your character in the "Room"-tab, in the same row where the wardrobe and profile buttons are.
-				It should be seen as a last resort tool and you should try to resolve a situation if possible by communicating OOC first before using it,
+				Though using "timeout mode" as a first step and resolving things by communicating is the recommended approach.
+				Using "safemode" should be seen as a last resort tool and it is best to try resolving a situation if possible by communicating OOC first before using it,
 				as it can potentially hurt the other user if you use "safemode" for seemingly no apparent reason.
 			</p>
 

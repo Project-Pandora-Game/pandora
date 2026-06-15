@@ -49,7 +49,7 @@ export function WikiSafety(): ReactElement {
 				unable to modify anything about your character, but you also cannot interact with other characters in turn.<br />
 				The timeout mode can be used as an escalating mechanism in the unlikely case
 				that OOC-communication is not immediately
-				working or it can be used for you to feel more safe while discussing the situation in OOC messages.
+				working or it can be used for you to feel safe while discussing the situation in OOC messages.
 			</p>
 			<ul>
 				<li>You can enter timeout mode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
@@ -67,7 +67,8 @@ export function WikiSafety(): ReactElement {
 			</p>
 			<p>
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
-				your <Link to='#SA_Out-of-character_communication'>OOC</Link>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				your <Link to='#SA_Out-of-character_communication'>OOC</Link>-wishes were maliciously ignored, you were irresponsibly abandoned,
+				or some real life emergency happened to your partner.
 				The intended way to get out of restraints is to ask other characters for help with removing them.
 			</p>
 			<p>
@@ -78,7 +79,7 @@ export function WikiSafety(): ReactElement {
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
-				<li>After you entered safemode, you will be unable to leave the mode for a certain time, which simulates a period of time to recover from a bad play.</li>
+				<li>After you entered safemode, you will be unable to leave the mode for a certain time, to balance the potency of this last-resort tool.</li>
 				<li>
 					The cooldown period is there to make restraints feel impactful.
 					Safemode was not added to be used outside of emergencies.

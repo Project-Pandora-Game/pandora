@@ -1,62 +1,9 @@
-import classNames from 'classnames';
 import { isEqual } from 'lodash-es';
-import { Assert, AssetFrameworkPosePresetSchema, GetLogger, type AssetFrameworkPosePreset } from 'pandora-common';
-import { useState, type ComponentType, type ReactElement } from 'react';
+import { Assert, GetLogger } from 'pandora-common';
+import { type ComponentType, type ReactElement } from 'react';
 import * as z from 'zod';
-import bodyIcon from '../../../assets/icons/body.svg';
-import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
 import { ParseImportData } from '../../../components/exportImport/exportImportUtils.ts';
 import './embeds.scss';
-
-/**
- * A component for rendering a pose preset
- */
-export function RenderedPosePreset({ value }: {
-	value: string;
-}): ReactElement {
-	return (
-		<RenderedPandoraImportEmbed
-			value={ value }
-			visibleName='pose preset'
-			expectedType='PosePreset'
-			expectedVersion={ 1 }
-			dataSchema={ AssetFrameworkPosePresetSchema }
-			Embed={ RenderedPosePresetInner }
-		/>
-	);
-}
-
-function RenderedPosePresetInner({ data }: {
-	data: AssetFrameworkPosePreset;
-}): ReactElement {
-	const [open, setOpen] = useState(false);
-
-	return (
-		<>
-			<button
-				className={ classNames(
-					'ChatEmbed',
-					open ? 'selected' : null,
-				) }
-				onClick={ () => setOpen(true) }
-			>
-				<img className='icon' src={ bodyIcon } alt='Quick posing' />
-				Pose preset "{ data.name }"
-			</button>
-			{ open ? (
-				<DraggableDialog
-					title={ `Pose preset "${ data.name }"` }
-					close={ () => {
-						setOpen(false);
-					} }
-					allowShade
-				>
-					TODO
-				</DraggableDialog>
-			) : null }
-		</>
-	);
-}
 
 export function RenderedPandoraImportEmbed<T extends z.ZodType>({ value, visibleName, expectedType, expectedVersion, dataSchema, migration, Embed }: {
 	value: string;

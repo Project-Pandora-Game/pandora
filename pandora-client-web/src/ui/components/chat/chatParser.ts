@@ -1,8 +1,9 @@
-import { CharacterId, IChatModifier, IClientMessage, IChatSegment } from 'pandora-common';
+import { CharacterId, IChatModifier, IChatSegment, IClientMessage } from 'pandora-common';
+import { RICH_TEXT_MATCHERS } from '../richText/richText.tsx';
 
 export type ParserConfig<Types extends string, Default extends string> = Record<Exclude<Types, Default>, [string, string]>;
 
-type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw' | 'link';
+type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw' | 'rawooc';
 
 const ESCAPE = '\\'; // length must be 1
 
@@ -28,8 +29,6 @@ export class LineParser {
 		['*', '*\n', /\*$/, 'me', false],
 		['((', '))\n', /\)?\)$/g, 'ooc', true],
 		['```', '```\n', /`{3}$/, 'raw', true],
-		['https://', '\n', /\s/g, 'link', true],
-		['http://', '\n', /\s/g, 'link', true],
 	];
 
 	public parse(text: string, allowNonTargeted: boolean): [LineTypes, string][] {
@@ -50,13 +49,23 @@ export class LineParser {
 		if (!text)
 			return [];
 
+		// Detect embeds and turn those into forced raw OOC message not to mess up links or exports
+		for (const matcher of RICH_TEXT_MATCHERS) {
+			if (matcher.autoDetect) {
+				const match = new RegExp(matcher.matchRegex.source, matcher.matchRegex.flags).exec(text);
+				if (match?.[0] === text) {
+					return ['rawooc', text];
+				}
+			}
+		}
+
 		for (const [start, lineEnd, replace, type, targeted] of this._config) {
 			if (!targeted && !allowNonTargeted)
 				continue;
 
 			if (text.startsWith(start)) {
 				const [index, inner] = IndexOf(text, lineEnd);
-				const idx = type === 'link' ? 0 : start.length;
+				const idx = start.length;
 				if (index === -1)
 					return [type, inner.substring(idx).replace(replace, '')];
 
@@ -200,7 +209,7 @@ export const ChatParser = new class ChatParser {
 						to,
 					});
 					break;
-				case 'link':
+				case 'rawooc':
 					result.push({
 						type: 'ooc',
 						parts: [['normal', line]],

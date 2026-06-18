@@ -1,6 +1,6 @@
 import { Fragment, useMemo, type ReactElement } from 'react';
 import { CreateExportedDataMatcher } from '../../../components/exportImport/exportImportUtils.ts';
-import { RenderedPosePreset } from '../chat/embeds.tsx';
+import { RenderedPosePreset } from '../chat/embed_posePreset.tsx';
 import { RenderedLink } from '../chat/links.tsx';
 import './richText.scss';
 
@@ -63,12 +63,15 @@ function ProcessTextMatchers(text: string, matcherIndex: number = 0, keyStartInd
 export const RICH_TEXT_MATCHERS: {
 	matchRegex: RegExp;
 	eatSpaceAfter: boolean;
+	/** If set, then chat will autodetect this during send and send it as raw OOC message. */
+	autoDetect: boolean;
 	process: (match: RegExpExecArray) => ReactElement | null;
 }[] = [
 	// URLs
 	{
 		matchRegex: /(https?:\/\/\S+)(\s*)/g,
 		eatSpaceAfter: false,
+		autoDetect: true,
 		process: (match) => {
 			const url = URL.parse(match[1]);
 
@@ -84,6 +87,7 @@ export const RICH_TEXT_MATCHERS: {
 	{
 		matchRegex: CreateExportedDataMatcher('PosePreset', 'g'),
 		eatSpaceAfter: true,
+		autoDetect: true,
 		process: (match) => (
 			<RenderedPosePreset value={ match[0] } />
 		),

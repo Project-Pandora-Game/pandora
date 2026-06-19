@@ -199,6 +199,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
 	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
+	const [hideFromLockee, setHideFromLockee] = useState(false);
 	const confirm = useConfirmDialog();
 
 	// Attempted action for locking or unlocking the lock
@@ -218,6 +219,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 		return {
 			timer,
 			allowEarlyUnlock: timerAllowEarly,
+			hideTimeFromLockee: hideFromLockee,
 		};
 	}, [timer, timerAllowEarly]);
 
@@ -275,6 +277,10 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 						<Row className='WardrobeInputRow'>
 							<Checkbox id={ `${id}-timerAllowEarly` } checked={ timerAllowEarly } onChange={ setTimerAllowEarlyWithConfirm } />
 							<label htmlFor={ `${id}-timerAllowEarly` }>The lock can be unlocked by you even the before timer runs out</label>
+						</Row>
+						<Row className='WardrobeInputRow'>
+							<Checkbox id={ `${id}-hideFromLockee` } checked={ hideFromLockee } onChange={ setHideFromLockee } />
+							<label htmlFor={ `${id}-hideFromLockee` }>The time can not be seen by the lockee</label>
 						</Row>
 						<TimerInput
 							value={ timer }

@@ -1,4 +1,3 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
 import { CharacterIdSchema } from '../character/index.ts';
@@ -91,7 +90,7 @@ export const DirectoryShardSchema = {
 		]),
 	},
 	//#endregion
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IDirectoryShard = Satisfies<typeof DirectoryShardSchema, SocketInterfaceDefinitionVerified<typeof DirectoryShardSchema>>;
 export type IDirectoryShardArgument = SocketInterfaceRequest<IDirectoryShard>;

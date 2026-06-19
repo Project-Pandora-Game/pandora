@@ -25,7 +25,7 @@ import { ActionSpaceConfigure, AppearanceActionSpaceConfigure } from './spaceCon
 import { ActionSpaceRoomLayout, AppearanceActionSpaceRoomLayout } from './spaceRoomLayout.ts';
 import { ActionTransferItem, AppearanceActionTransferSchema } from './transfer.ts';
 
-export const AppearanceActionSchema = z.discriminatedUnion('type', [
+const AppearanceActionSchemaBase = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
 	AppearanceActionTransferSchema,
@@ -48,11 +48,13 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionSpaceRoomLayout,
 	AppearanceActionAttemptInterruptSchema,
 ]);
-type AppearanceActionBase = z.infer<typeof AppearanceActionSchema>;
+type AppearanceActionBase = z.infer<typeof AppearanceActionSchemaBase>;
 
 export type AppearanceActionType = AppearanceActionBase['type'];
 export type AppearanceAction<ActionType extends AppearanceActionType = AppearanceActionType> =
 	Extract<AppearanceActionBase, { type: ActionType; }>;
+
+export const AppearanceActionSchema: z.ZodType<AppearanceAction<AppearanceActionType>> = AppearanceActionSchemaBase;
 
 /** List of appearance actions that cannot be affected by character modifiers or other scripting mechanisms. */
 export const PROTECTED_APPEARANCE_ACTIONS = {

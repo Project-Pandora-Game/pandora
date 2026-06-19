@@ -26,7 +26,7 @@ const ASSET_TEST_BONE_DEFINITIONS_IMPL = {
 		baseRotation: -90,
 		type: 'pose',
 	},
-} as const satisfies Immutable<Record<string, BoneDefinitionCompressed>>;
+} as const satisfies Record<string, BoneDefinitionCompressed>;
 
 type Key = keyof typeof ASSET_TEST_BONE_DEFINITIONS_IMPL;
 

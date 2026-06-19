@@ -18,7 +18,6 @@ export function ZodTemplateString<T extends string>(validator: z.ZodString, rege
  * @param baseSchema The schema to wrap
  * @returns Schema wrapped with the interning effect
  */
-
 export function ZodWrapInternString<const T extends string>(baseSchema: z.ZodLiteral<T>): z.ZodCodec<z.ZodLiteral<T>, z.ZodLiteral<T>> {
 	// We use a "codec" here, because (unlike transform) it doesn't prevent generation of a JSON schema
 	return z.codec(
@@ -164,6 +163,13 @@ export function RecordUnpackSubobjectProperties<const T extends string, const V 
 export function ZodCast<T>(): z.ZodType<T> {
 	return z.any();
 }
+
+/**
+ * Create a ZodObject shape based on its final type
+ */
+export type ZodObjectShape<T extends object> = {
+	[k in keyof T]-?: undefined extends T[k] ? z.ZodOptional<z.ZodType<T[k]>> : z.ZodType<T[k]>;
+};
 
 export const HexColorStringSchema = ZodTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
 export type HexColorString = z.infer<typeof HexColorStringSchema>;

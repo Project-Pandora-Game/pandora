@@ -23,7 +23,7 @@ const PANDORA_FONTS_SETUP = {
 		name: 'Brush Script MT',
 		cssSelector: `'Brush Script MT', cursive`,
 	},
-} as const satisfies Immutable<Record<string, PandoraFontMetadata>>;
+} as const satisfies Record<string, PandoraFontMetadata>;
 
 export type PandoraFontMetadata = {
 	name: string;

@@ -1,46 +1,66 @@
 import * as z from 'zod';
-import { AssetIdSchema } from '../base.ts';
-import { PointTemplateSourceSchema } from '../graphics/points.ts';
-import { GraphicsSourceLayerSchema, GraphicsSourceRoomDeviceLayerSchema } from './layer.ts';
+import { AssetIdSchema, type AssetId } from '../base.ts';
+import { PointTemplateSourceSchema, type PointTemplateSource } from '../graphics/points.ts';
+import { GraphicsSourceLayerSchema, GraphicsSourceRoomDeviceLayerSchema, type GraphicsSourceLayer, type GraphicsSourceRoomDeviceLayer } from './layer.ts';
 
-export const AssetSourceGraphicsDefinitionSchema = z.object({
-	layers: GraphicsSourceLayerSchema.array(),
+export interface AssetSourceGraphicsDefinition {
+	layers: GraphicsSourceLayer[];
 	/** The graphics that is used when the item can be (and is) deployed in a room. */
+	roomLayers?: GraphicsSourceRoomDeviceLayer[];
+}
+export const AssetSourceGraphicsDefinitionSchema: z.ZodType<AssetSourceGraphicsDefinition> = z.object({
+	layers: GraphicsSourceLayerSchema.array(),
 	roomLayers: GraphicsSourceRoomDeviceLayerSchema.array().optional(),
 }).strict();
-export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDefinitionSchema>;
 
-export const AssetSourceGraphicsRoomDeviceSlotDefinitionSchema = z.object({
+export interface AssetSourceGraphicsRoomDeviceSlotDefinition {
+	layers: GraphicsSourceLayer[];
+}
+export const AssetSourceGraphicsRoomDeviceSlotDefinitionSchema: z.ZodType<AssetSourceGraphicsRoomDeviceSlotDefinition> = z.object({
 	layers: GraphicsSourceLayerSchema.array(),
 });
-export type AssetSourceGraphicsRoomDeviceSlotDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceSlotDefinitionSchema>;
 
-export const AssetSourceGraphicsRoomDeviceDefinitionSchema = z.object({
+export interface AssetSourceGraphicsRoomDeviceDefinition {
 	/** The graphical display of the device */
+	layers: GraphicsSourceRoomDeviceLayer[];
+	slots: Record<string, AssetSourceGraphicsRoomDeviceSlotDefinition>;
+}
+export const AssetSourceGraphicsRoomDeviceDefinitionSchema: z.ZodType<AssetSourceGraphicsRoomDeviceDefinition> = z.object({
 	layers: GraphicsSourceRoomDeviceLayerSchema.array(),
 	slots: z.record(z.string(), AssetSourceGraphicsRoomDeviceSlotDefinitionSchema),
 }).strict();
-export type AssetSourceGraphicsRoomDeviceDefinition = z.infer<typeof AssetSourceGraphicsRoomDeviceDefinitionSchema>;
 
-export const AssetSourceGraphicsInfoSchema = z.discriminatedUnion('type', [
+export type AssetSourceGraphicsInfo =
+	| {
+		type: 'worn';
+		definition: AssetSourceGraphicsDefinition;
+		/** Map containing mappings between original image and image resource final name. */
+		originalImagesMap: Record<string, string>;
+	}
+	| {
+		type: 'roomDevice';
+		definition: AssetSourceGraphicsRoomDeviceDefinition;
+		/** Map containing mappings between original image and image resource final name. */
+		originalImagesMap: Record<string, string>;
+	};
+export const AssetSourceGraphicsInfoSchema: z.ZodType<AssetSourceGraphicsInfo> = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('worn'),
 		definition: AssetSourceGraphicsDefinitionSchema,
-		/** Map containing mappings between original image and image resource final name. */
 		originalImagesMap: z.record(z.string(), z.string()),
 	}),
 	z.object({
 		type: z.literal('roomDevice'),
 		definition: AssetSourceGraphicsRoomDeviceDefinitionSchema,
-		/** Map containing mappings between original image and image resource final name. */
 		originalImagesMap: z.record(z.string(), z.string()),
 	}),
 ]);
-export type AssetSourceGraphicsInfo = z.infer<typeof AssetSourceGraphicsInfoSchema>;
 
-export const GraphicsSourceDefinitionFileSchema = z.object({
+export interface GraphicsSourceDefinitionFile {
+	assets: Record<AssetId, AssetSourceGraphicsInfo>;
+	pointTemplates: Record<string, PointTemplateSource>;
+}
+export const GraphicsSourceDefinitionFileSchema: z.ZodType<GraphicsSourceDefinitionFile> = z.object({
 	assets: z.record(AssetIdSchema, AssetSourceGraphicsInfoSchema),
 	pointTemplates: z.record(z.string(), PointTemplateSourceSchema),
 });
-
-export type GraphicsSourceDefinitionFile = z.infer<typeof GraphicsSourceDefinitionFileSchema>;

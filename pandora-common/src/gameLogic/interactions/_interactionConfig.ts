@@ -1,7 +1,6 @@
-import type { Immutable } from 'immer';
-import type { InteractionGenericId } from './interactionData.ts';
-import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfigDefault, PermissionType } from '../permissions/index.ts';
 import { KnownObject, ParseArrayNotEmpty } from '../../utility/misc.ts';
+import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfigDefault, PermissionType } from '../permissions/index.ts';
+import type { InteractionGenericId } from './interactionData.ts';
 
 //#region Config for existing interactions; when adding an interaction edit only this
 
@@ -99,7 +98,7 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'no',
 		},
 	},
-} as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
+} as const satisfies Record<InteractionGenericId, IInteractionConfig>;
 
 //#endregion
 

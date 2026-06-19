@@ -3,7 +3,7 @@ import { RoomIdSchema } from '../assets/appearanceTypes.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
 import { HexColorStringSchema } from '../validation.ts';
-import { ChatMessageActionLogSchema } from './actionLog.ts';
+import { ChatMessageActionLogSchema, type ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionIdSchema } from './chatActions.ts';
 import { ChatReceivedMessageBaseSchema, IChatMessageActionAccountSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
 
@@ -124,8 +124,8 @@ export const ChatMessageActionSchema = ChatReceivedMessageBaseSchema.extend({
 });
 export type ChatMessageAction = z.infer<typeof ChatMessageActionSchema>;
 
-export const ChatMessageSchema = z.union([ChatMessageChatSchema, ChatMessageActionSchema, ChatMessageDeletedSchema, ChatMessageActionLogSchema]);
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+export type ChatMessage = ChatMessageChat | ChatMessageAction | ChatMessageDeleted | ChatMessageActionLog;
+export const ChatMessageSchema: z.ZodType<ChatMessage> = z.union([ChatMessageChatSchema, ChatMessageActionSchema, ChatMessageDeletedSchema, ChatMessageActionLogSchema]);
 
 export const ChatMessageDirectoryActionSchema = ChatMessageActionSchema.omit({ time: true, data: true, rooms: true }).extend({
 	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */

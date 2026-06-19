@@ -33,7 +33,7 @@ export const ASSET_PREFERENCES_PERMISSIONS = {
 	},
 	prevent: null,
 	doNotRender: null,
-} as const satisfies Immutable<Record<AssetPreferenceType, AssetPreferencePermissionConfig | null>>;
+} as const satisfies Record<AssetPreferenceType, AssetPreferencePermissionConfig | null>;
 
 export interface AssetPreferencePermissionConfig {
 	visibleName: string;

@@ -1,29 +1,38 @@
 import * as z from 'zod';
-import { GraphicsSourceAlphaImageMeshLayerSchema } from './layers/alphaImageMesh.ts';
-import { GraphicsSourceAutoMeshLayerSchema } from './layers/autoMesh.ts';
-import { GraphicsSourceMeshLayerSchema } from './layers/mesh.ts';
-import { GraphicsSourceRoomDeviceAutoSpriteLayerSchema } from './layers/roomDeviceAutoSprite.ts';
-import { GraphicsSourceRoomDeviceLayerMeshSchema } from './layers/roomDeviceMesh.ts';
-import { GraphicsSourceRoomDeviceLayerSlotSchema } from './layers/roomDeviceSlot.ts';
-import { GraphicsSourceRoomDeviceLayerSpriteSchema } from './layers/roomDeviceSprite.ts';
-import { GraphicsSourceRoomDeviceLayerTextSchema } from './layers/roomDeviceText.ts';
-import { GraphicsSourceTextLayerSchema } from './layers/text.ts';
+import { GraphicsSourceAlphaImageMeshLayerSchema, type GraphicsSourceAlphaImageMeshLayer } from './layers/alphaImageMesh.ts';
+import { GraphicsSourceAutoMeshLayerSchema, type GraphicsSourceAutoMeshLayer } from './layers/autoMesh.ts';
+import { GraphicsSourceMeshLayerSchema, type GraphicsSourceMeshLayer } from './layers/mesh.ts';
+import { GraphicsSourceRoomDeviceAutoSpriteLayerSchema, type GraphicsSourceRoomDeviceAutoSpriteLayer } from './layers/roomDeviceAutoSprite.ts';
+import { GraphicsSourceRoomDeviceLayerMeshSchema, type GraphicsSourceRoomDeviceLayerMesh } from './layers/roomDeviceMesh.ts';
+import { GraphicsSourceRoomDeviceLayerSlotSchema, type GraphicsSourceRoomDeviceLayerSlot } from './layers/roomDeviceSlot.ts';
+import { GraphicsSourceRoomDeviceLayerSpriteSchema, type GraphicsSourceRoomDeviceLayerSprite } from './layers/roomDeviceSprite.ts';
+import { GraphicsSourceRoomDeviceLayerTextSchema, type GraphicsSourceRoomDeviceLayerText } from './layers/roomDeviceText.ts';
+import { GraphicsSourceTextLayerSchema, type GraphicsSourceTextLayer } from './layers/text.ts';
 
-export const GraphicsSourceLayerSchema = z.discriminatedUnion('type', [
+export type GraphicsSourceLayer =
+	| GraphicsSourceMeshLayer
+	| GraphicsSourceAlphaImageMeshLayer
+	| GraphicsSourceAutoMeshLayer
+	| GraphicsSourceTextLayer;
+export const GraphicsSourceLayerSchema: z.ZodType<GraphicsSourceLayer> = z.discriminatedUnion('type', [
 	GraphicsSourceMeshLayerSchema,
 	GraphicsSourceAlphaImageMeshLayerSchema,
 	GraphicsSourceAutoMeshLayerSchema,
 	GraphicsSourceTextLayerSchema,
 ]);
-export type GraphicsSourceLayer = z.infer<typeof GraphicsSourceLayerSchema>;
 export type GraphicsSourceLayerType = GraphicsSourceLayer['type'];
 
-export const GraphicsSourceRoomDeviceLayerSchema = z.discriminatedUnion('type', [
+export type GraphicsSourceRoomDeviceLayer =
+	| GraphicsSourceRoomDeviceLayerSprite
+	| GraphicsSourceRoomDeviceAutoSpriteLayer
+	| GraphicsSourceRoomDeviceLayerSlot
+	| GraphicsSourceRoomDeviceLayerText
+	| GraphicsSourceRoomDeviceLayerMesh;
+export const GraphicsSourceRoomDeviceLayerSchema: z.ZodType<GraphicsSourceRoomDeviceLayer> = z.discriminatedUnion('type', [
 	GraphicsSourceRoomDeviceLayerSpriteSchema,
 	GraphicsSourceRoomDeviceAutoSpriteLayerSchema,
 	GraphicsSourceRoomDeviceLayerSlotSchema,
 	GraphicsSourceRoomDeviceLayerTextSchema,
 	GraphicsSourceRoomDeviceLayerMeshSchema,
 ]);
-export type GraphicsSourceRoomDeviceLayer = z.infer<typeof GraphicsSourceRoomDeviceLayerSchema>;
 export type GraphicsSourceRoomDeviceLayerType = GraphicsSourceRoomDeviceLayer['type'];

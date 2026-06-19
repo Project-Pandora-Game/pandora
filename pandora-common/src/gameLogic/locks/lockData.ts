@@ -13,6 +13,8 @@ export interface LockDataBundle {
 		lockedUntil?: number;
 		/** Whether the character that locked it is allowed to unlock the timer early */
 		disallowEarlyUnlock?: boolean;
+		/** Show the time of the timer to the locked character */
+		hideTimeFromLockee?: boolean;
 	};
 	/** Data applicable only to locks with fingerprint */
 	fingerprint?: {

@@ -1,4 +1,3 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
@@ -192,7 +191,7 @@ export const DirectoryClientSchema = {
 		request: AccountContactsUpdateDataSchema,
 		response: null,
 	},
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
 export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;

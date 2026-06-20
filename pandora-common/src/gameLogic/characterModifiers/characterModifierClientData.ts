@@ -1,14 +1,16 @@
-import * as z from 'zod';
-import { CharacterIdSchema } from '../../character/characterTypes.ts';
-import { CharacterModifierEffectDataSchema } from './characterModifierData.ts';
-import { KnownObject } from '../../utility/misc.ts';
 import { cloneDeep, isEqual } from 'lodash-es';
+import * as z from 'zod';
+import { CharacterIdSchema, type CharacterId } from '../../character/characterTypes.ts';
+import { KnownObject } from '../../utility/misc.ts';
+import { CharacterModifierEffectDataSchema, type CharacterModifierEffectData } from './characterModifierData.ts';
 
-export const SpaceCharacterModifierEffectDataSchema = z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array());
-export type SpaceCharacterModifierEffectData = z.infer<typeof SpaceCharacterModifierEffectDataSchema>;
+export type SpaceCharacterModifierEffectData = Record<CharacterId, CharacterModifierEffectData[]>;
+export const SpaceCharacterModifierEffectDataSchema: z.ZodType<SpaceCharacterModifierEffectData> =
+	z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array());
 
-export const SpaceCharacterModifierEffectDataUpdateSchema = z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array().nullable());
-export type SpaceCharacterModifierEffectDataUpdate = z.infer<typeof SpaceCharacterModifierEffectDataUpdateSchema>;
+export type SpaceCharacterModifierEffectDataUpdate = Record<CharacterId, CharacterModifierEffectData[] | null>;
+export const SpaceCharacterModifierEffectDataUpdateSchema: z.ZodType<SpaceCharacterModifierEffectDataUpdate> =
+	z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array().nullable());
 
 export function SpaceCharacterModifierEffectCalculateUpdate(original: SpaceCharacterModifierEffectData, newData: SpaceCharacterModifierEffectData): SpaceCharacterModifierEffectDataUpdate | undefined {
 	let result: SpaceCharacterModifierEffectDataUpdate | undefined;

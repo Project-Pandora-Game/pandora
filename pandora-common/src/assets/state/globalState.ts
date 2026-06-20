@@ -13,9 +13,9 @@ import type { Item } from '../item/base.ts';
 import type { AppearanceItems } from '../item/index.ts';
 import { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkCharacterState } from './characterState.ts';
-import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema } from './characterStateTypes.ts';
+import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema, type AppearanceBundle, type AppearanceClientDeltaBundle } from './characterStateTypes.ts';
 import { GlobalStateAutoProcessCharacterPositions } from './roomGeometry.ts';
-import { AssetFrameworkSpaceState, SpaceStateBundleSchema, SpaceStateClientDeltaBundleSchema, type SpaceStateClientBundle } from './spaceState.ts';
+import { AssetFrameworkSpaceState, SpaceStateBundleSchema, SpaceStateClientDeltaBundleSchema, type SpaceStateClientBundle, type SpaceStateClientDeltaBundle } from './spaceState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	stateId: z.string(),
@@ -30,18 +30,28 @@ export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBun
 	clientOnly: true;
 };
 
-const AssetFrameworkGlobalStateCharacterClientDeltaSchema = z.union([
+type AssetFrameworkGlobalStateCharacterClientDelta =
+	| ['full', AppearanceBundle]
+	| ['delta', AppearanceClientDeltaBundle]
+	| null;
+const AssetFrameworkGlobalStateCharacterClientDeltaSchema: z.ZodType<AssetFrameworkGlobalStateCharacterClientDelta> = z.union([
 	z.tuple([z.literal('full'), AppearanceBundleSchema]),
 	z.tuple([z.literal('delta'), AppearanceClientDeltaBundleSchema]),
 	z.null(),
 ]);
-export const AssetFrameworkGlobalStateClientDeltaBundleSchema = z.object({
+
+export type AssetFrameworkGlobalStateClientDeltaBundle = {
+	originalStateId: string;
+	targetStateId: string;
+	characters?: Record<CharacterId, AssetFrameworkGlobalStateCharacterClientDelta>;
+	space?: SpaceStateClientDeltaBundle;
+};
+export const AssetFrameworkGlobalStateClientDeltaBundleSchema: z.ZodType<AssetFrameworkGlobalStateClientDeltaBundle> = z.object({
 	originalStateId: z.string(),
 	targetStateId: z.string(),
 	characters: z.record(CharacterIdSchema, AssetFrameworkGlobalStateCharacterClientDeltaSchema).optional(),
 	space: SpaceStateClientDeltaBundleSchema.optional(),
 });
-export type AssetFrameworkGlobalStateClientDeltaBundle = z.infer<typeof AssetFrameworkGlobalStateClientDeltaBundleSchema>;
 
 /**
  * Class that stores immutable state for whole current context (so the current space, be it private or public one).

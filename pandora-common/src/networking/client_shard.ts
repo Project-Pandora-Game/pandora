@@ -1,4 +1,3 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences.ts';
 import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../character/characterSettings.ts';
@@ -319,7 +318,7 @@ export const ClientShardSchema = {
 			}),
 		]),
 	},
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IClientShard = Satisfies<typeof ClientShardSchema, SocketInterfaceDefinitionVerified<typeof ClientShardSchema>>;
 export type IClientShardArgument = SocketInterfaceRequest<IClientShard>;

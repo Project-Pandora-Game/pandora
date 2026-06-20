@@ -1,4 +1,3 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
@@ -847,7 +846,7 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	//#endregion
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IClientDirectory = Satisfies<typeof ClientDirectorySchema, SocketInterfaceDefinitionVerified<typeof ClientDirectorySchema>>;
 export type IClientDirectoryArgument = SocketInterfaceRequest<IClientDirectory>;

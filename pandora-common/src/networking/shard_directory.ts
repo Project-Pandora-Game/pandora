@@ -1,4 +1,3 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
@@ -117,7 +116,7 @@ export const ShardDirectorySchema = {
 		}),
 	},
 	//#endregion
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IShardDirectory = Satisfies<typeof ShardDirectorySchema, SocketInterfaceDefinitionVerified<typeof ShardDirectorySchema>>;
 export type IShardDirectoryArgument = SocketInterfaceRequest<IShardDirectory>;

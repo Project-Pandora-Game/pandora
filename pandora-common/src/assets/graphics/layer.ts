@@ -1,25 +1,32 @@
 import * as z from 'zod';
-import { GraphicsAlphaImageMeshLayerSchema } from './layers/alphaImageMesh.ts';
-import { GraphicsMeshLayerSchema } from './layers/mesh.ts';
-import { RoomDeviceGraphicsLayerMeshSchema } from './layers/roomDeviceMesh.ts';
-import { RoomDeviceGraphicsLayerSlotSchema } from './layers/roomDeviceSlot.ts';
-import { RoomDeviceGraphicsLayerSpriteSchema } from './layers/roomDeviceSprite.ts';
-import { RoomDeviceGraphicsLayerTextSchema } from './layers/roomDeviceText.ts';
-import { GraphicsTextLayerSchema } from './layers/text.ts';
+import { GraphicsAlphaImageMeshLayerSchema, type GraphicsAlphaImageMeshLayer } from './layers/alphaImageMesh.ts';
+import { GraphicsMeshLayerSchema, type GraphicsMeshLayer } from './layers/mesh.ts';
+import { RoomDeviceGraphicsLayerMeshSchema, type RoomDeviceGraphicsLayerMesh } from './layers/roomDeviceMesh.ts';
+import { RoomDeviceGraphicsLayerSlotSchema, type RoomDeviceGraphicsLayerSlot } from './layers/roomDeviceSlot.ts';
+import { RoomDeviceGraphicsLayerSpriteSchema, type RoomDeviceGraphicsLayerSprite } from './layers/roomDeviceSprite.ts';
+import { RoomDeviceGraphicsLayerTextSchema, type RoomDeviceGraphicsLayerText } from './layers/roomDeviceText.ts';
+import { GraphicsTextLayerSchema, type GraphicsTextLayer } from './layers/text.ts';
 
-export const GraphicsLayerSchema = z.discriminatedUnion('type', [
+export type GraphicsLayer =
+	| GraphicsMeshLayer
+	| GraphicsAlphaImageMeshLayer
+	| GraphicsTextLayer;
+export const GraphicsLayerSchema: z.ZodType<GraphicsLayer> = z.discriminatedUnion('type', [
 	GraphicsMeshLayerSchema,
 	GraphicsAlphaImageMeshLayerSchema,
 	GraphicsTextLayerSchema,
 ]);
-export type GraphicsLayer = z.infer<typeof GraphicsLayerSchema>;
 export type GraphicsLayerType = GraphicsLayer['type'];
 
-export const RoomDeviceGraphicsLayerSchema = z.discriminatedUnion('type', [
+export type RoomDeviceGraphicsLayer =
+	| RoomDeviceGraphicsLayerSprite
+	| RoomDeviceGraphicsLayerSlot
+	| RoomDeviceGraphicsLayerText
+	| RoomDeviceGraphicsLayerMesh;
+export const RoomDeviceGraphicsLayerSchema: z.ZodType<RoomDeviceGraphicsLayer> = z.discriminatedUnion('type', [
 	RoomDeviceGraphicsLayerSpriteSchema,
 	RoomDeviceGraphicsLayerSlotSchema,
 	RoomDeviceGraphicsLayerTextSchema,
 	RoomDeviceGraphicsLayerMeshSchema,
 ]);
-export type RoomDeviceGraphicsLayer = z.infer<typeof RoomDeviceGraphicsLayerSchema>;
 export type RoomDeviceGraphicsLayerType = RoomDeviceGraphicsLayer['type'];

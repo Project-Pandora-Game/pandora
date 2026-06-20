@@ -1,9 +1,9 @@
 import * as z from 'zod';
-import { AssetIdSchema } from '../base.ts';
+import { AssetIdSchema, type AssetId } from '../base.ts';
 import type { BoneType } from './conditions.ts';
-import { InversePosingHandleSchema } from './inversePosing.ts';
+import { InversePosingHandleSchema, type InversePosingHandle } from './inversePosing.ts';
 import { GraphicsLayerSchema, RoomDeviceGraphicsLayerSchema } from './layer.ts';
-import { PointTemplateSchema } from './points.ts';
+import { PointTemplateSchema, type PointTemplate } from './points.ts';
 
 export const CharacterSize = {
 	WIDTH: 1000,
@@ -32,7 +32,7 @@ export const AssetGraphicsWornDefinitionSchema = z.object({
 	/** The graphics that is used when the item can be (and is) deployed in a room. */
 	roomLayers: RoomDeviceGraphicsLayerSchema.array().optional(),
 }).strict();
-export type AssetGraphicsWornDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
+export type AssetGraphicsWornDefinition = z.infer<typeof AssetGraphicsWornDefinitionSchema>;
 
 export const AssetGraphicsRoomDeviceDefinitionSchema = z.object({
 	type: z.literal('roomDevice'),
@@ -41,21 +41,28 @@ export const AssetGraphicsRoomDeviceDefinitionSchema = z.object({
 }).strict();
 export type AssetGraphicsRoomDeviceDefinition = z.infer<typeof AssetGraphicsRoomDeviceDefinitionSchema>;
 
-export const AssetGraphicsDefinitionSchema = z.discriminatedUnion('type', [
+export type AssetGraphicsDefinition =
+	| AssetGraphicsWornDefinition
+	| AssetGraphicsRoomDeviceDefinition;
+export const AssetGraphicsDefinitionSchema: z.ZodType<AssetGraphicsDefinition> = z.discriminatedUnion('type', [
 	AssetGraphicsWornDefinitionSchema,
 	AssetGraphicsRoomDeviceDefinitionSchema,
 ]);
-export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 
 export const GraphicsImageFormatSchema = z.enum(['avif', 'webp']);
 export type GraphicsImageFormat = z.infer<typeof GraphicsImageFormatSchema>;
 
-export const GraphicsDefinitionFileSchema = z.object({
+export interface GraphicsDefinitionFile {
+	assets: Partial<Record<AssetId, AssetGraphicsDefinition>>;
+	pointTemplates: Record<string, PointTemplate>;
+	imageFormats: Partial<Record<GraphicsImageFormat, string>>;
+	/** UI handles used for inverse kinematic posing of the character. */
+	inversePosingHandles: InversePosingHandle[];
+}
+export const GraphicsDefinitionFileSchema: z.ZodType<GraphicsDefinitionFile> = z.object({
 	assets: z.partialRecord(AssetIdSchema, AssetGraphicsDefinitionSchema.optional()),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
 	imageFormats: z.partialRecord(GraphicsImageFormatSchema, z.string().optional()),
 	/** UI handles used for inverse kinematic posing of the character. */
 	inversePosingHandles: InversePosingHandleSchema.array(),
 });
-
-export type GraphicsDefinitionFile = z.infer<typeof GraphicsDefinitionFileSchema>;

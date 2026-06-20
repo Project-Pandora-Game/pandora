@@ -1,7 +1,6 @@
-import { Immutable } from 'immer';
 import * as z from 'zod';
 import type { AccountOnlineStatus } from '../account/contacts.ts';
-import type { AssetsDefinitionFile } from '../assets/definitions.ts';
+import { AssetsDefinitionFileSchema } from '../assets/definitions.ts';
 import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
 import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
 import type { CharacterPublicSettings } from '../character/characterSettings.ts';
@@ -21,11 +20,13 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	publicSettings: Partial<CharacterPublicSettings>;
 	onlineStatus: AccountOnlineStatus;
 };
+export const ICharacterRoomDataSchema: z.ZodType<ICharacterRoomData> = ZodCast<ICharacterRoomData>();
+export const ICharacterRoomDataDeltaSchema: z.ZodType<Partial<ICharacterRoomData>> = ZodCast<Partial<ICharacterRoomData>>();
 
 export const SpaceLoadDataSchema = z.object({
 	id: SpaceIdSchema.nullable(),
 	info: SpaceClientInfoSchema,
-	characters: ZodCast<ICharacterRoomData>().array(),
+	characters: ICharacterRoomDataSchema.array(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataSchema,
 	chatStatus: z.partialRecord(CharacterIdSchema, ChatCharacterStatusSchema.optional()),
 });
@@ -35,8 +36,8 @@ export const GameStateUpdateSchema = z.object({
 	globalState: AssetFrameworkGlobalStateClientDeltaBundleSchema.optional(),
 	info: SpaceClientInfoSchema.partial().optional(),
 	leave: CharacterIdSchema.optional(),
-	join: ZodCast<ICharacterRoomData>().optional(),
-	characters: z.record(CharacterIdSchema, ZodCast<Partial<ICharacterRoomData>>()).optional(),
+	join: ICharacterRoomDataSchema.optional(),
+	characters: z.record(CharacterIdSchema, ICharacterRoomDataDeltaSchema).optional(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataUpdateSchema.optional(),
 });
 export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;
@@ -50,7 +51,7 @@ export const ShardClientSchema = {
 			character: ZodCast<ICharacterPrivateData & ICharacterRoomData>(),
 			globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>(),
 			space: SpaceLoadDataSchema,
-			assetsDefinition: ZodCast<Immutable<AssetsDefinitionFile>>(),
+			assetsDefinition: AssetsDefinitionFileSchema,
 			assetsDefinitionHash: z.string(),
 			assetsSource: z.string(),
 		}),
@@ -98,7 +99,7 @@ export const ShardClientSchema = {
 		}),
 		response: null,
 	},
-} as const satisfies Immutable<SocketInterfaceDefinition>;
+} as const satisfies SocketInterfaceDefinition;
 
 export type IShardClient = Satisfies<typeof ShardClientSchema, SocketInterfaceDefinitionVerified<typeof ShardClientSchema>>;
 export type IShardClientArgument = SocketInterfaceRequest<IShardClient>;

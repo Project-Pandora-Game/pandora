@@ -1,12 +1,12 @@
 import * as z from 'zod';
-import { AccountIdSchema } from '../account/account.ts';
-import { SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE, SpaceStateBundleSchema } from '../assets/state/spaceState.ts';
+import { AccountIdSchema, type AccountId } from '../account/account.ts';
+import { SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE, SpaceStateBundleSchema, type SpaceStateBundle } from '../assets/state/spaceState.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits.ts';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
-import { ZodArrayWithInvalidDrop } from '../validation.ts';
-import { SPACE_ACTIVITY_DATA_DEFAULT, SpaceActivitySavedDataSchema } from './activity.ts';
-import { SpaceFeatureSchema, SpaceIdSchema, SpaceInviteIdSchema, SpaceNameSchema, SpacePublicSettingSchema } from './space.ts';
+import { ZodArrayWithInvalidDrop, type ZodObjectShape } from '../validation.ts';
+import { SPACE_ACTIVITY_DATA_DEFAULT, SpaceActivitySavedDataSchema, type SpaceActivitySavedData } from './activity.ts';
+import { SpaceFeatureSchema, SpaceIdSchema, SpaceInviteIdSchema, SpaceNameSchema, SpacePublicSettingSchema, type SpaceId } from './space.ts';
 import { SpaceSwitchClientStatusSchema } from './spaceSwitch.ts';
 
 export const SpaceBaseInfoSchema = z.object({
@@ -122,32 +122,41 @@ export const CurrentSpaceInfoSchema = z.object({
 export type CurrentSpaceInfo = z.infer<typeof CurrentSpaceInfoSchema>;
 
 /** Space data stored in database */
-export const SpaceDataSchema = z.object({
+export interface SpaceData {
+	id: SpaceId;
+	accessId: string;
+	/** Account IDs of accounts owning this space */
+	owners: AccountId[];
+	/** Account IDs of accounts invited to own this space */
+	ownerInvites: AccountId[];
+	config: SpaceDirectoryConfig;
+	spaceState: SpaceStateBundle;
+	invites: SpaceInvite[];
+	/** Data about how active the space is */
+	activity: SpaceActivitySavedData;
+}
+/** Space data stored in database */
+export const SpaceDataSchema: z.ZodObject<ZodObjectShape<SpaceData>> = z.object({
 	id: SpaceIdSchema,
 	accessId: z.string(),
-	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
-	/** Account IDs of accounts invited to own this space */
 	ownerInvites: AccountIdSchema.array().catch(() => []),
 	config: SpaceDirectoryConfigSchema,
 	spaceState: SpaceStateBundleSchema.catch(() => CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE)),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.string(), z.unknown())).catch(() => []),
-	/** Data about how active the space is */
 	activity: SpaceActivitySavedDataSchema.catch(() => CloneDeepMutable(SPACE_ACTIVITY_DATA_DEFAULT)),
 });
-/** Space data stored in database */
-export type SpaceData = z.infer<typeof SpaceDataSchema>;
 
 export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'ownerInvites', 'invites', 'activity'] as const satisfies readonly (keyof SpaceData)[];
-export const SpaceDataDirectoryUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
-export type SpaceDataDirectoryUpdate = z.infer<typeof SpaceDataDirectoryUpdateSchema>;
+export type SpaceDataDirectoryUpdate = Partial<Pick<SpaceData, (typeof SPACE_DIRECTORY_UPDATEABLE_PROPERTIES)[number]>>;
+export const SpaceDataDirectoryUpdateSchema: z.ZodType<SpaceDataDirectoryUpdate> = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 
 export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['spaceState'] as const satisfies readonly Exclude<keyof SpaceData, ((typeof SPACE_DIRECTORY_PROPERTIES)[number])>[];
-export const SpaceDataShardUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
-export type SpaceDataShardUpdate = z.infer<typeof SpaceDataShardUpdateSchema>;
+export type SpaceDataShardUpdate = Partial<Pick<SpaceData, (typeof SPACE_SHARD_UPDATEABLE_PROPERTIES)[number]>>;
+export const SpaceDataShardUpdateSchema: z.ZodType<SpaceDataShardUpdate> = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 
 export const SPACE_DIRECTORY_PROPERTIES = [...SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, 'id', 'accessId'] as const satisfies readonly (keyof SpaceData)[];
 /** Space data from database, only those relevant to Directory */
-export const SpaceDirectoryDataSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, true));
+export type SpaceDirectoryData = Pick<SpaceData, (typeof SPACE_DIRECTORY_PROPERTIES)[number]>;
 /** Space data from database, only those relevant to Directory */
-export type SpaceDirectoryData = z.infer<typeof SpaceDirectoryDataSchema>;
+export const SpaceDirectoryDataSchema: z.ZodType<SpaceDirectoryData> = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, true));

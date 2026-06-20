@@ -4,7 +4,7 @@ import type { AssetPreferenceType } from '../character/index.ts';
 import type { CharacterModifierSpecificTemplate, CharacterModifierType } from '../gameLogic/index.ts';
 import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';
 import type { Satisfies } from '../utility/misc.ts';
-import { HexRGBAColorString } from '../validation.ts';
+import { HexRGBAColorString, ZodCast } from '../validation.ts';
 import type { AssetId } from './base.ts';
 import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegSideOrder, LegsPose } from './graphics/index.ts';
 import type { AssetModuleDefinition } from './modules.ts';
@@ -506,3 +506,4 @@ export interface AssetsDefinitionFile {
 	randomization: AppearanceRandomizationData;
 	characterModifierTemplates: CharacterModifierInbuiltTemplates;
 }
+export const AssetsDefinitionFileSchema: z.ZodType<AssetsDefinitionFile> = ZodCast<AssetsDefinitionFile>();

@@ -1,8 +1,8 @@
 import * as z from 'zod';
 import { ZodMatcher, ZodTemplateString } from '../validation.ts';
 
-export const CharacterIdSchema = ZodTemplateString<`c${number}`>(z.string(), /^c[0-9]+$/);
-export type CharacterId = z.infer<typeof CharacterIdSchema>;
+export type CharacterId = `c${number}`;
+export const CharacterIdSchema: z.ZodType<CharacterId> = ZodTemplateString<CharacterId>(z.string(), /^c[0-9]+$/);
 
 /**
  * Test if a given value is a valid CharacterId - `'c{number}'`

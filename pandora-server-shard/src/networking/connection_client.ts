@@ -1,5 +1,5 @@
 import type { IncomingHttpHeaders } from 'http';
-import { Assert, AssertNotNullable, CharacterId, ClientShardSchema, GetLogger, IClientShard, IncomingConnection, IncomingSocket, IServerSocket, IShardClient, ShardClientSchema } from 'pandora-common';
+import { Assert, AssertNotNullable, CharacterId, ClientShardSchema, CloneDeepMutable, GetLogger, IClientShard, IncomingConnection, IncomingSocket, IServerSocket, IShardClient, ShardClientSchema } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { assetManager } from '../assets/assetManager.ts';
 import { Character } from '../character/character.ts';
@@ -70,7 +70,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 			character: this.character.getPrivateData(),
 			globalState: space.currentState.exportToClientBundle(),
 			space: space.getLoadData(this.character.id),
-			assetsDefinition: assetManager.rawData,
+			assetsDefinition: CloneDeepMutable(assetManager.rawData),
 			assetsDefinitionHash: assetManager.definitionsHash,
 			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS.split(';').map((addr) => addr.trim() + '/assets/').join(';')),
 		});

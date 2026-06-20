@@ -18,6 +18,7 @@ import { Column, Row } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { WardrobeItemPreferenceIcon } from './itemDetail/wardrobeItemPreference.tsx';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView.tsx';
 import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents.tsx';
 
@@ -122,6 +123,7 @@ function WardrobePreferencesItemPickerItem({ asset, listMode }: {
 				<span>{ asset.definition.name }</span>
 				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
 			</span>
+			<WardrobeItemPreferenceIcon preference={ preference } />
 		</div>
 	);
 }
@@ -210,6 +212,7 @@ function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
 			} }>
 			<InventoryAttributePreview attribute={ attribute } />
 			<span className='itemName'>{ definition.name }</span>
+			<WardrobeItemPreferenceIcon preference={ preference } />
 		</div>
 	);
 }
@@ -408,6 +411,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 										>
 											<InventoryAttributePreview attribute={ attribute } />
 											<span className='itemName'>{ definition.name }</span>
+											<WardrobeItemPreferenceIcon preference={ attributePreference } />
 										</div>
 									);
 								})
@@ -541,6 +545,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 												<span>{ a.definition.name }</span>
 												<span className='credits'>by { NaturalListJoin(a.definition.credits.credits) }</span>
 											</span>
+											<WardrobeItemPreferenceIcon preference={ assetPreference } />
 										</div>
 									);
 								})

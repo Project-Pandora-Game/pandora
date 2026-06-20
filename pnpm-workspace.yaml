@@ -27,3 +27,5 @@ packages:
 minimumReleaseAgeExclude:
   # Renovate security update: webpack-dev-server@5.2.5
   - webpack-dev-server@5.2.5
+  # Renovate security update: nodemailer@9.0.1
+  - nodemailer@9.0.1

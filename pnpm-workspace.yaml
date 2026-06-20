@@ -2,7 +2,7 @@ overrides:
   superstatic>re2: '-'
   '@webgpu/types': '-'
 patchedDependencies:
-  pixi.js@8.18.1: patches/pixi.js@8.18.1.patch
+  pixi.js: patches/pixi.js.patch
   react-switch: patches/react-switch.patch
 allowBuilds:
   argon2: true
@@ -24,8 +24,3 @@ packages:
   - pandora-server-shard
   - pandora-client-web
   - pandora-tests
-minimumReleaseAgeExclude:
-  # Renovate security update: webpack-dev-server@5.2.5
-  - webpack-dev-server@5.2.5
-  # Renovate security update: nodemailer@9.0.1
-  - nodemailer@9.0.1

@@ -1,5 +1,5 @@
 import { produce } from 'immer';
-import { capitalize, clamp, cloneDeep, omit, upperFirst } from 'lodash-es';
+import { clamp, cloneDeep, omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
@@ -7,12 +7,9 @@ import {
 	GetLogger,
 	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
-	type AppearanceArmPose,
-	type AppearanceArmsOrder,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
-	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
 import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
@@ -25,7 +22,6 @@ import exportIcon from '../../../assets/icons/export.svg';
 import importIcon from '../../../assets/icons/import.svg';
 import triangleDown from '../../../assets/icons/triangle_down.svg';
 import triangleUp from '../../../assets/icons/triangle_up.svg';
-import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
@@ -37,9 +33,9 @@ import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog, type ExportDialogTarget } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
-import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 import { FixupStoredPosePreset, StoredPosePresets } from './customPosePresetStorage.ts';
 import { PoseButton } from './poseButton.tsx';
+import { PosePresetEditTable } from './posePresetEdit.tsx';
 import { GeneratePosePreview } from './posePreview.tsx';
 import './storedPosePresets.scss';
 
@@ -122,9 +118,21 @@ function usePosePresetContext(): PosePresetContextType {
 	return context;
 }
 
-function PosePresetContextProvider({ setPose, characterState, children }: WardrobeStoredPosePresetsProps & { children: React.ReactNode; }): ReactNode {
+export function useSavedPosePresetsProvider(): {
+	stored: AssetFrameworkPosePresetWithId[] | undefined;
+	save: (newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => void;
+} {
 	const stored = useObservable(StoredPosePresets);
 	const save = useSaveStoredOutfits();
+
+	return {
+		stored,
+		save,
+	};
+}
+
+function PosePresetContextProvider({ setPose, characterState, children }: WardrobeStoredPosePresetsProps & { children: React.ReactNode; }): ReactNode {
+	const { stored, save } = useSavedPosePresetsProvider();
 
 	const reorder = React.useCallback((id: string, shift: number) => {
 		if (stored == null) {
@@ -322,8 +330,6 @@ function PosePresetCreateButton(): ReactNode {
 
 function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPosePresetWithId; close: () => void; }): ReactNode {
 	const { characterState, update, presets, setEdit } = usePosePresetContext();
-	const assetManager = characterState.assetManager;
-	const allBones = React.useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const onNameChange = React.useCallback((newValue: string) => {
 		setEdit({ ...preset, name: newValue });
 	}, [preset, setEdit]);
@@ -332,26 +338,6 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 		update(preset);
 		close();
 	}, [update, preset, close]);
-
-	const onCheckAll = React.useCallback(() => {
-		const bones: Record<string, number> = {};
-		for (const bone of allBones) {
-			if (bone.type === 'pose') {
-				bones[bone.name] = preset.pose.bones?.[bone.name] ?? characterState.getActualPoseBoneValue(bone.name);
-			}
-		}
-		setEdit({
-			...preset,
-			pose: {
-				...characterState.actualPose,
-				bones,
-			},
-		});
-	}, [preset, setEdit, allBones, characterState]);
-
-	const onUncheckAll = React.useCallback(() => {
-		setEdit({ ...preset, pose: {} });
-	}, [preset, setEdit]);
 
 	const title = React.useMemo(() => {
 		if (presets?.some((p) => p.id === preset.id)) {
@@ -376,50 +362,17 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					<TextInput id='pose-preset-name' className='flex-1' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
 				</Row>
 				<br />
-				<table className='smallPadding'>
-					<thead>
-						<tr>
-							<th>Include</th>
-							<th>Name</th>
-							<th>Value</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>
-								<Button onClick={ Object.keys(preset.pose).length === 0 ? onCheckAll : onUncheckAll } slim>Toggle all</Button>
-							</td>
-							<td></td>
-							<td></td>
-						</tr>
-						<PosePresetView preset={ preset } />
-						<tr>
-							<td className='noPadding' colSpan={ 3 }><hr /></td>
-						</tr>
-						<PosePresetArmPoses preset={ preset } />
-						<PosePresetArmsOrder preset={ preset } />
-						<tr>
-							<td className='noPadding' colSpan={ 3 }><hr /></td>
-						</tr>
-						<PosePresetLegPoses preset={ preset } />
-						<tr>
-							<td className='noPadding' colSpan={ 3 }><hr /></td>
-						</tr>
-						{
-							allBones
-								.filter((bone) => bone.type === 'pose')
-								.map((bone) => (
-									<PosePresetBoneRow
-										key={ bone.name }
-										preset={ preset }
-										bone={ bone }
-										storedValue={ preset.pose.bones?.[bone.name] }
-										currentValue={ characterState.getActualPoseBoneValue(bone.name) }
-									/>
-								))
-						}
-					</tbody>
-				</table>
+				<PosePresetEditTable
+					preset={ preset.pose }
+					update={ (newPose) => {
+						setEdit({
+							...preset,
+							pose: newPose,
+						});
+					} }
+					assetManager={ characterState.assetManager }
+					sourcePose={ characterState.actualPose }
+				/>
 				<Row alignX='space-between'>
 					<Button onClick={ close }>Cancel</Button>
 					<Button onClick={ onExport }>Export</Button>
@@ -427,13 +380,13 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				</Row>
 			</Column>
 			{ exported == null ? null : (
-				<PosePresetExport exported={ exported } close={ closeExport } />
+				<PosePresetExportDialog exported={ exported } close={ closeExport } />
 			) }
 		</DraggableDialog>
 	);
 }
 
-function PosePresetExport({ exported, close }: {
+export function PosePresetExportDialog({ exported, close }: {
 	exported: AssetFrameworkPosePreset;
 	close: () => void;
 }): ReactNode {
@@ -487,182 +440,6 @@ function PosePresetExport({ exported, close }: {
 			data={ exported }
 			closeDialog={ close }
 		/>
-	);
-}
-
-function PosePresetView({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
-	const { characterState, setEdit } = usePosePresetContext();
-
-	return (
-		<tr>
-			<td>
-				<Checkbox
-					checked={ preset.pose.view != null }
-					onChange={ (checked) => {
-						if (checked) {
-							setEdit({ ...preset, pose: { ...preset.pose, view: characterState.actualPose.view } });
-						} else {
-							const newPose = { ...preset.pose };
-							delete newPose.view;
-							setEdit({ ...preset, pose: newPose });
-						}
-					} } />
-			</td>
-			<td>
-				View
-			</td>
-			<td>
-				{ upperFirst(preset.pose.view ?? characterState.actualPose.view) }
-			</td>
-		</tr>
-	);
-}
-
-function PosePresetArmPoses({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
-	const { characterState, setEdit } = usePosePresetContext();
-
-	const Arm = React.useCallback(<TArmKey extends keyof AppearanceArmPose>({ side, part }: { side: 'left' | 'right'; part: TArmKey; }): ReactNode => (
-		<tr>
-			<td>
-				<Checkbox
-					checked={ preset.pose[`${side}Arm`]?.[part] != null || preset.pose.arms?.[part] != null }
-					onChange={ (checked) => {
-						if (checked) {
-							setEdit({ ...preset, pose: { ...preset.pose, [`${side}Arm`]: { ...preset.pose[`${side}Arm`], [part]: characterState.actualPose[`${side}Arm`][part] } } });
-						} else {
-							const newArm: Partial<AppearanceArmPose> = { ...preset.pose[`${side}Arm`] };
-							delete newArm[part];
-							const pose = { ...preset.pose, [`${side}Arm`]: newArm };
-							delete pose.arms;
-							setEdit({ ...preset, pose });
-						}
-					} } />
-			</td>
-			<td>
-				{ capitalize(side) } arm { part }
-			</td>
-			<td>
-				{ preset.pose[`${side}Arm`]?.[part] ?? preset.pose.arms?.[part] ?? characterState.actualPose[`${side}Arm`][part] ?? 'WUT' }
-			</td>
-		</tr>
-	), [preset, setEdit, characterState]);
-
-	return (
-		<>
-			<Arm side='right' part='position' />
-			<Arm side='right' part='rotation' />
-			<Arm side='right' part='fingers' />
-			<Arm side='left' part='position' />
-			<Arm side='left' part='rotation' />
-			<Arm side='left' part='fingers' />
-		</>
-	);
-}
-
-function PosePresetArmsOrder({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
-	const { characterState, setEdit } = usePosePresetContext();
-
-	const Arm = React.useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
-		<tr>
-			<td>
-				<Checkbox
-					checked={ preset.pose.armsOrder?.[part] != null }
-					onChange={ (checked) => {
-						if (checked) {
-							setEdit({ ...preset, pose: { ...preset.pose, armsOrder: { ...preset.pose.armsOrder, [part]: characterState.actualPose.armsOrder[part] } } });
-						} else {
-							const newOrder = { ...preset.pose.armsOrder };
-							delete newOrder[part];
-							setEdit({ ...preset, pose: { ...preset.pose, armsOrder: newOrder } });
-						}
-					} } />
-			</td>
-			<td>
-				{ capitalize(part) } arm order
-			</td>
-			<td>
-				{ preset.pose.armsOrder?.[part] ?? characterState.actualPose.armsOrder[part] }
-			</td>
-		</tr>
-	), [preset, setEdit, characterState]);
-
-	return (
-		<Arm part='upper' />
-	);
-}
-
-function PosePresetLegPoses({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
-	const { characterState, setEdit } = usePosePresetContext();
-
-	return (
-		<>
-			<tr>
-				<td>
-					<Checkbox
-						checked={ preset.pose.legs?.pose != null }
-						onChange={ (checked) => {
-							setEdit(produce(preset, (d) => {
-								d.pose.legs ??= {};
-								if (checked) {
-									d.pose.legs.pose = characterState.actualPose.legs.pose;
-								} else {
-									delete d.pose.legs.pose;
-								}
-							}));
-						} }
-					/>
-				</td>
-				<td>Legs state</td>
-				<td>{ preset.pose.legs?.pose ?? characterState.actualPose.legs.pose }</td>
-			</tr>
-			<tr>
-				<td>
-					<Checkbox
-						checked={ preset.pose.legs?.upper != null }
-						onChange={ (checked) => {
-							setEdit(produce(preset, (d) => {
-								d.pose.legs ??= {};
-								if (checked) {
-									d.pose.legs.upper = characterState.actualPose.legs.upper;
-								} else {
-									delete d.pose.legs.upper;
-								}
-							}));
-						} }
-					/>
-				</td>
-				<td>Upper leg order</td>
-				<td>{ preset.pose.legs?.upper ?? characterState.actualPose.legs.upper }</td>
-			</tr>
-		</>
-	);
-
-}
-
-function PosePresetBoneRow({ preset, bone, storedValue, currentValue }: { preset: AssetFrameworkPosePresetWithId; bone: BoneDefinition; storedValue?: number; currentValue: number; }): ReactNode {
-	const { setEdit } = usePosePresetContext();
-	const onChange = React.useCallback((checked: boolean) => {
-		if (checked) {
-			setEdit({ ...preset, pose: { ...preset.pose, bones: { ...preset.pose.bones, [bone.name]: currentValue } } });
-		} else {
-			const newBones = { ...preset.pose.bones };
-			delete newBones[bone.name];
-			setEdit({ ...preset, pose: { ...preset.pose, bones: newBones } });
-		}
-	}, [setEdit, preset, bone, currentValue]);
-
-	return (
-		<tr>
-			<td>
-				<Checkbox checked={ storedValue != null } onChange={ onChange } />
-			</td>
-			<td>
-				{ GetVisibleBoneName(bone.name) }
-			</td>
-			<td>
-				{ storedValue ?? currentValue }
-			</td>
-		</tr>
 	);
 }
 
@@ -747,7 +524,7 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 				</Row>
 			</td>
 			{ exported == null ? null : (
-				<PosePresetExport exported={ exported } close={ closeExport } />
+				<PosePresetExportDialog exported={ exported } close={ closeExport } />
 			) }
 		</tr>
 	);

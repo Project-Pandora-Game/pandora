@@ -616,45 +616,22 @@ $drop-overlay-gap: 0.3em;
 			margin: auto;
 		}
 
-		&::after {
+		.ItemPreferenceIcon {
+			position: absolute;
 			top: 0.3em;
+			right: 0.3em;
 		}
-	}
-
-	&::after { // Used for displaying asset preferences
-		position: absolute;
-		right: 0.3em;
-		font-size: 1.5em;
-		line-height: 1em;
-		width: 1em;
-		height: 1em;
-		border-radius: 50%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		text-shadow: 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow;
-		forced-color-adjust: none;
 	}
 
 	&.pref-favorite {
 		.itemName, .assetName {
 			font-weight: bold;
 		}
-
-		&::after {
-			content: '★';
-			color: common.$theme-wardrobe-favorite-color;
-		}
 	}
 
 	&.pref-maybe {
 		.itemName, .assetName {
 			font-style: italic;
-		}
-
-		&::after {
-			content: '?';
-			color: common.$theme-wardrobe-maybe-color;
 		}
 	}
 
@@ -667,11 +644,6 @@ $drop-overlay-gap: 0.3em;
 			text-decoration: line-through;
 			font-style: italic;
 		}
-
-		&::after {
-			content: '✕';
-			color: common.$theme-wardrobe-prevent-color;
-		}
 	}
 
 	&.pref-doNotRender {
@@ -682,12 +654,6 @@ $drop-overlay-gap: 0.3em;
 		.itemName, .assetName {
 			text-decoration: line-through;
 			font-style: italic;
-		}
-
-		&::after {
-			content: '✕';
-			color: common.$theme-wardrobe-doNotRender-color;
-			background: common.$theme-wardrobe-prevent-color;
 		}
 	}
 
@@ -723,6 +689,37 @@ $drop-overlay-gap: 0.3em;
 		left: 2.6em;
 		right: 1em;
 		z-index: 11;
+	}
+}
+
+.ItemPreferenceIcon {
+	font-size: 1.5em;
+	line-height: 1em;
+	width: 1em;
+	height: 1em;
+	margin: 0.1em 0.15em;
+	border-radius: 50%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-shadow: 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow, 0 0 0.05em common.$theme-wardrobe-assetpreferences-shadow;
+	forced-color-adjust: none;
+
+	&.pref-favorite {
+		color: common.$theme-wardrobe-favorite-color;
+	}
+
+	&.pref-maybe {
+		color: common.$theme-wardrobe-maybe-color;
+	}
+
+	&.pref-prevent {
+		color: common.$theme-wardrobe-prevent-color;
+	}
+
+	&.pref-doNotRender {
+		color: common.$theme-wardrobe-doNotRender-color;
+		background: common.$theme-wardrobe-prevent-color;
 	}
 }
 

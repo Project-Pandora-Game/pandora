@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es';
+import { escapeRegExp, isEqual } from 'lodash-es';
 import { compressToBase64, decompressFromBase64 } from 'lz-string';
 import { Assert } from 'pandora-common';
 
@@ -110,7 +110,12 @@ export function ParseImportData(data: string): {
 	} catch (error) {
 		return {
 			success: false,
-			problem: `Failed parse data (${String(error)})`,
+			problem: `Failed to parse data (${String(error)})`,
 		};
 	}
+}
+
+/** Creates a regular expression for matching specific type of Pandora's export string */
+export function CreateExportedDataMatcher(exportType: string, flags?: string): RegExp {
+	return new RegExp(`${escapeRegExp(EXPORT_FORMAT_TYPE_PREFIX)}${escapeRegExp(exportType)}Begin:[0-9]+:[0-9a-zA-Z+/\\-_=:]+:${escapeRegExp(EXPORT_FORMAT_TYPE_PREFIX)}${escapeRegExp(exportType)}End`, flags);
 }

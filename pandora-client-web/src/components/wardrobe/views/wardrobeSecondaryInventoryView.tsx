@@ -16,11 +16,13 @@ import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Column } from '../../common/container/container.tsx';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
+import { WardrobeItemPreferenceIcon } from '../itemDetail/wardrobeItemPreference.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes.ts';
 import { useWardrobeContainerAccessCheck } from '../wardrobeUtils.ts';
+import { useAssetPreference } from './wardrobeAssetView.tsx';
 import { InventoryItemViewDropArea, ViewStorageButton, ViewStorageButtonPlaceholder } from './wardrobeItemView.tsx';
 
 export function SecondaryInventoryView({ header, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
@@ -155,6 +157,8 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 	const item = EvalItemPath(globalState.getItems(target) ?? EMPTY_ARRAY, itemPath);
 	const ribbonColor = useItemColorRibbon([], item ?? null);
 
+	const preference = useAssetPreference(item?.asset ?? null);
+
 	const heldItemSelector = useMemo((): WardrobeHeldItem => ({
 		type: 'item',
 		target,
@@ -176,7 +180,11 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 		<Column gap='none'>
 			<div
 				tabIndex={ 0 }
-				className={ classNames('inventoryViewItem', 'listMode') }
+				className={ classNames(
+					'inventoryViewItem',
+					'listMode',
+					`pref-${preference}`,
+				) }
 				data-asset-id={ asset.id }
 			>
 				{
@@ -184,6 +192,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 				}
 				<InventoryAssetPreview asset={ asset } small={ true } />
 				<WardrobeItemName item={ item } />
+				<WardrobeItemPreferenceIcon preference={ preference } />
 				<div className='quickActions'>
 					{ ((item.isType('roomDevice') && item.isDeployed()) ||
 						(item.isType('personal') && item.deployment?.deployed)) ? (

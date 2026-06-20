@@ -30,6 +30,7 @@ import { useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.t
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column } from '../../common/container/container.tsx';
+import { WardrobeItemPreferenceIcon } from '../itemDetail/wardrobeItemPreference.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext.tsx';
 import { ActionButtonHoverInfo } from '../wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
@@ -339,6 +340,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 				<span>{ asset.definition.name }</span>
 				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
 			</span>
+			<WardrobeItemPreferenceIcon preference={ preference } />
 		</div>
 	);
 }
@@ -411,6 +413,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				<span>{ asset.definition.name }</span>
 				<span className='credits'>by { NaturalListJoin(asset.definition.credits.credits) }</span>
 			</span>
+			<WardrobeItemPreferenceIcon preference={ preference } />
 		</div>
 	);
 }
@@ -492,13 +495,13 @@ export function useAssetPreferences(): Immutable<AssetPreferencesPublic> | null 
 	return targetSelector.type === 'character' ? (characterPreferences ?? ASSET_PREFERENCES_DEFAULT) : null;
 }
 
-export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
+export function useAssetPreferenceResolver(): (asset: Asset | null) => AssetPreferenceType {
 	const { player } = useWardrobeActionContext();
 	const preferences = useAssetPreferences();
 
 	return React.useCallback((asset) => {
 		// Use normal if we have no preference data (targetting a room)
-		if (preferences == null)
+		if (preferences == null || asset == null)
 			return 'normal';
 
 		const pref = ResolveAssetPreference(preferences, asset, player.id).preference;
@@ -507,7 +510,7 @@ export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceT
 	}, [preferences, player.id]);
 }
 
-export function useAssetPreference(asset: Asset): AssetPreferenceType {
+export function useAssetPreference(asset: Asset | null): AssetPreferenceType {
 	const resolvePreference = useAssetPreferenceResolver();
 	return useMemo(() => resolvePreference(asset), [asset, resolvePreference]);
 }

@@ -5,6 +5,7 @@ import {
 	AppearanceActionProcessingContext,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
+	AssetFrameworkPosePresetSchema,
 	AssetsPosePreset,
 	AssetsPosePresets,
 	BONE_MAX,
@@ -48,29 +49,64 @@ import { ActionButtonHoverInfo, ActionProblemsContent } from '../wardrobeActionP
 import { CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
+import { CreateExportedDataMatcher, ParseImportData } from '../../exportImport/exportImportUtils.ts';
 
 const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
+
+const POSE_PRESET_MATCHER = CreateExportedDataMatcher('PosePreset', 'g');
 
 function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): Immutable<AssetsPosePresets> {
 	const assetManager = characterState.assetManager;
 	const presets: Immutable<AssetsPosePresetCategory>[] = assetManager.posePresets.slice();
 	for (const item of characterState.items) {
-		// Collect custom pose presets from room device and personal items that provide them
-		if (!item.isType('bodypart') && !item.isType('personal') && !item.isType('roomDeviceWearablePart'))
-			continue;
+		if (item.isType('bodypart') || item.isType('personal') || item.isType('roomDeviceWearablePart')) {
+			const baseItem = item.isType('roomDeviceWearablePart') ? item.roomDevice : null;
 
-		const baseItem = item.isType('roomDeviceWearablePart') ? item.roomDevice : null;
+			const poses: AssetsPosePreset[] = [];
 
-		if (!item.asset.definition.posePresets && !baseItem?.asset.definition.posePresets)
-			continue;
+			// Collect custom pose presets from room device and personal items that provide them
+			if (baseItem?.asset.definition.posePresets != null) {
+				poses.push(...baseItem.asset.definition.posePresets);
+			}
+			if (item.asset.definition.posePresets != null) {
+				poses.push(...item.asset.definition.posePresets);
+			}
 
-		presets.unshift({
-			category: `${item.isType('roomDeviceWearablePart') ? 'Device' : 'Item'}: ${ResolveItemDisplayName(baseItem ?? item, itemDisplayNameType)}`,
-			poses: [
-				...(baseItem?.asset.definition.posePresets ?? []),
-				...(item.asset.definition.posePresets ?? []),
-			],
-		});
+			// Collect custom pose presets from item's description
+			for (const description of [
+				item.description,
+				baseItem?.description,
+			]) {
+				if (!description)
+					continue;
+
+				for (const match of description.matchAll(POSE_PRESET_MATCHER)) {
+					try {
+						const parsedImport = ParseImportData(match[0]);
+						if (!parsedImport.success || parsedImport.exportType !== 'PosePreset' || parsedImport.exportVersion !== 1)
+							continue;
+
+						const parsedData = AssetFrameworkPosePresetSchema.safeParse(parsedImport.data);
+						if (parsedData.success) {
+							poses.push({
+								...parsedData.data.pose,
+								name: parsedData.data.name,
+							});
+						}
+					} catch (_) {
+						// Ignore errors here
+					}
+				}
+			}
+
+			if (poses.length > 0) {
+				presets.unshift({
+					category: `${item.isType('roomDeviceWearablePart') ? 'Device' : 'Item'}: ${ResolveItemDisplayName(baseItem ?? item, itemDisplayNameType)}`,
+					poses,
+				});
+			}
+		}
+
 	}
 
 	return presets;

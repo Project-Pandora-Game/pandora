@@ -1,5 +1,5 @@
 import { pick } from 'lodash-es';
-import type { HexColorString } from 'pandora-common';
+import { AssertNever, type HexColorString } from 'pandora-common';
 import type { InputHTMLAttributes, ReactElement } from 'react';
 import { useMemo } from 'react';
 import ReactSwitch, { type ReactSwitchProps } from 'react-switch';
@@ -16,10 +16,12 @@ export interface SwitchProps extends Pick<InputHTMLAttributes<HTMLInputElement>,
 	checked: boolean;
 	onChange: (newValue: boolean) => void;
 	label?: string;
+	/** @default 'normal' */
+	size?: 'small' | 'normal';
 }
 
 export function Switch(props: SwitchProps): ReactElement {
-	const { checked, onChange, label } = props;
+	const { checked, onChange, label, size } = props;
 	const forwardedProps = pick(props, FORWARDED_PROPS);
 	const { interfaceAccentColor } = useAccountSettings();
 
@@ -29,6 +31,19 @@ export function Switch(props: SwitchProps): ReactElement {
 		color = color.setValue(33 + Math.floor(0.6 * color.value));
 		return color.toHex();
 	}, [interfaceAccentColor]);
+
+	let height: number;
+	switch (size) {
+		case 'small':
+			height = 22;
+			break;
+		case 'normal':
+		case undefined:
+			height = 28;
+			break;
+		default:
+			AssertNever(size);
+	}
 
 	return (
 		<ReactSwitch
@@ -44,8 +59,8 @@ export function Switch(props: SwitchProps): ReactElement {
 			onColor={ onColor }
 			offHandleColor='#889'
 			onHandleColor='#ccc'
-			width={ 56 }
-			height={ 28 }
+			height={ height }
+			width={ 2 * height }
 		/>
 	);
 }

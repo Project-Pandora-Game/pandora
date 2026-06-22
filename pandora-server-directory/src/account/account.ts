@@ -156,7 +156,8 @@ export class Account implements ActorIdentity {
 			labelColor: settings.labelColor,
 			created: this.data.created,
 			visibleRoles: uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
-			profileDescription: this.data.profileDescription,
+			profileDescription: this.secure.isDisabled() ? `[ This account has been disabled by Pandora's Team. ]` :
+				this.data.profileDescription,
 		};
 	}
 

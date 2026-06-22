@@ -39,7 +39,7 @@ export const ShardDirectorySchema = {
 		request: z.object({
 			id: CharacterIdSchema,
 			action: z.enum(['kick']),
-			reason: z.enum(['ghostManagement']),
+			reason: z.enum(['ghostManagement', 'disabledAccountRemoval']),
 		}),
 		response: null,
 	},

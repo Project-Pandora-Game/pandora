@@ -171,12 +171,18 @@ export class Account implements ActorIdentity {
 	}
 
 	public getShardAccountDefinition(): IShardAccountDefinition {
-		return {
+		const result: IShardAccountDefinition = {
 			id: this.id,
 			displayName: this.displayName,
 			roles: this.roles.getSelfInfo(),
 			onlineStatus: this.isOnline() ? (this.data.settings.onlineStatus ?? 'online') : 'offline',
 		};
+
+		if (this.secure.isDisabled()) {
+			result.disabledAccount = true;
+		}
+
+		return result;
 	}
 
 	public getAdminInfo(): Readonly<ManagementAccountInfo> {

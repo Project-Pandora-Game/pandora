@@ -67,6 +67,9 @@ export class Account implements ActorIdentity {
 	}
 
 	public get displayName(): string {
+		if (this.secure.isDisabled())
+			return '[disabled account]';
+
 		return this.data.settings.displayName ?? this.data.username;
 	}
 

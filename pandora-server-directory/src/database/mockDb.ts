@@ -213,8 +213,10 @@ export class MockDatabase implements PandoraDatabase {
 	public queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
 		const result: Record<AccountId, string> = {};
 		for (const acc of this.accountDbView) {
-			if (query.includes(acc.id))
-				result[acc.id] = acc.settings.displayName ?? acc.username;
+			if (query.includes(acc.id)) {
+				result[acc.id] = acc.secure.disabled != null ? '[disabled account]' :
+					(acc.settings.displayName ?? acc.username);
+			}
 		}
 		return Promise.resolve(result);
 	}

@@ -263,6 +263,7 @@ export default class AccountSecure {
 		}
 
 		await this.#updateDatabase();
+		this.#account.onAccountInfoChange();
 	}
 
 	public getCryptoKey(): IAccountCryptoKey | undefined {

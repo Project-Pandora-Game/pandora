@@ -29,6 +29,11 @@ export type IAccountContact = {
 export type IAccountFriendStatus = {
 	/** Account id of the friend */
 	id: AccountId;
+	/**
+	 * Account name of the account
+	 * @note This is included in both @see {IAccountContact} and this, as status is used to update the display name if it changes live
+	 */
+	displayName: string;
 	/** The current label color of the account */
 	labelColor: HexColorString;
 	/** The online status of the friend */

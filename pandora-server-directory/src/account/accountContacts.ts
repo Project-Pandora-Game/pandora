@@ -40,6 +40,7 @@ export class AccountContacts {
 		const status: AccountOnlineStatus = this.account.isOnline() ? accountSettings.onlineStatus : 'offline';
 		return {
 			id: this.account.id,
+			displayName: this.account.displayName,
 			labelColor: accountSettings.labelColor,
 			status,
 			characters: (status !== 'offline') ? (

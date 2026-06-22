@@ -12,7 +12,7 @@ export type DirectMessageChatContext = {
 
 const directMessageContext = createContext<DirectMessageChatContext | null>(null);
 
-export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
+export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement | null {
 	const directMessageManager = useService('directMessageManager');
 	const [closed, setClosed] = useState(false);
 	const chats = useObservable(directMessageManager.chats);
@@ -66,7 +66,7 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 	}, [chat, encryption, state]);
 
 	if (closed) {
-		return <DirectMessageChannelError channel={ chat } message='Chat closed' />;
+		return null;
 	} else if (chat == null || state == null || state === 'notLoaded') {
 		return (
 			<span className='loading'>

@@ -55,7 +55,6 @@ import type { PandoraDatabase } from './databaseProvider.ts';
 import {
 	AccountTokenReason,
 	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
-	DatabaseAccount,
 	DatabaseAccountContact,
 	DatabaseAccountContactType,
 	DatabaseAccountSchema,
@@ -485,11 +484,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
-			.project<Pick<DatabaseAccount, 'id' | 'username' | 'settings'>>({ id: 1, username: 1, settings: 1 })
+			.project<Pick<DatabaseAccountWithSecure, 'id' | 'username' | 'settings' | 'secure'>>({ id: 1, username: 1, settings: 1, secure: 1 })
 			.toArray();
 
 		for (const acc of accounts) {
-			result[acc.id] = acc.settings.displayName ?? acc.username;
+			result[acc.id] = acc.secure.disabled != null ? '[disabled account]' :
+				(acc.settings.displayName ?? acc.username);
 		}
 		return result;
 	}

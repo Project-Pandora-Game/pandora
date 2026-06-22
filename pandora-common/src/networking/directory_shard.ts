@@ -12,6 +12,8 @@ export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
 	displayName: z.string(),
 	roles: AccountRoleInfoSchema.optional(),
+	/** Flag indicating the account has been disabled in Pandora. */
+	disabledAccount: z.literal(true).optional(),
 	onlineStatus: AccountOnlineStatusSchema,
 });
 export type IShardAccountDefinition = z.infer<typeof ShardAccountDefinitionSchema>;

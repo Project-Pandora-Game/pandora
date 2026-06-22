@@ -142,7 +142,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this.sendConnectionStateUpdate();
 		}
 
-		this.logger.verbose(`${this.id} logged out`);
+		this.logger.verbose(`${this.id} logged out (token destroyed)`);
 	}
 
 	/**

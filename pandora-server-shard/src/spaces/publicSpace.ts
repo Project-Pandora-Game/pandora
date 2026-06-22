@@ -125,6 +125,17 @@ export class PublicSpace extends Space {
 		});
 
 		// Automod characters
+		for (const character of this.characters) {
+			if (character.accountData.disabledAccount) {
+				DirectoryConnector.sendMessage('characterAutomod', {
+					id: character.id,
+					action: 'kick',
+					reason: 'disabledAccountRemoval',
+				});
+				continue;
+			}
+		}
+
 		if (this.config.ghostManagement != null) {
 			for (const character of this.characters) {
 				if (character.isOnline)

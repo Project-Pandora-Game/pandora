@@ -67,6 +67,9 @@ export class Account implements ActorIdentity {
 	}
 
 	public get displayName(): string {
+		if (this.secure.isDisabled())
+			return '[disabled account]';
+
 		return this.data.settings.displayName ?? this.data.username;
 	}
 
@@ -153,7 +156,8 @@ export class Account implements ActorIdentity {
 			labelColor: settings.labelColor,
 			created: this.data.created,
 			visibleRoles: uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
-			profileDescription: this.data.profileDescription,
+			profileDescription: this.secure.isDisabled() ? `[ This account has been disabled by Pandora's Team. ]` :
+				this.data.profileDescription,
 		};
 	}
 
@@ -167,12 +171,18 @@ export class Account implements ActorIdentity {
 	}
 
 	public getShardAccountDefinition(): IShardAccountDefinition {
-		return {
+		const result: IShardAccountDefinition = {
 			id: this.id,
 			displayName: this.displayName,
 			roles: this.roles.getSelfInfo(),
 			onlineStatus: this.isOnline() ? (this.data.settings.onlineStatus ?? 'online') : 'offline',
 		};
+
+		if (this.secure.isDisabled()) {
+			result.disabledAccount = true;
+		}
+
+		return result;
 	}
 
 	public getAdminInfo(): Readonly<ManagementAccountInfo> {

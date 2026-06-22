@@ -51,6 +51,14 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 			const filtered = FRIEND_STATUS.value.filter((status) => status.id !== friendStatus.id);
 			if (friendStatus.status !== null) {
 				filtered.push(friendStatus);
+
+				// Update cotacts based on data from status
+				const accountIndex = ACCOUNT_CONTACTS.value.findIndex((c) => c.id === friendStatus.id);
+				if (accountIndex >= 0) {
+					ACCOUNT_CONTACTS.produceImmer((contacts) => {
+						contacts[accountIndex].displayName = friendStatus.displayName;
+					});
+				}
 			}
 			FRIEND_STATUS.value = filtered;
 		}

@@ -323,8 +323,8 @@ importers:
         specifier: 3.1070.0
         version: 3.1070.0
       '@aws-sdk/credential-provider-node':
-        specifier: 3.972.56
-        version: 3.972.56
+        specifier: 3.972.57
+        version: 3.972.57
       '@octokit/auth-oauth-app':
         specifier: 9.0.3
         version: 9.0.3
@@ -411,8 +411,8 @@ importers:
         specifier: 0.10.0
         version: 0.10.0
       discord-api-types:
-        specifier: 0.38.48
-        version: 0.38.48
+        specifier: 0.38.49
+        version: 0.38.49
       jest:
         specifier: 30.4.2
         version: 30.4.2(@types/node@24.13.2)(supports-color@5.5.0)
@@ -502,8 +502,8 @@ importers:
         specifier: 0.10.0
         version: 0.10.0
       discord-api-types:
-        specifier: 0.38.48
-        version: 0.38.48
+        specifier: 0.38.49
+        version: 0.38.49
       jest:
         specifier: 30.4.2
         version: 30.4.2(@types/node@24.13.2)(supports-color@5.5.0)
@@ -634,6 +634,10 @@ packages:
 
   '@aws-sdk/credential-provider-node@3.972.56':
     resolution: {integrity: sha512-iI+4o0dvQQ4NHel4FMDiFy5q2gaU/ryLK3niOsoPccAt9WLFRkV4XTYPWRr9XvmBUqEzXG73S4p/8gm0Lu/W3A==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/credential-provider-node@3.972.57':
+    resolution: {integrity: sha512-u6dClpzNdWf1HGWz4wwhdXi1wiOofCLniM9S4BQQGlLAN9TW7VB+ld5V533GdKrYMaFeBGFqKnj0JCYvynLqwQ==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-process@3.972.48':
@@ -2853,6 +2857,9 @@ packages:
 
   discord-api-types@0.38.48:
     resolution: {integrity: sha512-WFUE/2o0lBlLeCQonQ+Pu2RqHAqbytBJ2RlXR91gzk05InSS6k9ShzzLYoymrA4c2oRgRKGE7/VqQJNNdGWSxQ==}
+
+  discord-api-types@0.38.49:
+    resolution: {integrity: sha512-XnqcWmnFZFAE8ZM8SHAw9DIV8D3Or00rMQ8iQLotrEA2PmXhl+ykaf6L6q4l474hrSUH1JaYcv+iOMRWp2p6Tg==}
 
   discord.js@14.26.4:
     resolution: {integrity: sha512-4oBp8tc6Kf8IDBwAHhbsMaAqx1b5fob9SNasZT7V6yyyUydoO5i5fGuX7TmvRtR+q/WgKRnRViRoAWnG7fNyvA==}
@@ -6385,6 +6392,20 @@ snapshots:
       '@smithy/types': 4.15.0
       tslib: 2.8.1
 
+  '@aws-sdk/credential-provider-node@3.972.57':
+    dependencies:
+      '@aws-sdk/credential-provider-env': 3.972.48
+      '@aws-sdk/credential-provider-http': 3.972.50
+      '@aws-sdk/credential-provider-ini': 3.972.55
+      '@aws-sdk/credential-provider-process': 3.972.48
+      '@aws-sdk/credential-provider-sso': 3.972.54
+      '@aws-sdk/credential-provider-web-identity': 3.972.54
+      '@aws-sdk/types': 3.973.13
+      '@smithy/core': 3.25.1
+      '@smithy/credential-provider-imds': 4.4.1
+      '@smithy/types': 4.15.0
+      tslib: 2.8.1
+
   '@aws-sdk/credential-provider-process@3.972.48':
     dependencies:
       '@aws-sdk/core': 3.974.22
@@ -8916,6 +8937,8 @@ snapshots:
   detect-node@2.1.0: {}
 
   discord-api-types@0.38.48: {}
+
+  discord-api-types@0.38.49: {}
 
   discord.js@14.26.4:
     dependencies:

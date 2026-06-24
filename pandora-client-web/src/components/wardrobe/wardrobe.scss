@@ -1108,13 +1108,35 @@ $drop-overlay-gap: 0.3em;
 	margin: 1em 0;
 }
 
+.WardrobeTimerUnit {
+	align-items: center;
+	border: 1px solid common.$theme-separator;
+	border-radius: 0.3em;
+	padding: 0.3em 0.5em 0.25em;
+	background: common.$theme-wardrobe-view-background;
+
+	@include common.forcedColors {
+		background: Canvas;
+		border-color: common.$forcedColors-separator;
+	}
+
+	label {
+		margin: 0;
+		line-height: 1;
+
+		@include common.forcedColors {
+			color: GrayText;
+		}
+	}
+}
+
 .WardrobeInputRow {
 	margin-left: 0.5em;
 	min-height: 1.6em;
 
 	label {
-		flex: 1 1;
 		margin: auto 0;
+		flex-grow: 0.5;
 	}
 
 	.error {

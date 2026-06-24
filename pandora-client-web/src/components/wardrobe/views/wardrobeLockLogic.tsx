@@ -567,38 +567,44 @@ function TimerInput({
 				Timer
 			</label>
 			<Row alignY='center'>
-				<NumberInput
-					id={ `${id}-days` }
-					min={ 0 }
-					max={ maximums.days }
-					step={ 1 }
-					value={ pendingAttempt ? NaN : inputValues.days }
-					onChange={ setDays }
-					disabled={ pendingAttempt }
-				/>
-				<label htmlFor={ `${id}-days` }>Days</label>
-				{ ' : ' }
-				<NumberInput
-					id={ `${id}-hours` }
-					min={ 0 }
-					max={ maximums.hours }
-					step={ 1 }
-					value={ pendingAttempt ? NaN : inputValues.hours }
-					onChange={ setHours }
-					disabled={ pendingAttempt }
-				/>
-				<label htmlFor={ `${id}-hours` }>Hours</label>
-				{ ' : ' }
-				<NumberInput
-					id={ `${id}-minutes` }
-					min={ 0 }
-					max={ maximums.minutes }
-					step={ 1 }
-					value={ pendingAttempt ? NaN : inputValues.minutes }
-					onChange={ setMinutes }
-					disabled={ pendingAttempt }
-				/>
-				<label htmlFor={ `${id}-minutes` }>Minutes</label>
+				<Column className='WardrobeTimerUnit'>
+					<label htmlFor={ `${id}-days` }>Days</label>
+					<NumberInput
+						id={ `${id}-days` }
+						min={ 0 }
+						max={ maximums.days }
+						step={ 1 }
+						value={ pendingAttempt ? NaN : inputValues.days }
+						onChange={ setDays }
+						disabled={ pendingAttempt }
+					/>
+				</Column>
+				<span>:</span>
+				<Column className='WardrobeTimerUnit'>
+					<label htmlFor={ `${id}-hours` }>Hours</label>
+					<NumberInput
+						id={ `${id}-hours` }
+						min={ 0 }
+						max={ maximums.hours }
+						step={ 1 }
+						value={ pendingAttempt ? NaN : inputValues.hours }
+						onChange={ setHours }
+						disabled={ pendingAttempt }
+					/>
+				</Column>
+				<span>:</span>
+				<Column className='WardrobeTimerUnit'>
+					<label htmlFor={ `${id}-minutes` }>Minutes</label>
+					<NumberInput
+						id={ `${id}-minutes` }
+						min={ 0 }
+						max={ maximums.minutes }
+						step={ 1 }
+						value={ pendingAttempt ? NaN : inputValues.minutes }
+						onChange={ setMinutes }
+						disabled={ pendingAttempt }
+					/>
+				</Column>
 			</Row>
 		</Row>
 	);

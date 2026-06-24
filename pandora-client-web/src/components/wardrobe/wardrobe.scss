@@ -1134,15 +1134,12 @@ $drop-overlay-gap: 0.3em;
 	margin-left: 0.5em;
 	min-height: 1.6em;
 
-	label {
-		margin: auto 0;
-		flex-grow: 0.5;
+	> label {
+		margin: auto 0.5em auto 0;
 	}
 
 	.error {
-		width: 100%;
 		color: common.$theme-wardrobe-errormessage-text;
-		text-align: right;
 
 		@include common.forcedColors {
 			color: inherit;

@@ -22,6 +22,7 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../../ui/components/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
+import { GridContainer } from '../../common/container/gridContainer.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
@@ -49,6 +50,7 @@ export interface WardrobeLockLogicLockedProps<TActionContext> extends WardrobeLo
 }
 
 export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButton, lockedText, actionContext }: WardrobeLockLogicLockedProps<TActionContext>): ReactElement | null {
+	const id = useId();
 	const { actions } = useWardrobeActionContext();
 	const { player, globalState } = usePlayerState();
 	const playerRestrictionManager = useCharacterRestrictionManager(player, globalState, actions.spaceContext);
@@ -61,12 +63,12 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 		if (formatText.length === 0)
 			return null;
 
-		const { name, id, time } = lockedData;
+		const { name, id: characterId, time } = lockedData;
 
 		const substitutes = {
 			CHARACTER_NAME: name,
-			CHARACTER_ID: id,
-			CHARACTER: `${name} (${id})`,
+			CHARACTER_ID: characterId,
+			CHARACTER: `${name} (${characterId})`,
 			TIME_PASSED: FormatTimeInterval(now - time),
 			TIME: new Date(time).toLocaleString(),
 		};
@@ -134,8 +136,8 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 				lockLogic.lockSetup.password ? (
 					<Column className='WardrobeLockPassword'>
 						<Row className='WardrobeInputRow'>
-							<label>Remove password</label>
-							<Checkbox checked={ clearLastPassword } onChange={ setClearLastPassword } />
+							<Checkbox id={ id + ':clearLastPassword' } checked={ clearLastPassword } onChange={ setClearLastPassword } />
+							<label htmlFor={ id + ':clearLastPassword' }>Remove password</label>
 						</Row>
 						<PasswordInput
 							value={ password }
@@ -192,12 +194,12 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 }
 
 export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionButton, actionContext }: WardrobeLockLogicProps<TActionContext>): ReactElement | null {
+	const id = useId();
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
 	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
 	const confirm = useConfirmDialog();
-	const id = useId();
 
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
@@ -250,8 +252,8 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 						{
 							lockLogic.hasPassword ? (
 								<Row className='WardrobeInputRow'>
-									<label>Use old password</label>
-									<Checkbox checked={ useOldPassword } onChange={ setUseOldPassword } />
+									<Checkbox id={ id + ':useOldPassword' } checked={ useOldPassword } onChange={ setUseOldPassword } />
+									<label htmlFor={ id + ':useOldPassword' }>Use old password</label>
 								</Row>
 							) : null
 						}
@@ -475,11 +477,18 @@ function PasswordInput<TActionContext>({
 	}, [onChange]);
 
 	return (
-		<>
-			<Row className='WardrobeInputRow'>
-				<label htmlFor={ id }>
-					Password
-				</label>
+		<GridContainer className='WardrobeInputRow' alignItemsY='center' templateColumns='auto minmax(auto, 1fr)' templateRows='auto-flow auto'>
+			<label htmlFor={ id }>
+				Password
+			</label>
+			<Row>
+				<TextInput
+					id={ id }
+					value={ pendingAttempt ? '\u2022'.repeat(Math.min(max, 16)) : value }
+					maxLength={ max }
+					onChange={ onInput }
+					disabled={ disabled || pendingAttempt }
+				/>
 				<ActionButton
 					lockAction={ showPasswordAction }
 					onExecute={ onPasswordShown }
@@ -488,22 +497,14 @@ function PasswordInput<TActionContext>({
 				>
 					Show
 				</ActionButton>
-				<TextInput
-					id={ id }
-					value={ pendingAttempt ? '\u2022'.repeat(Math.min(max, 16)) : value }
-					maxLength={ max }
-					onChange={ onInput }
-					disabled={ disabled || pendingAttempt }
-				/>
 			</Row>
-			{
-				(error && !pendingAttempt) ? (
-					<Row className='WardrobeInputRow'>
-						<span className='error'>{ error }</span>
-					</Row>
-				) : null
-			}
-		</>
+			{ (error && !pendingAttempt) ? (
+				<>
+					<div /* Empty grid slot */ />
+					<div className='error'>{ error }</div>
+				</>
+			) : null }
+		</GridContainer>
 	);
 }
 

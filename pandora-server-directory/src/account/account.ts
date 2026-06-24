@@ -392,12 +392,7 @@ export class Account implements ActorIdentity {
 	}
 
 	public onCharacterListChange(): void {
-		for (const connection of this.associatedConnections.clients) {
-			// Only send updates to connections that can see the list (don't have character selected)
-			if (!connection.character) {
-				connection.sendMessage('somethingChanged', { changes: ['characterList'] });
-			}
-		}
+		this.associatedConnections.sendMessage('somethingChanged', { changes: ['characterList'] });
 		this.contacts.updateStatus();
 	}
 

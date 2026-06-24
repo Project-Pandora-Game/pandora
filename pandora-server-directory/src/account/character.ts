@@ -397,10 +397,9 @@ export class Character {
 		}
 		if (isChange) {
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.contacts.updateStatus();
 			if (this.space != null) {
 				this.space.updateActivityData();
-				ConnectionManagerClient.onSpaceListChange();
+				this.space.onSpacePresentationChanged();
 			}
 		}
 
@@ -468,9 +467,8 @@ export class Character {
 
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.contacts.updateStatus();
 			if (this.space != null) {
-				ConnectionManagerClient.onSpaceListChange();
+				this.space.onSpacePresentationChanged();
 			}
 		}
 
@@ -538,7 +536,6 @@ export class Character {
 			// Do the rest
 			this._connectSecret = connectionSecret;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.contacts.updateStatus();
 
 			return;
 		}
@@ -548,8 +545,6 @@ export class Character {
 		// Restore access id and connection secret
 		this.accessId = accessId;
 		this._connectSecret = connectionSecret;
-		this.baseInfo.account.onCharacterListChange();
-		this.baseInfo.account.contacts.updateStatus();
 
 		// We are ready to connect to shard, but check again if we can to avoid race conditions
 		if (!shard.allowConnect()) {
@@ -564,6 +559,7 @@ export class Character {
 		};
 		shard.characters.set(this.baseInfo.id, this);
 		this.assignedClient?.sendConnectionStateUpdate();
+		this.baseInfo.account.onCharacterListChange();
 
 		this.logger.debug('Re-connected to shard', shard.id);
 	}
@@ -609,6 +605,7 @@ export class Character {
 		shard.characters.set(this.baseInfo.id, this);
 		await shard.update('characters');
 		this.assignedClient?.sendConnectionStateUpdate();
+		this.baseInfo.account.onCharacterListChange();
 
 		this.logger.debug('Connected to shard', shard.id);
 		return 'ok';
@@ -633,6 +630,7 @@ export class Character {
 			space.trackingCharacters.delete(this);
 			this.assignment = null;
 			this.assignedClient?.sendConnectionStateUpdate();
+			this.baseInfo.account.onCharacterListChange();
 
 			// Disconnect from a shard, if there is one
 			if (shard != null) {
@@ -648,6 +646,7 @@ export class Character {
 
 			this.assignment = null;
 			this.assignedClient?.sendConnectionStateUpdate();
+			this.baseInfo.account.onCharacterListChange();
 
 			Assert(shard.characters.get(this.baseInfo.id) === this);
 			shard.characters.delete(this.baseInfo.id);
@@ -700,7 +699,6 @@ export class Character {
 
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.contacts.updateStatus();
 			if (this.space != null) {
 				ConnectionManagerClient.onSpaceListChange();
 			}
@@ -797,6 +795,7 @@ export class Character {
 
 					this.assignment = null;
 					this.assignedClient?.sendConnectionStateUpdate();
+					this.baseInfo.account.onCharacterListChange();
 
 					Assert(oldShard.characters.get(this.baseInfo.id) === this);
 					oldShard.characters.delete(this.baseInfo.id);
@@ -885,6 +884,7 @@ export class Character {
 
 			// Inform client about connection update (connect doesn't do that in all code paths)
 			this.assignedClient?.sendConnectionStateUpdate();
+			this.baseInfo.account.onCharacterListChange();
 
 			if (shard === 'failed' || shard === 'noShardFound')
 				return 'failed';

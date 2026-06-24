@@ -216,7 +216,7 @@ function WardrobeRoomDeviceInteractionVisibilityCustomize({ roomDevice, item }: 
 					)) }
 				</Row>
 				<ContextHelpButton>
-					These options allow you to change whether this device's intereaction button appears in the room view.<br />
+					These options allow you to change whether this device's interaction button appears in the room view.<br />
 					The options are:<br />
 					<ul>
 						{ INTERACTION_VISIBILITY_OPTIONS.map(({ value, label, description }) => (

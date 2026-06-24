@@ -226,7 +226,7 @@ export class Space {
 			}, null),
 		]);
 
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
 		return 'ok';
 	}
 
@@ -262,7 +262,7 @@ export class Space {
 			]);
 			// TODO: Make an announcement of the change
 
-			ConnectionManagerClient.onSpaceListChange();
+			this.onSpacePresentationChanged();
 		}
 		return 'ok';
 	}
@@ -468,7 +468,7 @@ export class Space {
 			}, null),
 		]);
 
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
 		return 'ok';
 	}
 
@@ -604,7 +604,7 @@ export class Space {
 		}
 
 		if (updated) {
-			ConnectionManagerClient.onSpaceListChange();
+			this.onSpacePresentationChanged();
 			await Promise.all([
 				this._assignedShard?.update('spaces'),
 				GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
@@ -635,7 +635,7 @@ export class Space {
 				AssertNever(action);
 		}
 		if (updated) {
-			ConnectionManagerClient.onSpaceListChange();
+			this.onSpacePresentationChanged();
 			await this._assignedShard?.update('spaces');
 		}
 	}
@@ -1017,7 +1017,7 @@ export class Space {
 		}
 
 		this.updateActivityData();
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
 			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
@@ -1133,7 +1133,9 @@ export class Space {
 
 		this._cleanupSpaceSwitchStatus();
 		await this._assignedShard?.update('characters', 'spaces', reason !== 'destroy' ? 'spaceCharacterRemovals' : null);
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
+		// Signal the just-removed character too
+		character.baseInfo.account.onCharacterListChange();
 
 		if (invitesChanged)
 			await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
@@ -1276,7 +1278,7 @@ export class Space {
 		}
 
 		this.logger.debug('Re-connected to shard', shard.id);
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
 
 		return Promise.resolve();
 	}
@@ -1351,7 +1353,7 @@ export class Space {
 		}
 
 		this.logger.debug('Connected to shard', shard.id);
-		ConnectionManagerClient.onSpaceListChange();
+		this.onSpacePresentationChanged();
 
 		return true;
 	}
@@ -1391,6 +1393,15 @@ export class Space {
 		}));
 		this.pendingMessages.push(...processedMessages);
 		this._assignedShard?.update('messages').catch(() => { /* NOOP */ });
+	}
+
+	/** Triggered when something potentially changed how space is presented to people outside of it. */
+	public onSpacePresentationChanged(): void {
+		ConnectionManagerClient.onSpaceListChange();
+		// Create update for all characters inside as well, as changes to space's visibility might affect them too
+		for (const character of this.characters) {
+			character.baseInfo.account.onCharacterListChange();
+		}
 	}
 
 	public updateActivityData(interval?: number, forceUpdate: boolean = false): void {

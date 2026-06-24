@@ -16,7 +16,7 @@ minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
 strictPeerDependencies: true
 updateNotifier: false
-verifyDepsBeforeRun: error
+verifyDepsBeforeRun: install
 
 packages:
   - pandora-common

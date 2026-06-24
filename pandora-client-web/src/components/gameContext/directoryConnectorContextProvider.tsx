@@ -12,6 +12,7 @@ import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../n
 import { SocketIOConnector } from '../../networking/socketio_connector.ts';
 import { useNullableObservable } from '../../observable.ts';
 import { useService, useServiceOptional } from '../../services/serviceProvider.tsx';
+import { useAccountContacts, useFriendStatus } from '../accountContacts/accountContactContext.ts';
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function GetDirectoryAddress(): string {
@@ -47,7 +48,9 @@ export function DirectoryConnectorServices(): null {
 		}
 	}, [errorHandler, directoryConnector]);
 
-	useDebugExpose('directoryConnector', directoryConnector);
+	useDebugExpose('PandoraDirectoryConnector', directoryConnector);
+	useDebugExpose('PandoraAccountContacts', useAccountContacts(null));
+	useDebugExpose('PandoraFriendStatus', useFriendStatus());
 
 	return null;
 }

@@ -21,11 +21,11 @@ export function EditorServiceManagerContextProvider({ children, serviceManager }
 	AssertNotNullable(editorService);
 
 	const editor = useObservable(editorService.editor);
-	useDebugExpose('editor', editor);
+	useDebugExpose('PandoraEditor', editor);
 
 	const textureGetterOverride = useObservable(EditorAssetGraphicsManager.builtTexturesGetter);
-	useDebugExpose('EditorAssetGraphicsManager', EditorAssetGraphicsManager);
-	useDebugExpose('GraphicsManagerInstance', GraphicsManagerInstance);
+	useDebugExpose('PandoraEditorAssetGraphicsManager', EditorAssetGraphicsManager);
+	useDebugExpose('PandoraGraphicsManagerInstance', GraphicsManagerInstance);
 
 	return (
 		<EditorServiceManagerContext.Provider value={ serviceManager }>

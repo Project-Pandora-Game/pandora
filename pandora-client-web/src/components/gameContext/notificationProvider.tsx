@@ -1,16 +1,11 @@
 import type { Immutable } from 'immer';
 import { useCallback, useEffect } from 'react';
-import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { useObservable } from '../../observable.ts';
 import type { NotificationEntry } from '../../services/notificationHandler.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { VersionCheck } from '../versionCheck/versionCheck.tsx';
 
 export function NotificationProvider() {
-	const notificationHandler = useService('notificationHandler');
-
-	useDebugExpose('notificationHandler', notificationHandler);
-
 	return (
 		<>
 			<VersionCheck />

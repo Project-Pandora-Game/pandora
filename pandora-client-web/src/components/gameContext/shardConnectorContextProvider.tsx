@@ -45,12 +45,12 @@ export function ShardConnectorContextProvider(): null {
 		});
 	}, [directoryState, directoryStatus, shardState, shardConnectionInfo, setDebugData]);
 
-	useDebugExpose('shardConnector', shardConnector);
-	useDebugExpose('player', gameState?.player);
-	useDebugExpose('gameState', gameState);
+	useDebugExpose('PandoraShardConnector', shardConnector);
+	useDebugExpose('PandoraPlayer', gameState?.player);
+	useDebugExpose('PandoraGameState', gameState);
 
-	useDebugExpose('assetManager', useAssetManager());
-	useDebugExpose('graphicsManager', useObservable(GraphicsManagerInstance));
+	useDebugExpose('PandoraAssetManager', useAssetManager());
+	useDebugExpose('PandoraGraphicsManager', useObservable(GraphicsManagerInstance));
 
 	return null;
 }

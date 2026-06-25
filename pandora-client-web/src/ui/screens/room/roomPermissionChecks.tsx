@@ -83,11 +83,8 @@ export function useCanMoveCharacter(target: Character | null): 'allowed' | 'forb
 		return {
 			type: 'moveCharacter',
 			target: { type: 'character', characterId: target.id },
-			moveTo: {
-				type: 'normal',
-				room: targetState.currentRoom,
-				position: [0, 0, 0],
-			},
+			// Test against noop change, as that still runs permission checks while preserving caches during validity checks
+			moveTo: targetState.position,
 		};
 	}, [target, globalState]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });

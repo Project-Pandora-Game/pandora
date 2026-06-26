@@ -87,8 +87,8 @@ importers:
         specifier: 1.5.0
         version: 1.5.0
       nanoid:
-        specifier: 5.1.11
-        version: 5.1.11
+        specifier: 5.1.14
+        version: 5.1.14
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -286,8 +286,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       nanoid:
-        specifier: 5.1.11
-        version: 5.1.11
+        specifier: 5.1.14
+        version: 5.1.14
     devDependencies:
       '@jest/globals':
         specifier: 30.4.1
@@ -362,8 +362,8 @@ importers:
         specifier: 11.2.0
         version: 11.2.0(supports-color@5.5.0)
       nanoid:
-        specifier: 5.1.11
-        version: 5.1.11
+        specifier: 5.1.14
+        version: 5.1.14
       nodemailer:
         specifier: 9.0.1
         version: 9.0.1
@@ -459,8 +459,8 @@ importers:
         specifier: 7.3.0
         version: 7.3.0
       nanoid:
-        specifier: 5.1.11
-        version: 5.1.11
+        specifier: 5.1.14
+        version: 5.1.14
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -547,8 +547,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(supports-color@5.5.0)
       mailparser:
-        specifier: 3.9.10
-        version: 3.9.10
+        specifier: 3.9.11
+        version: 3.9.11
       nyc:
         specifier: 18.0.0
         version: 18.0.0(supports-color@5.5.0)
@@ -4266,8 +4266,8 @@ packages:
   magic-bytes.js@1.13.0:
     resolution: {integrity: sha512-afO2mnxW7GDTXMm5/AoN1WuOcdoKhtgXjIvHmobqTD1grNplhGdv3PFOyjCVmrnOZBIT/gD/koDKpYG+0mvHcg==}
 
-  mailparser@3.9.10:
-    resolution: {integrity: sha512-/PWScCewV4/97Y0wDNgQkcQ4FK8AK0aGVPAg51lVyisiRep9BkzkzT3/l/7aSkQ1k2T1iJu1tdXVF84wjGdDqw==}
+  mailparser@3.9.11:
+    resolution: {integrity: sha512-N1LPZwp1yVblJQukv5NAedlkHeA+PmZYdPCfk0Uwohn8JFOM8fYoUGF978qwlQcd3AlUleuzK0fu/EFAHPM9tg==}
 
   make-dir@3.1.0:
     resolution: {integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==}
@@ -4473,8 +4473,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.11:
-    resolution: {integrity: sha512-v+KEsUv2ps74PaSKv0gHTxTCgMXOIfBEbaqa6w6ISIGC7ZsvHN4N9oJ8d4cmf0n5oTzQz2SLmThbQWhjd/8eKg==}
+  nanoid@5.1.14:
+    resolution: {integrity: sha512-5c8l8kVzqpnDPaicbEop/fV0Q1w16FmbWtVhMqugTozAwYdlIQojWH5a/M7UfziFmGdQRrUdV+EPzc9Xng3VAQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -4548,10 +4548,6 @@ packages:
   node-releases@2.0.48:
     resolution: {integrity: sha512-1uz8041X6LoI6ZSdZacM9lVY28vuzDlSKitnpbSNK0RfKoIJkX29NBPVEFXhnuSuEOA9Ww0xnPJ+ILWbGAv8DA==}
     engines: {node: '>=18'}
-
-  nodemailer@9.0.0:
-    resolution: {integrity: sha512-tbPTid7d/p9jAA8CRZ3iomvrMaST0o6NYuY7v6JQZHpPRZ61mLFSPKYd7342NtOFuej9/+L48SOIxwfu2uDvtw==}
-    engines: {node: '>=6.0.0'}
 
   nodemailer@9.0.1:
     resolution: {integrity: sha512-Gwv8SQewT616ZM/URn0H54b8PWo/Wum7md3EW2aWy1lO27+WZCX+Xyak3J+NlmHUjDh5ME+uesJUDRbR3Ye8Bw==}
@@ -10774,7 +10770,7 @@ snapshots:
 
   magic-bytes.js@1.13.0: {}
 
-  mailparser@3.9.10:
+  mailparser@3.9.11:
     dependencies:
       '@zone-eu/mailsplit': 5.4.12
       encoding-japanese: 2.2.0
@@ -10783,7 +10779,7 @@ snapshots:
       iconv-lite: 0.7.2
       libmime: 5.3.8
       linkify-it: 5.0.1
-      nodemailer: 9.0.0
+      nodemailer: 9.0.1
       punycode.js: 2.3.1
       tlds: 1.261.0
 
@@ -10960,7 +10956,7 @@ snapshots:
 
   nanoid@3.3.13: {}
 
-  nanoid@5.1.11: {}
+  nanoid@5.1.14: {}
 
   napi-postinstall@0.3.4: {}
 
@@ -11014,8 +11010,6 @@ snapshots:
       process-on-spawn: 1.1.0
 
   node-releases@2.0.48: {}
-
-  nodemailer@9.0.0: {}
 
   nodemailer@9.0.1: {}
 

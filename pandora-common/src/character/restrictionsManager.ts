@@ -32,7 +32,6 @@ export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
 	public readonly spaceContext: ActionSpaceContext;
 	public readonly restrictionOverrideConfig: RestrictionOverrideConfig;
-	private readonly _properties: Immutable<AssetPropertiesResult>;
 	private readonly _roomDeviceLink: Immutable<RoomDeviceLink> | null;
 
 	public get character(): GameLogicCharacter {
@@ -45,7 +44,6 @@ export class CharacterRestrictionsManager {
 		this.restrictionOverrideConfig = GetRestrictionOverrideConfig(this.appearance.getRestrictionOverride());
 
 		// Calculate caches
-		this._properties = AppearanceItemProperties(this.appearance.getAllItems());
 		this._roomDeviceLink = this.appearance.characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
 	}
 
@@ -81,8 +79,9 @@ export class CharacterRestrictionsManager {
 		});
 	}
 
+	@MemoizeNoArg
 	public getProperties(): Immutable<AssetPropertiesResult> {
-		return this._properties;
+		return AppearanceItemProperties(this.appearance.getAllItems());
 	}
 
 	public getRoomDeviceLink(): Immutable<RoomDeviceLink> | null {

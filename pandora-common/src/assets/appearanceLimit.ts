@@ -1,7 +1,7 @@
 import { freeze, Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import * as z from 'zod';
-import { Assert, CloneDeepMutable, IntervalSetIntersection, IsNotNullable, IsReadonlyArray, MemoizeSingleObjectArg, type Satisfies } from '../utility/misc.ts';
+import { Assert, CloneDeepMutable, IntervalSetIntersection, IntervalSetIsSubsetOf, IsReadonlyArray, MemoizeSingleObjectArg, type Satisfies } from '../utility/misc.ts';
 import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionLegsPosePoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from './graphics/index.ts';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearanceLegsPose, AppearancePose } from './state/characterStatePose.ts';
@@ -90,9 +90,46 @@ class TreeLimit {
 	}
 
 	/**
+	 * Checks whether this limit is subset of `other` (i.e. anything that is valid in this limit is valid in `other`),
+	 * while both of these are limited by implicit outer limit.
+	 * @param superset - The limit to check against
+	 * @param outerLimit - The implicit limit applied to BOTH limits
+	 */
+	public isSubsetOf(superset: TreeLimit, outerLimit: TreeLimit): boolean {
+		// Each superset's limitation must be met by combination of outerLimit and `this`.
+		// If `this` has any extra limitations, they do not matter, as they are definitely subset of superset, which is unlimited in that dimension
+		for (const [key, otherValue] of superset.limit) {
+			const ourValue = this.limit.get(key);
+			const outerLimitValue = outerLimit.limit.get(key);
+
+			// We ask: (this ∩ outerLimit) ⊆ (superset ∩ outerLimit)
+
+			if (ourValue == null) {
+				// If we have no limiter, then `other` must be superset of outer limit
+				// outerLimit ⊆ (superset ∩ outerLimit)
+				// outerLimit ⊆ superset
+				if (outerLimitValue == null || !IntervalSetIsSubsetOf(outerLimitValue, otherValue))
+					return false;
+			} else {
+				// If we do have a limiter, verify it is a subset of the superset
+				const checkedInterval = outerLimitValue != null ? IntervalSetIntersection(outerLimitValue, ourValue) : ourValue;
+				const limitingInterval = outerLimitValue != null ? IntervalSetIntersection(outerLimitValue, otherValue) : otherValue;
+				if (!IntervalSetIsSubsetOf(checkedInterval, limitingInterval))
+					return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Returns a limit that describes intersection of this and given limits.
 	 */
 	public intersection(other: TreeLimit): TreeLimit | null {
+		// Optimization for common case
+		if (other === TreeLimit.empty)
+			return this;
+
 		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, readonly (readonly [number, number])[]>(this.limit);
 		for (const [key, otherValue] of other.limit) {
 			const currentValue = newLimit.get(key);
@@ -123,12 +160,18 @@ class TreeLimit {
 			if (isEqual(newValue, value))
 				newLimit.delete(key);
 		}
+
+		if (newLimit.size === 0)
+			return TreeLimit.empty;
+
 		return new TreeLimit(newLimit);
 	}
 
 	public toJSON(): unknown {
 		return Object.fromEntries(this.limit);
 	}
+
+	public static readonly empty = new TreeLimit();
 }
 
 /**
@@ -136,9 +179,9 @@ class TreeLimit {
  */
 class TreeNode {
 	private readonly limit: TreeLimit;
-	private readonly children: TreeNode[] | null;
+	private readonly children: readonly TreeNode[] | null;
 
-	constructor(limit: TreeLimit | TreeLimitDimensionData = new TreeLimit(), children: TreeNode[] | null = null) {
+	constructor(limit: TreeLimit | TreeLimitDimensionData = TreeLimit.empty, children: TreeNode[] | null = null) {
 		this.limit = limit instanceof TreeLimit ? limit : new TreeLimit(limit);
 		this.children = children;
 	}
@@ -180,65 +223,186 @@ class TreeNode {
 		return this.limit.hasNoLimits() && !this.children;
 	}
 
-	public intersection(other: TreeNode): TreeNode | null {
-		const next = this.intersectionWithLimit(other.limit);
-		if (next == null)
-			return null;
-
-		if (other.children == null)
-			return next;
-
-		let nodes: TreeNode[];
-
-		if (next.children == null) {
-			nodes = other.children
-				.map((child) => child.intersectionWithLimit(next.limit, true))
-				.filter(IsNotNullable);
+	/**
+	 * Simplifies this node, flattening hierarchy if there are nodes with empty limits.
+	 */
+	public simplify(): readonly TreeNode[] {
+		if (this.limit.hasNoLimits()) {
+			if (this.children != null) {
+				return this.children;
+			} else {
+				return [TreeNode.empty];
+			}
 		} else {
-			const children = next.children;
-			nodes = other.children
-				.flatMap((otherChild) => children
-					.map((child) => child.intersection(otherChild)?.intersectionWithLimit(next.limit, true))
-					.filter(IsNotNullable));
+			return [this];
 		}
-
-		return TreeNode.fromResult(next.limit, nodes);
 	}
 
 	/**
-	 * Calculates the intersection on the current limit on all keys present in the 'limit' parameter.
-	 * If 'prune' is true, all matching values will be removed from the resulting limit, otherwise all missing keys will be added from the 'limit' parameter.
-	 * Then all children will be intersected with the resulting limit.
+	 * Intersect this node with another node, combining them with an "AND" operation.
+	 * @param other - The node to AND with
+	 * @param outerLimit - A limit already applied by parents, used for pruning
+	 * @returns - New node, or `null` if there is no intersection
 	 */
-	private intersectionWithLimit(limit: TreeLimit, prune: boolean = false): TreeNode | null {
-		const intersection = this.limit.intersection(limit);
+	public intersection(other: TreeNode, outerLimit: TreeLimit): TreeNode | null {
+		if (other.children == null) {
+			// Simple case: The other node has no children - just apply its limit
+			return this.intersectionWithLimit(other.limit, outerLimit);
+		}
+		if (this.children == null) {
+			// Simple case: We have no children - same as above, just in reverse
+			return other.intersectionWithLimit(this.limit, outerLimit);
+		}
+
+		// Complex case, we need to combine children
+
+		// Create intersection with our children and the other limit
+		const next = this.intersectionWithLimit(other.limit, outerLimit);
+		if (next == null)
+			return null;
+
+		// Children might have gotten pruned by the intersection, lucky
+		if (next.children == null) {
+			return other.intersectionWithLimit(next.limit, outerLimit);
+		}
+
+		// The hard way, do some combinatorics with the children
+		const fullLimit = next.limit.intersection(outerLimit);
+		Assert(fullLimit != null); // Otherwise `next` would be null already
+
+		const resultChildren: TreeNode[] = [];
+
+		const children = next.children;
+		for (const otherChild of other.children) {
+			for (const child of children) {
+				let intersection = child.intersection(otherChild, fullLimit);
+				if (intersection == null)
+					continue;
+
+				// If the child is empty, it means it covers our whole node. We can just drop all children in that case.
+				if (intersection.hasNoLimits()) {
+					return new TreeNode(next.limit);
+				}
+
+				// Look through current children to merge subsets into this child
+				// If there is already a child that is superset of this child, then merge this one into it instead and abort
+				let merged = false;
+				for (let i = resultChildren.length - 1; i >= 0; i--) {
+					if (intersection.limit.isSubsetOf(resultChildren[i].limit, fullLimit)) {
+						resultChildren[i] = resultChildren[i].union(intersection, fullLimit);
+						merged = true;
+						break;
+					}
+
+					if (resultChildren[i].limit.isSubsetOf(intersection.limit, fullLimit)) {
+						intersection = intersection.union(resultChildren[i], fullLimit);
+						resultChildren.splice(i, 1);
+					}
+				}
+				if (!merged) {
+					resultChildren.push(intersection);
+				}
+			}
+		}
+
+		return TreeNode.fromResult(next.limit, resultChildren, outerLimit);
+	}
+
+	/**
+	 * Calculates the intersection on the current node with a flat TreeLimit, combining them with an "AND" operation.
+	 * @param limit - The limit to AND with
+	 * @param outerLimit - A limit already applied by parents, used for pruning
+	 * @returns - New node, or `null` if there is no intersection
+	 */
+	private intersectionWithLimit(limit: TreeLimit, outerLimit: TreeLimit): TreeNode | null {
+		const intersection = outerLimit.intersection(this.limit)?.intersection(limit);
 		if (intersection == null)
 			return null;
 
-		const newLimit = prune ? intersection.prune(limit) : intersection;
+		const newLimit = intersection.prune(outerLimit);
 
 		if (this.children == null)
 			return new TreeNode(newLimit);
 
-		const newChildren = this.children
-			.map((child) => child.intersectionWithLimit(intersection, true))
-			.filter(IsNotNullable);
+		// If there are children, prune them
+		const newChildren: TreeNode[] = [];
+		for (const resultingChild of this.children.flatMap((child) => child.intersectionWithLimit(TreeLimit.empty, intersection)?.simplify())) {
+			if (resultingChild == null)
+				continue;
 
-		return TreeNode.fromResult(newLimit, newChildren);
+			// If the child is empty, it means it covers our whole node. We can just drop all children in that case
+			if (resultingChild.hasNoLimits())
+				return new TreeNode(newLimit);
+
+			newChildren.push(resultingChild);
+		}
+
+		return TreeNode.fromResult(newLimit, newChildren, outerLimit);
 	}
 
-	private static fromResult(limit: TreeLimit, children: TreeNode[]): TreeNode | null {
+	/**
+	 * Perform an OR operation between this node and other node.
+	 * The other node **must be a subset** of this node!
+	 * @param additional - The node to OR with
+	 * @param outerLimit - Implicit limit that already applies to BOTH nodes
+	 */
+	private union(additional: TreeNode, outerLimit: TreeLimit): TreeNode {
+		// We already contain everything possible
+		if (this.children == null)
+			return this;
+
+		const fullLimit = this.limit.intersection(outerLimit);
+		Assert(fullLimit != null); // Otherwise this node would not exist
+
+		let intersection = additional.intersectionWithLimit(TreeLimit.empty, fullLimit);
+		if (intersection == null)
+			return this;
+
+		// If the child is empty, it means it covers our whole node. We can just drop all children in that case.
+		if (intersection.hasNoLimits()) {
+			return new TreeNode(this.limit);
+		}
+
+		// Look through current children to merge subsets into this child
+		// If there is already a child that is superset of this child, then merge this one into it instead and abort
+		const resultChildren: TreeNode[] = this.children.slice();
+		let merged = false;
+
+		for (let i = resultChildren.length - 1; i >= 0; i--) {
+			if (intersection.limit.isSubsetOf(resultChildren[i].limit, fullLimit)) {
+				resultChildren[i] = resultChildren[i].union(intersection, fullLimit);
+				merged = true;
+				break;
+			}
+
+			if (resultChildren[i].limit.isSubsetOf(intersection.limit, fullLimit)) {
+				intersection = intersection.union(resultChildren[i], fullLimit);
+				resultChildren.splice(i, 1);
+			}
+		}
+		if (!merged) {
+			resultChildren.push(intersection);
+		}
+
+		const result = TreeNode.fromResult(this.limit, resultChildren, outerLimit);
+		Assert(result != null); // We are only adding things, we should always produce non-empty result if start was non-empty
+		return result;
+	}
+
+	private static fromResult(limit: TreeLimit, children: TreeNode[], outerLimit: TreeLimit): TreeNode | null {
 		// If there is no valid child, then this node is invalid
 		if (children.length === 0)
 			return null;
 
 		// Collapse children if there is only single valid one
 		if (children.length === 1) {
-			return children[0].intersectionWithLimit(limit);
+			return children[0].intersectionWithLimit(limit, outerLimit);
 		}
 
 		return new TreeNode(limit, children);
 	}
+
+	public static readonly empty = new TreeNode(TreeLimit.empty);
 }
 
 export interface ReadonlyAppearanceLimitTree {
@@ -282,7 +446,7 @@ export class AppearanceLimitTree implements ReadonlyAppearanceLimitTree {
 		if (limits == null)
 			return true;
 
-		this.root = this.root.intersection(CreateTreeNode(limits));
+		this.root = this.root.intersection(CreateTreeNode(limits), TreeLimit.empty);
 
 		return this.root != null;
 	}

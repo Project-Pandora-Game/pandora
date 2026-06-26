@@ -360,6 +360,30 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 }
 
 /**
+ * Checks whether `subset ⊆ superset`.
+ * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]]).
+ * @param subset The interval being checked
+ * @param superset The interval that is being checked against
+ */
+export function IntervalSetIsSubsetOf(subset: ReadonlyIntervalSet, superset: ReadonlyIntervalSet): boolean {
+	let j = 0;
+
+	for (const [subMin, subMax] of subset) {
+		// Skip superset entries that are before the current one
+		while (j < superset.length && superset[j][1] < subMin) {
+			j++;
+		}
+
+		// No superset interval left, or the next one doesn't fully cover the currently checked one
+		// Due to our requirements for interval sets (sorted and non-overlapping) each subset interval must be fully covered by a single superset one
+		if (j >= superset.length || superset[j][0] > subMin || superset[j][1] < subMax)
+			return false;
+	}
+
+	return true;
+}
+
+/**
  * Generates combinations by taking values of multiple independent lists and creating an SQL-like join of them.
  * @param lists - The lists to generate values from
  * @example

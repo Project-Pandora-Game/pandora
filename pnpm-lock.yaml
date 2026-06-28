@@ -87,8 +87,8 @@ importers:
         specifier: 1.5.0
         version: 1.5.0
       nanoid:
-        specifier: 5.1.14
-        version: 5.1.14
+        specifier: 5.1.15
+        version: 5.1.15
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -286,8 +286,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       nanoid:
-        specifier: 5.1.14
-        version: 5.1.14
+        specifier: 5.1.15
+        version: 5.1.15
     devDependencies:
       '@jest/globals':
         specifier: 30.4.1
@@ -362,8 +362,8 @@ importers:
         specifier: 11.2.0
         version: 11.2.0(supports-color@5.5.0)
       nanoid:
-        specifier: 5.1.14
-        version: 5.1.14
+        specifier: 5.1.15
+        version: 5.1.15
       nodemailer:
         specifier: 9.0.1
         version: 9.0.1
@@ -459,8 +459,8 @@ importers:
         specifier: 7.3.0
         version: 7.3.0
       nanoid:
-        specifier: 5.1.14
-        version: 5.1.14
+        specifier: 5.1.15
+        version: 5.1.15
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -4473,8 +4473,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.14:
-    resolution: {integrity: sha512-5c8l8kVzqpnDPaicbEop/fV0Q1w16FmbWtVhMqugTozAwYdlIQojWH5a/M7UfziFmGdQRrUdV+EPzc9Xng3VAQ==}
+  nanoid@5.1.15:
+    resolution: {integrity: sha512-kBg3RpGtIe+RpTbyXwoI6pk5yD7KUiI3sygUqgeBMRst42KmhB4RZC7eiO9Wa1HIpaCCtpE2DJ6OI4Wi5ebwFw==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -10956,7 +10956,7 @@ snapshots:
 
   nanoid@3.3.13: {}
 
-  nanoid@5.1.14: {}
+  nanoid@5.1.15: {}
 
   napi-postinstall@0.3.4: {}
 

@@ -39,7 +39,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-sesv2": "3.1077.0",
-		"@aws-sdk/credential-provider-node": "3.972.60",
+		"@aws-sdk/credential-provider-node": "3.972.61",
 		"@octokit/auth-oauth-app": "9.0.3",
 		"@octokit/rest": "22.0.1",
 		"@simplewebauthn/server": "13.3.2",
@@ -47,7 +47,7 @@
 		"async-lock": "1.4.1",
 		"discord.js": "14.26.4",
 		"express": "5.2.1",
-		"immer": "11.1.8",
+		"immer": "11.1.9",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.18.1",
 		"mongodb": "7.4.0",

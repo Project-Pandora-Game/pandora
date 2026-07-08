@@ -75,8 +75,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       immer:
-        specifier: 11.1.8
-        version: 11.1.8
+        specifier: 11.1.9
+        version: 11.1.9
       inter-ui:
         specifier: 4.1.1
         version: 4.1.1
@@ -280,8 +280,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       immer:
-        specifier: 11.1.8
-        version: 11.1.8
+        specifier: 11.1.9
+        version: 11.1.9
       lodash-es:
         specifier: 4.18.1
         version: 4.18.1
@@ -323,8 +323,8 @@ importers:
         specifier: 3.1077.0
         version: 3.1077.0
       '@aws-sdk/credential-provider-node':
-        specifier: 3.972.60
-        version: 3.972.60
+        specifier: 3.972.61
+        version: 3.972.61
       '@octokit/auth-oauth-app':
         specifier: 9.0.3
         version: 9.0.3
@@ -347,8 +347,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(supports-color@5.5.0)
       immer:
-        specifier: 11.1.8
-        version: 11.1.8
+        specifier: 11.1.9
+        version: 11.1.9
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -447,8 +447,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(supports-color@5.5.0)
       immer:
-        specifier: 11.1.8
-        version: 11.1.8
+        specifier: 11.1.9
+        version: 11.1.9
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -617,6 +617,10 @@ packages:
 
   '@aws-sdk/credential-provider-node@3.972.60':
     resolution: {integrity: sha512-hE2hIBJQjCDRx8TbSqpVQ+/o2mIrJZQZbQ3LlwE2bJf7z47x5GmhcvGwZPqJH7Oq//SzTXEBGSZ4qSpK3yPbhw==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/credential-provider-node@3.972.61':
+    resolution: {integrity: sha512-2U2KHMRCt1dlZoLU3KZR5g5EL4b0h2HHw96SkaUBK7qvEXPZj5rGRO/3ZTeJmh37dIYQuCnA2273rZOQvmsiHw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-process@3.972.53':
@@ -3609,8 +3613,8 @@ packages:
     resolution: {integrity: sha512-Hs59xBNfUIunMFgWAbGX5cq6893IbWg4KnrjbYwX3tx0ztorVgTDA6B2sxf8ejHJ4wz8BqGUMYlnzNBer5NvGg==}
     engines: {node: '>= 4'}
 
-  immer@11.1.8:
-    resolution: {integrity: sha512-/tbkHMW7y10Lx6i1crLjD4/OhNkRG+Fo7byZHtah0547nIeXYcpIXaUh0IAQY6gO5459qpGGYapcEOHtFXkIuA==}
+  immer@11.1.9:
+    resolution: {integrity: sha512-sc/z0Cyti70bZa0ZU4sWfAElfovFb9Ni8tArJZLuklYWxegPiK3pDOql1Rq5H0FIRAW9LSQRG6OX4KqBldbhBA==}
 
   immutable@5.1.6:
     resolution: {integrity: sha512-q1swsS8K7L8usSHuOqF2TAoCCkonYz0SG38wLAggaa4Wml70zixIvt2ql4coQ2C2B3hTjltJry4r6bULwgAXLQ==}
@@ -6335,6 +6339,20 @@ snapshots:
       '@smithy/core': 3.29.1
       '@smithy/credential-provider-imds': 4.4.6
       '@smithy/types': 4.15.0
+      tslib: 2.8.1
+
+  '@aws-sdk/credential-provider-node@3.972.61':
+    dependencies:
+      '@aws-sdk/credential-provider-env': 3.972.53
+      '@aws-sdk/credential-provider-http': 3.972.55
+      '@aws-sdk/credential-provider-ini': 3.972.60
+      '@aws-sdk/credential-provider-process': 3.972.53
+      '@aws-sdk/credential-provider-sso': 3.972.59
+      '@aws-sdk/credential-provider-web-identity': 3.972.59
+      '@aws-sdk/types': 3.973.15
+      '@smithy/core': 3.29.1
+      '@smithy/credential-provider-imds': 4.4.6
+      '@smithy/types': 4.15.1
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-process@3.972.53':
@@ -9898,7 +9916,7 @@ snapshots:
 
   ignore@7.0.5: {}
 
-  immer@11.1.8: {}
+  immer@11.1.9: {}
 
   immutable@5.1.6: {}
 

@@ -356,8 +356,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.4.0
-        version: 7.4.0
+        specifier: 7.5.0
+        version: 7.5.0
       mongodb-memory-server-core:
         specifier: 11.2.0
         version: 11.2.0(supports-color@5.5.0)
@@ -456,8 +456,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.4.0
-        version: 7.4.0
+        specifier: 7.5.0
+        version: 7.5.0
       nanoid:
         specifier: 5.1.16
         version: 5.1.16
@@ -4410,8 +4410,8 @@ packages:
     resolution: {integrity: sha512-vOoDtn0JiLrHvZY81Rp/UtKXXK0rtJHZGZFVnccvJwYitPLNspO0Ty0grqFQOe7iAET8+GI4zAQcphg+R3vxQg==}
     engines: {node: '>=20.19.0'}
 
-  mongodb@7.3.0:
-    resolution: {integrity: sha512-WpCqSx7JAU9vcyjm/SU7ydnHls2YrfU3Y3sx4Ml9D7sPe4mXPlaapndiurDXrQ7/VvJkB4/i7b7WovHb8bd8sg==}
+  mongodb@7.4.0:
+    resolution: {integrity: sha512-giySkkdYiwoBFo/oCc8nzov3xOYZ/sB8OpAYk5GINRLEjVw0LDsm8xgQL0XMTyU4extQlDZjhdUr1ZEwKFaazw==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.806.0
@@ -4437,15 +4437,15 @@ packages:
       socks:
         optional: true
 
-  mongodb@7.4.0:
-    resolution: {integrity: sha512-giySkkdYiwoBFo/oCc8nzov3xOYZ/sB8OpAYk5GINRLEjVw0LDsm8xgQL0XMTyU4extQlDZjhdUr1ZEwKFaazw==}
+  mongodb@7.5.0:
+    resolution: {integrity: sha512-5FnrEDLnvp6ycUOGLNLLU33BfCx2qmp2mJjGPDwKLruYsVzXVSK5fsGpoDXvsXJwBfBsD7ebMRdawbDxC2814g==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.806.0
       '@mongodb-js/zstd': ^7.0.0
       gcp-metadata: ^7.0.1
       kerberos: ^7.0.0
-      mongodb-client-encryption: '>=7.0.0 <7.1.0'
+      mongodb-client-encryption: ^7.2.0
       snappy: ^7.3.2
       socks: ^2.8.6
     peerDependenciesMeta:
@@ -10847,7 +10847,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.16.0(debug@4.4.3(supports-color@5.5.0))
       https-proxy-agent: 7.0.6
-      mongodb: 7.3.0
+      mongodb: 7.4.0
       new-find-package-json: 2.0.0(supports-color@5.5.0)
       semver: 7.8.4
       tar-stream: 3.2.0
@@ -10866,13 +10866,13 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb@7.3.0:
+  mongodb@7.4.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.11
       bson: 7.3.0
       mongodb-connection-string-url: 7.0.1
 
-  mongodb@7.4.0:
+  mongodb@7.5.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.11
       bson: 7.3.0

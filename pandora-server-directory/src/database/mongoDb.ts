@@ -424,7 +424,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async getAccountIdByAccessToken(token: PandoraAccessToken): Promise<AccountId | null> {
 		return (await this._accounts.find({ 'secure.accessTokens.token': token }, { singleBatch: true })
-			.project<Pick<DatabaseAccount, 'id'>>({ id: 1 })
+			.project<Pick<DatabaseAccountWithSecure, 'id'>>({ id: 1 })
 			.limit(1)
 			.next())
 			?.id ?? null;

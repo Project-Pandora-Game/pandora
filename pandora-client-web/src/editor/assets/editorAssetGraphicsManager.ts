@@ -199,7 +199,7 @@ export class EditorAssetGraphicsManagerClass {
 		}
 	}
 
-	@AsyncSynchronized(undefined, { maxPending: Number.MAX_SAFE_INTEGER })
+	@AsyncSynchronized({ maxPending: Number.MAX_SAFE_INTEGER })
 	private async _onAssetDefinitionChanged(asset: EditorAssetGraphics): Promise<void> {
 		// Ignore if the asset is no longer being edited
 		if (this._editedAssetGraphics.value.get(asset.id) !== asset)

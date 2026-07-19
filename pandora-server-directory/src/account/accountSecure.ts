@@ -20,7 +20,7 @@ const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWOR
  * JavaScript's private fields is used to ensure that the data is not exposed to the outside world
  */
 export default class AccountSecure {
-	readonly #account: Account;
+	public readonly account: Account;
 	readonly #secure: DatabaseAccountSecure;
 	readonly #auditLog: Logger;
 	#tokens: readonly AccountToken[];
@@ -28,7 +28,7 @@ export default class AccountSecure {
 	public readonly accessTokens: AccountSecureAccessTokenStore;
 
 	constructor(account: Account, secure: DatabaseAccountSecure) {
-		this.#account = account;
+		this.account = account;
 		this.#secure = secure;
 		this.#auditLog = AUDIT_LOG.prefixMessages(`[Account ${account.id}]`);
 		this.accessTokens = new AccountSecureAccessTokenStore(secure.accessTokens ?? [], this, this.#auditLog.prefixMessages(`[AccessTokenStore]`));
@@ -75,7 +75,7 @@ export default class AccountSecure {
 		}
 
 		const emailHash = GenerateEmailHash(email);
-		const result = await GetDatabase().updateAccountEmailHash(this.#account.id, emailHash);
+		const result = await GetDatabase().updateAccountEmailHash(this.account.id, emailHash);
 		switch (result) {
 			case 'ok':
 				this.#secure.emailHash = emailHash;
@@ -139,7 +139,7 @@ export default class AccountSecure {
 			return false;
 
 		const { value } = await this.#generateToken(AccountTokenReason.PASSWORD_RESET);
-		await GetEmailSender().sendPasswordReset(email, this.#account.username, value);
+		await GetEmailSender().sendPasswordReset(email, this.account.username, value);
 
 		this.#auditLog.info('Password reset requested');
 
@@ -170,8 +170,8 @@ export default class AccountSecure {
 	public async onLogin(): Promise<void> {
 		const currentTime = Date.now();
 
-		this.#account.data.lastLogin = currentTime;
-		await GetDatabase().updateAccountData(this.#account.id, { lastLogin: currentTime });
+		this.account.data.lastLogin = currentTime;
+		await GetDatabase().updateAccountData(this.account.id, { lastLogin: currentTime });
 	}
 
 	public generateNewLoginToken(): Promise<AccountToken> {
@@ -227,7 +227,7 @@ export default class AccountSecure {
 	public async setGitHubInfo(info: Omit<GitHubInfo, 'date'> | null): Promise<boolean> {
 		if (!info) {
 			delete this.#secure.github;
-			await this.#account.roles.setGitHubStatus('none');
+			await this.account.roles.setGitHubStatus('none');
 			await this.updateDatabase();
 			return true;
 		}
@@ -235,17 +235,17 @@ export default class AccountSecure {
 			this.#secure.github.login = info.login;
 			this.#secure.github.role = info.role;
 			this.#secure.github.date = Date.now();
-			await this.#account.roles.setGitHubStatus(info.role, info.teams);
+			await this.account.roles.setGitHubStatus(info.role, info.teams);
 			await this.updateDatabase();
 			return true;
 		}
 
 		const newInfo = { ...info, date: Date.now() };
-		if (!await GetDatabase().setAccountSecureGitHub(this.#account.id, newInfo))
+		if (!await GetDatabase().setAccountSecureGitHub(this.account.id, newInfo))
 			return false;
 
 		this.#secure.github = newInfo;
-		await this.#account.roles.setGitHubStatus(newInfo.role, newInfo.teams);
+		await this.account.roles.setGitHubStatus(newInfo.role, newInfo.teams);
 
 		return true;
 	}
@@ -267,7 +267,7 @@ export default class AccountSecure {
 		}
 
 		await this.updateDatabase();
-		this.#account.onAccountInfoChange();
+		this.account.onAccountInfoChange();
 	}
 
 	public getCryptoKey(): IAccountCryptoKey | undefined {
@@ -406,7 +406,7 @@ export default class AccountSecure {
 
 	async #sendActivation(email: string, log: string): Promise<void> {
 		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
-		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
+		await GetEmailSender().sendRegistrationConfirmation(email, this.account.username, value);
 		this.#auditLog.info(log);
 	}
 
@@ -424,7 +424,7 @@ export default class AccountSecure {
 		if (this.#secure.accessTokens.length === 0)
 			delete this.#secure.accessTokens;
 
-		return GetDatabase().setAccountSecure(this.#account.id, cloneDeep(this.#secure));
+		return GetDatabase().setAccountSecure(this.account.id, cloneDeep(this.#secure));
 	}
 }
 

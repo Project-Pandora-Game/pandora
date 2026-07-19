@@ -43,6 +43,48 @@ export type PandoraAccessTokenScopeList = readonly PandoraAccessTokenScope[];
 export const PandoraAccessTokenScopeListSchema: z.ZodType<PandoraAccessTokenScopeList> = PandoraAccessTokenScopeSchema.array()
 	.max(KnownObject.keys(PANDORA_ACCESS_TOKEN_SCOPES_DEFINITION).length);
 
+export function PandoraAccessTokenScopeListAdd(oldScope: PandoraAccessTokenScopeList, addScope: PandoraAccessTokenScope): PandoraAccessTokenScopeList {
+	const newScope = oldScope.slice();
+
+	function checkAndAdd(scope: PandoraAccessTokenScope) {
+		if (newScope.includes(scope))
+			return;
+
+		newScope.push(scope);
+		const requires = PANDORA_ACCESS_TOKEN_SCOPES[scope].requires;
+		if (requires != null) {
+			for (const required of requires) {
+				checkAndAdd(required);
+			}
+		}
+	}
+
+	checkAndAdd(addScope);
+
+	const keys = KnownObject.keys(PANDORA_ACCESS_TOKEN_SCOPES);
+	return newScope.sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+}
+
+export function PandoraAccessTokenScopeListRemove(oldScope: PandoraAccessTokenScopeList, removeScope: PandoraAccessTokenScope): PandoraAccessTokenScopeList {
+	const newScope = oldScope.filter((s) => s !== removeScope);
+
+	let hadChange = true;
+	while (hadChange) {
+		hadChange = false;
+
+		for (let i = newScope.length - 1; i >= 0; i--) {
+			const requires = PANDORA_ACCESS_TOKEN_SCOPES[newScope[i]].requires;
+			if (requires != null && !requires.every((required) => newScope.includes(required))) {
+				newScope.splice(i, 1);
+				hadChange = true;
+			}
+		}
+	}
+
+	const keys = KnownObject.keys(PANDORA_ACCESS_TOKEN_SCOPES);
+	return newScope.sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+}
+
 /** Regex for matching Pandora Access Tokens inside a string */
 export const PANDORA_ACCESS_TOKEN_REGEX = /pdr_at_([0-9a-zA-Z]{32})([0-9a-f]{8})/g;
 /** Regex for matching whole string as Pandora Access Token */

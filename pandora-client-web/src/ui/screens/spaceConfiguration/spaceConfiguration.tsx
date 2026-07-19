@@ -36,7 +36,7 @@ import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { RenderAppearanceActionProblem } from '../../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
-import { CopyToClipboard } from '../../../common/clipboard.ts';
+import { CopyToClipboard } from '../../../common/clipboard.tsx';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';

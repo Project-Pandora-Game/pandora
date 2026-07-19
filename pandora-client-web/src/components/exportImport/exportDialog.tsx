@@ -1,7 +1,7 @@
 import { CloneDeepMutable, EMPTY_ARRAY, GetLogger } from 'pandora-common';
 import { ReactElement, Suspense, use, useCallback, useMemo, useRef, useState } from 'react';
 import * as z from 'zod';
-import { CopyToClipboard } from '../../common/clipboard.ts';
+import { CopyToClipboardButton } from '../../common/clipboard.tsx';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -29,8 +29,6 @@ interface ExportDialogProps<T extends z.ZodType> {
 }
 
 const logger = GetLogger('ExportImport');
-
-const COPY_SUCCESS_COOLDOWN = 3_000;
 
 export function ExportDialog<T extends z.ZodType>({
 	closeDialog,
@@ -63,8 +61,6 @@ function ExportDialogInner<T extends z.ZodType>({
 }: Omit<ExportDialogProps<T>, 'closeDialog'>): ReactElement {
 	const account = useCurrentAccount();
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
-	const [showCopySuccess, setShowCopySuccess] = useState(false);
-	const showCopyClearTimeout = useRef<number>(null);
 
 	const extraData = extraDataPromise != null ? use(extraDataPromise) : EMPTY_ARRAY;
 
@@ -104,18 +100,6 @@ function ExportDialogInner<T extends z.ZodType>({
 			DownloadAsFile(target.content, downloadFileName.trim() + target.suffix);
 		}
 	}, [downloadFileName, exportString]);
-
-	const copyToClipboard = useCallback(() => {
-		CopyToClipboard(exportString, () => {
-			if (showCopyClearTimeout.current != null) {
-				clearTimeout(showCopyClearTimeout.current);
-			}
-			setShowCopySuccess(true);
-			showCopyClearTimeout.current = setTimeout(() => {
-				setShowCopySuccess(false);
-			}, COPY_SUCCESS_COOLDOWN);
-		});
-	}, [exportString]);
 
 	const shareData = useMemo((): ShareData => {
 		return {
@@ -157,9 +141,7 @@ function ExportDialogInner<T extends z.ZodType>({
 				</Column>
 			</fieldset>
 			<Row>
-				<Button className='flex-1' onClick={ copyToClipboard }>
-					{ showCopySuccess ? 'Copied!' : 'Copy to clipboard' }
-				</Button>
+				<CopyToClipboardButton text={ exportString } buttonText='Copy to clipboard' className='flex-1' />
 				<ShareButton className='flex-1' shareData={ shareData } />
 			</Row>
 			<textarea

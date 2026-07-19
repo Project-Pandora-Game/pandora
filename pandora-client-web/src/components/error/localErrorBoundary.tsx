@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { GetLogger } from 'pandora-common';
 import { Component, ErrorInfo, ReactElement } from 'react';
-import { CopyToClipboard } from '../../common/clipboard.ts';
+import { CopyToClipboard } from '../../common/clipboard.tsx';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';

@@ -27,7 +27,7 @@ import { GraphicsSettings } from './graphicsSettings.tsx';
 import { InterfaceSettings } from './interfaceSettings.tsx';
 import { NotificationSettings } from './notificationSettings.tsx';
 import { PermissionsSettings } from './permissionsSettings.tsx';
-import { PersonalAccessTokensSettings } from './personalAccessTokensSettings.tsx';
+import { PersonalAccessTokensSettings } from './personalAccessTokensSettings/personalAccessTokensSettings.tsx';
 import { SecuritySettings } from './securitySettings/securitySettings.tsx';
 import './settings.scss';
 

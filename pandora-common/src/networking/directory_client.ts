@@ -98,7 +98,13 @@ export type IDirectoryCharacterAssignmentInfo = {
 	shardConnection: IDirectoryCharacterConnectionInfo | null;
 };
 
-export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'spaceList' | 'storedOutfits' | 'storedPosePresets';
+export type IDirectoryClientChangeEvents =
+	| 'characterList'
+	| 'shardList'
+	| 'spaceList'
+	| 'storedOutfits'
+	| 'storedPosePresets'
+	| 'accessTokens';
 
 export type IDirectoryDirectMessage = {
 	/** Encrypted content, or empty string if the message was deleted. */

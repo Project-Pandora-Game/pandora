@@ -1,6 +1,11 @@
 import { GetLogger } from 'pandora-common';
+import { useCallback, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
+import { Button } from '../components/common/button/button.tsx';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
+import type { CommonProps } from './reactTypes.ts';
+
+const COPY_SUCCESS_COOLDOWN = 3_000;
 
 const logger = GetLogger('Clipboard');
 
@@ -54,4 +59,30 @@ export function CopyToClipboard(text: string, onSuccess?: () => void, onError?: 
 			// Try fallback
 			copyFallback();
 		});
+}
+
+export function CopyToClipboardButton({ text, buttonText, ...props }: CommonProps & {
+	text: string;
+	buttonText?: string;
+}): ReactElement {
+	const [showCopySuccess, setShowCopySuccess] = useState(false);
+	const showCopyClearTimeout = useRef<number>(null);
+
+	const copyToClipboard = useCallback(() => {
+		CopyToClipboard(text, () => {
+			if (showCopyClearTimeout.current != null) {
+				clearTimeout(showCopyClearTimeout.current);
+			}
+			setShowCopySuccess(true);
+			showCopyClearTimeout.current = setTimeout(() => {
+				setShowCopySuccess(false);
+			}, COPY_SUCCESS_COOLDOWN);
+		});
+	}, [text]);
+
+	return (
+		<Button { ...props } onClick={ copyToClipboard }>
+			{ showCopySuccess ? 'Copied!' : buttonText }
+		</Button>
+	);
 }

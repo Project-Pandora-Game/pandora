@@ -1,7 +1,8 @@
 import AsyncLock from 'async-lock';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, debounce } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
 import { AsyncSynchronized, LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT, PandoraAccessTokenGenerate, type Logger, type PandoraAccessToken, type PandoraAccessTokenData, type PandoraAccessTokenInfo, type PandoraAccessTokenScope, type PandoraAccessTokenScopeList } from 'pandora-common';
+import promClient from 'prom-client';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type AccountSecure from '../accountSecure.ts';
 
@@ -10,6 +11,14 @@ const GlobalTokenLock = new AsyncLock({
 });
 
 const AccessTokenSecretGenerator = nanoCustomAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+const tokenUseMetric = new promClient.Counter({
+	name: 'pandora_directory_access_token_usage',
+	help: 'Count of uses of access tokens by scope. Use requiring multiple scopes counts multiple times.',
+	labelNames: ['scope'],
+});
+
+const LAST_USE_UPDATE_DEBOUNCE = 5000; // Update "last use" value only at most every 5 seconds
 
 export class AccountSecureAccessTokenStore {
 	readonly #tokens: PandoraAccessTokenData[];
@@ -34,6 +43,16 @@ export class AccountSecureAccessTokenStore {
 		}));
 	}
 
+	private readonly _delayedUpdateDebounced = debounce(() => {
+		this.#accountSecure.updateDatabase()
+			.catch((err) => {
+				this._auditLog.warning('Failed to update lastUsed on token:', err);
+			});
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
+	}, LAST_USE_UPDATE_DEBOUNCE, { maxWait: LAST_USE_UPDATE_DEBOUNCE });
+
 	public verifyToken(token: PandoraAccessToken, requiredScopes: readonly PandoraAccessTokenScope[]): boolean {
 		const tokenData = this.#tokens.find((t) => t.token === token);
 
@@ -43,12 +62,20 @@ export class AccountSecureAccessTokenStore {
 
 		// If the token exists and is valid, update "lastUsed" (even if scopes don't match)
 		tokenData.lastUsed = now;
-		this.#accountSecure.updateDatabase()
-			.catch((err) => {
-				this._auditLog.warning('Failed to update lastUsed on token:', err);
-			});
+		this._delayedUpdateDebounced();
 
-		return requiredScopes.every((s) => tokenData.scopes.includes(s));
+		const result = requiredScopes.every((s) => tokenData.scopes.includes(s));
+		// Count metrics
+		if (result) {
+			if (requiredScopes.length > 0) {
+				for (const scope of requiredScopes) {
+					tokenUseMetric.inc({ scope }, 1);
+				}
+			} else {
+				tokenUseMetric.inc({ scope: 'basic' }, 1);
+			}
+		}
+		return result;
 	}
 
 	@AsyncSynchronized('object')
@@ -79,6 +106,9 @@ export class AccountSecureAccessTokenStore {
 		this.#tokens.push(cloneDeep(tokenData));
 
 		await this.#accountSecure.updateDatabase();
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
 
 		return tokenData;
 	}
@@ -100,6 +130,9 @@ export class AccountSecureAccessTokenStore {
 		tokenData.expires = expires;
 
 		await this.#accountSecure.updateDatabase();
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
 
 		return tokenData;
 	}
@@ -113,6 +146,9 @@ export class AccountSecureAccessTokenStore {
 		this.#tokens.splice(index, 1);
 
 		await this.#accountSecure.updateDatabase();
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
 
 		return true;
 	}
@@ -127,6 +163,9 @@ export class AccountSecureAccessTokenStore {
 		token.scopes = cloneDeep(scopes);
 
 		await this.#accountSecure.updateDatabase();
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
 
 		return true;
 	}

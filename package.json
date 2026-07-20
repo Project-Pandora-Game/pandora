@@ -22,7 +22,8 @@
 		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e && pnpm run -C pandora-tests coverage:report",
 		"coverage:collect": "node .hooks/coverage-collect.cjs",
 		"build": "pnpm -r --no-bail run build",
-		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
+		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev",
+		"pandora-cli": "pnpm --filter pandora-cli run pandora-cli"
 	},
 	"dependencies": {
 		"js-yaml": "4.3.0"

@@ -40,7 +40,7 @@ importers:
         version: 7.1.1(eslint@9.39.5(jiti@2.7.0)(supports-color@5.5.0))
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       nyc:
         specifier: 18.0.0
         version: 18.0.0(supports-color@5.5.0)
@@ -71,10 +71,41 @@ importers:
         version: 24.13.3
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
+      rimraf:
+        specifier: 6.1.3
+        version: 6.1.3
+      ts-jest:
+        specifier: 29.4.11
+        version: 29.4.11(@babel/core@7.29.7)(@jest/transform@30.4.1)(@jest/types@30.4.1)(babel-jest@30.4.1(@babel/core@7.29.7))(jest-util@30.4.1)(jest@30.4.2(@types/node@24.13.3))(typescript@6.0.3)
+      tslib:
+        specifier: 2.8.1
+        version: 2.8.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
+  pandora-cli:
+    dependencies:
+      pandora-api:
+        specifier: workspace:*
+        version: link:../pandora-api
+      pandora-common:
+        specifier: workspace:*
+        version: link:../pandora-common
+    devDependencies:
+      '@jest/globals':
+        specifier: 30.4.1
+        version: 30.4.1
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
+      jest:
+        specifier: 30.4.2
+        version: 30.4.2(@types/node@24.13.3)
       rimraf:
         specifier: 6.1.3
         version: 6.1.3
@@ -234,7 +265,7 @@ importers:
         version: 5.6.7(webpack@5.108.4)
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       jest-environment-jsdom:
         specifier: 30.4.1
         version: 30.4.1(supports-color@5.5.0)
@@ -331,7 +362,7 @@ importers:
         version: 24.13.3
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       rimraf:
         specifier: 6.1.3
         version: 6.1.3
@@ -449,7 +480,7 @@ importers:
         version: 0.38.49
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -540,7 +571,7 @@ importers:
         version: 0.38.49
       jest:
         specifier: 30.4.2
-        version: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+        version: 30.4.2(@types/node@24.13.3)
       nodemon:
         specifier: 3.1.14
         version: 3.1.14
@@ -7022,11 +7053,11 @@ snapshots:
       jest-util: 30.4.1
       slash: 3.0.0
 
-  '@jest/core@30.4.2(supports-color@5.5.0)':
+  '@jest/core@30.4.2':
     dependencies:
       '@jest/console': 30.4.1
       '@jest/pattern': 30.4.0
-      '@jest/reporters': 30.4.1(supports-color@5.5.0)
+      '@jest/reporters': 30.4.1
       '@jest/test-result': 30.4.1
       '@jest/transform': 30.4.1
       '@jest/types': 30.4.1
@@ -7114,7 +7145,7 @@ snapshots:
       '@types/node': 24.13.3
       jest-regex-util: 30.4.0
 
-  '@jest/reporters@30.4.1(supports-color@5.5.0)':
+  '@jest/reporters@30.4.1':
     dependencies:
       '@bcoe/v8-coverage': 0.2.3
       '@jest/console': 30.4.1
@@ -7131,7 +7162,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-instrument: 6.0.3
       istanbul-lib-report: 3.0.1
-      istanbul-lib-source-maps: 5.0.6(supports-color@5.5.0)
+      istanbul-lib-source-maps: 5.0.6
       istanbul-reports: 3.2.0
       jest-message-util: 30.4.1
       jest-util: 30.4.1
@@ -10430,7 +10461,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  istanbul-lib-source-maps@5.0.6(supports-color@5.5.0):
+  istanbul-lib-source-maps@5.0.6:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       debug: 4.4.3(supports-color@5.5.0)
@@ -10492,7 +10523,7 @@ snapshots:
 
   jest-cli@30.4.2(@types/node@24.13.3):
     dependencies:
-      '@jest/core': 30.4.2(supports-color@5.5.0)
+      '@jest/core': 30.4.2
       '@jest/test-result': 30.4.1
       '@jest/types': 30.4.1
       chalk: 4.1.2
@@ -10772,9 +10803,9 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jest@30.4.2(@types/node@24.13.3)(supports-color@5.5.0):
+  jest@30.4.2(@types/node@24.13.3):
     dependencies:
-      '@jest/core': 30.4.2(supports-color@5.5.0)
+      '@jest/core': 30.4.2
       '@jest/types': 30.4.1
       import-local: 3.2.0
       jest-cli: 30.4.2(@types/node@24.13.3)
@@ -12598,7 +12629,7 @@ snapshots:
       bs-logger: 0.2.6
       fast-json-stable-stringify: 2.1.0
       handlebars: 4.7.9
-      jest: 30.4.2(@types/node@24.13.3)(supports-color@5.5.0)
+      jest: 30.4.2(@types/node@24.13.3)
       json5: 2.2.3
       lodash.memoize: 4.1.2
       make-error: 1.3.6

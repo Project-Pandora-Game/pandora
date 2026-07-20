@@ -24,4 +24,5 @@ packages:
   - pandora-server-shard
   - pandora-client-web
   - pandora-api
+  - pandora-cli
   - pandora-tests

@@ -1,0 +1,17 @@
+{
+	"extends": "pandora-common/tsconfig.base.json",
+	"compilerOptions": {
+		"types": [
+			"@types/node",
+		],
+		"rootDir": "..",
+	},
+	"include": [
+		"../src/**/*.d.ts",
+		"./**/*"
+	],
+	"references": [
+		{ "path": "../../pandora-common" },
+		{ "path": "../../pandora-api" },
+	],
+}

@@ -2,7 +2,6 @@
 	"name": "pandora-server-directory",
 	"version": "0.1.0",
 	"private": true,
-	"repository": "github:Project-Pandora-Game/pandora-server-directory",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
 		"node": ">=24.x"

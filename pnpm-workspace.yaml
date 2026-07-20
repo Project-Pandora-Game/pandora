@@ -23,6 +23,7 @@ packages:
   - pandora-server-directory
   - pandora-server-shard
   - pandora-client-web
+  - pandora-api
   - pandora-tests
 minimumReleaseAgeExclude:
   # Renovate security update: react-router@8.3.0

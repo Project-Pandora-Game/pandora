@@ -25,7 +25,7 @@ async function collectCoverage() {
 	}
 	fs.mkdirSync(COVERAGE_OUTPUT);
 
-	for (const project of ['pandora-common', 'pandora-server-directory', 'pandora-server-shard', 'pandora-client-web', 'pandora-tests']) {
+	for (const project of ['pandora-common', 'pandora-server-directory', 'pandora-server-shard', 'pandora-client-web', 'pandora-api', 'pandora-tests']) {
 		try {
 			await copyFile(
 				path.resolve(process.cwd(), project, 'coverage/coverage-final.json'),

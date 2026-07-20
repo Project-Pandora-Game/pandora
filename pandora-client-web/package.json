@@ -2,7 +2,6 @@
 	"name": "pandora-client-web",
 	"version": "0.1.0",
 	"private": true,
-	"repository": "git@github.com:Project-Pandora-Game/pandora-client-web.git",
 	"license": "LGPL-3.0-or-later",
 	"type": "module",
 	"browserslist": [

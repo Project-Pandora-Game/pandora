@@ -48,6 +48,7 @@ export default {
 		await loadProjectConfig('pandora-server-directory'),
 		await loadProjectConfig('pandora-server-shard'),
 		await loadProjectConfig('pandora-client-web'),
+		await loadProjectConfig('pandora-api'),
 	],
 	coverageProvider: 'v8',
 	errorOnDeprecated: true,

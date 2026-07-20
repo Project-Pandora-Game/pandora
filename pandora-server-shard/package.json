@@ -2,7 +2,6 @@
 	"name": "pandora-server-shard",
 	"version": "0.1.0",
 	"private": true,
-	"repository": "github:Project-Pandora-Game/pandora-server-shard",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
 		"node": ">=24.x"

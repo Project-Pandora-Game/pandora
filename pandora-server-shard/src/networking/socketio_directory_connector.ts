@@ -1,21 +1,23 @@
 import {
 	AsyncSynchronized,
 	ConnectionBase,
-	DirectoryShardSchema,
 	GetLogger,
 	HTTP_HEADER_SHARD_SECRET,
 	HTTP_SOCKET_IO_SHARD_PATH,
-	IDirectoryShard,
-	IDirectoryShardArgument,
-	IDirectoryShardResult,
-	IDirectoryShardUpdate,
-	IShardDirectory,
 	MessageHandler,
 	PANDORA_VERSION_DATABASE,
-	ShardDirectorySchema,
 	ShardFeature,
 	SpaceIdSchema,
 } from 'pandora-common';
+import {
+	DirectoryShardSchema,
+	ShardDirectorySchema,
+	type IDirectoryShard,
+	type IDirectoryShardArgument,
+	type IDirectoryShardResult,
+	type IDirectoryShardUpdate,
+	type IShardDirectory,
+} from 'pandora-common/networking/api/directory_shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { connect, Socket } from 'socket.io-client';

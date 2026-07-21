@@ -1,5 +1,7 @@
 import { isEqual, last, uniq } from 'lodash-es';
-import { Assert, AsyncSynchronized, CharacterId, CloneDeepMutable, CreateManuallyResolvedPromise, GetLogger, IDirectoryShardInfo, IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, IShardTokenType, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction, type SpaceCharacterRemoval } from 'pandora-common';
+import { Assert, AsyncSynchronized, CharacterId, CloneDeepMutable, CreateManuallyResolvedPromise, GetLogger, IsNotNullable, Logger, ManuallyResolvedPromise, SpaceId, type ChatMessageDirectoryAction } from 'pandora-common';
+import type { IDirectoryShardInfo, IShardTokenType } from 'pandora-common/networking/api/directory_client';
+import type { IDirectoryShardUpdate, IShardCharacterDefinition, IShardDirectoryArgument, IShardDirectoryPromiseResult, IShardSpaceDefinition, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Character } from '../account/character.ts';

@@ -2,17 +2,11 @@ import { freeze, type Immutable } from 'immer';
 import {
 	Assert,
 	CheckPropertiesNotNullable,
-	ClientShardSchema,
 	GetLogger,
-	IClientShard,
 	IConnectionBase,
-	IDirectoryCharacterConnectionInfo,
-	IShardClient,
-	IShardClientChangeEvents,
 	KnownObject,
 	MessageHandler,
 	Service,
-	ShardClientSchema,
 	TypedEventEmitter,
 	type CharacterId,
 	type MessageHandlers,
@@ -20,6 +14,14 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import type { IDirectoryCharacterConnectionInfo } from 'pandora-common/networking/api/directory_client';
+import {
+	ClientShardSchema,
+	ShardClientSchema,
+	type IClientShard,
+	type IShardClient,
+	type IShardClientChangeEvents,
+} from 'pandora-common/networking/api/shard_client';
 import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Socket } from 'socket.io-client';
 import { ConfigServerIndex } from '../config/searchArgs.ts';

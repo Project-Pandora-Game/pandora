@@ -1,6 +1,7 @@
 import { verifyAuthenticationResponse, verifyRegistrationResponse, type AuthenticatorTransportFuture, type VerifiedAuthenticationResponse, type VerifiedRegistrationResponse } from '@simplewebauthn/server';
 import { createHash, randomBytes } from 'crypto';
-import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, GetLogger, type AccountId, type IAccountPasskeyCredential } from 'pandora-common';
+import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, GetLogger, type AccountId } from 'pandora-common';
+import type { IAccountPasskeyCredential } from 'pandora-common/networking/api/directory_client';
 import { ENV } from '../config.ts';
 
 const { PASSKEY_ALLOWED_ORIGINS, PASSKEY_RP_ID } = ENV;

@@ -1,12 +1,12 @@
 import * as z from 'zod';
-import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
-import { CharacterIdSchema } from '../character/index.ts';
-import { ChatMessageDirectoryActionSchema } from '../chat/chat.ts';
-import { SpaceIdSchema, SpaceLeaveReasonSchema } from '../space/space.ts';
-import { SpaceDataSchema } from '../space/spaceData.ts';
-import { SpaceSwitchCharacterStatusPermissionSchema, SpaceSwitchStatusSchema } from '../space/spaceSwitch.ts';
-import { Satisfies } from '../utility/misc.ts';
-import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
+import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../../../account/index.ts';
+import { CharacterIdSchema } from '../../../character/index.ts';
+import { ChatMessageDirectoryActionSchema } from '../../../chat/chat.ts';
+import { SpaceIdSchema, SpaceLeaveReasonSchema } from '../../../space/space.ts';
+import { SpaceDataSchema } from '../../../space/spaceData.ts';
+import { SpaceSwitchCharacterStatusPermissionSchema, SpaceSwitchStatusSchema } from '../../../space/spaceSwitch.ts';
+import { Satisfies } from '../../../utility/misc.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),

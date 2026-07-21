@@ -2,26 +2,28 @@ import { freeze, type Immutable } from 'immer';
 import {
 	Assert,
 	CheckPropertiesNotNullable,
-	ClientDirectorySchema,
 	CreateDefaultDirectoryStatus,
-	DirectoryClientSchema,
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
-	IClientDirectory,
-	IClientDirectoryAuthMessage,
 	IConnectionBase,
-	IDirectoryClient,
-	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	KnownObject,
 	MessageHandler,
 	Service,
-	type IDirectoryCharacterAssignmentInfo,
 	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import {
+	ClientDirectorySchema,
+	DirectoryClientSchema,
+	type IClientDirectory,
+	type IClientDirectoryAuthMessage,
+	type IDirectoryCharacterAssignmentInfo,
+	type IDirectoryClient,
+	type IDirectoryClientChangeEvents,
+} from 'pandora-common/networking/api/directory_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/networking/helpers';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';

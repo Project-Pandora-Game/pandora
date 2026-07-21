@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { createHash, generateKeyPairSync, sign } from 'crypto';
-import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
+import { MockConnection, MockServerSocket } from 'pandora-common';
+import type { IClientDirectory, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
 import { AccountToken } from '../../src/account/accountSecure.ts';
 import { AccountTokenReason } from '../../src/database/databaseStructure.ts';
 import { PrehashPassword } from '../../src/database/mockDb.ts';

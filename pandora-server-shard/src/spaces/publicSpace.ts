@@ -6,9 +6,7 @@ import {
 	Assert,
 	AssertNever,
 	AsyncSynchronized,
-	GameStateUpdate,
 	GetLogger,
-	IShardSpaceDefinition,
 	KnownObject,
 	SPACE_SHARD_UPDATEABLE_PROPERTIES,
 	SpaceData,
@@ -19,6 +17,8 @@ import {
 	type SpaceSwitchShardStatusUpdate,
 	type SpaceSwitchStatus,
 } from 'pandora-common';
+import type { IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
+import type { GameStateUpdate } from 'pandora-common/networking/api/shard_client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
 import { Space } from './space.ts';

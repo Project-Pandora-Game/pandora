@@ -1,5 +1,6 @@
 import type { Immutable } from 'immer';
-import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type AssetFrameworkGlobalStateContainer, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type IClientShardPromiseResult, type SpaceCharacterModifierEffectData } from 'pandora-common';
+import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type AssetFrameworkGlobalStateContainer, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type SpaceCharacterModifierEffectData } from 'pandora-common';
+import type { IClientShardPromiseResult } from 'pandora-common/networking/api/shard_client';
 import type { Character } from '../character/character.ts';
 import type { PlayerCharacter } from '../character/player.ts';
 import { ChatSendError, type GameState, type GameStateEvents, type ISavedMessage } from '../components/gameContext/gameStateContextProvider.tsx';

@@ -1,4 +1,5 @@
-import type { IDirectoryShard, IIncomingConnection } from 'pandora-common';
+import type { IIncomingConnection } from 'pandora-common';
+import type { IDirectoryShard } from 'pandora-common/networking/api/directory_shard';
 import type { Shard } from '../shard/shard.ts';
 import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
 

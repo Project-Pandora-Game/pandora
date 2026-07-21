@@ -7,10 +7,10 @@ import {
 	EMPTY,
 	FormatTimeInterval,
 	GetLogger,
-	IDirectoryAccountInfo,
 	IsAuthorized,
 	TimeSpanMs,
 } from 'pandora-common';
+import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { ReactElement, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';

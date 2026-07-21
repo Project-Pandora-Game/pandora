@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { createHash, createPublicKey, generateKeyPairSync, sign } from 'crypto';
-import type { IAccountPasskeyCredential } from 'pandora-common';
+import type { IAccountPasskeyCredential } from 'pandora-common/networking/api/directory_client';
 import {
 	Base64UrlEncode,
 	CreatePasskeyChallenge,

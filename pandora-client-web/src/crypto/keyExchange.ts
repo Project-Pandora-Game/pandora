@@ -1,4 +1,5 @@
-import { Assert, type IAccountCryptoKey } from 'pandora-common';
+import { Assert } from 'pandora-common';
+import type { IAccountCryptoKey } from 'pandora-common/networking/api/directory_client';
 import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers.ts';
 import { SymmetricEncryption } from './symmetric.ts';
 

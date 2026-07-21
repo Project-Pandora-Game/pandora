@@ -13,7 +13,6 @@ import {
 	type CharacterRestrictionsManager,
 	type CurrentSpaceInfo,
 	type ICharacterRoomData,
-	type IDirectoryAccountInfo,
 	type Item,
 	type ItemContainerPath,
 	type ItemId,
@@ -24,6 +23,7 @@ import {
 	type SpaceFeature,
 	type SpaceRole,
 } from 'pandora-common';
+import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useCharacterDataOptional, type Character } from '../../character/character.ts';
 import { type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';

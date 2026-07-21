@@ -1,5 +1,6 @@
 import type { IncomingHttpHeaders } from 'http';
-import { Assert, AssertNotNullable, CharacterId, ClientShardSchema, CloneDeepMutable, GetLogger, IClientShard, IncomingConnection, IncomingSocket, IServerSocket, IShardClient, ShardClientSchema } from 'pandora-common';
+import { Assert, AssertNotNullable, CharacterId, CloneDeepMutable, GetLogger, IncomingConnection, IncomingSocket, IServerSocket } from 'pandora-common';
+import { ClientShardSchema, ShardClientSchema, type IClientShard, type IShardClient } from 'pandora-common/networking/api/shard_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { assetManager } from '../assets/assetManager.ts';
 import { Character } from '../character/character.ts';

@@ -1,6 +1,7 @@
 import AsyncLock from 'async-lock';
 import { isEqual } from 'lodash-es';
-import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce, type AccountContactsInitData, type AccountContactsUpdateData, type AccountOnlineStatus } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IsNotNullable, Logger, PromiseOnce, type AccountContactsInitData, type AccountContactsUpdateData, type AccountOnlineStatus } from 'pandora-common';
+import type { IDirectoryClientArgument } from 'pandora-common/networking/api/directory_client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure.ts';
 import type { ClientConnection } from '../networking/connection_client.ts';

@@ -1,6 +1,32 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_SETTINGS_DEFAULT, CharacterId, CharacterIdSchema, CompareCharacterIds, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeSchema } from 'pandora-common';
+import {
+	ASSET_PREFERENCES_PERMISSIONS,
+	AssertNever,
+	AssetPreferenceType,
+	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	CHARACTER_SETTINGS_DEFAULT,
+	CharacterId,
+	CharacterIdSchema,
+	CompareCharacterIds,
+	EMPTY,
+	GetLogger,
+	IInteractionConfig,
+	INTERACTION_CONFIG,
+	INTERACTION_IDS,
+	InteractionId,
+	KnownObject,
+	MakePermissionConfigFromDefault,
+	PERMISSION_MAX_CHARACTER_OVERRIDES,
+	PermissionConfig,
+	PermissionConfigChangeSelector,
+	PermissionConfigChangeType,
+	PermissionGroup,
+	PermissionSetup,
+	PermissionType,
+	PermissionTypeSchema,
+} from 'pandora-common';
+import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';

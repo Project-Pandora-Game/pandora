@@ -2,8 +2,8 @@ import type { Immutable } from 'immer';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	type AccountSettings,
-	type IDirectoryAccountInfo,
 } from 'pandora-common';
+import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { useMemo } from 'react';
 import { useNullableObservable, useObservable } from '../../observable.ts';
 import { useService, useServiceOptional } from '../serviceProvider.tsx';

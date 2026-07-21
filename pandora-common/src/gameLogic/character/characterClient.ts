@@ -1,12 +1,31 @@
 import type { Immutable } from 'immer';
+import * as z from 'zod';
+import { AccountOnlineStatusSchema, type AccountOnlineStatus } from '../../account/contacts.ts';
+import { AssetPreferencesPublicSchema, type AssetPreferencesPublic } from '../../character/assetPreferences.ts';
+import { CharacterPublicDataSchema, type ICharacterPublicData } from '../../character/characterData.ts';
+import { CharacterPublicSettingsSchema, type CharacterPublicSettings } from '../../character/characterSettings.ts';
 import type { Logger } from '../../logging/logger.ts';
-import type { ICharacterRoomData } from '../../networking/shard_client.ts';
 import { AssertNever } from '../../utility/misc.ts';
+import type { ZodObjectShape } from '../../validation.ts';
 import { AssetPreferencesSubsystemClient } from '../assetPreferences/index.ts';
 import { CharacterModifiersSubsystemClient } from '../characterModifiers/characterModifiersSubsystemClient.ts';
 import { InteractionSubsystemClient } from '../interactions/interactionSubsystemClient.ts';
 import { GameLogicPermissionClient, IPermissionProvider, PermissionGroup } from '../permissions/index.ts';
 import { GameLogicCharacter } from './character.ts';
+
+export interface ICharacterRoomData extends ICharacterPublicData {
+	accountDisplayName: string;
+	assetPreferences: AssetPreferencesPublic;
+	publicSettings: Partial<CharacterPublicSettings>;
+	onlineStatus: AccountOnlineStatus;
+}
+export const CharacterRoomDataSchema: z.ZodObject<ZodObjectShape<ICharacterRoomData>> = CharacterPublicDataSchema.extend({
+	accountDisplayName: z.string(),
+	assetPreferences: AssetPreferencesPublicSchema,
+	publicSettings: CharacterPublicSettingsSchema.partial(),
+	onlineStatus: AccountOnlineStatusSchema,
+});
+export const CharacterRoomDataDeltaSchema: z.ZodType<Partial<ICharacterRoomData>> = CharacterRoomDataSchema.partial();
 
 export class GameLogicCharacterClient extends GameLogicCharacter {
 	public readonly _dataGetter: () => Immutable<ICharacterRoomData>;

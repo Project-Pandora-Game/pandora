@@ -1,6 +1,7 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, IClientDirectoryArgument, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus, type IClientDirectoryNormalResult } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
+import type { IClientDirectoryArgument, IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { toast } from 'react-toastify';
 import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';

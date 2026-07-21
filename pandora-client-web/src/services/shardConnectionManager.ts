@@ -7,14 +7,13 @@ import {
 	Service,
 	ServiceManager,
 	type CharacterId,
-	type IDirectoryCharacterAssignmentInfo,
-	type IDirectoryCharacterConnectionInfo,
 	type IService,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProvider,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import type { IDirectoryCharacterAssignmentInfo, IDirectoryCharacterConnectionInfo } from 'pandora-common/networking/api/directory_client';
 import { SocketIOConnector } from '../networking/socketio_connector.ts';
 import { Observable, type ReadonlyObservable } from '../observable.ts';
 import type { ClientGameLogicServices, ClientGameLogicServicesConnectionInfo, ClientGameLogicServicesDependencies } from './clientGameLogicServices.ts';

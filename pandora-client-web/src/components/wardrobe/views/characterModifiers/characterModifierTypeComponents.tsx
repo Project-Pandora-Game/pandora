@@ -7,9 +7,9 @@ import {
 	type CharacterModifierId,
 	type CharacterModifierTemplate,
 	type CharacterModifierType,
-	type IClientShardNormalResult,
 	type PermissionGroup,
 } from 'pandora-common';
+import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import type { Character } from '../../../../character/character.ts';

@@ -1,13 +1,13 @@
 import * as z from 'zod';
-import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../character/characterData.ts';
-import { CharacterIdSchema } from '../character/characterTypes.ts';
-import { ShardFeatureSchema, SpaceIdSchema } from '../space/space.ts';
-import { SpaceDataShardUpdateSchema, type SpaceData } from '../space/spaceData.ts';
-import { SpaceSwitchShardStatusUpdateSchema } from '../space/spaceSwitch.ts';
-import { Satisfies } from '../utility/misc.ts';
-import { ZodCast } from '../validation.ts';
+import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../../../character/characterData.ts';
+import { CharacterIdSchema } from '../../../character/characterTypes.ts';
+import { ShardFeatureSchema, SpaceIdSchema } from '../../../space/space.ts';
+import { SpaceDataShardUpdateSchema, type SpaceData } from '../../../space/spaceData.ts';
+import { SpaceSwitchShardStatusUpdateSchema } from '../../../space/spaceSwitch.ts';
+import { Satisfies } from '../../../utility/misc.ts';
+import { ZodCast } from '../../../validation.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard.ts';
-import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardDirectorySchema = {
 	shardRegister: {

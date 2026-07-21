@@ -19,10 +19,6 @@ import {
 	FinishActionAttempt,
 	GameLogicPermissionServer,
 	GetLogger,
-	IClientShard,
-	IClientShardArgument,
-	IClientShardNormalResult,
-	IClientShardPromiseResult,
 	IMessageHandler,
 	MessageHandler,
 	NaturalListJoin,
@@ -35,6 +31,12 @@ import {
 	type CharacterRestrictionsManager,
 	type GameLogicModifierInstanceServer,
 } from 'pandora-common';
+import type {
+	IClientShard,
+	IClientShardArgument,
+	IClientShardNormalResult,
+	IClientShardPromiseResult,
+} from 'pandora-common/networking/api/shard_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import { Character } from '../character/character.ts';

@@ -1,16 +1,17 @@
 import classNames from 'classnames';
 import { noop } from 'lodash-es';
-import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult, type CharacterId } from 'pandora-common';
+import { CharacterSelfInfo, EMPTY, GetLogger, type CharacterId } from 'pandora-common';
+import type { IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
+import pandoraLogo from '../../assets/icons/pandora.svg';
 import profileIcon from '../../assets/icons/profile.svg';
 import { useCreateNewCharacter } from '../../networking/account_manager.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
-import pandoraLogo from '../../assets/icons/pandora.svg';
 import './characterSelect.scss';
 
 /**

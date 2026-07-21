@@ -7,7 +7,6 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	GetLogger,
-	IDirectoryCharacterAssignmentInfo,
 	Logger,
 	NOT_NARROWING_FALSE,
 	NOT_NARROWING_TRUE,
@@ -17,6 +16,7 @@ import {
 	type ICharacterDataDirectoryUpdate,
 	type ManagementAccountInfoCharacter,
 } from 'pandora-common';
+import type { IDirectoryCharacterAssignmentInfo } from 'pandora-common/networking/api/directory_client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
 import type { ClientConnection } from '../networking/connection_client.ts';

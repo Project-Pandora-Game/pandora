@@ -1,5 +1,6 @@
 import { waitFor } from '@testing-library/react';
-import { Assert, type IDirectoryAccountInfo, type IAccountCryptoKey, type ServiceManager } from 'pandora-common';
+import { Assert, type ServiceManager } from 'pandora-common';
+import type { IAccountCryptoKey, IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { KeyExchange } from '../../src/crypto/keyExchange.ts';
 import { DirectoryConnector } from '../../src/networking/directoryConnector.ts';
 import type { PasskeyDirectMessageUnlock } from '../../src/services/accountLogic/accountManager.ts';

@@ -1,4 +1,5 @@
-import { Assert, IDirectoryShardInfo, IShardTokenType } from 'pandora-common';
+import { Assert } from 'pandora-common';
+import type { IDirectoryShardInfo, IShardTokenType } from 'pandora-common/networking/api/directory_client';
 import promClient from 'prom-client';
 import { Shard } from './shard.ts';
 import { IConnectedTokenInfo } from './shardTokenStore.ts';

@@ -1,4 +1,5 @@
-import { EMPTY, GetLogger, type IClientDirectoryPromiseResult } from 'pandora-common';
+import { EMPTY, GetLogger } from 'pandora-common';
+import type { IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider.tsx';

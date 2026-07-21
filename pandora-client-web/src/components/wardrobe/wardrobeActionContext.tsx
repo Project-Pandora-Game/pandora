@@ -7,17 +7,16 @@ import {
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	GetLogger,
-	IClientShardResult,
 	RedactSensitiveActionData,
 	type AppearanceActionData,
 	type AppearanceActionProblem,
 	type AppearanceActionProcessingResult,
 	type CharacterActionAttempt,
 	type CharacterId,
-	type IClientShardNormalResult,
 	type Nullable,
 	type PermissionGroup,
 } from 'pandora-common';
+import type { IClientShardNormalResult, IClientShardResult } from 'pandora-common/networking/api/shard_client';
 import { createContext, useCallback, useContext, useMemo, useRef, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.tsx';

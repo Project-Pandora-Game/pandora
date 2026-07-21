@@ -1,8 +1,8 @@
 import { noop } from 'lodash-es';
 import {
 	GetLogger,
-	IDirectoryClientChangeEvents,
 } from 'pandora-common';
+import type { IDirectoryClientChangeEvents } from 'pandora-common/networking/api/directory_client';
 import React, { useEffect, useRef } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { useErrorHandler } from '../../common/useErrorHandler.ts';

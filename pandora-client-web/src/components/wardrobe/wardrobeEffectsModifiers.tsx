@@ -10,10 +10,9 @@ import {
 	type CharacterModifierEffectData,
 	type CharacterModifierId,
 	type CharacterModifierType,
-	type IClientShardNormalResult,
-	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
+import type { IClientShardNormalResult, IShardClientChangeEvents } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { Character, useCharacterRestrictionManager } from '../../character/character.ts';

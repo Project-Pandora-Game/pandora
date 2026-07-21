@@ -1,5 +1,6 @@
 import type { Server as HttpServer, IncomingMessage } from 'http';
-import { GetLogger, IIncomingConnection, IsCharacterId, IServerSocket, IShardClient } from 'pandora-common';
+import { GetLogger, IIncomingConnection, IsCharacterId, IServerSocket } from 'pandora-common';
+import type { IShardClient } from 'pandora-common/networking/api/shard_client';
 import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/networking/helpers';
 import type { Socket } from 'socket.io';
 import { CharacterManager } from '../character/characterManager.ts';

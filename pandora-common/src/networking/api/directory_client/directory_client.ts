@@ -1,12 +1,12 @@
 import * as z from 'zod';
-import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
-import type { CharacterId } from '../character/index.ts';
-import type { IDirectoryStatus } from '../directory/status.ts';
-import { LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_IV_LENGTH, LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } from '../inputLimits.ts';
-import type { ShardFeature } from '../space/space.ts';
-import { Satisfies } from '../utility/misc.ts';
-import { ZodBase64Regex, ZodCast, type HexColorString } from '../validation.ts';
-import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
+import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../../../account/index.ts';
+import type { CharacterId } from '../../../character/index.ts';
+import type { IDirectoryStatus } from '../../../directory/status.ts';
+import { LIMIT_ACCOUNT_CRYPTO_ENCRYPTED_PRIVATE_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_IV_LENGTH, LIMIT_ACCOUNT_CRYPTO_PUBLIC_KEY_LENGTH, LIMIT_ACCOUNT_CRYPTO_SALT_LENGTH, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH } from '../../../inputLimits.ts';
+import type { ShardFeature } from '../../../space/space.ts';
+import { Satisfies } from '../../../utility/misc.ts';
+import { ZodBase64Regex, ZodCast, type HexColorString } from '../../../validation.ts';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
 const ZodBase64UrlRegex = /^[A-Za-z0-9_-]*$/;
 

@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import type { IDirectoryShardUpdate, IShardCharacterDefinition, IShardSpaceDefinition, SpaceId } from 'pandora-common';
+import type { SpaceId } from 'pandora-common';
+import type { IDirectoryShardUpdate, IShardCharacterDefinition, IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
 import type { Character } from '../src/character/character.ts';
 import { CharacterManager } from '../src/character/characterManager.ts';
 import { SocketIODirectoryConnector } from '../src/networking/socketio_directory_connector.ts';

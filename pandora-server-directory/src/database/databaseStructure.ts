@@ -1,9 +1,7 @@
 import {
-	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
 	AccountManagementDisableInfoSchema,
-	AccountPasskeyCredentialSchema,
 	AccountSettingsCooldownsSchema,
 	AccountSettingsSchema,
 	ArrayToRecordKeys,
@@ -11,9 +9,6 @@ import {
 	AssetFrameworkPosePresetWithIdSchema,
 	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
-	IBetaKeyInfo,
-	IDirectoryDirectMessageInfo,
-	IShardTokenInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
 	PandoraAccessTokenDataSchema,
 	ZodArrayWithInvalidDrop,
@@ -21,6 +16,13 @@ import {
 	ZodTemplateString,
 	ZodTruncate,
 } from 'pandora-common';
+import {
+	AccountCryptoKeySchema,
+	AccountPasskeyCredentialSchema,
+	type IBetaKeyInfo,
+	type IDirectoryDirectMessageInfo,
+	type IShardTokenInfo,
+} from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
 import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
 

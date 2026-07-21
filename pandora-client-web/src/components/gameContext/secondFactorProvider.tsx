@@ -1,9 +1,5 @@
-import {
-	AssertNever,
-	SecondFactorData,
-	SecondFactorResponse,
-	SecondFactorType,
-} from 'pandora-common';
+import { AssertNever } from 'pandora-common';
+import type { SecondFactorData, SecondFactorResponse, SecondFactorType } from 'pandora-common/networking/api/directory_client';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useService } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';

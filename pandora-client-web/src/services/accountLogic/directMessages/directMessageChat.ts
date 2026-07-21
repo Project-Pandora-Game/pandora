@@ -7,10 +7,9 @@ import {
 	type AccountId,
 	type HexColorString,
 	type IChatSegment,
-	type IDirectoryDirectMessage,
-	type IDirectoryDirectMessageInfo,
 	type Logger,
 } from 'pandora-common';
+import type { IDirectoryDirectMessage, IDirectoryDirectMessageInfo } from 'pandora-common/networking/api/directory_client';
 import { HashSHA256Base64 } from '../../../crypto/helpers.ts';
 import { SymmetricEncryption } from '../../../crypto/symmetric.ts';
 import { Observable, type ReadonlyObservable } from '../../../observable.ts';

@@ -22,11 +22,9 @@ import {
 	CloneDeepMutable,
 	CreateActionLogFromGameLogicAction,
 	EMPTY_ARRAY,
-	GameStateUpdate,
 	IChatMessageActionTargetCharacter,
 	IChatSegment,
 	IClientMessage,
-	IShardClient,
 	IsNotNullable,
 	Logger,
 	ServerRoom,
@@ -34,7 +32,6 @@ import {
 	SpaceClientInfo,
 	SpaceDirectoryConfig,
 	SpaceId,
-	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
 	type ChatMessage,
 	type ChatMessageAction,
@@ -43,13 +40,13 @@ import {
 	type ChatMessageDirectoryAction,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
-	type IClientShardNormalResult,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
 	type SpaceStateBundle,
 	type SpaceSwitchStatus,
 } from 'pandora-common';
+import type { GameStateUpdate, IClientShardNormalResult, IShardClient, SpaceLoadData } from 'pandora-common/networking/api/shard_client';
 import { assetManager } from '../assets/assetManager.ts';
 import type { Character } from '../character/character.ts';
 

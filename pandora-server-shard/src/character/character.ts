@@ -1,3 +1,6 @@
+import { Immutable } from 'immer';
+import { diffString } from 'json-diff';
+import { clone, cloneDeep, isEqual, pick } from 'lodash-es';
 import {
 	AccountRole,
 	AppearanceActionContext,
@@ -25,9 +28,6 @@ import {
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
 	ICharacterRoomData,
-	IShardAccountDefinition,
-	IShardCharacterDefinition,
-	IShardClientChangeEvents,
 	IsAuthorized,
 	KnownObject,
 	Logger,
@@ -43,6 +43,8 @@ import {
 	type ICharacterDataShard,
 	type SpaceSwitchCharacterStatus,
 } from 'pandora-common';
+import type { IShardAccountDefinition, IShardCharacterDefinition } from 'pandora-common/networking/api/directory_shard';
+import type { IShardClientChangeEvents } from 'pandora-common/networking/api/shard_client';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ClientConnection } from '../networking/connection_client.ts';
@@ -50,10 +52,6 @@ import { DirectoryConnector } from '../networking/socketio_directory_connector.t
 import { PersonalSpace } from '../spaces/personalSpace.ts';
 import type { Space } from '../spaces/space.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
-
-import { Immutable } from 'immer';
-import { diffString } from 'json-diff';
-import { clone, cloneDeep, isEqual, pick } from 'lodash-es';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;

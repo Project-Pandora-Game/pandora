@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { Assert, AssertNever, type IDirectoryShardArgument, type IDirectoryShardUpdate, type SpaceDirectoryConfig } from 'pandora-common';
+import { Assert, AssertNever, type SpaceDirectoryConfig } from 'pandora-common';
+import type { IDirectoryShardArgument, IDirectoryShardUpdate } from 'pandora-common/networking/api/directory_shard';
 import type { Character } from '../../src/account/character.ts';
 import { GetDatabase } from '../../src/database/databaseProvider.ts';
 import { ConnectionManagerClient } from '../../src/networking/manager_client.ts';

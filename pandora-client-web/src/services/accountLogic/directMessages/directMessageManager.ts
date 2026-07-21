@@ -1,20 +1,22 @@
 import {
 	AccountId,
-	AccountCryptoKeySchema,
 	Assert,
 	AsyncSynchronized,
 	EMPTY,
 	GetLogger,
-	IAccountCryptoKey,
-	IDirectoryClientArgument,
-	IDirectoryDirectMessage,
 	Service,
-	type IDirectoryAccountInfo,
 	type Logger,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import {
+	AccountCryptoKeySchema,
+	type IAccountCryptoKey,
+	type IDirectoryAccountInfo,
+	type IDirectoryClientArgument,
+	type IDirectoryDirectMessage,
+} from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { KeyExchange } from '../../../crypto/keyExchange.ts';

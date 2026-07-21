@@ -1,6 +1,7 @@
 import { cloneDeep, debounce, omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { ServerService, type IBaseTokenInfo, type Logger } from 'pandora-common';
+import { ServerService, type Logger } from 'pandora-common';
+import type { IBaseTokenInfo } from 'pandora-common/networking/api/directory_client';
 import type { ActorIdentity } from '../account/actorIdentity.ts';
 
 const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24 * 7; // 1 week

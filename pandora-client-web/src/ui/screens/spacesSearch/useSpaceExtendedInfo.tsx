@@ -1,5 +1,6 @@
 import { noop } from 'lodash-es';
-import type { CharacterId, SpaceExtendedInfoResponse, SpaceId, SpaceInviteId } from 'pandora-common';
+import type { CharacterId, SpaceId, SpaceInviteId } from 'pandora-common';
+import type { SpaceExtendedInfoResponse } from 'pandora-common/networking/api/directory_client';
 import { useCallback, useState } from 'react';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 

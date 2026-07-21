@@ -1,4 +1,5 @@
-import { AccountId, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
+import { AccountId, IAccountContact, IAccountFriendStatus, TypedEventEmitter } from 'pandora-common';
+import type { IDirectoryClientArgument } from 'pandora-common/networking/api/directory_client';
 import { useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { Observable, useObservable } from '../../observable.ts';

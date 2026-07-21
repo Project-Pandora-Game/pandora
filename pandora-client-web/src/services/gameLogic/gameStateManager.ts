@@ -2,11 +2,11 @@ import {
 	Assert,
 	Service,
 	type IService,
-	type IShardClientArgument,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import type { IShardClientArgument } from 'pandora-common/networking/api/shard_client';
 import { LoadAssetDefinitions } from '../../assets/assetManager.tsx';
 import { GameState, GameStateImpl } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';

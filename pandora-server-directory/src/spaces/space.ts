@@ -1,7 +1,9 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type IClientDirectoryPromiseResult, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceCharacterRemoval, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
+import type { IShardDirectoryArgument, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';

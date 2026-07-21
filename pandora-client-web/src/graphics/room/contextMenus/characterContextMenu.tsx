@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { Immutable, produce } from 'immer';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterHideSettingSchema, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterHideSettingSchema, ICharacterRoomData, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
+import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';

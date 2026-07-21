@@ -1,32 +1,21 @@
 import * as z from 'zod';
-import type { AccountOnlineStatus } from '../account/contacts.ts';
-import { AssetsDefinitionFileSchema } from '../assets/definitions.ts';
-import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
-import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
-import type { CharacterPublicSettings } from '../character/characterSettings.ts';
-import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
-import { ChatCharacterStatusSchema, ChatMessageSchema } from '../chat/chat.ts';
-import { AppearanceActionSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema } from '../gameLogic/index.ts';
-import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
-import { SpaceIdSchema } from '../space/space.ts';
-import { SpaceClientInfoSchema } from '../space/spaceData.ts';
-import { Satisfies } from '../utility/misc.ts';
-import { ZodCast } from '../validation.ts';
-import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
-
-export type ICharacterRoomData = ICharacterPublicData & {
-	accountDisplayName: string;
-	assetPreferences: AssetPreferencesPublic;
-	publicSettings: Partial<CharacterPublicSettings>;
-	onlineStatus: AccountOnlineStatus;
-};
-export const ICharacterRoomDataSchema: z.ZodType<ICharacterRoomData> = ZodCast<ICharacterRoomData>();
-export const ICharacterRoomDataDeltaSchema: z.ZodType<Partial<ICharacterRoomData>> = ZodCast<Partial<ICharacterRoomData>>();
+import { AssetsDefinitionFileSchema } from '../../../assets/definitions.ts';
+import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../../../assets/state/globalState.ts';
+import type { ICharacterPrivateData } from '../../../character/characterData.ts';
+import { CharacterIdSchema, CharacterPrivateDataSchema } from '../../../character/index.ts';
+import { ChatCharacterStatusSchema, ChatMessageSchema } from '../../../chat/chat.ts';
+import { AppearanceActionSchema, CharacterRoomDataDeltaSchema, CharacterRoomDataSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema, type ICharacterRoomData } from '../../../gameLogic/index.ts';
+import { PermissionConfigSchema, PermissionSetupSchema } from '../../../gameLogic/permissions/permissionData.ts';
+import { SpaceIdSchema } from '../../../space/space.ts';
+import { SpaceClientInfoSchema } from '../../../space/spaceData.ts';
+import { Satisfies } from '../../../utility/misc.ts';
+import { ZodCast } from '../../../validation.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
 export const SpaceLoadDataSchema = z.object({
 	id: SpaceIdSchema.nullable(),
 	info: SpaceClientInfoSchema,
-	characters: ICharacterRoomDataSchema.array(),
+	characters: CharacterRoomDataSchema.array(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataSchema,
 	chatStatus: z.partialRecord(CharacterIdSchema, ChatCharacterStatusSchema.optional()),
 });
@@ -36,8 +25,8 @@ export const GameStateUpdateSchema = z.object({
 	globalState: AssetFrameworkGlobalStateClientDeltaBundleSchema.optional(),
 	info: SpaceClientInfoSchema.partial().optional(),
 	leave: CharacterIdSchema.optional(),
-	join: ICharacterRoomDataSchema.optional(),
-	characters: z.record(CharacterIdSchema, ICharacterRoomDataDeltaSchema).optional(),
+	join: CharacterRoomDataSchema.optional(),
+	characters: z.record(CharacterIdSchema, CharacterRoomDataDeltaSchema).optional(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataUpdateSchema.optional(),
 });
 export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;

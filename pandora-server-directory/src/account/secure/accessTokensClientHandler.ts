@@ -1,10 +1,8 @@
 import {
 	BadMessageError,
-	type IClientDirectory,
-	type IClientDirectoryNormalResult,
-	type IClientDirectoryPromiseResult,
 	type MessageHandlers,
 } from 'pandora-common';
+import type { IClientDirectory, IClientDirectoryNormalResult, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
 import type { ClientConnection } from '../../networking/connection_client.ts';
 
 export const AccessTokensClientHandler = {

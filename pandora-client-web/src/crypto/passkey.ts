@@ -1,4 +1,5 @@
-import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, type IClientDirectoryNormalResult } from 'pandora-common';
+import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS } from 'pandora-common';
+import type { IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { ArrayToBase64, ArrayToBase64Url, Base64UrlToArray } from './helpers.ts';
 
 type PasskeyAssertionStart = {

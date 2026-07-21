@@ -13,11 +13,11 @@ import {
 	LIMIT_CHARACTER_MODIFIER_NAME_LENGTH,
 	MakeCharacterModifierTemplateFromClientData,
 	type CharacterModifierConfigurationChange,
-	type IClientShardNormalResult,
 	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
 	type Promisable,
 } from 'pandora-common';
+import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import crossIcon from '../../../../assets/icons/cross.svg';

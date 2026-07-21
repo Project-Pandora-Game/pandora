@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
+import { GetLogger, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
+import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import React, { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useObservable } from '../../observable.ts';

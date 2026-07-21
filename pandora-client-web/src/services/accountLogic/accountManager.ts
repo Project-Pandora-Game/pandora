@@ -5,19 +5,21 @@ import {
 	CharacterIdSchema,
 	EMPTY,
 	GetLogger,
-	IAccountCryptoKey,
-	IDirectoryAccountInfo,
 	Service,
 	type CharacterId,
-	type IClientDirectoryArgument,
-	type IDirectoryCharacterAssignmentInfo,
 	type IService,
 	type Satisfies,
-	type SecondFactorData,
-	type SecondFactorResponse,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import type {
+	IAccountCryptoKey,
+	IClientDirectoryArgument,
+	IDirectoryAccountInfo,
+	IDirectoryCharacterAssignmentInfo,
+	SecondFactorData,
+	SecondFactorResponse,
+} from 'pandora-common/networking/api/directory_client';
 import { toast } from 'react-toastify';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';

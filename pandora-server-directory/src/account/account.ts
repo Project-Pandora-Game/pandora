@@ -3,16 +3,12 @@ import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	ACCOUNT_SETTINGS_LIMITED_LIMITS,
 	AccountId,
-	AccountPublicInfo,
 	Assert,
 	AssetFrameworkOutfitWithId,
 	AsyncSynchronized,
 	CharacterId,
 	CharacterSelfInfo,
 	GetLogger,
-	IDirectoryAccountInfo,
-	IDirectoryClient,
-	IShardAccountDefinition,
 	KnownObject,
 	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_CHARACTER_COUNT,
@@ -28,6 +24,8 @@ import {
 	type Logger,
 	type ManagementAccountInfo,
 } from 'pandora-common';
+import type { AccountPublicInfo, IDirectoryAccountInfo, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
+import type { IShardAccountDefinition } from 'pandora-common/networking/api/directory_shard';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
 import type { ClientConnection } from '../networking/connection_client.ts';

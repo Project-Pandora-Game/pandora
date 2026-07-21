@@ -1,5 +1,6 @@
 import { RenderHookResult } from '@testing-library/react';
-import { Assert, IDirectoryClientChangeEvents, type ServiceManager } from 'pandora-common';
+import { Assert, type ServiceManager } from 'pandora-common';
+import type { IDirectoryClientChangeEvents } from 'pandora-common/networking/api/directory_client';
 import {
 	useAuthToken,
 	useDirectoryChangeListener,

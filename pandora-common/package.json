@@ -20,6 +20,10 @@
 			"types": "./dist/networking/helpers.d.ts",
 			"default": "./dist/networking/helpers.js"
 		},
+		"./networking/api/*": {
+			"types": "./dist/networking/api/*/index.d.ts",
+			"default": "./dist/networking/api/*/index.js"
+		},
 		"./gameLogic/characterModifiers/helpers/*": {
 			"types": "./dist/gameLogic/characterModifiers/helpers/*.d.ts",
 			"default": "./dist/gameLogic/characterModifiers/helpers/*.js"

@@ -1,6 +1,7 @@
 import { expect, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
-import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, PANDORA_VERSION_DATABASE, ShardFeature } from 'pandora-common';
+import { IMessageHandler, MockConnection, MockServerSocket, PANDORA_VERSION_DATABASE, ShardFeature } from 'pandora-common';
+import type { IDirectoryShard, IShardDirectory, IShardDirectoryNormalResult } from 'pandora-common/networking/api/directory_shard';
 import { Account, CreateAccountData } from '../src/account/account.ts';
 import { accountManager } from '../src/account/accountManager.ts';
 import { CharacterInfo } from '../src/account/character.ts';

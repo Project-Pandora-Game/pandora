@@ -14,3 +14,6 @@ export const DEFAULT_ACK_TIMEOUT: number = 15_000;
 export const MESSAGE_HANDLER_DEBUG_ALL: boolean = false;
 /** Set of message types that should be logged */
 export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();
+
+/** HTTP path the API connects to when connecting to Directory, relative to directory root */
+export const HTTP_SOCKET_IO_API_PATH: string = 'api_socket.io';

@@ -1,7 +1,7 @@
 import AsyncLock from 'async-lock';
 import { cloneDeep, debounce } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
-import { AsyncSynchronized, LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT, PandoraAccessTokenGenerate, type Logger, type PandoraAccessToken, type PandoraAccessTokenData, type PandoraAccessTokenInfo, type PandoraAccessTokenScope, type PandoraAccessTokenScopeList } from 'pandora-common';
+import { AsyncSynchronized, LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT, PandoraAccessTokenGenerate, TypedEventEmitter, type Logger, type PandoraAccessToken, type PandoraAccessTokenData, type PandoraAccessTokenInfo, type PandoraAccessTokenScope, type PandoraAccessTokenScopeList } from 'pandora-common';
 import promClient from 'prom-client';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type AccountSecure from '../accountSecure.ts';
@@ -20,16 +20,31 @@ const tokenUseMetric = new promClient.Counter({
 
 const LAST_USE_UPDATE_DEBOUNCE = 5000; // Update "last use" value only at most every 5 seconds
 
-export class AccountSecureAccessTokenStore {
+export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
+	tokenInvalidated: PandoraAccessToken;
+}> {
 	readonly #tokens: PandoraAccessTokenData[];
 	readonly #accountSecure: AccountSecure;
 
 	private readonly _auditLog: Logger;
 
 	constructor(tokens: PandoraAccessTokenData[], parentAccountSecure: AccountSecure, auditLog: Logger) {
+		super();
 		this.#tokens = tokens;
 		this.#accountSecure = parentAccountSecure;
 		this._auditLog = auditLog;
+	}
+
+	public getTokenInfo(token: PandoraAccessToken): PandoraAccessTokenInfo | null {
+		const data = this.#tokens.find((t) => t.token === token);
+		return data != null ? {
+			id: data.id,
+			name: data.name,
+			scopes: cloneDeep(data.scopes),
+			created: data.created,
+			lastUsed: data.lastUsed,
+			expires: data.expires,
+		} : null;
 	}
 
 	public listTokens(): PandoraAccessTokenInfo[] {
@@ -54,6 +69,10 @@ export class AccountSecureAccessTokenStore {
 	}, LAST_USE_UPDATE_DEBOUNCE, { maxWait: LAST_USE_UPDATE_DEBOUNCE });
 
 	public verifyToken(token: PandoraAccessToken, requiredScopes: readonly PandoraAccessTokenScope[]): boolean {
+		// Only activated, non-banned accounts can make use of tokens, otherwise treat the token as invalid
+		if (!this.#accountSecure.isActivated() || this.#accountSecure.isDisabled())
+			return false;
+
 		const tokenData = this.#tokens.find((t) => t.token === token);
 
 		const now = Date.now();
@@ -120,6 +139,8 @@ export class AccountSecureAccessTokenStore {
 		if (tokenData == null)
 			return 'notFound';
 
+		const oldToken = tokenData.token;
+
 		// Generate a token and check against unicorns
 		const token = AccountSecureAccessTokenStore._generateRandomToken();
 		if ((await GetDatabase().getAccountIdByAccessToken(token)) != null) {
@@ -130,6 +151,7 @@ export class AccountSecureAccessTokenStore {
 		tokenData.expires = expires;
 
 		await this.#accountSecure.updateDatabase();
+		this.emit('tokenInvalidated', oldToken);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -143,9 +165,11 @@ export class AccountSecureAccessTokenStore {
 		if (index < 0)
 			return false;
 
+		const oldToken = this.#tokens[index].token;
 		this.#tokens.splice(index, 1);
 
 		await this.#accountSecure.updateDatabase();
+		this.emit('tokenInvalidated', oldToken);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});

@@ -2,6 +2,7 @@ import { GetLogger, ServerService, logConfig } from 'pandora-common';
 import wtfnode from 'wtfnode';
 import { accountManager } from './account/accountManager.ts';
 import { GetDatabaseService } from './database/databaseProvider.ts';
+import { ConnectionManagerApi } from './networking/api/socket/manager_api.ts';
 import { HttpServer } from './networking/httpServer.ts';
 import { ConnectionManagerClient } from './networking/manager_client.ts';
 import { BetaRegistrationService } from './services/betaRegistration/betaRegistration.ts';
@@ -42,6 +43,7 @@ async function StopGracefully(): Promise<void> {
 	await DestroyService(GitHubVerifier);
 	await DestroyService(BetaRegistrationService);
 	// Stop sending status updates
+	await DestroyService(ConnectionManagerApi);
 	await DestroyService(ConnectionManagerClient);
 	// Unload all shards
 	await DestroyService(ShardManager);

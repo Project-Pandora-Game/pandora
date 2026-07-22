@@ -6,6 +6,7 @@ import { GetDatabaseService } from './database/databaseProvider.ts';
 import { MockDatabase } from './database/mockDb.ts';
 import { SetupSignalHandling } from './lifecycle.ts';
 import { AddDiscordLogOutput, AddFileOutput } from './logging.ts';
+import { ConnectionManagerApi } from './networking/api/socket/manager_api.ts';
 import { HttpServer } from './networking/httpServer.ts';
 import { ConnectionManagerClient } from './networking/manager_client.ts';
 import { BetaRegistrationService } from './services/betaRegistration/betaRegistration.ts';
@@ -56,6 +57,7 @@ async function Start(): Promise<void> {
 	await ServiceInit(accountManager);
 	await ServiceInit(SpaceManager);
 	await ServiceInit(ConnectionManagerClient);
+	await ServiceInit(ConnectionManagerApi);
 	await ServiceInit(BetaRegistrationService);
 	logger.verbose('Initializing APIs...');
 	await ServiceInit(GitHubVerifier);

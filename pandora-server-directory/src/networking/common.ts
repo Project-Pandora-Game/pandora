@@ -6,6 +6,7 @@ import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
 export enum ConnectionType {
 	SHARD,
 	CLIENT,
+	API,
 }
 
 export interface IConnectionShard extends IIncomingConnection<IDirectoryShard> {

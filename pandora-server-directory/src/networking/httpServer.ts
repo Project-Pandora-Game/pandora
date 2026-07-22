@@ -7,6 +7,7 @@ import { GetLogger, ServerService } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { MetricsServe } from '../metrics.ts';
 import { GitHubVerifierAPI } from '../services/github/githubVerify.ts';
+import { SocketIOServerApi } from './api/socket/socketio_api_server.ts';
 import { PandoraPublicApi } from './manager_client_api.ts';
 import { SocketIOServerClient } from './socketio_client_server.ts';
 import { SocketIOServerShard } from './socketio_shard_server.ts';
@@ -73,6 +74,7 @@ export const HttpServer = new class HttpServer implements ServerService {
 
 		// Attach socket.io servers
 		new SocketIOServerClient(server);
+		new SocketIOServerApi(server);
 		new SocketIOServerShard(server);
 		// Keep track of existing connection
 		server.on('connection', (socket) => {

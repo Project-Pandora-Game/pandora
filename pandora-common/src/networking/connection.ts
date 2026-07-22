@@ -309,6 +309,7 @@ export abstract class IncomingConnection<
 	IncomingT extends SocketInterfaceDefinition,
 	SocketT extends IncomingSocket = IncomingSocket,
 > extends ConnectionBase<OutboundT, IncomingT, SocketT> implements IIncomingConnection<OutboundT> {
+	protected override readonly socket: SocketT;
 	public readonly _internalRooms: Set<IServerRoom<OutboundT>> = new Set();
 	public readonly socketServer: IServerSocket<OutboundT>;
 
@@ -319,6 +320,7 @@ export abstract class IncomingConnection<
 		logger: Logger,
 	) {
 		super(socket, schema, logger);
+		this.socket = socket;
 		this.socketServer = server;
 		socket.onDisconnect = (reason) => this.onDisconnect(reason);
 		socket.onMessage = (...args) => this.handleMessage(...args);

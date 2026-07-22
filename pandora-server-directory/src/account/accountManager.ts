@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick } from 'lodash-es';
-import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, ServerService } from 'pandora-common';
+import { Assert, AssertNotNullable, AsyncSynchronized, EMPTY_ARRAY, GetLogger, ServerService, type PandoraAccessToken } from 'pandora-common';
 import promClient from 'prom-client';
 import * as z from 'zod';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -244,6 +244,20 @@ export class AccountManager implements ServerService {
 	}
 
 	/**
+	 * Find an account between **currently loaded accounts**
+	 * @returns The account or `null` if not found
+	 */
+	public getAccountByAccessToken(token: PandoraAccessToken): Account | null {
+		for (const account of this._onlineAccounts) {
+			if (account.secure.accessTokens.verifyToken(token, EMPTY_ARRAY)) {
+				account.touch();
+				return account;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Find an account between loaded ones or try to load it from database
 	 * @returns The account or `null` if not found even in database
 	 */
@@ -310,6 +324,27 @@ export class AccountManager implements ServerService {
 		if (!data)
 			return null;
 		return await this._loadAccount(data);
+	}
+
+	/**
+	 * Find an account between loaded ones or try to load it from database
+	 * @returns The account or `null` if not found even in database
+	 */
+	public async loadAccountByAccessToken(token: PandoraAccessToken): Promise<Account | null> {
+		// Check if account is loaded and return it if it is
+		const account = this.getAccountByAccessToken(token);
+		if (account)
+			return account;
+		// Find matching account in database
+		const accountId = await GetDatabase().getAccountIdByAccessToken(token);
+		if (accountId == null)
+			return null;
+
+		const loadedAccount = await this.loadAccountById(accountId);
+		if (loadedAccount == null || !loadedAccount.secure.accessTokens.verifyToken(token, EMPTY_ARRAY))
+			return null;
+
+		return loadedAccount;
 	}
 
 	public async createAccount(username: string, displayName: string, password: string, email: string): Promise<Account | 'usernameTaken' | 'emailTaken'> {

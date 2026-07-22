@@ -24,10 +24,12 @@ import {
 	type Logger,
 	type ManagementAccountInfo,
 } from 'pandora-common';
+import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import type { AccountPublicInfo, IDirectoryAccountInfo, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
 import type { IShardAccountDefinition } from 'pandora-common/networking/api/directory_shard';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
+import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
 import type { ClientConnection } from '../networking/connection_client.ts';
 import { AsyncInterval } from '../utility.ts';
 import { AccountContacts } from './accountContacts.ts';
@@ -48,6 +50,8 @@ export class Account implements ActorIdentity {
 	public data: Omit<DatabaseAccount, 'secure' | 'characters'>;
 	/** List of connections logged in as this account */
 	public readonly associatedConnections = new ServerRoom<IDirectoryClient, ClientConnection>();
+	/** List of API connections authenticated to this account */
+	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
 
 	public readonly characters: Map<CharacterId, CharacterInfo> = new Map();
 
@@ -110,7 +114,9 @@ export class Account implements ActorIdentity {
 	}
 
 	public isInUse(): boolean {
-		return this.associatedConnections.hasClients() || Array.from(this.characters.values()).some((c) => c.isInUse());
+		return this.associatedConnections.hasClients() ||
+			this.associatedApiConnections.hasClients() ||
+			Array.from(this.characters.values()).some((c) => c.isInUse());
 	}
 
 	public isOnline(): boolean {
@@ -338,6 +344,10 @@ export class Account implements ActorIdentity {
 			client.setAccount(null);
 		}
 		Assert(!this.associatedConnections.hasClients());
+		for (const client of this.associatedApiConnections.clients.slice()) {
+			client.disconnect('shutting down');
+		}
+		Assert(!this.associatedApiConnections.hasClients());
 	}
 
 	//#region Character

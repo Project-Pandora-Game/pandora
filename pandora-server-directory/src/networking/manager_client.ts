@@ -62,7 +62,7 @@ type PasskeyAssertionVerification = { ok: true; passkey: IAccountPasskeyCredenti
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_directory_client_connections',
 	help: 'Current count of connections from clients',
-	labelNames: ['messageType'],
+	labelNames: [],
 });
 
 const messagesMetric = new promClient.Counter({

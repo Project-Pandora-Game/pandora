@@ -568,8 +568,8 @@ importers:
         specifier: 6.1.3
         version: 6.1.3
       superstatic:
-        specifier: 10.0.0
-        version: 10.0.0
+        specifier: 11.0.0
+        version: 11.0.0
       tar:
         specifier: 7.5.20
         version: 7.5.20
@@ -2229,9 +2229,6 @@ packages:
     resolution: {integrity: sha512-BNoCY6SXXPQ7gF2opIP4GBE+Xw7U+pHMYKuzjgCN3GwiaIR09UUeKfheyIry77QtrCBlC0KK0q5/TER/tYh3PQ==}
     engines: {node: '>= 0.4'}
 
-  as-array@2.0.0:
-    resolution: {integrity: sha512-1Sd1LrodN0XYxYeZcN1J4xYZvmvTwD5tDWaPUGPIzH1mFsmzsPnVtd2exWhecMjtZk/wYWjNZJiD3b1SLCeJqg==}
-
   asn1js@3.0.10:
     resolution: {integrity: sha512-S2s3aOytiKdFRdulw2qPE51MzjzVOisppcVv7jVFR+Kw0kxwvFrDcYA0h7Ndqbmj0HkMIXYWaoj7fli8kgx1eg==}
     engines: {node: '>=12.0.0'}
@@ -3439,12 +3436,6 @@ packages:
     resolution: {integrity: sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==}
     engines: {node: '>=10.13.0'}
 
-  glob-slash@1.0.0:
-    resolution: {integrity: sha512-ZwFh34WZhZX28ntCMAP1mwyAJkn8+Omagvt/GvA+JQM/qgT0+MR2NPF3vhvgdshfdvDyGZXs8fPXW84K32Wjuw==}
-
-  glob-slasher@1.0.1:
-    resolution: {integrity: sha512-5MUzqFiycIKLMD1B0dYOE4hGgLLUZUNGGYO4BExdwT32wUwW3DBOE7lMQars7vB1q43Fb3Tyt+HmgLKsJhDYdg==}
-
   glob-to-regex.js@1.2.0:
     resolution: {integrity: sha512-QMwlOQKU/IzqMUOAZWubUOT8Qft+Y0KQWnX9nK3ch0CJg0tTp4TvGZsTfudYKv2NzoQSyPcnA6TYeIQ3jGichQ==}
     engines: {node: '>=10.0'}
@@ -4120,9 +4111,6 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  join-path@1.1.1:
-    resolution: {integrity: sha512-jnt9OC34sLXMLJ6YfPQ2ZEKrR9mB5ZbSnQb4LPaOx1c5rTzxpR33L18jjp0r75mGGTJmsil3qwN1B5IBeTnSSA==}
-
   js-binary-schema-parser@2.0.3:
     resolution: {integrity: sha512-xezGJmOb4lk/M1ZZLTR/jaBHQ4gG/lqQnJqdIv4721DMggsa1bDVlHXNeHYogaIEHD9vCRv0fcL4hMA+Coarkg==}
 
@@ -4248,14 +4236,8 @@ packages:
   lodash-es@4.18.1:
     resolution: {integrity: sha512-J8xewKD/Gk22OZbhpOVSwcs60zhd95ESDwezOFuA3/099925PdHJ7OFHNTGtajL3AlZkykD32HykiMo+BIBI8A==}
 
-  lodash._objecttypes@2.4.1:
-    resolution: {integrity: sha512-XpqGh1e7hhkOzftBfWE7zt+Yn9mVHFkDhicVttvKLsoCMLVVL+xTQjfjB4X4vtznauxv0QZ5ZAeqjvat0dh62Q==}
-
   lodash.flattendeep@4.4.0:
     resolution: {integrity: sha512-uHaJFihxmJcEX3kT4I23ABqKKalJ/zDrDg0lsFtc1h+3uw49SIJ5beyhx5ExVRti3AvKoOJngIj7xz3oylPdWQ==}
-
-  lodash.isobject@2.4.1:
-    resolution: {integrity: sha512-sTebg2a1PoicYEZXD5PBdQcTlIJ6hUslrlWr7iV0O7n+i4596s2NQ9I5CaZ5FbXSfya/9WQsrYLANUJv9paYVA==}
 
   lodash.memoize@4.1.2:
     resolution: {integrity: sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==}
@@ -5673,9 +5655,9 @@ packages:
     peerDependencies:
       webpack: ^5.27.0
 
-  superstatic@10.0.0:
-    resolution: {integrity: sha512-4xIenBdrIIYuqXrIVx/lejyCh4EJwEMPCwfk9VGFfRlhZcdvzTd3oVOUILrAGfC4pFUWixzPgaOVzAEZgeYI3w==}
-    engines: {node: 20 || 22 || 24}
+  superstatic@11.0.0:
+    resolution: {integrity: sha512-1+rx9hPdO4Oe4bk0CnXYF/J2x9tiV4qlBZ44y7Y9o/KkTAXkx+zz45sFNKVICOMh8Vf79pYdIcbuGGY8MKLz4g==}
+    engines: {node: 22 || 24 || 26}
     hasBin: true
 
   supports-color@5.5.0:
@@ -5791,9 +5773,6 @@ packages:
   tough-cookie@5.1.2:
     resolution: {integrity: sha512-FVDYdxtnj0G6Qm/DhNPSb8Ju59ULcup3tuJxkFb5K8Bv2pUXILbf0xZWU8PX8Ov19OXljbUyveOFwRMwkXzO+A==}
     engines: {node: '>=16'}
-
-  toxic@1.0.1:
-    resolution: {integrity: sha512-WI3rIGdcaKULYg7KVoB0zcjikqvcYYvcuT6D89bFPz2rVR0Rl0PK6x8/X62rtdLtBKIE985NzVf/auTtGegIIg==}
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -6001,9 +5980,6 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
-  url-join@0.0.1:
-    resolution: {integrity: sha512-H6dnQ/yPAAVzMQRvEvyz01hhfQL5qRWSEt7BX8t9DqnPw9BjMb64fjIRq76Uvf1hkHp+mTZvEVJ5guXOT0Xqaw==}
-
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
@@ -6022,9 +5998,6 @@ packages:
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
-
-  valid-url@1.0.9:
-    resolution: {integrity: sha512-QQDsV8OnSf5Uc30CKSwG9lnhMPe6exHtTXLRYX8uMwKENy640pU+2BgBL0LRbDh/eYRahNCS7aewCx0wf3NYVA==}
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -8392,8 +8365,6 @@ snapshots:
       get-intrinsic: 1.3.0
       is-array-buffer: 3.0.5
 
-  as-array@2.0.0: {}
-
   asn1js@3.0.10:
     dependencies:
       pvtsutils: 1.3.6
@@ -9826,14 +9797,6 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
-  glob-slash@1.0.0: {}
-
-  glob-slasher@1.0.1:
-    dependencies:
-      glob-slash: 1.0.0
-      lodash.isobject: 2.4.1
-      toxic: 1.0.1
-
   glob-to-regex.js@1.2.0(tslib@2.8.1):
     dependencies:
       tslib: 2.8.1
@@ -10767,12 +10730,6 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  join-path@1.1.1:
-    dependencies:
-      as-array: 2.0.0
-      url-join: 0.0.1
-      valid-url: 1.0.9
-
   js-binary-schema-parser@2.0.3: {}
 
   js-tokens@4.0.0: {}
@@ -10911,13 +10868,7 @@ snapshots:
 
   lodash-es@4.18.1: {}
 
-  lodash._objecttypes@2.4.1: {}
-
   lodash.flattendeep@4.4.0: {}
-
-  lodash.isobject@2.4.1:
-    dependencies:
-      lodash._objecttypes: 2.4.1
 
   lodash.memoize@4.1.2: {}
 
@@ -12408,17 +12359,14 @@ snapshots:
     dependencies:
       webpack: 5.108.4(postcss@8.5.19)(webpack-cli@7.2.1)
 
-  superstatic@10.0.0:
+  superstatic@11.0.0:
     dependencies:
       basic-auth-connect: 1.1.0
       commander: 10.0.1
       compression: 1.8.1
       connect: 3.7.0
       destroy: 1.2.0
-      glob-slasher: 1.0.1
       is-url: 1.2.4
-      join-path: 1.1.1
-      lodash: 4.18.1
       mime-types: 2.1.35
       minimatch: 6.2.3
       morgan: 1.11.0
@@ -12550,10 +12498,6 @@ snapshots:
   tough-cookie@5.1.2:
     dependencies:
       tldts: 6.1.86
-
-  toxic@1.0.1:
-    dependencies:
-      lodash: 4.18.1
 
   tr46@0.0.3: {}
 
@@ -12805,8 +12749,6 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  url-join@0.0.1: {}
-
   util-deprecate@1.0.2: {}
 
   utila@0.4.0: {}
@@ -12820,8 +12762,6 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
-
-  valid-url@1.0.9: {}
 
   varint@6.0.0: {}
 

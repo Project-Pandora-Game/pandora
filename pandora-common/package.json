@@ -60,7 +60,7 @@
 		"@types/node": "24.13.3",
 		"async-lock": "1.4.1",
 		"delaunator": "5.1.0",
-		"immer": "11.1.11",
+		"immer": "11.1.15",
 		"lodash-es": "4.18.1",
 		"nanoid": "5.1.16"
 	},

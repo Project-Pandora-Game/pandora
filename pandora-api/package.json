@@ -4,7 +4,7 @@
 	"private": true,
 	"license": "LGPL-3.0-or-later",
 	"engines": {
-		"node": ">=24.x"
+		"node": ">=24.11.x"
 	},
 	"type": "module",
 	"exports": {
@@ -31,7 +31,8 @@
 		"prepack": "pnpm run build"
 	},
 	"dependencies": {
-		"async-lock": "1.4.1"
+		"async-lock": "1.4.1",
+		"socket.io-client": "4.8.3"
 	},
 	"devDependencies": {
 		"@jest/globals": "30.4.1",

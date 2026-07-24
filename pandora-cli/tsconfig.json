@@ -4,6 +4,10 @@
 		"types": [
 			"@types/node"
 		],
+		"lib": [
+			"ES2024",
+			"ESNext.Disposable"
+		],
 		"noEmit": false,
 		"outDir": "./dist",
 		"rewriteRelativeImportExtensions": true,

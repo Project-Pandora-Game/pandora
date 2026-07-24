@@ -78,6 +78,6 @@
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "7.2.1",
 		"tslib": "2.8.1",
-		"typescript": "6.0.3"
+		"typescript": "7.0.2"
 	}
 }

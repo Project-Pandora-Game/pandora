@@ -1,12 +1,10 @@
 #!/usr/bin/env node
-/* Scripts are run in Node, so don't make use of the logger or ES imports */
-/* eslint-disable no-console, @typescript-eslint/no-require-imports */
-const { constants } = require('fs');
-const { copyFile } = require('fs/promises');
-const { resolve } = require('path');
-const { spawnSync } = require('child_process');
-const yaml = require('js-yaml');
-const fs = require('fs');
+/* Scripts are run in Node, so don't make use of the logger */
+import { spawnSync } from 'child_process';
+import { constants, readFileSync } from 'fs';
+import { copyFile } from 'fs/promises';
+import { load as yamlLoad } from 'js-yaml';
+import { resolve } from 'path';
 
 postinstall();
 async function postinstall() {
@@ -15,7 +13,7 @@ async function postinstall() {
 		configureGitHooks();
 	}
 	try {
-		const doc = yaml.load(fs.readFileSync('pnpm-workspace.yaml', 'utf-8'));
+		const doc = yamlLoad(readFileSync('pnpm-workspace.yaml', 'utf-8'));
 		const WORKSPACES = doc.packages;
 		for (const workspace of WORKSPACES) {
 			await copyDotenv(workspace);
@@ -25,6 +23,9 @@ async function postinstall() {
 	}
 }
 
+/**
+ * @param {string} basePath
+ */
 async function copyDotenv(basePath) {
 	try {
 		await copyFile(
@@ -34,7 +35,7 @@ async function copyDotenv(basePath) {
 		);
 		console.log(`${basePath}: No .env file found - template copied`);
 	} catch (error) {
-		if (error.code !== 'EEXIST' && error.code !== 'ENOENT') {
+		if (!error || typeof error !== 'object' || !(error instanceof Error) || (error.code !== 'EEXIST' && error.code !== 'ENOENT')) {
 			throw error;
 		}
 	}

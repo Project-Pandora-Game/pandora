@@ -40,4 +40,4 @@
 /pandora-server-shard/logs
 
 # Otherwise ignored data, but required for build
-!/.hooks/postinstall.cjs
+!/.hooks/postinstall.mjs

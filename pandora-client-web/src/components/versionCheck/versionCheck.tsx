@@ -63,6 +63,6 @@ function VersionCheckImpl() {
 }
 
 async function GetCurrentVersion(): Promise<VersionData> {
-	const result = await fetch(`/version.json?${Date.now()}`);
+	const result = await fetch(`/version.json`, { cache: 'no-cache' });
 	return VersionDataSchema.parse(await result.json());
 }

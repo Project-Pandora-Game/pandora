@@ -45,7 +45,7 @@
 		"@simplewebauthn/server": "13.3.2",
 		"argon2": "0.44.0",
 		"async-lock": "1.4.1",
-		"discord.js": "14.26.5",
+		"discord.js": "14.27.0",
 		"express": "5.2.1",
 		"immer": "11.1.15",
 		"json-diff": "1.0.6",

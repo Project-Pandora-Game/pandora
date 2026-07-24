@@ -76,7 +76,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		const tokenData = this.#tokens.find((t) => t.token === token);
 
 		const now = Date.now();
-		if (tokenData == null || (tokenData.expires != null && now < tokenData.expires))
+		if (tokenData == null || (tokenData.expires != null && now >= tokenData.expires))
 			return false;
 
 		// If the token exists and is valid, update "lastUsed" (even if scopes don't match)

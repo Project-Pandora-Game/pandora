@@ -4,6 +4,10 @@
 		"types": [
 			"@types/node",
 		],
+		"lib": [
+			"ES2024",
+			"ESNext.Disposable"
+		],
 		"rootDir": "..",
 	},
 	"include": [
@@ -11,6 +15,8 @@
 		"./**/*"
 	],
 	"references": [
-		{ "path": "../../pandora-common" },
+		{
+			"path": "../../pandora-common"
+		},
 	],
 }

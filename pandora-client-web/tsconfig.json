@@ -2,7 +2,7 @@
 	"extends": "pandora-common/tsconfig.base.json",
 	"compilerOptions": {
 		"lib": [
-			"ES2023",
+			"ES2024",
 			"DOM"
 		],
 		"types": [
@@ -11,8 +11,7 @@
 		"rootDir": "./src",
 		"jsx": "react-jsx",
 		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"target": "ES6"
+		"moduleResolution": "bundler"
 	},
 	"include": ["./src/**/*"],
 	"references": [

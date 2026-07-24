@@ -2,6 +2,10 @@
 	"extends": "pandora-common/tsconfig.base.json",
 	"compilerOptions": {
 		"types": [],
+		"lib": [
+			"ES2024",
+			"ESNext.Disposable"
+		],
 		"noEmit": false,
 		"outDir": "./dist",
 		"rewriteRelativeImportExtensions": true,

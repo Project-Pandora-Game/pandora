@@ -1,3 +1,4 @@
+import { ConnectToPandoraApi, WELL_KNOWN_SERVER_ADDRESSES } from 'pandora-api/api';
 import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 
 {
@@ -10,7 +11,7 @@ import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 /**
  * Run the CLI.
  */
-// eslint-disable-next-line @typescript-eslint/require-await
+
 async function Run(): Promise<void> {
 	// Setup logging specially for CLI: Only ever log to the stderr
 	logConfig.logOutputs = [
@@ -26,6 +27,15 @@ async function Run(): Promise<void> {
 	];
 
 	GetLogger('CLI').info('Hello World!');
+
+	using pandoraApi = (await ConnectToPandoraApi({
+		token: '',
+		directoryConnectionAddress: WELL_KNOWN_SERVER_ADDRESSES.localDev,
+	})).unwrap();
+
+	const currentToken = (await pandoraApi.token.getCurrentTokenInfo()).unwrap();
+
+	GetLogger('CLI').log('Current token:', JSON.stringify(currentToken, undefined, '  '));
 }
 
 await Run();

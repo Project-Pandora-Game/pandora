@@ -39,7 +39,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-sesv2": "3.1093.0",
-		"@aws-sdk/credential-provider-node": "3.972.70",
+		"@aws-sdk/credential-provider-node": "3.972.71",
 		"@octokit/auth-oauth-app": "9.0.3",
 		"@octokit/rest": "22.0.1",
 		"@simplewebauthn/server": "13.3.2",

@@ -196,8 +196,8 @@ importers:
         specifier: 9.1.0
         version: 9.1.0(typescript@6.0.3)(webpack@5.109.0)
       html-webpack-plugin:
-        specifier: 5.6.7
-        version: 5.6.7(webpack@5.109.0)
+        specifier: 5.6.8
+        version: 5.6.8(webpack@5.109.0)
       jest:
         specifier: 30.4.2
         version: 30.4.2(@types/node@24.13.3)(supports-color@8.1.1)
@@ -3470,11 +3470,11 @@ packages:
     resolution: {integrity: sha512-2OH59Gtprdczel+7Rxgpz9hGVJREaf8Lt1H4kZwWHpEn70VQKRuMNGsb2eDbwaTzrYzb0hheiOG1P7Dim0B4dQ==}
     engines: {node: '>=20.19.0'}
 
-  html-webpack-plugin@5.6.7:
-    resolution: {integrity: sha512-md+vXtdCAe60s1k6AU3dUyMJnDxUyQAwfwPKoLisvgUF1IXjtlLsk2se54+qfL9Mdm26bbwvjJybpNx48NKRLw==}
+  html-webpack-plugin@5.6.8:
+    resolution: {integrity: sha512-MZmKQcTnhEh1SPSyMiEytIeDZDUoBZVorNHivQGXMASHf/BSGGOrKa2xQ5bGx3TCe1n109ecCt+cpww7wwWhKA==}
     engines: {node: '>=10.13.0'}
     peerDependencies:
-      '@rspack/core': 0.x || 1.x
+      '@rspack/core': 0.x || 1.x || 2.x
       webpack: ^5.20.0
     peerDependenciesMeta:
       '@rspack/core':
@@ -9989,7 +9989,7 @@ snapshots:
       htmlparser2: 10.1.0
       selderee: 0.12.0
 
-  html-webpack-plugin@5.6.7(webpack@5.109.0):
+  html-webpack-plugin@5.6.8(webpack@5.109.0):
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0

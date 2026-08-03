@@ -122,6 +122,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 			created: Date.now(),
 			expires,
 		};
+		this._auditLog.info(`Created new access token (id: ${tokenData.id}; scopes: ${tokenData.scopes.join(',')})`);
 		this.#tokens.push(cloneDeep(tokenData));
 
 		await this.#accountSecure.updateDatabase();
@@ -149,6 +150,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 		tokenData.token = token;
 		tokenData.expires = expires;
+		this._auditLog.info(`Regenerated access token (id: ${tokenData.id})`);
 
 		await this.#accountSecure.updateDatabase();
 		this.emit('tokenInvalidated', oldToken);
@@ -165,11 +167,12 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		if (index < 0)
 			return false;
 
-		const oldToken = this.#tokens[index].token;
+		const oldToken = this.#tokens[index];
 		this.#tokens.splice(index, 1);
+		this._auditLog.info(`Deleted access token (id: ${oldToken.id})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenInvalidated', oldToken);
+		this.emit('tokenInvalidated', oldToken.token);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -185,6 +188,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 		token.name = name;
 		token.scopes = uniq(scopes);
+		this._auditLog.info(`Updated access token (id: ${token.id}; scopes: ${token.scopes.join(',')})`);
 
 		await this.#accountSecure.updateDatabase();
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {

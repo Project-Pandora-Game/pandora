@@ -57,6 +57,7 @@ export class SocketIOConnector<OutboundT extends SocketInterfaceDefinition, Inco
 			autoConnect: false,
 			withCredentials: true,
 			auth: getAuthData ? ((callback: SocketAuthCallback) => callback(getAuthData())) : undefined,
+			transports: ['websocket'],
 		});
 
 		super(socket, props.schema, props.logger);

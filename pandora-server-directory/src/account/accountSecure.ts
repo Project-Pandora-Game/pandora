@@ -456,7 +456,7 @@ async function IsPublicKey(keyData: string): Promise<boolean> {
  * Argon2 password options
  * @see https://github.com/ranisalt/node-argon2/wiki/Options
  */
-const ARGON2_OPTIONS = {
+const ARGON2_OPTIONS: argon2.HashOptions = {
 	type: argon2.argon2id,
 	parallelism: 4,
 };

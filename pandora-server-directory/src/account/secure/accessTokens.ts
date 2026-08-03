@@ -1,5 +1,5 @@
 import AsyncLock from 'async-lock';
-import { cloneDeep, debounce } from 'lodash-es';
+import { cloneDeep, debounce, uniq } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
 import { AsyncSynchronized, LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT, PandoraAccessTokenGenerate, TypedEventEmitter, type Logger, type PandoraAccessToken, type PandoraAccessTokenData, type PandoraAccessTokenInfo, type PandoraAccessTokenScope, type PandoraAccessTokenScopeList } from 'pandora-common';
 import promClient from 'prom-client';
@@ -118,7 +118,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 			token,
 			id,
 			name,
-			scopes,
+			scopes: uniq(scopes),
 			created: Date.now(),
 			expires,
 		};
@@ -184,7 +184,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 			return false;
 
 		token.name = name;
-		token.scopes = cloneDeep(scopes);
+		token.scopes = uniq(scopes);
 
 		await this.#accountSecure.updateDatabase();
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {

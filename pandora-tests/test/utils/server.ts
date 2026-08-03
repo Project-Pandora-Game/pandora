@@ -101,7 +101,7 @@ class ServerInstance {
 		this.keepActive = options.keepActive;
 
 		// On Windows we need IPC capabilities, so use fork
-		// Using this we loose on nyc (coverage collection), but there is no way around this
+		// Using this we lose on nyc (coverage collection), but there is no way around this
 		if (process.platform === 'win32') {
 			this.process = fork(options.entrypoint, {
 				cwd: TEST_PROJECT_PANDORA_DIR,

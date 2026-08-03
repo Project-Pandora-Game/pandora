@@ -91,7 +91,7 @@ function PATListToken({ token }: {
 					slim
 					disabled={ !sudoActive || processing }
 					title='Delete token'
-					content={ `Are you sure you want to delete token ${token.name}?\nAny application using this token will loose access to your account.` }
+					content={ `Are you sure you want to delete token ${token.name}?\nAny application using this token will lose access to your account.` }
 					onClick={ deleteToken }
 				>
 					Delete

@@ -19,6 +19,7 @@ import {
 import { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { useCharacterDataOptional } from '../../../character/character.ts';
+import { InteractiveLink } from '../../../components/common/link/interactiveLink.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { FindItemById, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
@@ -418,20 +419,18 @@ export function DescribeItem({ item, globalState }: {
 		const hasDescription = !!item.description;
 
 		return (
-			<a
+			<InteractiveLink
 				className={ classNames(
 					'itemLink',
 					hasCustomName ? 'hasCustomName' : null,
 					hasDescription ? 'hasDescription' : null,
 				) }
-				onClick={ (ev) => {
-					ev.stopPropagation();
-					ev.preventDefault();
+				onClick={ () => {
 					OpenRoomItemDialog(item.id);
 				} }
 			>
 				{ text }
-			</a>
+			</InteractiveLink>
 		);
 	}
 

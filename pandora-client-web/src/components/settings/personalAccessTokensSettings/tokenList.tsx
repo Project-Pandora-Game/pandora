@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { InteractiveLink } from '../../common/link/interactiveLink.tsx';
 import { ButtonConfirm } from '../../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { useSudoMode } from '../securitySettings/sudoMode.tsx';
@@ -61,13 +62,13 @@ function PATListToken({ token }: {
 		<tr>
 			<td>
 				<strong>
-					<a onClick={ (ev) => {
-						ev.preventDefault();
-
-						setShowDetails(true);
-					} }>
+					<InteractiveLink
+						onClick={ () => {
+							setShowDetails(true);
+						} }
+					>
 						{ token.name || token.id }
-					</a>
+					</InteractiveLink>
 				</strong>
 			</td>
 			<td>

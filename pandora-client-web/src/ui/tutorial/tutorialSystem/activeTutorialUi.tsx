@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
+import { InteractiveLink } from '../../../components/common/link/interactiveLink.tsx';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
@@ -81,16 +82,14 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 						stage === 'complete' ? (
 							<>complete</>
 						) : DEVELOPMENT ? (
-							<a
+							<InteractiveLink
 								title='[DEBUG] Skip this tutorial stage'
-								onClick={ (ev) => {
-									ev.preventDefault();
-									ev.stopPropagation();
+								onClick={ () => {
 									tutorial.advanceStage();
 								} }
 							>
 								{ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length }
-							</a>
+							</InteractiveLink>
 						) : (
 							<>{ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length }</>
 						)

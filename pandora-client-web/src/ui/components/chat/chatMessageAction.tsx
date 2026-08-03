@@ -16,6 +16,7 @@ import React, {
 	ReactElement,
 } from 'react';
 import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
+import { InteractiveLink } from '../../../components/common/link/interactiveLink.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useGameState, useGlobalState, useStateFindItemById } from '../../../services/gameLogic/gameStateHooks.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
@@ -236,20 +237,18 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 		const hasDescription = !!currentItem.description;
 
 		return (
-			<a
+			<InteractiveLink
 				className={ classNames(
 					'itemLink',
 					hasCustomName ? 'hasCustomName' : null,
 					hasDescription ? 'hasDescription' : null,
 				) }
-				onClick={ (ev) => {
-					ev.stopPropagation();
-					ev.preventDefault();
+				onClick={ () => {
 					OpenRoomItemDialog(item.id);
 				} }
 			>
 				{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.assetId), item.itemName, itemDisplayNameType) }
-			</a>
+			</InteractiveLink>
 		);
 	}
 

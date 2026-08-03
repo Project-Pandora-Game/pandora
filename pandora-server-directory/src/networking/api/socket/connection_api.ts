@@ -1,4 +1,4 @@
-import { Assert, EMPTY_ARRAY, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessToken, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessToken, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
 import { ApiDirectorySchema, DirectoryApiSchema, type IApiDirectory, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../../../account/account.ts';
@@ -70,15 +70,20 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		if (this._account == null)
 			return false;
 
-		if (this._account.secure.accessTokens.verifyToken(this.token, requiredScopes)) {
+		const verifyResult = this._account.secure.accessTokens.verifyToken(this.token, requiredScopes);
+		if (verifyResult === 'ok') {
 			return true;
 		}
 
-		// Check if the token was altogether invalidated
-		if (!this._account.secure.accessTokens.verifyToken(this.token, EMPTY_ARRAY)) {
+		// Check if the token was altogether invalidated and disconnect the connection if yes
+		if (verifyResult === 'disabledAccount' || verifyResult === 'invalidToken') {
 			queueMicrotask(() => {
 				this.disconnect('token expired');
 			});
+		} else if (verifyResult === 'missingScopes') {
+			// No action if only missing scopes - the connection remains usable
+		} else {
+			AssertNever(verifyResult);
 		}
 		return false;
 	}

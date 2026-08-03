@@ -68,16 +68,16 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		});
 	}, LAST_USE_UPDATE_DEBOUNCE, { maxWait: LAST_USE_UPDATE_DEBOUNCE });
 
-	public verifyToken(token: PandoraAccessToken, requiredScopes: readonly PandoraAccessTokenScope[]): boolean {
+	public verifyToken(token: PandoraAccessToken, requiredScopes: readonly PandoraAccessTokenScope[]): 'ok' | 'disabledAccount' | 'invalidToken' | 'missingScopes' {
 		// Only activated, non-banned accounts can make use of tokens, otherwise treat the token as invalid
 		if (!this.#accountSecure.isActivated() || this.#accountSecure.isDisabled())
-			return false;
+			return 'disabledAccount';
 
 		const tokenData = this.#tokens.find((t) => t.token === token);
 
 		const now = Date.now();
 		if (tokenData == null || (tokenData.expires != null && now >= tokenData.expires))
-			return false;
+			return 'invalidToken';
 
 		// If the token exists and is valid, update "lastUsed" (even if scopes don't match)
 		tokenData.lastUsed = now;
@@ -94,7 +94,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 				tokenUseMetric.inc({ scope: 'basic' }, 1);
 			}
 		}
-		return result;
+		return result ? 'ok' : 'missingScopes';
 	}
 
 	@AsyncSynchronized('object')

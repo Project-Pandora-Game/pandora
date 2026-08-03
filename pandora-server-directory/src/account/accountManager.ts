@@ -249,7 +249,7 @@ export class AccountManager implements ServerService {
 	 */
 	public getAccountByAccessToken(token: PandoraAccessToken): Account | null {
 		for (const account of this._onlineAccounts) {
-			if (account.secure.accessTokens.verifyToken(token, EMPTY_ARRAY)) {
+			if (account.secure.accessTokens.verifyToken(token, EMPTY_ARRAY) === 'ok') {
 				account.touch();
 				return account;
 			}
@@ -341,7 +341,7 @@ export class AccountManager implements ServerService {
 			return null;
 
 		const loadedAccount = await this.loadAccountById(accountId);
-		if (loadedAccount == null || !loadedAccount.secure.accessTokens.verifyToken(token, EMPTY_ARRAY))
+		if (loadedAccount == null || loadedAccount.secure.accessTokens.verifyToken(token, EMPTY_ARRAY) !== 'ok')
 			return null;
 
 		return loadedAccount;

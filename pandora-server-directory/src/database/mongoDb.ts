@@ -42,7 +42,6 @@ import {
 	ZodCast,
 	ZodTemplateString,
 	type ICharacterDataShard,
-	type PandoraAccessToken,
 	type RoomGeometryConfig,
 	type SpaceSearchArguments,
 	type SpaceSearchResult,
@@ -422,8 +421,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._accounts.findOne({ 'secure.emailHash': emailHash });
 	}
 
-	public async getAccountIdByAccessToken(token: PandoraAccessToken): Promise<AccountId | null> {
-		return (await this._accounts.find({ 'secure.accessTokens.token': token }, { singleBatch: true })
+	public async getAccountIdByAccessTokenHash(tokenHash: string): Promise<AccountId | null> {
+		return (await this._accounts.find({ 'secure.accessTokens.tokenHash': tokenHash }, { singleBatch: true })
 			.project<Pick<DatabaseAccountWithSecure, 'id'>>({ id: 1 })
 			.limit(1)
 			.next())

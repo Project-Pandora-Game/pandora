@@ -172,13 +172,3 @@ export const PandoraAccessTokenInfoSchema: z.ZodObject<ZodObjectShape<PandoraAcc
 	lastUsed: z.number().optional(),
 	expires: z.number().nullable(),
 });
-
-/** Secret data about Pandora Access Token */
-export interface PandoraAccessTokenData extends PandoraAccessTokenInfo {
-	/** The actual token */
-	token: PandoraAccessToken;
-}
-/** Secret data about Pandora Access Token */
-export const PandoraAccessTokenDataSchema: z.ZodObject<ZodObjectShape<PandoraAccessTokenData>> = PandoraAccessTokenInfoSchema.extend({
-	token: PandoraAccessTokenSchema,
-});

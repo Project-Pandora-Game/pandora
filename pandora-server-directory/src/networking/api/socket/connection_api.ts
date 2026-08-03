@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessToken, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
 import { ApiDirectorySchema, DirectoryApiSchema, type IApiDirectory, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../../../account/account.ts';
@@ -9,21 +9,22 @@ import { ConnectionManagerApi } from './manager_api.ts';
 export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirectory, IncomingSocket> {
 	public readonly type: ConnectionType.API = ConnectionType.API;
 
-	public readonly token: PandoraAccessToken;
+	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
+	public readonly tokenHash: string;
 	public readonly connectionTime: number;
 
 	private _account: Account | null;
 	private _tokenEventUnsubscribe: (() => void) | null = null;
 
-	constructor(server: IServerSocket<IDirectoryApi>, socket: IncomingSocket, account: Account, token: PandoraAccessToken, tokenInfo: PandoraAccessTokenInfo) {
+	constructor(server: IServerSocket<IDirectoryApi>, socket: IncomingSocket, account: Account, tokenHash: string, tokenInfo: PandoraAccessTokenInfo) {
 		super(server, socket, [DirectoryApiSchema, ApiDirectorySchema], GetLogger('Connection-Api', `[Connection-Api ${socket.id}]`));
 
 		// Link to the account
 		account.touch();
 		this._account = account;
-		this.token = token;
+		this.tokenHash = tokenHash;
 		this._tokenEventUnsubscribe = account.secure.accessTokens.onAny((event) => {
-			if (event.tokenInvalidated === this.token) {
+			if (event.tokenInvalidated === this.tokenHash) {
 				if (this._account != null) {
 					this.disconnect('token invalidated');
 				}
@@ -70,7 +71,7 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		if (this._account == null)
 			return false;
 
-		const verifyResult = this._account.secure.accessTokens.verifyToken(this.token, requiredScopes);
+		const verifyResult = this._account.secure.accessTokens.verifyToken(this.tokenHash, requiredScopes);
 		if (verifyResult === 'ok') {
 			return true;
 		}

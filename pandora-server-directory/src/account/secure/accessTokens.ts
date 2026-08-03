@@ -1,8 +1,22 @@
 import AsyncLock from 'async-lock';
 import { cloneDeep, debounce, uniq } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
-import { AsyncSynchronized, LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT, PandoraAccessTokenGenerate, TypedEventEmitter, type Logger, type PandoraAccessToken, type PandoraAccessTokenData, type PandoraAccessTokenInfo, type PandoraAccessTokenScope, type PandoraAccessTokenScopeList } from 'pandora-common';
+import {
+	AsyncSynchronized,
+	LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT,
+	PandoraAccessTokenGenerate,
+	PandoraAccessTokenInfoSchema,
+	TypedEventEmitter,
+	ZodBase64Regex,
+	type Logger,
+	type PandoraAccessToken,
+	type PandoraAccessTokenInfo,
+	type PandoraAccessTokenScope,
+	type PandoraAccessTokenScopeList,
+	type ZodObjectShape,
+} from 'pandora-common';
 import promClient from 'prom-client';
+import * as z from 'zod';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type AccountSecure from '../accountSecure.ts';
 
@@ -20,8 +34,19 @@ const tokenUseMetric = new promClient.Counter({
 
 const LAST_USE_UPDATE_DEBOUNCE = 5000; // Update "last use" value only at most every 5 seconds
 
+/** Secret data about Pandora Access Token */
+export interface PandoraAccessTokenData extends PandoraAccessTokenInfo {
+	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
+	tokenHash: string;
+}
+/** Secret data about Pandora Access Token */
+export const PandoraAccessTokenDataSchema: z.ZodObject<ZodObjectShape<PandoraAccessTokenData>> = PandoraAccessTokenInfoSchema.extend({
+	tokenHash: z.string().regex(ZodBase64Regex),
+});
+
 export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
-	tokenInvalidated: PandoraAccessToken;
+	/** Token was invalidated. Content is token's hash. */
+	tokenInvalidated: string;
 }> {
 	readonly #tokens: PandoraAccessTokenData[];
 	readonly #accountSecure: AccountSecure;
@@ -35,8 +60,8 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog = auditLog;
 	}
 
-	public getTokenInfo(token: PandoraAccessToken): PandoraAccessTokenInfo | null {
-		const data = this.#tokens.find((t) => t.token === token);
+	public getTokenInfo(tokenHash: string): PandoraAccessTokenInfo | null {
+		const data = this.#tokens.find((t) => t.tokenHash === tokenHash);
 		return data != null ? {
 			id: data.id,
 			name: data.name,
@@ -68,12 +93,12 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		});
 	}, LAST_USE_UPDATE_DEBOUNCE, { maxWait: LAST_USE_UPDATE_DEBOUNCE });
 
-	public verifyToken(token: PandoraAccessToken, requiredScopes: readonly PandoraAccessTokenScope[]): 'ok' | 'disabledAccount' | 'invalidToken' | 'missingScopes' {
+	public verifyToken(tokenHash: string, requiredScopes: readonly PandoraAccessTokenScope[]): 'ok' | 'disabledAccount' | 'invalidToken' | 'missingScopes' {
 		// Only activated, non-banned accounts can make use of tokens, otherwise treat the token as invalid
 		if (!this.#accountSecure.isActivated() || this.#accountSecure.isDisabled())
 			return 'disabledAccount';
 
-		const tokenData = this.#tokens.find((t) => t.token === token);
+		const tokenData = this.#tokens.find((t) => t.tokenHash === tokenHash);
 
 		const now = Date.now();
 		if (tokenData == null || (tokenData.expires != null && now >= tokenData.expires))
@@ -99,13 +124,14 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 	@AsyncSynchronized('object')
 	@AsyncSynchronized(GlobalTokenLock)
-	public async createToken(name: string, scopes: PandoraAccessTokenScopeList, expires: number | null): Promise<PandoraAccessTokenData | 'limitReached'> {
+	public async createToken(name: string, scopes: PandoraAccessTokenScopeList, expires: number | null): Promise<[PandoraAccessToken, PandoraAccessTokenData] | 'limitReached'> {
 		if (this.#tokens.length >= LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT)
 			return 'limitReached';
 
 		// Generate a token and check against unicorns
 		const token = AccountSecureAccessTokenStore._generateRandomToken();
-		if ((await GetDatabase().getAccountIdByAccessToken(token)) != null) {
+		const tokenHash = await AccountSecureAccessTokenStore.hashToken(token);
+		if ((await GetDatabase().getAccountIdByAccessTokenHash(tokenHash)) != null) {
 			throw new Error('Encountered a unicorn! (generated duplicate access token)');
 		}
 
@@ -115,7 +141,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		} while (this.#tokens.some((t) => t.id === id));
 
 		const tokenData: PandoraAccessTokenData = {
-			token,
+			tokenHash,
 			id,
 			name,
 			scopes: uniq(scopes),
@@ -130,35 +156,36 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 			changes: ['accessTokens'],
 		});
 
-		return tokenData;
+		return [token, tokenData];
 	}
 
 	@AsyncSynchronized('object')
 	@AsyncSynchronized(GlobalTokenLock)
-	public async regenerateToken(id: string, expires: number | null): Promise<PandoraAccessTokenData | 'notFound'> {
+	public async regenerateToken(id: string, expires: number | null): Promise<[PandoraAccessToken, PandoraAccessTokenData] | 'notFound'> {
 		const tokenData = this.#tokens.find((t) => t.id === id);
 		if (tokenData == null)
 			return 'notFound';
 
-		const oldToken = tokenData.token;
+		const oldTokenHash = tokenData.tokenHash;
 
 		// Generate a token and check against unicorns
 		const token = AccountSecureAccessTokenStore._generateRandomToken();
-		if ((await GetDatabase().getAccountIdByAccessToken(token)) != null) {
+		const tokenHash = await AccountSecureAccessTokenStore.hashToken(token);
+		if ((await GetDatabase().getAccountIdByAccessTokenHash(tokenHash)) != null) {
 			throw new Error('Encountered a unicorn! (generated duplicate access token)');
 		}
 
-		tokenData.token = token;
+		tokenData.tokenHash = tokenHash;
 		tokenData.expires = expires;
 		this._auditLog.info(`Regenerated access token (id: ${tokenData.id})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenInvalidated', oldToken);
+		this.emit('tokenInvalidated', oldTokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
 
-		return tokenData;
+		return [token, tokenData];
 	}
 
 	@AsyncSynchronized('object')
@@ -172,7 +199,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog.info(`Deleted access token (id: ${oldToken.id})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenInvalidated', oldToken.token);
+		this.emit('tokenInvalidated', oldToken.tokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -204,5 +231,17 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 	private static _generateRandomToken(): PandoraAccessToken {
 		return PandoraAccessTokenGenerate(AccessTokenSecretGenerator(32));
+	}
+
+	private static readonly _enc = new TextEncoder();
+
+	/**
+	 * Generates a SHA-256 hash from token
+	 * @param token - The token to hash
+	 * @returns - base64 encoded hash
+	 */
+	public static async hashToken(token: PandoraAccessToken): Promise<string> {
+		const digest = await globalThis.crypto.subtle.digest('SHA-256', AccountSecureAccessTokenStore._enc.encode(token));
+		return Buffer.from(digest).toString('base64');
 	}
 }

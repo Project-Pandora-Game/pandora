@@ -21,7 +21,6 @@ import {
 	SpaceId,
 	TutorialIdSchema,
 	type ICharacterDataShard,
-	type PandoraAccessToken,
 	type SpaceSearchArguments,
 	type SpaceSearchResult,
 	type SpaceSearchResultEntry,
@@ -141,8 +140,8 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
-	public getAccountIdByAccessToken(token: PandoraAccessToken): Promise<AccountId | null> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.accessTokens?.some((t) => t.token === token));
+	public getAccountIdByAccessTokenHash(tokenHash: string): Promise<AccountId | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.accessTokens?.some((t) => t.tokenHash === tokenHash));
 		return Promise.resolve(acc?.id ?? null);
 	}
 

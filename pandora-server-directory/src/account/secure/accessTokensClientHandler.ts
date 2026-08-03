@@ -23,20 +23,22 @@ export const AccessTokensClientHandler = {
 		if (!connection.hasSudo())
 			return { result: 'sudoRequired' };
 
-		const token = await account.secure.accessTokens.createToken(name, scopes, expires);
-		if (typeof token === 'string')
-			return { result: token };
+		const result = await account.secure.accessTokens.createToken(name, scopes, expires);
+		if (typeof result === 'string')
+			return { result };
+
+		const [token, tokenData] = result;
 
 		return {
 			result: 'ok',
-			token: token.token,
+			token,
 			info: {
-				id: token.id,
-				name: token.name,
-				scopes: token.scopes,
-				created: token.created,
-				lastUsed: token.lastUsed,
-				expires: token.expires,
+				id: tokenData.id,
+				name: tokenData.name,
+				scopes: tokenData.scopes,
+				created: tokenData.created,
+				lastUsed: tokenData.lastUsed,
+				expires: tokenData.expires,
 			},
 		};
 	},
@@ -76,13 +78,13 @@ export const AccessTokensClientHandler = {
 		if (!connection.hasSudo())
 			return { result: 'sudoRequired' };
 
-		const token = await account.secure.accessTokens.regenerateToken(id, expires);
-		if (typeof token === 'string')
-			return { result: token };
+		const result = await account.secure.accessTokens.regenerateToken(id, expires);
+		if (typeof result === 'string')
+			return { result };
 
 		return {
 			result: 'ok',
-			token: token.token,
+			token: result[0],
 		};
 	},
 } satisfies Partial<MessageHandlers<IClientDirectory, ClientConnection>>;

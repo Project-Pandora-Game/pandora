@@ -10,7 +10,6 @@ import {
 	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
-	PandoraAccessTokenDataSchema,
 	ZodArrayWithInvalidDrop,
 	ZodCast,
 	ZodTemplateString,
@@ -24,6 +23,7 @@ import {
 	type IShardTokenInfo,
 } from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
+import { PandoraAccessTokenDataSchema } from '../account/secure/accessTokens.ts';
 import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
 
 export enum AccountTokenReason {

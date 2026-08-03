@@ -10,7 +10,7 @@ import type { ApiConnection } from '../connection_api.ts';
 export const ApiHandlersToken = {
 	getTokenInfo: (_args, connection): IApiDirectoryNormalResult['getTokenInfo'] => {
 		const account = connection.verifyTokenUseAndGetAccount([]);
-		const tokenInfo = account?.secure.accessTokens.getTokenInfo(connection.token) ?? null;
+		const tokenInfo = account?.secure.accessTokens.getTokenInfo(connection.tokenHash) ?? null;
 		if (account == null || tokenInfo == null)
 			throw new BadMessageError();
 

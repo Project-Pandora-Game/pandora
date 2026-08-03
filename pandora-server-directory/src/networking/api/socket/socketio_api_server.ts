@@ -1,18 +1,19 @@
 import type { Server as HttpServer } from 'http';
-import { Assert, GetLogger, HTTP_SOCKET_IO_API_PATH, IIncomingConnection, type IServerSocket, type PandoraAccessToken } from 'pandora-common';
+import { Assert, GetLogger, HTTP_SOCKET_IO_API_PATH, IIncomingConnection, type IServerSocket } from 'pandora-common';
 import { ApiDirectorySocketAuthMessageSchema, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/networking/helpers';
 import type { DefaultEventsMap, ExtendedError, Socket } from 'socket.io';
 import * as z from 'zod';
 import { accountManager } from '../../../account/accountManager.ts';
+import { AccountSecureAccessTokenStore } from '../../../account/secure/accessTokens.ts';
 import { SocketIOServer } from '../../socketio_common_server.ts';
-import { ApiConnection } from './connection_api.ts';
 import { SocketIOSocket } from '../../socketio_common_socket.ts';
+import { ApiConnection } from './connection_api.ts';
 
 const logger = GetLogger('SIO-Server-Api');
 
 /** Class housing socket.io endpoint for clients */
-export class SocketIOServerApi extends SocketIOServer<{ token: PandoraAccessToken; }> implements IServerSocket<IDirectoryApi> {
+export class SocketIOServerApi extends SocketIOServer<{ tokenHash: string; }> implements IServerSocket<IDirectoryApi> {
 
 	constructor(httpServer: HttpServer) {
 		super(httpServer, {
@@ -33,13 +34,15 @@ export class SocketIOServerApi extends SocketIOServer<{ token: PandoraAccessToke
 					return new Error('Invalid version, expected 1');
 				}
 
-				const account = await accountManager.loadAccountByAccessToken(parsedAuth.data.token);
+				const tokenHash = await AccountSecureAccessTokenStore.hashToken(parsedAuth.data.token);
+
+				const account = await accountManager.loadAccountByAccessTokenHash(tokenHash);
 				if (account == null) {
 					logger.verbose('Rejecting connection due to invalid token');
 					return new Error('Invalid token');
 				}
 
-				socket.data.token = parsedAuth.data.token;
+				socket.data.tokenHash = tokenHash;
 				return undefined;
 			})().then(next, (err) => {
 				logger.error('Error processing API handshake: ', err);
@@ -52,23 +55,23 @@ export class SocketIOServerApi extends SocketIOServer<{ token: PandoraAccessToke
 	 * Handle new incoming connections
 	 * @param socket - The newly connected socket
 	 */
-	protected override onConnect(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, Partial<{ token: PandoraAccessToken; }>>): void {
+	protected override onConnect(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, Partial<{ tokenHash: string; }>>): void {
 		logger.debug(`New API client connected; id: ${socket.id}, remoteAddress: ${socket.request.socket.remoteAddress ?? '[unknown]'}`);
 		socket.once('disconnect', () => {
 			logger.debug(`API Client disconnected; id: ${socket.id}`);
 		});
 
-		const token = socket.data.token;
-		Assert(token != null, 'Token is null after successful connection'); // Shouldn't happen after auth middleware runs
+		const tokenHash = socket.data.tokenHash;
+		Assert(tokenHash != null, 'Token is null after successful connection'); // Shouldn't happen after auth middleware runs
 
-		const account = accountManager.getAccountByAccessToken(token); // Should be hot after auth middleware, but not guaranteed due to races (e.g. token deletion)
-		const tokenInfo = account?.secure.accessTokens.getTokenInfo(token);
+		const account = accountManager.getAccountByAccessTokenHash(tokenHash); // Should be hot after auth middleware, but not guaranteed due to races (e.g. token deletion)
+		const tokenInfo = account?.secure.accessTokens.getTokenInfo(tokenHash);
 		if (!account || !tokenInfo) {
 			logger.warning(`Late rejecting API connection from ${socket.request.socket.remoteAddress ?? '[unknown]'}: Bad token`);
 			socket.disconnect(true);
 			return;
 		}
-		new ApiConnection(this, new SocketIOSocket(socket), account, token, tokenInfo);
+		new ApiConnection(this, new SocketIOSocket(socket), account, tokenHash, tokenInfo);
 	}
 
 	public sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryApi>>(client: ReadonlySet<IIncomingConnection<IDirectoryApi>>, messageType: K, message: SocketInterfaceRequest<IDirectoryApi>[K]): void {

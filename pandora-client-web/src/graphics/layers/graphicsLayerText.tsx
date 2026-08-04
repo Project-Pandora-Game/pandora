@@ -135,9 +135,11 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 
 	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => getFilters()?.slice(), [getFilters]);
 
+	const layerEnabled = layer.enableCond == null || EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item));
+
 	useLayoutEffect(() => {
 		const sprite = ref.current;
-		if (app == null || textModule == null || sprite == null)
+		if (app == null || textModule == null || sprite == null || !layerEnabled)
 			return;
 
 		const style = new PIXI.TextStyle({
@@ -166,9 +168,9 @@ export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDevice
 			sprite.position = { x: 0, y: 0 };
 			app.renderer.canvasText.returnTexture(textTexture);
 		};
-	}, [app, textModule, color, layer, pivot]);
+	}, [app, textModule, color, layer, pivot, layerEnabled]);
 
-	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
+	if (!layerEnabled)
 		return null;
 
 	return (

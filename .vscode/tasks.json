@@ -210,6 +210,76 @@
 			}
 		},
 		{
+			"label": "pandora-api: dev",
+			"type": "npm",
+			"script": "dev",
+			"path": "pandora-api",
+			"dependsOn": [
+				"pandora-common: dev"
+			],
+			"icon": {
+				"id": "tools"
+			},
+			"isBackground": true,
+			"promptOnClose": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"base": "$tsc",
+				"source": "tsc:common",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/pandora-api"
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " File change detected\\. Starting incremental compilation\\.\\.\\.",
+					"endsPattern": " Watching for file changes\\."
+				}
+			}
+		},
+		{
+			"label": "pandora-cli: dev",
+			"type": "npm",
+			"script": "dev",
+			"path": "pandora-cli",
+			"dependsOn": [
+				"pandora-api: dev"
+			],
+			"icon": {
+				"id": "tools"
+			},
+			"isBackground": true,
+			"promptOnClose": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"base": "$tsc",
+				"source": "tsc:common",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/pandora-cli"
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " File change detected\\. Starting incremental compilation\\.\\.\\.",
+					"endsPattern": " Watching for file changes\\."
+				}
+			}
+		},
+		{
 			"label": "Start all (no-common,parallel)",
 			"hide": true,
 			"dependsOn": [

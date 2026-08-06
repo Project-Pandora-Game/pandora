@@ -1,4 +1,4 @@
-import { ConnectToPandoraApi, WELL_KNOWN_SERVER_ADDRESSES } from 'pandora-api/api';
+import { ConnectToPandoraApi } from 'pandora-api/api';
 import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 
 {
@@ -30,7 +30,7 @@ async function Run(): Promise<void> {
 
 	using pandoraApi = (await ConnectToPandoraApi({
 		token: '',
-		directoryConnectionAddress: WELL_KNOWN_SERVER_ADDRESSES.localDev,
+		directoryConnectionAddress: 'localDev',
 	})).unwrap();
 
 	const currentToken = (await pandoraApi.token.getCurrentTokenInfo()).unwrap();

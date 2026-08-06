@@ -6,6 +6,7 @@ import {
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceDefinition } from 'pandora-common/networking/helpers';
 import { Socket, connect } from 'socket.io-client';
+import { URL } from './utils/url_shim.ts';
 
 export interface Connector<OutboundT extends SocketInterfaceDefinition> extends IConnectionBase<OutboundT> {
 	connect(): void;
@@ -28,19 +29,16 @@ export interface SocketIOConnectorProps<OutboundT extends SocketInterfaceDefinit
 
 type SocketAuthCallback = (data?: object) => void;
 
-export const URL_PATH_REGEX = /^((?:(https?|wss?):\/)?\/?([^:/\s]+)(?::(\d+))?)(\/[^#\s]+)?$/;
-
 export function GetSocketIoUrl(uri: string): {
 	origin: string;
 	path: string;
 } {
-	const matched = URL_PATH_REGEX.exec(uri);
-	if (matched == null) {
-		throw new Error(`Failed to parse URL ${uri}`);
-	}
+	// Parse the uri into full URL
+	const url = new URL(uri);
+	// Return origin and updated path
 	return {
-		origin: matched[1],
-		path: matched[5],
+		origin: url.origin,
+		path: url.pathname,
 	};
 }
 

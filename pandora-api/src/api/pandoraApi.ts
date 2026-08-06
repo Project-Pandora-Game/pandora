@@ -43,8 +43,14 @@ export class PandoraApi implements Disposable {
 		const internalInstance = new InternalApiDirectory();
 		await internalInstance.init();
 		try {
+			// Translate well-known names to addresses
+			const directoryConnectionName = options.directoryConnectionAddress ?? 'main';
+			const directoryConnectionAddress = Object.hasOwn(WELL_KNOWN_SERVER_ADDRESSES, directoryConnectionName) ?
+				WELL_KNOWN_SERVER_ADDRESSES[directoryConnectionName as keyof typeof WELL_KNOWN_SERVER_ADDRESSES] :
+				directoryConnectionName;
+
 			await internalInstance.connectToServer(
-				options.directoryConnectionAddress ?? WELL_KNOWN_SERVER_ADDRESSES.main,
+				directoryConnectionAddress,
 				parsedToken.data,
 			);
 		} catch (err) {
@@ -64,16 +70,23 @@ export interface PandoraApiCreateOptions {
 	 */
 	token: string;
 	/**
-	 * Address to Directory server to connect to.
+	 * Address to Directory server to connect to. You can use a well-known name (listed below),
+	 * or a HTTP(S) URL path to Directory server's api_socket.io.
 	 *
 	 * This is useful if you want to connect to local Pandora instance or to PTB for testing.
 	 * Connects to main server by default.
 	 *
-	 * For other well-known values see `WELL_KNOWN_SERVER_ADDRESSES`.
+	 * Well-known names:
+	 * - `'main'` - Main production server.
+	 * - `'mainFallback'` - Fallback path to production server. Use sparingly, as it has lower capacity than default path.
+	 * - `'ptb'` - Public Test Build server. See https://ptb.project-pandora.com/ for more details.
+	 * - `'localDev'` - Default configuration for locally running development server. You can use this if you host your own Pandora instance for development.
 	 *
-	 * @default 'https://project-pandora.com/server/directory/api_socket.io'
+	 * For URLs of well-known values see `WELL_KNOWN_SERVER_ADDRESSES`.
+	 *
+	 * @default 'main'
 	 */
-	directoryConnectionAddress?: string;
+	directoryConnectionAddress?: (keyof typeof WELL_KNOWN_SERVER_ADDRESSES) | (string & {} /* A normal string, but still offer intellisense on well-known values instead of collapsing type */);
 }
 
 /** Possible errors during Pandora API creation */

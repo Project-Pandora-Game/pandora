@@ -143,10 +143,9 @@ export class ApiDirectoryConnector extends Service<ApiDirectoryConnectorServiceC
 			this.setState(ApiDirectoryConnectionState.DISCONNECTED);
 			return;
 		}
-		Assert(this._connector != null);
 		if (this._state === ApiDirectoryConnectionState.DISCONNECTED)
 			return;
-		this._connector.disconnect();
+		this._connector?.disconnect();
 		this.setState(ApiDirectoryConnectionState.DISCONNECTED);
 		this.logger.verbose('Disconnected from Directory');
 	}

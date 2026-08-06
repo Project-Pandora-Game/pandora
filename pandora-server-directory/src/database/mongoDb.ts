@@ -173,7 +173,7 @@ const accountCollection = new ValidatedCollection(
 		{
 			name: 'accountAccessToken',
 			unique: true,
-			key: { 'secure.accessTokens.token': 1 },
+			key: { 'secure.accessTokens.tokenHash': 1 },
 			// Ignore accounts without access tokens
 			sparse: true,
 		},

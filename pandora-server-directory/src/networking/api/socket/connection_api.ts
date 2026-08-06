@@ -77,7 +77,11 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		}
 
 		// Check if the token was altogether invalidated and disconnect the connection if yes
-		if (verifyResult === 'disabledAccount' || verifyResult === 'invalidToken') {
+		if (verifyResult === 'disabledAccount') {
+			queueMicrotask(() => {
+				this.disconnect('account disabled');
+			});
+		} else if (verifyResult === 'invalidToken') {
 			queueMicrotask(() => {
 				this.disconnect('token expired');
 			});

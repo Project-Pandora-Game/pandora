@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
+import { Assert, AssertNever, EMPTY_ARRAY, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
 import { ApiDirectorySchema, DirectoryApiSchema, type IApiDirectory, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../../../account/account.ts';
@@ -14,6 +14,7 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 	public readonly connectionTime: number;
 
 	private _account: Account | null;
+	private _accountEventUnsubscribe: (() => void) | null = null;
 	private _tokenEventUnsubscribe: (() => void) | null = null;
 
 	constructor(server: IServerSocket<IDirectoryApi>, socket: IncomingSocket, account: Account, tokenHash: string, tokenInfo: PandoraAccessTokenInfo) {
@@ -23,6 +24,16 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		account.touch();
 		this._account = account;
 		this.tokenHash = tokenHash;
+		this._accountEventUnsubscribe = account.onAny((event) => {
+			if ('accountInfoChanged' in event) {
+				if (this._account != null) {
+					const verifyResult = this._account.secure.accessTokens.verifyToken(this.tokenHash, EMPTY_ARRAY);
+					if (verifyResult !== 'ok') {
+						this._onTokenReverifyError(verifyResult);
+					}
+				}
+			}
+		});
 		this._tokenEventUnsubscribe = account.secure.accessTokens.onAny((event) => {
 			if (event.tokenInvalidated === this.tokenHash) {
 				if (this._account != null) {
@@ -76,6 +87,11 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 			return true;
 		}
 
+		this._onTokenReverifyError(verifyResult);
+		return false;
+	}
+
+	private _onTokenReverifyError(verifyResult: 'disabledAccount' | 'invalidToken' | 'missingScopes'): void {
 		// Check if the token was altogether invalidated and disconnect the connection if yes
 		if (verifyResult === 'disabledAccount') {
 			queueMicrotask(() => {
@@ -90,7 +106,6 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		} else {
 			AssertNever(verifyResult);
 		}
-		return false;
 	}
 
 	public verifyTokenUseAndGetAccount(requiredScopes: readonly PandoraAccessTokenScope[]): Account | null {
@@ -107,6 +122,8 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		Assert(this.rooms.has(this._account.associatedApiConnections));
 		this._account.touch();
 		this._account.associatedApiConnections.leave(this);
+		this._accountEventUnsubscribe?.();
+		this._accountEventUnsubscribe = null;
 		this._tokenEventUnsubscribe?.();
 		this._tokenEventUnsubscribe = null;
 		this._account = null;

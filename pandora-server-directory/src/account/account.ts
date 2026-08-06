@@ -17,6 +17,7 @@ import {
 	OutfitMeasureCost,
 	ServerRoom,
 	TimeSpanMs,
+	TypedEventEmitter,
 	type AccountSettings,
 	type AccountSettingsKeys,
 	type AssetFrameworkPosePresetWithId,
@@ -40,7 +41,10 @@ import type { ActorIdentity } from './actorIdentity.ts';
 import { CharacterInfo } from './character.ts';
 
 /** Currently logged in or recently used account */
-export class Account implements ActorIdentity {
+export class Account extends TypedEventEmitter<{
+	/** Some of the account's information has changed. Re-check important data the consumer uses. */
+	accountInfoChanged: void;
+}> implements ActorIdentity {
 	private readonly logger: Logger;
 	private readonly cleanupInterval: AsyncInterval;
 
@@ -76,6 +80,7 @@ export class Account implements ActorIdentity {
 	}
 
 	constructor(data: DatabaseAccountWithSecure, characters: readonly DatabaseCharacterSelfInfo[]) {
+		super();
 		this.logger = GetLogger('Account', `[Account ${data.id}]`);
 		this.lastActivity = Date.now();
 		// Shallow copy to preserve received data when cleaning up secure
@@ -415,6 +420,8 @@ export class Account implements ActorIdentity {
 		}
 		// Update friends
 		this.contacts.updateStatus();
+		// Update anything else that subscribed
+		this.emit('accountInfoChanged', undefined);
 	}
 
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {

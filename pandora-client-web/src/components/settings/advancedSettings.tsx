@@ -128,10 +128,10 @@ function AdvancedSettingConfirmationDialogContents({ category, cancel }: Advance
 	const categoryInfo = ADVANCED_SETTINGS_CATEGORIES[category];
 
 	const [waitDeadline, setWaitDeadline] = useState<number | null>(null);
-	const now = useCurrentTime();
+	const now = useCurrentTime(500);
 
 	useEffect(() => {
-		setWaitDeadline(Date.now() + categoryInfo.wait);
+		setWaitDeadline(Date.now() + categoryInfo.wait - 100 /* Small reduction to avoid seemingly higher number in UI */);
 	}, [categoryInfo]);
 
 	return (

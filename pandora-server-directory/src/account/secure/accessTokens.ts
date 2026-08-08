@@ -5,19 +5,16 @@ import {
 	AsyncSynchronized,
 	LIMIT_ACCOUNT_ACCESS_TOKEN_COUNT,
 	PandoraAccessTokenGenerate,
-	PandoraAccessTokenInfoSchema,
 	TypedEventEmitter,
-	ZodBase64Regex,
 	type Logger,
 	type PandoraAccessToken,
 	type PandoraAccessTokenInfo,
 	type PandoraAccessTokenScope,
 	type PandoraAccessTokenScopeList,
-	type ZodObjectShape,
 } from 'pandora-common';
 import promClient from 'prom-client';
-import * as z from 'zod';
 import { GetDatabase } from '../../database/databaseProvider.ts';
+import type { PandoraAccessTokenData } from '../../database/databaseStructure.ts';
 import type AccountSecure from '../accountSecure.ts';
 
 const GlobalTokenLock = new AsyncLock({
@@ -33,16 +30,6 @@ const tokenUseMetric = new promClient.Counter({
 });
 
 const LAST_USE_UPDATE_DEBOUNCE = 5000; // Update "last use" value only at most every 5 seconds
-
-/** Secret data about Pandora Access Token */
-export interface PandoraAccessTokenData extends PandoraAccessTokenInfo {
-	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
-	tokenHash: string;
-}
-/** Secret data about Pandora Access Token */
-export const PandoraAccessTokenDataSchema: z.ZodObject<ZodObjectShape<PandoraAccessTokenData>> = PandoraAccessTokenInfoSchema.extend({
-	tokenHash: z.string().regex(ZodBase64Regex),
-});
 
 export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 	/** Token was invalidated. Content is token's hash. */
@@ -229,7 +216,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		return cloneDeep(this.#tokens);
 	}
 
-	private static _generateRandomToken(): PandoraAccessToken {
+	public static _generateRandomToken(): PandoraAccessToken {
 		return PandoraAccessTokenGenerate(AccessTokenSecretGenerator(32));
 	}
 

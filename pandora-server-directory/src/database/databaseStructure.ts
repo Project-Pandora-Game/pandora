@@ -10,10 +10,14 @@ import {
 	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
+	PandoraAccessTokenInfoSchema,
 	ZodArrayWithInvalidDrop,
+	ZodBase64Regex,
 	ZodCast,
 	ZodTemplateString,
 	ZodTruncate,
+	type PandoraAccessTokenInfo,
+	type ZodObjectShape,
 } from 'pandora-common';
 import {
 	AccountCryptoKeySchema,
@@ -23,7 +27,6 @@ import {
 	type IShardTokenInfo,
 } from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
-import { PandoraAccessTokenDataSchema } from '../account/secure/accessTokens.ts';
 import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
 
 export enum AccountTokenReason {
@@ -44,6 +47,16 @@ export const DatabaseAccountTokenSchema = z.object({
 	reason: z.enum(AccountTokenReason),
 });
 export type DatabaseAccountToken = z.infer<typeof DatabaseAccountTokenSchema>;
+
+/** Secret data about Pandora Access Token */
+export interface PandoraAccessTokenData extends PandoraAccessTokenInfo {
+	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
+	tokenHash: string;
+}
+/** Secret data about Pandora Access Token */
+export const PandoraAccessTokenDataSchema: z.ZodObject<ZodObjectShape<PandoraAccessTokenData>> = PandoraAccessTokenInfoSchema.extend({
+	tokenHash: z.string().regex(ZodBase64Regex),
+});
 
 export const GitHubInfoSchema = z.object({
 	id: z.number(),

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
+import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
@@ -17,6 +17,7 @@ export const ApiDirectorySchema = {
 		response: z.object({
 			accountId: AccountIdSchema,
 			tokenId: PandoraAccessTokenIdSchema,
+			tokenName: PandoraAccessTokenNameSchema,
 			tokenScopes: PandoraAccessTokenScopeListSchema,
 			tokenExpires: z.number().nullable(),
 		}),

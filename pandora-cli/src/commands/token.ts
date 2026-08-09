@@ -29,6 +29,7 @@ export const COMMAND_TOKEN: CliCommand<CliCommandExecutionContext> = {
 									const {
 										accountId,
 										tokenId,
+										tokenName,
 										tokenScopes,
 										tokenExpires,
 									} = info.value;
@@ -37,6 +38,7 @@ export const COMMAND_TOKEN: CliCommand<CliCommandExecutionContext> = {
 										process.stdout.write(
 											`Account id: ${accountId}\n` +
 											`Token id: ${tokenId}\n` +
+											`Token name: ${tokenName}\n` +
 											`Token scopes:\n` +
 											(tokenScopes.length > 0 ? tokenScopes.map((s) => `  - ${s}\n`).join('') : '  - Basic\n') +
 											`Token expires: ${tokenExpires.map_or('Never', (d) => d.toISOString())}\n`,
@@ -45,6 +47,7 @@ export const COMMAND_TOKEN: CliCommand<CliCommandExecutionContext> = {
 										process.stdout.write(JSON.stringify({
 											accountId,
 											tokenId,
+											tokenName,
 											tokenScopes,
 											tokenExpires: tokenExpires.map_or(null, (d) => d.toISOString()),
 										}, undefined, '  ') + '\n');

@@ -14,6 +14,8 @@ export class PandoraApiToken {
 		accountId: AccountId;
 		/** Unique Id of the token within this account (NOT the token itself). Can be used in other token-based APIs to select this token. */
 		tokenId: string;
+		/** Name of the token, as specified by the user. */
+		tokenName: string;
 		/** List of scopes this token has been granted. */
 		tokenScopes: PandoraAccessTokenScopeList;
 		/** Time when this token expires, or `None` if it does not expire. */
@@ -24,6 +26,7 @@ export class PandoraApiToken {
 			return Result.Ok({
 				accountId: response.accountId,
 				tokenId: response.tokenId,
+				tokenName: response.tokenName,
 				tokenScopes: response.tokenScopes,
 				tokenExpires: response.tokenExpires != null ? Option.Some(new Date(response.tokenExpires)) : Option.None,
 			});

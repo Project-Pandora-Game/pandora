@@ -17,6 +17,7 @@ export const ApiHandlersToken = {
 		return {
 			accountId: account.id,
 			tokenId: tokenInfo.id,
+			tokenName: tokenInfo.name,
 			tokenScopes: CloneDeepMutable(tokenInfo.scopes),
 			tokenExpires: tokenInfo.expires,
 		};

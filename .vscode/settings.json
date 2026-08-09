@@ -11,9 +11,9 @@
 	"files.readonlyInclude": {
 		"node_modules/**": true,
 		"coverage/**": true,
-		"pandora-{common,server-directory,server-shard,client-web,tests}/node_modules/**": true,
-		"pandora-{common,server-directory,server-shard,client-web}/dist/**": true,
-		"pandora-{common,server-directory,server-shard,client-web,tests}/coverage/**": true,
+		"pandora-{common,server-directory,server-shard,client-web,tests,api,cli}/node_modules/**": true,
+		"pandora-{common,server-directory,server-shard,client-web,api,cli}/dist/**": true,
+		"pandora-{common,server-directory,server-shard,client-web,tests,api,cli}/coverage/**": true,
 		"pandora-tests/playwright-report/**": true,
 		"pandora-tests/temp/**": true,
 		"pandora-tests/test-results/**": true,

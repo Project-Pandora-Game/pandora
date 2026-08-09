@@ -8,6 +8,17 @@ export function CommandSelectorEnum<const TOption extends string>(options: reado
 	return {
 		preparse: 'quotedArgTrimmed',
 		parse(selector) {
+			// If there is no input, print options and exit.
+			// Do not assume that empty input matches anything - not even if there is only one option.
+			if (!selector.trim()) {
+				return {
+					success: false,
+					error: `Possible options:\n` + options.map((o) => (
+						'  - ' + (typeof o === 'string' ? o : `${o[0]} - ${o[1]}`) + '\n'
+					)).join(''),
+				};
+			}
+
 			let matches = options.filter((o) => (typeof o === 'string' ? o : o[0]) === selector);
 			if (matches.length === 0)
 				matches = options.filter((o) => (typeof o === 'string' ? o : o[0]).toLowerCase() === selector.toLowerCase());

@@ -42,6 +42,11 @@ export interface CommandRunner<
 	EntryArguments extends Record<string, never>,
 > {
 	run(context: Context, args: EntryArguments, rest: string): Promisable<boolean>;
+	/**
+	 * Same as `run`, but input has already been tokenized - doesn't need further splitting up.
+	 * @param rest - Unparsed arguments. The array **may be modified**.
+	 */
+	runTokenized(context: Context, args: EntryArguments, rest: string[]): Promisable<boolean>;
 
 	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteResult;
 	predictHeader(): string;
@@ -76,6 +81,22 @@ export class CommandRunnerExecutor<
 
 	public run(context: Context, args: EntryArguments, rest: string): Promisable<boolean> {
 		const result = this.handler(context, args, rest);
+		if (result == null || typeof result === 'boolean')
+			return result ?? true;
+
+		return result.then((r) => r ?? true);
+	}
+
+	public runTokenized(context: Context, args: EntryArguments, rest: string[]): Promisable<boolean> {
+		if (rest.length > 1) {
+			context.displayError?.(
+				`Done parsing command arguments, but received ${rest.length - 1} unknown positional arguments.\n` +
+				`If you are trying to pass argument with spaces, make sure to "quote" it.`,
+			);
+			return false;
+		}
+
+		const result = this.handler(context, args, rest.length > 0 ? rest[0] : '');
 		if (result == null || typeof result === 'boolean')
 			return result ?? true;
 
@@ -142,6 +163,20 @@ export class CommandRunnerArgParser<
 			...args,
 			[this.name]: parsed.value,
 		}, rest);
+	}
+
+	public runTokenized(context: Context, args: EntryArguments, input: string[]): Promisable<boolean> {
+		const value = input.shift() ?? '';
+
+		const parsed = this.processor.parse(value, context, args);
+		if (!parsed.success) {
+			context.displayError?.(parsed.error);
+			return false;
+		}
+		return this.next.runTokenized(context, {
+			...args,
+			[this.name]: parsed.value,
+		}, input);
 	}
 
 	public autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteResult {
@@ -231,6 +266,14 @@ export class CommandRunnerFork<
 		const option = this.descriptor[optionName];
 
 		return option.handler.run(context, args, input);
+	}
+
+	public runTokenized(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string[]): Promisable<boolean> {
+		const optionName: ForkOptions = args[this.argument];
+		Assert(Object.hasOwn(this.descriptor, optionName));
+		const option = this.descriptor[optionName];
+
+		return option.handler.runTokenized(context, args, input);
 	}
 
 	public autocomplete(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): CommandAutocompleteResult {

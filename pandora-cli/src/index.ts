@@ -1,5 +1,8 @@
-import { ConnectToPandoraApi } from 'pandora-api/api';
-import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
+import { existsSync } from 'fs';
+import { AnyToString, GetLogger, logConfig, LogLevel, type LogOutputDefinition } from 'pandora-common';
+import { loadEnvFile } from 'process';
+import { RunCliCommand } from './cliCommandRunner.ts';
+import { GenerateCliServices } from './services/cliServices.ts';
 
 {
 	const nodeLogger = GetLogger('Node');
@@ -14,28 +17,44 @@ import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 
 async function Run(): Promise<void> {
 	// Setup logging specially for CLI: Only ever log to the stderr
-	logConfig.logOutputs = [
-		{
-			logLevel: LogLevel.DEBUG,
-			logLevelOverrides: {},
-			supportsColor: true,
-			onMessage: (prefix, message) => {
-				const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
-				process.stderr.write(line, 'utf8');
-			},
+	const consoleOutput: LogOutputDefinition = {
+		logLevel: LogLevel.VERBOSE,
+		logLevelOverrides: {},
+		supportsColor: true,
+		onMessage: (prefix, message) => {
+			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
+			process.stderr.write(line, 'utf8');
 		},
+	};
+	logConfig.logOutputs = [
+		consoleOutput,
 	];
 
-	GetLogger('CLI').info('Hello World!');
+	const logger = GetLogger('CLI');
 
-	using pandoraApi = (await ConnectToPandoraApi({
-		token: '',
-		directoryConnectionAddress: 'localDev',
-	})).unwrap();
+	// Load environment variables from .env file
+	if (existsSync('./.env')) {
+		loadEnvFile('./.env');
+		logger.debug('Loaded .env file');
+	}
 
-	const currentToken = (await pandoraApi.token.getCurrentTokenInfo()).unwrap();
+	// Init the CLI service manager
+	const serviceManager = GenerateCliServices();
+	await serviceManager.load();
 
-	GetLogger('CLI').log('Current token:', JSON.stringify(currentToken, undefined, '  '));
+	logger.debug('CLI Services loaded');
+
+	logger.debug('Running command...');
+	try {
+		await RunCliCommand(serviceManager, process.argv.slice(2));
+		logger.debug('Command runner completed');
+	} catch (err) {
+		logger.fatal('Error running command:\n', err);
+		process.exitCode = 2;
+	}
+
+	// Cleanup
+	serviceManager.services.apiManager?.close();
 }
 
 await Run();

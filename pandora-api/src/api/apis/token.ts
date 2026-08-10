@@ -36,7 +36,7 @@ export class PandoraApiToken {
 	}
 
 	/** @private */
-	public static create(internal: InternalApiDirectory): PandoraApiToken {
+	public static _create(internal: InternalApiDirectory): PandoraApiToken {
 		return new PandoraApiToken(internal);
 	}
 }

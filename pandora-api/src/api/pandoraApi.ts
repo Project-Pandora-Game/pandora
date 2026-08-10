@@ -1,5 +1,6 @@
 import { GetLogger, PandoraAccessTokenSchema, Result } from 'pandora-common';
 import { InternalApiDirectory } from '../internal/apiDirectory.ts';
+import { PandoraApiSpaceSearch } from './apis/spaceSearch.ts';
 import { PandoraApiToken } from './apis/token.ts';
 import { WELL_KNOWN_SERVER_ADDRESSES } from './wellKnownServerAddresses.ts';
 
@@ -16,10 +17,13 @@ export class PandoraApi implements Disposable {
 
 	/** APIs related to working with Pandora tokens. */
 	public readonly token: PandoraApiToken;
+	/** APIs related to finding spaces. */
+	public readonly spaceSearch: PandoraApiSpaceSearch;
 
 	private constructor(internal: InternalApiDirectory) {
 		this._internal = internal;
-		this.token = PandoraApiToken.create(internal);
+		this.token = PandoraApiToken._create(internal);
+		this.spaceSearch = PandoraApiSpaceSearch._create(internal);
 	}
 
 	/**

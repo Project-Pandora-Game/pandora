@@ -1,5 +1,7 @@
 import * as z from 'zod';
 import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
+import { LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
+import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../../../space/spaceSearch.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
@@ -11,6 +13,8 @@ export type ApiDirectorySocketAuthMessage = z.infer<typeof ApiDirectorySocketAut
 
 /** API->Directory messages */
 export const ApiDirectorySchema = {
+	//#region Tokens
+
 	/** Get info about the token that was used to authenticate to the API. */
 	getTokenInfo: {
 		request: z.object({}),
@@ -22,6 +26,25 @@ export const ApiDirectorySchema = {
 			tokenExpires: z.number().nullable(),
 		}),
 	},
+
+	//#endregion
+
+	//#region Space search
+
+	/** Search through all public spaces */
+	spacePublicSearch: {
+		request: z.object({
+			args: SpaceSearchArgumentsSchema,
+			limit: z.int().positive().max(LIMIT_SPACE_SEARCH_COUNT),
+			skip: z.number().int().nonnegative().optional(),
+		}),
+		response: z.object({
+			result: SpaceSearchResultSchema,
+		}),
+	},
+
+	//#endregion
+
 } as const satisfies SocketInterfaceDefinition;
 
 export type IApiDirectory = Satisfies<typeof ApiDirectorySchema, SocketInterfaceDefinitionVerified<typeof ApiDirectorySchema>>;

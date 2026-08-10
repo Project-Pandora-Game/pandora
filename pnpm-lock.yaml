@@ -320,8 +320,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1101.0
-        version: 3.1101.0
+        specifier: 3.1102.0
+        version: 3.1102.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.76
         version: 3.972.76
@@ -591,8 +591,8 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@aws-sdk/client-sesv2@3.1101.0':
-    resolution: {integrity: sha512-5n4COAW5u6T1gOz4t6RueAncImDjK0wdoQEXu1ABnRfLAoNa2dlouubKq3lHLliQdhhEo4so7Cn88ylprab0Ng==}
+  '@aws-sdk/client-sesv2@3.1102.0':
+    resolution: {integrity: sha512-xkTVCxv/vDcUJfnoDxyeQktioSS/zBIPI/GZbTXOFjhwLhli3mLuN/d5xI3b1y3cDjx7i4wAdnRuO04qUwhBBQ==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.977.6':
@@ -617,6 +617,10 @@ packages:
 
   '@aws-sdk/credential-provider-node@3.972.76':
     resolution: {integrity: sha512-1yzLmRiYSgGC25v7ZZEwJn/auhHHTIHgFOmzL2f36hf1+7jSLcX+1QrAz4760WEzPiiQl8xmlpFhHfl2OoyVzA==}
+    engines: {node: '>=20.0.0'}
+
+  '@aws-sdk/credential-provider-node@3.972.78':
+    resolution: {integrity: sha512-OgPAnfvbGAMWac6yvxJ1ihslrvDpPVwR68D2csospdNCCyPvHk9JLzYKwz48SNiS1T2znDwHauywRKRFfpyYng==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/credential-provider-process@3.972.67':
@@ -6152,10 +6156,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@aws-sdk/client-sesv2@3.1101.0':
+  '@aws-sdk/client-sesv2@3.1102.0':
     dependencies:
       '@aws-sdk/core': 3.977.6
-      '@aws-sdk/credential-provider-node': 3.972.76
+      '@aws-sdk/credential-provider-node': 3.972.78
       '@aws-sdk/signature-v4-multi-region': 3.996.43
       '@aws-sdk/types': 3.974.2
       '@smithy/core': 3.31.1
@@ -6219,6 +6223,20 @@ snapshots:
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-node@3.972.76':
+    dependencies:
+      '@aws-sdk/credential-provider-env': 3.972.67
+      '@aws-sdk/credential-provider-http': 3.972.69
+      '@aws-sdk/credential-provider-ini': 3.973.12
+      '@aws-sdk/credential-provider-process': 3.972.67
+      '@aws-sdk/credential-provider-sso': 3.973.11
+      '@aws-sdk/credential-provider-web-identity': 3.972.73
+      '@aws-sdk/types': 3.974.2
+      '@smithy/core': 3.31.1
+      '@smithy/credential-provider-imds': 4.4.16
+      '@smithy/types': 4.16.1
+      tslib: 2.8.1
+
+  '@aws-sdk/credential-provider-node@3.972.78':
     dependencies:
       '@aws-sdk/credential-provider-env': 3.972.67
       '@aws-sdk/credential-provider-http': 3.972.69

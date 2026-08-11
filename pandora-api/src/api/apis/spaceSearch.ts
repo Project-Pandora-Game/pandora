@@ -8,6 +8,10 @@ export type SearchPublicSpacesError =
 	| { type: 'error'; error: Error; }
 	| { type: 'invalidArgument'; invalidArgument: 'searchArgs' | 'limit' | 'skip'; };
 
+export type ListOwnedSpacesError =
+	| { type: 'error'; error: Error; }
+	| { type: 'notAllowed'; };
+
 /** APIs related to finding spaces. */
 export class PandoraApiSpaceSearch {
 	private readonly _internal: InternalApiDirectory;
@@ -63,6 +67,26 @@ export class PandoraApiSpaceSearch {
 				skip: skip || undefined,
 			});
 			return Result.Ok(response.result);
+		} catch (err) {
+			return Result.Err({
+				type: 'error',
+				error: new Error('Request failed', { cause: err }),
+			});
+		}
+	}
+
+	/**
+	 * Get list of spaces owned by the current account.
+	 * Requires the `spaces:list_owned` token scope.
+	 * @returns Result containing either list of spaces or reason for failure.
+	 */
+	public async listOwnedSpaces(): Promise<Result<Omit<SpaceListInfo, 'hasFriend'>[], ListOwnedSpacesError>> {
+		try {
+			const response = await this._internal.directoryConnector.awaitResponse('spaceOwnedList', {});
+			if (response.result === 'ok') {
+				return Result.Ok(response.spaces);
+			}
+			return Result.Err({ type: response.result });
 		} catch (err) {
 			return Result.Err({
 				type: 'error',

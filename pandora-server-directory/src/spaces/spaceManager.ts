@@ -123,6 +123,19 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		return Array.from(result);
 	}
 
+	public async listOwnedSpaces(account: Account): Promise<Space[]> {
+		const result: Space[] = [];
+		for (const spaceData of await GetDatabase().getSpacesWithOwner(account.id)) {
+			// Load the space (using already loaded to avoid race conditions)
+			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
+			// If we are still owner, add it to the list
+			if (space?.isOwner(account)) {
+				result.push(space);
+			}
+		}
+		return result;
+	}
+
 	public async listPublicSpaces(args: SpaceSearchArguments, limit: number, skip: number): Promise<SpaceSearchResult> {
 		return await GetDatabase().searchSpace(args, limit, skip, false);
 	}

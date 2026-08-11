@@ -65,6 +65,17 @@ export const ApiDirectorySchema = {
 			result: SpaceSearchResultSchema,
 		}),
 	},
+	/** Get list of spaces owned by the current account. Requires the `spaces:list_owned` token scope. */
+	spaceOwnedList: {
+		request: z.object({}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				spaces: ZodCast<Omit<SpaceListInfo, 'hasFriend'>>().array(),
+			}),
+			z.object({ result: z.literal('notAllowed') }),
+		]),
+	},
 
 	//#endregion
 

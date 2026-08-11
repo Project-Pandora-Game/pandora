@@ -883,7 +883,7 @@ export class Space {
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space listing */
-	public checkVisibleTo(account: Account): boolean {
+	public checkVisibleTo(account: Account | 'everyone'): boolean {
 		if (!this.isValid)
 			return false;
 
@@ -891,7 +891,7 @@ export class Space {
 		if (this.isPublic && Array.from(this.characters).some((c) => c.isOnline()))
 			return true;
 
-		if (this.isAllowed(account))
+		if (account !== 'everyone' && this.isAllowed(account))
 			return true;
 
 		return false;

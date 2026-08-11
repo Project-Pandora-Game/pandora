@@ -519,7 +519,9 @@ export const ClientDirectorySchema = {
 	//#region Space search
 	listSpaces: { // Get list of currently active spaces
 		request: z.object({}),
-		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
+		response: z.object({
+			spaces: ZodCast<SpaceListInfo>().array(),
+		}),
 	},
 	spaceSearch: { // Search through all public spaces
 		request: z.object({

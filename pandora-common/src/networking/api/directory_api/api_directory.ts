@@ -1,8 +1,10 @@
 import * as z from 'zod';
 import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
 import { LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
+import type { SpaceListInfo } from '../../../space/space.ts';
 import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../../../space/spaceSearch.ts';
 import { Satisfies } from '../../../utility/misc.ts';
+import { ZodCast } from '../../../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 
 export const ApiDirectorySocketAuthMessageSchema = z.object({
@@ -43,6 +45,15 @@ export const ApiDirectorySchema = {
 
 	//#region Space search
 
+	/** Get list of currently active fully public spaces. Does NOT return the same list as client -
+	 * Spaces that are private but visible to the current account are NOT included.
+	 */
+	spacePublicActiveList: {
+		request: z.object({}),
+		response: z.object({
+			spaces: ZodCast<Omit<SpaceListInfo, 'hasFriend'>>().array(),
+		}),
+	},
 	/** Search through all public spaces */
 	spacePublicSearch: {
 		request: z.object({

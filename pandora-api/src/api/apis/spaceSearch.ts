@@ -1,5 +1,8 @@
-import { LIMIT_SPACE_SEARCH_COUNT, Result, SpaceSearchArgumentsSchema, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
+import { LIMIT_SPACE_SEARCH_COUNT, Result, SpaceSearchArgumentsSchema, type SpaceListInfo, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import type { InternalApiDirectory } from '../../internal/apiDirectory.ts';
+
+export type ListActivePublicSpacesError =
+	| { type: 'error'; error: Error; };
 
 export type SearchPublicSpacesError =
 	| { type: 'error'; error: Error; }
@@ -11,6 +14,23 @@ export class PandoraApiSpaceSearch {
 
 	private constructor(internal: InternalApiDirectory) {
 		this._internal = internal;
+	}
+
+	/**
+	 * List currently active public spaces.
+	 * This does NOT return the same list as client - Spaces that are private but visible to the current account are NOT included.
+	 * @returns Result containing either list of spaces or reason for failure.
+	 */
+	public async listActivePublicSpaces(): Promise<Result<Omit<SpaceListInfo, 'hasFriend'>[], ListActivePublicSpacesError>> {
+		try {
+			const response = await this._internal.directoryConnector.awaitResponse('spacePublicActiveList', {});
+			return Result.Ok(response.spaces);
+		} catch (err) {
+			return Result.Err({
+				type: 'error',
+				error: new Error('Request failed', { cause: err }),
+			});
+		}
 	}
 
 	/**

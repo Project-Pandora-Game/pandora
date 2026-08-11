@@ -100,7 +100,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 
 	private interval: NodeJS.Timeout | undefined;
 
-	public async listSpacesVisibleTo(account: Account): Promise<Space[]> {
+	public async listSpacesVisibleTo(account: Account | 'everyone'): Promise<Space[]> {
 		const result = new Set<Space>();
 		// Look for publically visible, currently loaded spaces
 		for (const space of this.loadedSpaces.values()) {
@@ -110,12 +110,14 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			}
 		}
 		// Look for owned spaces or spaces this account is admin of
-		for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdminOrAllowed(account.id)) {
-			// Load the space (using already loaded to avoid race conditions)
-			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
-			// If we are still owner or admin, add it to the list
-			if (space?.checkVisibleTo(account)) {
-				result.add(space);
+		if (account !== 'everyone') {
+			for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdminOrAllowed(account.id)) {
+				// Load the space (using already loaded to avoid race conditions)
+				const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
+				// If we are still owner or admin, add it to the list
+				if (space?.checkVisibleTo(account)) {
+					result.add(space);
+				}
 			}
 		}
 		return Array.from(result);

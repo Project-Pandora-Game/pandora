@@ -9,6 +9,51 @@ export const COMMAND_SPACESEARCH: CliCommand<CliCommandExecutionContext> = {
 	handler: CreateCliCommand()
 		.fork('subcommand', (forkCtx) => {
 			return {
+				activePublic: {
+					description: `List currently active public spaces. This does NOT return the same list as client - Spaces that are private but visible to the current account are NOT included.\nUsage: spaceSearch activePublic [format: text|json]`,
+					handler: forkCtx
+						.argumentOptional('format', CommandSelectorEnum(['text', 'json']))
+						.handler(async ({ getApi, logger }, {
+							format = 'text',
+						}) => {
+							const api = await getApi();
+
+							const result = await api.spaceSearch.listActivePublicSpaces();
+
+							if (result.is_err()) {
+								logger.error('Error listing spaces:', result.error);
+								return false;
+							}
+
+							if (format === 'text') {
+								if (result.value.length === 0) {
+									process.stdout.write('No spaces found\n');
+								} else {
+									for (const space of result.value) {
+										process.stdout.write(
+											`- Id: ${space.id}\n` +
+											`  Name: ${space.name}\n` +
+											`  Description: ${space.description.includes('\n') ? ('|\n    ' + space.description.replaceAll('\n', '\n    ')) : space.description}\n` +
+											`  Public: ${space.public}\n` +
+											`  Online characters: ${space.onlineCharacters}\n` +
+											`  Total present characters: ${space.totalCharacters}\n` +
+											`  Max characters: ${space.maxUsers}\n` +
+											`  Owners: ${JSON.stringify(space.owners)}\n` +
+											`  Is owner: ${space.isOwner}\n`,
+										);
+									}
+								}
+							} else if (format === 'json') {
+								process.stdout.write(JSON.stringify((
+									result.value
+								), undefined, '  ') + '\n');
+							} else {
+								AssertNever(format);
+							}
+
+							return true;
+						}),
+				},
 				public: {
 					description: `Search through public spaces.\nUsage: spaceSearch public [name filter] [limit] [skip] [sort order: ${SpaceSearchSortSchema.options.join('|')}] [format: text|json]`,
 					handler: forkCtx

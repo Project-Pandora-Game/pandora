@@ -14,8 +14,8 @@
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
 		"lint": "pnpm -r --no-bail --parallel run lint",
-		"lint:root": "eslint --max-warnings 0 .",
-		"lint:fix": "eslint --fix .",
+		"lint:root": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --max-warnings 0 .",
+		"lint:fix": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --fix .",
 		"type-check": "pnpm -r --no-bail --parallel run '/type-check:.*/'",
 		"type-check:test": "pnpm -r --no-bail --parallel run '/type-check:test.*/'",
 		"test": "pnpm -r --no-bail --parallel run test",
@@ -31,6 +31,7 @@
 	"devDependencies": {
 		"@eslint/js": "9.39.5",
 		"@stylistic/eslint-plugin": "5.10.0",
+		"cross-env": "10.1.0",
 		"eslint": "9.39.5",
 		"eslint-plugin-import": "2.32.0",
 		"eslint-plugin-react": "7.37.5",

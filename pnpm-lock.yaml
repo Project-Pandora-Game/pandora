@@ -26,6 +26,9 @@ importers:
       '@stylistic/eslint-plugin':
         specifier: 5.10.0
         version: 5.10.0(eslint@9.39.5(jiti@2.7.0)(supports-color@5.5.0))
+      cross-env:
+        specifier: 10.1.0
+        version: 10.1.0
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)(supports-color@5.5.0)

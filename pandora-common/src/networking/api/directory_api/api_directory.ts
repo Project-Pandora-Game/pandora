@@ -26,6 +26,18 @@ export const ApiDirectorySchema = {
 			tokenExpires: z.number().nullable(),
 		}),
 	},
+	/** Delete the specified token. Currently supports only deleting the very token that is being used. */
+	deleteToken: {
+		request: z.object({
+			/** Id of the token to delete. `null` = own token. */
+			tokenId: PandoraAccessTokenIdSchema.nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({ result: z.literal('ok') }),
+			z.object({ result: z.literal('notAllowed') }),
+			z.object({ result: z.literal('notFound') }),
+		]),
+	},
 
 	//#endregion
 

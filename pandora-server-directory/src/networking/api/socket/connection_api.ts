@@ -11,6 +11,8 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 
 	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
 	public readonly tokenHash: string;
+	/** Id of the token being used. */
+	public readonly tokenId: string;
 	public readonly connectionTime: number;
 
 	private _account: Account | null;
@@ -24,6 +26,7 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		account.touch();
 		this._account = account;
 		this.tokenHash = tokenHash;
+		this.tokenId = tokenInfo.id;
 		this._accountEventUnsubscribe = account.onAny((event) => {
 			if ('accountInfoChanged' in event) {
 				if (this._account != null) {
@@ -37,7 +40,12 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		this._tokenEventUnsubscribe = account.secure.accessTokens.onAny((event) => {
 			if (event.tokenInvalidated === this.tokenHash) {
 				if (this._account != null) {
-					this.disconnect('token invalidated');
+					// Slight delay to let ongoing responses finish
+					// This is not a security hole, as any existing request will already perform the action
+					// and any new one will fail on validation
+					setTimeout(() => {
+						this.disconnect('token invalidated');
+					}, 100);
 				}
 			}
 		});

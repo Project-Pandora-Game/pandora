@@ -58,6 +58,23 @@ export const COMMAND_TOKEN: CliCommand<CliCommandExecutionContext> = {
 									return true;
 								}),
 						},
+						delete: {
+							description: 'Delete (invalidate) the current token. This will make it unable to be used again and immediately terminate all connections using it.',
+							handler: currentForkCtx
+								.handler(async ({ getApi, logger }) => {
+									const api = await getApi();
+
+									const info = await api.token.deleteCurrentToken();
+
+									if (info.is_err()) {
+										logger.error('Error deleting token:', info.error);
+										return false;
+									}
+
+									process.stdout.write(`Ok\n`);
+									return true;
+								}),
+						},
 					})),
 				},
 			};

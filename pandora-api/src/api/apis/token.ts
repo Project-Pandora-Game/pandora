@@ -1,6 +1,11 @@
 import { Option, Result, type AccountId, type PandoraAccessTokenScopeList } from 'pandora-common';
 import type { InternalApiDirectory } from '../../internal/apiDirectory.ts';
 
+export type DeleteTokenError =
+	| { type: 'error'; error: Error; }
+	| { type: 'notAllowed'; }
+	| { type: 'notFound'; };
+
 /** APIs related to working with Pandora tokens. */
 export class PandoraApiToken {
 	private readonly _internal: InternalApiDirectory;
@@ -9,6 +14,10 @@ export class PandoraApiToken {
 		this._internal = internal;
 	}
 
+	/**
+	 * Get information about the token that is currently being used.
+	 * @returns The authenticated account id and information about the token, if successful.
+	 */
 	public async getCurrentTokenInfo(): Promise<Result<{
 		/** Id of the account this token is for. */
 		accountId: AccountId;
@@ -32,6 +41,41 @@ export class PandoraApiToken {
 			});
 		} catch (err) {
 			return Result.Err(new Error('Request failed', { cause: err }));
+		}
+	}
+
+	/**
+	 * Delete (invalidate) a token. Currently only currently used token can be invalidated.
+	 * @param tokenId - Token to invalidate, identified by per-account ID (see `getCurrentTokenInfo`).
+	 * @returns Result of the action.
+	 */
+	public async deleteToken(tokenId: string): Promise<Result<void, DeleteTokenError>> {
+		try {
+			const response = await this._internal.directoryConnector.awaitResponse('deleteToken', { tokenId });
+			if (response.result === 'ok') {
+				return Result.Ok(undefined);
+			} else {
+				return Result.Err({ type: response.result });
+			}
+		} catch (err) {
+			return Result.Err({ type: 'error', error: new Error('Request failed', { cause: err }) });
+		}
+	}
+
+	/**
+	 * Delete (invalidate) the token that is currently being used. Note, that this will immediately cut the connection.
+	 * @returns Result of the action.
+	 */
+	public async deleteCurrentToken(): Promise<Result<void, DeleteTokenError>> {
+		try {
+			const response = await this._internal.directoryConnector.awaitResponse('deleteToken', { tokenId: null });
+			if (response.result === 'ok') {
+				return Result.Ok(undefined);
+			} else {
+				return Result.Err({ type: response.result });
+			}
+		} catch (err) {
+			return Result.Err({ type: 'error', error: new Error('Request failed', { cause: err }) });
 		}
 	}
 

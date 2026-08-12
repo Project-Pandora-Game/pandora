@@ -5,7 +5,10 @@ import { PandoraApiSpaceSearch } from './apis/spaceSearch.ts';
 import { PandoraApiToken } from './apis/token.ts';
 import { WELL_KNOWN_SERVER_ADDRESSES } from './wellKnownServerAddresses.ts';
 
-export type { PandoraApiToken } from './apis/token.ts';
+// Re-export all sub-api types
+export type * from './apis/spaceManagement.ts';
+export type * from './apis/spaceSearch.ts';
+export type * from './apis/token.ts';
 
 /**
  * The main instance of Pandora Api. Includes connection to the server and all API methods.

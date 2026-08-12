@@ -1,10 +1,10 @@
-import { GetLogger, ParseNotNullable, type PandoraAccessToken, type ServiceManager } from 'pandora-common';
+import { GetLogger, ParseNotNullable, type Logger, type PandoraAccessToken, type ServiceManager } from 'pandora-common';
 import type { ApiDirectoryConnector } from './apiDirectoryConnector.ts';
 import { GenerateApiDirectoryServices, type ApiDirectoryServices } from './apiDirectoryServices.ts';
 import { SocketIOConnector } from './socketio_connector.ts';
 
 export class InternalApiDirectory {
-	public readonly logger = GetLogger('PandoraApi');
+	public readonly logger: Logger = GetLogger('PandoraApi');
 
 	public readonly serviceManager: ServiceManager<ApiDirectoryServices>;
 

@@ -19,6 +19,9 @@
 		"strict": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
-		"isolatedModules": true
+		"isolatedModules": true,
+	},
+	"typeAcquisition": {
+		"enable": false
 	}
 }

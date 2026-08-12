@@ -14,8 +14,6 @@
 		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
 		"rootDir": "./src",
 		"incremental": true,
-		"composite": true,
-		"declaration": true,
 	},
 	"include": [
 		"./src/**/*"

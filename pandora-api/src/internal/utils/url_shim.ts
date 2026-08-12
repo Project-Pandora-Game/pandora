@@ -25,4 +25,4 @@ export interface PandoraURLStatic {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const URL = (globalThis as unknown as { URL: PandoraURLStatic; }).URL;
+export const URL: PandoraURLStatic = (globalThis as unknown as { URL: PandoraURLStatic; }).URL;

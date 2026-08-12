@@ -13,16 +13,14 @@ import {
 	RoomLinkNodeConfig,
 	RoomLinkNodeConfigSchema,
 	RoomNameSchema,
-	RoomTemplateSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type CardinalDirection,
 	type Coordinates,
 	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useId, useMemo, useState, type ReactNode } from 'react';
+import { ReactElement, useId, useState, type ReactNode } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
-import exportIcon from '../../../assets/icons/export.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -32,7 +30,6 @@ import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
-import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
@@ -41,10 +38,10 @@ import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
-import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
+import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { SpaceRoleSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
-import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
+import { RoomExportButton } from './roomExportButton.tsx';
 import { RoomSettingsDialog } from './roomSettings.tsx';
 
 export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
@@ -454,81 +451,5 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 				</GameLogicActionButton>
 			</td>
 		</tr>
-	);
-}
-
-function RoomExportButton({ roomState, globalState }: {
-	roomState: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
-}): ReactElement {
-	const serviceManager = useServiceManager();
-	const [showExportDialog, setShowExportDialog] = useState(false);
-	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
-
-	const exportExtra = useMemo(async () => {
-		const previewCanvas = await CreateRoomPhoto({
-			roomState,
-			globalState,
-			serviceManager,
-			quality: '720p',
-			trim: true,
-			noGhost: true,
-			characters: [],
-			characterNames: false,
-		});
-
-		const previewBlob = await new Promise<Blob>((resolve, reject) => {
-			previewCanvas.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				resolve(blob);
-			}, 'image/jpeg', 0.8);
-		}).catch(() => new Promise<Blob>((resolve, reject) => {
-			previewCanvas.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				resolve(blob);
-			}, 'image/png');
-		}));
-
-		const preview: ExportDialogTarget = {
-			content: previewBlob,
-			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
-			type: previewBlob.type,
-		};
-
-		return [preview];
-	}, [globalState, roomState, serviceManager]);
-
-	return (
-		<>
-			<button
-				className='wardrobeActionButton allowed'
-				onClick={ () => {
-					setShowExportDialog(true);
-				} }
-			>
-				<img src={ exportIcon } alt='Export room' />&nbsp;Export
-			</button>
-			{
-				showExportDialog ? (
-					<ExportDialog
-						title={ 'room template' + (roomTemplate.name ? ` "${ roomTemplate.name }"` : '') }
-						exportType='RoomTemplate'
-						exportVersion={ 1 }
-						dataSchema={ RoomTemplateSchema }
-						data={ roomTemplate }
-						extraData={ exportExtra }
-						closeDialog={ () => setShowExportDialog(false) }
-					/>
-				) : null
-			}
-		</>
 	);
 }

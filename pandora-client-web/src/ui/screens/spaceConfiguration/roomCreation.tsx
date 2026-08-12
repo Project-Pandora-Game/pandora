@@ -29,7 +29,7 @@ import { ImportDialog } from '../../../components/exportImport/importDialog.tsx'
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { BackgroundSelectUi } from './backgroundSelect.tsx';
-import { RoomConfigurationBackgroundPreview } from './roomConfiguration.tsx';
+import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 
 export function RoomCreation({ globalState, close }: {
 	globalState: AssetFrameworkGlobalState;

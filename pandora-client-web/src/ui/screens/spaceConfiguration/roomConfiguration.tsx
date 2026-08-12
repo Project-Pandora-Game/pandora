@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
@@ -17,7 +16,6 @@ import {
 	type AssetFrameworkRoomState,
 	type CardinalDirection,
 	type Coordinates,
-	type RoomBackgroundData,
 } from 'pandora-common';
 import { ReactElement, useId, useState, type ReactNode } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -28,19 +26,14 @@ import { TextAreaInput } from '../../../common/userInteraction/input/textAreaInp
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import { Container } from '../../../graphics/baseComponents/container.ts';
-import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
-import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
-import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
-import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
-import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { SpaceRoleSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
+import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 import { RoomExportButton } from './roomExportButton.tsx';
 import { RoomSettingsDialog } from './roomSettings.tsx';
 
@@ -276,44 +269,6 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 				</fieldset>
 			</Column>
 		</fieldset>
-	);
-}
-
-export function RoomConfigurationBackgroundPreview({ background, previewSize, className }: {
-	background: Immutable<RoomBackgroundData> | null;
-	previewSize: number;
-	className?: string;
-}): ReactElement | null {
-	const dpr = useDevicePixelRatio();
-
-	if (background == null) {
-		return null;
-	}
-
-	const previewScale = Math.min(previewSize / background.imageSize[0], previewSize / background.imageSize[1]);
-	const previewSizeX = Math.ceil(previewScale * background.imageSize[0]);
-	const previewSizeY = Math.ceil(previewScale * background.imageSize[1]);
-
-	return (
-		<DivContainer className={ classNames('RoomConfigurationBackgroundPreview', className) }>
-			<GraphicsSceneBackgroundRenderer
-				renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
-				resolution={ dpr }
-				backgroundColor={ 0x000000 }
-				backgroundAlpha={ 0 }
-				forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
-			>
-				<Container
-					scale={ { x: previewScale, y: previewScale } }
-					x={ (previewSizeX - previewScale * background.imageSize[0]) / 2 }
-					y={ (previewSizeY - previewScale * background.imageSize[1]) / 2 }
-				>
-					<GraphicsBackground
-						background={ background }
-					/>
-				</Container>
-			</GraphicsSceneBackgroundRenderer>
-		</DivContainer>
 	);
 }
 

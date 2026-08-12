@@ -20,7 +20,8 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../../../components/common/usageMeter/usageMeter.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
-import { RoomConfiguration, RoomConfigurationBackgroundPreview } from './roomConfiguration.tsx';
+import { RoomConfiguration } from './roomConfiguration.tsx';
+import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 import { RoomCreation } from './roomCreation.tsx';
 import { RoomSpaceGlobalSettingsDialog } from './roomSettings.tsx';
 import './spaceStateConfiguration.scss';
@@ -250,4 +251,3 @@ function GridDirectionArrow({ roomState, linkData, spaceState }: { roomState: As
 		</div>
 	);
 }
-

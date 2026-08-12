@@ -619,18 +619,18 @@ export const ClientDirectorySchema = {
 				space: SpaceIdSchema,
 			}),
 		]),
-		response: ZodCast<{
-			result:
-			| 'ok'
-			| 'failed' // Generic failure
-			| 'notFound' // Space not found
-			| 'notAnOwner' // abandon, invite, inviteCancel: You need to be an owner of the space to do this
-			| 'targetNotAdmin' // invite: Target needs to already be an admin to promote to owner
-			| 'targetNotAllowed' // invite: Target needs to be present or on contacts list to promote to owner
-			| 'inviteNotFound' // inviteCancel, inviteAccept, inviteRefuse: There is no pending invite for target/player
-			| 'spaceOwnershipLimitReached' // inviteAccept: Too many spaces owned
-			;
-		}>(),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notFound', // Space not found
+				'notAnOwner', // abandon, invite, inviteCancel: You need to be an owner of the space to do this
+				'targetNotAdmin', // invite: Target needs to already be an admin to promote to owner
+				'targetNotAllowed', // invite: Target needs to be present or on contacts list to promote to owner
+				'inviteNotFound', // inviteCancel, inviteAccept, inviteRefuse: There is no pending invite for target/player
+				'spaceOwnershipLimitReached', // inviteAccept: Too many spaces owned
+			]),
+		}),
 	},
 	spaceInvite: {
 		request: z.discriminatedUnion('action', [

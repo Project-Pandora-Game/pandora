@@ -16,7 +16,9 @@ ENV variables:
 
 Available commands:
 `.trim() + '\n' +
-		CLI_COMMANDS.map((c): string => (
-			`- ${c.key} ${c.usage}\n    ${c.description.replaceAll('\n', '\n    ')}\n`
-		)).join('');
+		CLI_COMMANDS
+			.filter((c) => !c.hidden)
+			.map((c): string => (
+				`- ${c.key} ${c.usage}\n    ${c.description.replaceAll('\n', '\n    ')}\n`
+			)).join('');
 }

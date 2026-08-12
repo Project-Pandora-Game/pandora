@@ -1,7 +1,8 @@
 import * as z from 'zod';
 import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
 import { LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
-import type { SpaceListInfo } from '../../../space/space.ts';
+import { SpaceIdSchema, type SpaceListInfo } from '../../../space/space.ts';
+import { SpaceDirectoryConfigSchema } from '../../../space/spaceData.ts';
 import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../../../space/spaceSearch.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import { ZodCast } from '../../../validation.ts';
@@ -75,6 +76,52 @@ export const ApiDirectorySchema = {
 			}),
 			z.object({ result: z.literal('notAllowed') }),
 		]),
+	},
+
+	//#endregion
+
+	//#region Space management
+
+	/** Create a new space. Requires the `spaces:create` token scope.
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	spaceCreate: {
+		request: z.object({
+			config: SpaceDirectoryConfigSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				id: SpaceIdSchema,
+			}),
+			z.object({
+				result: z.enum([
+					'notAllowed', // Missing token scopes
+					'spaceOwnershipLimitReached',
+					'accountListNotAllowed', // API cannot fill admin and allow lists in advance - add accounts after target character joins the space
+					'failed', // Generic failure
+				]),
+			}),
+		]),
+	},
+	/** Drop own ownership of a space. Requires the `spaces:disown` token scope.
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	spaceAbandon: {
+		request: z.object({
+			space: SpaceIdSchema,
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'notAllowed', // Missing token scopes
+				'notFound', // Space not found
+				'notAnOwner', // You need to be an owner of the space to do this
+				'failed', // Generic failure
+			]),
+		}),
 	},
 
 	//#endregion

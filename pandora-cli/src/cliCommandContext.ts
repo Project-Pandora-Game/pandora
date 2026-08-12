@@ -13,6 +13,8 @@ export interface CliCommandExecutionContext extends ICommandExecutionContext {
 
 export type CliCommand<TCommandExecutionContext extends ICommandExecutionContext> = {
 	key: string;
+	/** If set, the command does not show in the help text. */
+	hidden?: true;
 	usage: string;
 	description: string;
 	handler: CommandRunner<TCommandExecutionContext, IEmpty>;

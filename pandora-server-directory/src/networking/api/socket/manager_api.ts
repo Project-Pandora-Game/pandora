@@ -3,6 +3,7 @@ import type { IApiDirectory } from 'pandora-common/networking/api/directory_api'
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import type { ApiConnection } from './connection_api.ts';
+import { ApiHandlersSpaceManagement } from './handlers/spaceManagement.ts';
 import { ApiHandlersSpaceSearch } from './handlers/spaceSearch.ts';
 import { ApiHandlersToken } from './handlers/token.ts';
 
@@ -47,6 +48,7 @@ export const ConnectionManagerApi = new class ConnectionManagerApi implements IM
 		this.messageHandler = new MessageHandler<IApiDirectory, ApiConnection>({
 			...ApiHandlersToken,
 			...ApiHandlersSpaceSearch,
+			...ApiHandlersSpaceManagement,
 		});
 	}
 

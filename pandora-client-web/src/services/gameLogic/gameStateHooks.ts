@@ -24,7 +24,7 @@ import {
 	type SpaceRole,
 } from 'pandora-common';
 import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { useCharacterDataOptional, type Character } from '../../character/character.ts';
 import { type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useNullableObservable, useObservable } from '../../observable.ts';
@@ -124,6 +124,35 @@ export function useGlobalState(context: GameState | null): AssetFrameworkGlobalS
 
 }
 
+export function useGlobalStateFiltered(
+	context: GameState,
+	shouldUpdate: (previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) => boolean,
+): AssetFrameworkGlobalState {
+	const snapshot = useRef<{
+		context: GameState;
+		state: AssetFrameworkGlobalState;
+	}>(null);
+
+	return useSyncExternalStore(
+		useCallback((onChange) => context.on('globalStateChange', () => onChange()), [context]),
+		useCallback(() => {
+			const currentState = context.globalState.currentState;
+			if (
+				snapshot.current == null ||
+				snapshot.current.context !== context ||
+				(snapshot.current.state !== currentState && shouldUpdate(snapshot.current.state, currentState))
+			) {
+				snapshot.current = {
+					context,
+					state: currentState,
+				};
+			}
+
+			return snapshot.current.state;
+		}, [context, shouldUpdate]),
+	);
+}
+
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
@@ -214,4 +243,3 @@ export function GetSpaceInfoAccountRole(data: Immutable<SpaceClientInfo>, accoun
 export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
 	return CompareSpaceRoles(GetSpaceInfoAccountRole(data, account), 'admin') >= 0;
 }
-

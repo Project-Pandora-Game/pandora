@@ -5,6 +5,7 @@
  * @type { import('jest').Config }
  */
 export default {
+	testRegex: '\\.test\\.[mc]?[jt]sx?$',
 	clearMocks: true,
 	collectCoverageFrom: [
 		'src/**/*.ts',

@@ -3,12 +3,11 @@ import { DirectoryShardSchema, ShardDirectorySchema, type IDirectoryShard, type 
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Shard } from '../shard/shard.ts';
 import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
-import { ConnectionType, IConnectionShard } from './common.ts';
+import { IConnectionShard } from './common.ts';
 import { ConnectionManagerShard } from './manager_shard.ts';
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
-	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 	private readonly info: IConnectedTokenInfo;
 
 	public shard: Shard | null = null;

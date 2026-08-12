@@ -2,13 +2,10 @@ import { Assert, AssertNever, EMPTY_ARRAY, GetLogger, IncomingConnection, Incomi
 import { ApiDirectorySchema, DirectoryApiSchema, type IApiDirectory, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../../../account/account.ts';
-import { ConnectionType } from '../../common.ts';
 import { ConnectionManagerApi } from './manager_api.ts';
 
 /** Class housing connection from public API */
 export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirectory, IncomingSocket> {
-	public readonly type: ConnectionType.API = ConnectionType.API;
-
 	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
 	public readonly tokenHash: string;
 	/** Id of the token being used. */

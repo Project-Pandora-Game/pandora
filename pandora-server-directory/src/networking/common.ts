@@ -3,14 +3,7 @@ import type { IDirectoryShard } from 'pandora-common/networking/api/directory_sh
 import type { Shard } from '../shard/shard.ts';
 import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
 
-export enum ConnectionType {
-	SHARD,
-	CLIENT,
-	API,
-}
-
 export interface IConnectionShard extends IIncomingConnection<IDirectoryShard> {
-	readonly type: ConnectionType.SHARD;
 	/** The associated shard */
 	shard: Shard | null;
 	/** Time at which this connection was created */

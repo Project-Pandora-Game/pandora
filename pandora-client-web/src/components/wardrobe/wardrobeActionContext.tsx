@@ -27,7 +27,7 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { LIVE_UPDATE_ERROR_THROTTLE } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
+import { useActionSpaceContext, useGameState, useGlobalStateFiltered, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
 import { Column } from '../common/container/container.tsx';
 import { useConfirmDialog } from '../dialog/dialog.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -47,7 +47,13 @@ export interface WardrobeActionContext {
 
 export const wardrobeActionContext = createContext<WardrobeActionContext | null>(null);
 
-export function WardrobeActionContextProvider({ player, children }: { player: PlayerCharacter; children: ReactNode; }): ReactElement {
+const ALWAYS_UPDATE_GLOBAL_STATE = (): boolean => true;
+
+export function WardrobeActionContextProvider({ player, globalStateUpdateFilter = ALWAYS_UPDATE_GLOBAL_STATE, children }: {
+	player: PlayerCharacter;
+	globalStateUpdateFilter?: (previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) => boolean;
+	children: ReactNode;
+}): ReactElement {
 	const gameState = useGameState();
 	const globalStateContainer = gameState.globalState;
 	const spaceContext = useActionSpaceContext();
@@ -68,7 +74,7 @@ export function WardrobeActionContextProvider({ player, children }: { player: Pl
 		},
 	}), [player, globalStateContainer, spaceContext, characters]);
 
-	const globalState = useGlobalState(gameState);
+	const globalState = useGlobalStateFiltered(gameState, globalStateUpdateFilter);
 
 	const context = useMemo((): WardrobeActionContext => ({
 		player,

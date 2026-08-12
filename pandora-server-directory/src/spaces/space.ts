@@ -665,6 +665,9 @@ export class Space {
 		await GetDatabase().deleteSpace(this.id);
 		// Note, that at this point there could still be pending connections or characters tracking it
 		// Ignore those - the requests will fail and once the space is not requestesd for a bit, it will be unloaded from the directory too, actually vanishing
+		queueMicrotask(() => {
+			SpaceManager.tick();
+		});
 	}
 
 	public checkAllowEnter(character: Character, opts: { inviteId?: SpaceInviteId; assumeValidInvite?: boolean; ignoreCharacterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
@@ -1443,6 +1446,9 @@ export class Space {
 
 	@AsyncSynchronized('object')
 	private async _syncActivityData(): Promise<void> {
+		if (!this.isValid)
+			return; // Ignore updating invalid space
+
 		await GetDatabase().updateSpace(this.id, { activity: cloneDeep(this._activity) }, null);
 	}
 

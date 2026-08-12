@@ -61,8 +61,8 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		inUseSpacesMetric.set(0);
 	}
 
-	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
-	private tick(): void {
+	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms or when requested */
+	public tick(): void {
 		const now = Date.now();
 		const activityInterval = SpaceActivityGetNextInterval(now);
 
@@ -88,7 +88,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 				inUseCount++;
 				space.touch();
 				space.updateActivityData(activityInterval);
-			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now) {
+			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now || !space.isValid) {
 				// Save last active time of the space
 				space.updateActivityData(undefined, true);
 

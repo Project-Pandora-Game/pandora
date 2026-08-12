@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import type { RoomBackgroundData } from 'pandora-common';
-import type { ReactElement } from 'react';
+import { memo, type ReactElement } from 'react';
 import { DivContainer } from '../../../components/common/container/container.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
@@ -10,7 +10,7 @@ import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 
-export function RoomConfigurationBackgroundPreview({ background, previewSize, className }: {
+export const RoomConfigurationBackgroundPreview = memo(function RoomConfigurationBackgroundPreview({ background, previewSize, className }: {
 	background: Immutable<RoomBackgroundData> | null;
 	previewSize: number;
 	className?: string;
@@ -46,4 +46,4 @@ export function RoomConfigurationBackgroundPreview({ background, previewSize, cl
 			</GraphicsSceneBackgroundRenderer>
 		</DivContainer>
 	);
-}
+});

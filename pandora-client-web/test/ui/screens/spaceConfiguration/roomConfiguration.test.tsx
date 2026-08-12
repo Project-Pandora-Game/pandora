@@ -4,6 +4,7 @@ import {
 	AssetFrameworkSpaceState,
 	AssetManager,
 	type AssetFrameworkRoomState,
+	type RoomBackgroundData,
 	type ServiceProvider,
 } from 'pandora-common';
 import type { ReactElement } from 'react';
@@ -20,6 +21,7 @@ const createRoomPhoto = jest.fn(() => new Promise<HTMLCanvasElement>(() => { /* 
 const renderExportDialog = jest.fn(({ data }: { data: { name?: string; }; }): ReactElement => (
 	<div data-testid='export-dialog'>{ data.name }</div>
 ));
+const renderBackground = jest.fn((): null => null);
 
 unstableMockModule('../../../../src/ui/screens/room/roomPhoto.tsx', () => ({
 	CreateRoomPhoto: createRoomPhoto,
@@ -29,7 +31,29 @@ unstableMockModule('../../../../src/components/exportImport/exportDialog.tsx', (
 	ExportDialog: renderExportDialog,
 }));
 
+unstableMockModule('../../../../src/graphics/graphicsSceneRenderer.tsx', () => ({
+	GraphicsSceneBackgroundRenderer: renderBackground,
+}));
+
+unstableMockModule('../../../../src/graphics/baseComponents/container.ts', () => ({
+	Container: (): null => null,
+}));
+
+unstableMockModule('../../../../src/graphics/graphicsBackground.tsx', () => ({
+	GraphicsBackground: (): null => null,
+}));
+
+unstableMockModule('../../../../src/graphics/useTexture.ts', async () => {
+	const { createContext } = await import('react');
+	return { UseTextureGetterOverride: createContext(null) };
+});
+
+unstableMockModule('../../../../src/services/screenResolution/screenResolutionHooks.ts', () => ({
+	useDevicePixelRatio: (): number => 1,
+}));
+
 const { RoomExportButton } = await import('../../../../src/ui/screens/spaceConfiguration/roomExportButton.tsx');
+const { RoomConfigurationBackgroundPreview } = await import('../../../../src/ui/screens/spaceConfiguration/roomConfigurationBackgroundPreview.tsx');
 
 describe('RoomExportButton', () => {
 	const roomState = {
@@ -88,5 +112,22 @@ describe('RoomExportButton', () => {
 			roomState,
 			globalState: originalGlobalState,
 		}));
+	});
+});
+
+describe('RoomConfigurationBackgroundPreview', () => {
+	it('does not redraw an unchanged background during parent updates', () => {
+		const background = { imageSize: [1024, 512] } as unknown as RoomBackgroundData;
+		const renderPreview = (): ReactElement => (
+			<RoomConfigurationBackgroundPreview background={ background } previewSize={ 256 } />
+		);
+		const { rerender } = render(renderPreview());
+		const initialRenderCount = renderBackground.mock.calls.length;
+
+		for (let i = 0; i < 100; i++) {
+			rerender(renderPreview());
+		}
+
+		expect(renderBackground).toHaveBeenCalledTimes(initialRenderCount);
 	});
 });

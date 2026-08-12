@@ -65,7 +65,7 @@ import { AccountListInput, AccountListInputActions } from '../../components/acco
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
-import { ShouldUpdateSpaceConfigurationState } from './spaceConfigurationState.ts';
+import { ShouldUpdateSpaceConfigurationActionState, ShouldUpdateSpaceConfigurationState } from './spaceConfigurationState.ts';
 import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
 import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
 import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
@@ -967,6 +967,11 @@ const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
 			ShouldUpdateSpaceConfigurationState(previousState, currentState, player.id),
 		[player.id],
 	);
+	const shouldUpdateActionState = useCallback(
+		(previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) =>
+			ShouldUpdateSpaceConfigurationActionState(previousState, currentState, player.id),
+		[player.id],
+	);
 	const currentSpaceState = useGlobalStateFiltered(gameState, shouldUpdateState);
 
 	if (creation || currentSpaceState.space.spaceId !== spaceId) {
@@ -982,7 +987,7 @@ const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
 	}
 
 	return (
-		<WardrobeActionContextProvider player={ player }>
+		<WardrobeActionContextProvider player={ player } globalStateUpdateFilter={ shouldUpdateActionState }>
 			<div className='tab-wrapper'>
 				<Column className='fill contain-size' overflowY='auto'>
 					<SpaceStateConfigurationUi

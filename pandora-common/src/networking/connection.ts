@@ -40,7 +40,7 @@ export interface IIncomingConnection<OutboundT extends SocketInterfaceDefinition
 
 	/**
 	 * Used for keeping tracks of rooms the connection is in. Do not use directly.
-	 * @private
+	 * @internal
 	*/
 	readonly _internalRooms: Set<IServerRoom<OutboundT>>;
 }

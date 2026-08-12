@@ -95,7 +95,7 @@ export class PandoraApiSpaceSearch {
 		}
 	}
 
-	/** @private */
+	/** @internal */
 	public static _create(internal: InternalApiDirectory): PandoraApiSpaceSearch {
 		return new PandoraApiSpaceSearch(internal);
 	}

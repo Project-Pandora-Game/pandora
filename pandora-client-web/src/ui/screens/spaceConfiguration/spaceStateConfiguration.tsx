@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { type Immutable } from 'immer';
 import {
+	AssertNotNullable,
 	LIMIT_ITEM_SPACE_ITEMS_TOTAL,
 	LIMIT_SPACE_ROOM_COUNT,
 	RoomId,
@@ -19,7 +20,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../../../components/common/usageMeter/usageMeter.tsx';
-import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { RoomConfiguration } from './roomConfiguration.tsx';
 import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 import { RoomCreation } from './roomCreation.tsx';
@@ -33,7 +34,10 @@ export type SpaceStateConfigurationUiProps = {
 export function SpaceStateConfigurationUi({
 	globalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
-	const { playerState } = usePlayerState();
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const playerState = globalState.getCharacterState(player.id);
+	AssertNotNullable(playerState);
 	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(playerState.currentRoom);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
 	const [showGlobalRoomSettings, setShowGlobalRoomSettings] = useState(false);

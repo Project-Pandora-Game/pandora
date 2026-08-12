@@ -29,6 +29,7 @@ This repository contains the following projects:
 - [`pandora-server-shard`](pandora-server-shard) - The "Shard" server, containing all character and space focused logic. Designed to be horizontally scalable by an active Space being assigned to a single shard at a time.
 - [`pandora-client-web`](pandora-client-web) - The web client for the platform, including both the standard client, the management tools, and the "Editor" for supporting asset creation.
 - [`pandora-api`](pandora-api) - API that can be used to programmatically interact with Pandora.
+- [`pandora-cli`](pandora-cli) - CLI tool containing example usages of API, allowing for some limited interactions with Pandora.
 - [`pandora-tests`](pandora-tests) - Set of End-To-End tests for Project Pandora.
 
 # Contribution

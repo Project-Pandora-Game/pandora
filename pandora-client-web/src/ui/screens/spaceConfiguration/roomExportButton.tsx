@@ -2,45 +2,49 @@ import {
 	RoomTemplateSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
+	type RoomTemplate,
 } from 'pandora-common';
-import { useMemo, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import exportIcon from '../../../assets/icons/export.svg';
 import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { useServiceManager } from '../../../services/serviceProvider.tsx';
 import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
+
+type RoomExportSnapshot = {
+	roomTemplate: RoomTemplate;
+	extraData: Promise<readonly ExportDialogTarget[]>;
+};
 
 export function RoomExportButton({ roomState, globalState }: {
 	roomState: AssetFrameworkRoomState;
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const serviceManager = useServiceManager();
-	const [showExportDialog, setShowExportDialog] = useState(false);
-	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
-	const exportExtra = useMemo(
-		() => CreateRoomExportExtra(roomState, globalState, serviceManager),
-		[globalState, roomState, serviceManager],
-	);
+	const [exportSnapshot, setExportSnapshot] = useState<RoomExportSnapshot | null>(null);
 
 	return (
 		<>
 			<button
 				className='wardrobeActionButton allowed'
 				onClick={ () => {
-					setShowExportDialog(true);
+					setExportSnapshot({
+						roomTemplate: roomState.exportToTemplate({ includeAllItems: true }),
+						extraData: CreateRoomExportExtra(roomState, globalState, serviceManager),
+					});
 				} }
 			>
 				<img src={ exportIcon } alt='Export room' />&nbsp;Export
 			</button>
 			{
-				showExportDialog ? (
+				exportSnapshot != null ? (
 					<ExportDialog
-						title={ 'room template' + (roomTemplate.name ? ` "${ roomTemplate.name }"` : '') }
+						title={ 'room template' + (exportSnapshot.roomTemplate.name ? ` "${ exportSnapshot.roomTemplate.name }"` : '') }
 						exportType='RoomTemplate'
 						exportVersion={ 1 }
 						dataSchema={ RoomTemplateSchema }
-						data={ roomTemplate }
-						extraData={ exportExtra }
-						closeDialog={ () => setShowExportDialog(false) }
+						data={ exportSnapshot.roomTemplate }
+						extraData={ exportSnapshot.extraData }
+						closeDialog={ () => setExportSnapshot(null) }
 					/>
 				) : null
 			}

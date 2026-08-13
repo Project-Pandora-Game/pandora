@@ -27,12 +27,14 @@ export async function TestMockAccount({
 	email = `${nanoid()}@project-pandora.com`,
 	password = nanoid(),
 	activated = true,
+	giveAdminRole = false,
 }: {
 	username?: string;
 	displayName?: string;
 	email?: string;
 	password?: string;
 	activated?: boolean;
+	giveAdminRole?: boolean;
 } = {}): Promise<Account> {
 	const db = await TestMockDb();
 
@@ -52,6 +54,16 @@ export async function TestMockAccount({
 
 	if (account == null) {
 		throw new Error(`Failed to load mock account`);
+	}
+
+	if (giveAdminRole) {
+		account.roles._devSetRoleOverrides({
+			admin: {
+				expires: undefined,
+				grantedBy: { id: 0, username: '[[Pandora]]' },
+				grantedAt: Date.now(),
+			},
+		});
 	}
 
 	return account;

@@ -13,23 +13,12 @@ export const ApiHandlersSpaceManagement = {
 		if (account == null)
 			return { result: 'notAllowed' };
 
-		// Only developers can create rooms with development mode enabled
-		if (config.features.includes('development') && !account.roles.isAuthorized('developer')) {
-			GetLogger('ApiHandlersSpaceManagement').verbose(`${connection.id} attempted to create a development space without being a developer`);
-			return { result: 'notAllowed' };
-		}
-		// No development options allowed if the development feature is not in use
-		if (config.development != null && !config.features.includes('development')) {
-			GetLogger('ApiHandlersSpaceManagement').verbose(`${connection.id} attempted to create a space with development data without development feature`);
-			return { result: 'failed' };
-		}
-
 		// API cannot fill admin and allow lists in advance
 		if (config.admin.length !== 0 || config.allow.length !== 0) {
 			return { result: 'accountListNotAllowed' };
 		}
 
-		const space = await SpaceManager.createSpace(config, [account.id]);
+		const space = await SpaceManager.createSpace(config, account);
 
 		if (typeof space === 'string') {
 			GetLogger('ApiHandlersSpaceManagement').verbose(`${connection.id} failed to create a space: ${space}`);

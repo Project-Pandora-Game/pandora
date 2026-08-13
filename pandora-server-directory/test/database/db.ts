@@ -5,7 +5,7 @@ import { CreateAccountData } from '../../src/account/account.ts';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
 import { PandoraDatabase } from '../../src/database/databaseProvider.ts';
 import { PrehashPassword } from '../../src/database/mockDb.ts';
-import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from '../spaces/testData.ts';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV } from '../spaces/testData.ts';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -466,12 +466,12 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it.each([TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV])('creates new space', async (config) => {
 			const result = await db.createSpace({
 				config,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			// Correct result
 			expect(result.config).toEqual(config);
-			expect(result.owners).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(result.owners).toEqual([0]);
 
 			// Exists in character database
 			const spaceData = await db.getSpaceById(result.id, null);
@@ -484,12 +484,12 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('fails if ids would have a collision', async () => {
 			const result1 = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			}, 's/id1');
 
 			// Correct result
 			expect(result1.config).toEqual(TEST_SPACE);
-			expect(result1.owners).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(result1.owners).toEqual([0]);
 			expect(result1.id).toEqual('s/id1');
 
 			// Fails to make space with same id
@@ -507,7 +507,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			const space = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			await db.updateSpace(space.id, {
@@ -530,7 +530,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('deletes correct space', async () => {
 			const room = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			await expect(db.getSpaceById(room.id, null)).resolves.not.toBeNull();
@@ -545,7 +545,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('generates new access id for a space', async () => {
 			const space = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			const result = await db.setSpaceAccessId(space.id);
@@ -558,7 +558,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('invalidates old access id for a space', async () => {
 			const space = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			const result = await db.setSpaceAccessId(space.id);
@@ -575,7 +575,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('fails with unknown space', async () => {
 			const space = await db.createSpace({
 				config: TEST_SPACE,
-				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+				owners: [0],
 			});
 
 			const result = await db.setSpaceAccessId(space.id);

@@ -57,12 +57,18 @@ export class AccountRoles implements ActorRoles {
 
 	private _devSetRoles(): void {
 		if (AUTO_ADMIN_ACCOUNTS.includes(this._account.id)) {
-			this._roleOverrides.admin = {
-				expires: undefined,
-				grantedBy: { id: 0, username: '[[Pandora]]' },
-				grantedAt: Date.now(),
-			};
+			this._devSetRoleOverrides({
+				admin: {
+					expires: undefined,
+					grantedBy: { id: 0, username: '[[Pandora]]' },
+					grantedAt: Date.now(),
+				},
+			});
 		}
+	}
+
+	public _devSetRoleOverrides(overrides: typeof this._roleOverrides): void {
+		this._roleOverrides = overrides;
 	}
 
 	public async setRole(granter: Account, role: AccountRole, expires?: number): Promise<void> {

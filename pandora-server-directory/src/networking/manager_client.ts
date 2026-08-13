@@ -757,35 +757,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
+		const account = connection.account;
 		const character = connection.character;
 
-		// Only developers can create rooms with development mode enabled
-		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
-			logger.verbose(`${connection.id} attempted to create a development space without being a developer`);
-			return {
-				result: 'failed',
-			};
-		}
-		// No development options allowed if the development feature is not in use
-		if (spaceConfig.development != null && !spaceConfig.features.includes('development')) {
-			logger.verbose(`${connection.id} attempted to create a space with development data without development feature`);
-			return {
-				result: 'failed',
-			};
-		}
-
-		// Admins and allowed accounts lists have limits on what accounts can be included
-		const friends = await connection.account.contacts.getFriendsIds();
-		for (const a of [...spaceConfig.admin, ...spaceConfig.allow]) {
-			if (!friends.has(a)) {
-				return { result: 'accountListNotAllowed' };
-			}
-		}
-
-		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
+		let space = await SpaceManager.createSpace(spaceConfig, account);
 
 		if (typeof space === 'string') {
 			logger.verbose(`${connection.id} failed to create a space: ${space}`);
+
+			// UI should not allow invalid config in the first place
+			if (space === 'notAllowed')
+				space = 'failed';
+
 			return { result: space };
 		}
 

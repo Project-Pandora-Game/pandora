@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
+import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import promClient from 'prom-client';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
@@ -174,29 +174,36 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 	}
 
 	@AsyncSynchronized()
-	public async createSpace(config: SpaceDirectoryConfig, owners: AccountId[]): Promise<Space | 'failed' | 'spaceOwnershipLimitReached'> {
-		Assert(owners.length > 0, 'Space must be created with some owners');
-
-		// Check, that owners are within limits
-		for (const ownerId of owners) {
-			// Meta-account Pandora has no limit
-			if (ownerId === 0)
-				continue;
-
-			const owner = await accountManager.loadAccountById(ownerId);
-			// We cannot have unknown owner on creation
-			if (!owner)
-				return 'failed';
-
-			const ownedSpaces = await GetDatabase().getSpacesWithOwner(ownerId);
-
-			if (ownedSpaces.length + 1 > owner.spaceOwnershipLimit)
-				return 'spaceOwnershipLimitReached';
+	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'spaceOwnershipLimitReached'> {
+		// Only developers can create rooms with development mode enabled
+		if (config.features.includes('development') && !creator.roles.isAuthorized('developer')) {
+			logger.verbose(`Account ${creator.id} attempted to create a development space without being a developer`);
+			return 'notAllowed';
 		}
+		// No development options allowed if the development feature is not in use
+		if (config.development != null && !config.features.includes('development')) {
+			logger.verbose(`Account ${creator.id} attempted to create a space with development data without development feature`);
+			return 'failed';
+		}
+
+		// Admins and allowed accounts lists have limits on what accounts can be included
+		if (config.admin.length > 0 || config.allow.length > 0) {
+			const friends = await creator.contacts.getFriendsIds();
+			for (const a of [...config.admin, ...config.allow]) {
+				if (!friends.has(a)) {
+					return 'accountListNotAllowed';
+				}
+			}
+		}
+
+		// Check, that owner is within limits
+		const ownedSpaces = await GetDatabase().getSpacesWithOwner(creator.id);
+		if (ownedSpaces.length + 1 > creator.spaceOwnershipLimit)
+			return 'spaceOwnershipLimitReached';
 
 		const spaceData = await GetDatabase().createSpace({
 			config,
-			owners,
+			owners: [creator.id],
 		});
 		logger.verbose(`Created space ${spaceData.id}, owned by ${spaceData.owners.join(',')}`);
 		const space = await this._loadSpace(spaceData);

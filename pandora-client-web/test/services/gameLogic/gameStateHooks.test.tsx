@@ -1,13 +1,13 @@
+import { jest } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react';
 import {
 	AssetFrameworkGlobalState,
 	AssetFrameworkSpaceState,
 	AssetManager,
+	type AssetFrameworkGlobalStateContainer,
 } from 'pandora-common';
 import type { GameState } from '../../../src/components/gameContext/gameStateContextProvider.tsx';
 import { useGlobalStateFiltered } from '../../../src/services/gameLogic/gameStateHooks.ts';
-
-const jest = import.meta.jest;
 
 function CreateGlobalState(): AssetFrameworkGlobalState {
 	const assetManager = new AssetManager('test');
@@ -23,18 +23,18 @@ function CreateGameState(initialState: AssetFrameworkGlobalState): {
 } {
 	let onGlobalStateChange: (() => void) | undefined;
 	const stateContainer = { currentState: initialState };
-	const gameState = {
-		globalState: stateContainer,
+	const gameState: Partial<GameState> = {
+		globalState: stateContainer as AssetFrameworkGlobalStateContainer,
 		on: jest.fn((_event, listener: () => void): (() => void) => {
 			onGlobalStateChange = listener;
 			return () => {
 				onGlobalStateChange = undefined;
 			};
 		}),
-	} as unknown as GameState;
+	};
 
 	return {
-		gameState,
+		gameState: gameState as GameState,
 		setGlobalState: (state) => {
 			stateContainer.currentState = state;
 			onGlobalStateChange?.();

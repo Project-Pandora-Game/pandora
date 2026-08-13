@@ -1,21 +1,18 @@
+import { jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
 	AssetFrameworkGlobalState,
+	AssetFrameworkRoomState,
 	AssetFrameworkSpaceState,
 	AssetManager,
-	type AssetFrameworkRoomState,
-	type RoomBackgroundData,
-	type ServiceProvider,
+	DEFAULT_PLAIN_BACKGROUND,
+	ResolveBackground,
+	ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
+	ServiceManager,
 } from 'pandora-common';
 import type { ReactElement } from 'react';
 import type { ClientServices } from '../../../../src/services/clientServices.ts';
 import { serviceManagerContext } from '../../../../src/services/serviceProvider.tsx';
-
-const jest = import.meta.jest;
-const unstableMockModule = (jest as typeof jest & Record<
-	'unstable_mockModule',
-	(moduleName: string, moduleFactory: () => unknown) => typeof jest
->).unstable_mockModule;
 
 const createRoomPhoto = jest.fn(() => new Promise<HTMLCanvasElement>(() => { /* Intentionally pending. */ }));
 const renderExportDialog = jest.fn(({ data }: { data: { name?: string; }; }): ReactElement => (
@@ -23,32 +20,32 @@ const renderExportDialog = jest.fn(({ data }: { data: { name?: string; }; }): Re
 ));
 const renderBackground = jest.fn((): null => null);
 
-unstableMockModule('../../../../src/ui/screens/room/roomPhoto.tsx', () => ({
+jest.unstable_mockModule('../../../../src/ui/screens/room/roomPhoto.tsx', () => ({
 	CreateRoomPhoto: createRoomPhoto,
 }));
 
-unstableMockModule('../../../../src/components/exportImport/exportDialog.tsx', () => ({
+jest.unstable_mockModule('../../../../src/components/exportImport/exportDialog.tsx', () => ({
 	ExportDialog: renderExportDialog,
 }));
 
-unstableMockModule('../../../../src/graphics/graphicsSceneRenderer.tsx', () => ({
+jest.unstable_mockModule('../../../../src/graphics/graphicsSceneRenderer.tsx', () => ({
 	GraphicsSceneBackgroundRenderer: renderBackground,
 }));
 
-unstableMockModule('../../../../src/graphics/baseComponents/container.ts', () => ({
+jest.unstable_mockModule('../../../../src/graphics/baseComponents/container.ts', () => ({
 	Container: (): null => null,
 }));
 
-unstableMockModule('../../../../src/graphics/graphicsBackground.tsx', () => ({
+jest.unstable_mockModule('../../../../src/graphics/graphicsBackground.tsx', () => ({
 	GraphicsBackground: (): null => null,
 }));
 
-unstableMockModule('../../../../src/graphics/useTexture.ts', async () => {
+jest.unstable_mockModule('../../../../src/graphics/useTexture.ts', async () => {
 	const { createContext } = await import('react');
 	return { UseTextureGetterOverride: createContext(null) };
 });
 
-unstableMockModule('../../../../src/services/screenResolution/screenResolutionHooks.ts', () => ({
+jest.unstable_mockModule('../../../../src/services/screenResolution/screenResolutionHooks.ts', () => ({
 	useDevicePixelRatio: (): number => 1,
 }));
 
@@ -56,12 +53,13 @@ const { RoomExportButton } = await import('../../../../src/ui/screens/spaceConfi
 const { RoomConfigurationBackgroundPreview } = await import('../../../../src/ui/screens/spaceConfiguration/roomConfigurationBackgroundPreview.tsx');
 
 describe('RoomExportButton', () => {
-	const roomState = {
-		exportToTemplate: () => ({ name: 'Test room' }),
-	} as unknown as AssetFrameworkRoomState;
-	const serviceManager = { services: {} } as unknown as ServiceProvider<ClientServices>;
+	const assetManager = new AssetManager('test');
+	const roomState = AssetFrameworkRoomState.loadFromBundle(assetManager, {
+		...ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
+		name: 'Test room',
+	}, null, undefined);
+	const serviceManager = new ServiceManager<ClientServices>({});
 	const createGlobalState = (): AssetFrameworkGlobalState => {
-		const assetManager = new AssetManager('test');
 		return AssetFrameworkGlobalState.createDefault(
 			assetManager,
 			AssetFrameworkSpaceState.createDefault(assetManager, null),
@@ -96,9 +94,7 @@ describe('RoomExportButton', () => {
 	it('keeps the template and preview from the same snapshot while open', () => {
 		const originalGlobalState = createGlobalState();
 		const updatedGlobalState = createGlobalState();
-		const updatedRoomState = {
-			exportToTemplate: () => ({ name: 'Updated room' }),
-		} as unknown as AssetFrameworkRoomState;
+		const updatedRoomState = roomState.withName('Updated room');
 		const { rerender } = render(renderButton(roomState, originalGlobalState));
 
 		fireEvent.click(screen.getByRole('button', { name: /export/i }));
@@ -117,7 +113,8 @@ describe('RoomExportButton', () => {
 
 describe('RoomConfigurationBackgroundPreview', () => {
 	it('does not redraw an unchanged background during parent updates', () => {
-		const background = { imageSize: [1024, 512] } as unknown as RoomBackgroundData;
+		const assetManager = new AssetManager('test');
+		const background = ResolveBackground(assetManager, DEFAULT_PLAIN_BACKGROUND);
 		const renderPreview = (): ReactElement => (
 			<RoomConfigurationBackgroundPreview background={ background } previewSize={ 256 } />
 		);

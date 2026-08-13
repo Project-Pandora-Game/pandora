@@ -4,13 +4,13 @@ import {
 	AssertNotNullable,
 	LIMIT_ITEM_SPACE_ITEMS_TOTAL,
 	LIMIT_SPACE_ROOM_COUNT,
-	RoomId,
 	SpaceRoomLayoutNeighborRoomCoordinates,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
 	type AssetFrameworkSpaceState,
 	type CardinalDirection,
 	type Coordinates,
+	type RoomId,
 	type RoomLinkNodeData,
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useRef, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
@@ -36,9 +36,7 @@ export function SpaceStateConfigurationUi({
 }: SpaceStateConfigurationUiProps): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
-	const playerState = globalState.getCharacterState(player.id);
-	AssertNotNullable(playerState);
-	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(playerState.currentRoom);
+	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(() => (globalState.getCharacterState(player.id))?.currentRoom ?? null);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
 	const [showGlobalRoomSettings, setShowGlobalRoomSettings] = useState(false);
 

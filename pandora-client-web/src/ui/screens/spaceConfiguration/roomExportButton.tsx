@@ -15,9 +15,9 @@ type RoomExportSnapshot = {
 	extraData: Promise<readonly ExportDialogTarget[]>;
 };
 
-export function RoomExportButton({ roomState, globalState }: {
+export function RoomExportButton({ roomState, getCurrentGlobalState }: {
 	roomState: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
+	getCurrentGlobalState: () => AssetFrameworkGlobalState;
 }): ReactElement {
 	const serviceManager = useServiceManager();
 	const [exportSnapshot, setExportSnapshot] = useState<RoomExportSnapshot | null>(null);
@@ -29,7 +29,7 @@ export function RoomExportButton({ roomState, globalState }: {
 				onClick={ () => {
 					setExportSnapshot({
 						roomTemplate: roomState.exportToTemplate({ includeAllItems: true }),
-						extraData: CreateRoomExportExtra(roomState, globalState, serviceManager),
+						extraData: CreateRoomExportExtra(roomState, getCurrentGlobalState(), serviceManager),
 					});
 				} }
 			>

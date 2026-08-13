@@ -1,6 +1,5 @@
 import { produce, type Immutable } from 'immer';
 import {
-	AssertNotNullable,
 	CloneDeepMutable,
 	DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG,
 	GenerateSpiralCurve,
@@ -11,13 +10,14 @@ import {
 	RoomNameSchema,
 	RoomTemplateSchema,
 	type AppearanceAction,
-	type AssetFrameworkGlobalState,
+	type AssetFrameworkSpaceState,
 	type Coordinates,
+	type RoomId,
 	type RoomTemplate,
 } from 'pandora-common';
 import { ReactElement, useId, useMemo, useState } from 'react';
 import importIcon from '../../../assets/icons/import.svg';
-import { useCharacterAppearance } from '../../../character/character.ts';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextAreaInput } from '../../../common/userInteraction/input/textAreaInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
@@ -26,22 +26,20 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ImportDialog } from '../../../components/exportImport/importDialog.tsx';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { BackgroundSelectUi } from './backgroundSelect.tsx';
 import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 
-export function RoomCreation({ globalState, close }: {
-	globalState: AssetFrameworkGlobalState;
+export function RoomCreation({ spaceState, initialPlayerRoom, close }: {
+	spaceState: AssetFrameworkSpaceState;
+	initialPlayerRoom: RoomId | null;
 	close: () => void;
 }): ReactElement {
 	const id = useId();
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [showImportDialog, setShowImportDialog] = useState(false);
 
-	const player = usePlayer();
-	AssertNotNullable(player);
-	const playerAppearance = useCharacterAppearance(globalState, player);
+	const assetManager = useAssetManager();
 
 	const [roomTemplate, setRoomTemplate] = useState((): RoomTemplate => ({
 		name: '',
@@ -53,10 +51,10 @@ export function RoomCreation({ globalState, close }: {
 		roomLinkNodes: CloneDeepMutable(DEFAULT_ROOM_NEIGHBOR_LINK_CONFIG),
 	}));
 	const [position, setPosition] = useState((): Immutable<Coordinates> => {
-		const playerRoom = playerAppearance.getCurrentRoom();
+		const playerRoom = initialPlayerRoom == null ? null : spaceState.getRoom(initialPlayerRoom);
 
 		for (const c of GenerateSpiralCurve(playerRoom?.position.x ?? 0, playerRoom?.position.y ?? 0)) {
-			if (!globalState.space.rooms.some((r) => r.position.x === c.x && r.position.y === c.y)) {
+			if (!spaceState.rooms.some((r) => r.position.x === c.x && r.position.y === c.y)) {
 				return c;
 			}
 		}
@@ -66,7 +64,7 @@ export function RoomCreation({ globalState, close }: {
 
 	const nameValueError = FormCreateStringValidator(RoomNameSchema.def.in.max(LIMIT_ROOM_NAME_LENGTH), 'value')(roomTemplate.name);
 	const descriptionValueError = FormCreateStringValidator(RoomDescriptionSchema.def.in.max(LIMIT_ROOM_DESCRIPTION_LENGTH), 'value')(roomTemplate.description);
-	const roomBackground = useMemo(() => ResolveBackground(globalState.assetManager, roomTemplate.roomGeometry), [globalState.assetManager, roomTemplate.roomGeometry]);
+	const roomBackground = useMemo(() => ResolveBackground(assetManager, roomTemplate.roomGeometry), [assetManager, roomTemplate.roomGeometry]);
 
 	const newRoomAction = useMemo((): AppearanceAction => ({
 		type: 'spaceRoomLayout',

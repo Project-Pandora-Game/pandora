@@ -9,6 +9,7 @@ import {
 	type ActionTargetSelector,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkGlobalState,
+	type AssetFrameworkSpaceState,
 	type CharacterId,
 	type CharacterRestrictionsManager,
 	type CurrentSpaceInfo,
@@ -18,13 +19,14 @@ import {
 	type ItemId,
 	type ItemPath,
 	type Nullable,
+	type RoomId,
 	type SpaceCharacterModifierEffectData,
 	type SpaceClientInfo,
 	type SpaceFeature,
 	type SpaceRole,
 } from 'pandora-common';
 import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
-import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { useCharacterDataOptional, type Character } from '../../character/character.ts';
 import { type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useNullableObservable, useObservable } from '../../observable.ts';
@@ -124,33 +126,31 @@ export function useGlobalState(context: GameState | null): AssetFrameworkGlobalS
 
 }
 
-export function useGlobalStateFiltered(
+/** Internal primitive for selectors that return structurally shared objects or primitive values. */
+function useGlobalStateSelector<T>(
 	context: GameState,
-	shouldUpdate: (previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) => boolean,
-): AssetFrameworkGlobalState {
-	const snapshot = useRef<{
-		context: GameState;
-		state: AssetFrameworkGlobalState;
-	}>(null);
-
+	selector: (state: AssetFrameworkGlobalState) => T,
+): T {
 	return useSyncExternalStore(
 		useCallback((onChange) => context.on('globalStateChange', () => onChange()), [context]),
-		useCallback(() => {
-			const currentState = context.globalState.currentState;
-			if (
-				snapshot.current == null ||
-				snapshot.current.context !== context ||
-				(snapshot.current.state !== currentState && shouldUpdate(snapshot.current.state, currentState))
-			) {
-				snapshot.current = {
-					context,
-					state: currentState,
-				};
-			}
-
-			return snapshot.current.state;
-		}, [context, shouldUpdate]),
+		useCallback(() => selector(context.globalState.currentState), [context, selector]),
 	);
+}
+
+const SelectSpaceState = (state: AssetFrameworkGlobalState): AssetFrameworkSpaceState => state.space;
+
+/** Subscribe to the immutable space state without updating for character-only changes. */
+export function useSpaceState(context: GameState): AssetFrameworkSpaceState {
+	return useGlobalStateSelector(context, SelectSpaceState);
+}
+
+/** Subscribe to only a character's current room, without exposing a potentially stale character or global state. */
+export function useCharacterCurrentRoom(context: GameState, characterId: CharacterId): RoomId | null {
+	const selector = useCallback(
+		(state: AssetFrameworkGlobalState) => state.getCharacterState(characterId)?.currentRoom ?? null,
+		[characterId],
+	);
+	return useGlobalStateSelector(context, selector);
 }
 
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {

@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { type Immutable } from 'immer';
 import {
-	AssertNotNullable,
 	LIMIT_ITEM_SPACE_ITEMS_TOTAL,
 	LIMIT_SPACE_ROOM_COUNT,
 	SpaceRoomLayoutNeighborRoomCoordinates,
@@ -20,7 +19,6 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../../../components/common/usageMeter/usageMeter.tsx';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { RoomConfiguration } from './roomConfiguration.tsx';
 import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
 import { RoomCreation } from './roomCreation.tsx';
@@ -28,19 +26,21 @@ import { RoomSpaceGlobalSettingsDialog } from './roomSettings.tsx';
 import './spaceStateConfiguration.scss';
 
 export type SpaceStateConfigurationUiProps = {
-	globalState: AssetFrameworkGlobalState;
+	spaceState: AssetFrameworkSpaceState;
+	initialSelectedRoom: RoomId | null;
+	getCurrentGlobalState: () => AssetFrameworkGlobalState;
 };
 
 export function SpaceStateConfigurationUi({
-	globalState,
+	spaceState,
+	initialSelectedRoom,
+	getCurrentGlobalState,
 }: SpaceStateConfigurationUiProps): ReactElement {
-	const player = usePlayer();
-	AssertNotNullable(player);
-	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(() => (globalState.getCharacterState(player.id))?.currentRoom ?? null);
+	const [selectedRoom, setSelectedRoom] = useState<RoomId | null>(() => initialSelectedRoom);
 	const [showRoomCreation, setShowRoomCreation] = useState(false);
 	const [showGlobalRoomSettings, setShowGlobalRoomSettings] = useState(false);
 
-	const selectedRoomState = selectedRoom == null ? null : globalState.space.getRoom(selectedRoom);
+	const selectedRoomState = selectedRoom == null ? null : spaceState.getRoom(selectedRoom);
 
 	return (
 		<Column className='SpaceStateConfigurationUi' alignX='center' gap='none'>
@@ -48,12 +48,12 @@ export function SpaceStateConfigurationUi({
 				<Row className='flex-2' alignX='space-evenly' alignY='center'>
 					<UsageMeter
 						title='Rooms inside the space'
-						used={ globalState.space.rooms.length }
+						used={ spaceState.rooms.length }
 						limit={ LIMIT_SPACE_ROOM_COUNT }
 					/>
 					<UsageMeter
 						title='Total items across all room inventories'
-						used={ globalState.space.getTotalItemCount() }
+						used={ spaceState.getTotalItemCount() }
 						limit={ LIMIT_ITEM_SPACE_ITEMS_TOTAL }
 					/>
 				</Row>
@@ -61,7 +61,7 @@ export function SpaceStateConfigurationUi({
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowGlobalRoomSettings(true) }
-						badge={ Object.keys(globalState.space.globalRoomSettings).length || null }
+						badge={ Object.keys(spaceState.globalRoomSettings).length || null }
 						badgeType='passive'
 						badgeTitle='Count of modified settings'
 					>
@@ -73,16 +73,16 @@ export function SpaceStateConfigurationUi({
 			<Row
 				className={ classNames(
 					'spaceLayout',
-					globalState.space.rooms.length === 1 ? 'singleRoom' : null,
+					spaceState.rooms.length === 1 ? 'singleRoom' : null,
 				) }>
 				<RoomGrid
-					spaceState={ globalState.space }
+					spaceState={ spaceState }
 					selectedRoom={ selectedRoom }
 					setSelectedRoom={ setSelectedRoom }
 				/>
 				<Column className='roomList fill-y flex-1' padding='medium' overflowY='auto'>
 					{
-						globalState.space.rooms.map((r) => (
+						spaceState.rooms.map((r) => (
 							<button
 								key={ r.id }
 								className={ classNames(
@@ -116,7 +116,8 @@ export function SpaceStateConfigurationUi({
 				</Column>
 				{ showRoomCreation ? (
 					<RoomCreation
-						globalState={ globalState }
+						spaceState={ spaceState }
+						initialPlayerRoom={ initialSelectedRoom }
 						close={ () => {
 							setShowRoomCreation(false);
 						} }
@@ -124,7 +125,7 @@ export function SpaceStateConfigurationUi({
 				) : null }
 				{ showGlobalRoomSettings ? (
 					<RoomSpaceGlobalSettingsDialog
-						globalState={ globalState }
+						spaceState={ spaceState }
 						close={ () => {
 							setShowGlobalRoomSettings(false);
 						} }
@@ -137,9 +138,10 @@ export function SpaceStateConfigurationUi({
 					selectedRoomState != null ? (
 						<RoomConfiguration
 							key={ selectedRoomState.id }
-							isEntryRoom={ globalState.space.rooms[0].id === selectedRoom }
+							isEntryRoom={ spaceState.rooms[0].id === selectedRoom }
 							roomState={ selectedRoomState }
-							globalState={ globalState }
+							spaceState={ spaceState }
+							getCurrentGlobalState={ getCurrentGlobalState }
 							close={ () => {
 								setSelectedRoom(null);
 							} }

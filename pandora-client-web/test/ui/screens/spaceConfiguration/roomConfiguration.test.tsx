@@ -67,7 +67,7 @@ describe('RoomExportButton', () => {
 	};
 	const renderButton = (state: AssetFrameworkRoomState, globalState: AssetFrameworkGlobalState): ReactElement => (
 		<serviceManagerContext.Provider value={ serviceManager }>
-			<RoomExportButton roomState={ state } globalState={ globalState } />
+			<RoomExportButton roomState={ state } getCurrentGlobalState={ () => globalState } />
 		</serviceManagerContext.Provider>
 	);
 

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
-import { CloneDeepMutable, GAME_LOGIC_ROOM_SETTINGS_DEFAULT, type AppearanceAction, type AssetFrameworkGlobalState, type AssetFrameworkRoomState, type GameLogicRoomSettings, type RoomId } from 'pandora-common';
+import { CloneDeepMutable, GAME_LOGIC_ROOM_SETTINGS_DEFAULT, type AppearanceAction, type AssetFrameworkRoomState, type AssetFrameworkSpaceState, type GameLogicRoomSettings, type RoomId } from 'pandora-common';
 import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
@@ -11,9 +11,9 @@ import { ToggleSettingInput, type SettingDriver } from '../../../components/sett
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 
-export function RoomSettingsDialog({ room, globalState, close }: {
+export function RoomSettingsDialog({ room, spaceState, close }: {
 	room: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
+	spaceState: AssetFrameworkSpaceState;
 	close: () => void;
 }): ReactElement | null {
 	const [roomSettingsUpdate, setRoomSettingsUpdate] = useState<Partial<Immutable<GameLogicRoomSettings>> | null>(null);
@@ -25,7 +25,7 @@ export function RoomSettingsDialog({ room, globalState, close }: {
 
 			return {
 				currentValue,
-				defaultValue: globalState.space.getEffectiveRoomSettings(null)[setting],
+				defaultValue: spaceState.getEffectiveRoomSettings(null)[setting],
 				onChange(newValue) {
 					setRoomSettingsUpdate({
 						...settings,
@@ -39,7 +39,7 @@ export function RoomSettingsDialog({ room, globalState, close }: {
 				},
 			};
 		});
-	}, [globalState.space, room, roomSettingsUpdate]);
+	}, [spaceState, room, roomSettingsUpdate]);
 
 	const updateAction = useMemo((): AppearanceAction | null => {
 		if (roomSettingsUpdate == null)
@@ -54,7 +54,6 @@ export function RoomSettingsDialog({ room, globalState, close }: {
 
 	const tabProps: RoomSettingsTabProps = {
 		roomId: room.id,
-		globalState,
 		getSettingDriver,
 	};
 
@@ -87,15 +86,15 @@ export function RoomSettingsDialog({ room, globalState, close }: {
 	);
 }
 
-export function RoomSpaceGlobalSettingsDialog({ globalState, close }: {
-	globalState: AssetFrameworkGlobalState;
+export function RoomSpaceGlobalSettingsDialog({ spaceState, close }: {
+	spaceState: AssetFrameworkSpaceState;
 	close: () => void;
 }): ReactElement {
 	const [roomSettingsUpdate, setRoomSettingsUpdate] = useState<Partial<Immutable<GameLogicRoomSettings>> | null>(null);
 
 	const getSettingDriver = useMemo((): RoomSettingsTabProps['getSettingDriver'] => {
 		return (function <const Setting extends keyof GameLogicRoomSettings>(setting: Setting): SettingDriver<Immutable<GameLogicRoomSettings>[Setting]> {
-			const settings: Partial<Immutable<GameLogicRoomSettings>> = roomSettingsUpdate ?? globalState.space.globalRoomSettings;
+			const settings: Partial<Immutable<GameLogicRoomSettings>> = roomSettingsUpdate ?? spaceState.globalRoomSettings;
 			const currentValue: Immutable<GameLogicRoomSettings>[Setting] | undefined = settings[setting];
 
 			return {
@@ -114,7 +113,7 @@ export function RoomSpaceGlobalSettingsDialog({ globalState, close }: {
 				},
 			};
 		});
-	}, [globalState.space, roomSettingsUpdate]);
+	}, [spaceState, roomSettingsUpdate]);
 
 	const updateAction = useMemo((): AppearanceAction | null => {
 		if (roomSettingsUpdate == null)
@@ -128,7 +127,6 @@ export function RoomSpaceGlobalSettingsDialog({ globalState, close }: {
 
 	const tabProps: RoomSettingsTabProps = {
 		roomId: null,
-		globalState,
 		getSettingDriver,
 	};
 
@@ -179,7 +177,6 @@ function RoomSettingsDialogContent(props: RoomSettingsTabProps): ReactElement {
 
 type RoomSettingsTabProps = {
 	roomId: RoomId | null;
-	globalState: AssetFrameworkGlobalState;
 	getSettingDriver: <const Setting extends keyof GameLogicRoomSettings>(setting: Setting) => SettingDriver<Immutable<GameLogicRoomSettings>[Setting]>;
 };
 

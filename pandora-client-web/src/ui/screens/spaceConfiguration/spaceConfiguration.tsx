@@ -59,13 +59,12 @@ import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { IsSpaceAdmin, useGameState, useGlobalState, useGlobalStateFiltered, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
+import { IsSpaceAdmin, useCharacterCurrentRoom, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, useSpaceState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
 import './spaceConfiguration.scss';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
-import { ShouldUpdateSpaceConfigurationActionState, ShouldUpdateSpaceConfigurationState } from './spaceConfigurationState.ts';
 import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
 import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
 import { SpaceStateConfigurationUi } from './spaceStateConfiguration.tsx';
@@ -962,19 +961,11 @@ const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
 	const player = usePlayer();
 	AssertNotNullable(player);
 	const gameState = useGameState();
-	const shouldUpdateState = useCallback(
-		(previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) =>
-			ShouldUpdateSpaceConfigurationState(previousState, currentState, player.id),
-		[player.id],
-	);
-	const shouldUpdateActionState = useCallback(
-		(previousState: AssetFrameworkGlobalState, currentState: AssetFrameworkGlobalState) =>
-			ShouldUpdateSpaceConfigurationActionState(previousState, currentState, player.id),
-		[player.id],
-	);
-	const currentSpaceState = useGlobalStateFiltered(gameState, shouldUpdateState);
+	const currentSpaceState = useSpaceState(gameState);
+	const playerCurrentRoom = useCharacterCurrentRoom(gameState, player.id);
+	const getCurrentGlobalState = useCallback(() => gameState.globalState.currentState, [gameState]);
 
-	if (creation || currentSpaceState.space.spaceId !== spaceId) {
+	if (creation || currentSpaceState.spaceId !== spaceId) {
 		return (
 			<div className='tab-wrapper'>
 				<Column className='flex-1' alignX='center'>
@@ -987,11 +978,13 @@ const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
 	}
 
 	return (
-		<WardrobeActionContextProvider player={ player } globalStateUpdateFilter={ shouldUpdateActionState }>
+		<WardrobeActionContextProvider player={ player }>
 			<div className='tab-wrapper'>
 				<Column className='fill contain-size' overflowY='auto'>
 					<SpaceStateConfigurationUi
-						globalState={ currentSpaceState }
+						spaceState={ currentSpaceState }
+						initialSelectedRoom={ playerCurrentRoom }
+						getCurrentGlobalState={ getCurrentGlobalState }
 					/>
 				</Column>
 			</div>

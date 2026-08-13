@@ -14,6 +14,7 @@ import {
 	RoomNameSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
+	type AssetFrameworkSpaceState,
 	type CardinalDirection,
 	type Coordinates,
 } from 'pandora-common';
@@ -37,10 +38,11 @@ import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroun
 import { RoomExportButton } from './roomExportButton.tsx';
 import { RoomSettingsDialog } from './roomSettings.tsx';
 
-export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
+export function RoomConfiguration({ isEntryRoom, roomState, spaceState, getCurrentGlobalState, close }: {
 	isEntryRoom: boolean;
 	roomState: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
+	spaceState: AssetFrameworkSpaceState;
+	getCurrentGlobalState: () => AssetFrameworkGlobalState;
 	close: () => void;
 }): ReactElement {
 	const id = useId();
@@ -96,7 +98,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 					>
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
-					<RoomExportButton roomState={ roomState } globalState={ globalState } />
+					<RoomExportButton roomState={ roomState } getCurrentGlobalState={ getCurrentGlobalState } />
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowRoomSettings(true) }
@@ -111,7 +113,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 				{ showRoomSettings ? (
 					<RoomSettingsDialog
 						room={ roomState }
-						globalState={ globalState }
+						spaceState={ spaceState }
 						close={ () => {
 							setShowRoomSettings(false);
 						} }

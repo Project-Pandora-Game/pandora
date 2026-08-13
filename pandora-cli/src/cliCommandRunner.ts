@@ -15,6 +15,7 @@ export async function RunCliCommand(serviceManager: ServiceManager<CliServices>,
 	const command = CLI_COMMANDS.find((c) => c.key === commandArgs[0]) ?? null;
 	if (!command) {
 		logger.fatal(`Unknown command "${commandArgs[0]}"`);
+		process.exitCode = 1;
 		return;
 	}
 

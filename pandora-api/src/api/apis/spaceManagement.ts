@@ -47,7 +47,7 @@ export class PandoraApiSpaceManagement {
 		if (!parsedConfig.success) {
 			return Result.Err({
 				type: 'invalidArgument',
-				parseError: parsedConfig.data,
+				parseError: parsedConfig.error,
 			});
 		}
 

@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"target": "ES2021",
-		"lib": ["ES2023"],
+		"target": "ES2024",
+		"lib": [
+			"ES2024"
+		],
 		"types": [],
 		"module": "NodeNext",
 		"moduleResolution": "nodenext",
@@ -12,10 +14,14 @@
 		"noEmitOnError": true,
 		"sourceMap": true,
 		"declaration": false,
+		"stripInternal": true,
 		"removeComments": true,
 		"strict": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
-		"isolatedModules": true
+		"isolatedModules": true,
+	},
+	"typeAcquisition": {
+		"enable": false
 	}
 }

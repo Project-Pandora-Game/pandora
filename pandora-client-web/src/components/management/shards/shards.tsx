@@ -1,4 +1,5 @@
-import { EMPTY, IsAuthorized, IShardTokenConnectInfo, IShardTokenType } from 'pandora-common';
+import { EMPTY, IsAuthorized } from 'pandora-common';
+import type { IShardTokenConnectInfo, IShardTokenType } from 'pandora-common/networking/api/directory_client';
 import { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';

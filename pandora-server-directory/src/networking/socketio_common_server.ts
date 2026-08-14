@@ -1,10 +1,11 @@
-import type { IncomingMessage, Server as HttpServer } from 'http';
-import { Server, Socket, ServerOptions as SocketIoOptions } from 'socket.io';
+import type { Server as HttpServer, IncomingMessage } from 'http';
+import type { IEmpty } from 'pandora-common';
+import { Server, Socket, ServerOptions as SocketIoOptions, type DefaultEventsMap } from 'socket.io';
 
 /** Class housing any socket.io endpoint */
-export abstract class SocketIOServer {
+export abstract class SocketIOServer<SocketData extends object = IEmpty> {
 	/** Socket.IO server */
-	protected readonly socketServer: Server;
+	protected readonly socketServer: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, Partial<SocketData>>;
 
 	/** HTTP(S) server */
 	protected readonly httpServer: HttpServer;
@@ -37,5 +38,5 @@ export abstract class SocketIOServer {
 	 * Handle new incoming connections
 	 * @param socket - The newly connected socket
 	 */
-	protected abstract onConnect(socket: Socket): void;
+	protected abstract onConnect(socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, Partial<SocketData>>): void;
 }

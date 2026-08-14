@@ -1,6 +1,8 @@
 import { GetLogger } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import lockIcon from '../../../assets/icons/lock_closed.svg';
+import lockIconOpen from '../../../assets/icons/lock_open.svg';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
@@ -46,11 +48,12 @@ export function SudoModeButton({
 	theme?: ButtonTheme;
 }): ReactElement {
 	const [showPrompt, setShowPrompt] = React.useState(false);
+	const { sudoActive } = useSudoMode();
 
 	return (
 		<>
 			<Button theme={ theme } disabled={ disabled } onClick={ () => setShowPrompt(true) }>
-				{ children }
+				<img src={ sudoActive ? lockIconOpen : lockIcon } />{ children }
 			</Button>
 			{ showPrompt ? (
 				<SudoDialog

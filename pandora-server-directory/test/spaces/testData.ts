@@ -1,5 +1,4 @@
-import { AccountId, SpaceDirectoryConfig } from 'pandora-common';
-import { ACTOR_PANDORA } from '../../src/account/actorPandora.ts';
+import { SpaceDirectoryConfig } from 'pandora-common';
 
 const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	name: '',
@@ -19,7 +18,7 @@ export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {
 	name: 'test',
 	description: 'Some description',
 	entryText: 'Some entry text',
-	admin: [1],
+	admin: [],
 	banned: [2],
 };
 
@@ -29,7 +28,7 @@ export const TEST_SPACE2: Readonly<SpaceDirectoryConfig> = {
 	description: 'Another description',
 	entryText: 'More text to read',
 	maxUsers: 7,
-	admin: [2],
+	admin: [],
 	banned: [22, 13],
 };
 
@@ -38,10 +37,8 @@ export const TEST_SPACE_DEV: Readonly<SpaceDirectoryConfig> = {
 	name: 'test-dev',
 	description: 'Development space',
 	entryText: 'Upon entering you see the future of Pandora',
-	admin: [1],
+	admin: [],
 	features: ['development'],
 	development: {
 	},
 };
-
-export const TEST_SPACE_PANDORA_OWNED: readonly AccountId[] = [ACTOR_PANDORA.id];

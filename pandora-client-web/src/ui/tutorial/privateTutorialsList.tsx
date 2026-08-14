@@ -1,6 +1,7 @@
 import { Assert } from 'pandora-common';
 import React, { type ReactElement } from 'react';
 import { Column, Row } from '../../components/common/container/container.tsx';
+import { InteractiveLink } from '../../components/common/link/interactiveLink.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { TUTORIAL_CHARACTER_MODIFIERS } from './tutorials/characterModifiers.tsx';
@@ -82,9 +83,9 @@ function TutorialEntry({ tutorial, openTutorialDetails }: {
 				) : null
 			}
 			{
-				<a onClick={ openTutorialDetails }>
+				<InteractiveLink onClick={ openTutorialDetails }>
 					{ tutorial.name }
-				</a>
+				</InteractiveLink>
 			}
 		</Row>
 	);

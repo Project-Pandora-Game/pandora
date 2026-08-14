@@ -12,12 +12,10 @@ import {
 	ChatMessage,
 	ChatTypeSchema,
 	CloneDeepMutable,
-	GameStateUpdate,
 	GetLogger,
 	ICharacterPrivateData,
 	ICharacterRoomData,
 	IClientMessage,
-	IShardClientArgument,
 	KnownObject,
 	LIMIT_CHAT_MESSAGE_LENGTH,
 	Logger,
@@ -33,11 +31,15 @@ import {
 	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
-	type IClientShardPromiseResult,
 	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
+import {
+	type GameStateUpdate,
+	type IClientShardPromiseResult,
+	type IShardClientArgument,
+} from 'pandora-common/networking/api/shard_client';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';

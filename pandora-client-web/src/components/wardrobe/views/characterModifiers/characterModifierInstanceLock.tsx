@@ -8,10 +8,10 @@ import {
 	type Asset,
 	type CharacterModifierLockAction,
 	type GameLogicModifierInstanceClient,
-	type IClientShardNormalResult,
 	type LockLogic,
 	type PermissionGroup,
 } from 'pandora-common';
+import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../../assets/assetManager.tsx';

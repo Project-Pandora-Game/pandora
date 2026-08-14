@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Assert, SpaceId } from 'pandora-common';
+import type { Account } from '../../src/account/account.ts';
 import { GetDatabase } from '../../src/database/databaseProvider.ts';
 import { ConnectionManagerClient } from '../../src/networking/manager_client.ts';
 import { Shard } from '../../src/shard/shard.ts';
@@ -7,14 +8,16 @@ import { ShardManager } from '../../src/shard/shardManager.ts';
 import { Space } from '../../src/spaces/space.ts';
 import { SpaceManager } from '../../src/spaces/spaceManager.ts';
 import { TestMockAccount, TestMockDb } from '../utils.ts';
-import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from './testData.ts';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV } from './testData.ts';
 
 describe('SpaceManager', () => {
 	let shard: Shard;
 	let testSpaceId: SpaceId;
+	let testAccount: Account;
 
 	beforeAll(async () => {
 		await TestMockDb();
+		testAccount = await TestMockAccount({ giveAdminRole: true });
 		shard = ShardManager.getOrCreateShard({
 			type: 'stable',
 			id: 'test',
@@ -28,7 +31,7 @@ describe('SpaceManager', () => {
 
 	describe('createSpace()', () => {
 		it.each([TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV])('Creates space', async (data) => {
-			const space = await SpaceManager.createSpace(data, TEST_SPACE_PANDORA_OWNED.slice());
+			const space = await SpaceManager.createSpace(data, testAccount);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -44,7 +47,7 @@ describe('SpaceManager', () => {
 
 		it('works even if there is space with the same name already', async () => {
 			expect(SpaceManager.listLoadedSpaces().some((s) => s.name === TEST_SPACE.name)).toBeTruthy();
-			const space = await SpaceManager.createSpace(TEST_SPACE, TEST_SPACE_PANDORA_OWNED.slice());
+			const space = await SpaceManager.createSpace(TEST_SPACE, testAccount);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -56,7 +59,7 @@ describe('SpaceManager', () => {
 			const account = await TestMockAccount();
 			const spaceList: Space[] = [];
 
-			const create = () => SpaceManager.createSpace(TEST_SPACE, [account.id]);
+			const create = () => SpaceManager.createSpace(TEST_SPACE, account);
 
 			// Success until ownership
 			expect(account.spaceOwnershipLimit).toBeGreaterThan(0);
@@ -86,7 +89,7 @@ describe('SpaceManager', () => {
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
 			expect(space.getConfig()).toEqual(TEST_SPACE);
-			expect(Array.from(space.owners)).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(Array.from(space.owners)).toEqual([testAccount.id]);
 		});
 
 		it('Returns undefined with unknown space', () => {

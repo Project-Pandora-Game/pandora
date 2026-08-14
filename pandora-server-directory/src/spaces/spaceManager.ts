@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
+import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import promClient from 'prom-client';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
@@ -61,8 +61,8 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		inUseSpacesMetric.set(0);
 	}
 
-	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
-	private tick(): void {
+	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms or when requested */
+	public tick(): void {
 		const now = Date.now();
 		const activityInterval = SpaceActivityGetNextInterval(now);
 
@@ -88,7 +88,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 				inUseCount++;
 				space.touch();
 				space.updateActivityData(activityInterval);
-			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now) {
+			} else if (space.lastActivity + SPACE_INACTIVITY_THRESHOLD < now || !space.isValid) {
 				// Save last active time of the space
 				space.updateActivityData(undefined, true);
 
@@ -100,7 +100,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 
 	private interval: NodeJS.Timeout | undefined;
 
-	public async listSpacesVisibleTo(account: Account): Promise<Space[]> {
+	public async listSpacesVisibleTo(account: Account | 'everyone'): Promise<Space[]> {
 		const result = new Set<Space>();
 		// Look for publically visible, currently loaded spaces
 		for (const space of this.loadedSpaces.values()) {
@@ -110,15 +110,30 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			}
 		}
 		// Look for owned spaces or spaces this account is admin of
-		for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdminOrAllowed(account.id)) {
-			// Load the space (using already loaded to avoid race conditions)
-			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
-			// If we are still owner or admin, add it to the list
-			if (space?.checkVisibleTo(account)) {
-				result.add(space);
+		if (account !== 'everyone') {
+			for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdminOrAllowed(account.id)) {
+				// Load the space (using already loaded to avoid race conditions)
+				const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
+				// If we are still owner or admin, add it to the list
+				if (space?.checkVisibleTo(account)) {
+					result.add(space);
+				}
 			}
 		}
 		return Array.from(result);
+	}
+
+	public async listOwnedSpaces(account: Account): Promise<Space[]> {
+		const result: Space[] = [];
+		for (const spaceData of await GetDatabase().getSpacesWithOwner(account.id)) {
+			// Load the space (using already loaded to avoid race conditions)
+			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
+			// If we are still owner, add it to the list
+			if (space?.isOwner(account)) {
+				result.push(space);
+			}
+		}
+		return result;
 	}
 
 	public async listPublicSpaces(args: SpaceSearchArguments, limit: number, skip: number): Promise<SpaceSearchResult> {
@@ -159,29 +174,36 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 	}
 
 	@AsyncSynchronized()
-	public async createSpace(config: SpaceDirectoryConfig, owners: AccountId[]): Promise<Space | 'failed' | 'spaceOwnershipLimitReached'> {
-		Assert(owners.length > 0, 'Space must be created with some owners');
-
-		// Check, that owners are within limits
-		for (const ownerId of owners) {
-			// Meta-account Pandora has no limit
-			if (ownerId === 0)
-				continue;
-
-			const owner = await accountManager.loadAccountById(ownerId);
-			// We cannot have unknown owner on creation
-			if (!owner)
-				return 'failed';
-
-			const ownedSpaces = await GetDatabase().getSpacesWithOwner(ownerId);
-
-			if (ownedSpaces.length + 1 > owner.spaceOwnershipLimit)
-				return 'spaceOwnershipLimitReached';
+	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'spaceOwnershipLimitReached'> {
+		// Only developers can create rooms with development mode enabled
+		if (config.features.includes('development') && !creator.roles.isAuthorized('developer')) {
+			logger.verbose(`Account ${creator.id} attempted to create a development space without being a developer`);
+			return 'notAllowed';
 		}
+		// No development options allowed if the development feature is not in use
+		if (config.development != null && !config.features.includes('development')) {
+			logger.verbose(`Account ${creator.id} attempted to create a space with development data without development feature`);
+			return 'failed';
+		}
+
+		// Admins and allowed accounts lists have limits on what accounts can be included
+		if (config.admin.length > 0 || config.allow.length > 0) {
+			const friends = await creator.contacts.getFriendsIds();
+			for (const a of [...config.admin, ...config.allow]) {
+				if (!friends.has(a)) {
+					return 'accountListNotAllowed';
+				}
+			}
+		}
+
+		// Check, that owner is within limits
+		const ownedSpaces = await GetDatabase().getSpacesWithOwner(creator.id);
+		if (ownedSpaces.length + 1 > creator.spaceOwnershipLimit)
+			return 'spaceOwnershipLimitReached';
 
 		const spaceData = await GetDatabase().createSpace({
 			config,
-			owners,
+			owners: [creator.id],
 		});
 		logger.verbose(`Created space ${spaceData.id}, owned by ${spaceData.owners.join(',')}`);
 		const space = await this._loadSpace(spaceData);

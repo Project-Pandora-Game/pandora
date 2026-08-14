@@ -1,9 +1,7 @@
 import { noop } from 'lodash-es';
-import { AppearanceAction, IClientShardNormalResult, IShardClientChangeEvents } from 'pandora-common';
-import {
-	useEffect,
-	useRef,
-} from 'react';
+import { AppearanceAction } from 'pandora-common';
+import type { IClientShardNormalResult, IShardClientChangeEvents } from 'pandora-common/networking/api/shard_client';
+import { useEffect, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useDebugExpose } from '../../common/useDebugExpose.ts';

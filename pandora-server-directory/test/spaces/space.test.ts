@@ -7,8 +7,8 @@ import { ShardManager } from '../../src/shard/shardManager.ts';
 import { Space } from '../../src/spaces/space.ts';
 import { SpaceManager } from '../../src/spaces/spaceManager.ts';
 import { Sleep } from '../../src/utility.ts';
-import { TestMockDb, TestMockShard, TestShardData } from '../utils.ts';
-import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from './testData.ts';
+import { TestMockAccount, TestMockDb, TestMockShard, TestShardData } from '../utils.ts';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV } from './testData.ts';
 
 describe('Space', () => {
 	let mockShard: TestShardData;
@@ -32,6 +32,9 @@ describe('Space', () => {
 			},
 		});
 	});
+	const setupAccount = async () => {
+		return await TestMockAccount({ giveAdminRole: true });
+	};
 
 	afterAll(async () => {
 		await ShardManager.onDestroy();
@@ -40,7 +43,8 @@ describe('Space', () => {
 
 	describe('constructor', () => {
 		it('works', async () => {
-			const space = await SpaceManager.createSpace(TEST_SPACE, TEST_SPACE_PANDORA_OWNED.slice());
+			const account = await setupAccount();
+			const space = await SpaceManager.createSpace(TEST_SPACE, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -56,15 +60,16 @@ describe('Space', () => {
 
 	describe('connect()', () => {
 		it('Fails when there is no shard', async () => {
+			const account = await setupAccount();
 			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
 			allowConnectSpy.mockReturnValue(false);
 
-			const space = await SpaceManager.createSpace(TEST_SPACE2, TEST_SPACE_PANDORA_OWNED.slice());
+			const space = await SpaceManager.createSpace(TEST_SPACE2, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
 			expect(space.getConfig()).toEqual(TEST_SPACE2);
-			expect(Array.from(space.owners)).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(Array.from(space.owners)).toEqual([account.id]);
 			expect(space.assignedShard).toBe(null);
 
 			await expect(space.connect()).resolves.toBe('noShardFound');
@@ -75,12 +80,13 @@ describe('Space', () => {
 		});
 
 		it('Uses random shard from available ones', async () => {
-			const space = await SpaceManager.createSpace(TEST_SPACE2, TEST_SPACE_PANDORA_OWNED.slice());
+			const account = await setupAccount();
+			const space = await SpaceManager.createSpace(TEST_SPACE2, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
 			expect(space.getConfig()).toEqual(TEST_SPACE2);
-			expect(Array.from(space.owners)).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(Array.from(space.owners)).toEqual([account.id]);
 			expect(space.assignedShard).toBe(null);
 
 			const connectedShard = await space.connect();
@@ -92,12 +98,13 @@ describe('Space', () => {
 		});
 
 		it('Fails with unknown shard id from development data', async () => {
+			const account = await setupAccount();
 			const space = await SpaceManager.createSpace({
 				...TEST_SPACE_DEV,
 				development: {
 					shardId: 'non-existent-shard',
 				},
-			}, TEST_SPACE_PANDORA_OWNED.slice());
+			}, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -110,12 +117,13 @@ describe('Space', () => {
 		});
 
 		it('Uses shard id from development data', async () => {
+			const account = await setupAccount();
 			const space = await SpaceManager.createSpace({
 				...TEST_SPACE_DEV,
 				development: {
 					shardId: mockShard.shard.id,
 				},
-			}, TEST_SPACE_PANDORA_OWNED.slice());
+			}, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -125,7 +133,7 @@ describe('Space', () => {
 					shardId: mockShard.shard.id,
 				},
 			});
-			expect(Array.from(space.owners)).toEqual(TEST_SPACE_PANDORA_OWNED);
+			expect(Array.from(space.owners)).toEqual([account.id]);
 			expect(space.assignedShard).toBe(null);
 
 			const connectedShard = await space.connect();
@@ -139,7 +147,8 @@ describe('Space', () => {
 
 	describe('delete()', () => {
 		it('Deletes and invalidates unloaded space', async () => {
-			const space = await SpaceManager.createSpace(TEST_SPACE, TEST_SPACE_PANDORA_OWNED.slice());
+			const account = await setupAccount();
+			const space = await SpaceManager.createSpace(TEST_SPACE, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);
@@ -151,7 +160,8 @@ describe('Space', () => {
 		});
 
 		it('Deletes and invalidates loaded space', async () => {
-			const space = await SpaceManager.createSpace(TEST_SPACE, TEST_SPACE_PANDORA_OWNED.slice());
+			const account = await setupAccount();
+			const space = await SpaceManager.createSpace(TEST_SPACE, account);
 
 			expect(space).toBeInstanceOf(Space);
 			Assert(space instanceof Space);

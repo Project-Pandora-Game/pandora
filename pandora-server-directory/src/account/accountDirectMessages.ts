@@ -1,13 +1,15 @@
 import { createHash } from 'crypto';
 import {
-	IClientDirectoryArgument,
-	IClientDirectoryPromiseResult,
-	IDirectoryDirectMessageAccount,
-	IDirectoryDirectMessageInfo,
 	LIMIT_DIRECT_MESSAGE_STORE_COUNT,
 	type AccountId,
-	type IDirectoryDirectMessage,
 } from 'pandora-common';
+import type {
+	IClientDirectoryArgument,
+	IClientDirectoryPromiseResult,
+	IDirectoryDirectMessage,
+	IDirectoryDirectMessageAccount,
+	IDirectoryDirectMessageInfo,
+} from 'pandora-common/networking/api/directory_client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseDirectMessage, DatabaseDirectMessageInfo } from '../database/databaseStructure.ts';
 import { Account, GetDirectMessageId } from './account.ts';

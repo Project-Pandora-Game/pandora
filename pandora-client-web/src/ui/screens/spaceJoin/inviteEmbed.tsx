@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { AssertNever, SpaceId, type CharacterId, type SpaceExtendedInfoResponse, type SpaceInviteId } from 'pandora-common';
+import { AssertNever, SpaceId, type CharacterId, type SpaceInviteId } from 'pandora-common';
+import type { SpaceExtendedInfoResponse } from 'pandora-common/networking/api/directory_client';
 import React, { ReactElement } from 'react';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';

@@ -1,4 +1,5 @@
-import { AssertNever, GetLogger, IClientDirectoryNormalResult, IDirectoryAccountInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import { AssertNever, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
+import type { IClientDirectoryNormalResult, IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import React, { ReactElement, useCallback, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';

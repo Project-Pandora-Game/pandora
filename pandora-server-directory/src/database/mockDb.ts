@@ -140,6 +140,11 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
+	public getAccountIdByAccessTokenHash(tokenHash: string): Promise<AccountId | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.accessTokens?.some((t) => t.tokenHash === tokenHash));
+		return Promise.resolve(acc?.id ?? null);
+	}
+
 	public createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
 		const acc = cloneDeep(data);
 		const conflict = this.accountDbView.find(

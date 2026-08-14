@@ -49,6 +49,11 @@ export interface PandoraDatabase extends ServerService {
 	 * @param emailHash - Email hash to search for
 	 */
 	getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null>;
+	/**
+	 * Get an account id by Access Token's hash
+	 * @param token - The hash of the token to search for. See `AccountSecureAccessTokenStore::hashToken`.
+	 */
+	getAccountIdByAccessTokenHash(tokenHash: string): Promise<AccountId | null>;
 
 	/**
 	 * Create account

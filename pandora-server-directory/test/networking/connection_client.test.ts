@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
-import { Assert, IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
+import { Assert, MockConnection, MockServerSocket } from 'pandora-common';
+import type { IClientDirectory, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
 import { AccountToken } from '../../src/account/accountSecure.ts';
 import { AccountTokenReason } from '../../src/database/databaseStructure.ts';
 import { PrehashPassword } from '../../src/database/mockDb.ts';

@@ -1,7 +1,7 @@
 import { GetLogger } from 'pandora-common';
 import { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import { CopyToClipboard } from '../../common/clipboard.ts';
+import { CopyToClipboard } from '../../common/clipboard.tsx';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { NODE_ENV } from '../../config/Environment.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';

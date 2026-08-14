@@ -1,7 +1,9 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IClientDirectoryArgument, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type IClientDirectoryPromiseResult, type IShardDirectoryArgument, type SpaceActivitySavedData, type SpaceCharacterRemoval, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
+import type { IShardDirectoryArgument, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -663,6 +665,9 @@ export class Space {
 		await GetDatabase().deleteSpace(this.id);
 		// Note, that at this point there could still be pending connections or characters tracking it
 		// Ignore those - the requests will fail and once the space is not requestesd for a bit, it will be unloaded from the directory too, actually vanishing
+		queueMicrotask(() => {
+			SpaceManager.tick();
+		});
 	}
 
 	public checkAllowEnter(character: Character, opts: { inviteId?: SpaceInviteId; assumeValidInvite?: boolean; ignoreCharacterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
@@ -881,7 +886,7 @@ export class Space {
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space listing */
-	public checkVisibleTo(account: Account): boolean {
+	public checkVisibleTo(account: Account | 'everyone'): boolean {
 		if (!this.isValid)
 			return false;
 
@@ -889,7 +894,7 @@ export class Space {
 		if (this.isPublic && Array.from(this.characters).some((c) => c.isOnline()))
 			return true;
 
-		if (this.isAllowed(account))
+		if (account !== 'everyone' && this.isAllowed(account))
 			return true;
 
 		return false;
@@ -1441,6 +1446,9 @@ export class Space {
 
 	@AsyncSynchronized('object')
 	private async _syncActivityData(): Promise<void> {
+		if (!this.isValid)
+			return; // Ignore updating invalid space
+
 		await GetDatabase().updateSpace(this.id, { activity: cloneDeep(this._activity) }, null);
 	}
 

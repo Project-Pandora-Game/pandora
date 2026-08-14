@@ -1,5 +1,6 @@
 import { cloneDeep, throttle } from 'lodash-es';
-import { AccountRole, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IAccountPasskeyCredential, IAccountPasskeyInfo, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryAccountInfo, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, BadMessageError, GetLogger, IMessageHandler, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, ServerService, type CharacterId, type DirectoryStatusAnnouncement, type IDirectoryStatus } from 'pandora-common';
+import { ClientDirectoryAuthMessageSchema, type IAccountPasskeyCredential, type IAccountPasskeyInfo, type IClientDirectory, type IClientDirectoryArgument, type IClientDirectoryAuthMessage, type IClientDirectoryPromiseResult, type IClientDirectoryResult, type IDirectoryAccountInfo, type IShardTokenConnectInfo, type SecondFactorData, type SecondFactorResponse, type SecondFactorType } from 'pandora-common/networking/api/directory_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import * as z from 'zod';
@@ -7,6 +8,7 @@ import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
+import { AccessTokensClientHandler } from '../account/secure/accessTokensClientHandler.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -60,7 +62,7 @@ type PasskeyAssertionVerification = { ok: true; passkey: IAccountPasskeyCredenti
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_directory_client_connections',
 	help: 'Current count of connections from clients',
-	labelNames: ['messageType'],
+	labelNames: [],
 });
 
 const messagesMetric = new promClient.Counter({
@@ -186,6 +188,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			friendRequest: this.handleFriendRequest.bind(this),
 			unfriend: this.handleUnfriend.bind(this),
 			blockList: this.handleBlockList.bind(this),
+
+			// Access Tokens
+			accessTokensList: AccessTokensClientHandler.accessTokensList,
+			accessTokensCreate: AccessTokensClientHandler.accessTokensCreate,
+			accessTokenDelete: AccessTokensClientHandler.accessTokenDelete,
+			accessTokenUpdate: AccessTokensClientHandler.accessTokenUpdate,
+			accessTokenRegenerate: AccessTokensClientHandler.accessTokenRegenerate,
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),
@@ -748,35 +757,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
+		const account = connection.account;
 		const character = connection.character;
 
-		// Only developers can create rooms with development mode enabled
-		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
-			logger.verbose(`${connection.id} attempted to create a development space without being a developer`);
-			return {
-				result: 'failed',
-			};
-		}
-		// No development options allowed if the development feature is not in use
-		if (spaceConfig.development != null && !spaceConfig.features.includes('development')) {
-			logger.verbose(`${connection.id} attempted to create a space with development data without development feature`);
-			return {
-				result: 'failed',
-			};
-		}
-
-		// Admins and allowed accounts lists have limits on what accounts can be included
-		const friends = await connection.account.contacts.getFriendsIds();
-		for (const a of [...spaceConfig.admin, ...spaceConfig.allow]) {
-			if (!friends.has(a)) {
-				return { result: 'accountListNotAllowed' };
-			}
-		}
-
-		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
+		let space = await SpaceManager.createSpace(spaceConfig, account);
 
 		if (typeof space === 'string') {
 			logger.verbose(`${connection.id} failed to create a space: ${space}`);
+
+			// UI should not allow invalid config in the first place
+			if (space === 'notAllowed')
+				space = 'failed';
+
 			return { result: space };
 		}
 

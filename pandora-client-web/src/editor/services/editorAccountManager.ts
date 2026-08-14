@@ -1,16 +1,18 @@
 import { freeze, type Immutable } from 'immer';
 import {
 	GetLogger,
-	IDirectoryAccountInfo,
 	Service,
 	type CharacterId,
-	type IDirectoryCharacterAssignmentInfo,
 	type Satisfies,
-	type SecondFactorData,
-	type SecondFactorResponse,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
+import type {
+	IDirectoryAccountInfo,
+	IDirectoryCharacterAssignmentInfo,
+	SecondFactorData,
+	SecondFactorResponse,
+} from 'pandora-common/networking/api/directory_client';
 import { toast } from 'react-toastify';
 import { GIT_DESCRIBE } from '../../config/Environment.ts';
 import type { LoginResponse } from '../../networking/directoryConnector.ts';

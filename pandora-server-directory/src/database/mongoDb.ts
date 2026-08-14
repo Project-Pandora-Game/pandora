@@ -170,6 +170,13 @@ const accountCollection = new ValidatedCollection(
 			// Ignore accounts without passkeys
 			sparse: true,
 		},
+		{
+			name: 'accountAccessToken',
+			unique: true,
+			key: { 'secure.accessTokens.tokenHash': 1 },
+			// Ignore accounts without access tokens
+			sparse: true,
+		},
 	],
 );
 
@@ -412,6 +419,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
 		return await this._accounts.findOne({ 'secure.emailHash': emailHash });
+	}
+
+	public async getAccountIdByAccessTokenHash(tokenHash: string): Promise<AccountId | null> {
+		return (await this._accounts.find({ 'secure.accessTokens.tokenHash': tokenHash }, { singleBatch: true })
+			.project<Pick<DatabaseAccountWithSecure, 'id'>>({ id: 1 })
+			.limit(1)
+			.next())
+			?.id ?? null;
 	}
 
 	@DbSynchronized()

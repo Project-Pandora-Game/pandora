@@ -1,0 +1,29 @@
+{
+	"extends": "pandora-common/tsconfig.base.json",
+	"compilerOptions": {
+		"types": [
+			"@types/node"
+		],
+		"lib": [
+			"ES2024",
+			"ESNext.Disposable"
+		],
+		"noEmit": false,
+		"outDir": "./dist",
+		"rewriteRelativeImportExtensions": true,
+		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+		"rootDir": "./src",
+		"incremental": true,
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"references": [
+		{
+			"path": "../pandora-common"
+		},
+		{
+			"path": "../pandora-api"
+		},
+	],
+}

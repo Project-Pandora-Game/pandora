@@ -1,5 +1,6 @@
 import { customAlphabet } from 'nanoid';
-import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
+import { GetLogger } from 'pandora-common';
+import type { IBetaKeyInfo, IClientDirectoryArgument } from 'pandora-common/networking/api/directory_client';
 import type { ActorIdentity } from '../account/actorIdentity.ts';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';

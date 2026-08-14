@@ -1,13 +1,13 @@
-import { DirectoryShardSchema, GetLogger, IDirectoryShard, IncomingConnection, IncomingSocket, IServerSocket, IShardDirectory, ShardDirectorySchema } from 'pandora-common';
+import { GetLogger, IncomingConnection, IncomingSocket, IServerSocket } from 'pandora-common';
+import { DirectoryShardSchema, ShardDirectorySchema, type IDirectoryShard, type IShardDirectory } from 'pandora-common/networking/api/directory_shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Shard } from '../shard/shard.ts';
 import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
-import { ConnectionType, IConnectionShard } from './common.ts';
+import { IConnectionShard } from './common.ts';
 import { ConnectionManagerShard } from './manager_shard.ts';
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
-	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 	private readonly info: IConnectedTokenInfo;
 
 	public shard: Shard | null = null;

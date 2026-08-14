@@ -1,18 +1,19 @@
 import * as z from 'zod';
-import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
-import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
-import { CharacterSelfInfoSchema } from '../character/characterData.ts';
-import { CharacterIdSchema } from '../character/characterTypes.ts';
-import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
-import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, LIMIT_SPACE_SEARCH_COUNT } from '../inputLimits.ts';
-import { SpaceIdSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceInviteCreateSchema, type SpaceInvite } from '../space/spaceData.ts';
-import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../space/spaceSearch.ts';
-import { SpaceSwitchCommandSchema } from '../space/spaceSwitch.ts';
-import { Satisfies } from '../utility/misc.ts';
-import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
+import { PandoraAccessTokenIdSchema, PandoraAccessTokenInfoSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/accessTokens.ts';
+import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../../../account/index.ts';
+import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../../../assets/item/unified.ts';
+import { CharacterSelfInfoSchema } from '../../../character/characterData.ts';
+import { CharacterIdSchema } from '../../../character/characterTypes.ts';
+import { ManagementAccountQueryResultSchema } from '../../../directory/management/account.ts';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
+import { SpaceIdSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../../../space/space.ts';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceInviteCreateSchema, type SpaceInvite } from '../../../space/spaceData.ts';
+import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../../../space/spaceSearch.ts';
+import { SpaceSwitchCommandSchema } from '../../../space/spaceSwitch.ts';
+import { Satisfies } from '../../../utility/misc.ts';
+import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../../../validation.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 import { ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX, AccountCryptoKeySchema, AccountPasskeyAuthenticatorDataSchema, AccountPasskeyClientDataSchema, AccountPasskeyCredentialIdSchema, AccountPasskeyInfoSchema, AccountPasskeyNameSchema, AccountPasskeyPublicKeySchema, AccountPasskeySignatureSchema, AccountPasskeyTransportSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo, type IAccountCryptoKey, type IAccountPasskeyInfo } from './directory_client.ts';
-import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
 type ShardError = z.infer<typeof ShardErrorSchema>;
@@ -518,7 +519,9 @@ export const ClientDirectorySchema = {
 	//#region Space search
 	listSpaces: { // Get list of currently active spaces
 		request: z.object({}),
-		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
+		response: z.object({
+			spaces: ZodCast<SpaceListInfo>().array(),
+		}),
 	},
 	spaceSearch: { // Search through all public spaces
 		request: z.object({
@@ -616,18 +619,18 @@ export const ClientDirectorySchema = {
 				space: SpaceIdSchema,
 			}),
 		]),
-		response: ZodCast<{
-			result:
-			| 'ok'
-			| 'failed' // Generic failure
-			| 'notFound' // Space not found
-			| 'notAnOwner' // abandon, invite, inviteCancel: You need to be an owner of the space to do this
-			| 'targetNotAdmin' // invite: Target needs to already be an admin to promote to owner
-			| 'targetNotAllowed' // invite: Target needs to be present or on contacts list to promote to owner
-			| 'inviteNotFound' // inviteCancel, inviteAccept, inviteRefuse: There is no pending invite for target/player
-			| 'spaceOwnershipLimitReached' // inviteAccept: Too many spaces owned
-			;
-		}>(),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'failed', // Generic failure
+				'notFound', // Space not found
+				'notAnOwner', // abandon, invite, inviteCancel: You need to be an owner of the space to do this
+				'targetNotAdmin', // invite: Target needs to already be an admin to promote to owner
+				'targetNotAllowed', // invite: Target needs to be present or on contacts list to promote to owner
+				'inviteNotFound', // inviteCancel, inviteAccept, inviteRefuse: There is no pending invite for target/player
+				'spaceOwnershipLimitReached', // inviteAccept: Too many spaces owned
+			]),
+		}),
 	},
 	spaceInvite: {
 		request: z.discriminatedUnion('action', [
@@ -762,7 +765,90 @@ export const ClientDirectorySchema = {
 		response: null,
 	},
 
-	//#region Management/admin endpoints; these require specific roles to be used
+	//#region Access Tokens
+	accessTokensList: {
+		request: z.object({}),
+		response: z.object({
+			tokens: PandoraAccessTokenInfoSchema.array(),
+		}),
+	},
+	accessTokensCreate: {
+		request: z.object({
+			name: PandoraAccessTokenNameSchema,
+			scopes: PandoraAccessTokenScopeListSchema,
+			expires: z.number().nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				token: PandoraAccessTokenSchema,
+				info: PandoraAccessTokenInfoSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('limitReached'),
+			}),
+		]),
+	},
+	accessTokenDelete: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	accessTokenUpdate: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+			name: PandoraAccessTokenNameSchema,
+			scopes: PandoraAccessTokenScopeListSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	accessTokenRegenerate: {
+		request: z.object({
+			id: PandoraAccessTokenIdSchema,
+			expires: z.number().nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				token: PandoraAccessTokenSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
+	//#endregion
+
+	//#region Management/admin endpoints
+	// these require specific roles to be used
 
 	// Account role assignment
 	manageAccountGet: {

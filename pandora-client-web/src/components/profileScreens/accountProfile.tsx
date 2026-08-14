@@ -1,5 +1,6 @@
 import { noop, startCase } from 'lodash-es';
-import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
+import { AccountId, AccountRoleSchema, AssertNever, GetLogger, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
+import type { AccountPublicInfo, IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';

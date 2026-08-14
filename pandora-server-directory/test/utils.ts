@@ -1,6 +1,7 @@
 import { expect, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
-import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, PANDORA_VERSION_DATABASE, ShardFeature } from 'pandora-common';
+import { IMessageHandler, MockConnection, MockServerSocket, PANDORA_VERSION_DATABASE, ShardFeature } from 'pandora-common';
+import type { IDirectoryShard, IShardDirectory, IShardDirectoryNormalResult } from 'pandora-common/networking/api/directory_shard';
 import { Account, CreateAccountData } from '../src/account/account.ts';
 import { accountManager } from '../src/account/accountManager.ts';
 import { CharacterInfo } from '../src/account/character.ts';
@@ -26,12 +27,14 @@ export async function TestMockAccount({
 	email = `${nanoid()}@project-pandora.com`,
 	password = nanoid(),
 	activated = true,
+	giveAdminRole = false,
 }: {
 	username?: string;
 	displayName?: string;
 	email?: string;
 	password?: string;
 	activated?: boolean;
+	giveAdminRole?: boolean;
 } = {}): Promise<Account> {
 	const db = await TestMockDb();
 
@@ -51,6 +54,16 @@ export async function TestMockAccount({
 
 	if (account == null) {
 		throw new Error(`Failed to load mock account`);
+	}
+
+	if (giveAdminRole) {
+		account.roles._devSetRoleOverrides({
+			admin: {
+				expires: undefined,
+				grantedBy: { id: 0, username: '[[Pandora]]' },
+				grantedAt: Date.now(),
+			},
+		});
 	}
 
 	return account;

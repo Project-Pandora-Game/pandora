@@ -1,0 +1,22 @@
+{
+	"extends": "pandora-common/tsconfig.base.json",
+	"compilerOptions": {
+		"types": [
+			"@types/node",
+		],
+		"lib": [
+			"ES2024",
+			"ESNext.Disposable"
+		],
+		"rootDir": "..",
+	},
+	"include": [
+		"../src/**/*.d.ts",
+		"./**/*"
+	],
+	"references": [
+		{
+			"path": "../../pandora-common"
+		},
+	],
+}

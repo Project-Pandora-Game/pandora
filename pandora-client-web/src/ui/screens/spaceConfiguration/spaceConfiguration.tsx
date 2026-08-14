@@ -10,7 +10,6 @@ import {
 	FormatTimeInterval,
 	GAME_LOGIC_SPACE_SETTINGS_DEFAULT,
 	GetLogger,
-	IDirectoryShardInfo,
 	IsAuthorized,
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
 	LIMIT_SPACE_ENTRYTEXT_LENGTH,
@@ -27,16 +26,16 @@ import {
 	type AssetFrameworkGlobalState,
 	type CurrentSpaceInfo,
 	type GameLogicSpaceSettings,
-	type IDirectoryAccountInfo,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
+import type { IDirectoryAccountInfo, IDirectoryShardInfo } from 'pandora-common/networking/api/directory_client';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { RenderAppearanceActionProblem } from '../../../assets/appearanceValidation.tsx';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
-import { CopyToClipboard } from '../../../common/clipboard.ts';
+import { CopyToClipboard } from '../../../common/clipboard.tsx';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';

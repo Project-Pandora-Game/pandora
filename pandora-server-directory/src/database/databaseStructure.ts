@@ -1,6 +1,4 @@
 import {
-	AccountCryptoKeySchema,
-	AccountPasskeyCredentialSchema,
 	AccountId,
 	AccountIdSchema,
 	AccountManagementDisableInfoSchema,
@@ -11,15 +9,23 @@ import {
 	AssetFrameworkPosePresetWithIdSchema,
 	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
-	IBetaKeyInfo,
-	IDirectoryDirectMessageInfo,
-	IShardTokenInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
+	PandoraAccessTokenInfoSchema,
 	ZodArrayWithInvalidDrop,
+	ZodBase64Regex,
 	ZodCast,
 	ZodTemplateString,
 	ZodTruncate,
+	type PandoraAccessTokenInfo,
+	type ZodObjectShape,
 } from 'pandora-common';
+import {
+	AccountCryptoKeySchema,
+	AccountPasskeyCredentialSchema,
+	type IBetaKeyInfo,
+	type IDirectoryDirectMessageInfo,
+	type IShardTokenInfo,
+} from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
 import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
 
@@ -42,6 +48,16 @@ export const DatabaseAccountTokenSchema = z.object({
 });
 export type DatabaseAccountToken = z.infer<typeof DatabaseAccountTokenSchema>;
 
+/** Secret data about Pandora Access Token */
+export interface PandoraAccessTokenData extends PandoraAccessTokenInfo {
+	/** Hash of the actual access token. See `AccountSecureAccessTokenStore::hashToken` */
+	tokenHash: string;
+}
+/** Secret data about Pandora Access Token */
+export const PandoraAccessTokenDataSchema: z.ZodObject<ZodObjectShape<PandoraAccessTokenData>> = PandoraAccessTokenInfoSchema.extend({
+	tokenHash: z.string().regex(ZodBase64Regex),
+});
+
 export const GitHubInfoSchema = z.object({
 	id: z.number(),
 	login: z.string(),
@@ -63,6 +79,8 @@ export const DatabaseAccountSecureSchema = z.object({
 	github: GitHubInfoSchema.optional(),
 	cryptoKey: AccountCryptoKeySchema.optional(),
 	passkeys: AccountPasskeyCredentialSchema.array().optional(),
+	/** Access tokens for this account */
+	accessTokens: ZodArrayWithInvalidDrop(PandoraAccessTokenDataSchema).optional().catch(undefined),
 });
 export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 

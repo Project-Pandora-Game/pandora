@@ -5,6 +5,7 @@ import { useBrowserStorage } from '../../browserStorage.ts';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
+import { InteractiveLink } from '../common/link/interactiveLink.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import './eula.scss';
 import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy.tsx';
@@ -39,7 +40,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 							I will not permit any minors to have access to any of the materials from this site.
 						</li>
 						<li>
-							I have read Pandora's <a onClick={ () => setShow(true) } role='button'>privacy policy</a> and accept it. (Last updated on: { EULA_LAST_UPDATED })
+							I have read Pandora's <InteractiveLink onClick={ () => setShow(true) }>privacy policy</InteractiveLink> and accept it. (Last updated on: { EULA_LAST_UPDATED })
 						</li>
 						<li>
 							I have carefully read the above and agree to all of them.

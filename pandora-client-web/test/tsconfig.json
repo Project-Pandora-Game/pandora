@@ -10,7 +10,6 @@
 			"@testing-library/jest-dom",
 			"offscreencanvas"
 		],
-		"skipLibCheck": true,
 		"jsx": "react-jsxdev",
 		"module": "ESNext",
 		"moduleResolution": "bundler",

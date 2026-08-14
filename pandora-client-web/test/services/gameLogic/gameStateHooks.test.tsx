@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react';
 import {
 	AssetFrameworkCharacterState,
@@ -10,6 +9,7 @@ import {
 } from 'pandora-common';
 import type { GameState } from '../../../src/components/gameContext/gameStateContextProvider.tsx';
 import { useCharacterCurrentRoom, useSpaceState } from '../../../src/services/gameLogic/gameStateHooks.ts';
+import { jest } from '../../jest.ts';
 
 function CreateGlobalState(characterCount: number = 0): AssetFrameworkGlobalState {
 	const assetManager = new AssetManager('test');

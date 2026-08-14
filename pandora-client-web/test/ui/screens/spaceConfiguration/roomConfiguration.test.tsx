@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import {
 	AssetFrameworkGlobalState,
@@ -13,6 +12,7 @@ import {
 import type { ReactElement } from 'react';
 import type { ClientServices } from '../../../../src/services/clientServices.ts';
 import { serviceManagerContext } from '../../../../src/services/serviceProvider.tsx';
+import { jest, MockClientModule } from '../../../jest.ts';
 
 const createRoomPhoto = jest.fn(() => new Promise<HTMLCanvasElement>(() => { /* Intentionally pending. */ }));
 const renderExportDialog = jest.fn(({ data }: { data: { name?: string; }; }): ReactElement => (
@@ -20,32 +20,32 @@ const renderExportDialog = jest.fn(({ data }: { data: { name?: string; }; }): Re
 ));
 const renderBackground = jest.fn((): null => null);
 
-jest.unstable_mockModule('../../../../src/ui/screens/room/roomPhoto.tsx', () => ({
+MockClientModule('ui/screens/room/roomPhoto.tsx', () => ({
 	CreateRoomPhoto: createRoomPhoto,
 }));
 
-jest.unstable_mockModule('../../../../src/components/exportImport/exportDialog.tsx', () => ({
+MockClientModule('components/exportImport/exportDialog.tsx', () => ({
 	ExportDialog: renderExportDialog,
 }));
 
-jest.unstable_mockModule('../../../../src/graphics/graphicsSceneRenderer.tsx', () => ({
+MockClientModule('graphics/graphicsSceneRenderer.tsx', () => ({
 	GraphicsSceneBackgroundRenderer: renderBackground,
 }));
 
-jest.unstable_mockModule('../../../../src/graphics/baseComponents/container.ts', () => ({
+MockClientModule('graphics/baseComponents/container.ts', () => ({
 	Container: (): null => null,
 }));
 
-jest.unstable_mockModule('../../../../src/graphics/graphicsBackground.tsx', () => ({
+MockClientModule('graphics/graphicsBackground.tsx', () => ({
 	GraphicsBackground: (): null => null,
 }));
 
-jest.unstable_mockModule('../../../../src/graphics/useTexture.ts', async () => {
+MockClientModule('graphics/useTexture.ts', async () => {
 	const { createContext } = await import('react');
 	return { UseTextureGetterOverride: createContext(null) };
 });
 
-jest.unstable_mockModule('../../../../src/services/screenResolution/screenResolutionHooks.ts', () => ({
+MockClientModule('services/screenResolution/screenResolutionHooks.ts', () => ({
 	useDevicePixelRatio: (): number => 1,
 }));
 

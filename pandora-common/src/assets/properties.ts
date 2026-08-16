@@ -81,6 +81,13 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	};
 
 	/**
+	 * If set, then the state is marked as invalid. The value is user-visible description of the reason.
+	 *
+	 * This property is intended to be used inside `stateFlagCombinations`.
+	 */
+	invalid?: string;
+
+	/**
 	 * Prevents this item from being added or removed on anyone, including on oneself
 	 * @default false
 	 */
@@ -158,6 +165,7 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	readonly attributeRequirements: ReadonlySet<string | `!${string}`>;
 	readonly stateFlags: ReadonlySet<string>;
 	readonly stateFlagsRequirements: ReadonlyMap<string, string>;
+	readonly invalid?: ReadonlySet<string>;
 	readonly blockAddRemove: boolean;
 	readonly blockModules: ReadonlySet<string>;
 	readonly overrideColorKey: ReadonlySet<string>;
@@ -168,6 +176,7 @@ export type AssetPropertiesIndividualIntermediateResult = AssetPropertiesIndivid
 	attributeRequirements: Set<string | `!${string}`>;
 	stateFlags: Set<string>;
 	stateFlagsRequirements: Map<string, string>;
+	invalid?: Set<string>;
 	blockAddRemove: boolean;
 	blockModules: Set<string>;
 	overrideColorKey: Set<string>;
@@ -196,6 +205,10 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualIn
 	for (const [flag, reason] of Object.entries(properties.stateFlags?.requires ?? {})) {
 		const currentReason = base.stateFlagsRequirements.get(flag);
 		base.stateFlagsRequirements.set(flag, (currentReason ? `${currentReason} ` : '') + reason);
+	}
+	if (properties.invalid != null) {
+		base.invalid ??= new Set();
+		base.invalid.add(properties.invalid);
 	}
 
 	base.blockAddRemove ||= properties.blockAddRemove ?? false;

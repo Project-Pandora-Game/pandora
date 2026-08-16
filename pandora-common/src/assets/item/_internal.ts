@@ -163,6 +163,20 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public validate(context: IItemValidationContext): AppearanceValidationResult {
 		// Check that the item's internal state is valid
 		const properties = this.getProperties();
+		if (properties.invalid != null && properties.invalid.size > 0) {
+			for (const reason of properties.invalid) {
+				return {
+					success: false,
+					error: {
+						problem: 'invalidState',
+						asset: this.asset.id,
+						itemName: this.name ?? '',
+						reason,
+					},
+				};
+			}
+		}
+
 		for (const [flag, reason] of properties.stateFlagsRequirements.entries()) {
 			if (!properties.stateFlags.has(flag)) {
 				return {

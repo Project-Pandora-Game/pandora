@@ -49,11 +49,13 @@ export function MirrorAtomicCondition(c: Immutable<AtomicCondition>): AtomicCond
 		return {
 			...c,
 			module: MirrorBoneLike(c.module),
+			value: MirrorBoneLike(c.value),
 		};
 	} else if ('attribute' in c) {
 		Assert(c.attribute != null);
 		return {
 			...c,
+			attribute: MirrorBoneLike(c.attribute),
 		};
 	} else if ('blinking' in c) {
 		Assert(c.blinking != null);

@@ -38,6 +38,13 @@ export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = Asset
 	};
 
 	/**
+	 * If set, then the state is marked as invalid. The value is user-visible description of the reason.
+	 *
+	 * This property is intended to be used inside `stateFlagCombinations`.
+	 */
+	invalid?: string;
+
+	/**
 	 * Prevents listed modules from being modified by anyone, including on oneself
 	 * @default []
 	 */
@@ -54,6 +61,7 @@ export interface RoomDevicePropertiesResult {
 	slotProperties: Partial<Record<string, Immutable<AssetProperties>[]>>;
 	stateFlags: Set<string>;
 	stateFlagsRequirements: Map<string, string>;
+	invalid?: Set<string>;
 	blockModules: Set<string>;
 	blockSlotsEnterLeave: Set<string>;
 }
@@ -81,6 +89,10 @@ export function MergeRoomDeviceProperties<T extends RoomDevicePropertiesResult>(
 	for (const [flag, reason] of Object.entries(properties.stateFlags?.requires ?? {})) {
 		const currentReason = base.stateFlagsRequirements.get(flag);
 		base.stateFlagsRequirements.set(flag, (currentReason ? `${currentReason} ` : '') + reason);
+	}
+	if (properties.invalid != null) {
+		base.invalid ??= new Set();
+		base.invalid.add(properties.invalid);
 	}
 
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));

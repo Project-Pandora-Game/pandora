@@ -40,7 +40,7 @@ import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsScene
 import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { SortSpaceCharacters } from '../../components/characterList/sortCharacters.ts';
@@ -194,11 +194,13 @@ export function PersonalSpaceControls(): ReactElement {
 	const [constructionModeButtonRef, setConstructionModeButtonRef] = useState<HTMLElement | null>(null);
 
 	const navigate = useNavigatePandora();
+	const gameState = useGameState();
 	const { globalState, player, playerState } = usePlayerState();
 	AssertNotNullable(player);
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 	const [showPhotoDialog, setShowPhotoDialog] = useState(false);
 	const { roomConstructionMode, canModifyRoom, modifyRequiredRole, canUseHands } = useObservable(DeviceOverlayState);
+	const getCurrentGlobalState = useCallback(() => gameState.globalState.currentState, [gameState]);
 
 	const onRoomConstructionModeChange = useCallback(() => {
 		DeviceOverlayState.value = {
@@ -302,7 +304,9 @@ export function PersonalSpaceControls(): ReactElement {
 									/>
 								</Row>
 								<SpaceStateConfigurationUi
-									globalState={ globalState }
+									spaceState={ globalState.space }
+									initialSelectedRoom={ playerState.currentRoom }
+									getCurrentGlobalState={ getCurrentGlobalState }
 								/>
 							</ModalDialog>
 						) : null

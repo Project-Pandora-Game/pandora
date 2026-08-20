@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
@@ -13,16 +12,14 @@ import {
 	RoomLinkNodeConfig,
 	RoomLinkNodeConfigSchema,
 	RoomNameSchema,
-	RoomTemplateSchema,
 	type AssetFrameworkGlobalState,
 	type AssetFrameworkRoomState,
+	type AssetFrameworkSpaceState,
 	type CardinalDirection,
 	type Coordinates,
-	type RoomBackgroundData,
 } from 'pandora-common';
-import { ReactElement, useId, useMemo, useState, type ReactNode } from 'react';
+import { ReactElement, useId, useState, type ReactNode } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
-import exportIcon from '../../../assets/icons/export.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -30,27 +27,22 @@ import { TextAreaInput } from '../../../common/userInteraction/input/textAreaInp
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FormCreateStringValidator, FormError } from '../../../components/common/form/form.tsx';
-import { ExportDialog, type ExportDialogTarget } from '../../../components/exportImport/exportDialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import { Container } from '../../../graphics/baseComponents/container.ts';
-import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
-import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
-import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
-import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
-import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { SpaceRoleSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
-import { CreateRoomPhoto } from '../room/roomPhoto.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
+import { RoomConfigurationBackgroundPreview } from './roomConfigurationBackgroundPreview.tsx';
+import { RoomExportButton } from './roomExportButton.tsx';
 import { RoomSettingsDialog } from './roomSettings.tsx';
 
-export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }: {
+export function RoomConfiguration({ isEntryRoom, roomState, spaceState, getCurrentGlobalState, close }: {
 	isEntryRoom: boolean;
 	roomState: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
+	spaceState: AssetFrameworkSpaceState;
+	getCurrentGlobalState: () => AssetFrameworkGlobalState;
 	close: () => void;
 }): ReactElement {
 	const id = useId();
@@ -106,7 +98,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 					>
 						<img src={ deleteIcon } alt='Delete action' /> Delete this room
 					</GameLogicActionButton>
-					<RoomExportButton roomState={ roomState } globalState={ globalState } />
+					<RoomExportButton roomState={ roomState } getCurrentGlobalState={ getCurrentGlobalState } />
 					<Button
 						className='half-slim align-start'
 						onClick={ () => setShowRoomSettings(true) }
@@ -121,7 +113,7 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 				{ showRoomSettings ? (
 					<RoomSettingsDialog
 						room={ roomState }
-						globalState={ globalState }
+						spaceState={ spaceState }
 						close={ () => {
 							setShowRoomSettings(false);
 						} }
@@ -282,44 +274,6 @@ export function RoomConfiguration({ isEntryRoom, roomState, globalState, close }
 	);
 }
 
-export function RoomConfigurationBackgroundPreview({ background, previewSize, className }: {
-	background: Immutable<RoomBackgroundData> | null;
-	previewSize: number;
-	className?: string;
-}): ReactElement | null {
-	const dpr = useDevicePixelRatio();
-
-	if (background == null) {
-		return null;
-	}
-
-	const previewScale = Math.min(previewSize / background.imageSize[0], previewSize / background.imageSize[1]);
-	const previewSizeX = Math.ceil(previewScale * background.imageSize[0]);
-	const previewSizeY = Math.ceil(previewScale * background.imageSize[1]);
-
-	return (
-		<DivContainer className={ classNames('RoomConfigurationBackgroundPreview', className) }>
-			<GraphicsSceneBackgroundRenderer
-				renderArea={ { x: 0, y: 0, width: previewSizeX, height: previewSizeY } }
-				resolution={ dpr }
-				backgroundColor={ 0x000000 }
-				backgroundAlpha={ 0 }
-				forwardContexts={ [serviceManagerContext, UseTextureGetterOverride] }
-			>
-				<Container
-					scale={ { x: previewScale, y: previewScale } }
-					x={ (previewSizeX - previewScale * background.imageSize[0]) / 2 }
-					y={ (previewSizeY - previewScale * background.imageSize[1]) / 2 }
-				>
-					<GraphicsBackground
-						background={ background }
-					/>
-				</Container>
-			</GraphicsSceneBackgroundRenderer>
-		</DivContainer>
-	);
-}
-
 const ROOM_INTERNAL_DIRECTION_NAMES: Readonly<Record<keyof AssetFrameworkRoomState['roomLinkNodes'], string>> = {
 	far: 'Far',
 	right: 'Right',
@@ -454,81 +408,5 @@ function RoomConfigurationRoomLink({ direction, roomState }: {
 				</GameLogicActionButton>
 			</td>
 		</tr>
-	);
-}
-
-function RoomExportButton({ roomState, globalState }: {
-	roomState: AssetFrameworkRoomState;
-	globalState: AssetFrameworkGlobalState;
-}): ReactElement {
-	const serviceManager = useServiceManager();
-	const [showExportDialog, setShowExportDialog] = useState(false);
-	const roomTemplate = useMemo(() => roomState.exportToTemplate({ includeAllItems: true }), [roomState]);
-
-	const exportExtra = useMemo(async () => {
-		const previewCanvas = await CreateRoomPhoto({
-			roomState,
-			globalState,
-			serviceManager,
-			quality: '720p',
-			trim: true,
-			noGhost: true,
-			characters: [],
-			characterNames: false,
-		});
-
-		const previewBlob = await new Promise<Blob>((resolve, reject) => {
-			previewCanvas.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				resolve(blob);
-			}, 'image/jpeg', 0.8);
-		}).catch(() => new Promise<Blob>((resolve, reject) => {
-			previewCanvas.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				resolve(blob);
-			}, 'image/png');
-		}));
-
-		const preview: ExportDialogTarget = {
-			content: previewBlob,
-			suffix: `-preview.${ previewBlob.type.split('/').at(-1) }`,
-			type: previewBlob.type,
-		};
-
-		return [preview];
-	}, [globalState, roomState, serviceManager]);
-
-	return (
-		<>
-			<button
-				className='wardrobeActionButton allowed'
-				onClick={ () => {
-					setShowExportDialog(true);
-				} }
-			>
-				<img src={ exportIcon } alt='Export room' />&nbsp;Export
-			</button>
-			{
-				showExportDialog ? (
-					<ExportDialog
-						title={ 'room template' + (roomTemplate.name ? ` "${ roomTemplate.name }"` : '') }
-						exportType='RoomTemplate'
-						exportVersion={ 1 }
-						dataSchema={ RoomTemplateSchema }
-						data={ roomTemplate }
-						extraData={ exportExtra }
-						closeDialog={ () => setShowExportDialog(false) }
-					/>
-				) : null
-			}
-		</>
 	);
 }

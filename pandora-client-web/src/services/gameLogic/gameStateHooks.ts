@@ -9,6 +9,7 @@ import {
 	type ActionTargetSelector,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkGlobalState,
+	type AssetFrameworkSpaceState,
 	type CharacterId,
 	type CharacterRestrictionsManager,
 	type CurrentSpaceInfo,
@@ -18,6 +19,7 @@ import {
 	type ItemId,
 	type ItemPath,
 	type Nullable,
+	type RoomId,
 	type SpaceCharacterModifierEffectData,
 	type SpaceClientInfo,
 	type SpaceFeature,
@@ -124,6 +126,33 @@ export function useGlobalState(context: GameState | null): AssetFrameworkGlobalS
 
 }
 
+/** Internal primitive for selectors that return structurally shared objects or primitive values. */
+function useGlobalStateSelector<T>(
+	context: GameState,
+	selector: (state: AssetFrameworkGlobalState) => T,
+): T {
+	return useSyncExternalStore(
+		useCallback((onChange) => context.on('globalStateChange', () => onChange()), [context]),
+		useCallback(() => selector(context.globalState.currentState), [context, selector]),
+	);
+}
+
+const SelectSpaceState = (state: AssetFrameworkGlobalState): AssetFrameworkSpaceState => state.space;
+
+/** Subscribe to the immutable space state without updating for character-only changes. */
+export function useSpaceState(context: GameState): AssetFrameworkSpaceState {
+	return useGlobalStateSelector(context, SelectSpaceState);
+}
+
+/** Subscribe to only a character's current room, without exposing a potentially stale character or global state. */
+export function useCharacterCurrentRoom(context: GameState, characterId: CharacterId): RoomId | null {
+	const selector = useCallback(
+		(state: AssetFrameworkGlobalState) => state.getCharacterState(characterId)?.currentRoom ?? null,
+		[characterId],
+	);
+	return useGlobalStateSelector(context, selector);
+}
+
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
@@ -214,4 +243,3 @@ export function GetSpaceInfoAccountRole(data: Immutable<SpaceClientInfo>, accoun
 export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
 	return CompareSpaceRoles(GetSpaceInfoAccountRole(data, account), 'admin') >= 0;
 }
-

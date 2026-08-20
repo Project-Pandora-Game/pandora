@@ -29,7 +29,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import type { IDirectoryAccountInfo, IDirectoryShardInfo } from 'pandora-common/networking/api/directory_client';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
+import React, { memo, ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -59,7 +59,7 @@ import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../services/gameLogic/gameStateHooks.ts';
+import { IsSpaceAdmin, useCharacterCurrentRoom, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, useSpaceState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
@@ -361,7 +361,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationFeatures } />
 				</Tab>
 				<Tab name='Room management'>
-					<SpaceConfigurationRoom { ...tabProps } />
+					<SpaceConfigurationRoom creation={ creation } spaceId={ currentSpaceInfo?.id ?? null } />
 				</Tab>
 				{
 					currentConfig.features.includes('development') && isDeveloper ? (
@@ -954,14 +954,18 @@ function SpaceConfigurationFeaturesInner({
 	);
 }
 
-function SpaceConfigurationRoom({
+const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
 	creation,
-	currentSpaceState,
-}: SpaceConfigurationTabProps): ReactElement {
+	spaceId,
+}: Pick<SpaceConfigurationTabProps, 'creation'> & { spaceId: SpaceId | null; }): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
+	const gameState = useGameState();
+	const currentSpaceState = useSpaceState(gameState);
+	const playerCurrentRoom = useCharacterCurrentRoom(gameState, player.id);
+	const getCurrentGlobalState = useCallback(() => gameState.globalState.currentState, [gameState]);
 
-	if (creation || currentSpaceState == null) {
+	if (creation || currentSpaceState.spaceId !== spaceId) {
 		return (
 			<div className='tab-wrapper'>
 				<Column className='flex-1' alignX='center'>
@@ -978,13 +982,15 @@ function SpaceConfigurationRoom({
 			<div className='tab-wrapper'>
 				<Column className='fill contain-size' overflowY='auto'>
 					<SpaceStateConfigurationUi
-						globalState={ currentSpaceState }
+						spaceState={ currentSpaceState }
+						initialSelectedRoom={ playerCurrentRoom }
+						getCurrentGlobalState={ getCurrentGlobalState }
 					/>
 				</Column>
 			</div>
 		</WardrobeActionContextProvider>
 	);
-}
+});
 
 function SpaceConfigurationDebug({
 	currentConfig,

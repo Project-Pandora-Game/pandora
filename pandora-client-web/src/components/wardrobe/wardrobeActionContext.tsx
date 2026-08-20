@@ -47,7 +47,10 @@ export interface WardrobeActionContext {
 
 export const wardrobeActionContext = createContext<WardrobeActionContext | null>(null);
 
-export function WardrobeActionContextProvider({ player, children }: { player: PlayerCharacter; children: ReactNode; }): ReactElement {
+export function WardrobeActionContextProvider({ player, children }: {
+	player: PlayerCharacter;
+	children: ReactNode;
+}): ReactElement {
 	const gameState = useGameState();
 	const globalStateContainer = gameState.globalState;
 	const spaceContext = useActionSpaceContext();

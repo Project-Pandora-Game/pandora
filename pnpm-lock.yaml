@@ -391,8 +391,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1109.0
-        version: 3.1109.0
+        specifier: 3.1110.0
+        version: 3.1110.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.79
         version: 3.972.79
@@ -662,8 +662,8 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@aws-sdk/client-sesv2@3.1109.0':
-    resolution: {integrity: sha512-wBrUNKC/kCCUAsqZAYWM2q8gZYcICRp2LUhTWoc9WCff41ny/vahxUpp1kYn5y31oDLKjNMONU4f+Bdy2k7k0g==}
+  '@aws-sdk/client-sesv2@3.1110.0':
+    resolution: {integrity: sha512-HcxyzL+rBpaNpkYfr/Dv8MxUhbuT3J8q4htbaBDxdKlW6rbUrW66bhHGOEX9RpA0Mp93F5w6L+/uysnlFzM4Ew==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.977.8':
@@ -3150,6 +3150,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -6232,7 +6233,7 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@aws-sdk/client-sesv2@3.1109.0':
+  '@aws-sdk/client-sesv2@3.1110.0':
     dependencies:
       '@aws-sdk/core': 3.977.8
       '@aws-sdk/credential-provider-node': 3.972.79
@@ -8029,7 +8030,7 @@ snapshots:
   '@typescript-eslint/project-service@8.60.0(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.60.0(typescript@6.0.3)
-      '@typescript-eslint/types': 8.60.0
+      '@typescript-eslint/types': 8.67.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: 6.0.3
     transitivePeerDependencies:

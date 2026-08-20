@@ -120,12 +120,17 @@ export function CharacterRoomDataToCacheData(data: ICharacterRoomData): Characte
 	};
 }
 
-export function useCharacterCacheEntry(id: CharacterId): Option<CharacterCacheGetResult> | null {
+export function useCharacterCacheEntry(id: CharacterId | null): Option<CharacterCacheGetResult> | null {
 	const [result, setResult] = useState<Option<CharacterCacheGetResult> | null>(null);
 
 	const indexedDb = useService('indexedDb');
 
 	useEffect(() => {
+		if (id == null) {
+			setResult(null);
+			return;
+		}
+
 		let cancelled = false;
 
 		const update = () => {

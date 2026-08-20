@@ -31,6 +31,7 @@ import { useCharacterDataOptional, type Character } from '../../character/charac
 import { type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { useNullableObservable, useObservable } from '../../observable.ts';
 import { useCurrentAccount } from '../accountLogic/accountManagerHooks.ts';
+import { useCharacterCacheEntry } from '../indexedDb/indexedDbCharacterCache.ts';
 import { useGameLogicServiceOptional } from '../serviceProvider.tsx';
 
 export function useGameStateOptional(): GameState | null {
@@ -54,10 +55,14 @@ export function useResolveCharacterName(characterId: CharacterId | null): string
 	// Look through space characters to see if we find matching one
 	const characters = useSpaceCharacters();
 	const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
-
 	const data = useCharacterDataOptional(character ?? null);
 
-	return (data != null) ? data.name : null;
+	// Look through local character cache (but only if no data was found)
+	const cacheData = useCharacterCacheEntry(data == null ? characterId : null)?.unwrap_or(null);
+
+	return data?.name ??
+		cacheData?.data.name ??
+		null;
 }
 
 export function useSpaceInfo(): Immutable<CurrentSpaceInfo> {

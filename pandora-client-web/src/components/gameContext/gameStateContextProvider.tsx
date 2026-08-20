@@ -52,6 +52,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { GetAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
 import { MakeActionSpaceContext } from '../../services/gameLogic/gameStateHooks.ts';
+import { CharacterRoomDataToCacheData } from '../../services/indexedDb/indexedDbCharacterCache.ts';
 import { ChatFocusMode, ChatMessageShouldDim, GetChatFocusModeForced } from '../../ui/components/chat/chatInputContext.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chatMessage.tsx';
 import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessageTypes.ts';
@@ -134,7 +135,7 @@ export class ChatSendError extends Error {
 	}
 }
 
-type GameStateDependencies = Readonly<Pick<ClientServices, 'accountManager' | 'notificationHandler'>>;
+type GameStateDependencies = Readonly<Pick<ClientServices, 'accountManager' | 'notificationHandler' | 'indexedDb'>>;
 export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements GameState {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
@@ -351,6 +352,11 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 				char.update(join);
 				this.characters.value = [...this.characters.value];
 			}
+			// Update persistent character cache
+			this._dependencies.indexedDb.characterCache.putCharacter(join.id, CharacterRoomDataToCacheData(join))
+				.catch((err) => {
+					logger.warning('Error storing character cache data:', err);
+				});
 		}
 		if (leave) {
 			this.characters.value = this.characters.value.filter((oc) => oc.data.id !== leave);
@@ -368,6 +374,11 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 				} else {
 					char.update(characterData);
 					this.characters.value = [...this.characters.value];
+					// Update persistent character cache
+					this._dependencies.indexedDb.characterCache.putCharacter(char.id, CharacterRoomDataToCacheData(char.data))
+						.catch((err) => {
+							logger.warning('Error storing character cache data:', err);
+						});
 				}
 			}
 		}
@@ -407,6 +418,13 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 			} else {
 				char = new CharacterImpl<ICharacterRoomData>(c);
 			}
+
+			// Update persistent character cache
+			this._dependencies.indexedDb.characterCache.putCharacter(c.id, CharacterRoomDataToCacheData(c))
+				.catch((err) => {
+					logger.warning('Error storing character cache data:', err);
+				});
+
 			return char;
 		});
 		this._status.produceImmer((s) => {

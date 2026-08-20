@@ -108,6 +108,7 @@ export const ShardConnectionManagerServiceProvider: ServiceProviderDefinition<Cl
 		browserPermissionManager: true,
 		userActivation: true,
 		audio: true,
+		indexedDb: true,
 		directoryConnector: true,
 		accountManager: true,
 		notificationHandler: true,

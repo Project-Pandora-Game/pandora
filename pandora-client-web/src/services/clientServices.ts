@@ -4,6 +4,7 @@ import { AccountManagerServiceProvider, type IAccountManager } from './accountLo
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
 import { AudioServiceProvider, type AudioService } from './audio.ts';
 import { BrowserPermissionManagerServiceProvider, type BrowserPermissionManager } from './browserPermissionManager.ts';
+import { IndexedDbServiceProvider, type IndexedDbService } from './indexedDb/indexedDbService.ts';
 import { NotificationHandlerServiceProvider, type NotificationHandler } from './notificationHandler.tsx';
 import { ScreenResolutionServiceProvider, type ScreenResolutionService } from './screenResolution/screenResolution.ts';
 import { ShardConnectionManagerServiceProvider, type IShardConnectionManager } from './shardConnectionManager.ts';
@@ -16,6 +17,7 @@ export type ClientServices = Satisfies<
 		browserPermissionManager: BrowserPermissionManager;
 		userActivation: UserActivationService;
 		audio: AudioService;
+		indexedDb: IndexedDbService;
 		directoryConnector: DirectoryConnector;
 		accountManager: IAccountManager;
 		notificationHandler: NotificationHandler;
@@ -34,6 +36,7 @@ export function GenerateClientUsermodeServices(): ServiceManager<ClientServices>
 		.registerService(BrowserPermissionManagerServiceProvider)
 		.registerService(UserActivationServiceProvider)
 		.registerService(AudioServiceProvider)
+		.registerService(IndexedDbServiceProvider)
 		.registerService(DirectoryConnectorServiceProvider)
 		.registerService(AccountManagerServiceProvider)
 		.registerService(NotificationHandlerServiceProvider)

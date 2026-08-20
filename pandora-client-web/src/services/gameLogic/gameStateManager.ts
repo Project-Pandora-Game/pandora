@@ -1,5 +1,6 @@
 import {
 	Assert,
+	GetLogger,
 	Service,
 	type IService,
 	type Satisfies,
@@ -11,9 +12,11 @@ import { LoadAssetDefinitions } from '../../assets/assetManager.tsx';
 import { GameState, GameStateImpl } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../clientGameLogicServices.ts';
+import { CharacterRoomDataToCacheData } from '../indexedDb/indexedDbCharacterCache.ts';
 
 type GameStateManagerServiceConfig = Satisfies<{
-	dependencies: Pick<ClientGameLogicServices, 'shardConnector'> & Pick<ClientGameLogicServicesDependencies, 'accountManager' | 'notificationHandler'>;
+	dependencies: Pick<ClientGameLogicServices, 'shardConnector'> &
+	Pick<ClientGameLogicServicesDependencies, 'accountManager' | 'notificationHandler' | 'indexedDb'>;
 	events: false;
 }, ServiceConfigBase>;
 
@@ -23,6 +26,7 @@ export interface IGameStateManager extends IService<GameStateManagerServiceConfi
 
 /** Class housing connection from Shard to Shard */
 class GameStateManager extends Service<GameStateManagerServiceConfig> implements IGameStateManager {
+	private readonly logger = GetLogger('GameStateManager');
 	private readonly _gameState = new Observable<GameStateImpl | null>(null);
 
 	public get gameState(): ReadonlyObservable<GameState | null> {
@@ -48,6 +52,12 @@ class GameStateManager extends Service<GameStateManagerServiceConfig> implements
 			const gameState = this._gameState.value;
 			Assert(gameState != null, 'Received update data without game state');
 			gameState.player.update(data);
+
+			// Update persistent character cache
+			this.serviceDeps.indexedDb.characterCache.putCharacter(gameState.player.id, CharacterRoomDataToCacheData(gameState.player.data))
+				.catch((err) => {
+					this.logger.warning('Error storing character cache data:', err);
+				});
 		};
 		shardConnector.messageHandlers.gameStateLoad = (data: IShardClientArgument['gameStateLoad']) => {
 			const gameState = this._gameState.value;
@@ -86,6 +96,7 @@ export const GameStateManagerServiceProvider: ServiceProviderDefinition<ClientGa
 	dependencies: {
 		accountManager: true,
 		notificationHandler: true,
+		indexedDb: true,
 		shardConnector: true,
 	},
 };

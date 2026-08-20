@@ -63,6 +63,7 @@ export const EditorShardConnectionManagerServiceProvider: ServiceProviderDefinit
 		browserPermissionManager: true,
 		userActivation: true,
 		audio: true,
+		indexedDb: true,
 		// directoryConnector: true,
 		accountManager: true,
 		notificationHandler: true,

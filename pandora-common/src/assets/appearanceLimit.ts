@@ -600,6 +600,11 @@ function PoseChangeWeight(key: TreeLimitDimension): number {
 		return 15;
 	}
 
+	// Opening/closing fingers is cheap
+	if (key.endsWith('.fingers')) {
+		return 15;
+	}
+
 	// Everything else is considered the same as moving right angle
 	return 90;
 }

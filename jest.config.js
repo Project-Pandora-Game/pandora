@@ -1,40 +1,32 @@
+//@ts-check
+
 import * as path from 'path';
 
 /**
- * Function that loads the target project config, deleting options not usable in the config
- * @param {string} dir - Path to the subproject
+ * @param { string } project
+ * @param { import('ts-jest').JestConfigWithTsJest } [config]
+ * @returns { (import('jest').Config['projects'] & {})[number] }
  */
-async function loadProjectConfig(dir) {
-	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
-	const config = (await import(path.resolve(path.join('./', dir, 'jest.config.js')))).default;
+function DefineProjectConfig(project, config) {
+	return {
+		displayName: project,
+		rootDir: path.join(import.meta.dirname, project),
 
-	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
-	const resultConfig = {
-		...config,
-		displayName: dir,
-		rootDir: path.join('./', dir, config.rootDir ?? '.'),
+		testMatch: [
+			'<rootDir>/test/**/*.test.?([mc])[jt]s?(x)',
+		],
+		clearMocks: true,
+		errorOnDeprecated: true,
+		setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+		extensionsToTreatAsEsm: ['.ts', '.tsx', '.mts'],
+		transform: {
+			'^.+\\.tsx?$': ['ts-jest', {
+				tsconfig: '<rootDir>/test/tsconfig.json',
+				useESM: true,
+			}],
+		},
+		...(config ?? {}),
 	};
-
-	// Fixup ts-jest project links
-	if (typeof resultConfig !== 'string' && resultConfig.transform) {
-		for (const transformConfig of Object.values(resultConfig.transform)) {
-			if (
-				typeof transformConfig !== 'string' &&
-				transformConfig[0] === 'ts-jest' &&
-				transformConfig[1] != null &&
-				typeof transformConfig[1] === 'object' &&
-				typeof transformConfig[1].tsconfig === 'string'
-			) {
-				transformConfig[1].tsconfig = path.resolve('./', dir, transformConfig[1].tsconfig);
-			}
-		}
-	}
-
-	delete resultConfig.collectCoverageFrom;
-	delete resultConfig.coverageDirectory;
-	delete resultConfig.coverageProvider;
-
-	return resultConfig;
 }
 
 /**
@@ -44,13 +36,32 @@ async function loadProjectConfig(dir) {
  */
 export default {
 	projects: [
-		await loadProjectConfig('pandora-common'),
-		await loadProjectConfig('pandora-server-directory'),
-		await loadProjectConfig('pandora-server-shard'),
-		await loadProjectConfig('pandora-client-web'),
-		await loadProjectConfig('pandora-api'),
-		await loadProjectConfig('pandora-cli'),
+		DefineProjectConfig('pandora-common'),
+		DefineProjectConfig('pandora-server-directory', {
+			watchPathIgnorePatterns: ['globalConfig'],
+		}),
+		DefineProjectConfig('pandora-server-shard'),
+		DefineProjectConfig('pandora-client-web', {
+			moduleNameMapper: {
+				'\\.(png|jpe?g|gif|svg|eot|ttf|woff2?|mp3|wav)$': '<rootDir>/test/stubs/resourceStub.ts',
+				'\\.s?css$': '<rootDir>/test/stubs/stylesheetStub.ts',
+				'react-reverse-portal': '<rootDir>/node_modules/react-reverse-portal/dist/cjs/index.js',
+			},
+			testEnvironment: 'jsdom',
+		}),
+		DefineProjectConfig('pandora-api'),
+		DefineProjectConfig('pandora-cli'),
 	],
 	coverageProvider: 'v8',
+	coverageDirectory: 'coverage_jest',
+	coverageReporters: [
+		'html',
+		'json',
+		'text-summary',
+	],
+	collectCoverageFrom: [
+		'**/pandora-*/src/**/*.{ts,tsx}',
+		'!**/node_modules/**',
+	],
 	errorOnDeprecated: true,
 };

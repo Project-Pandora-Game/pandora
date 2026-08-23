@@ -25,23 +25,18 @@ async function collectCoverage() {
 	}
 	fs.mkdirSync(COVERAGE_OUTPUT);
 
-	for (const project of [
-		'pandora-common',
-		'pandora-server-directory',
-		'pandora-server-shard',
-		'pandora-client-web',
-		'pandora-api',
-		'pandora-cli',
-		'pandora-tests',
+	for (const [project, coverageDir] of [
+		['jest', './coverage_jest'],
+		['pandora-tests', './pandora-tests/coverage'],
 	]) {
 		try {
 			await copyFile(
-				path.resolve(process.cwd(), project, 'coverage/coverage-final.json'),
+				path.resolve(process.cwd(), coverageDir, 'coverage-final.json'),
 				path.resolve(COVERAGE_TEMP, `coverage-${project}.json`),
 				constants.COPYFILE_EXCL,
 			);
 		} catch (err) {
-			console.error(`Failed to copy coverage file from ${project}:\n`, err);
+			console.error(`Failed to copy coverage directory ${coverageDir} for project '${project}':\n`, err);
 			process.exitCode = 1;
 		}
 	}

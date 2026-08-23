@@ -1,4 +1,4 @@
-import { noop } from 'lodash-es';
+import { memoize, noop } from 'lodash-es';
 import { MAX_BONE_COUNT } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 
@@ -128,15 +128,16 @@ vec3 getNormal(vec2 pos) {
 	},
 };
 
-export const NORMAL_MESH_GL_PROGRAM = PIXI.compileHighShaderGlProgram({
-	name: 'mesh',
-	bits: [
-		PIXI.localUniformBitGl,
-		SHADER_NORMALS_BIT_GL,
-		{
-			name: 'normal-mesh-texture-bit',
-			fragment: {
-				header: /* glsl */`
+export const GetNormalMeshGlProgram = memoize(function GetNormalMeshGlProgram(): PIXI.GlProgram {
+	return PIXI.compileHighShaderGlProgram({
+		name: 'mesh',
+		bits: [
+			PIXI.localUniformBitGl,
+			SHADER_NORMALS_BIT_GL,
+			{
+				name: 'normal-mesh-texture-bit',
+				fragment: {
+					header: /* glsl */`
 vec3 ambientColour = vec3(1., 1., 1.);
 vec3 lightColour = vec3(1., 1., 1.);
 uniform vec4 uBaseColor;
@@ -147,7 +148,7 @@ uniform float uAmbientStrength;
 uniform float uSpecularStrength;
 uniform float uRoughness;
 		`,
-				main: /* glsl */`
+					main: /* glsl */`
 vec3 normal = getNormal(vUV);
 outColor = texture(uTexture, vUV);
 
@@ -177,28 +178,31 @@ outColor *= uBaseColor;
 outColor.xyz *= (ambient + diffuse);
 outColor.xyz += specular * outColor.w;
 		`,
+				},
 			},
-		},
-		PIXI.roundPixelsBitGl,
-	],
+			PIXI.roundPixelsBitGl,
+		],
+	});
 });
 
-export const NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM = PIXI.compileHighShaderGlProgram({
-	name: 'mesh',
-	bits: [
-		PIXI.localUniformBitGl,
-		SHADER_NORMALS_BIT_GL,
-		{
-			name: 'normal-mesh-texture-bit',
-			fragment: {
-				main: /* glsl */`
+export const GetNormalMeshDebugNormalsGlProgram = memoize(function GetNormalMeshDebugNormalsGlProgram(): PIXI.GlProgram {
+	return PIXI.compileHighShaderGlProgram({
+		name: 'mesh',
+		bits: [
+			PIXI.localUniformBitGl,
+			SHADER_NORMALS_BIT_GL,
+			{
+				name: 'normal-mesh-texture-bit',
+				fragment: {
+					main: /* glsl */`
 vec3 normal = getNormal(vUV);
 outColor = texture(uTexture, vUV);
 
 outColor.xyz = packNormal(normal) * outColor.w;
 		`,
+				},
 			},
-		},
-		PIXI.roundPixelsBitGl,
-	],
+			PIXI.roundPixelsBitGl,
+		],
+	});
 });

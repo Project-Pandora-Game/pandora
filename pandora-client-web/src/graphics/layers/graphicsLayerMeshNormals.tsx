@@ -5,7 +5,7 @@ import { ReactElement, useCallback, useMemo, type RefAttributes } from 'react';
 import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshProps, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
 import type { LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
-import { DEFAULT_NORMAL_TEXTURE, NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM, NORMAL_MESH_GL_PROGRAM } from './graphicsLayerMeshNormalsShader.ts';
+import { DEFAULT_NORMAL_TEXTURE, GetNormalMeshDebugNormalsGlProgram, GetNormalMeshGlProgram } from './graphicsLayerMeshNormalsShader.ts';
 
 export interface GraphicsLayerMeshNormalsProps extends RefAttributes<PIXI.Mesh<PIXI.Geometry, PIXI.Shader>>,
 	Omit<PixiCustomMeshProps<PIXI.Geometry, PIXI.Shader>, 'geometry' | 'shader' | 'state'> {
@@ -119,7 +119,7 @@ export function GraphicsLayerMeshNormals({
 	}, [triangles, uvs, vertices]);
 
 	const shader = useMemo((): PixiCustomMeshShaderCreator<PIXI.Shader> => {
-		const program = debugConfig?.displayNormalMap ? NORMAL_MESH_DEBUG_NORMALS_GL_PROGRAM : NORMAL_MESH_GL_PROGRAM;
+		const program = debugConfig?.displayNormalMap ? GetNormalMeshDebugNormalsGlProgram() : GetNormalMeshGlProgram();
 
 		const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
 		const ambientStrength = 0.1;

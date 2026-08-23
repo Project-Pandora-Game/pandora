@@ -23,6 +23,7 @@ import {
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
 	PANDORA_VERSION_DATABASE,
+	ParseNotNullable,
 	ROOM_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ROOM_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	RoomBundleSchema,
@@ -49,6 +50,7 @@ import {
 	type SpaceSearchSort,
 	type SpaceStateBundle,
 } from 'pandora-common';
+import type { BotId } from 'pandora-common/bots';
 import * as z from 'zod';
 import { ENV } from '../config.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
@@ -76,6 +78,7 @@ import {
 	type DatabaseDirectMessageAccounts,
 	type DatabaseVersionConfig,
 } from './databaseStructure.ts';
+import { DatabaseBotSchema, DatabaseBotUpdateSchema, type DatabaseBot, type DatabaseBotUpdate } from './databaseStructure/bots.ts';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
 import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType, type ValidatedCollectionDocumentType } from './validatedCollection.ts';
 
@@ -85,6 +88,7 @@ const logger = GetLogger('db');
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const SPACES_COLLECTION_NAME = 'spaces';
+const BOTS_COLLECTION_NAME = 'bots';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
@@ -242,6 +246,19 @@ const spaceCollection = new ValidatedCollection(
 	],
 );
 
+const botCollection = new ValidatedCollection(
+	logger,
+	BOTS_COLLECTION_NAME,
+	DatabaseBotSchema,
+	[
+		{
+			name: 'id',
+			unique: true,
+			key: { id: 1 },
+		},
+	],
+);
+
 const configCollection = new ValidatedCollection(
 	logger,
 	'config',
@@ -281,6 +298,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _characters!: ValidatedCollectionType<typeof characterCollection>;
 	private _accountContacts!: ValidatedCollectionType<typeof accountContactCollection>;
 	private _spaces!: ValidatedCollectionType<typeof spaceCollection>;
+	private _bots!: ValidatedCollectionType<typeof botCollection>;
 	private _config!: ValidatedCollectionType<typeof configCollection>;
 	private _directMessages!: ValidatedCollectionType<typeof directMessageCollection>;
 
@@ -335,6 +353,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._characters = await characterCollection.create(this._db, migration);
 		this._accountContacts = await accountContactCollection.create(this._db, migration);
 		this._spaces = await spaceCollection.create(this._db, migration);
+		this._bots = await botCollection.create(this._db, migration);
 		this._config = await configCollection.create(this._db, migration);
 		this._directMessages = await directMessageCollection.create(this._db, migration);
 
@@ -371,6 +390,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			characterCollection,
 			accountContactCollection,
 			spaceCollection,
+			botCollection,
 			configCollection,
 			directMessageCollection,
 		].forEach((c) => c.onDestroy());
@@ -805,6 +825,51 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void> {
 		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
 	}
+
+	//#region Bots
+
+	public async getBotById(id: BotId): Promise<DatabaseBot | null> {
+		return await this._bots.findOne({ id });
+	}
+
+	public async getBotsOwnedBy(accountId: AccountId): Promise<DatabaseBot[]> {
+		const result: DatabaseBot[] = await this._bots
+			.find({ ownerAccount: accountId })
+			.toArray();
+
+		return result;
+	}
+
+	@DbSynchronized()
+	public async createBot(data: DatabaseBot): Promise<DatabaseBot | 'duplicateId'> {
+		const existingId = await this._bots.findOne({ id: data.id });
+		if (existingId)
+			return 'duplicateId';
+
+		await this._bots.insertOne(data);
+
+		return ParseNotNullable(await this.getBotById(data.id));
+	}
+
+	public async deleteBot(id: BotId): Promise<void> {
+		await this._bots.deleteOne({ id });
+	}
+
+	public async updateBotData(id: BotId, data: DatabaseBotUpdate): Promise<void> {
+		const parsedData = DatabaseBotUpdateSchema
+			.parse(cloneDeep(data));
+
+		if (!isEqual(parsedData, data)) {
+			const diff = diffString(data, parsedData, { color: false });
+			logger.error(`Bot ${id} update has invalid data, rejecting:\n`, diff);
+			throw new Error('Invalid data');
+		}
+		data = parsedData;
+
+		await this._bots.updateOne({ id }, { $set: data });
+	}
+
+	//#endregion
 
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null> {
 		if (accessId === false) {

@@ -14,6 +14,8 @@ import { Satisfies } from '../../../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../../../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 import { ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX, AccountCryptoKeySchema, AccountPasskeyAuthenticatorDataSchema, AccountPasskeyClientDataSchema, AccountPasskeyCredentialIdSchema, AccountPasskeyInfoSchema, AccountPasskeyNameSchema, AccountPasskeyPublicKeySchema, AccountPasskeySignatureSchema, AccountPasskeyTransportSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo, type IAccountCryptoKey, type IAccountPasskeyInfo } from './directory_client.ts';
+import { BotConfigSchema, BotDefinitionSchema } from '../../../bots/botDefinition.ts';
+import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
 
 export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
 type ShardError = z.infer<typeof ShardErrorSchema>;
@@ -835,6 +837,79 @@ export const ClientDirectorySchema = {
 			z.object({
 				result: z.literal('ok'),
 				token: PandoraAccessTokenSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
+	//#endregion
+
+	//#region Bots management
+
+	listOwnedBots: {
+		request: z.object({}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				bots: BotDefinitionSchema.array(),
+			}),
+			z.object({
+				result: z.literal('notLoggedIn'),
+			}),
+		]),
+	},
+	createBot: {
+		request: z.object({
+			config: BotConfigSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				id: BotIdSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notAllowed'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+			}),
+		]),
+	},
+	updateBot: {
+		request: z.object({
+			id: BotIdSchema,
+			config: BotConfigSchema.partial(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+			}),
+		]),
+	},
+	deleteBot: {
+		request: z.object({
+			id: BotIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
 			}),
 			z.object({
 				result: z.literal('sudoRequired'),

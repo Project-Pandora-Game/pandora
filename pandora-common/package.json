@@ -16,6 +16,10 @@
 			"types": "./dist/assets/modules/*.d.ts",
 			"default": "./dist/assets/modules/*.js"
 		},
+		"./bots": {
+			"types": "./dist/bots/index.d.ts",
+			"default": "./dist/bots/index.js"
+		},
 		"./networking/helpers": {
 			"types": "./dist/networking/helpers.d.ts",
 			"default": "./dist/networking/helpers.js"

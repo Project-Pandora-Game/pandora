@@ -3,6 +3,7 @@
 /data
 /node_modules
 /coverage
+/coverage_jest
 /.nyc_output
 /docker.env
 # SonarQube

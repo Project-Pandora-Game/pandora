@@ -15,8 +15,10 @@ import type {
 	SpaceSearchResult,
 } from 'pandora-common';
 import { ServiceInit } from 'pandora-common';
+import type { BotId } from 'pandora-common/bots';
 import { ENV } from '../config.ts';
 import { DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts } from './databaseStructure.ts';
+import type { DatabaseBot, DatabaseBotUpdate } from './databaseStructure/bots.ts';
 import type { SpaceCreationData } from './dbHelper.ts';
 import { MockDatabase } from './mockDb.ts';
 import MongoDatabase from './mongoDb.ts';
@@ -28,6 +30,8 @@ export interface PandoraDatabase extends ServerService {
 
 	/** The id in numeric form that will be assigned to next created character */
 	readonly nextCharacterId: number;
+
+	//#region Account
 
 	/**
 	 * Find and get account with matching `id`
@@ -97,6 +101,8 @@ export interface PandoraDatabase extends ServerService {
 	 * @param from - timestamp in milliseconds
 	 */
 	getCountOfAccountsLastLoggedInAfter(from: number): Promise<number>;
+
+	//#endregion
 
 	//#region Character
 
@@ -256,6 +262,42 @@ export interface PandoraDatabase extends ServerService {
 	 * @param directMessageInfo - Direct message info to set
 	 */
 	setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void>;
+
+	//#region Bots
+
+	/**
+	 * Find and get bot with matching `id`
+	 * @returns The bot data or `null` if not found
+	 */
+	getBotById(id: BotId): Promise<DatabaseBot | null>;
+
+	/**
+	 * Queries bots for bots owned by the specified account
+	 * @param accountId - ID of account to find bots of
+	 */
+	getBotsOwnedBy(accountId: AccountId): Promise<DatabaseBot[]>;
+
+	/**
+	 * Create bot
+	 * @param data - Bot data
+	 * @returns The created bot data or reason for failure
+	 */
+	createBot(data: DatabaseBot): Promise<DatabaseBot | 'duplicateId'>;
+
+	/**
+	 * Delete bot
+	 * @param id - Id of the bot to delete
+	 */
+	deleteBot(id: BotId): Promise<void>;
+
+	/**
+	 * Sets bot data
+	 * @param id - Bot id
+	 * @param data - data to set
+	 */
+	updateBotData(id: BotId, data: DatabaseBotUpdate): Promise<void>;
+
+	//#endregion
 
 	//#region Shard
 

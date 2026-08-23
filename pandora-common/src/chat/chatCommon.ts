@@ -3,6 +3,7 @@ import { AccountIdSchema } from '../account/account.ts';
 import { RoomIdSchema } from '../assets/appearanceTypes.ts';
 import { AssetIdSchema } from '../assets/base.ts';
 import { ItemIdSchema } from '../assets/item/base.ts';
+import { BotIdSchema } from '../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { PronounKeySchema } from '../character/pronouns.ts';
 import { HexColorStringSchema } from '../validation.ts';
@@ -29,6 +30,14 @@ export const IChatMessageActionAccountSchema = z.object({
 	labelColor: HexColorStringSchema,
 });
 export type IChatMessageActionAccount = z.infer<typeof IChatMessageActionAccountSchema>;
+
+export const IChatMessageActionBotSchema = z.object({
+	type: z.literal('bot'),
+	id: BotIdSchema,
+	displayName: z.string(),
+	labelColor: HexColorStringSchema,
+});
+export type IChatMessageActionBot = z.infer<typeof IChatMessageActionBotSchema>;
 
 export const IChatMessageActionItemSchema = z.object({
 	id: ItemIdSchema,

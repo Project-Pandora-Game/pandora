@@ -46,7 +46,7 @@
 		"async-lock": "1.4.1",
 		"discord.js": "14.27.0",
 		"express": "5.2.1",
-		"immer": "11.1.16",
+		"immer": "11.1.17",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.18.1",
 		"mongodb": "7.5.0",

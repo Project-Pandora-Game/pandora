@@ -5,7 +5,7 @@ import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
 import { HexColorStringSchema } from '../validation.ts';
 import { ChatMessageActionLogSchema, type ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionIdSchema } from './chatActions.ts';
-import { ChatReceivedMessageBaseSchema, IChatMessageActionAccountSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
+import { ChatReceivedMessageBaseSchema, IChatMessageActionAccountSchema, IChatMessageActionBotSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
@@ -116,7 +116,7 @@ export const ChatMessageActionSchema = ChatReceivedMessageBaseSchema.extend({
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
 		itemContainerPath: IChatMessageActionContainerPathSchema.optional(),
 		/** Used to generate specific dictionary entries, acts as source */
-		account: IChatMessageActionAccountSchema.optional(),
+		account: z.discriminatedUnion('type', [IChatMessageActionAccountSchema, IChatMessageActionBotSchema]).optional(),
 		/** Used to generate specific dictionary entries, defaults to `account` */
 		accountTarget: IChatMessageActionAccountSchema.optional(),
 	}).optional(),
@@ -133,7 +133,7 @@ export const ChatMessageDirectoryActionSchema = ChatMessageActionSchema.omit({ t
 	data: z.object({
 		character: CharacterIdSchema.optional(),
 		targetCharacter: CharacterIdSchema.optional(),
-		account: IChatMessageActionAccountSchema.optional(),
+		account: z.discriminatedUnion('type', [IChatMessageActionAccountSchema, IChatMessageActionBotSchema]).optional(),
 		accountTarget: IChatMessageActionAccountSchema.optional(),
 	}).optional(),
 });

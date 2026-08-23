@@ -26,6 +26,7 @@ import {
 	type SpaceSearchResultEntry,
 	type SpaceSearchSort,
 } from 'pandora-common';
+import type { BotId } from 'pandora-common/bots';
 import { CreateAccountData } from '../account/account.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
 import {
@@ -45,6 +46,7 @@ import {
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
 } from './databaseStructure.ts';
+import { DatabaseBotUpdateSchema, type DatabaseBot, type DatabaseBotUpdate } from './databaseStructure/bots.ts';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
 
 function HashSHA512Base64(text: string): string {
@@ -65,6 +67,7 @@ export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterDatabaseData> = new Map();
 	private spacesDb: Map<SpaceId, SpaceData> = new Map();
+	private botDb: Map<BotId, DatabaseBot> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessageAccounts> = new Map();
 	private accountContactDb: DatabaseAccountContact[] = [];
@@ -72,6 +75,7 @@ export class MockDatabase implements PandoraDatabase {
 		nextAccountId: 1,
 		nextCharacterId: 1,
 	};
+
 	private get accountDbView(): DatabaseAccountWithSecure[] {
 		return Array.from(this.accountDb.values());
 	}
@@ -499,6 +503,56 @@ export class MockDatabase implements PandoraDatabase {
 		acc.directMessages = directMessageInfo;
 		return Promise.resolve();
 	}
+
+	//#region Bots
+
+	public getBotById(id: BotId): Promise<DatabaseBot | null> {
+		const bot = this.botDb.get(id);
+		return Promise.resolve(cloneDeep(bot ?? null));
+	}
+
+	public getBotsOwnedBy(accountId: AccountId): Promise<DatabaseBot[]> {
+		return Promise.resolve(
+			Array.from(this.botDb.values())
+				.filter((it) => it.ownerAccount === accountId)
+				.map(cloneDeep),
+		);
+	}
+
+	public createBot(data: DatabaseBot): Promise<DatabaseBot | 'duplicateId'> {
+		const bot = cloneDeep(data);
+		if (this.botDb.has(bot.id)) {
+			return Promise.resolve('duplicateId');
+		}
+		this.botDb.set(bot.id, bot);
+		return Promise.resolve(cloneDeep(bot));
+	}
+
+	public deleteBot(id: BotId): Promise<void> {
+		this.botDb.delete(id);
+		return Promise.resolve();
+	}
+
+	public updateBotData(id: BotId, data: DatabaseBotUpdate): Promise<void> {
+		const parsedData = DatabaseBotUpdateSchema
+			.parse(cloneDeep(data));
+
+		if (!isEqual(parsedData, data)) {
+			const diff = diffString(data, parsedData, { color: false });
+			logger.error(`Bot "${id}" update has invalid data, rejecting:\n`, diff);
+			throw new Error('Invalid data');
+		}
+		data = parsedData;
+
+		const bot = this.botDb.get(id);
+		if (!bot)
+			return Promise.resolve();
+
+		Object.assign(bot, data);
+		return Promise.resolve();
+	}
+
+	//#endregion
 
 	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null> {
 		const char = this.characterDb.get(id);

@@ -3,17 +3,17 @@ import { produce, type Immutable } from 'immer';
 import { AssertNotNullable, CLIENT_NOTIFICATION_GROUPS, CLIENT_NOTIFICATION_TYPES, ClientNotificationSoundSchema, ClientNotificationSuppressionSettingSchema, KnownObject, type AccountSettings, type ClientNotificationSound, type ClientNotificationType } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import * as z from 'zod';
-import popupIcon from '../../assets/icons/bubble.svg';
-import notificationIcon from '../../assets/icons/notification.svg';
-import soundOffIcon from '../../assets/icons/sound-0.svg';
-import soundOnIcon from '../../assets/icons/sound-3.svg';
-import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS } from '../../services/notificationHandler.tsx';
-import { NotificationPermissionRequest } from '../../ui/components/notifications/notificationPermissionRequest.tsx';
-import { Button } from '../common/button/button.tsx';
-import { Column } from '../common/container/container.tsx';
-import { useAccountSettingDriver } from './helpers/accountSettings.tsx';
-import { NumberSettingInput, SelectSettingInput, ToggleSettingInput, useOptionalSubsettingDriver, useSubsettingDriver, useValueMapDriver, type SettingDriver } from './helpers/settingsInputs.tsx';
+import popupIcon from '../../../assets/icons/bubble.svg';
+import notificationIcon from '../../../assets/icons/notification.svg';
+import soundOffIcon from '../../../assets/icons/sound-0.svg';
+import soundOnIcon from '../../../assets/icons/sound-3.svg';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column } from '../../../components/common/container/container.tsx';
+import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettingDriver } from '../../../services/accountLogic/accountSettingsDriver.ts';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS } from '../../../services/notificationHandler.tsx';
+import { NotificationPermissionRequest } from '../../components/notifications/notificationPermissionRequest.tsx';
+import { NumberSettingInput, SelectSettingInput, ToggleSettingInput, useOptionalSubsettingDriver, useSubsettingDriver, useValueMapDriver, type SettingDriver } from '../../components/settings/settingsInputs.tsx';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();

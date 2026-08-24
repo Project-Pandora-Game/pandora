@@ -1,21 +1,21 @@
 import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useColorInput } from '../../common/useColorInput.ts';
-import { useAsyncEvent } from '../../common/useEvent.ts';
-import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
-import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
-import { Select } from '../../common/userInteraction/select/select.tsx';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
-import { useNavigatePandora } from '../../routing/navigate.ts';
-import { CharacterPreviewGenerationButton } from '../../ui/screens/room/characterPreviewGeneration.tsx';
-import { Button } from '../common/button/button.tsx';
-import { ColorInput } from '../common/colorInput/colorInput.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { ModalDialog } from '../dialog/dialog.tsx';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
-import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
+import { useColorInput } from '../../../common/useColorInput.ts';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { usePlayerData } from '../../../components/gameContext/playerContextProvider.tsx';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useCharacterSettingDriver } from '../../../services/gameLogic/characterSettingsDriver.ts';
+import { CharacterPreviewGenerationButton } from '../room/characterPreviewGeneration.tsx';
 import { SudoDialog, useSudoMode } from './securitySettings/sudoMode.tsx';
 
 export function CharacterSettings(): ReactElement | null {

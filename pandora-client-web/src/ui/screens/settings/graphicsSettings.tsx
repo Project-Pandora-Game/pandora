@@ -1,13 +1,13 @@
 import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
-import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../graphics/graphicsSettings.tsx';
-import { useObservable } from '../../observable.ts';
-import { useAutomaticResolution } from '../../services/screenResolution/screenResolutionHooks.ts';
-import { Button } from '../common/button/button.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { ContextHelpButton } from '../help/contextHelpButton.tsx';
-import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from './helpers/settingsInputs.tsx';
+import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../../assets/graphicsManager.ts';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
+import { useObservable } from '../../../observable.ts';
+import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
+import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from '../../components/settings/settingsInputs.tsx';
 
 export function GraphicsSettings(): ReactElement | null {
 	return (

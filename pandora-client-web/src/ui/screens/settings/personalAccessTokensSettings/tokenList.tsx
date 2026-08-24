@@ -1,11 +1,11 @@
 import { AssertNever, type PandoraAccessToken, type PandoraAccessTokenInfo } from 'pandora-common';
 import { useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../../common/useEvent.ts';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
-import { InteractiveLink } from '../../common/link/interactiveLink.tsx';
-import { ButtonConfirm } from '../../dialog/dialog.tsx';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { useAsyncEvent } from '../../../../common/useEvent.ts';
+import { InteractiveLink } from '../../../../components/common/link/interactiveLink.tsx';
+import { ButtonConfirm } from '../../../../components/dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../../persistentToast.ts';
 import { useSudoMode } from '../securitySettings/sudoMode.tsx';
 import { PATCreatedDialog, PATEditDialog } from './tokenDialog.tsx';
 

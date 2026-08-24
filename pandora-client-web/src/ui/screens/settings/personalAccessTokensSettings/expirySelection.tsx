@@ -1,7 +1,7 @@
 import { Assert, TimeSpanMs } from 'pandora-common';
 import { useId, type ReactElement } from 'react';
-import { Select } from '../../../common/userInteraction/select/select.tsx';
-import { Column } from '../../common/container/container.tsx';
+import { Select } from '../../../../common/userInteraction/select/select.tsx';
+import { Column } from '../../../../components/common/container/container.tsx';
 
 const EXPIRY_PRESETS = {
 	week: ['7 days', TimeSpanMs(7, 'days')],

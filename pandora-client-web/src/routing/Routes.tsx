@@ -11,7 +11,6 @@ import { usePlayerData } from '../components/gameContext/playerContextProvider.t
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
 import { AuthPage } from '../components/login/authPage.tsx';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens.tsx';
-import { Settings } from '../components/settings/settings.tsx';
 import { WardrobeRouter } from '../components/wardrobe/wardrobe.tsx';
 import { ShardConnectionState } from '../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../observable.ts';
@@ -20,6 +19,7 @@ import { useGameStateOptional } from '../services/gameLogic/gameStateHooks.ts';
 import { useService } from '../services/serviceProvider.tsx';
 import { Freeze } from '../ui/components/common/freeze.tsx';
 import { RoomScreen } from '../ui/screens/room/room.tsx';
+import { Settings } from '../ui/screens/settings/settings.tsx';
 import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration.tsx';
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
 import { PublicSpaceSearch } from '../ui/screens/spacesSearch/publicSpaceSearch.tsx';

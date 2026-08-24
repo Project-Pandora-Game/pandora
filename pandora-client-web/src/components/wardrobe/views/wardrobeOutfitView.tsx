@@ -16,7 +16,6 @@ import {
 	OutfitMeasureCost,
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -24,7 +23,6 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import plusIcon from '../../../assets/icons/plus.svg';
-import wikiIcon from '../../../assets/icons/wiki.svg';
 import { useBrowserSessionStorage } from '../../../browserStorage.ts';
 import { usePlayerVisionFilters } from '../../../graphics/common/visionFilters.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
@@ -34,6 +32,7 @@ import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
+import { WikiButton } from '../../../ui/components/help/wikiButton.tsx';
 import { Button, IconButton } from '../../common/button/button.tsx';
 import { Column, DivContainer, Row } from '../../common/container/container.tsx';
 import { UsageMeter } from '../../common/usageMeter/usageMeter.tsx';
@@ -156,9 +155,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 					<div className='toolbar'>
 						<Row alignY='center' className='flex-1'>
 							<span>Editing:&nbsp;<strong>Temporary collection</strong></span>
-							<Link title='Get help in the wiki' to='/wiki/items#IT_Saving_collections' className='flex-row'>
-								<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
-							</Link>
+							<WikiButton link='/wiki/items#IT_Saving_collections' />
 						</Row>
 					</div>
 					<OutfitEditView
@@ -202,9 +199,7 @@ export function InventoryOutfitView({ header, targetContainer }: {
 				<div className='toolbar'>
 					<Row alignY='center' alignX='center' className='flex-1'>
 						<span><strong>Temporary collection</strong></span>
-						<Link title='Get help in the wiki' to='/wiki/items#IT_Saving_collections' className='flex-row'>
-							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
-						</Link>
+						<WikiButton link='/wiki/items#IT_Saving_collections' />
 					</Row>
 				</div>
 				<div className='Scrollbar'>

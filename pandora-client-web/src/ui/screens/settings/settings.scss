@@ -1,28 +1,6 @@
-@use '../../styles/common';
+@use '../../../styles/common';
 
-.attribute-description {
-	padding: 1em;
-	background: common.$theme-hoverdialog-background;
-	color: common.$theme-hoverdialog-text;
-	border: 2px solid common.$theme-hoverdialog-border;
-	border-radius: 1em;
-	line-height: 1.5em;
-	text-align: center;
-
-	@include common.forcedColors {
-		background: Canvas;
-		color: CanvasText;
-		border: 1px solid common.$forcedColors-separator;
-	}
-}
-
-.help-image {
-	&:hover {
-		filter: invert(30%);
-	}
-}
-
-.settings {
+.SettingsScreen {
 	display: flex;
 	overflow: hidden;
 
@@ -244,12 +222,4 @@
 			}
 		}
 	}
-}
-
-.permission-base-highlight {
-	box-shadow: inset 0 0 0 2px common.$theme-settings-permission-button-default-highlight;
-}
-
-.AdvancedSettings-confirmation-content {
-	max-width: min(95vw, 50em);
 }

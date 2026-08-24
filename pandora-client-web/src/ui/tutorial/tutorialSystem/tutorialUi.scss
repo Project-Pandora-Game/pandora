@@ -50,7 +50,7 @@
 	position: fixed;
 	overflow: hidden;
 	margin: 0;
-	z-index: 89000; // This is positioned to be under hover elements (.hover-element), not to obscure them
+	z-index: 89000; // This is positioned to be under hover elements (.HoverElement), not to obscure them
 	pointer-events: none;
 	forced-color-adjust: none;
 

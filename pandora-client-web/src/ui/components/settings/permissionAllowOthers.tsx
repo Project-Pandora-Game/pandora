@@ -39,7 +39,7 @@ export function PermissionAllowOthersIcon({ config }: { config: PermissionType; 
 	return (
 		<>
 			<img ref={ setRef } src={ src } width='26' height='26' alt={ alt } />
-			<HoverElement parent={ ref } className='attribute-description'>
+			<HoverElement parent={ ref } center>
 				{ description }
 			</HoverElement>
 		</>

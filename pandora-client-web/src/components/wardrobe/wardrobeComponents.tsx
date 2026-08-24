@@ -386,7 +386,7 @@ export function AttributeButton({ attribute, long = false, ...buttonProps }: {
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }
-			<HoverElement parent={ buttonRef } className='attribute-description'>
+			<HoverElement parent={ buttonRef } center>
 				{ attributeDefinition?.description ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 			</HoverElement>
 		</>

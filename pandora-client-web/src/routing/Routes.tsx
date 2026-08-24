@@ -19,7 +19,6 @@ import { useGameStateOptional } from '../services/gameLogic/gameStateHooks.ts';
 import { useService } from '../services/serviceProvider.tsx';
 import { Freeze } from '../ui/components/common/freeze.tsx';
 import { RoomScreen } from '../ui/screens/room/room.tsx';
-import { Settings } from '../ui/screens/settings/settings.tsx';
 import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration.tsx';
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
 import { PublicSpaceSearch } from '../ui/screens/spacesSearch/publicSpaceSearch.tsx';
@@ -28,6 +27,7 @@ import { authPagePathsAndComponents } from './authRoutingData.ts';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management/index.tsx'));
+const SettingsScreen = lazy(() => import('../ui/screens/settings/settings.tsx').then((it) => ({ default: it.SettingsScreen })));
 const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 
 export function PandoraRoutes(): ReactElement {
@@ -40,7 +40,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/character/select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished /> } />
 
-			<Route path='/settings/*' element={ <RequiresLogin element={ Settings } /> } />
+			<Route path='/settings/*' element={ <RequiresLogin element={ SettingsScreen } /> } />
 
 			<Route path='/contacts/*' element={ <RequiresLogin element={ AccountContacts } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />

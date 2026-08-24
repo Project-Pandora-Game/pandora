@@ -16,7 +16,7 @@ import { useGameLogicServiceManager } from '../../services/serviceProvider.tsx';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput.tsx';
 import { RoomScreen } from '../../ui/screens/room/room.tsx';
 import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog.tsx';
-import { Settings } from '../../ui/screens/settings/settings.tsx';
+import { SettingsScreen } from '../../ui/screens/settings/settings.tsx';
 import './pandoraEditorInstance.scss';
 
 export function PandoraInnerInstanceDriver(): ReactElement {
@@ -134,7 +134,7 @@ function EditorGameStateContextProvider(): null {
 function PandoraEditorInstanceRoutes(): ReactElement {
 	return (
 		<Routes>
-			<Route path='/settings/*' element={ <Settings /> } />
+			<Route path='/settings/*' element={ <SettingsScreen /> } />
 			<Route path='/room' element={ <RoomScreen /> } />
 			<Route path='/wardrobe/*' element={ <WardrobeRouter /> } />
 

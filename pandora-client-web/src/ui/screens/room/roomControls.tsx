@@ -141,7 +141,7 @@ export function RoomControls(): ReactElement | null {
 							disabled={ !canModifyRoom || !canUseHands }
 						>
 							{ constructionModeTooltip ? (
-								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+								<HoverElement parent={ constructionModeButtonRef } className='display-linebreak'>
 									{ constructionModeTooltip }
 								</HoverElement>
 							) : null }
@@ -324,7 +324,7 @@ export function PersonalSpaceControls(): ReactElement {
 							disabled={ !canModifyRoom || !canUseHands }
 						>
 							{ constructionModeTooltip ? (
-								<HoverElement parent={ constructionModeButtonRef } className='action-warning display-linebreak'>
+								<HoverElement parent={ constructionModeButtonRef } className='display-linebreak'>
 									{ constructionModeTooltip }
 								</HoverElement>
 							) : null }

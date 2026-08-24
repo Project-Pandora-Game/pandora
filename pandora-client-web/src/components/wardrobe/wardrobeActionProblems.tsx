@@ -93,7 +93,7 @@ export function ActionButtonHoverInfo({ checkResult, parent, actionInProgress }:
 	}
 
 	return (
-		<HoverElement parent={ parent } className='action-warning display-linebreak'>
+		<HoverElement parent={ parent } className='display-linebreak'>
 			<Column>
 				{
 					actionInProgress ? (

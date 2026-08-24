@@ -97,7 +97,7 @@ type SettingsPageConfig = {
 
 const SETTINGS_PAGES: Readonly<Record<keyof typeof SETTINGS_PAGES_SETUP, SettingsPageConfig>> = SETTINGS_PAGES_SETUP;
 
-export function Settings(): ReactElement | null {
+export function SettingsScreen(): ReactElement | null {
 	const { enabledAdvancedSettings } = useAccountSettings();
 	const { pathnameBase } = useRoutingParentPath();
 	const { pathname } = useLocation();

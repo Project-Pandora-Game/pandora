@@ -8,14 +8,13 @@ import {
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
-import wikiIcon from '../../../../assets/icons/wiki.svg';
 import type { Character } from '../../../../character/character.ts';
 import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus.ts';
+import { WikiButton } from '../../../../ui/components/help/wikiButton.tsx';
+import { PermissionEffectiveAllowOthersIcon } from '../../../../ui/components/settings/permissionAllowOthers.tsx';
 import { Row } from '../../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider.tsx';
-import { ShowEffectiveAllowOthers } from '../../../settings/permissionsSettings.tsx';
 import { useWardrobeActionContext } from '../../wardrobeActionContext.tsx';
 import { CheckResultToClassName } from '../../wardrobeComponents.tsx';
 
@@ -47,9 +46,7 @@ export function WardrobeCharacterModifierTypeView({ title, character, currentlyF
 			<div className='toolbar'>
 				<Row alignY='center' className='flex-1'>
 					<span>{ title }</span>
-					<Link title='Get help in the wiki' to='/wiki/characters#CH_Character_modifiers' className='flex-row'>
-						<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
-					</Link>
+					<WikiButton link='/wiki/characters#CH_Character_modifiers' />
 				</Row>
 				<div className='filter'>
 					<TextInput ref={ filterInput }
@@ -111,7 +108,7 @@ function ModifierTypesListItem({ modifier, selected, character, onClick }: {
 			<span className='itemName'>{ modifier.visibleName }</span>
 			{
 				character.isPlayer() ? (
-					<ShowEffectiveAllowOthers permissionGroup='characterModifierType' permissionId={ modifier.typeId } />
+					<PermissionEffectiveAllowOthersIcon permissionGroup='characterModifierType' permissionId={ modifier.typeId } />
 				) : null
 			}
 		</div>

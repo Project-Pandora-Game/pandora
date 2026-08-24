@@ -1085,25 +1085,6 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
-.action-warning, .attribute-description {
-	background: common.$theme-hoverdialog-background;
-	color: common.$theme-hoverdialog-text;
-	border: 2px solid common.$theme-hoverdialog-border;
-	padding: 1em;
-	border-radius: 1em;
-	line-height: 1.5em;
-
-	@include common.forcedColors {
-		background: Canvas;
-		color: CanvasText;
-		border-color: common.$forcedColors-separator;
-	}
-}
-
-.attribute-description {
-	text-align: center;
-}
-
 .WardrobeLockPassword {
 	margin: 1em 0;
 }

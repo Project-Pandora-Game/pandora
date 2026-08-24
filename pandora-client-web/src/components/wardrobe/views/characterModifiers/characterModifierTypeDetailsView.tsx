@@ -10,8 +10,8 @@ import {
 import { ReactElement, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../../assets/assetManager.tsx';
 import type { Character } from '../../../../character/character.ts';
+import { PermissionSettingConfigurationRow } from '../../../../ui/components/settings/permissionConfig.tsx';
 import { Column } from '../../../common/container/container.tsx';
-import { PermissionSettingEntry } from '../../../settings/permissionsSettings.tsx';
 import { CharacterModifierImportTemplateDialog } from './characterModifierImport.tsx';
 import { WardrobeCharacterModifierAddButton, WardrobeCharacterModifierTypeDescription } from './characterModifierTypeComponents.tsx';
 import './characterModifierTypeDetailsView.scss';
@@ -46,7 +46,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 					character.isPlayer() ? (
 						<fieldset className='modifierPermission'>
 							<legend>Permission</legend>
-							<PermissionSettingEntry
+							<PermissionSettingConfigurationRow
 								visibleName={ `Allow other characters to add or configure "${ typeDefinition.visibleName }" modifiers` }
 								icon=''
 								permissionGroup='characterModifierType'

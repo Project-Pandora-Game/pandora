@@ -3,17 +3,16 @@ import { Immutable } from 'immer';
 import { noop } from 'lodash-es';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, NaturalListJoin, ResolveAssetPreference } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { useAssetManager } from '../../assets/assetManager.tsx';
-import wikiIcon from '../../assets/icons/wiki.svg';
 import { useBrowserStorage } from '../../browserStorage.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
 import { Select, type SelectProps } from '../../common/userInteraction/select/select.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { WikiButton } from '../../ui/components/help/wikiButton.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
@@ -358,9 +357,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 				<Column padding='large'>
 					<Row alignY='center' alignX='space-between' className='flex-1'>
 						<label htmlFor={ `${idBase}-select` }>Item preference:</label>
-						<Link title='Get help in the wiki' to='/wiki/items#IT_Item_preferences_and_limits' className='flex-row'>
-							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
-						</Link>
+						<WikiButton link='/wiki/items#IT_Item_preferences_and_limits' />
 					</Row>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' }>
 						<option value='' title='Select the preference for the item based on the most limited attribute'>
@@ -498,9 +495,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 				<Column padding='large'>
 					<Row alignY='center' alignX='space-between' className='flex-1'>
 						<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
-						<Link title='Get help in the wiki' to='/wiki/items#IT_Item_preferences_and_limits' className='flex-row'>
-							<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
-						</Link>
+						<WikiButton link='/wiki/items#IT_Item_preferences_and_limits' />
 					</Row>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } disabled={ !isConfigurable }>
 						{

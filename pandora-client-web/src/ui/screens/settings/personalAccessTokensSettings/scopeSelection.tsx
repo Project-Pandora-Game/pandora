@@ -1,8 +1,8 @@
 import { KnownObject, PANDORA_ACCESS_TOKEN_SCOPES, PandoraAccessTokenScopeListAdd, PandoraAccessTokenScopeListRemove, type PandoraAccessTokenScopeList } from 'pandora-common';
 import { Fragment, useId, type ReactElement } from 'react';
-import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
-import { Column, Row } from '../../common/container/container.tsx';
-import { GridContainer } from '../../common/container/gridContainer.tsx';
+import { Checkbox } from '../../../../common/userInteraction/checkbox.tsx';
+import { Column, Row } from '../../../../components/common/container/container.tsx';
+import { GridContainer } from '../../../../components/common/container/gridContainer.tsx';
 
 export function PATScopes({ selectedScopes, onChange }: {
 	selectedScopes: PandoraAccessTokenScopeList;

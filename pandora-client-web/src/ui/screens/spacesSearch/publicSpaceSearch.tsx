@@ -10,9 +10,9 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { SelectSettingInput, useStateSettingDriver, useValueMapDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
+import { SelectSettingInput, useStateSettingDriver, useValueMapDriver } from '../../components/settings/settingsInputs.tsx';
 import { SpaceDetailsDialog } from './spaceSearchSpaceDetails.tsx';
 import { SPACE_SEARCH_PUBLIC_ICONS, SPACE_SEARCH_PUBLIC_LABELS } from './spacesSearch.tsx';
 

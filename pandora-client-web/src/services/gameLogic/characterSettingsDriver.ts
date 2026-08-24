@@ -2,10 +2,10 @@ import type { Immutable } from 'immer';
 import { CHARACTER_SETTINGS_DEFAULT, GetLogger, type CharacterSettings } from 'pandora-common';
 import { useMemo } from 'react';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
-import { useModifiedCharacterSettings } from '../../gameContext/playerContextProvider.tsx';
-import { useShardConnector } from '../../gameContext/shardConnectorContextProvider.tsx';
-import type { SettingDriver } from './settingsInputs.tsx';
+import { useModifiedCharacterSettings } from '../../components/gameContext/playerContextProvider.tsx';
+import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import type { SettingDriver } from '../../ui/components/settings/settingsInputs.tsx';
 
 export function useCharacterSettingDriver<const Setting extends keyof CharacterSettings>(setting: Setting): SettingDriver<Immutable<CharacterSettings>[Setting]> {
 	const modifiedSettings = useModifiedCharacterSettings();

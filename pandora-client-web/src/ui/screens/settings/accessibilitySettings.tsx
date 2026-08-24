@@ -1,7 +1,7 @@
 import { ReactElement } from 'react';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { Column, Row } from '../common/container/container.tsx';
-import { ContextHelpButton } from '../help/contextHelpButton.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { ToggleAccountSetting } from './helpers/accountSettings.tsx';
 
 export function AccessibilitySettings(): ReactElement | null {

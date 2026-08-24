@@ -1,16 +1,17 @@
 import { KnownObject, type SettingsAdvancedCategory } from 'pandora-common';
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
-import type { ChildrenProps } from '../../common/reactTypes.ts';
-import { useCurrentTime } from '../../common/useCurrentTime.ts';
-import { Switch } from '../../common/userInteraction/switch.tsx';
-import { useNavigatePandora } from '../../routing/navigate.ts';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { Button } from '../common/button/button.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { GridContainer } from '../common/container/gridContainer.tsx';
-import { ModalDialog } from '../dialog/dialog.tsx';
-import { useAccountSettingDriver } from './helpers/accountSettings.tsx';
-import { useEnumSetMembershipDriver } from './helpers/settingsInputs.tsx';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { Switch } from '../../../common/userInteraction/switch.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettingDriver } from '../../../services/accountLogic/accountSettingsDriver.ts';
+import { useEnumSetMembershipDriver } from '../../components/settings/settingsInputs.tsx';
+import './advancedSettings.scss';
 
 const ADVANCED_SETTINGS_CATEGORIES: Record<SettingsAdvancedCategory, {
 	name: string;

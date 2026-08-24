@@ -1,21 +1,22 @@
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
 import { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../common/useEvent.ts';
-import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
-import { NumberInput } from '../../common/userInteraction/input/numberInput.tsx';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { Button } from '../common/button/button.tsx';
-import { ColorInput } from '../common/colorInput/colorInput.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
-import { useConfirmDialog } from '../dialog/dialog.tsx';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { ContextHelpButton } from '../help/contextHelpButton.tsx';
-import { SelectAccountSettings, ToggleAccountSetting, useAccountSettingDriver } from './helpers/accountSettings.tsx';
-import { NumberSettingInput } from './helpers/settingsInputs.tsx';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
+import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettingDriver } from '../../../services/accountLogic/accountSettingsDriver.ts';
+import { NumberSettingInput } from '../../components/settings/settingsInputs.tsx';
+import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings.tsx';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();

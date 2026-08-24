@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { useMediaQuery } from '../common/useMediaQuery.ts';
-import type { SettingDriver } from '../components/settings/helpers/settingsInputs.tsx';
 import { useObservable } from '../observable.ts';
+import type { SettingDriver } from '../ui/components/settings/settingsInputs.tsx';
 
 export const GraphicsUpscalingSettingSchema = z.enum(['smooth', 'crisp-edges', 'pixelated']);
 export type GraphicsUpscalingSetting = z.infer<typeof GraphicsUpscalingSettingSchema>;

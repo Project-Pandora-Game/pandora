@@ -1,24 +1,24 @@
 import { ParseNotNullable, type SettingsAdvancedCategory } from 'pandora-common';
 import { ReactElement } from 'react';
 import { matchPath, Navigate, resolvePath, Route, Routes, useLocation } from 'react-router';
-import iconAccessibility from '../../assets/icons/accessibility.svg';
-import iconAccount from '../../assets/icons/account.svg';
-import iconColor from '../../assets/icons/color.svg';
-import iconClose from '../../assets/icons/cross.svg';
-import iconInterface from '../../assets/icons/interface.svg';
-import iconLock from '../../assets/icons/lock.svg';
-import iconModificationEdit from '../../assets/icons/modification-edit.svg';
-import iconModificationLock from '../../assets/icons/modification-lock.svg';
-import iconNotification from '../../assets/icons/notification.svg';
-import iconSettingAdvanced from '../../assets/icons/setting-advanced.svg';
-import { BUILD_TIME, GIT_DESCRIBE } from '../../config/Environment.ts';
-import { useNavigatePandora } from '../../routing/navigate.ts';
-import { useRoutingParentPath } from '../../routing/routingUtils.ts';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
-import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
-import { Button } from '../common/button/button.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { usePlayer } from '../gameContext/playerContextProvider.tsx';
+import iconAccessibility from '../../../assets/icons/accessibility.svg';
+import iconAccount from '../../../assets/icons/account.svg';
+import iconColor from '../../../assets/icons/color.svg';
+import iconClose from '../../../assets/icons/cross.svg';
+import iconInterface from '../../../assets/icons/interface.svg';
+import iconLock from '../../../assets/icons/lock.svg';
+import iconModificationEdit from '../../../assets/icons/modification-edit.svg';
+import iconModificationLock from '../../../assets/icons/modification-lock.svg';
+import iconNotification from '../../../assets/icons/notification.svg';
+import iconSettingAdvanced from '../../../assets/icons/setting-advanced.svg';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
+import { BUILD_TIME, GIT_DESCRIBE } from '../../../config/Environment.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
+import { useRoutingParentPath } from '../../../routing/routingUtils.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { AccessibilitySettings } from './accessibilitySettings.tsx';
 import { AccountSettings } from './accountSettings.tsx';
 import { AdvancedSettingsGate, AdvancedSettingsScreen } from './advancedSettings.tsx';
@@ -135,7 +135,7 @@ export function Settings(): ReactElement | null {
 
 	return (
 		<>
-			<div className='settings'>
+			<div className='SettingsScreen'>
 				<Row className='fill-x' gap='none'>
 					{ !isNarrowScreen ? (
 						<Column className='page-list left-list' padding='medium'>

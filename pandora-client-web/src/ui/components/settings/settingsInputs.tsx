@@ -7,8 +7,8 @@ import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedU
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
-import { Button } from '../../common/button/button.tsx';
-import { Column, Row } from '../../common/container/container.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 
 export interface SettingDriver<T> {
 	currentValue: NoInfer<T | undefined>;

@@ -4,15 +4,15 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column } from '../../../components/common/container/container.tsx';
+import { Form, FormField } from '../../../components/common/form/form.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { useAuthToken, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { PrehashPassword } from '../../../crypto/helpers.ts';
 import { GetPasskeyAssertion, IsPasskeyConditionalMediationSupported, IsPasskeySupported } from '../../../crypto/passkey.ts';
 import type { AuthToken } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
-import { Button } from '../../common/button/button.tsx';
-import { Column } from '../../common/container/container.tsx';
-import { Form, FormField } from '../../common/form/form.tsx';
-import { ModalDialog } from '../../dialog/dialog.tsx';
-import { useAuthToken, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 
 export function SessionExpireInfo({ token }: { token: AuthToken; }): ReactElement {
 	const now = useCurrentTime();

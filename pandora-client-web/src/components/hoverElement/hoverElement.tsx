@@ -7,9 +7,15 @@ import './hoverElement.scss';
 
 type HoverElementProps = CommonProps & {
 	parent: HTMLElement | null;
+	center?: boolean;
 };
 
-export function HoverElement({ children, className, parent }: HoverElementProps): ReactElement | null {
+export function HoverElement({
+	children,
+	className,
+	parent,
+	center = false,
+}: HoverElementProps): ReactElement | null {
 	const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
 	const [show, setShow] = useState(false);
 
@@ -45,7 +51,7 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 
 	return (
 		<DialogInPortal location='global' priority={ 100 }>
-			<div className={ classNames('hover-element', className) } ref={ positionRef }>
+			<div className={ classNames('HoverElement', center ? 'center' : null, className) } ref={ positionRef }>
 				{ children }
 			</div>
 		</DialogInPortal>

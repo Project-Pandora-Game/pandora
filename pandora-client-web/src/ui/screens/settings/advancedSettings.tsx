@@ -6,6 +6,7 @@ import { Switch } from '../../../common/userInteraction/switch.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { GridContainer } from '../../../components/common/container/gridContainer.tsx';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
@@ -37,6 +38,25 @@ const ADVANCED_SETTINGS_CATEGORIES: Record<SettingsAdvancedCategory, {
 			</>
 		),
 		wait: 20_000,
+	},
+	bot_development: {
+		name: 'Bot Development',
+		warning: (
+			<>
+				<div className='warning-box'>
+					These options are intended for developers of bots — not for their users.<br />
+					Bots are an experimental feature that might change heavily in the future.
+				</div>
+				<p>
+					Bot Development settings will allow you to create and manage bots that people will be able to use in the spaces they own.
+				</p>
+				<p>
+					Be aware, that creating a bot requires permission from Pandora's developers.<br />
+					You can get in touch with us using the <code>#development-help</code> channel in <ExternalLink className='inline' href='https://discord.gg/EnaPvuQf8d' sendReferrer>Pandora's Discord</ExternalLink>.
+				</p>
+			</>
+		),
+		wait: 10_000,
 	},
 };
 

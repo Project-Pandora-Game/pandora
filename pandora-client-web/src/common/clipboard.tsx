@@ -1,7 +1,7 @@
 import { GetLogger } from 'pandora-common';
 import { useCallback, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import { Button } from '../components/common/button/button.tsx';
+import { Button, type ButtonProps } from '../components/common/button/button.tsx';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
 import type { CommonProps } from './reactTypes.ts';
 
@@ -61,7 +61,7 @@ export function CopyToClipboard(text: string, onSuccess?: () => void, onError?: 
 		});
 }
 
-export function CopyToClipboardButton({ text, buttonText, ...props }: CommonProps & {
+export function CopyToClipboardButton({ text, buttonText, ...props }: CommonProps & Pick<ButtonProps, 'slim'> & {
 	text: string;
 	buttonText?: string;
 }): ReactElement {

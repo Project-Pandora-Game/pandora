@@ -1,8 +1,7 @@
 import * as z from 'zod';
 import { AccountIdSchema, type AccountId } from '../account/account.ts';
-import { LIMIT_SPACE_DESCRIPTION_LENGTH } from '../inputLimits.ts';
 import type { ZodObjectShape } from '../validation.ts';
-import { BotIdSchema, BotNameSchema, PandoraBotSpacePermissionListSchema, type BotId, type BotName, type PandoraBotSpacePermissionList } from './botBaseTypes.ts';
+import { BotDescriptionSchema, BotIdSchema, BotNameSchema, PandoraBotSpacePermissionListSchema, type BotId, type BotName, type PandoraBotSpacePermissionList } from './botBaseTypes.ts';
 
 /** Public definition of a bot assignable to a space. */
 export interface BotDefinition {
@@ -29,7 +28,7 @@ export interface BotDefinition {
 export const BotDefinitionSchema: z.ZodObject<ZodObjectShape<BotDefinition>> = z.object({
 	id: BotIdSchema,
 	name: BotNameSchema,
-	description: z.string().max(LIMIT_SPACE_DESCRIPTION_LENGTH),
+	description: BotDescriptionSchema,
 	ownerAccount: AccountIdSchema,
 	requestedPermissions: PandoraBotSpacePermissionListSchema,
 	private: z.boolean(),

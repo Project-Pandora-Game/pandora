@@ -2,6 +2,8 @@ import * as z from 'zod';
 import { PandoraAccessTokenIdSchema, PandoraAccessTokenInfoSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/accessTokens.ts';
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../../../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../../../assets/item/unified.ts';
+import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
+import { BotConfigSchema, BotDefinitionSchema } from '../../../bots/botDefinition.ts';
 import { CharacterSelfInfoSchema } from '../../../character/characterData.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../../../directory/management/account.ts';
@@ -14,8 +16,6 @@ import { Satisfies } from '../../../utility/misc.ts';
 import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../../../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 import { ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX, AccountCryptoKeySchema, AccountPasskeyAuthenticatorDataSchema, AccountPasskeyClientDataSchema, AccountPasskeyCredentialIdSchema, AccountPasskeyInfoSchema, AccountPasskeyNameSchema, AccountPasskeyPublicKeySchema, AccountPasskeySignatureSchema, AccountPasskeyTransportSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo, type IAccountCryptoKey, type IAccountPasskeyInfo } from './directory_client.ts';
-import { BotConfigSchema, BotDefinitionSchema } from '../../../bots/botDefinition.ts';
-import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
 
 export const ShardErrorSchema = z.enum(['noShardFound', 'failed']);
 type ShardError = z.infer<typeof ShardErrorSchema>;
@@ -851,7 +851,7 @@ export const ClientDirectorySchema = {
 
 	//#region Bots management
 
-	listOwnedBots: {
+	botDevelopmentListOwned: {
 		request: z.object({}),
 		response: z.discriminatedUnion('result', [
 			z.object({
@@ -863,7 +863,7 @@ export const ClientDirectorySchema = {
 			}),
 		]),
 	},
-	createBot: {
+	botDevelopmentCreate: {
 		request: z.object({
 			config: BotConfigSchema,
 		}),
@@ -883,7 +883,7 @@ export const ClientDirectorySchema = {
 			}),
 		]),
 	},
-	updateBot: {
+	botDevelopmentUpdate: {
 		request: z.object({
 			id: BotIdSchema,
 			config: BotConfigSchema.partial(),
@@ -903,7 +903,7 @@ export const ClientDirectorySchema = {
 			}),
 		]),
 	},
-	deleteBot: {
+	botDevelopmentDelete: {
 		request: z.object({
 			id: BotIdSchema,
 		}),

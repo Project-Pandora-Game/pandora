@@ -7,7 +7,7 @@ import type { ClientConnection } from '../networking/connection_client.ts';
 import { botManager } from './botManager.ts';
 
 export const BotsClientHandler = {
-	listOwnedBots: async (_args, connection): IClientDirectoryPromiseResult['listOwnedBots'] => {
+	botDevelopmentListOwned: async (_args, connection): IClientDirectoryPromiseResult['botDevelopmentListOwned'] => {
 		const account = connection.account;
 		if (account == null)
 			return { result: 'notLoggedIn' };
@@ -18,7 +18,7 @@ export const BotsClientHandler = {
 			bots: bots.map((it) => it.getPublicDefinition()),
 		};
 	},
-	createBot: async ({ config }, connection): IClientDirectoryPromiseResult['createBot'] => {
+	botDevelopmentCreate: async ({ config }, connection): IClientDirectoryPromiseResult['botDevelopmentCreate'] => {
 		const account = connection.account;
 		if (account == null)
 			throw new BadMessageError();
@@ -36,7 +36,7 @@ export const BotsClientHandler = {
 			id: result.id,
 		};
 	},
-	updateBot: async ({ id, config }, connection): IClientDirectoryPromiseResult['updateBot'] => {
+	botDevelopmentUpdate: async ({ id, config }, connection): IClientDirectoryPromiseResult['botDevelopmentUpdate'] => {
 		const account = connection.account;
 		if (account == null)
 			throw new BadMessageError();
@@ -54,7 +54,7 @@ export const BotsClientHandler = {
 			result,
 		};
 	},
-	deleteBot: async ({ id }, connection): IClientDirectoryPromiseResult['deleteBot'] => {
+	botDevelopmentDelete: async ({ id }, connection): IClientDirectoryPromiseResult['botDevelopmentDelete'] => {
 		const account = connection.account;
 		if (account == null)
 			throw new BadMessageError();

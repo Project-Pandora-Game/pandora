@@ -22,6 +22,7 @@ import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { AccessibilitySettings } from './accessibilitySettings.tsx';
 import { AccountSettings } from './accountSettings.tsx';
 import { AdvancedSettingsGate, AdvancedSettingsScreen } from './advancedSettings.tsx';
+import { BotDevelopmentSettings } from './botDevelopmentSettings/botDevelopmentSettings.tsx';
 import { CharacterSettings } from './characterSettings.tsx';
 import { GraphicsSettings } from './graphicsSettings.tsx';
 import { InterfaceSettings } from './interfaceSettings.tsx';
@@ -84,6 +85,12 @@ const SETTINGS_PAGES_SETUP = {
 		image: '',
 		element: PersonalAccessTokensSettings,
 		advanced: 'access_tokens',
+	},
+	bot_development: {
+		name: 'Bot Development',
+		image: '',
+		element: BotDevelopmentSettings,
+		advanced: 'bot_development',
 	},
 } as const satisfies Readonly<Record<string, SettingsPageConfig>>;
 

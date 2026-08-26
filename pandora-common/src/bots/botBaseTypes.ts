@@ -1,7 +1,7 @@
 import { freeze } from 'immer';
 import { nanoid } from 'nanoid';
 import * as z from 'zod';
-import { LIMIT_BOT_NAME_LENGTH, LIMIT_BOT_NAME_PATTERN } from '../inputLimits.ts';
+import { LIMIT_BOT_DESCRIPTION_LENGTH, LIMIT_BOT_NAME_LENGTH, LIMIT_BOT_NAME_PATTERN } from '../inputLimits.ts';
 import { KnownObject } from '../utility/misc.ts';
 import { ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
 
@@ -19,15 +19,20 @@ export function CreateRandomBotId(): BotId {
 
 //#endregion
 
-//#region Bot name
+//#region Bot name, description
 
 /** Developer-specified name of a bot. */
 export type BotName = string;
 /** Developer-specified name of a bot. */
-export const BotNameSchema: z.ZodType<BotName> = z.string()
+export const BotNameSchema: z.ZodString = z.string()
 	.min(3)
 	.max(LIMIT_BOT_NAME_LENGTH)
 	.regex(LIMIT_BOT_NAME_PATTERN)
+	.regex(ZodTrimedRegex);
+
+/** Developer-specified description of a bot. */
+export const BotDescriptionSchema: z.ZodString = z.string()
+	.max(LIMIT_BOT_DESCRIPTION_LENGTH)
 	.regex(ZodTrimedRegex);
 
 //#endregion

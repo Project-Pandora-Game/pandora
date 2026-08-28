@@ -1,9 +1,11 @@
+import classNames from 'classnames';
 import { KnownObject } from 'pandora-common';
 import { PANDORA_BOT_SPACE_PERMISSIONS, type PandoraBotSpacePermissionList } from 'pandora-common/bots';
 import { Fragment, useId, type ReactElement } from 'react';
 import { Checkbox } from '../../../../common/userInteraction/checkbox.tsx';
 import { Column, Row } from '../../../../components/common/container/container.tsx';
 import { GridContainer } from '../../../../components/common/container/gridContainer.tsx';
+import './botPermissionSelection.scss';
 
 export function BotSpacePermissions({ selectedPermissions, filterPermissions, onChange }: {
 	selectedPermissions: PandoraBotSpacePermissionList;
@@ -13,42 +15,50 @@ export function BotSpacePermissions({ selectedPermissions, filterPermissions, on
 }): ReactElement {
 	const id = useId();
 
+	const filteredPermissions = KnownObject.entries(PANDORA_BOT_SPACE_PERMISSIONS)
+		.filter(([permission]) => filterPermissions == null || filterPermissions.includes(permission) || selectedPermissions.includes(permission));
+
 	return (
-		<Column gap='small'>
+		<Column gap='small' className='BotSpacePermissions'>
 			<strong>Bot's Space Permissions</strong>
 			<GridContainer templateColumns='minmax(max-content, 1fr) 2fr' templateRows='auto-flow' gap='small' alignItemsY='start'>
-				{ KnownObject.entries(PANDORA_BOT_SPACE_PERMISSIONS)
-					.filter(([permission]) => filterPermissions == null || filterPermissions.includes(permission))
-					.map(([permission, { name, description }]) => {
-						return (
-							<Fragment key={ permission }>
-								{ onChange != null ? (
-									<Row alignY='center'>
-										<Checkbox
-											id={ id + ':' + permission }
-											checked={ selectedPermissions.includes(permission) }
-											onChange={ (checked) => {
-												if (checked && !selectedPermissions.includes(permission)) {
-													onChange([...selectedPermissions, permission]
-														.filter((it) => filterPermissions == null || filterPermissions.includes(it)));
-												} else {
-													onChange(selectedPermissions
-														.filter((it) => it !== permission)
-														.filter((it) => filterPermissions == null || filterPermissions.includes(it)));
-												}
-											} }
-										/>
-										<label htmlFor={ id + ':' + permission }>{ name }</label>
-									</Row>
-								) : (
-									<span>{ name }</span>
+				{ filteredPermissions.map(([permission, { name, description }]) => (
+					<Fragment key={ permission }>
+						{ onChange != null ? (
+							<Row
+								alignY='center'
+								className={ classNames(
+									'permission',
+									(filterPermissions != null && !filterPermissions.includes(permission)) ? 'invalid' : null,
 								) }
-								<div>
-									{ description }
-								</div>
-							</Fragment>
-						);
-					}) }
+							>
+								<Checkbox
+									id={ id + ':' + permission }
+									checked={ selectedPermissions.includes(permission) }
+									onChange={ (checked) => {
+										if (checked && !selectedPermissions.includes(permission)) {
+											onChange([...selectedPermissions, permission]
+												.filter((it) => filterPermissions == null || filterPermissions.includes(it)));
+										} else {
+											onChange(selectedPermissions
+												.filter((it) => it !== permission)
+												.filter((it) => filterPermissions == null || filterPermissions.includes(it)));
+										}
+									} }
+								/>
+								<label htmlFor={ id + ':' + permission }>{ name }</label>
+							</Row>
+						) : (
+							<span>{ name }</span>
+						) }
+						<div>
+							{ description }
+						</div>
+					</Fragment>
+				)) }
+				{ filteredPermissions?.length === 0 ? (
+					<span>[ None ]</span>
+				) : null }
 			</GridContainer>
 		</Column>
 	);

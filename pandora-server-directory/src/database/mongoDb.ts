@@ -840,6 +840,14 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
+	public async getAllBots(): Promise<DatabaseBot[]> {
+		const result: DatabaseBot[] = await this._bots
+			.find()
+			.toArray();
+
+		return result;
+	}
+
 	@DbSynchronized()
 	public async createBot(data: DatabaseBot): Promise<DatabaseBot | 'duplicateId'> {
 		const existingId = await this._bots.findOne({ id: data.id });

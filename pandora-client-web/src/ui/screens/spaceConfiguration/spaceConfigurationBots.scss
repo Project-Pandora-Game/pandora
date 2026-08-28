@@ -1,0 +1,52 @@
+@use '../../../styles/common';
+
+.SpaceConfigurationBotSelectionDialog {
+	.botDetails {
+		height: min(20em, 30vh);
+		overflow-x: hidden;
+		overflow-y: scroll;
+	}
+}
+
+.BotSelectUi {
+	display: flex;
+	flex-flow: column;
+	gap: 0.5em;
+	flex-grow: 1;
+
+	.bot-list {
+		height: 0;
+		flex: 1;
+		overflow-x: hidden;
+		overflow-y: scroll;
+		contain: size;
+
+		background: common.$theme-normal-background-secondary;
+		color: common.$theme-normal-text;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border: 1px solid common.$forcedColors-separator;
+		}
+
+		.credits {
+			margin-left: common.spacing(medium);
+			font-size: 0.7em;
+			font-style: normal;
+			font-weight: normal;
+			color: common.$theme-normal-text-dim;
+
+			@include common.forcedColors {
+				color: GrayText;
+			}
+		}
+
+		.description {
+			overflow: hidden;
+			text-wrap: nowrap;
+			text-overflow: ellipsis;
+			text-align: start;
+		}
+	}
+}

@@ -32,6 +32,7 @@ export class PersonalSpace extends Space {
 			admin: [],
 			allow: [],
 			ghostManagement: null,
+			bot: null,
 		};
 	}
 

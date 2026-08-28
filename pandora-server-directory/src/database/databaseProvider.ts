@@ -278,6 +278,11 @@ export interface PandoraDatabase extends ServerService {
 	getBotsOwnedBy(accountId: AccountId): Promise<DatabaseBot[]>;
 
 	/**
+	 * Queries for all bots
+	 */
+	getAllBots(): Promise<DatabaseBot[]>;
+
+	/**
 	 * Create bot
 	 * @param data - Bot data
 	 * @returns The created bot data or reason for failure

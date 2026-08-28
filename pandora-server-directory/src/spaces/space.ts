@@ -424,6 +424,10 @@ export class Space {
 		if (changes.ghostManagement !== undefined) {
 			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
 		}
+		if (changes.bot !== undefined) {
+			this.config.bot = cloneDeep(changes.bot);
+			// TODO: Kick currently connected bot (even if it is the same one)
+		}
 		if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer'))) {
 			this.config.development = changes.development;
 		}
@@ -456,6 +460,8 @@ export class Space {
 				changeList.push('allow list');
 			if (changes.ghostManagement !== undefined)
 				changeList.push('offline character management settings');
+			if (changes.bot !== undefined)
+				changeList.push('bot configuration');
 			if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer')))
 				changeList.push('development settings');
 

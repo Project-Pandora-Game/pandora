@@ -190,6 +190,7 @@ function CreateSpaceDefinition(id: SpaceId): IShardSpaceDefinition {
 			entryText: '',
 			features: [],
 			ghostManagement: null,
+			bot: null,
 		},
 		owners: [],
 		ownerInvites: [],

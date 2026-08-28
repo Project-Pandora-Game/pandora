@@ -30,7 +30,7 @@ export class Bot extends TypedEventEmitter<{
 	/** Time when this bot was last used */
 	public lastActivity: number;
 	/** The bot's saved data */
-	public data: DatabaseBot;
+	private data: DatabaseBot;
 
 	/** List of API connections listening to bot change events */
 	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
@@ -51,6 +51,10 @@ export class Bot extends TypedEventEmitter<{
 
 	public get isValid(): boolean {
 		return !this._deletionPending;
+	}
+
+	public get isPublic(): boolean {
+		return !this.data.private;
 	}
 
 	constructor(data: DatabaseBot) {

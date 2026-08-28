@@ -7,6 +7,27 @@ import type { ClientConnection } from '../networking/connection_client.ts';
 import { botManager } from './botManager.ts';
 
 export const BotsClientHandler = {
+	botListPublic: async (_args, connection): IClientDirectoryPromiseResult['botListPublic'] => {
+		const accountId = connection.account?.id;
+
+		const bots = (await botManager.loadAllBots())
+			.filter((it) => it.isPublic || it.ownerAccount === accountId);
+
+		return {
+			bots: bots.map((it) => it.getPublicDefinition()),
+		};
+	},
+	botGetBotDetails: async ({ id }, _connection): IClientDirectoryPromiseResult['botGetBotDetails'] => {
+		const bot = await botManager.loadBotById(id);
+
+		if (bot == null)
+			return { result: 'notFound' };
+
+		return {
+			result: 'ok',
+			details: bot.getPublicDefinition(),
+		};
+	},
 	botDevelopmentListOwned: async (_args, connection): IClientDirectoryPromiseResult['botDevelopmentListOwned'] => {
 		const account = connection.account;
 		if (account == null)

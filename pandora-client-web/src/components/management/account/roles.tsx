@@ -1,4 +1,5 @@
-import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, ZodMatcher, type AccountId } from 'pandora-common';
+import { capitalize } from 'lodash-es';
+import { ACCOUNT_ROLES_CONFIG, AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, KnownObject, ZodMatcher, type AccountId } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -109,7 +110,11 @@ function ManageRoleGrant(): ReactElement {
 				<label>Role</label>
 				<Select value={ role ?? '' } onChange={ (e) => setRole(e.target.value as ConfiguredAccountRole) }>
 					<option value=''>Select a role</option>
-					<option value={ 'moderator' } disabled={ includes('moderator') }>Moderator</option>
+					{ KnownObject.entries(ACCOUNT_ROLES_CONFIG)
+						.filter(([, config]) => config.assignable)
+						.map(([r]) => (
+							<option key={ r } value={ r } disabled={ includes(r) }>{ capitalize(r) }</option>
+						)) }
 				</Select>
 			</div>
 			<div className='input-row'>

@@ -519,6 +519,13 @@ export class MockDatabase implements PandoraDatabase {
 		);
 	}
 
+	public getAllBots(): Promise<DatabaseBot[]> {
+		return Promise.resolve(
+			Array.from(this.botDb.values())
+				.map(cloneDeep),
+		);
+	}
+
 	public createBot(data: DatabaseBot): Promise<DatabaseBot | 'duplicateId'> {
 		const bot = cloneDeep(data);
 		if (this.botDb.has(bot.id)) {

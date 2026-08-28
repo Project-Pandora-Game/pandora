@@ -38,6 +38,7 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 				owners: [editor.character.data.accountId],
 				ownerInvites: [],
 				spaceSwitchStatus: [],
+				bot: null,
 			},
 		});
 

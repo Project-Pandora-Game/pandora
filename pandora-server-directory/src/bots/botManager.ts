@@ -165,6 +165,17 @@ export class BotManager implements ServerService {
 	}
 
 	/**
+	 * Find all bots
+	 */
+	public async loadAllBots(): Promise<Bot[]> {
+		// Get full list from database
+		const data = await GetDatabase().getAllBots();
+		// Use the acquired DB data to load the bots
+		const result = await Promise.all(data.map((bot) => this._loadBot(bot)));
+		return result.filter(IsNotNullable);
+	}
+
+	/**
 	 * Find all bot owned by specified account
 	 */
 	public async loadAllBotsOwnedBy(id: AccountId): Promise<Bot[]> {

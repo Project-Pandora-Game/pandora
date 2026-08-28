@@ -141,7 +141,7 @@ export function ModalDialog({ children, priority, position = 'center', rawConten
 	 * @default 0
 	 */
 	priority?: number;
-	position?: 'center' | 'top';
+	position?: 'center' | 'top' | 'max-size';
 	rawContent?: boolean;
 	/**
 	 * What overflow style should be used for the dialog content

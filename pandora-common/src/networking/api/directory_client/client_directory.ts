@@ -920,6 +920,27 @@ export const ClientDirectorySchema = {
 		]),
 	},
 
+	botListPublic: {
+		request: z.object({}),
+		response: z.object({
+			bots: BotDefinitionSchema.array(),
+		}),
+	},
+	botGetBotDetails: {
+		request: z.object({
+			id: BotIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				details: BotDefinitionSchema,
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
 	//#endregion
 
 	//#region Management/admin endpoints

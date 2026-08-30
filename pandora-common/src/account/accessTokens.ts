@@ -16,6 +16,9 @@ const PANDORA_ACCESS_TOKEN_SCOPES_DEFINITION = {
 	'spaces:disown': {
 		description: 'Give up ownership on spaces you own (potentially deleting them)',
 	},
+	'bots:run': {
+		description: 'Run bots owned by this account',
+	},
 } as const satisfies Record<string, PandoraAccessTokenScopeDefinitionBase>;
 
 // Both validate and export the config

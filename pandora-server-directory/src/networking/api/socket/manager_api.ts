@@ -2,6 +2,7 @@ import { GetLogger, IMessageHandler, MessageHandler, ServerService } from 'pando
 import type { IApiDirectory } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
+import { ApiHandlersBots } from '../../../bots/botsApiHandler.ts';
 import type { ApiConnection } from './connection_api.ts';
 import { ApiHandlersSpaceManagement } from './handlers/spaceManagement.ts';
 import { ApiHandlersSpaceSearch } from './handlers/spaceSearch.ts';
@@ -49,6 +50,7 @@ export const ConnectionManagerApi = new class ConnectionManagerApi implements IM
 			...ApiHandlersToken,
 			...ApiHandlersSpaceSearch,
 			...ApiHandlersSpaceManagement,
+			...ApiHandlersBots,
 		});
 	}
 

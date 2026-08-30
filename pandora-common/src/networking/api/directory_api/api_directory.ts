@@ -1,5 +1,7 @@
 import * as z from 'zod';
 import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
+import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
+import { BotShardConnectionInfoSchema, BotSpaceAssignmentApiDataSchema } from '../../../bots/botDirectoryState.ts';
 import { LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
 import { SpaceIdSchema, type SpaceListInfo } from '../../../space/space.ts';
 import { SpaceDirectoryConfigSchema } from '../../../space/spaceData.ts';
@@ -122,6 +124,77 @@ export const ApiDirectorySchema = {
 				'failed', // Generic failure
 			]),
 		}),
+	},
+
+	//#endregion
+
+	//#region Bots
+
+	/** Register this connection as one running bot with specific id. Requires the owner account to own this bot and the `bots:run` scope.
+	 * After the connection is registered for running the specified bot, the connection will start receiving the `botStateChanged` event.
+	 *
+	 * Note, that the registration **needs to happen after every re-connect** as well!
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	botRunRegister: {
+		request: z.object({
+			bot: BotIdSchema,
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'notAllowed', // Missing token scopes
+				'notFound', // Bot not found or not owned by the token's account
+			]),
+		}),
+	},
+	/** Stops receiving events related to bot registered using `botRunRegister`.
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	botRunUnregister: {
+		request: z.object({
+			bot: BotIdSchema,
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'notFound', // Bot is not registered by this connection
+			]),
+		}),
+	},
+
+	/** Connect to a bot's presence in an active space, returning credentials that can be used to connect to matching Shard.
+	 * Can only be done on the same connection as `botRunRegister`.
+	 *
+	 * If `ifAssignmentMatches` is specified (not `undefined`), then the connection happens only if current assignment matches the one provided.
+	 * This can be used to avoid race condition with multiple orchestrators running at the same time.
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	botConnect: {
+		request: z.object({
+			bot: BotIdSchema,
+			space: SpaceIdSchema,
+			assignment: BotSpaceAssignmentApiDataSchema,
+			ifAssignmentMatches: BotSpaceAssignmentApiDataSchema.nullable().optional(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				shardConnection: BotShardConnectionInfoSchema,
+			}),
+			z.object({
+				result: z.literal([
+					'notActive', // The space became inactive in the interval before last bot state update and this request
+					'notAssigned', // The bot is no longer assigned to this space
+					'registrationRequired', // Only connections with active `botRunRegister` can do this action.
+					'assignmentMismatch', // `ifAssignmentMatches` not satisfied
+					'failed', // Internal error - try again later
+				]),
+			}),
+		]),
 	},
 
 	//#endregion

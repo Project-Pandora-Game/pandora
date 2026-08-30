@@ -28,7 +28,7 @@
 		"test": "jest -c ../jest.config.js --selectProjects pandora-api",
 		"test:coverage": "jest -c ../jest.config.js --selectProjects pandora-api --coverage",
 		"test:watch": "jest -c ../jest.config.js --selectProjects pandora-api --watch",
-		"prepack": "pnpm run build"
+		"prepack": "pnpm --filter pandora-common run build && pnpm run build"
 	},
 	"dependencies": {
 		"async-lock": "1.4.1",

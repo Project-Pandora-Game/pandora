@@ -1,5 +1,6 @@
 import { cloneDeep, uniq } from 'lodash-es';
 import {
+	Assert,
 	AsyncSynchronized,
 	GetLogger,
 	ServerRoom,
@@ -157,8 +158,13 @@ export class Bot extends TypedEventEmitter<{
 		});
 	}
 
+	// eslint-disable-next-line @typescript-eslint/require-await
 	public async onManagerDestroy(): Promise<void> {
-		// Nothing here yet
+		// Disconnect bot API connections
+		for (const client of this.associatedApiConnections.clients.slice()) {
+			client.removeBotRegistration(this);
+		}
+		Assert(!this.associatedApiConnections.hasClients());
 	}
 
 	public onBotInfoChange(): void {

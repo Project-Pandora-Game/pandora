@@ -162,13 +162,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
+        version: 6.1.5(pixi.js@8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
+        version: 6.0.3(pixi.js@8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi.js:
-        specifier: 8.19.0
-        version: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+        specifier: 8.20.1
+        version: 8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -2047,10 +2047,9 @@ packages:
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
 
-  '@xmldom/xmldom@0.8.14':
-    resolution: {integrity: sha512-T4EDRUBVZYRldYApjEJiU0e1stYWaRAX7CuSnKzrpwdZKo53zGV8/pqfzV6FfwNl9YThD2OumQYvqtvjvgG7aQ==}
+  '@xmldom/xmldom@0.8.15':
+    resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -4742,8 +4741,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.19.0:
-    resolution: {integrity: sha512-pq1O6emA/GFjjeF+8d3Pb5t7knD8FsnfWGqQcRjYjsqFZ7QdzG1XgjLDUu0DFJRbafjV5+g8iNLFBx0b9649lg==}
+  pixi.js@8.20.1:
+    resolution: {integrity: sha512-akLVBMLvQbaEViqsmVraK0Njer1q4Q4lm4iNKuzvBiFrV8q+6/+HluJN3sWIwO663IBeQtUUS/CaXFJZs6ffXQ==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -8050,7 +8049,7 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
-  '@xmldom/xmldom@0.8.14': {}
+  '@xmldom/xmldom@0.8.15': {}
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -11321,20 +11320,20 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
+  pixi-filters@6.1.5(pixi.js@8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+      pixi.js: 8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi-viewport@6.0.3(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
+  pixi-viewport@6.0.3(pixi.js@8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
-      pixi.js: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+      pixi.js: 8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174):
+  pixi.js@8.20.1(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174):
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0
-      '@xmldom/xmldom': 0.8.14
+      '@xmldom/xmldom': 0.8.15
       earcut: 3.2.3
       eventemitter3: 5.0.4
       gifuct-js: 2.1.2

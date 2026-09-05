@@ -403,8 +403,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.5.0
-        version: 7.5.0
+        specifier: 7.6.0
+        version: 7.6.0
       mongodb-memory-server-core:
         specifier: 11.2.0
         version: 11.2.0(supports-color@5.5.0)
@@ -494,8 +494,8 @@ importers:
         specifier: 4.18.1
         version: 4.18.1
       mongodb:
-        specifier: 7.5.0
-        version: 7.5.0
+        specifier: 7.6.0
+        version: 7.6.0
       nanoid:
         specifier: 6.0.1
         version: 6.0.1
@@ -4394,8 +4394,8 @@ packages:
     resolution: {integrity: sha512-vOoDtn0JiLrHvZY81Rp/UtKXXK0rtJHZGZFVnccvJwYitPLNspO0Ty0grqFQOe7iAET8+GI4zAQcphg+R3vxQg==}
     engines: {node: '>=20.19.0'}
 
-  mongodb@7.5.0:
-    resolution: {integrity: sha512-5FnrEDLnvp6ycUOGLNLLU33BfCx2qmp2mJjGPDwKLruYsVzXVSK5fsGpoDXvsXJwBfBsD7ebMRdawbDxC2814g==}
+  mongodb@7.6.0:
+    resolution: {integrity: sha512-WbZ6OCjYw2c53LOjfkQa+reXr7kIiOVpXXglnASFuiMtif0BvsMwHe3ClJHLm1/r7wJFwaasfFtD6iYIktB01g==}
     engines: {node: '>=20.19.0'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.806.0
@@ -10961,7 +10961,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.16.0(debug@4.4.3(supports-color@5.5.0))
       https-proxy-agent: 7.0.6(supports-color@5.5.0)
-      mongodb: 7.5.0
+      mongodb: 7.6.0
       new-find-package-json: 2.0.0(supports-color@5.5.0)
       semver: 7.8.5
       tar-stream: 3.2.0
@@ -10980,7 +10980,7 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb@7.5.0:
+  mongodb@7.6.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.13
       bson: 7.3.2

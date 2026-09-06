@@ -14,6 +14,7 @@
 		"* 2-8 * * *"
 	],
 	"rangeStrategy": "pin",
+	"groupSingleUpdates": true,
 	"semanticCommits": "disabled",
 	"commitMessagePrefix": "[CHORE]",
 	"configMigration": true,
@@ -34,6 +35,8 @@
 				"docker.io/node",
 				"@types/node"
 			],
+			"commitMessageTopic": "Node.js",
+			"groupName": "Node.js",
 			"allowedVersions": "^24.x"
 		},
 		{

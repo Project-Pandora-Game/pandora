@@ -1,6 +1,7 @@
 overrides:
   superstatic>re2: '-'
   '@webgpu/types': '-'
+  'sass': '-'
 patchedDependencies:
   pixi.js: patches/pixi.js.patch
   react-switch: patches/react-switch.patch
@@ -14,6 +15,7 @@ forceLegacyDeploy: true
 injectWorkspacePackages: false
 minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
+autoInstallPeers: false
 strictPeerDependencies: true
 updateNotifier: false
 verifyDepsBeforeRun: install

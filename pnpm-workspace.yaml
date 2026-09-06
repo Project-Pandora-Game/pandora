@@ -18,6 +18,7 @@ autoInstallPeers: false
 strictPeerDependencies: true
 updateNotifier: false
 verifyDepsBeforeRun: install
+trustLockfile: true
 
 packages:
   - pandora-common

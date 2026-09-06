@@ -29,7 +29,7 @@ jobs:
         run: |
           echo COREPACK_INTEGRITY_KEYS="$(curl -s https://registry.npmjs.org/-/npm/v1/keys | jq -c '{npm: .keys}')" | tee -a "$GITHUB_ENV"
       - run: corepack enable
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --no-trust-lockfile
       - run: pnpm run build
 
   build-docker:

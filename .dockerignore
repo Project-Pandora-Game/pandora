@@ -13,6 +13,8 @@
 
 # IDE configs
 /.vscode
+/.idea
+/*/.idea
 
 # Persistent data
 /data
@@ -25,7 +27,10 @@
 /node_modules
 /*/node_modules
 /*/dist
+/coverage
 /*/coverage
+/coverage_jest
+/.nyc_output
 # SonarQube
 /.sonar
 /.scannerwork
@@ -38,6 +43,13 @@
 
 # pandora-server-shard
 /pandora-server-shard/logs
+
+# pandora-tests
+/pandora-tests/test-results
+/pandora-tests/playwright-report
+/pandora-tests/playwright-report
+/pandora-tests/playwright/.cache
+/pandora-tests/temp
 
 # Otherwise ignored data, but required for build
 !/.hooks/postinstall.mjs

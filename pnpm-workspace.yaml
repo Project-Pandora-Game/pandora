@@ -1,6 +1,7 @@
 overrides:
   superstatic>re2: '-'
   '@webgpu/types': '-'
+  'sass': '-'
 patchedDependencies:
   pixi.js: patches/pixi.js.patch
   react-switch: patches/react-switch.patch
@@ -10,13 +11,14 @@ allowBuilds:
   core-js-pure: false
 
 allowUnusedPatches: false
-forceLegacyDeploy: true
-injectWorkspacePackages: false
+injectWorkspacePackages: true
 minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
+autoInstallPeers: false
 strictPeerDependencies: true
 updateNotifier: false
 verifyDepsBeforeRun: install
+trustLockfile: true
 
 packages:
   - pandora-common

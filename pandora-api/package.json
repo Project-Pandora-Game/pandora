@@ -11,6 +11,10 @@
 		"./api": {
 			"types": "./dist/api/index.d.ts",
 			"default": "./dist/api/index.js"
+		},
+		"./bots": {
+			"types": "./dist/bots/index.d.ts",
+			"default": "./dist/bots/index.js"
 		}
 	},
 	"files": [

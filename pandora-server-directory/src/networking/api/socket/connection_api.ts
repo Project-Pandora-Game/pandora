@@ -137,7 +137,7 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		bot.associatedApiConnections.join(this);
 
 		// Send initial state data
-		// TODO
+		bot.sendBotStatus(this);
 	}
 
 	/**

@@ -1,11 +1,13 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, CloneDeepMutable, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
-import type { IShardDirectoryArgument, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
+import type { IShardDirectoryArgument, ShardSpaceBotState, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import { Account } from '../account/account.ts';
 import { Character, CharacterInfo } from '../account/character.ts';
+import type { Bot } from '../bots/bot.ts';
+import { botManager } from '../bots/botManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ConnectionManagerClient } from '../networking/manager_client.ts';
 import { Shard } from '../shard/shard.ts';
@@ -33,6 +35,17 @@ export class Space {
 	private _assignedShard: Shard | null = null;
 	public get assignedShard(): Shard | null {
 		return this._assignedShard;
+	}
+
+	/** Instance of the bot assigned to this space. MUST always match `config.bot` while the space is loaded. */
+	private _assignedBot: Bot | null = null;
+	public get assignedBot(): Bot | null {
+		return this._assignedBot;
+	}
+	/** Connection secret for the assigned bot. */
+	private _assignedBotSecret: string | null = null;
+	public get assignedBotSecret(): string | null {
+		return this._assignedBotSecret;
 	}
 
 	public accessId: string;
@@ -72,7 +85,7 @@ export class Space {
 
 	private readonly logger: Logger;
 
-	constructor({ id, config, owners, ownerInvites, accessId, invites, activity }: SpaceDirectoryData) {
+	constructor({ id, config, owners, ownerInvites, accessId, invites, activity }: SpaceDirectoryData, bot: Bot | null) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
@@ -85,6 +98,14 @@ export class Space {
 		// Make sure things that should are unique
 		this.config.features = uniq(this.config.features);
 		this._cleanupLists();
+
+		// Assign bot
+		if (bot != null) {
+			Assert(bot.id === config.bot?.bot);
+			this._setBot(bot);
+		} else {
+			Assert(config.bot == null);
+		}
 
 		this.logger.debug('Loaded');
 	}
@@ -194,7 +215,7 @@ export class Space {
 	}
 
 	public getConfig(): SpaceDirectoryConfig {
-		return this.config;
+		return CloneDeepMutable(this.config);
 	}
 
 	@AsyncSynchronized('object')
@@ -362,7 +383,7 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok' | 'failed' | 'targetNotAllowed'> {
+	public async update(changes: Partial<SpaceDirectoryConfig>, source: CharacterInfo | null): Promise<'ok' | 'failed' | 'targetNotAllowed' | 'unknownBot'> {
 		// Bail out if space is invalidated
 		if (!this.isValid)
 			return 'failed';
@@ -390,6 +411,18 @@ export class Space {
 				))) {
 					return 'targetNotAllowed';
 				}
+			}
+		}
+
+		// Load bot, if it is being changed
+		let bot: Bot | null | undefined;
+		if (changes.bot !== undefined) {
+			if (changes.bot != null) {
+				bot = await botManager.loadBotById(changes.bot.bot);
+				if (bot == null)
+					return 'unknownBot';
+			} else {
+				bot = null;
 			}
 		}
 
@@ -425,8 +458,10 @@ export class Space {
 			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
 		}
 		if (changes.bot !== undefined) {
+			Assert(bot === (changes.bot?.bot ?? null));
 			this.config.bot = cloneDeep(changes.bot);
-			// TODO: Kick currently connected bot (even if it is the same one)
+			this._setBot(null); // Even if the bot doesn't change, re-connect it
+			this._setBot(bot);
 		}
 		if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer'))) {
 			this.config.development = changes.development;
@@ -1248,8 +1283,13 @@ export class Space {
 		}
 	}
 
+	/** Run cleanup when the space is unloaded. */
+	public onUnload(): void {
+		this._setBot(null);
+	}
+
 	@AsyncSynchronized('object')
-	public shardReconnect(shard: Shard, accessId: string, characterAccessIds: ReadonlyMap<CharacterId, string>): Promise<void> {
+	public shardReconnect(shard: Shard, accessId: string, characterAccessIds: ReadonlyMap<CharacterId, string>, assignedBot: ShardSpaceBotState | null): Promise<void> {
 		this.touch();
 		if (!this.isValid || this.isInUse() || this.accessId !== accessId)
 			return Promise.resolve();
@@ -1276,6 +1316,11 @@ export class Space {
 		Assert(this._assignedShard == null);
 
 		this._assignedShard = shard;
+		Assert(this.config.bot?.bot === this._assignedBot?.id);
+		// Restore secret if the bot matches, otherwise regenerate it
+		this._assignedBotSecret = this._assignedBot != null && assignedBot?.bot === this._assignedBot.id ? assignedBot.connectSecret :
+			(this._assignedBot?.generateShardConnectSecret() ?? null);
+
 		shard.spaces.set(this.id, this);
 		for (const character of this.trackingCharacters) {
 			Assert(character.assignment?.type === 'space-tracking' || character.assignment?.type === 'space-joined');
@@ -1290,6 +1335,7 @@ export class Space {
 
 		this.logger.debug('Re-connected to shard', shard.id);
 		this.onSpacePresentationChanged();
+		this.assignedBot?.onSpacesChanged();
 
 		return Promise.resolve();
 	}
@@ -1304,6 +1350,7 @@ export class Space {
 		if (this._assignedShard != null) {
 			const oldShard = this._assignedShard;
 			this._assignedShard = null;
+			this._assignedBotSecret = null;
 
 			for (const character of this.trackingCharacters) {
 				Assert(character.assignment?.type === 'space-tracking' || character.assignment?.type === 'space-joined');
@@ -1314,6 +1361,8 @@ export class Space {
 			}
 			Assert(oldShard.spaces.get(this.id) === this);
 			oldShard.spaces.delete(this.id);
+
+			this.assignedBot?.onSpacesChanged();
 
 			await oldShard.update('spaces', 'characters');
 
@@ -1345,6 +1394,9 @@ export class Space {
 		Assert(this._assignedShard == null);
 
 		this._assignedShard = shard;
+		if (this._assignedBot != null) {
+			this._assignedBotSecret = this._assignedBot.generateShardConnectSecret();
+		}
 		shard.spaces.set(this.id, this);
 		for (const character of this.trackingCharacters) {
 			Assert(character.assignment?.type === 'space-tracking' || character.assignment?.type === 'space-joined');
@@ -1365,6 +1417,7 @@ export class Space {
 
 		this.logger.debug('Connected to shard', shard.id);
 		this.onSpacePresentationChanged();
+		this.assignedBot?.onSpacesChanged();
 
 		return true;
 	}
@@ -1383,6 +1436,46 @@ export class Space {
 		// Clear pending action messages when the space gets disconnected
 		this.pendingMessages.length = 0;
 	}
+
+	//#region Bots
+
+	private _setBot(bot: Bot | null): void {
+		this.touch();
+
+		if (this._assignedBot === bot)
+			return;
+
+		// If we have wrong bot, unassign it
+		if (this._assignedBot != null) {
+			const oldBot = this._assignedBot;
+			oldBot.touch();
+			this._assignedBot = null;
+			this._assignedBotSecret = null;
+
+			Assert(oldBot.spaces.get(this.id) === this);
+			oldBot.spaces.delete(this.id);
+
+			oldBot.onSpacesChanged();
+
+			this.logger.debug('Unassigned bot', oldBot.id);
+		}
+
+		// If we are not assigning a new bot, this is enough
+		if (bot == null)
+			return;
+
+		// Actually assign to the bot
+		Assert(this._assignedBot == null);
+
+		this._assignedBot = bot;
+		this._assignedBotSecret = this.assignedShard != null ? bot.generateShardConnectSecret() : null;
+		bot.spaces.set(this.id, this);
+		bot.onSpacesChanged();
+
+		this.logger.debug('Assigned bot', bot.id);
+	}
+
+	//#endregion
 
 	public readonly pendingMessages: ChatMessageDirectoryAction[] = [];
 	public readonly pendingCharacterRemovals: SpaceCharacterRemoval[] = [];

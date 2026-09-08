@@ -1,11 +1,13 @@
 import { GetLogger, PandoraAccessTokenSchema, Result } from 'pandora-common';
 import { InternalApiDirectory } from '../internal/apiDirectory.ts';
+import { PandoraApiBots } from './apis/bots.ts';
 import { PandoraApiSpaceManagement } from './apis/spaceManagement.ts';
 import { PandoraApiSpaceSearch } from './apis/spaceSearch.ts';
 import { PandoraApiToken } from './apis/token.ts';
 import { WELL_KNOWN_SERVER_ADDRESSES } from './wellKnownServerAddresses.ts';
 
 // Re-export all sub-api types
+export type * from './apis/bots.ts';
 export type * from './apis/spaceManagement.ts';
 export type * from './apis/spaceSearch.ts';
 export type * from './apis/token.ts';
@@ -25,12 +27,15 @@ export class PandoraApi implements Disposable {
 	public readonly spaceSearch: PandoraApiSpaceSearch;
 	/** APIs related to space management (creation, deletion, configuration, ...). */
 	public readonly spaceManagement: PandoraApiSpaceManagement;
+	/** APIs related to running bots. */
+	public readonly bots: PandoraApiBots;
 
 	private constructor(internal: InternalApiDirectory) {
 		this._internal = internal;
 		this.token = PandoraApiToken._create(internal);
 		this.spaceSearch = PandoraApiSpaceSearch._create(internal);
 		this.spaceManagement = PandoraApiSpaceManagement._create(internal);
+		this.bots = PandoraApiBots._create(internal);
 	}
 
 	/**

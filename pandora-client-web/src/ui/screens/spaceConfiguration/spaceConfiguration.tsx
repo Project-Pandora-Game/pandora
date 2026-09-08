@@ -262,6 +262,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						noAccess: 'You must be an Admin or an Owner to do this',
 						notInPublicSpace: 'This action cannot be done inside personal space',
 						targetNotAllowed: 'Some of the changes are invalid (affecting some accounts/characters is limited)',
+						unknownBot: 'The assigned bot is invalid. Please re-select the bot.',
 					};
 
 					setCommitProcess(

@@ -571,6 +571,7 @@ export const ClientDirectorySchema = {
 				'notInPublicSpace', // Must be in a public space (not personal space) to do this
 				'noAccess', // Must be an admin
 				'targetNotAllowed', // Changes affecting specific accounts can be limited
+				'unknownBot', // Changes include setting a bot that Pandora does not know
 			]),
 		}),
 	},

@@ -37,14 +37,4 @@ export const ApiHandlersBots = {
 			result: 'ok',
 		};
 	},
-	botConnect: async ({ bot, space, assignment, ifAssignmentMatches }, connection): IApiDirectoryPromiseResult['botConnect'] => {
-		const account = connection.verifyTokenUseAndGetAccount(['bots:run']);
-		const botInstance = connection.registeredBots.get(bot);
-
-		if (account == null || botInstance == null)
-			return { result: 'notAssigned' };
-
-		// TODO
-		return { result: 'failed' };
-	},
 } satisfies Partial<MessageHandlers<IApiDirectory, ApiConnection>>;

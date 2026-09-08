@@ -1,4 +1,5 @@
-import { cloneDeep, uniq } from 'lodash-es';
+import { cloneDeep, throttle, uniq } from 'lodash-es';
+import { nanoid } from 'nanoid';
 import {
 	Assert,
 	AsyncSynchronized,
@@ -8,14 +9,17 @@ import {
 	type AccountId,
 	type HexColorString,
 	type IChatMessageActionBot,
+	type IServerRoom,
 	type Logger,
 	type ManagementBotInfo,
+	type SpaceId,
 } from 'pandora-common';
-import type { BotConfig, BotDefinition, BotId } from 'pandora-common/bots';
+import type { BotConfig, BotDefinition, BotDirectoryStateInfo, BotId, BotSpaceStateInfo } from 'pandora-common/bots';
 import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseBot, DatabaseBotUpdate } from '../database/databaseStructure/bots.ts';
 import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
+import { Space } from '../spaces/space.ts';
 import { botManager } from './botManager.ts';
 
 /** Color for any bot name or message. */
@@ -35,6 +39,8 @@ export class Bot extends TypedEventEmitter<{
 
 	/** List of API connections listening to bot change events */
 	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
+	/** List of *active* spaces associated to this bot */
+	public readonly spaces = new Map<SpaceId, Space>();
 
 	private _deletionPending = false;
 
@@ -75,7 +81,8 @@ export class Bot extends TypedEventEmitter<{
 	}
 
 	public isInUse(): boolean {
-		return this.associatedApiConnections.hasClients();
+		return this.associatedApiConnections.hasClients() ||
+			this.spaces.size > 0;
 	}
 
 	public isOnline(): boolean {
@@ -158,6 +165,25 @@ export class Bot extends TypedEventEmitter<{
 		});
 	}
 
+	public sendBotStatus(to: ApiConnection | IServerRoom<IDirectoryApi, ApiConnection>): void {
+		const state: BotDirectoryStateInfo = {
+			spaces: Array.from(this.spaces.values())
+				.filter((it) => it.assignedShard != null)
+				.map((it): BotSpaceStateInfo => ({
+					id: it.id,
+					connection: it.assignedShard != null && it.assignedBotSecret != null ? {
+						connectUrl: it.assignedShard.getInfo().publicURL,
+						secret: it.assignedBotSecret,
+					} : null,
+				})),
+		};
+
+		to.sendMessage('botStateChanged', {
+			bot: this.id,
+			state,
+		});
+	}
+
 	// eslint-disable-next-line @typescript-eslint/require-await
 	public async onManagerDestroy(): Promise<void> {
 		// Disconnect bot API connections
@@ -170,5 +196,19 @@ export class Bot extends TypedEventEmitter<{
 	public onBotInfoChange(): void {
 		// Update anything else that subscribed
 		this.emit('botInfoChanged', undefined);
+	}
+
+	/** Triggered when assigned spaces changed, or when assigned space changes online state. */
+	public onSpacesChanged(): void {
+		this._onSpacedChangedThrottled();
+	}
+
+	private readonly _onSpacedChangedThrottled = throttle(() => {
+		// TODO: Improve this to only send status if it actually changes
+		this.sendBotStatus(this.associatedApiConnections);
+	}, 100, { leading: false });
+
+	public generateShardConnectSecret(): string {
+		return nanoid(8);
 	}
 }

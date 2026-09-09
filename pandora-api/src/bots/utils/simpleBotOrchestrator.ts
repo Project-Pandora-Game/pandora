@@ -1,6 +1,7 @@
-import { type Promisable, type SpaceId, AsyncSynchronized, CloneDeepMutable, GetLogger } from 'pandora-common';
+import { type Promisable, type SpaceId, AsyncSynchronized, GetLogger } from 'pandora-common';
 import { type BotDirectoryStateInfo, type BotId, type BotShardConnectionInfo, type BotSpaceStateInfo } from 'pandora-common/bots';
 import type { PandoraApi } from '../../api/pandoraApi.ts';
+import { URL } from '../../internal/utils/url_shim.ts';
 
 /**
  * Abstract interface for a bot created by Simple Bot Orchestrator.
@@ -22,7 +23,7 @@ export interface SimpleBotOrchestratorBotInstance {
 /**
  * Factory function that creates a BotConnection from shard connection info.
  */
-export type SimpleBotOrchestratorBotFactory = (connectionInfo: BotShardConnectionInfo) => Promisable<SimpleBotOrchestratorBotInstance>;
+export type SimpleBotOrchestratorBotFactory = (bot: BotId, space: SpaceId, connectionInfo: BotShardConnectionInfo) => Promisable<SimpleBotOrchestratorBotInstance>;
 
 /**
  * A simple bot orchestrator - the little piece that creates bot connection for each space assigned to the registered bot.
@@ -31,6 +32,7 @@ export class SimpleBotOrchestrator {
 	public readonly api: PandoraApi;
 	public readonly bot: BotId;
 	public readonly factory: SimpleBotOrchestratorBotFactory;
+	public readonly baseUrl: string;
 
 	private _connections = new Map<SpaceId, [connectionInfo: BotShardConnectionInfo, instance: SimpleBotOrchestratorBotInstance]>();
 	private _stateSnapshot: BotDirectoryStateInfo | null = null;
@@ -43,10 +45,14 @@ export class SimpleBotOrchestrator {
 		api: PandoraApi,
 		bot: BotId,
 		factory: SimpleBotOrchestratorBotFactory,
+		baseUrl: string,
 	) {
 		this.api = api;
 		this.bot = bot;
 		this.factory = factory;
+		this.baseUrl = baseUrl;
+		// Check base URL parsing
+		new URL(this.baseUrl);
 	}
 
 	@AsyncSynchronized('object')
@@ -143,7 +149,8 @@ export class SimpleBotOrchestrator {
 
 				if (typeof currentConnection[1].updateConnectionInfo === 'function') {
 					try {
-						await currentConnection[1].updateConnectionInfo(CloneDeepMutable(connectionInfo));
+						await currentConnection[1].updateConnectionInfo(this._resolveConnectionInfo(connectionInfo));
+						currentConnection[0] = connectionInfo;
 						return;
 					} catch (err) {
 						this.logger.error(`Failed to update connection info for space ${spaceId}, doing reconnect instead:`, err);
@@ -154,7 +161,7 @@ export class SimpleBotOrchestrator {
 
 			// Spawn a new connection
 			try {
-				const connection = await this.factory(CloneDeepMutable(connectionInfo));
+				const connection = await this.factory(this.bot, spaceId, this._resolveConnectionInfo(connectionInfo));
 				this._connections.set(spaceId, [connectionInfo, connection]);
 			} catch (err) {
 				this.logger.error(`Failed to create connection for space ${spaceId}:`, err);
@@ -182,5 +189,21 @@ export class SimpleBotOrchestrator {
 		} catch (err) {
 			this.logger.error(`Error while disconnecting from space ${spaceId}:`, err);
 		}
+	}
+
+	/** Updates connection info to be usable by connection directly. */
+	private _resolveConnectionInfo(connectionInfo: BotShardConnectionInfo): BotShardConnectionInfo {
+		return {
+			connectUrl: connectionInfo.connectUrl.split(';')
+				.map((it) => {
+					// For relative URLs, we need to map them relative to the Directory address
+					if (it.startsWith('/')) {
+						it = new URL(it, this.baseUrl).href;
+					}
+					return it;
+				})
+				.join(';'),
+			secret: connectionInfo.secret,
+		};
 	}
 }

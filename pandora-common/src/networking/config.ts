@@ -17,3 +17,5 @@ export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();
 
 /** HTTP path the API connects to when connecting to Directory, relative to directory root */
 export const HTTP_SOCKET_IO_API_PATH: string = 'api_socket.io';
+/** HTTP path the BotAPI connects to when connecting to Shard, relative to shard root */
+export const HTTP_SOCKET_IO_BOT_PATH: string = 'bot_socket.io';

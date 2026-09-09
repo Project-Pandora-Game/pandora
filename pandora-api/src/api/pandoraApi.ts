@@ -20,6 +20,7 @@ export type * from './apis/token.ts';
  */
 export class PandoraApi implements Disposable {
 	private readonly _internal: InternalApiDirectory;
+	public readonly directoryConnectionAddress: string;
 
 	/** APIs related to working with Pandora tokens. */
 	public readonly token: PandoraApiToken;
@@ -30,8 +31,10 @@ export class PandoraApi implements Disposable {
 	/** APIs related to running bots. */
 	public readonly bots: PandoraApiBots;
 
-	private constructor(internal: InternalApiDirectory) {
+	private constructor(internal: InternalApiDirectory, directoryConnectionAddress: string) {
 		this._internal = internal;
+		this.directoryConnectionAddress = directoryConnectionAddress;
+
 		this.token = PandoraApiToken._create(internal);
 		this.spaceSearch = PandoraApiSpaceSearch._create(internal);
 		this.spaceManagement = PandoraApiSpaceManagement._create(internal);
@@ -58,10 +61,11 @@ export class PandoraApi implements Disposable {
 
 		const internalInstance = new InternalApiDirectory();
 		await internalInstance.init();
+		let directoryConnectionAddress: string;
 		try {
 			// Translate well-known names to addresses
 			const directoryConnectionName = options.directoryConnectionAddress ?? 'main';
-			const directoryConnectionAddress = Object.hasOwn(WELL_KNOWN_SERVER_ADDRESSES, directoryConnectionName) ?
+			directoryConnectionAddress = Object.hasOwn(WELL_KNOWN_SERVER_ADDRESSES, directoryConnectionName) ?
 				WELL_KNOWN_SERVER_ADDRESSES[directoryConnectionName as keyof typeof WELL_KNOWN_SERVER_ADDRESSES] :
 				directoryConnectionName;
 
@@ -75,7 +79,7 @@ export class PandoraApi implements Disposable {
 			return Result.Err('connectionFailed');
 		}
 
-		return Result.Ok(new PandoraApi(internalInstance));
+		return Result.Ok(new PandoraApi(internalInstance, directoryConnectionAddress));
 	}
 }
 

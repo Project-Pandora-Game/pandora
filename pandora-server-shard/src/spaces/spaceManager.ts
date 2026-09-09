@@ -1,5 +1,5 @@
 import promClient from '@prometheus-io/client';
-import { Assert, GetLogger, SpaceId } from 'pandora-common';
+import { Assert, CloneDeepMutable, GetLogger, SpaceId } from 'pandora-common';
 import type { IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
 import { assetManager } from '../assets/assetManager.ts';
 import { PublicSpace } from './publicSpace.ts';
@@ -22,11 +22,12 @@ export const SpaceManager = new class SpaceManagerService {
 		return Array.from(this._spaces.values());
 	}
 
-	public listSpaces(): Pick<IShardSpaceDefinition, 'id' | 'accessId'>[] {
+	public listSpaces(): Pick<IShardSpaceDefinition, 'id' | 'accessId' | 'botState'>[] {
 		return [...this._spaces.values()]
-			.map((space) => ({
+			.map((space): Pick<IShardSpaceDefinition, 'id' | 'accessId' | 'botState'> => ({
 				id: space.id,
 				accessId: space.accessId,
+				botState: CloneDeepMutable(space.bot?.state ?? null),
 			}));
 	}
 

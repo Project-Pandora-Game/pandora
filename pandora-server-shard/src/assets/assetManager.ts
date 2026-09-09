@@ -4,6 +4,7 @@ import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora
 import { join } from 'path';
 import { CharacterManager } from '../character/characterManager.ts';
 import { ENV } from '../config.ts';
+import { ConnectionManagerBots } from '../networking/bot/manager_bot.ts';
 import { ConnectionManagerClient } from '../networking/manager_client.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
 
@@ -43,6 +44,7 @@ export function LoadAssetDefinitions(): void {
 	SpaceManager.onAssetDefinitionsChanged();
 	CharacterManager.onAssetDefinitionsChanged();
 	ConnectionManagerClient.onAssetDefinitionsChanged();
+	ConnectionManagerBots.onAssetDefinitionsChanged();
 
 	if (watcher === undefined) {
 		watcher = setInterval(WatchAssetDefinitionsTick, ASSET_DEFINITIONS_WATCH_INTERVAL).unref();

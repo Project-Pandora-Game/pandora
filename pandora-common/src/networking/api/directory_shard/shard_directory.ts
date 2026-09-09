@@ -18,7 +18,7 @@ export const ShardDirectorySchema = {
 			databaseVersion: z.number().int().nonnegative(),
 			characters: z.array(ShardCharacterDefinitionSchema),
 			disconnectCharacters: z.array(CharacterIdSchema),
-			spaces: z.array(ShardSpaceDefinitionSchema.pick({ id: true, accessId: true })),
+			spaces: z.array(ShardSpaceDefinitionSchema.pick({ id: true, accessId: true, botState: true })),
 		}),
 		response: DirectoryShardUpdateSchema.extend({
 			shardId: z.string(),

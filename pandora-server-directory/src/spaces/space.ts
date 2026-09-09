@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, CloneDeepMutable, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, CloneDeepMutable, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpacePublicSetting, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
 import type { IShardDirectoryArgument, ShardSpaceBotState, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import { Account } from '../account/account.ts';
@@ -458,7 +458,7 @@ export class Space {
 			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
 		}
 		if (changes.bot !== undefined) {
-			Assert(bot === (changes.bot?.bot ?? null));
+			Assert(bot !== undefined && bot?.id === changes.bot?.bot);
 			this.config.bot = cloneDeep(changes.bot);
 			this._setBot(null); // Even if the bot doesn't change, re-connect it
 			this._setBot(bot);
@@ -477,7 +477,7 @@ export class Space {
 			if (changes.maxUsers !== undefined)
 				changeList.push(`character limit to '${changes.maxUsers}'`);
 			if (changes.public !== undefined) {
-				const NAME_MAP: Record<typeof this.config.public, string> = {
+				const NAME_MAP: Record<SpacePublicSetting, string> = {
 					'locked': 'private (locked)',
 					'private': 'private',
 					'public-with-admin': 'public (while an admin is present)',

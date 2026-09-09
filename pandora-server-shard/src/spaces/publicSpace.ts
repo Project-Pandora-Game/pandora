@@ -14,19 +14,21 @@ import {
 	SpaceDataShardUpdate,
 	SpaceDirectoryConfig,
 	SpaceId,
+	type GameStateUpdate,
 	type SpaceSwitchShardStatusUpdate,
 	type SpaceSwitchStatus,
 } from 'pandora-common';
 import type { IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
-import type { GameStateUpdate } from 'pandora-common/networking/api/shard_client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
 import { Space } from './space.ts';
+import { SpaceBot } from './spaceBot.ts';
 
 export class PublicSpace extends Space {
 	public override readonly id: SpaceId;
 	private readonly data: IShardSpaceDefinition;
 	private readonly _modified: Set<keyof SpaceDataShardUpdate> = new Set();
+	private _bot: SpaceBot | null;
 
 	public get accessId(): string {
 		return this.data.accessId;
@@ -48,11 +50,21 @@ export class PublicSpace extends Space {
 		return this.data.config;
 	}
 
+	public override get bot(): SpaceBot | null {
+		return this._bot;
+	}
+
 	constructor(shardData: IShardSpaceDefinition, data: Omit<SpaceData, 'config' | 'accessId' | 'owners' | 'ownerInvites'>) {
 		Assert(shardData.id === data.id);
 		super(data.id, data.spaceState, GetLogger('Space', `[PublicSpace ${data.id}]`));
 		this.id = data.id;
 		this.data = shardData;
+		if (shardData.botState) {
+			this.logger.verbose(`Adding bot ${shardData.botState.bot}`);
+			this._bot = new SpaceBot(this, shardData.botState);
+		} else {
+			this._bot = null;
+		}
 	}
 
 	/** Actions to do once space is fully loaded */
@@ -72,6 +84,26 @@ export class PublicSpace extends Space {
 		this.data.owners = data.owners;
 		this.data.ownerInvites = data.ownerInvites;
 		this.data.spaceSwitchStatus = data.spaceSwitchStatus;
+		this.data.botState = data.botState;
+		// Update bot as needed
+		if (data.botState != null) {
+			if (this._bot?.id === data.botState?.bot && this._bot.state.connectSecret === data.botState.connectSecret) {
+				this._bot.update(data.botState);
+			} else {
+				if (this._bot != null) {
+					const oldBot = this._bot;
+					this._bot = null;
+					oldBot.onRemove();
+				}
+				this.logger.verbose(`Setting bot ${data.botState.bot}`);
+				this._bot = new SpaceBot(this, data.botState);
+			}
+		} else if (this._bot != null) {
+			this.logger.verbose(`Removing bot ${this._bot.id}`);
+			const oldBot = this._bot;
+			this._bot = null;
+			oldBot.onRemove();
+		}
 
 		this.checkSpaceSwitchStatusUpdates();
 
@@ -114,6 +146,17 @@ export class PublicSpace extends Space {
 				});
 			}
 		}
+	}
+
+	public override onRemove(): void {
+		// Unload the bot, if there is some
+		if (this._bot != null) {
+			const oldBot = this._bot;
+			this._bot = null;
+			oldBot.onRemove();
+		}
+
+		super.onRemove();
 	}
 
 	protected override _tick(): void {

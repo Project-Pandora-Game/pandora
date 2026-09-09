@@ -1,37 +1,15 @@
 import * as z from 'zod';
 import { AssetsDefinitionFileSchema } from '../../../assets/definitions.ts';
-import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../../../assets/state/globalState.ts';
+import { AssetFrameworkGlobalStateClientBundle } from '../../../assets/state/globalState.ts';
 import type { ICharacterPrivateData } from '../../../character/characterData.ts';
 import { CharacterIdSchema, CharacterPrivateDataSchema } from '../../../character/index.ts';
 import { ChatCharacterStatusSchema, ChatMessageSchema } from '../../../chat/chat.ts';
-import { AppearanceActionSchema, CharacterRoomDataDeltaSchema, CharacterRoomDataSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema, type ICharacterRoomData } from '../../../gameLogic/index.ts';
+import { AppearanceActionSchema, type ICharacterRoomData } from '../../../gameLogic/index.ts';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../../../gameLogic/permissions/permissionData.ts';
-import { SpaceIdSchema } from '../../../space/space.ts';
-import { SpaceClientInfoSchema } from '../../../space/spaceData.ts';
+import { GameStateUpdateSchema, SpaceLoadDataSchema, type IShardClientChangeEvents } from '../../../space/spaceClientData.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import { ZodCast } from '../../../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
-
-export const SpaceLoadDataSchema = z.object({
-	id: SpaceIdSchema.nullable(),
-	info: SpaceClientInfoSchema,
-	characters: CharacterRoomDataSchema.array(),
-	characterModifierEffects: SpaceCharacterModifierEffectDataSchema,
-	chatStatus: z.partialRecord(CharacterIdSchema, ChatCharacterStatusSchema.optional()),
-});
-export type SpaceLoadData = z.infer<typeof SpaceLoadDataSchema>;
-
-export const GameStateUpdateSchema = z.object({
-	globalState: AssetFrameworkGlobalStateClientDeltaBundleSchema.optional(),
-	info: SpaceClientInfoSchema.partial().optional(),
-	leave: CharacterIdSchema.optional(),
-	join: CharacterRoomDataSchema.optional(),
-	characters: z.record(CharacterIdSchema, CharacterRoomDataDeltaSchema).optional(),
-	characterModifierEffects: SpaceCharacterModifierEffectDataUpdateSchema.optional(),
-});
-export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;
-
-export type IShardClientChangeEvents = 'permissions' | 'characterModifiers';
 
 /** Shard->Client messages */
 export const ShardClientSchema = {

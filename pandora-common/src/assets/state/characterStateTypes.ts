@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
-import { SpaceIdSchema } from '../../space/index.ts';
+import { SpaceIdSchema } from '../../space/space.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema } from '../item/items.ts';
 import { AppearancePoseSchema, GetDefaultAppearancePose, PartialAppearancePoseSchema } from './characterStatePose.ts';
 import { CharacterSpacePositionSchema } from './roomGeometry.ts';

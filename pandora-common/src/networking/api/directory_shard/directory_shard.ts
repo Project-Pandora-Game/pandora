@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../../../account/index.ts';
+import { BotIdSchema, PandoraBotSpacePermissionListSchema, type BotId, type PandoraBotSpacePermissionList } from '../../../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../../../character/index.ts';
 import { ChatMessageDirectoryActionSchema } from '../../../chat/chat.ts';
 import { SpaceIdSchema, SpaceLeaveReasonSchema } from '../../../space/space.ts';
@@ -29,6 +30,20 @@ export const ShardCharacterDefinitionSchema = z.object({
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 
+export interface ShardSpaceBotState {
+	/** Bot assigned to the space. */
+	bot: BotId;
+	/** Actual effective permissions the bot has. */
+	permissions: PandoraBotSpacePermissionList;
+	/** Connection secret for bot's connections. */
+	connectSecret: string;
+}
+export const ShardSpaceBotStateSchema: z.ZodType<ShardSpaceBotState> = z.object({
+	bot: BotIdSchema,
+	permissions: PandoraBotSpacePermissionListSchema,
+	connectSecret: z.string(),
+});
+
 export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 	id: true,
 	config: true,
@@ -37,6 +52,8 @@ export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 	ownerInvites: true,
 }).extend({
 	spaceSwitchStatus: SpaceSwitchStatusSchema.array(),
+	/** State of the space's bot. This is the actual bot configuration for Shard - `config.bot` is ignored. */
+	botState: ShardSpaceBotStateSchema.nullable(),
 });
 export type IShardSpaceDefinition = z.infer<typeof ShardSpaceDefinitionSchema>;
 

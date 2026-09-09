@@ -146,7 +146,7 @@ export class Shard {
 						}
 					}
 
-					return space.shardReconnect(this, spaceData.accessId, characterAccessIds);
+					return space.shardReconnect(this, spaceData.accessId, characterAccessIds, spaceData.botState);
 				}),
 			),
 		);
@@ -429,14 +429,23 @@ export class Shard {
 	}
 
 	private makeSpacesSetupList(): IShardSpaceDefinition[] {
-		return Array.from(this.spaces.values()).map((s) => ({
-			id: s.id,
-			accessId: s.accessId,
-			config: s.getConfig(),
-			owners: Array.from(s.owners),
-			ownerInvites: Array.from(s.ownerInvites),
-			spaceSwitchStatus: CloneDeepMutable(s.spaceSwitchStatus),
-		}));
+		return Array.from(this.spaces.values()).map((s): IShardSpaceDefinition => {
+			const config = s.getConfig();
+
+			return {
+				id: s.id,
+				accessId: s.accessId,
+				config,
+				owners: Array.from(s.owners),
+				ownerInvites: Array.from(s.ownerInvites),
+				spaceSwitchStatus: CloneDeepMutable(s.spaceSwitchStatus),
+				botState: config.bot != null && s.assignedBot != null && s.assignedBotSecret != null ? {
+					bot: s.assignedBot.id,
+					permissions: config.bot.permissions,
+					connectSecret: s.assignedBotSecret,
+				} : null,
+			};
+		});
 	}
 
 	private makeDirectoryActionMessages(): Record<SpaceId, ChatMessageDirectoryAction[]> {

@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import { AccountId, EMPTY_ARRAY, GetLogger, SpaceDirectoryConfig, type SpaceStateBundle, type SpaceSwitchStatus } from 'pandora-common';
 import { Character } from '../character/character.ts';
 import { Space } from './space.ts';
+import type { SpaceBot } from './spaceBot.ts';
 
 export class PersonalSpace extends Space {
 	private readonly _character: Character;
@@ -34,6 +35,10 @@ export class PersonalSpace extends Space {
 			ghostManagement: null,
 			bot: null,
 		};
+	}
+
+	public override get bot(): SpaceBot | null {
+		return null;
 	}
 
 	constructor(character: Character, spaceState: SpaceStateBundle) {

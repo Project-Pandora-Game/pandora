@@ -195,6 +195,7 @@ function CreateSpaceDefinition(id: SpaceId): IShardSpaceDefinition {
 		owners: [],
 		ownerInvites: [],
 		spaceSwitchStatus: [],
+		botState: null,
 	};
 }
 

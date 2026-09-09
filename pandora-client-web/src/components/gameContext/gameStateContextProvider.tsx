@@ -31,12 +31,12 @@ import {
 	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
+	type GameStateUpdate,
 	type ITypedEventEmitter,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import {
-	type GameStateUpdate,
 	type IClientShardPromiseResult,
 	type IShardClientArgument,
 } from 'pandora-common/networking/api/shard_client';

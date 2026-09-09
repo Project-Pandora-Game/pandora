@@ -7,6 +7,7 @@ import { GetLogger, ServerService } from 'pandora-common';
 import { AssetsServe } from '../assets/assetManager.ts';
 import { ENV } from '../config.ts';
 import { MetricsServe } from '../metrics.ts';
+import { SocketIOServerBot } from './bot/socketio_bot_server.ts';
 import { SocketIOServerClient } from './socketio_client_server.ts';
 const { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 
@@ -86,6 +87,7 @@ export const HttpServer = new class HttpServer implements ServerService {
 
 		// Attach socket.io server
 		new SocketIOServerClient(server);
+		new SocketIOServerBot(server);
 		// Keep track of existing connection
 		server.on('connection', (socket) => {
 			this._activeConnections.add(socket);

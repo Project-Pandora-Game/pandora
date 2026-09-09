@@ -9,6 +9,7 @@ import {
 	Service,
 	TypedEventEmitter,
 	type CharacterId,
+	type IShardClientChangeEvents,
 	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
@@ -20,7 +21,6 @@ import {
 	ShardClientSchema,
 	type IClientShard,
 	type IShardClient,
-	type IShardClientChangeEvents,
 } from 'pandora-common/networking/api/shard_client';
 import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import { Socket } from 'socket.io-client';

@@ -11,7 +11,7 @@ allowBuilds:
   core-js-pure: false
 
 allowUnusedPatches: false
-injectWorkspacePackages: true
+injectWorkspacePackages: false
 minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
 autoInstallPeers: false

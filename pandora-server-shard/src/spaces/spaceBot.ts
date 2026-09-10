@@ -82,22 +82,20 @@ export class SpaceBot {
 	}
 
 	public setConnection(connection: BotConnection | null): void {
-		if (this._connection != null) {
-			Assert(this._connection !== connection);
-			this.logger.debug(`Disconnected (${this._connection.id})`);
-			this._connection.disconnect('Replaced by new connection');
-			Assert(this._connection == null);
-		}
-		Assert(!this.invalid);
 		if (this._clientTimeout !== null) {
 			clearInterval(this._clientTimeout);
 			this._clientTimeout = null;
 		}
 		if (connection) {
+			Assert(!this.invalid);
+			Assert(this._connection == null, 'Attempt to set connection while another is already set');
 			this.logger.debug(`Connected (${connection.id})`);
 			this._connection = connection;
-		} else if (this.isValid) {
-			this._clientTimeout = setInterval(this._handleTimeout.bind(this), SPACE_BOT_TIMEOUT);
+		} else {
+			this._connection = null;
+			if (this.isValid) {
+				this._clientTimeout = setInterval(this._handleTimeout.bind(this), SPACE_BOT_TIMEOUT);
+			}
 		}
 	}
 

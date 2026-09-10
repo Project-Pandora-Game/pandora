@@ -7,6 +7,7 @@ import type { IBotShard } from 'pandora-common/networking/api/shard_bot';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import promClient from 'prom-client';
 import type { BotConnection } from './connection_bot.ts';
+import { BotHandlersChat } from './handlers/botChat.ts';
 
 const logger = GetLogger('ConnectionManager-Bot');
 
@@ -39,6 +40,7 @@ export const ConnectionManagerBots = new class ConnectionManagerBots implements 
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IBotShard, BotConnection>({
+			...BotHandlersChat,
 		});
 	}
 

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { uniq } from 'lodash-es';
-import { CharacterId, CharacterIdSchema, ChatMessageChat, NaturalListJoin, type AccountSettings, type ChatMessageChatCharacter, type HexColorString, type RoomId } from 'pandora-common';
+import { CharacterId, CharacterIdSchema, ChatMessageChat, NaturalListJoin, type AccountSettings, type ChatMessageChatCharacter, type ChatMessageChatNPC, type HexColorString, type RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -86,7 +86,7 @@ function DisplayUserMessage({ message, playerId }: { message: ChatNormalMessageP
 				<DisplayInfo
 					messageTime={ message.time }
 					edited={ message.edited ?? false }
-					rooms={ [message.roomData] }
+					rooms={ message.roomData != null ? [message.roomData] : null }
 					receivedRoomId={ message.receivedRoomId }
 					from={ message.from }
 				/>
@@ -183,7 +183,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	edited: boolean;
 	rooms: readonly ChatMessageProcessedRoomData[] | null;
 	receivedRoomId: RoomId | null;
-	from?: ChatMessageChatCharacter;
+	from?: ChatMessageChatCharacter | ChatMessageChatNPC;
 }): ReactElement {
 	const time = useMemo(() => messageTime != null ? new Date(messageTime) : null, [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time?.getDate());
@@ -203,7 +203,15 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 	return (
 		<span className='info' translate='no'>
 			{ time != null ? (
-				<span title={ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` + (from != null ? ` by ${ from.name } (${ from.id })` : '') }>
+				<span
+					title={
+						`${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE')}` +
+						(from != null ? (
+							from.id === 'bot' ? ` from Space's BOT, as ${ from.name }` :
+							` by ${ from.name } (${ from.id })`
+						) : '')
+					}
+				>
 					{
 						full ? `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)} ` :
 						(time.toLocaleTimeString('en-IE').substring(0, 5) + ' ')
@@ -211,6 +219,7 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 				</span>
 			) : null }
 			{ edited ? <span>[edited] </span> : null }
+			{ from?.id === 'bot' ? /* TODO: Consider bot icon (chip?) instead */ <span>[BOT] </span> : null }
 			{ rooms && rooms.length > 0 && (rooms.length > 1 || rooms[0].id !== receivedRoomId) ? (
 				<span className='roomInfo' title={ NaturalListJoin(rooms.map((r) => r.name)) }>
 					{ rooms.length > 1 ? '[multiple rooms] ' : <>[<span className='roomName'>{ rooms[0].name }</span>] </> }
@@ -244,7 +253,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 		event.preventDefault();
 
 		const id = event.currentTarget.getAttribute('data-id');
-		if (!id || id === playerId)
+		if (!id || id === 'bot' || id === playerId)
 			return;
 
 		const parsedId = CharacterIdSchema.parse(id);
@@ -267,7 +276,9 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 		event.stopPropagation();
 		event.preventDefault();
 
-		const ids = uniq([message.from.id, ...('to' in message && message.to ? message.to.map((t) => t.id) : [])].filter((t) => t !== playerId));
+		const ids = uniq([message.from.id, ...('to' in message && message.to ? message.to.map((t) => t.id) : [])]
+			.filter((t) => t !== playerId)
+			.filter((t) => t !== 'bot'));
 		setTargets(ids);
 	}, [setTargets, playerId, message]);
 
@@ -279,7 +290,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : message.from.id === 'bot' ? ' [BOT]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
@@ -320,7 +331,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 					className='from cursor-pointer'
 					color={ color }
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : message.from.id === 'bot' ? ' [BOT]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }
@@ -329,7 +340,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 				<span
 					className='from cursor-pointer'
 					data-id={ message.from.id }
-					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : ' (click to whisper)') }
+					title={ `${message.from.name} (${message.from.id})` + (message.from.id === playerId ? ' [You]' : message.from.id === 'bot' ? ' [BOT]' : ' (click to whisper)') }
 					onClick={ onClick }
 				>
 					{ message.from.name }

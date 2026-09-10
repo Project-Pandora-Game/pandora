@@ -1,6 +1,7 @@
 import { freeze } from 'immer';
 import * as z from 'zod';
 import { AccountIdSchema } from '../account/account.ts';
+import { VirtualBotCharacterSchema } from '../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { type ChatActionId } from '../chat/chatActions.ts';
 import { KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
@@ -46,7 +47,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		name: 'A character says something',
 		group: 'chatMessages',
 		metadata: z.object({
-			from: CharacterIdSchema,
+			from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_MIN,
@@ -55,7 +56,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		name: 'A character performs custom action (emote)',
 		group: 'chatMessages',
 		metadata: z.object({
-			from: CharacterIdSchema,
+			from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_MIN,
@@ -64,7 +65,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		name: 'A character says something in OOC',
 		group: 'chatMessages',
 		metadata: z.object({
-			from: CharacterIdSchema,
+			from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_MIN,
@@ -73,7 +74,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		name: 'A character whispers something to you',
 		group: 'chatMessages',
 		metadata: z.object({
-			from: CharacterIdSchema,
+			from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_MIN,
@@ -82,7 +83,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		name: 'A character whispers something to you OOC',
 		group: 'chatMessages',
 		metadata: z.object({
-			from: CharacterIdSchema,
+			from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_MIN,

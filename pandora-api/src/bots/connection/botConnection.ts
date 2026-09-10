@@ -1,11 +1,12 @@
-import { Assert, MessageHandler, TypedEventEmitter, type IShardClientChangeEvents, type SpaceId } from 'pandora-common';
+import { Assert, MessageHandler, TypedEventEmitter, type IConnectionBase, type IShardClientChangeEvents, type SpaceId } from 'pandora-common';
 import type { BotId, BotShardConnectionInfo } from 'pandora-common/bots';
-import type { IShardBot } from 'pandora-common/networking/api/shard_bot';
+import type { IBotShard, IShardBot } from 'pandora-common/networking/api/shard_bot';
 import { ApiBotShardConnector } from '../../internal/apiBotShardConnector.ts';
 import { SocketIOConnector } from '../../internal/socketio_connector.ts';
 import type { BotSpaceState } from '../state/botSpaceState.ts';
 import { BotSpaceStateImpl } from '../state/botSpaceStateImpl.ts';
 import type { SimpleBotOrchestratorBotInstance } from '../utils/simpleBotOrchestrator.ts';
+import { ChatSender } from './botChatSender.ts';
 
 export type BotConnectionEvents = {
 	/** Connected (or re-connected) to Shard. Note, that at this point we don't have data yet. */
@@ -26,6 +27,11 @@ export class BotConnection extends TypedEventEmitter<BotConnectionEvents> implem
 	public readonly spaceId: SpaceId;
 
 	private _connection: ApiBotShardConnector | null = null;
+	/** Raw connection useable to manually send any message to Shard. */
+	public get connection(): IConnectionBase<IBotShard> | null {
+		return this._connection;
+	}
+
 	private _connectionCleanup: (() => void)[] = [];
 	private _serverIndex: number;
 
@@ -33,6 +39,11 @@ export class BotConnection extends TypedEventEmitter<BotConnectionEvents> implem
 	public get gameState(): BotSpaceState | null {
 		return this._gameState;
 	}
+
+	/**
+	 * Helper for sending chat messages into the space.
+	 */
+	public readonly chatSender: ChatSender = new ChatSender(this);
 
 	constructor(bot: BotId, space: SpaceId, serverIndex: number = 0) {
 		super();

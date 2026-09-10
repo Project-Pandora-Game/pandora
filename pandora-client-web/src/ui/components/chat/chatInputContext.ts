@@ -63,7 +63,7 @@ export function ChatMessageShouldDim(message: ChatMessagePreprocessed): boolean 
 		return false;
 	} else {
 		const isPrivate = 'to' in message && message.to;
-		const differentRoom = message.room !== message.receivedRoomId;
+		const differentRoom = message.room != null && message.room !== message.receivedRoomId;
 		return !isPrivate && differentRoom;
 	}
 }

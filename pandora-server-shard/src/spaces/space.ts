@@ -33,6 +33,7 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 	type AppearanceActionProcessingResultValid,
+	type BotChatMessageEnvelope,
 	type ChatMessage,
 	type ChatMessageAction,
 	type ChatMessageActionLogEntry,
@@ -71,6 +72,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
+	protected _botLastMessageId: number = 0;
 	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; targets?: readonly CharacterId[]; }>();
 	protected readonly actionCache = new Map<CharacterId, {
 		descriptor: IChatMessageActionTargetCharacter;
@@ -667,6 +669,44 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 
 		return { result: 'ok' };
+	}
+
+	public handleBotMessages({ messages, id, editId }: BotChatMessageEnvelope): void {
+		// Skip re-sent messages
+		if (id <= this._botLastMessageId)
+			return;
+
+		this._botLastMessageId = id;
+		const queue: ChatMessage[] = [];
+
+		if (editId) {
+			queue.push({
+				type: 'deleted',
+				id: editId,
+				from: 'bot',
+				time: this.nextMessageTime(),
+			});
+		}
+		for (const message of messages) {
+			const finalMessage: ChatMessage = {
+				type: message.type,
+				id,
+				insertId: editId,
+				from: message.as,
+				room: message.room ?? null,
+				parts: typeof message.message === 'string' ? [['normal', message.message]] : message.message,
+				time: this.nextMessageTime(),
+			};
+			if ((message.type === 'chat' || message.type === 'ooc') && message.to != null) {
+				Assert(finalMessage.type === 'chat' || finalMessage.type === 'ooc');
+				finalMessage.to = message.to.map((t): ChatMessageChatCharacter | null => {
+					const target = this.getCharacterById(t);
+					return target != null ? { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor } : null;
+				}).filter(IsNotNullable);
+			}
+			queue.push(finalMessage);
+		}
+		this._queueMessages(queue);
 	}
 
 	public handleActionMessage(actionMessage: ActionHandlerMessage): void {

@@ -30,6 +30,9 @@ export class BotConnection extends IncomingConnection<IShardBot, IBotShard, Inco
 		Assert(bot.space.id != null, 'Bot cannot be assigned to a personal space');
 		this.spaceId = bot.space.id;
 		this.connectSecret = connectSecret;
+		if (bot.connection != null) {
+			bot.connection.disconnect('Replaced by new connection');
+		}
 		bot.setConnection(this);
 		this._bot = bot;
 

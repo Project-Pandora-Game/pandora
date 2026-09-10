@@ -1,4 +1,4 @@
-import { GetLogger, PandoraAccessTokenSchema, Result } from 'pandora-common';
+import { GetLogger, PandoraAccessTokenSchema, Result, TypedEventEmitter } from 'pandora-common';
 import { InternalApiDirectory } from '../internal/apiDirectory.ts';
 import { PandoraApiBots } from './apis/bots.ts';
 import { PandoraApiSpaceManagement } from './apis/spaceManagement.ts';
@@ -12,13 +12,22 @@ export type * from './apis/spaceManagement.ts';
 export type * from './apis/spaceSearch.ts';
 export type * from './apis/token.ts';
 
+export type BotConnectionEvents = {
+	/** Connected (or re-connected) to Directory. */
+	connected: void;
+	/** Connection failed. */
+	connectError: Error;
+	/** Connection was lost. */
+	disconnected: void;
+};
+
 /**
  * The main instance of Pandora Api. Includes connection to the server and all API methods.
  *
  * When you are done using the API, make sure you call `close`.
  * You can also use PandoraApi with `using` (see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management).
  */
-export class PandoraApi implements Disposable {
+export class PandoraApi extends TypedEventEmitter<BotConnectionEvents> implements Disposable {
 	private readonly _internal: InternalApiDirectory;
 	public readonly directoryConnectionAddress: string;
 
@@ -32,6 +41,7 @@ export class PandoraApi implements Disposable {
 	public readonly bots: PandoraApiBots;
 
 	private constructor(internal: InternalApiDirectory, directoryConnectionAddress: string) {
+		super();
 		this._internal = internal;
 		this.directoryConnectionAddress = directoryConnectionAddress;
 
@@ -39,6 +49,11 @@ export class PandoraApi implements Disposable {
 		this.spaceSearch = PandoraApiSpaceSearch._create(internal);
 		this.spaceManagement = PandoraApiSpaceManagement._create(internal);
 		this.bots = PandoraApiBots._create(internal);
+
+		// Setup events forwarding
+		this._internal.directoryConnector.on('connected', (it) => this.emit('connected', it));
+		this._internal.directoryConnector.on('connectError', (it) => this.emit('connectError', it));
+		this._internal.directoryConnector.on('disconnected', (it) => this.emit('disconnected', it));
 	}
 
 	/**

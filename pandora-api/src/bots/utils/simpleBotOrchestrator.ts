@@ -40,6 +40,7 @@ export class SimpleBotOrchestrator {
 	private readonly logger = GetLogger('SimpleBotOrchestrator');
 	private _running = false;
 	private _unsubscribeBotStateChanged: (() => void) | null = null;
+	private _unsubscribeConnected: (() => void) | null = null;
 
 	constructor(
 		api: PandoraApi,
@@ -71,6 +72,18 @@ export class SimpleBotOrchestrator {
 			}
 		});
 
+		this._unsubscribeConnected = this.api.on('connected', () => {
+			(async () => {
+				(await this.api.bots.botRunRegister(this.bot))
+					.expect('Failed to register bot');
+
+				this.logger.verbose('Re-registered bot after Directory reconnect');
+			})()
+				.catch((err) => {
+					this.logger.error('Error while re-registering bot after Directory reconnect:', err);
+				});
+		});
+
 		// Register bot with directory server
 		// TODO: Handle server reconnects... somehow
 		(await this.api.bots.botRunRegister(this.bot))
@@ -97,6 +110,8 @@ export class SimpleBotOrchestrator {
 		// Unsubscribe from state changes
 		this._unsubscribeBotStateChanged?.();
 		this._unsubscribeBotStateChanged = null;
+		this._unsubscribeConnected?.();
+		this._unsubscribeConnected = null;
 		this._stateSnapshot = null;
 
 		// Unregister bot from directory server

@@ -17,6 +17,10 @@ export function CreateRandomBotId(): BotId {
 	return BotIdSchema.parse(`bot:${nanoid(32)}` satisfies BotId);
 }
 
+/** Equivalent of `CharacterId` for actions caused by space's bot. */
+export type VirtualBotCharacter = 'bot';
+export const VirtualBotCharacterSchema: z.ZodLiteral<VirtualBotCharacter> = z.literal('bot');
+
 //#endregion
 
 //#region Bot name, description

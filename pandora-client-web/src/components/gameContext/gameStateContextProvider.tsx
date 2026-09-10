@@ -451,7 +451,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 					case 'ooc':
 					case 'me':
 					case 'emote':
-						return ({ ...m, spaceId, roomData: processRoom(m.room), receivedRoomId: roomId });
+						return ({ ...m, spaceId, roomData: m.room != null ? processRoom(m.room) : null, receivedRoomId: roomId });
 					case 'action':
 					case 'serverMessage':
 						return ({ ...m, spaceId, roomsData: m.rooms?.map(processRoom) ?? null, receivedRoomId: roomId });

@@ -1,8 +1,9 @@
 import * as z from 'zod';
-import { RoomIdSchema } from '../assets/appearanceTypes.ts';
+import { RoomIdSchema, type RoomId } from '../assets/appearanceTypes.ts';
+import { VirtualBotCharacterSchema, type VirtualBotCharacter } from '../bots/botBaseTypes.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
-import { HexColorStringSchema } from '../validation.ts';
+import { HexColorStringSchema, type HexColorString } from '../validation.ts';
 import { ChatMessageActionLogSchema, type ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionIdSchema } from './chatActions.ts';
 import { ChatReceivedMessageBaseSchema, IChatMessageActionAccountSchema, IChatMessageActionBotSchema, IChatMessageActionContainerPathSchema, IChatMessageActionItemSchema, IChatMessageActionTargetCharacterSchema, IChatMessageActionTargetSchema } from './chatCommon.ts';
@@ -63,12 +64,27 @@ export const ChatMessageChatCharacterSchema = z.object({
 });
 export type ChatMessageChatCharacter = z.infer<typeof ChatMessageChatCharacterSchema>;
 
+/** A chat NPC (bot) styling the message */
+export interface ChatMessageChatNPC {
+	/** Mark that this is from a bot */
+	id: VirtualBotCharacter;
+	/** NPC name for the message. */
+	name: string;
+	/** Label color for the message. */
+	labelColor: HexColorString;
+}
+export const ChatMessageChatNPCSchema: z.ZodType<ChatMessageChatNPC> = z.object({
+	id: VirtualBotCharacterSchema,
+	name: z.string(),
+	labelColor: HexColorStringSchema,
+});
+
 const ChatMessageChatBaseDataSchema = ChatReceivedMessageBaseSchema.extend({
 	id: z.number(),
 	insertId: z.number().optional(),
-	/** Room the message was said in */
-	room: RoomIdSchema,
-	from: ChatMessageChatCharacterSchema,
+	/** Room the message was said in. `null` means space-wide message (only sent by bots). */
+	room: RoomIdSchema.nullable(),
+	from: z.union([ChatMessageChatCharacterSchema, ChatMessageChatNPCSchema]),
 });
 
 export const ChatMessageChatSchema = z.discriminatedUnion('type', [
@@ -92,7 +108,7 @@ export type ChatMessageChat = z.infer<typeof ChatMessageChatSchema>;
 export const ChatMessageDeletedSchema = ChatReceivedMessageBaseSchema.extend({
 	type: z.literal('deleted'),
 	id: z.number(),
-	from: CharacterIdSchema,
+	from: CharacterIdSchema.or(VirtualBotCharacterSchema),
 });
 export type ChatMessageDeleted = z.infer<typeof ChatMessageDeletedSchema>;
 
@@ -181,3 +197,92 @@ export const ChatTypeDetails: Record<IChatType, IChatTypeDetails> = {
 		longDescription: 'Sends an **emote* message, without including your name.' + LONGDESC_THIRD_PERSON + LONGDESC_TOGGLE_MODE,
 	},
 };
+
+/** A single message sent by a bot. */
+export type BotChatMessage =
+	| {
+		/** Type of this message: Standard chat message. */
+		type: 'chat';
+		/** Contents of the message as plain string or formatted segment list. */
+		message: string | IChatSegment[];
+		/** A virtual character this message is being sent as. */
+		as: ChatMessageChatNPC;
+		/** Which room is the message comming from. If unspecified, the message is space-wide. */
+		room?: RoomId;
+		/** If specified, then this message is a whisper that only the specified characters will see. */
+		to?: CharacterId[];
+	}
+	| {
+		/** Type of this message: Out-Of-Character message. */
+		type: 'ooc';
+		/** Contents of the message as plain string or formatted segment list. */
+		message: string | IChatSegment[];
+		/** A virtual character this message is being sent as. */
+		as: ChatMessageChatNPC;
+		/** Which room is the message comming from. If unspecified, the message is space-wide. */
+		room?: RoomId;
+		/** If specified, then this message is a whisper that only the specified characters will see. */
+		to?: CharacterId[];
+	}
+	| {
+		/** Type of this message: Emote (me = Emote with name auto-inserted). */
+		type: 'emote' | 'me';
+		/** Contents of the message as plain string or formatted segment list. */
+		message: string | IChatSegment[];
+		/** A virtual character this message is being sent as. */
+		as: ChatMessageChatNPC;
+		/** Which room is the message comming from. If unspecified, the message is space-wide. */
+		room?: RoomId;
+	};
+/** A single message sent by a bot. */
+export const BotChatMessageSchema: z.ZodType<BotChatMessage> = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('chat'),
+		message: z.union([z.string(), ChatSegmentSchema.array()]),
+		as: ChatMessageChatNPCSchema,
+		room: RoomIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
+	}),
+	z.object({
+		type: z.literal('ooc'),
+		message: z.union([z.string(), ChatSegmentSchema.array()]),
+		as: ChatMessageChatNPCSchema,
+		room: RoomIdSchema.optional(),
+		to: CharacterIdSchema.array().optional(),
+	}),
+	z.object({
+		type: z.enum(['me', 'emote']),
+		message: z.union([z.string(), ChatSegmentSchema.array()]),
+		as: ChatMessageChatNPCSchema,
+		room: RoomIdSchema.optional(),
+	}),
+]);
+
+/**
+ * An identifiable batch of chat messages sent by bot.
+ */
+export interface BotChatMessageEnvelope {
+	messages: BotChatMessage[];
+	/**
+	 * Increasing ID of the message. Must be strictly larger than the previous sent message in order for the envelope to sent.
+	 *
+	 * IDs that are smaller than or equal to previously seen id are skipped
+	 * (this makes chat message send idempotent - if it fails once you can retry it without risking duplicate message send).
+	 *
+	 * We recommend basing this off of current time,
+	 * adjusted to be strictly increasing if sending multiple envelopes in a single millisecond.
+	 */
+	id: number;
+	/**
+	 * If specified, then this envelope REPLACES envelope with the specified id.
+	 * Use with empty `messages` to delete previous message.
+	 *
+	 * Unlike client, bot has no limitation on how recent messages can be edited.
+	 */
+	editId?: number;
+}
+export const BotChatMessageEnvelopeSchema: z.ZodType<BotChatMessageEnvelope> = z.object({
+	messages: BotChatMessageSchema.array(),
+	id: z.number().min(0),
+	editId: z.number().min(0).optional(),
+});

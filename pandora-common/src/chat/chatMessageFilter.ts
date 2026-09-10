@@ -1,4 +1,5 @@
 import type { Immutable } from 'immer';
+import type { VirtualBotCharacter } from '../bots/botBaseTypes.ts';
 import type { CharacterId } from '../character/index.ts';
 import type { IChatSegment } from './chat.ts';
 
@@ -9,7 +10,7 @@ export interface ChatMessageFilter {
 
 export interface ChatMessageFilterMetadata {
 	/** Id of the character the message is from */
-	from: CharacterId;
+	from: CharacterId | VirtualBotCharacter;
 	/** Character(s) this message is being whispered to, or `null` of normal chat message */
 	to: CharacterId[] | null;
 }

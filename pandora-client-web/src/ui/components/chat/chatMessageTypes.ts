@@ -28,8 +28,8 @@ export type ChatDeletedMessageProcessed = z.infer<typeof ChatDeletedMessageProce
 export const ChatNormalMessageProcessedSchema = ChatMessageChatSchema.and(z.object({
 	/** The space this message was received in */
 	spaceId: SpaceIdSchema.nullable(),
-	/** Room the message was said in */
-	roomData: ChatMessageProcessedRoomDataSchema,
+	/** Room the message was said in, `null` if global */
+	roomData: ChatMessageProcessedRoomDataSchema.nullable(),
 	/** Id of a room the player character was in when the message was received. */
 	receivedRoomId: RoomIdSchema,
 	edited: z.boolean().optional(),

@@ -94,6 +94,7 @@ export class PublicSpace extends Space {
 					const oldBot = this._bot;
 					this._bot = null;
 					oldBot.onRemove();
+					this._botLastMessageId = 0;
 				}
 				this.logger.verbose(`Setting bot ${data.botState.bot}`);
 				this._bot = new SpaceBot(this, data.botState);
@@ -103,6 +104,7 @@ export class PublicSpace extends Space {
 			const oldBot = this._bot;
 			this._bot = null;
 			oldBot.onRemove();
+			this._botLastMessageId = 0;
 		}
 
 		this.checkSpaceSwitchStatusUpdates();
@@ -154,6 +156,7 @@ export class PublicSpace extends Space {
 			const oldBot = this._bot;
 			this._bot = null;
 			oldBot.onRemove();
+			this._botLastMessageId = 0;
 		}
 
 		super.onRemove();

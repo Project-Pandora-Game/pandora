@@ -50,6 +50,8 @@ type ApiDirectoryConnectorServiceConfig = Satisfies<{
 		connected: void;
 		/** Connection failed */
 		connectError: Error;
+		/** Connection was lost. */
+		disconnected: void;
 		/** `botStateChanged` event */
 		botStateChanged: IDirectoryApiArgument['botStateChanged'];
 	};
@@ -168,6 +170,8 @@ export class ApiDirectoryConnector extends Service<ApiDirectoryConnectorServiceC
 		this._state = newState;
 		if (newState === ApiDirectoryConnectionState.CONNECTED) {
 			this.emit('connected', undefined);
+		} else if (newState === ApiDirectoryConnectionState.DISCONNECTED) {
+			this.emit('disconnected', undefined);
 		}
 	}
 

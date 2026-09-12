@@ -68,10 +68,6 @@ export class BotConnection extends IncomingConnection<IShardBot, IBotShard, Inco
 		return ConnectionManagerBots.onMessage(messageType, message, this);
 	}
 
-	public override awaitResponse(_messageType: unknown, _message: unknown, _timeout?: unknown): Promise<never> {
-		throw new Error('Invalid operation');
-	}
-
 	public disconnect(reason: string): void {
 		this._deAuth(reason);
 		this.socket.disconnect();

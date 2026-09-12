@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { BotCommandDescriptorSchema, BotCommandGetStructureResultSchema, BotCommandRunResultSchema } from '../../../bots/index.ts';
 import { AssetPreferencesPublicSchema } from '../../../character/assetPreferences.ts';
 import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../../../character/characterSettings.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
@@ -318,6 +319,71 @@ export const ClientShardSchema = {
 			}),
 		]),
 	},
+
+	//#region Bot intereactions
+	botCommandsGet: {
+		request: z.object({}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				/** Bot returned result. */
+				result: z.literal('ok'),
+				commands: BotCommandDescriptorSchema.array(),
+			}),
+			z.object({
+				/** There is no bot in this space. */
+				result: z.literal('noBot'),
+			}),
+			z.object({
+				/** The bot is currently disconnected. */
+				result: z.literal('botDisconnected'),
+			}),
+			z.object({
+				/** The bot didn't reply properly (or at all). */
+				result: z.literal('botError'),
+			}),
+		]),
+	},
+	botCommandRun: {
+		request: z.object({
+			command: z.string(),
+			args: z.string().array(),
+		}),
+		response: BotCommandRunResultSchema.or(z.discriminatedUnion('result', [
+			z.object({
+				/** There is no bot in this space. */
+				result: z.literal('noBot'),
+			}),
+			z.object({
+				/** The bot is currently disconnected. */
+				result: z.literal('botDisconnected'),
+			}),
+			z.object({
+				/** The bot didn't reply properly (or at all). */
+				result: z.literal('botError'),
+			}),
+		])),
+	},
+	botCommandGetStructurePart: {
+		request: z.object({
+			command: z.string(),
+			args: z.string().array(),
+		}),
+		response: BotCommandGetStructureResultSchema.or(z.discriminatedUnion('result', [
+			z.object({
+				/** There is no bot in this space. */
+				result: z.literal('noBot'),
+			}),
+			z.object({
+				/** The bot is currently disconnected. */
+				result: z.literal('botDisconnected'),
+			}),
+			z.object({
+				/** The bot didn't reply properly (or at all). */
+				result: z.literal('botError'),
+			}),
+		])),
+	},
+	//#endregion
 } as const satisfies SocketInterfaceDefinition;
 
 export type IClientShard = Satisfies<typeof ClientShardSchema, SocketInterfaceDefinitionVerified<typeof ClientShardSchema>>;

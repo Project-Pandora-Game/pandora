@@ -1,16 +1,16 @@
+import type { BotCommandArgumentProcessor, BotCommandStructureResult, BotCommandStructureSegmentError } from '../bots/index.ts';
 import type { ChatCharacterFullStatus } from '../chat/chat.ts';
 import type { IEmpty } from '../networking/index.ts';
 import { Assert, type Promisable } from '../utility/misc.ts';
+import { Result } from '../utility/result.ts';
 import type { CommandForkDescriptor } from './builder.ts';
-import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers.ts';
+import { COMMAND_STEP_PREPARSE_PROCESSORS, CommandArgumentNeedsQuotes, CommandArgumentQuote, type CommandStepPreparseProcessor } from './parsers.ts';
 
 export interface ICommandExecutionContext {
 	executionType: 'help' | 'run' | 'autocomplete' | 'chatstatus';
 	displayError?: (error: string) => void;
 	commandName: string;
 }
-
-export type CommandStepPreparseProcessor = ((input: string) => { value: string; spacing: string; rest: string; });
 
 export type CommandAutocompleteOption = {
 	replaceValue: string;
@@ -24,9 +24,16 @@ export type CommandAutocompleteResult = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, any> = IEmpty> {
-	preparse: CommandStepPreparseProcessor | 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
+	preparse: CommandStepPreparseProcessor;
 	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType; } | { success: false; error: string; };
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];
+	/**
+	 * If specified, allows bot-defined commands using this processor to have working autocomplete on the client.
+	 *
+	 * Note, that unlike `autocomplete`, this method does not receive `input` - it knows only previous arguments
+	 * and needs to respond with metadata that will allow client to autocomplete this argument without more communication.
+	 */
+	getBotProcessor?(context: Context, args: EntryArguments): BotCommandArgumentProcessor | undefined;
 	/** If set to true, the autocomplete header will show value if already chosen */
 	autocompleteShowValue?: boolean;
 	/** Custom value to show instead of argument name */
@@ -36,6 +43,8 @@ export interface CommandStepProcessor<ResultType, Context extends ICommandExecut
 	 */
 	isOptional?: boolean;
 }
+
+export type CommandRunnerBotSegmentInfoResult = Result<BotCommandStructureResult, BotCommandStructureSegmentError>;
 
 export interface CommandRunner<
 	Context extends ICommandExecutionContext,
@@ -50,6 +59,18 @@ export interface CommandRunner<
 
 	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteResult;
 	predictHeader(): string;
+
+	/**
+	 * Runs on the bot - used to generate info about next command segment to fill in.
+	 *
+	 * While `rest` is not empty, the argument is processed and the next chain link should be called.
+	 * When the `rest` is empty, then this is the argument that should return its segment descriptor.
+	 *
+	 * @param context - Context the command is being processed in.
+	 * @param args - Arguments processed from earlier link chains.
+	 * @param rest - Entered arguments prefix. The argument currently being entered is *not* included.
+	 */
+	getNextBotSegmentInfo(context: Context, args: EntryArguments, rest: string[]): Promisable<CommandRunnerBotSegmentInfoResult>;
 
 	getChatStatus(context: Context, args: EntryArguments, rest: string): ChatCharacterFullStatus | null;
 }
@@ -110,6 +131,28 @@ export class CommandRunnerExecutor<
 		} : null;
 	}
 
+	public getNextBotSegmentInfo(_context: Context, _args: EntryArguments, rest: string[]): CommandRunnerBotSegmentInfoResult {
+		// This is the last link
+		if (rest.length > 0)
+			return Result.Err({
+				message: `Done parsing command arguments, but received ${rest.length - 1} unknown positional arguments.\n` +
+					`If you are trying to pass argument with spaces, make sure to "quote" it.`,
+				validCount: 0,
+			});
+
+		if (this.options.restArgName) {
+			return Result.Ok({
+				header: `\u25b6<${this.options.restArgName}>\u25c0`,
+				nextSegment: 'rest',
+			});
+		} else {
+			return Result.Ok({
+				header: '',
+				nextSegment: 'rest',
+			});
+		}
+	}
+
 	public predictHeader(): string {
 		return this.options.restArgName ? `<${this.options.restArgName}>` : '';
 	}
@@ -136,23 +179,12 @@ export class CommandRunnerArgParser<
 		this.next = next;
 	}
 
-	private get preprocessor(): CommandStepPreparseProcessor {
-		switch (this.processor.preparse) {
-			case 'all':
-				return (input) => ({ value: input, spacing: '', rest: '' });
-			case 'allTrimmed':
-				return (input) => ({ value: input.trim(), spacing: '', rest: '' });
-			case 'quotedArg':
-				return CommandParseQuotedString;
-			case 'quotedArgTrimmed':
-				return CommandParseQuotedStringTrim;
-			default:
-				return this.processor.preparse;
-		}
+	private preprocess(input: string): { value: string; spacing: string; rest: string; } {
+		return COMMAND_STEP_PREPARSE_PROCESSORS[this.processor.preparse](input);
 	}
 
 	public run(context: Context, args: EntryArguments, input: string): Promisable<boolean> {
-		const { value, rest } = this.preprocessor(input);
+		const { value, rest } = this.preprocess(input);
 
 		const parsed = this.processor.parse(value, context, args);
 		if (!parsed.success) {
@@ -180,7 +212,7 @@ export class CommandRunnerArgParser<
 	}
 
 	public autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteResult {
-		const { value, spacing, rest } = this.preprocessor(input);
+		const { value, spacing, rest } = this.preprocess(input);
 
 		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
 
@@ -224,8 +256,58 @@ export class CommandRunnerArgParser<
 		} : null;
 	}
 
+	public async getNextBotSegmentInfo(context: Context, args: EntryArguments, rest: string[]): Promise<CommandRunnerBotSegmentInfoResult> {
+		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
+
+		// If nothing follows, this is the thing to get info for
+		if (rest.length === 0) {
+			const botProcessor = this.processor.getBotProcessor?.(context, args);
+			const currentHeader = this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
+				`<${this.processor.autocompleteCustomName ?? this.name}>`;
+
+			return Result.Ok({
+				header: `\u25b6${currentHeader}\u25c0 ${this.next.predictHeader()}`,
+				nextSegment: {
+					preparse: this.processor.preparse,
+					process: botProcessor ?? {
+						type: 'string', // Default to string processor, which basically does nothing with the input
+					},
+				},
+			});
+		}
+
+		// Otherwise we continue
+		const value = rest.shift() ?? '';
+		const parsed = this.processor.parse(value, context, args);
+		if (!parsed.success) {
+			// The following completers might need current args, fail if we are invalid
+			return Result.Err({
+				message: parsed.error,
+				validCount: 0,
+			});
+		}
+
+		const processedHeader = this.processor.autocompleteShowValue === true ? (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) :
+			this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
+				`<${this.processor.autocompleteCustomName ?? this.name}>`;
+
+		return (await this.next.getNextBotSegmentInfo(context, {
+			...args,
+			[this.name]: parsed.value,
+		}, rest))
+			.map((nextResult): BotCommandStructureResult => {
+				nextResult.header = processedHeader + ' ' + nextResult.header;
+
+				return nextResult;
+			})
+			.map_err((err) => {
+				err.validCount++; // This command was valid (we did `shift`)
+				return err;
+			});
+	}
+
 	public getChatStatus(context: Context, args: EntryArguments, input: string): ChatCharacterFullStatus | null {
-		const { value, rest } = this.preprocessor(input);
+		const { value, rest } = this.preprocess(input);
 
 		const parsed = this.processor.parse(value, context, args);
 		if (!parsed.success)
@@ -282,6 +364,14 @@ export class CommandRunnerFork<
 		const option = this.descriptor[optionName];
 
 		return option.handler.autocomplete(context, args, input);
+	}
+
+	public async getNextBotSegmentInfo(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, rest: string[]): Promise<CommandRunnerBotSegmentInfoResult> {
+		const optionName: ForkOptions = args[this.argument];
+		Assert(Object.hasOwn(this.descriptor, optionName));
+		const option = this.descriptor[optionName];
+
+		return await option.handler.getNextBotSegmentInfo(context, args, rest);
 	}
 
 	public predictHeader(): string {

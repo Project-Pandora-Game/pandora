@@ -3,6 +3,7 @@ import type { BotId, BotShardConnectionInfo } from 'pandora-common/bots';
 import type { IBotShard, IShardBot } from 'pandora-common/networking/api/shard_bot';
 import { ApiBotShardConnector } from '../../internal/apiBotShardConnector.ts';
 import { SocketIOConnector } from '../../internal/socketio_connector.ts';
+import type { BotCommandRouter } from '../commands/commandRouter.ts';
 import type { BotSpaceState } from '../state/botSpaceState.ts';
 import { BotSpaceStateImpl } from '../state/botSpaceStateImpl.ts';
 import type { SimpleBotOrchestratorBotInstance } from '../utils/simpleBotOrchestrator.ts';
@@ -44,6 +45,15 @@ export class BotConnection extends TypedEventEmitter<BotConnectionEvents> implem
 	 * Helper for sending chat messages into the space.
 	 */
 	public readonly chatSender: ChatSender = new ChatSender(this);
+
+	/**
+	 * Router used for handling commands. Without a command router, all commands will fail.
+	 *
+	 * While it is recommended to set this once upon connection creation, it can be freely changed over time (though this might cause slight weirdness for clients).
+	 *
+	 * You can also set this using the `withCommandRouter` helper method.
+	 */
+	public commandRouter: BotCommandRouter | null = null;
 
 	constructor(bot: BotId, space: SpaceId, serverIndex: number = 0) {
 		super();
@@ -96,6 +106,15 @@ export class BotConnection extends TypedEventEmitter<BotConnectionEvents> implem
 		}
 	}
 
+	/**
+	 * Sets a command router, used to allow custom bot commands for clients.
+	 * @param commandRouter - The command router to use. You can use the `BotCommandRepository` helper or implement fully custom command router.
+	 */
+	public withCommandRouter(commandRouter: BotCommandRouter | null): this {
+		this.commandRouter = commandRouter;
+		return this;
+	}
+
 	private _messageHandler: MessageHandler<IShardBot> = new MessageHandler<IShardBot>({
 		load: (data) => {
 			Assert(this._connection != null);
@@ -120,5 +139,29 @@ export class BotConnection extends TypedEventEmitter<BotConnectionEvents> implem
 			gameState.handleUpdate(data);
 		},
 		somethingChanged: ({ changes }) => this.emit('somethingChanged', changes),
+
+		// Custom commands
+		getCharacterCommands: async ({ id }) => {
+			if (this.commandRouter == null)
+				return { commands: [] };
+
+			return {
+				commands: await this.commandRouter.getCommands(id, this),
+			};
+		},
+		getCharacterCommandStructurePart: async ({ id, command, args }) => {
+			// If we have no router, there are no valid commands
+			if (this.commandRouter == null)
+				return { result: 'invalidCommand' };
+
+			return await this.commandRouter.getCommandStructurePart(command, args, id, this);
+		},
+		runCharacterCommand: async ({ id, command, args }) => {
+			// If we have no router, there are no valid commands
+			if (this.commandRouter == null)
+				return { result: 'invalidCommand' };
+
+			return await this.commandRouter.runCommand(command, args, id, this);
+		},
 	});
 }

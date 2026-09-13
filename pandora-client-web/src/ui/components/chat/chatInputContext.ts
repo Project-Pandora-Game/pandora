@@ -1,4 +1,4 @@
-import { AssertNotNullable, type CharacterId, type CharacterRestrictionsManager, type IChatType } from 'pandora-common';
+import { AssertNotNullable, type CharacterId, type CharacterRestrictionsManager, type ChatCharacterFullStatus, type CommandAutocompleteResult, type IChatType, type Promisable } from 'pandora-common';
 import { createContext, RefObject, useContext } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { IMessageParseOptions } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -17,19 +17,39 @@ export type ChatMode = {
 	raw: boolean;
 };
 
+export interface ChatInputAutocompleteState {
+	data: AutocompleteDisplayData;
+}
+
+/** Defines how should commands be used by the chat input, abstracting away per-prefix handling from input itself. */
+export interface ChatInputCommandRunner {
+	/** Run a command */
+	run(input: string): Promisable<boolean>;
+
+	/** Run autocomplete on a command */
+	autocomplete(input: string): CommandAutocompleteResult;
+
+	/** Run autocomplete on a command, cycling previous result if unchanged */
+	autocompleteCycle(input: string, reverse: boolean): AutocompleteDisplayData;
+
+	/** Get typing status for the input */
+	getChatStatus(input: string): ChatCharacterFullStatus;
+}
+
 export type IChatInputHandler = {
 	setValue: (value: string) => void;
 	targets: readonly Character[] | null;
 	setTargets: (targets: readonly CharacterId[] | null) => void;
 	editing: ChatInputHandlerEditing | null;
 	setEditing: (editing: number | null) => boolean;
-	autocompleteHint: AutocompleteDisplayData | null;
-	setAutocompleteHint: (hint: AutocompleteDisplayData | null) => void;
+	autocompleteHint: ChatInputAutocompleteState | null;
+	setAutocompleteHint: (hint: ChatInputAutocompleteState | null) => void;
 	mode: ChatMode | null;
 	setMode: (mode: ChatMode | null) => void;
 	showSelector: boolean;
 	setShowSelector: (show: boolean) => void;
-	allowCommands: boolean;
+	/** Defines one command runner per command prefix. `null` if commands are not allowed in the current context. */
+	commandsRunner: Record<string, ChatInputCommandRunner> | null;
 	ref: RefObject<HTMLTextAreaElement | null>;
 };
 

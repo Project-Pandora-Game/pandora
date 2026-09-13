@@ -7,6 +7,7 @@ import {
 	LongestCommonPrefix,
 	type AccountSettings,
 	type AssetFrameworkGlobalState,
+	type CharacterId,
 	type CharacterSettings,
 	type ChatCharacterFullStatus,
 	type CommandAutocompleteOption,
@@ -18,7 +19,7 @@ import type { DirectoryConnector } from '../../../networking/directoryConnector.
 import type { ShardConnector } from '../../../networking/shardConnector.ts';
 import type { NavigateFunctionPandora } from '../../../routing/navigate.ts';
 import type { IAccountManager } from '../../../services/accountLogic/accountManager.ts';
-import type { IChatInputHandler } from './chatInputContext.ts';
+import type { ChatMode } from './chatInputContext.ts';
 
 export const COMMAND_KEY = '/';
 
@@ -32,7 +33,10 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	accountSettings: Immutable<AccountSettings>;
 	characterSettings: Immutable<CharacterSettings>;
 	messageSender: IChatMessageSender;
-	inputHandlerContext: IChatInputHandler;
+
+	getChatMode: () => ChatMode | null;
+	setChatMode: (mode: ChatMode | null) => void;
+	setChatTargets: (targets: readonly CharacterId[] | null) => void;
 	navigate: NavigateFunctionPandora;
 }
 

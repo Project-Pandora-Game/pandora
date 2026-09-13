@@ -1,5 +1,5 @@
 import { KnownObject, type SettingsAdvancedCategory } from 'pandora-common';
-import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { Fragment, useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Switch } from '../../../common/userInteraction/switch.tsx';
@@ -107,7 +107,7 @@ export function AdvancedSettingsScreen(): ReactElement {
 					<h3>These settings can have various negative consequences when used improperly</h3>
 					<GridContainer padding='large' gap='large' alignItemsY='center' templateColumns='auto 1fr' templateRows='auto-flow'>
 						{ KnownObject.entries(ADVANCED_SETTINGS_CATEGORIES).map(([category, categoryInfo]) => (
-							<>
+							<Fragment key={ category }>
 								<Switch
 									checked={ enabledAdvancedSettings.includes(category) }
 									label={ categoryInfo.name }
@@ -120,7 +120,7 @@ export function AdvancedSettingsScreen(): ReactElement {
 									} }
 								/>
 								<span>{ categoryInfo.name }</span>
-							</>
+							</Fragment>
 						)) }
 					</GridContainer>
 				</Column>

@@ -1,4 +1,4 @@
-import { AssertNotNullable, type CharacterId, type CharacterRestrictionsManager, type ChatCharacterFullStatus, type CommandAutocompleteResult, type IChatType, type Promisable } from 'pandora-common';
+import { AssertNotNullable, type CharacterId, type CharacterRestrictionsManager, type ChatCharacterFullStatus, type CommandAutocompleteOption, type CommandAutocompleteResult, type IChatType, type Promisable } from 'pandora-common';
 import { createContext, RefObject, useContext } from 'react';
 import type { Character } from '../../../character/character.ts';
 import type { IMessageParseOptions } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -19,6 +19,8 @@ export type ChatMode = {
 
 export interface ChatInputAutocompleteState {
 	data: AutocompleteDisplayData;
+	commandKey: string;
+	selectOption: (option: CommandAutocompleteOption, commandKey: string) => void;
 }
 
 /** Defines how should commands be used by the chat input, abstracting away per-prefix handling from input itself. */

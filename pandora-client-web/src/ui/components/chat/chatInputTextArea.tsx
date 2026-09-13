@@ -1,5 +1,5 @@
 import { clamp } from 'lodash-es';
-import { AssertNever, GetLogger, type CharacterId, type ChatCharacterFullStatus, type ChatCharacterStatus, type Promisable } from 'pandora-common';
+import { AssertNever, GetLogger, type CharacterId, type ChatCharacterFullStatus, type ChatCharacterStatus, type CommandAutocompleteOption, type Promisable } from 'pandora-common';
 import { useCallback, useEffect, useRef, type ForwardedRef, type ReactElement, type RefObject } from 'react';
 import { toast } from 'react-toastify';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -8,6 +8,7 @@ import { ChatSendError, type IMessageParseOptions, type ISavedMessage } from '..
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatInput } from './chatInputContext.ts';
+import type { AutocompleteDisplayData } from './commandsProcessor.ts';
 
 export interface ChatInputHistoryDriver {
 	get(index: number): string | undefined;
@@ -44,6 +45,8 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 	placeholder: string;
 	ref: ForwardedRef<HTMLTextAreaElement>;
 }): ReactElement {
+	const actualRef = useTextFormattingOnKeyboardEvent(ref);
+
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const { targets, editing, setEditing, setValue, setAutocompleteHint, mode, commandsRunner } = useChatInput();
 	const { chatCommandHintBehavior } = useAccountSettings();
@@ -61,6 +64,43 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 			timeout.current = null;
 		}
 		setPlayerStatus('none');
+	});
+
+	const selectAutocompleteOption = useEvent((option: CommandAutocompleteOption, commandKey: string) => {
+		const textarea = actualRef.current;
+		if (!textarea || textarea.disabled || textarea.readOnly || commandsRunner == null || !Object.hasOwn(commandsRunner, commandKey))
+			return;
+
+		const runner = commandsRunner[commandKey];
+		const inputPosition = textarea.selectionStart || textarea.value.length;
+		const input = option.replaceValue + ' ';
+
+		textarea.value = commandKey + input + textarea.value.slice(inputPosition).trimStart();
+		textarea.focus();
+		textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
+
+		const autocompleteResult: AutocompleteDisplayData = {
+			replace: textarea.value,
+			result: runner.autocomplete(input),
+			index: null,
+			nextSegment: true,
+		};
+
+		if (chatCommandHintBehavior === 'always-show') {
+			setAutocompleteHint({
+				data: autocompleteResult,
+				selectOption: selectAutocompleteOption,
+				commandKey,
+			});
+		} else if (chatCommandHintBehavior === 'on-tab') {
+			setAutocompleteHint(autocompleteResult.nextSegment ? null : {
+				data: autocompleteResult,
+				selectOption: selectAutocompleteOption,
+				commandKey,
+			});
+		} else {
+			AssertNever(chatCommandHintBehavior);
+		}
 	});
 
 	const updateCommandHelp = useEvent((textarea: HTMLTextAreaElement) => {
@@ -82,13 +122,17 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 			const autocompleteResult = runner.autocomplete(input);
 
 			if (chatCommandHintBehavior === 'always-show') {
+				// Set index to exactly matching entry, if there is one
+				const matchingIndex = autocompleteResult?.options.findIndex((it) => it.replaceValue === input) ?? -1;
 				setAutocompleteHint({
 					data: {
 						replace: textarea.value,
 						result: autocompleteResult,
-						index: null,
+						index: matchingIndex >= 0 ? matchingIndex : null,
 						nextSegment: false,
 					},
+					selectOption: selectAutocompleteOption,
+					commandKey: key,
 				});
 			} else if (chatCommandHintBehavior === 'on-tab') {
 				if (autocompleteResult != null &&
@@ -101,9 +145,11 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 						data: {
 							replace: textarea.value,
 							result: autocompleteResult,
-							index: null,
+							index: 0,
 							nextSegment: false,
 						},
+						selectOption: selectAutocompleteOption,
+						commandKey: key,
 					});
 				} else {
 					setAutocompleteHint(null);
@@ -111,6 +157,8 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 			} else {
 				AssertNever(chatCommandHintBehavior);
 			}
+
+			return;
 		}
 
 		// No matched prefix
@@ -238,10 +286,14 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 					if (chatCommandHintBehavior === 'always-show') {
 						setAutocompleteHint({
 							data: autocompleteResult,
+							selectOption: selectAutocompleteOption,
+							commandKey: key,
 						});
 					} else if (chatCommandHintBehavior === 'on-tab') {
 						setAutocompleteHint(autocompleteResult.nextSegment ? null : {
 							data: autocompleteResult,
+							selectOption: selectAutocompleteOption,
+							commandKey: key,
 						});
 					} else {
 						AssertNever(chatCommandHintBehavior);
@@ -381,7 +433,6 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 	});
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
-	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
 	return (
 		<textarea

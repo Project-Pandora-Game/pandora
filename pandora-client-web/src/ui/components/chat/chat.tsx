@@ -18,8 +18,8 @@ import { useChatMessages } from '../../../services/gameLogic/chatHooks.ts';
 import { useGameState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
-import { AutoCompleteHint, ChatInputArea, useChatCommandContext } from './chatInput.tsx';
-import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced } from './chatInputContext.ts';
+import { AutoCompleteHint, ChatInputArea, useChatCommandContextGenerator } from './chatInput.tsx';
+import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced, useChatInput } from './chatInputContext.ts';
 import { ChatMessage } from './chatMessage.tsx';
 import { COMMANDS } from './commands.ts';
 
@@ -198,8 +198,10 @@ export function Chat(): ReactElement | null {
 }
 
 function ChatAutoCompleteHint() {
-	const ctx = useChatCommandContext();
+	const { mode, setMode, setTargets } = useChatInput();
+	const ctxGenerator = useChatCommandContextGenerator(mode, setMode, setTargets);
+
 	return (
-		<AutoCompleteHint ctx={ ctx } commands={ COMMANDS } />
+		<AutoCompleteHint ctxGenerator={ ctxGenerator } commands={ COMMANDS } />
 	);
 }

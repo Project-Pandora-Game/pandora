@@ -1,5 +1,4 @@
-import classNames from 'classnames';
-import { Assert, AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, ICommandExecutionContext, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
+import { Assert, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
 import React, { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -14,8 +13,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column, Row } from '../../../components/common/container/container.tsx';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
+import { Row } from '../../../components/common/container/container.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
@@ -30,7 +28,7 @@ import { ColoredName } from '../common/coloredName.tsx';
 import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputAutocompleteState, type ChatInputCommandRunner, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
 import { ChatInputTextArea, type ChatInputHistoryDriver, type ChatInputRestoreDriver } from './chatInputTextArea.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
+import { COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -492,108 +490,6 @@ export function useChatCommandContextGenerator(
 			navigate,
 		};
 	}, [accountManager, accountSettings, characterSettings, directoryConnector, gameState, navigate, chatMode, setChatMode, setChatTargets, shardConnector]);
-}
-
-export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctxGenerator, commands }: {
-	ctxGenerator: () => ICommandInvokeContext<TCommandExecutionContext> | null;
-	commands: readonly IClientCommand<TCommandExecutionContext>[];
-}): ReactElement | null {
-	const { autocompleteHint, ref, setAutocompleteHint, commandsRunner } = useChatInput();
-	const { chatCommandHintBehavior } = useAccountSettings();
-	const selectedElementRef = useRef<HTMLSpanElement>(null);
-
-	useEffect(() => {
-		if (autocompleteHint?.data.index != null && selectedElementRef.current != null) {
-			selectedElementRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		}
-	}, [autocompleteHint?.data.index]);
-
-	if (!autocompleteHint?.data.result || commandsRunner == null)
-		return null;
-
-	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
-	let longDescriptionOption: number | null = null;
-	if (autocompleteHint.data.index != null) {
-		longDescriptionOption = autocompleteHint.data.index;
-	} else if (autocompleteHint.data.result.options.length === 1) {
-		longDescriptionOption = 0;
-	} else if (ref.current) {
-		longDescriptionOption = autocompleteHint.data.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
-	}
-	if (longDescriptionOption != null && !autocompleteHint.data.result.options[longDescriptionOption]?.longDescription) {
-		longDescriptionOption = null;
-	}
-
-	return (
-		<div className='autocomplete-hint'>
-			{ autocompleteHint.data.result.header }
-			{
-				autocompleteHint.data.result.options.length > 0 &&
-				<>
-					<hr />
-					<Scrollable className='flex-1'>
-						<Column gap='tiny'>
-							{
-								autocompleteHint.data.result.options.map((option, index) => (
-									<span key={ index }
-										className={ classNames({ selected: index === autocompleteHint.data.index }) }
-										ref={ index === autocompleteHint.data.index ? selectedElementRef : undefined }
-										onClick={ (ev) => {
-											const textarea = ref.current;
-											if (!textarea || textarea.disabled || textarea.readOnly)
-												return;
-
-											ev.preventDefault();
-											ev.stopPropagation();
-
-											const inputPosition = textarea.selectionStart || textarea.value.length;
-											const input = option.replaceValue + ' ';
-
-											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
-											textarea.focus();
-											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
-
-											const ctx = ctxGenerator();
-											AssertNotNullable(ctx);
-
-											const autocompleteResult: AutocompleteDisplayData = {
-												replace: textarea.value,
-												result: CommandAutocomplete(input, ctx, commands),
-												index: null,
-												nextSegment: true,
-											};
-
-											if (chatCommandHintBehavior === 'always-show') {
-												setAutocompleteHint({
-													data: autocompleteResult,
-												});
-											} else if (chatCommandHintBehavior === 'on-tab') {
-												setAutocompleteHint(autocompleteResult.nextSegment ? null : {
-													data: autocompleteResult,
-												});
-											} else {
-												AssertNever(chatCommandHintBehavior);
-											}
-										} }
-									>
-										{ option.displayValue }
-									</span>
-								))
-							}
-						</Column>
-					</Scrollable>
-				</>
-			}
-			{
-				longDescriptionOption != null ? (
-					<>
-						<hr />
-						{ autocompleteHint.data.result.options[longDescriptionOption]?.longDescription }
-					</>
-				) : null
-			}
-		</div>
-	);
 }
 
 function ChatModeSelector(): ReactElement | null {

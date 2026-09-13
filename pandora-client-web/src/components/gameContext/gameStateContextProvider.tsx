@@ -53,6 +53,7 @@ import { GetAccountSettings } from '../../services/accountLogic/accountManagerHo
 import type { ClientServices } from '../../services/clientServices.ts';
 import { MakeActionSpaceContext } from '../../services/gameLogic/gameStateHooks.ts';
 import { ChatFocusMode, ChatMessageShouldDim, GetChatFocusModeForced } from '../../ui/components/chat/chatInputContext.ts';
+import type { ChatInputMessageDriver } from '../../ui/components/chat/chatInputTextArea.tsx';
 import { RenderChatMessageToString } from '../../ui/components/chat/chatMessage.tsx';
 import { ChatMessagePreprocessedSchema, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData } from '../../ui/components/chat/chatMessageTypes.ts';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
@@ -78,15 +79,8 @@ const SavedMessageSchema = z.object({
 
 export type ISavedMessage = z.infer<typeof SavedMessageSchema>;
 
-export interface IChatMessageSender {
+export interface IChatMessageSender extends ChatInputMessageDriver {
 	readonly status: ReadonlyObservable<ReadonlyMap<CharacterId, ChatCharacterStatus>>;
-
-	sendMessage(message: string, options?: IMessageParseOptions): void;
-	deleteMessage(deleteId: number): void;
-	getMessageEditTimeout(id: number): number | undefined;
-	getMessageEdit(id: number): ISavedMessage | undefined;
-	getLastMessageEdit(): number | undefined;
-
 	setPlayerStatus(status: ChatCharacterStatus, targets?: readonly CharacterId[]): void;
 }
 

@@ -4,14 +4,15 @@ import { GetLogger, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
 import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import React, { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
+import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
 import { AutoCompleteHint } from '../../ui/components/chat/chatInput.tsx';
-import { ChatInputContext, IChatInputHandler } from '../../ui/components/chat/chatInputContext.ts';
+import { ChatInputContext, IChatInputHandler, type ChatInputAutocompleteState, type ChatInputCommandRunner } from '../../ui/components/chat/chatInputContext.ts';
 import { RenderChatPart } from '../../ui/components/chat/chatMessageText.tsx';
-import { AutocompleteDisplayData } from '../../ui/components/chat/commandsProcessor.ts';
+import { COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
 import { ColoredName } from '../../ui/components/common/coloredName.tsx';
 import { Column } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
@@ -23,12 +24,48 @@ import { DirectMessageInput, DirectMessageInputSaveStorage } from './directMessa
 export function DirectMessage({ accountId }: {
 	accountId: number;
 }): ReactElement {
+	return (
+		<div className='chatArea'>
+			<DirectMessageChannelProvider accountId={ accountId }>
+				<DirectMessageChat accountId={ accountId } />
+			</DirectMessageChannelProvider>
+		</div>
+	);
+}
+
+function DirectMessageChat({ accountId }: {
+	accountId: number;
+}): ReactElement {
 	const ref = React.useRef<HTMLTextAreaElement>(null);
 	const chatId: string = `chat:${accountId}`;
-	const [autocompleteHint, setAutocompleteHint] = React.useState<AutocompleteDisplayData | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = React.useState<ChatInputAutocompleteState | null>(null);
 
 	const messagesDiv = useRef<HTMLDivElement>(null);
 	const scrollFnRef = useRef<(forceScroll: boolean, behavior?: ScrollBehavior) => void>(null);
+
+	const commandInvokeContext = useDirectMessageCommandContext(true);
+
+	const dmCommandRunner = useMemo((): ChatInputCommandRunner => ({
+		run(input) {
+			return RunCommand(input, commandInvokeContext, DIRECT_MESSAGE_COMMANDS);
+		},
+		autocomplete(input) {
+			return CommandAutocomplete(input, commandInvokeContext, DIRECT_MESSAGE_COMMANDS);
+		},
+		autocompleteCycle(input, reverse) {
+			return CommandAutocompleteCycle(input, commandInvokeContext, DIRECT_MESSAGE_COMMANDS, reverse);
+		},
+		getChatStatus(input) {
+			return CommandGetChatStatus(input, commandInvokeContext, DIRECT_MESSAGE_COMMANDS);
+		},
+	}), [commandInvokeContext]);
+
+	const commandsRunner = useMemo(() => ({
+		[COMMAND_KEY]: dmCommandRunner,
+	}), [dmCommandRunner]);
+
+	// Handler to autofocus chat input
+	useInputAutofocus(ref);
 
 	const ctx = React.useMemo((): IChatInputHandler => ({
 		setValue: (value: string) => {
@@ -53,9 +90,9 @@ export function DirectMessage({ accountId }: {
 		setMode: () => { /* Not supported */ },
 		showSelector: false,
 		setShowSelector: () => { /* Not supported */ },
-		allowCommands: true,
+		commandsRunner,
 		ref,
-	}), [autocompleteHint, chatId]);
+	}), [autocompleteHint, commandsRunner, chatId]);
 
 	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
 		return (
@@ -69,22 +106,19 @@ export function DirectMessage({ accountId }: {
 	}, []);
 
 	return (
-		<div className='chatArea'>
-			<ChatInputContext.Provider value={ ctx }>
-				<DirectMessageChannelProvider accountId={ accountId }>
-					<DirectMessageList
-						ref={ messagesDiv }
-						scrollRef={ scrollFnRef }
-					/>
-					<DirectMessageInput
-						ref={ ref }
-						chatId={ chatId }
-						messagesDiv={ messagesDiv }
-						scrollMessagesView={ scroll }
-					/>
-				</DirectMessageChannelProvider>
-			</ChatInputContext.Provider>
-		</div>
+
+		<ChatInputContext.Provider value={ ctx }>
+			<DirectMessageList
+				ref={ messagesDiv }
+				scrollRef={ scrollFnRef }
+			/>
+			<DirectMessageInput
+				ref={ ref }
+				chatId={ chatId }
+				messagesDiv={ messagesDiv }
+				scrollMessagesView={ scroll }
+			/>
+		</ChatInputContext.Provider>
 	);
 }
 
@@ -177,9 +211,10 @@ function OldMessagesKeyWarning(): ReactElement {
 
 function DirectMessageAutoCompleteHint(): ReactElement | null {
 	const ctx = useDirectMessageCommandContext(false);
+	const ctxGenerator = useCallback(() => ctx, [ctx]);
 
 	return (
-		<AutoCompleteHint ctx={ ctx } commands={ DIRECT_MESSAGE_COMMANDS } />
+		<AutoCompleteHint ctxGenerator={ ctxGenerator } commands={ DIRECT_MESSAGE_COMMANDS } />
 	);
 }
 

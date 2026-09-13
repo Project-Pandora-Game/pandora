@@ -29,10 +29,10 @@ export interface ChatInputCommandRunner {
 	run(input: string): Promisable<boolean>;
 
 	/** Run autocomplete on a command */
-	autocomplete(input: string): CommandAutocompleteResult;
+	autocomplete(input: string): Promisable<CommandAutocompleteResult>;
 
 	/** Run autocomplete on a command, cycling previous result if unchanged */
-	autocompleteCycle(input: string, reverse: boolean): AutocompleteDisplayData;
+	autocompleteCycle(input: string, reverse: boolean): Promisable<AutocompleteDisplayData>;
 
 	/** Get typing status for the input */
 	getChatStatus(input: string): ChatCharacterFullStatus;

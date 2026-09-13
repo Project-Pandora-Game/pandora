@@ -17,11 +17,11 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useChatMessages } from '../../../services/gameLogic/chatHooks.ts';
 import { useGameState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
+import { ChatAutocompleteHint } from './chatAutocompleteHint.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
-import { AutoCompleteHint, ChatInputArea, useChatCommandContextGenerator } from './chatInput.tsx';
-import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced, useChatInput } from './chatInputContext.ts';
+import { ChatInputArea } from './chatInput.tsx';
+import { ChatActionLog, ChatFocusMode, useChatActionLogDisabled, useChatFocusModeForced } from './chatInputContext.ts';
 import { ChatMessage } from './chatMessage.tsx';
-import { COMMANDS } from './commands.ts';
 
 export function Chat(): ReactElement | null {
 	const gameState = useGameState();
@@ -190,18 +190,9 @@ export function Chat(): ReactElement | null {
 						{ finalMessages }
 					</Column>
 				</Scrollable>
-				<ChatAutoCompleteHint />
+				<ChatAutocompleteHint />
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
-	);
-}
-
-function ChatAutoCompleteHint() {
-	const { mode, setMode, setTargets } = useChatInput();
-	const ctxGenerator = useChatCommandContextGenerator(mode, setMode, setTargets);
-
-	return (
-		<AutoCompleteHint ctxGenerator={ ctxGenerator } commands={ COMMANDS } />
 	);
 }

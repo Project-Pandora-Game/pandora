@@ -9,7 +9,7 @@ import { useObservable } from '../../observable.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
-import { AutoCompleteHint } from '../../ui/components/chat/chatInput.tsx';
+import { ChatAutocompleteHint } from '../../ui/components/chat/chatAutocompleteHint.tsx';
 import { ChatInputContext, IChatInputHandler, type ChatInputAutocompleteState, type ChatInputCommandRunner } from '../../ui/components/chat/chatInputContext.ts';
 import { RenderChatPart } from '../../ui/components/chat/chatMessageText.tsx';
 import { COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
@@ -194,7 +194,7 @@ function DirectMessageList({ scrollRef, ref }: {
 					)) }
 				</Column>
 			</Scrollable>
-			<DirectMessageAutoCompleteHint />
+			<ChatAutocompleteHint />
 		</div>
 	);
 }
@@ -206,15 +206,6 @@ function OldMessagesKeyWarning(): ReactElement {
 			Because of that, a fresh encryption key was generated for this conversation, making older messages unrecoverable.<br />
 			Sending a new message will delete the older messages from the conversation history.
 		</div>
-	);
-}
-
-function DirectMessageAutoCompleteHint(): ReactElement | null {
-	const ctx = useDirectMessageCommandContext(false);
-	const ctxGenerator = useCallback(() => ctx, [ctx]);
-
-	return (
-		<AutoCompleteHint ctxGenerator={ ctxGenerator } commands={ DIRECT_MESSAGE_COMMANDS } />
 	);
 }
 

@@ -27,6 +27,9 @@ export class ScreenHandlerAuth extends TestScreenHandler {
 		expect(email.code).toBeTruthy();
 
 		await this.verificationEnterCode(email.code);
+
+		// After email verification, user lands on the character select screen
+		await this.page.waitForURL('/character/select');
 	}
 
 	@TestStep

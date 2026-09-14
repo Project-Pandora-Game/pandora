@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { isEqual } from 'lodash-es';
-import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, EMPTY_ARRAY, GetLogger, IsAuthorized, type AccountOnlineStatus } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useState } from 'react';
+import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, EMPTY_ARRAY, GetLogger, IsAuthorized, type AccountOnlineStatus, type CharacterId } from 'pandora-common';
+import React, { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import crossIcon from '../../assets/icons/cross.svg';
 import friendsIcon from '../../assets/icons/friends.svg';
@@ -44,12 +44,18 @@ function LeftHeader({ onAnyClick }: {
 	const selectedCharacter = useObservable(useService('accountManager').currentCharacter);
 
 	const characterData = usePlayerData();
+	const haveCharacterData = characterData != null;
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 	const [preview, setPreview] = useState<string | null>(null);
 	const auth = useAuthTokenHeader();
 
+	const initiallyInCreation = useRef<[CharacterId, boolean]>(null);
+	if (characterData != null && (initiallyInCreation.current == null || initiallyInCreation.current[0] !== characterData.id)) {
+		initiallyInCreation.current = [characterData.id, characterData.inCreation === true];
+	}
+
 	useEffect(() => {
-		if (!auth || !selectedCharacter)
+		if (!auth || !selectedCharacter || !haveCharacterData || initiallyInCreation.current?.[1])
 			return;
 
 		let valid = true;
@@ -85,7 +91,7 @@ function LeftHeader({ onAnyClick }: {
 		return () => {
 			valid = false;
 		};
-	});
+	}, [auth, haveCharacterData, selectedCharacter]);
 
 	const navigate = useNavigatePandora();
 	const goToWardrobe = useCallback(() => {

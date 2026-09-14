@@ -37,106 +37,107 @@ function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {
 	}
 }
 
-setup('Setup', async () => {
-	console.log('\n--- Running global setup ---\n');
-
+setup('Build servers and client', () => {
 	const shouldBuild = process.env.SKIP_TEST_BUILD !== 'true' || !fs.existsSync(TEST_TEMP);
 
+	setup.skip(!shouldBuild, 'Skipped using SKIP_TEST_BUILD');
+
 	// Clean and setup temporary directory
-	if (shouldBuild) {
-		if (fs.existsSync(TEST_TEMP)) {
-			fs.rmSync(TEST_TEMP, { recursive: true });
-		}
-		fs.mkdirSync(TEST_TEMP);
-		fs.mkdirSync(TEST_SERVER_DIRECTORY_TEST_DIR);
-		fs.mkdirSync(TEST_SERVER_SHARD_TEST_DIR);
+	if (fs.existsSync(TEST_TEMP)) {
+		fs.rmSync(TEST_TEMP, { recursive: true });
 	}
+	fs.mkdirSync(TEST_TEMP);
+	fs.mkdirSync(TEST_SERVER_DIRECTORY_TEST_DIR);
+	fs.mkdirSync(TEST_SERVER_SHARD_TEST_DIR);
 
 	// Build everything necessary
-	if (shouldBuild) {
-		console.log('\nBuilding servers...');
-		Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-server-*', 'build']);
+	console.log('\nBuilding servers...');
+	Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-server-*', 'build']);
 
-		console.log('\nBuilding client...');
-		fs.mkdirSync(TEST_CLIENT_DIST_DIR);
-		Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-client-web', 'build'], {
-			env: {
-				...process.env,
-				DIST_DIR_OVERRIDE: TEST_CLIENT_DIST_DIR,
-				DIRECTORY_ADDRESS: TEST_CLIENT_DIRECTORY_ADDRESS,
-				EDITOR_ASSETS_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
-				EDITOR_ASSETS_OFFICIAL_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
-				EXTRA_ASSETS_ADDRESS: '',
-				WEBPACK_DEV_SERVER_PORT: TEST_HTTP_SERVER_PORT.toString(10),
-				WEBPACK_DEV_SERVER_SECURE: 'false',
-				USER_DEBUG: 'false',
-			} satisfies EnvInputJson<typeof WEBPACK_CONFIG>,
-		});
-	}
+	console.log('\nBuilding client...');
+	fs.mkdirSync(TEST_CLIENT_DIST_DIR);
+	Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-client-web', 'build'], {
+		env: {
+			...process.env,
+			DIST_DIR_OVERRIDE: TEST_CLIENT_DIST_DIR,
+			DIRECTORY_ADDRESS: TEST_CLIENT_DIRECTORY_ADDRESS,
+			EDITOR_ASSETS_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
+			EDITOR_ASSETS_OFFICIAL_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
+			EXTRA_ASSETS_ADDRESS: '',
+			WEBPACK_DEV_SERVER_PORT: TEST_HTTP_SERVER_PORT.toString(10),
+			WEBPACK_DEV_SERVER_SECURE: 'false',
+			USER_DEBUG: 'false',
+		} satisfies EnvInputJson<typeof WEBPACK_CONFIG>,
+	});
+
+	console.log('Done\n');
+});
+
+setup('Prepare test assets', async () => {
 
 	// Prepare assets
-	{
-		console.log('\nPreparing assets...');
-		if (fs.existsSync(TEST_ASSETS_DIR)) {
-			fs.rmSync(TEST_ASSETS_DIR, { recursive: true });
-		}
-		fs.mkdirSync(TEST_ASSETS_DIR);
+	console.log('\nPreparing test assets...');
+	if (fs.existsSync(TEST_ASSETS_DIR)) {
+		fs.rmSync(TEST_ASSETS_DIR, { recursive: true });
+	}
+	fs.mkdirSync(TEST_ASSETS_DIR);
 
-		// Get the archive
-		const TEMP_ARCHIVE_PATH = resolve(TEST_TEMP, './assets.tar');
-		const ASSETS_PROJECT_ARCHIVE_PATH = resolve(TEST_PROJECT_ASSETS_DIR, './out-for-test.tar');
-		if (fs.existsSync(ASSETS_PROJECT_ARCHIVE_PATH) && fs.statSync(ASSETS_PROJECT_ARCHIVE_PATH).isFile()) {
-			console.log('  Using test archive from local pandora-assets project');
-			fs.copyFileSync(ASSETS_PROJECT_ARCHIVE_PATH, TEMP_ARCHIVE_PATH);
+	// Get the archive
+	const TEMP_ARCHIVE_PATH = resolve(TEST_TEMP, './assets.tar');
+	const ASSETS_PROJECT_ARCHIVE_PATH = resolve(TEST_PROJECT_ASSETS_DIR, './out-for-test.tar');
+	if (fs.existsSync(ASSETS_PROJECT_ARCHIVE_PATH) && fs.statSync(ASSETS_PROJECT_ARCHIVE_PATH).isFile()) {
+		console.log('  Using test archive from local pandora-assets project');
+		fs.copyFileSync(ASSETS_PROJECT_ARCHIVE_PATH, TEMP_ARCHIVE_PATH);
+	} else {
+		const bundleVersion = fs.readFileSync(resolve(TEST_PROJECT_PANDORA_DIR, './pandora-common/test/testAssetsVersion.txt'), { encoding: 'utf-8' }).trim();
+
+		if (fs.existsSync(TEMP_ARCHIVE_PATH) && createHash('sha256').update(fs.readFileSync(TEMP_ARCHIVE_PATH)).digest('base64url') === bundleVersion) {
+			console.log('  Using cached test assets');
 		} else {
-			const bundleVersion = fs.readFileSync(resolve(TEST_PROJECT_PANDORA_DIR, './pandora-common/test/testAssetsVersion.txt'), { encoding: 'utf-8' }).trim();
+			// Download archive bundle
+			const url = TEST_ASSETS_DOWNLOAD_URL.replace('%v', bundleVersion);
+			console.log('  Downloading test assets from', url);
 
-			if (fs.existsSync(TEMP_ARCHIVE_PATH) && createHash('sha256').update(fs.readFileSync(TEMP_ARCHIVE_PATH)).digest('base64url') === bundleVersion) {
-				console.log('  Using cached test assets');
-			} else {
-				// Download archive bundle
-				const url = TEST_ASSETS_DOWNLOAD_URL.replace('%v', bundleVersion);
-				console.log('  Downloading test assets from', url);
-
-				const testAssetsCompressed = await fetch(url).then((r) => {
-					if (!r.ok) {
-						throw new Error(`Received ${r.status} ${r.statusText} response`);
-					}
-					return r.arrayBuffer();
-				});
-
-				// Decompress
-				const testAssetsUncompressed = zstdDecompressSync(testAssetsCompressed, {
-					params: {
-						[zlib.constants.ZSTD_d_windowLogMax]: 31,
-					},
-				});
-
-				// Check hash
-				if (createHash('sha256').update(testAssetsUncompressed).digest('base64url') !== bundleVersion) {
-					throw new Error('Received test archive checksum mismatch');
+			const testAssetsCompressed = await fetch(url).then((r) => {
+				if (!r.ok) {
+					throw new Error(`Received ${r.status} ${r.statusText} response`);
 				}
-				fs.writeFileSync(TEMP_ARCHIVE_PATH, testAssetsUncompressed);
+				return r.arrayBuffer();
+			});
 
-				console.log('  Downloading test assets done');
+			// Decompress
+			const testAssetsUncompressed = zstdDecompressSync(testAssetsCompressed, {
+				params: {
+					[zlib.constants.ZSTD_d_windowLogMax]: 31,
+				},
+			});
+
+			// Check hash
+			if (createHash('sha256').update(testAssetsUncompressed).digest('base64url') !== bundleVersion) {
+				throw new Error('Received test archive checksum mismatch');
 			}
-		}
+			fs.writeFileSync(TEMP_ARCHIVE_PATH, testAssetsUncompressed);
 
-		// Extract the archive
-		tar.extract({
-			file: TEMP_ARCHIVE_PATH,
-			sync: true,
-			strict: true,
-			cwd: TEST_ASSETS_DIR,
-			preserveOwner: false,
-		});
+			console.log('  Downloading test assets done');
+		}
 	}
 
+	// Extract the archive
+	tar.extract({
+		file: TEMP_ARCHIVE_PATH,
+		sync: true,
+		strict: true,
+		cwd: TEST_ASSETS_DIR,
+		preserveOwner: false,
+	});
+
+	console.log('Done\n');
+});
+
+setup('Prepare coverage directory', () => {
 	// Clean coverage temporary directory
 	if (fs.existsSync(TEST_COVERAGE_TEMP)) {
 		fs.rmSync(TEST_COVERAGE_TEMP, { recursive: true });
 	}
 	fs.mkdirSync(TEST_COVERAGE_TEMP);
-
-	console.log('\n--- Global setup done ---\n');
 });

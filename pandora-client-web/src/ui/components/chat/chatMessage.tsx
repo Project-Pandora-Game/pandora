@@ -323,10 +323,14 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 		);
 	}
 
+	// No name for emote message
+	if (message.type === 'emote')
+		return null;
+
 	return (
 		<span className='name' translate='no'>
 			{ before }
-			{ message.type !== 'me' && message.type !== 'emote' ? (
+			{ message.type !== 'me' ? (
 				<ColoredName
 					className='from cursor-pointer'
 					color={ color }

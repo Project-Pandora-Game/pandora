@@ -55,7 +55,7 @@
 		"zod": "4.4.3"
 	},
 	"devDependencies": {
-		"@jest/globals": "30.4.1",
+		"@jest/globals": "30.5.1",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.6.3",
 		"@testing-library/dom": "10.4.1",
 		"@testing-library/jest-dom": "7.0.1",

@@ -51,7 +51,7 @@ export type IChatInputHandler = {
 	showSelector: boolean;
 	setShowSelector: (show: boolean) => void;
 	/** Defines one command runner per command prefix. `null` if commands are not allowed in the current context. */
-	commandsRunner: Record<string, ChatInputCommandRunner> | null;
+	commandsRunner: Record<string, ChatInputCommandRunner | undefined> | null;
 	ref: RefObject<HTMLTextAreaElement | null>;
 };
 

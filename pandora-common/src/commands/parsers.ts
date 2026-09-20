@@ -43,6 +43,9 @@ export const CommandSelectorAnyQuotedString = (): CommandStepProcessor<string> =
 	parse(input: string): { success: true; value: string; } {
 		return { success: true, value: input };
 	},
+	getBotProcessor() {
+		return { type: 'string' };
+	},
 });
 
 export type CommandStepPreparseProcessor = 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';

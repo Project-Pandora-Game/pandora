@@ -1,4 +1,4 @@
-import type { BotCommandArgumentProcessor, BotCommandStructureResult, BotCommandStructureSegmentError } from '../bots/index.ts';
+import type { BotCommandArgumentDescriptor, BotCommandArgumentProcessor, BotCommandStructureResult, BotCommandStructureSegmentError } from '../bots/index.ts';
 import type { ChatCharacterFullStatus } from '../chat/chat.ts';
 import type { IEmpty } from '../networking/index.ts';
 import { Assert, type Promisable } from '../utility/misc.ts';
@@ -23,7 +23,7 @@ export type CommandAutocompleteResult = {
 } | null;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, any> = IEmpty> {
+export interface CommandStepProcessor<ResultType, Context extends object = ICommandExecutionContext, EntryArguments extends Record<string, any> = IEmpty> {
 	preparse: CommandStepPreparseProcessor;
 	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType; } | { success: false; error: string; };
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];
@@ -143,12 +143,14 @@ export class CommandRunnerExecutor<
 		if (this.options.restArgName) {
 			return Result.Ok({
 				header: `\u25b6<${this.options.restArgName}>\u25c0`,
+				arguments: [],
 				nextSegment: 'rest',
 			});
 		} else {
 			return Result.Ok({
 				header: '',
-				nextSegment: 'rest',
+				arguments: [],
+				nextSegment: null,
 			});
 		}
 	}
@@ -258,21 +260,24 @@ export class CommandRunnerArgParser<
 
 	public async getNextBotSegmentInfo(context: Context, args: EntryArguments, rest: string[]): Promise<CommandRunnerBotSegmentInfoResult> {
 		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
+		const botProcessor = this.processor.getBotProcessor?.(context, args);
+
+		const descriptor: BotCommandArgumentDescriptor = {
+			preparse: this.processor.preparse,
+			process: botProcessor ?? {
+				type: 'string', // Default to string processor, which basically does nothing with the input
+			},
+		};
 
 		// If nothing follows, this is the thing to get info for
 		if (rest.length === 0) {
-			const botProcessor = this.processor.getBotProcessor?.(context, args);
 			const currentHeader = this.processor.isOptional === true ? `[${this.processor.autocompleteCustomName ?? this.name}]` :
 				`<${this.processor.autocompleteCustomName ?? this.name}>`;
 
 			return Result.Ok({
 				header: `\u25b6${currentHeader}\u25c0 ${this.next.predictHeader()}`,
-				nextSegment: {
-					preparse: this.processor.preparse,
-					process: botProcessor ?? {
-						type: 'string', // Default to string processor, which basically does nothing with the input
-					},
-				},
+				arguments: [],
+				nextSegment: descriptor,
 			});
 		}
 
@@ -297,6 +302,7 @@ export class CommandRunnerArgParser<
 		}, rest))
 			.map((nextResult): BotCommandStructureResult => {
 				nextResult.header = processedHeader + ' ' + nextResult.header;
+				nextResult.arguments.unshift(descriptor);
 
 				return nextResult;
 			})

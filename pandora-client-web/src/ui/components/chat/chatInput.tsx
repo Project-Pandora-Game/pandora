@@ -23,7 +23,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus } from '../../../services/gameLogic/chatHooks.ts';
 import { useGameStateOptional, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
-import { useService } from '../../../services/serviceProvider.tsx';
+import { useGameLogicServiceOptional, useService } from '../../../services/serviceProvider.tsx';
 import { ColoredName } from '../common/coloredName.tsx';
 import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputAutocompleteState, type ChatInputCommandRunner, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
 import { ChatInputTextArea, type ChatInputHistoryDriver, type ChatInputRestoreDriver } from './chatInputTextArea.tsx';
@@ -48,6 +48,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const [autocompleteHint, setAutocompleteHint] = useState<ChatInputAutocompleteState | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
+	const botInteractions = useGameLogicServiceOptional('botInteractions');
 	const gameState = useGameStateOptional();
 	const characters = useSpaceCharacters();
 	const playerId = usePlayerId();
@@ -136,7 +137,8 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 
 	const commandsRunner = useMemo(() => ({
 		[COMMAND_KEY]: clientCommandRunner,
-	}), [clientCommandRunner]);
+		'!': botInteractions ?? undefined,
+	}), [clientCommandRunner, botInteractions]);
 
 	// Handler to autofocus chat input
 	useInputAutofocus(ref);

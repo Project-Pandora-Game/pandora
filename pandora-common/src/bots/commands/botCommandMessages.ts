@@ -68,6 +68,8 @@ export type BotCommandStructureSegmentResult = z.infer<typeof BotCommandStructur
 export const BotCommandStructureResultSchema = z.object({
 	/** Autocomplete header to show to the user. */
 	header: z.string(),
+	/** Arguments data matching the passed-in arguments for the query. */
+	arguments: BotCommandArgumentDescriptorSchema.array(),
 	/**
 	 * Information about the segment user is expected to enter next.
 	 *

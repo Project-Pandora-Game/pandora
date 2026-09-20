@@ -114,6 +114,7 @@ export abstract class BotCommandRepositoryBase<TCommandExecutionContext extends 
 					return {
 						result: 'ok',
 						header: result.header,
+						arguments: result.arguments,
 						nextSegment: result.nextSegment,
 					};
 				},

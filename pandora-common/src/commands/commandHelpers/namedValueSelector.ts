@@ -8,7 +8,7 @@ import type { CommandStepProcessor } from '../executor.ts';
 export function CommandSelectorNamedValue<const TOption>(
 	options: readonly { value: TOption; name: string; description?: string; }[],
 	autocompleteShowValues: boolean = false,
-): CommandStepProcessor<TOption> {
+): CommandStepProcessor<TOption, object> {
 	// Filter out duplicate options
 	{
 		const seenNames = new Set<string>();
@@ -61,5 +61,15 @@ export function CommandSelectorNamedValue<const TOption>(
 		},
 		autocompleteShowValue: autocompleteShowValues,
 		autocompleteCustomName: autocompleteShowValues ? options.map(({ name }) => name).join(' | ') : undefined,
+		getBotProcessor() {
+			return {
+				type: 'namedValue',
+				options: options.map((it) => ({
+					name: it.name,
+					description: it.description,
+				})),
+				autocompleteShowValues,
+			};
+		},
 	};
 }

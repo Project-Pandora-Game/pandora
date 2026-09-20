@@ -72,6 +72,8 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 			return;
 
 		const runner = commandsRunner[commandKey];
+		if (runner == null)
+			return;
 		const inputPosition = textarea.selectionStart || textarea.value.length;
 		const input = option.replaceValue + ' ';
 
@@ -139,7 +141,7 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 		// Check all prefixes
 		for (const [key, runner] of Object.entries(commandsRunner)) {
 			// Prefix does not match, or matcher is escaped
-			if (!input.startsWith(key) || input.startsWith(key + key))
+			if (runner == null || !input.startsWith(key) || input.startsWith(key + key))
 				continue;
 
 			input = input.slice(key.length, textarea.selectionStart || textarea.value.length);
@@ -199,7 +201,7 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 		if (commandsRunner != null) {
 			for (const [key, runner] of Object.entries(commandsRunner)) {
 				// Prefix must match
-				if (!input.startsWith(key))
+				if (runner == null || !input.startsWith(key))
 					continue;
 
 				// Double command key escapes itself
@@ -291,7 +293,7 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 			try {
 				for (const [key, runner] of Object.entries(commandsRunner)) {
 					// Prefix must match
-					if (!input.startsWith(key))
+					if (runner == null || !input.startsWith(key))
 						continue;
 
 					// Double command key escapes itself
@@ -439,7 +441,7 @@ export function ChatInputTextArea({ messagesDiv, scrollMessagesView, inputHistor
 		if (commandsRunner != null) {
 			for (const [key, runner] of Object.entries(commandsRunner)) {
 				// Prefix must match
-				if (!value.startsWith(key))
+				if (runner == null || !value.startsWith(key))
 					continue;
 
 				// Double command key escapes itself

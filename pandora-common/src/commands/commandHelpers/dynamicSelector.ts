@@ -11,7 +11,7 @@ import type { CommandStepProcessor, ICommandExecutionContext } from '../executor
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CommandSelectorDynamic<TOut, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, any> = IEmpty>(
 	options: Omit<CommandStepProcessor<TOut, Context>, 'parse' | 'autocomplete'>,
-	generate: (context: Context, args: EntryArguments) => Pick<CommandStepProcessor<TOut, Context>, 'parse' | 'autocomplete'>,
+	generate: (context: Context, args: EntryArguments) => Pick<CommandStepProcessor<TOut, Context>, 'parse' | 'autocomplete' | 'getBotProcessor'>,
 ): CommandStepProcessor<TOut, Context, EntryArguments> {
 	return {
 		preparse: options.preparse,
@@ -24,6 +24,10 @@ export function CommandSelectorDynamic<TOut, Context extends ICommandExecutionCo
 		autocomplete(input, context, args) {
 			const generated = generate(context, args);
 			return generated.autocomplete?.(input, context, args) ?? [];
+		},
+		getBotProcessor(context, args) {
+			const generated = generate(context, args);
+			return generated.getBotProcessor?.(context, args);
 		},
 	};
 }

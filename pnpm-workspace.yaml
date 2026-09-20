@@ -9,9 +9,10 @@ allowBuilds:
   argon2: true
   unrs-resolver: true
   core-js-pure: false
+  '@parcel/watcher': true
 
 allowUnusedPatches: false
-injectWorkspacePackages: true
+injectWorkspacePackages: false
 minimumReleaseAge: 2880
 nodeOptions: --no-warnings=ExperimentalWarning --experimental-vm-modules
 autoInstallPeers: false

@@ -55,11 +55,11 @@ setup('Setup', async () => {
 	// Build everything necessary
 	if (shouldBuild) {
 		console.log('\nBuilding servers...');
-		Run(PNPM_EXECUTABLE, ['run', '-r', '--no-bail', '--filter', 'pandora-server-*', 'build']);
+		Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-server-*', 'build']);
 
 		console.log('\nBuilding client...');
 		fs.mkdirSync(TEST_CLIENT_DIST_DIR);
-		Run(PNPM_EXECUTABLE, ['run', '-r', '--no-bail', '--filter', 'pandora-client-web', 'build'], {
+		Run(PNPM_EXECUTABLE, ['run', '-r', '--filter', 'pandora-client-web', 'build'], {
 			env: {
 				...process.env,
 				DIST_DIR_OVERRIDE: TEST_CLIENT_DIST_DIR,

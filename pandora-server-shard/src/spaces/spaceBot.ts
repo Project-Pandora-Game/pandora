@@ -74,10 +74,6 @@ export class SpaceBot {
 		}
 	}
 
-	public isInUse(): boolean {
-		return this.connection !== undefined;
-	}
-
 	public setConnection(connection: BotConnection | null): void {
 		if (connection) {
 			Assert(!this.invalid);

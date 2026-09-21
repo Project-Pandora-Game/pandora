@@ -12,10 +12,12 @@ import { SpaceClientInfoSchema } from './spaceData.ts';
 /** Data about bot visible to everyone */
 export interface BotPublicData {
 	bot: BotId;
+	connected: boolean;
 }
 /** Data about bot visible to everyone */
 export const BotPublicDataSchema: z.ZodObject<ZodObjectShape<BotPublicData>> = z.object({
 	bot: BotIdSchema,
+	connected: z.boolean(),
 });
 
 export const SpaceLoadDataSchema = z.object({
@@ -36,6 +38,7 @@ export const GameStateUpdateSchema = z.object({
 	characters: z.record(CharacterIdSchema, CharacterRoomDataDeltaSchema).optional(),
 	characterModifierEffects: SpaceCharacterModifierEffectDataUpdateSchema.optional(),
 	bot: BotPublicDataSchema.nullable().optional(),
+	botUpdate: BotPublicDataSchema.partial().optional(),
 });
 export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;
 

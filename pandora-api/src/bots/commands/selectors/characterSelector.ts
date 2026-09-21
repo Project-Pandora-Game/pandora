@@ -8,7 +8,12 @@ export type CommandSelectorCharacterSelfSelect = 'none' | 'otherCharacter' | 'an
  * Allows the user to select any character from the current space.
  */
 export const CommandSelectorCharacter = ({ allowSelf, filter }: {
-	/** Whether the  */
+	/**
+	 * Whether the use can select themselves in the command. Valid options:
+	 * - `none` - User cannot select this character or ony other character from the same account
+	 * - `otherCharacter` - Use cannot select this character, but other characters from the same account are valid
+	 * - `any` - Any character is allowed, including oneself
+	 */
 	allowSelf: CommandSelectorCharacterSelfSelect;
 	filter?: (character: { character: BotSpaceCharacter; characterState: AssetFrameworkCharacterState; }) => boolean;
 }): CommandStepProcessor<BotSpaceCharacter, Pick<BotCommandRepositoryCommandContext, 'gameState' | 'character'>> => ({

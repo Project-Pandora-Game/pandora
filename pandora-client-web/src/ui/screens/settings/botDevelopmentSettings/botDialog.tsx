@@ -99,7 +99,7 @@ export function BotCreateDialog({ close, onCreated }: {
 							setDescription(newDescription.trim());
 						} }
 					/>
-					{ nameError ? (
+					{ descriptionError ? (
 						<span className='error'>{ descriptionError }</span>
 					) : null }
 				</Column>

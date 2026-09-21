@@ -29,7 +29,7 @@ import type { SpaceSwitchCoordinator } from '../spaces/spaceSwitch.ts';
 import type { Account } from './account.ts';
 
 function GenerateConnectSecret(): string {
-	return nanoid(8);
+	return nanoid(21);
 }
 
 export class CharacterInfo {

@@ -209,6 +209,6 @@ export class Bot extends TypedEventEmitter<{
 	}, 100, { leading: false });
 
 	public generateShardConnectSecret(): string {
-		return nanoid(8);
+		return nanoid(21);
 	}
 }

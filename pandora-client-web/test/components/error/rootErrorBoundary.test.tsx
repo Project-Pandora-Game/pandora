@@ -95,7 +95,7 @@ describe('RootErrorBoundary', () => {
 	function renderComponent(element: ReactElement): RenderResult {
 		return render(
 			<debugContext.Provider value={ { debugData, setDebugData } }>
-				<RootErrorBoundary>
+				<RootErrorBoundary reloadPath='/'>
 					{ element }
 				</RootErrorBoundary>
 			</debugContext.Provider>,

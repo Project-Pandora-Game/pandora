@@ -1,9 +1,6 @@
 import * as z from 'zod';
 import { SpaceIdSchema, type SpaceId } from '../space/space.ts';
 
-/** Maximum length (in characters) of `BotSpaceAssignmentApiData`. */
-export const BOT_SPACE_ASSIGNMENT_API_DATA_MAX_LENGTH = 1024;
-
 /**
  * Information about how API can connect to a shard with a Space the Bot is running.
  */

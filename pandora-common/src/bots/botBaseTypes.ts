@@ -10,7 +10,7 @@ import { ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
 /** Unique identifier of a bot account. */
 export type BotId = `bot:${string}`;
 /** Unique identifier of a bot account. */
-export const BotIdSchema: z.ZodType<BotId> = ZodTemplateString<BotId>(z.string(), /^bot:[A-Za-z0-9_-]{32}/);
+export const BotIdSchema: z.ZodType<BotId> = ZodTemplateString<BotId>(z.string(), /^bot:[A-Za-z0-9_-]{32}$/);
 
 /** Creates a random Bot ID */
 export function CreateRandomBotId(): BotId {

@@ -127,7 +127,7 @@ export function BotCreateDialog({ close, onCreated }: {
 					{ sudoActive ? (
 						<Button
 							onClick={ createBot }
-							disabled={ processing || nameError != null }
+							disabled={ processing || nameError != null || descriptionError != null }
 						>
 							Create bot
 						</Button>
@@ -236,7 +236,7 @@ export function BotEditDialog({ close, onChange, botDefinition }: {
 							setDescription(newDescription.trim());
 						} }
 					/>
-					{ nameError ? (
+					{ descriptionError ? (
 						<span className='error'>{ descriptionError }</span>
 					) : null }
 				</Column>

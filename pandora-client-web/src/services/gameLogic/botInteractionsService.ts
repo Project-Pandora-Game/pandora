@@ -202,7 +202,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		}
 	}
 
-	private _lastAutcomplete: {
+	private _lastAutocomplete: {
 		key: CommandCacheKey;
 		lastQuery: string;
 		lastResult: CommandAutocompleteResult;
@@ -222,23 +222,23 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			};
 		}
 
-		if (this._lastAutcomplete?.lastQuery === input &&
-			this._lastAutcomplete.lastResult &&
-			isEqual(this._lastAutcomplete.key, BotInteractionsService._getCurrentCacheKey(context))
+		if (this._lastAutocomplete?.lastQuery === input &&
+			this._lastAutocomplete.lastResult &&
+			isEqual(this._lastAutocomplete.key, BotInteractionsService._getCurrentCacheKey(context))
 		) {
-			this._lastAutcomplete.currentIndex = reverse ?
-				((this._lastAutcomplete.currentIndex ?? this._lastAutcomplete.lastResult.options.length) - 1 + this._lastAutcomplete.lastResult.options.length) % this._lastAutcomplete.lastResult.options.length :
-				((this._lastAutcomplete.currentIndex ?? -1) + 1) % this._lastAutcomplete.lastResult.options.length;
-			const replace = this._lastAutcomplete.lastResult.options[this._lastAutcomplete.currentIndex].replaceValue.trim();
-			this._lastAutcomplete.lastQuery = replace;
+			this._lastAutocomplete.currentIndex = reverse ?
+				((this._lastAutocomplete.currentIndex ?? this._lastAutocomplete.lastResult.options.length) - 1 + this._lastAutocomplete.lastResult.options.length) % this._lastAutocomplete.lastResult.options.length :
+				((this._lastAutocomplete.currentIndex ?? -1) + 1) % this._lastAutocomplete.lastResult.options.length;
+			const replace = this._lastAutocomplete.lastResult.options[this._lastAutocomplete.currentIndex].replaceValue.trim();
+			this._lastAutocomplete.lastQuery = replace;
 			return {
 				replace,
-				result: this._lastAutcomplete.lastResult,
-				index: this._lastAutcomplete.currentIndex,
+				result: this._lastAutocomplete.lastResult,
+				index: this._lastAutocomplete.currentIndex,
 				nextSegment: false,
 			};
 		}
-		this._lastAutcomplete = undefined;
+		this._lastAutocomplete = undefined;
 		const result = await this.autocomplete(input);
 		if (!result || result.options.length === 0) {
 			return {
@@ -259,7 +259,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		const best = LongestCommonPrefix(result.options.map((i) => i.replaceValue));
 		// Only use the prefix if it matches with the already entered value
 		const bestReplacement = best.toLocaleLowerCase().startsWith(input.toLocaleLowerCase()) ? best : input;
-		this._lastAutcomplete = {
+		this._lastAutocomplete = {
 			key: BotInteractionsService._getCurrentCacheKey(context),
 			lastQuery: bestReplacement,
 			lastResult: result,

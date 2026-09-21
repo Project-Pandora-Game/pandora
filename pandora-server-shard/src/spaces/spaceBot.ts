@@ -21,9 +21,6 @@ export class SpaceBot {
 
 	private invalid: null | 'remove' = null;
 
-	/** Timeout (interval) for when directory should be notified that client is disconnected */
-	private _clientTimeout: NodeJS.Timeout | null = null;
-
 	private _connection: BotConnection | null = null;
 	public get connection(): BotConnection | null {
 		return this._connection;
@@ -82,10 +79,6 @@ export class SpaceBot {
 	}
 
 	public setConnection(connection: BotConnection | null): void {
-		if (this._clientTimeout !== null) {
-			clearInterval(this._clientTimeout);
-			this._clientTimeout = null;
-		}
 		if (connection) {
 			Assert(!this.invalid);
 			Assert(this._connection == null, 'Attempt to set connection while another is already set');
@@ -93,18 +86,7 @@ export class SpaceBot {
 			this._connection = connection;
 		} else {
 			this._connection = null;
-			if (this.isValid) {
-				this._clientTimeout = setInterval(this._handleTimeout.bind(this), SPACE_BOT_TIMEOUT);
-			}
 		}
-	}
-
-	private _handleTimeout(): void {
-		if (!this.isValid)
-			return;
-		this.logger.verbose('Bot timed out');
-		// TODO: Handle bot timeouts
-		// DirectoryConnector.sendMessage('characterClientDisconnect', { id: this.id, reason: 'timeout' });
 	}
 
 	public onRemove(): void {
@@ -127,10 +109,6 @@ export class SpaceBot {
 			this.logger.debug(`Disconnected during invalidation (${this._connection.id})`);
 			this._connection.disconnect('Bot invalidated: ' + reason);
 			Assert(this._connection == null);
-		}
-		if (this._clientTimeout !== null) {
-			clearInterval(this._clientTimeout);
-			this._clientTimeout = null;
 		}
 	}
 

@@ -17,6 +17,11 @@ export enum ReportCopyState {
 	FAILED = 'Failed',
 }
 
+export interface RootErrorBoundaryProps extends ChildrenProps {
+	/** Specifies the path that the user will be redirected to in case of reload after crash. */
+	reloadPath: string;
+}
+
 export interface RootErrorBoundaryState {
 	report?: string;
 	isTemporaryReport: boolean;
@@ -25,7 +30,7 @@ export interface RootErrorBoundaryState {
 
 const logger = GetLogger('ErrorBoundary');
 
-export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBoundaryState> {
+export class RootErrorBoundary extends PureComponent<RootErrorBoundaryProps, RootErrorBoundaryState> {
 	private timeout: number | null = null;
 	private reportRef = createRef<HTMLSpanElement>();
 
@@ -125,6 +130,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private renderErrorContent(): ReactElement {
 		const { copyState, report } = this.state;
+		const { reloadPath } = this.props;
 
 		return (
 			<div className='RootErrorBoundary'>
@@ -146,7 +152,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 				<Row alignX='center' padding='medium'>
 					<Button
 						onClick={ () => {
-							window.location.assign('/');
+							window.location.assign(reloadPath);
 						} }
 					>
 						Reload the game

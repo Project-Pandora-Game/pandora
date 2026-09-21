@@ -1,4 +1,4 @@
-import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS } from 'pandora-common';
+import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, GetLogger } from 'pandora-common';
 import type { IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { ArrayToBase64, ArrayToBase64Url, Base64UrlToArray } from './helpers.ts';
 
@@ -51,53 +51,56 @@ export function IsPasskeySupported(): boolean {
 }
 
 export async function IsPasskeyConditionalMediationSupported(): Promise<boolean> {
-	if (!IsPasskeySupported() || PublicKeyCredential.isConditionalMediationAvailable == null)
+	if (!IsPasskeySupported() || globalThis.PublicKeyCredential.isConditionalMediationAvailable == null)
 		return false;
 
-	return await PublicKeyCredential.isConditionalMediationAvailable();
+	return await globalThis.PublicKeyCredential.isConditionalMediationAvailable();
 }
 
 export async function SignalUnknownPasskeyCredential(rpId: string, credentialId: string): Promise<void> {
-	if (PublicKeyCredential.signalUnknownCredential == null)
+	if (!IsPasskeySupported() || globalThis.PublicKeyCredential.signalUnknownCredential == null)
 		return;
 
 	try {
-		await PublicKeyCredential.signalUnknownCredential({
+		await globalThis.PublicKeyCredential.signalUnknownCredential({
 			credentialId,
 			rpId,
 		});
-	} catch {
+	} catch (err) {
+		GetLogger('SignalUnknownPasskeyCredential').warning('Error signaling unknown passkey:', err);
 		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
 	}
 }
 
 export async function SignalAllAcceptedPasskeyCredentials(rpId: string, userId: string, passkeys: { credentialId: string; }[]): Promise<void> {
-	if (PublicKeyCredential.signalAllAcceptedCredentials == null)
+	if (!IsPasskeySupported() || globalThis.PublicKeyCredential.signalAllAcceptedCredentials == null)
 		return;
 
 	try {
-		await PublicKeyCredential.signalAllAcceptedCredentials({
+		await globalThis.PublicKeyCredential.signalAllAcceptedCredentials({
 			allAcceptedCredentialIds: passkeys.map((passkey) => passkey.credentialId),
 			rpId,
 			userId,
 		});
-	} catch {
+	} catch (err) {
+		GetLogger('SignalAllAcceptedPasskeyCredentials').warning('Error signaling accepted passkeys:', err);
 		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
 	}
 }
 
 export async function SignalCurrentPasskeyUserDetails(rpId: string, userId: string, name: string, displayName: string): Promise<void> {
-	if (PublicKeyCredential.signalCurrentUserDetails == null)
+	if (!IsPasskeySupported() || globalThis.PublicKeyCredential.signalCurrentUserDetails == null)
 		return;
 
 	try {
-		await PublicKeyCredential.signalCurrentUserDetails({
+		await globalThis.PublicKeyCredential.signalCurrentUserDetails({
 			displayName,
 			name,
 			rpId,
 			userId,
 		});
-	} catch {
+	} catch (err) {
+		GetLogger('SignalCurrentPasskeyUserDetails').warning('Error signaling passkey user details:', err);
 		// Browser/passkey-provider cleanup is best-effort and should not affect login UX.
 	}
 }
@@ -130,7 +133,7 @@ export async function GetPasskeyAssertion(start: PasskeyAssertionStart, options?
 		signal: options?.signal,
 	});
 
-	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse) || credential.type !== 'public-key')
+	if (!(credential instanceof globalThis.PublicKeyCredential) || !(credential.response instanceof AuthenticatorAssertionResponse) || credential.type !== 'public-key')
 		throw new Error('Unexpected passkey assertion response');
 
 	const prf = credential.getClientExtensionResults();
@@ -177,7 +180,7 @@ export async function CreatePasskeyCredential(start: PasskeyRegisterStart): Prom
 		},
 	});
 
-	if (!(credential instanceof PublicKeyCredential) || !(credential.response instanceof AuthenticatorAttestationResponse) || credential.type !== 'public-key')
+	if (!(credential instanceof globalThis.PublicKeyCredential) || !(credential.response instanceof AuthenticatorAttestationResponse) || credential.type !== 'public-key')
 		throw new Error('Unexpected passkey registration response');
 
 	const publicKey = credential.response.getPublicKey();
@@ -221,7 +224,7 @@ async function GetPrfSecretForNewCredential(start: PasskeyRegisterStart, credent
 		},
 	});
 
-	if (!(assertion instanceof PublicKeyCredential) || !(assertion.response instanceof AuthenticatorAssertionResponse))
+	if (!(assertion instanceof globalThis.PublicKeyCredential) || !(assertion.response instanceof AuthenticatorAssertionResponse))
 		throw new Error('Unexpected passkey PRF assertion response');
 
 	const prf = assertion.getClientExtensionResults();

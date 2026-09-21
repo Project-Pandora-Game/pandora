@@ -372,6 +372,9 @@ export function SetupAutomeshLayerSelected({
 		const imagesTmp = new Set<string>();
 
 		for (const mapped of Object.values(imageMap)) {
+			if (mapped == null)
+				continue;
+
 			for (const i of mapped) {
 				if (i) {
 					imagesTmp.add(i);

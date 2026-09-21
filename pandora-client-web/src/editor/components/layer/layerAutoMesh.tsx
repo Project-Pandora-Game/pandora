@@ -354,7 +354,7 @@ function LayerAutomeshGraphicalLayers({ layer }: {
 
 			// Update all images
 			for (const image of Object.values(d.imageMap)) {
-				if (image.length < d.graphicalLayers.length) {
+				if (image != null && image.length < d.graphicalLayers.length) {
 					image.push('');
 				}
 			}
@@ -383,7 +383,7 @@ function LayerAutomeshGraphicalLayers({ layer }: {
 									d.graphicalLayers.splice(index, 1);
 
 									for (const image of Object.values(d.imageMap)) {
-										if (image.length === previousLength) {
+										if (image != null && image.length === previousLength) {
 											image.splice(index, 1);
 										}
 									}
@@ -528,9 +528,11 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 			for (const combination of (existingVariants.length > 0 ? GenerateMultipleListsFullJoin(existingVariants) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]])) {
 				const oldIdParts = combination.map((c) => c.id);
 				const oldId = oldIdParts.join(':');
-				for (const newVariant of newVariants) {
-					const newId = existingVariants.length > 0 ? ([...oldIdParts, newVariant.id]).join(':') : newVariant.id;
-					newImages[newId] = d.imageMap[oldId];
+				if (Object.hasOwn(d.imageMap, oldId) && d.imageMap[oldId] != null) {
+					for (const newVariant of newVariants) {
+						const newId = existingVariants.length > 0 ? ([...oldIdParts, newVariant.id]).join(':') : newVariant.id;
+						newImages[newId] = d.imageMap[oldId];
+					}
 				}
 			}
 
@@ -578,7 +580,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 				}
 				const oldId = oldIdParts.join(':');
 				const newId = newIdParts.join(':');
-				if (Object.hasOwn(d.imageMap, oldId)) {
+				if (Object.hasOwn(d.imageMap, oldId) && d.imageMap[oldId] != null) {
 					Assert(!Object.hasOwn(newImages, newId));
 					newImages[newId] = d.imageMap[oldId];
 				}
@@ -618,7 +620,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsWornLayer
 				const oldIdParts = newIdParts.toSpliced(startIndex, 0, keepId);
 				const oldId = oldIdParts.join(':');
 				const newId = newIdParts.join(':');
-				if (Object.hasOwn(d.imageMap, oldId)) {
+				if (Object.hasOwn(d.imageMap, oldId) && d.imageMap[oldId] != null) {
 					Assert(!Object.hasOwn(newImages, newId));
 					newImages[newId] = d.imageMap[oldId];
 				}

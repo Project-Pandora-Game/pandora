@@ -27,7 +27,7 @@ export interface GameContextProviderProps extends ChildrenProps {
 export function GameContextProvider({ children, serviceManager }: GameContextProviderProps): ReactElement {
 	return (
 		<DebugContextProvider>
-			<RootErrorBoundary>
+			<RootErrorBoundary reloadPath='/'>
 				<ServiceManagerContextProvider serviceManager={ serviceManager }>
 					<ChatInputContextProvider>
 						<MiscProviders>

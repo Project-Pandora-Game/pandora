@@ -274,7 +274,7 @@ export function RoomGraphicsInteractive({
 						} if (roomSceneMode.mode === 'moveCharacter') {
 							const character = characters.find((c) => c.id === roomSceneMode.characterId);
 							const characterState = globalState.characters.get(roomSceneMode.characterId);
-							if (character == null || characterState == null)
+							if (character == null || characterState == null || characterState.currentRoom !== room.id)
 								return null;
 
 							return (
@@ -291,7 +291,7 @@ export function RoomGraphicsInteractive({
 						} else if (roomSceneMode.mode === 'poseCharacter') {
 							const character = characters.find((c) => c.id === roomSceneMode.characterId);
 							const characterState = globalState.characters.get(roomSceneMode.characterId);
-							if (character == null || characterState == null)
+							if (character == null || characterState == null || characterState.currentRoom !== room.id)
 								return null;
 
 							return (

@@ -51,7 +51,7 @@ function EditorErrorBoundary({ children }: ChildrenProps): ReactElement {
 	}, [context]);
 
 	return (
-		<RootErrorBoundary>
+		<RootErrorBoundary reloadPath='/editor/'>
 			{ children }
 		</RootErrorBoundary>
 	);

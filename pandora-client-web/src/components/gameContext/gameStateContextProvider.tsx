@@ -2,6 +2,7 @@ import { freeze, Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import {
 	ActionSpaceContext,
+	Assert,
 	AssertNever,
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateClientBundle,
@@ -30,6 +31,7 @@ import {
 	type AppearanceAction,
 	type AppearanceActionContext,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
+	type BotPublicData,
 	type CurrentSpaceInfo,
 	type GameStateUpdate,
 	type ITypedEventEmitter,
@@ -102,6 +104,7 @@ export interface GameState extends IChatService, ITypedEventEmitter<GameStateEve
 	readonly characters: ReadonlyObservable<readonly Character<ICharacterRoomData>[]>;
 
 	readonly currentSpace: ReadonlyObservable<CurrentSpaceInfo>;
+	readonly botState: ReadonlyObservable<BotPublicData | null>;
 	readonly characterModifierEffects: ReadonlyObservable<Immutable<SpaceCharacterModifierEffectData>>;
 
 	doImmediateAction(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'];
@@ -137,6 +140,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 	public readonly characters: Observable<readonly CharacterImpl<ICharacterRoomData>[]>;
 	public readonly characterModifierEffects: Observable<Immutable<SpaceCharacterModifierEffectData>>;
 	public readonly player: PlayerCharacterImpl;
+	public readonly botState: Observable<BotPublicData | null>;
 
 	public get playerId() {
 		return this.player?.data.id;
@@ -186,11 +190,12 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		this.player = new PlayerCharacterImpl(characterData);
 		this.characters = new Observable<readonly CharacterImpl<ICharacterRoomData>[]>([this.player]);
 
-		const { id, info, characters, characterModifierEffects } = space;
+		const { id, info, characters, characterModifierEffects, bot } = space;
 		this.currentSpace = new Observable<CurrentSpaceInfo>({
 			id,
 			config: info,
 		});
+		this.botState = new Observable<BotPublicData | null>(freeze(bot, true));
 		if (this._restore.value?.spaceId === id) {
 			this.messages.value = this._restore.value.messages;
 			const now = Date.now();
@@ -271,11 +276,12 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 
 	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
 		const oldSpace = this.currentSpace.value;
-		const { id, info, characters, characterModifierEffects, chatStatus } = data.space;
+		const { id, info, characters, characterModifierEffects, chatStatus, bot } = data.space;
 		this.currentSpace.value = {
 			id,
 			config: info,
 		};
+		this.botState.value = freeze(bot, true);
 		if (oldSpace.id !== id) {
 			logger.debug('Changed space');
 			this._onSpaceChange();
@@ -321,7 +327,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		if (!this.player) {
 			throw new Error('Cannot update room when player is not loaded');
 		}
-		const { info, globalState, join, leave, characters, characterModifierEffects } = data;
+		const { info, globalState, join, leave, characters, characterModifierEffects, bot, botUpdate } = data;
 		if (join?.id === this.playerId) {
 			return; // Ignore self-join
 		}
@@ -335,6 +341,22 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 						...info,
 					},
 				};
+			});
+		}
+		if (bot !== undefined) {
+			Assert(botUpdate === undefined, 'Received bot update at the same time as full bot data');
+			this.botState.value = freeze(bot, true);
+		} else if (botUpdate !== undefined) {
+			this.botState.produce((oldValue): BotPublicData | null => {
+				if (oldValue == null) {
+					logger.error('Received bot data update while we have no bot data');
+					return null;
+				}
+
+				return freeze({
+					...oldValue,
+					...freeze(botUpdate, true),
+				});
 			});
 		}
 		if (join) {

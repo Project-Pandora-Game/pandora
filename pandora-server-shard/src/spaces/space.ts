@@ -300,7 +300,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => c.getRoomData()),
 			characterModifierEffects: this.getCharacterModifierEffects(),
-			bot: this.bot?.getPublicData() ?? null,
+			bot: this.bot?.isValid ? this.bot.getPublicData() : null,
 			chatStatus,
 		};
 	}

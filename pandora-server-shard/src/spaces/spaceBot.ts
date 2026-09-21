@@ -83,9 +83,14 @@ export class SpaceBot {
 			Assert(!this.invalid);
 			Assert(this._connection == null, 'Attempt to set connection while another is already set');
 			this.logger.debug(`Connected (${connection.id})`);
+			// Send connect update right before connection, so bot does not get it before its load
+			this._sendDataUpdate({ connected: true });
 			this._connection = connection;
 		} else {
 			this._connection = null;
+			if (this.isValid) {
+				this._sendDataUpdate({ connected: false });
+			}
 		}
 	}
 
@@ -115,6 +120,7 @@ export class SpaceBot {
 	public getPublicData(): BotPublicData {
 		return {
 			bot: this.state.bot,
+			connected: this._connection != null,
 		};
 	}
 
@@ -124,13 +130,15 @@ export class SpaceBot {
 		};
 	}
 
-	private _sendDataUpdate(_updatedData: Partial<BotPublicData>): void {
+	private _sendDataUpdate(updatedData: Partial<BotPublicData>): void {
+		Assert(this.isValid);
 		this.space.sendUpdateToAllCharacters({
-			bot: this.getPublicData(), // TODO: Figure out how to do delta updates here
+			botUpdate: updatedData,
 		});
 	}
 
 	private _sendPrivateDataUpdate(updatedData: Partial<Omit<BotPrivateData, keyof BotPublicData>>): void {
+		Assert(this.isValid);
 		this.connection?.sendMessage('updateBotPrivateData', updatedData);
 	}
 }

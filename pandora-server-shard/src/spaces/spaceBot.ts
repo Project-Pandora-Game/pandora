@@ -44,8 +44,6 @@ export class SpaceBot {
 		this.logger = GetLogger('SpaceBot', `[SpaceBot ${state.bot}(${space.id})]`);
 		this._state = state;
 
-		this.setConnection(null);
-
 		// Load into the space
 		Assert(this.isValid, 'Bot state should not load while invalid');
 

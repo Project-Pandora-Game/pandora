@@ -3,7 +3,7 @@ import { BaseServicesDefinition, Satisfies, ServiceManager, type CharacterId } f
 import type { IDirectoryCharacterConnectionInfo } from 'pandora-common/networking/api/directory_client';
 import { ShardConnectorServiceProvider, type ShardConnector } from '../networking/shardConnector.ts';
 import type { ClientServices } from './clientServices.ts';
-import { BotInteractionsServiceProvider, type BotInteractionsService } from './gameLogic/botInteractionsService.ts';
+import { BotInteractionsServiceProvider, type BotInteractionsService } from './gameLogic/bot/botInteractionsService.ts';
 import { GameStateManagerServiceProvider, type IGameStateManager } from './gameLogic/gameStateManager.ts';
 
 /**

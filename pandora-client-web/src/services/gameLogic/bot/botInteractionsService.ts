@@ -25,11 +25,11 @@ import {
 } from 'pandora-common';
 import type { BotCommandArgumentDescriptor, BotCommandArgumentProcessor, BotCommandStructureResult, BotId } from 'pandora-common/bots';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import type { ChatInputCommandRunner } from '../../ui/components/chat/chatInputContext.ts';
-import { CommandSelectorCharacter, type ICommandClientNeededContext } from '../../ui/components/chat/commandsHelpers.ts';
-import type { AutocompleteDisplayData } from '../../ui/components/chat/commandsProcessor.ts';
-import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../clientGameLogicServices.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import type { ChatInputCommandRunner } from '../../../ui/components/chat/chatInputContext.ts';
+import { CommandSelectorCharacter, type ICommandClientNeededContext } from '../../../ui/components/chat/commandsHelpers.ts';
+import type { AutocompleteDisplayData } from '../../../ui/components/chat/commandsProcessor.ts';
+import type { ClientGameLogicServices, ClientGameLogicServicesDependencies } from '../../clientGameLogicServices.ts';
 
 type BotInteractionsServiceConfig = Satisfies<{
 	dependencies: Pick<ClientGameLogicServices, 'shardConnector' | 'gameState'> & Pick<ClientGameLogicServicesDependencies, never>;

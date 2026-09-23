@@ -58,7 +58,7 @@
 		"@types/express": "5.0.6",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "24.13.4",
+		"@types/node": "24.13.5",
 		"@types/wtfnode": "0.10.0",
 		"discord-api-types": "0.38.55",
 		"nodemon": "3.1.14",

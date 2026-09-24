@@ -43,9 +43,6 @@ async function StopGracefully(): Promise<void> {
 	await DestroyService(DiscordBot);
 	await DestroyService(GitHubVerifier);
 	await DestroyService(BetaRegistrationService);
-	// Stop sending status updates
-	await DestroyService(ConnectionManagerApi);
-	await DestroyService(ConnectionManagerClient);
 	// Unload all shards
 	await DestroyService(ShardManager);
 	// Unload all characters
@@ -58,6 +55,9 @@ async function StopGracefully(): Promise<void> {
 	// Unload all accounts (must have characters & bots unloaded first)
 	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
+	// Stop sending status updates
+	await DestroyService(ConnectionManagerApi);
+	await DestroyService(ConnectionManagerClient);
 	// Disconnect database
 	await DestroyService(GetDatabaseService());
 	destroying = '[done]';

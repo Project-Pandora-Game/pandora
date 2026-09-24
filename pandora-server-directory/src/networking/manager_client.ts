@@ -101,6 +101,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			clearInterval(this.statusUpdateInterval);
 			this.statusUpdateInterval = undefined;
 		}
+
+		this._throttledOnSpaceListChange.cancel();
 	}
 
 	private statusUpdateInterval: NodeJS.Timeout | undefined;

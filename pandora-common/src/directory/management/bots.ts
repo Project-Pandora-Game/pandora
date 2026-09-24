@@ -1,7 +1,7 @@
 import * as z from 'zod';
-import { BotDefinitionSchema } from '../../bots/botDefinition.ts';
+import { BotPublicInfoSchema } from '../../bots/botDefinition.ts';
 
-export const ManagementBotInfoSchema = BotDefinitionSchema.extend({
+export const ManagementBotInfoSchema = BotPublicInfoSchema.extend({
 	created: z.int().nonnegative(),
 	updated: z.int().nonnegative(),
 	online: z.boolean(),

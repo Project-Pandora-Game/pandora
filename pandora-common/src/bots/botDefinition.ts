@@ -34,6 +34,15 @@ export const BotDefinitionSchema: z.ZodObject<ZodObjectShape<BotDefinition>> = z
 	private: z.boolean(),
 });
 
+/** Information about bot that is publicly visible */
+export interface BotPublicInfo extends BotDefinition {
+	ownerAccountName: string;
+}
+/** Information about bot that is publicly visible */
+export const BotPublicInfoSchema: z.ZodObject<ZodObjectShape<BotPublicInfo>> = BotDefinitionSchema.extend({
+	ownerAccountName: z.string(),
+});
+
 /** Developer-specified configuration of a bot */
 export type BotConfig = Pick<BotDefinition, 'name' | 'description' | 'requestedPermissions' | 'private'>;
 export const BotConfigSchema: z.ZodObject<ZodObjectShape<BotConfig>> = BotDefinitionSchema.pick({

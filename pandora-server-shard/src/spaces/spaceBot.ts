@@ -114,6 +114,9 @@ export class SpaceBot {
 	public getPublicData(): BotPublicData {
 		return {
 			bot: this.state.bot,
+			name: this.state.name,
+			creatorId: this.state.creatorId,
+			creatorName: this.state.creatorName,
 			connected: this._connection != null,
 		};
 	}

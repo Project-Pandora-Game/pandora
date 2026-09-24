@@ -441,6 +441,9 @@ export class Shard {
 				spaceSwitchStatus: CloneDeepMutable(s.spaceSwitchStatus),
 				botState: config.bot != null && s.assignedBot != null && s.assignedBotSecret != null ? {
 					bot: s.assignedBot.id,
+					name: s.assignedBot.displayName,
+					creatorId: s.assignedBot.ownerAccountId,
+					creatorName: s.assignedBot.ownerAccount.displayName,
 					permissions: config.bot.permissions,
 					connectSecret: s.assignedBotSecret,
 				} : null,

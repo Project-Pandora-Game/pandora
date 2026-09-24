@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { AccountIdSchema, type AccountId } from '../account/account.ts';
 import { AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
 import { BotIdSchema, type BotId } from '../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
@@ -12,11 +13,22 @@ import { SpaceClientInfoSchema } from './spaceData.ts';
 /** Data about bot visible to everyone */
 export interface BotPublicData {
 	bot: BotId;
+	/** Name of the bot */
+	name: string;
+	/** Account id of the bot's creator. */
+	creatorId: AccountId;
+	/** Account display name of the bot's creator. */
+	creatorName: string;
+
+	/** Whether the bot is currently connected */
 	connected: boolean;
 }
 /** Data about bot visible to everyone */
 export const BotPublicDataSchema: z.ZodObject<ZodObjectShape<BotPublicData>> = z.object({
 	bot: BotIdSchema,
+	name: z.string(),
+	creatorId: AccountIdSchema,
+	creatorName: z.string(),
 	connected: z.boolean(),
 });
 

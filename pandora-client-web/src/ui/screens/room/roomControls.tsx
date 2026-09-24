@@ -51,6 +51,7 @@ import { SpaceStateConfigurationUi } from '../spaceConfiguration/spaceStateConfi
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { ROOM_CONTEXT_MENU_OFFSET, useRoomScreenContext } from './roomContext.tsx';
 import './roomControls.scss';
+import { RoomControlsBotInfo } from './roomControlsBot.tsx';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomDeviceButtons, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
@@ -159,6 +160,7 @@ export function RoomControls(): ReactElement | null {
 			</Row>
 			{ multipleRooms ? null : '\u00a0' }
 			<SpaceVisibilityWarning />
+			<RoomControlsBotInfo />
 			<Row alignX='space-between' wrap>
 				<span>
 					{ characterCount > 1 ?

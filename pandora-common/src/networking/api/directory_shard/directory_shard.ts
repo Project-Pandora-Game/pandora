@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { AccountIdSchema, type AccountId } from '../../../account/account.ts';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../../../account/index.ts';
 import { BotIdSchema, PandoraBotSpacePermissionListSchema, type BotId, type PandoraBotSpacePermissionList } from '../../../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../../../character/index.ts';
@@ -33,6 +34,13 @@ export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionS
 export interface ShardSpaceBotState {
 	/** Bot assigned to the space. */
 	bot: BotId;
+	/** Name of the bot */
+	name: string;
+	/** Account id of the bot's creator. */
+	creatorId: AccountId;
+	/** Account display name of the bot's creator. */
+	creatorName: string;
+
 	/** Actual effective permissions the bot has. */
 	permissions: PandoraBotSpacePermissionList;
 	/** Connection secret for bot's connections. */
@@ -40,6 +48,9 @@ export interface ShardSpaceBotState {
 }
 export const ShardSpaceBotStateSchema: z.ZodType<ShardSpaceBotState> = z.object({
 	bot: BotIdSchema,
+	name: z.string(),
+	creatorId: AccountIdSchema,
+	creatorName: z.string(),
 	permissions: PandoraBotSpacePermissionListSchema,
 	connectSecret: z.string(),
 });

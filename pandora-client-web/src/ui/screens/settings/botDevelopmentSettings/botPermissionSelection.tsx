@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { KnownObject } from 'pandora-common';
-import { PANDORA_BOT_SPACE_PERMISSIONS, type PandoraBotSpacePermissionList } from 'pandora-common/bots';
+import { PANDORA_BOT_SPACE_PASSIVE_PERMISSIONS, PANDORA_BOT_SPACE_PERMISSIONS, type PandoraBotSpacePermissionList } from 'pandora-common/bots';
 import { Fragment, useId, type ReactElement } from 'react';
 import { Checkbox } from '../../../../common/userInteraction/checkbox.tsx';
 import { Column, Row } from '../../../../components/common/container/container.tsx';
@@ -57,8 +57,17 @@ export function BotSpacePermissions({ selectedPermissions, filterPermissions, on
 					</Fragment>
 				)) }
 				{ filteredPermissions?.length === 0 ? (
-					<span>[ None ]</span>
+					<span className='headerRow'>[ None ]</span>
 				) : null }
+				<span className='headerRow'>Additionally, all bots can:</span>
+				{ PANDORA_BOT_SPACE_PASSIVE_PERMISSIONS.map(({ name, description }, index) => (
+					<Fragment key={ index }>
+						<span>{ name }</span>
+						<div>
+							{ description }
+						</div>
+					</Fragment>
+				)) }
 			</GridContainer>
 		</Column>
 	);

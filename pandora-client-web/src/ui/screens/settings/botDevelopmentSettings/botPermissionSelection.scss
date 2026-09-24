@@ -4,4 +4,9 @@
 			text-decoration: line-through;
 		}
 	}
+
+	.headerRow {
+		margin-top: 0.5em;
+		grid-column: span 2;
+	}
 }

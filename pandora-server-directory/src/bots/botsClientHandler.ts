@@ -11,7 +11,7 @@ export const BotsClientHandler = {
 		const accountId = connection.account?.id;
 
 		const bots = (await botManager.loadAllBots())
-			.filter((it) => it.isPublic || it.ownerAccount === accountId);
+			.filter((it) => it.isPublic || it.ownerAccountId === accountId);
 
 		return {
 			bots: bots.map((it) => it.getPublicDefinition()),
@@ -36,7 +36,7 @@ export const BotsClientHandler = {
 		const bots = await botManager.loadAllBotsOwnedBy(account.id);
 		return {
 			result: 'ok',
-			bots: bots.map((it) => it.getPublicDefinition()),
+			bots: bots.map((it) => it.getDefinition()),
 		};
 	},
 	botDevelopmentCreate: async ({ config }, connection): IClientDirectoryPromiseResult['botDevelopmentCreate'] => {
@@ -66,7 +66,7 @@ export const BotsClientHandler = {
 			return { result: 'sudoRequired' };
 
 		const bot = await botManager.loadBotById(id);
-		if (bot == null || bot.ownerAccount !== account.id)
+		if (bot == null || bot.ownerAccountId !== account.id)
 			return { result: 'notFound' };
 
 		const result = await bot.updateConfig(config);
@@ -84,7 +84,7 @@ export const BotsClientHandler = {
 			return { result: 'sudoRequired' };
 
 		const bot = await botManager.loadBotById(id);
-		if (bot == null || bot.ownerAccount !== account.id)
+		if (bot == null || bot.ownerAccountId !== account.id)
 			return { result: 'notFound' };
 
 		await bot.delete();

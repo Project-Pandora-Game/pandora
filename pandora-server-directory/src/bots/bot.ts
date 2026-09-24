@@ -14,8 +14,9 @@ import {
 	type ManagementBotInfo,
 	type SpaceId,
 } from 'pandora-common';
-import type { BotConfig, BotDefinition, BotDirectoryStateInfo, BotId, BotSpaceStateInfo } from 'pandora-common/bots';
+import type { BotConfig, BotDefinition, BotDirectoryStateInfo, BotId, BotPublicInfo, BotSpaceStateInfo } from 'pandora-common/bots';
 import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
+import type { Account } from '../account/account.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseBot, DatabaseBotUpdate } from '../database/databaseStructure/bots.ts';
 import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
@@ -52,7 +53,10 @@ export class Bot extends TypedEventEmitter<{
 		return this.data.name;
 	}
 
-	public get ownerAccount(): AccountId {
+	/** Account that owns the bot */
+	public readonly ownerAccount: Account;
+
+	public get ownerAccountId(): AccountId {
 		return this.data.ownerAccount;
 	}
 
@@ -64,15 +68,24 @@ export class Bot extends TypedEventEmitter<{
 		return !this.data.private;
 	}
 
-	constructor(data: DatabaseBot) {
+	constructor(data: DatabaseBot, ownerAccount: Account) {
+		Assert(ownerAccount.id === data.ownerAccount);
+
 		super();
 		this.logger = GetLogger('Bot', `[Bot ${data.id}]`);
 		this.lastActivity = Date.now();
 		this.data = data;
+		this.ownerAccount = ownerAccount;
+
+		// Register the loaded bot to the account
+		Assert(!ownerAccount.loadedBots.has(this.id));
+		ownerAccount.loadedBots.set(this.id, this);
 	}
 
 	public onUnload(): void {
-		// Nothing here yet
+		// Unregister the loaded bot from the account
+		Assert(this.ownerAccount.loadedBots.get(this.id) === this);
+		this.ownerAccount.loadedBots.delete(this.id);
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -89,8 +102,8 @@ export class Bot extends TypedEventEmitter<{
 		return this.associatedApiConnections.hasClients();
 	}
 
-	/** Build account part of `connectionState` update message for connection */
-	public getPublicDefinition(): BotDefinition {
+	/** Get bot's definition */
+	public getDefinition(): BotDefinition {
 		return {
 			id: this.data.id,
 			name: this.data.name,
@@ -98,6 +111,14 @@ export class Bot extends TypedEventEmitter<{
 			ownerAccount: this.data.ownerAccount,
 			requestedPermissions: this.data.requestedPermissions.slice(),
 			private: this.data.private,
+		};
+	}
+
+	/** Get bot's public definition */
+	public getPublicDefinition(): BotPublicInfo {
+		return {
+			...this.getDefinition(),
+			ownerAccountName: this.ownerAccount.displayName,
 		};
 	}
 

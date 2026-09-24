@@ -3,7 +3,7 @@ import { PandoraAccessTokenIdSchema, PandoraAccessTokenInfoSchema, PandoraAccess
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../../../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../../../assets/item/unified.ts';
 import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
-import { BotConfigSchema, BotDefinitionSchema } from '../../../bots/botDefinition.ts';
+import { BotConfigSchema, BotDefinitionSchema, BotPublicInfoSchema } from '../../../bots/botDefinition.ts';
 import { CharacterSelfInfoSchema } from '../../../character/characterData.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../../../directory/management/account.ts';
@@ -924,7 +924,7 @@ export const ClientDirectorySchema = {
 	botListPublic: {
 		request: z.object({}),
 		response: z.object({
-			bots: BotDefinitionSchema.array(),
+			bots: BotPublicInfoSchema.array(),
 		}),
 	},
 	botGetBotDetails: {
@@ -934,7 +934,7 @@ export const ClientDirectorySchema = {
 		response: z.discriminatedUnion('result', [
 			z.object({
 				result: z.literal('ok'),
-				details: BotDefinitionSchema,
+				details: BotPublicInfoSchema,
 			}),
 			z.object({
 				result: z.literal('notFound'),

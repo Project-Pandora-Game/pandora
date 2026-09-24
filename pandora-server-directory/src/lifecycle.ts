@@ -1,6 +1,7 @@
 import { GetLogger, ServerService, logConfig } from 'pandora-common';
 import wtfnode from 'wtfnode';
 import { accountManager } from './account/accountManager.ts';
+import { botManager } from './bots/botManager.ts';
 import { GetDatabaseService } from './database/databaseProvider.ts';
 import { ConnectionManagerApi } from './networking/api/socket/manager_api.ts';
 import { HttpServer } from './networking/httpServer.ts';
@@ -36,7 +37,7 @@ export function IsStopping(): boolean {
 async function StopGracefully(): Promise<void> {
 	// Stop listening for IPC
 	process.off('message', IPCMessageListener);
-	// Stop HTTP server
+	// Stop HTTP server and kill all connections
 	await DestroyService(HttpServer);
 	// Stop APIs
 	await DestroyService(DiscordBot);
@@ -52,7 +53,9 @@ async function StopGracefully(): Promise<void> {
 	await accountManager.onDestroyCharacters();
 	// Unload all spaces
 	await DestroyService(SpaceManager);
-	// Unload all accounts
+	// Unload all bots (must have spaces unloaded first)
+	await DestroyService(botManager);
+	// Unload all accounts (must have characters & bots unloaded first)
 	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
 	// Disconnect database

@@ -5,6 +5,7 @@ import { CreateRandomBotId, type BotConfig, type BotId } from 'pandora-common/bo
 import promClient from 'prom-client';
 import * as z from 'zod';
 import type { Account } from '../account/account.ts';
+import { accountManager } from '../account/accountManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DATABASE_BOT_UPDATEABLE_PROPERTIES, DatabaseBotSchema, type DatabaseBot } from '../database/databaseStructure/bots.ts';
 import { AUDIT_LOG } from '../logging.ts';
@@ -116,8 +117,15 @@ export class BotManager implements ServerService {
 			logger.warning(`Bot ${parsedData.data.id} has invalid data, fixing...\n`, diff);
 			await GetDatabase().updateBotData(parsedData.data.id, pick(parsedData.data, ...DATABASE_BOT_UPDATEABLE_PROPERTIES));
 		}
+		// Load account the bot belongs to
+		const ownerAccount = await accountManager.loadAccountById(parsedData.data.ownerAccount);
+		if (ownerAccount == null) {
+			logger.warning(`Failed to load bot "${rawData.id}": Owner account not found`);
+			return null;
+		}
+		ownerAccount.touch();
 
-		const bot = new Bot(parsedData.data);
+		const bot = new Bot(parsedData.data, ownerAccount);
 		this._onlineBots.add(bot);
 		loadedBotsMetric.set(this._onlineBots.size);
 		logger.debug(`Loaded bot "${bot.id}"`);

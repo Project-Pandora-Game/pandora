@@ -113,17 +113,25 @@ export const HttpServer = new class HttpServer implements ServerService {
 		});
 	}
 
-	public onDestroy(): void {
+	public async onDestroy(): Promise<void> {
+		let closePromise: Promise<void> | undefined;
 		if (this._server) {
-			this._server.unref();
-			this._server.close((err) => {
-				if (err) {
-					this._logger.error('Failed to close HTTP server', err);
-				} else {
-					this._logger.info('HTTP server closed');
-				}
+			const srv = this._server;
+			srv.unref();
+			closePromise = new Promise((resolve, reject) => {
+				srv.close((err) => {
+					if (err) {
+						this._logger.error('Failed to close HTTP server', err);
+						reject(new Error('Failed to close HTTP server', { cause: err }));
+					} else {
+						this._logger.info('HTTP server closed');
+						resolve();
+					}
+				});
 			});
 		}
 		this._activeConnections.forEach((socket) => socket.destroy());
+
+		await closePromise;
 	}
 };

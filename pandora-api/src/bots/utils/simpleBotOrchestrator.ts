@@ -85,7 +85,6 @@ export class SimpleBotOrchestrator {
 		});
 
 		// Register bot with directory server
-		// TODO: Handle server reconnects... somehow
 		(await this.api.bots.botRunRegister(this.bot))
 			.expect('Failed to register bot');
 

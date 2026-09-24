@@ -1,0 +1,55 @@
+@use '../../../styles/common';
+
+.RoomControlsBotInfo {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid common.$theme-room-controls-room-border;
+		border-radius: 0.5em;
+		margin-bottom: 0.5em;
+
+		@include common.forcedColors {
+			background: Canvas;
+			color: CanvasText;
+			border-color: common.$forcedColors-separator;
+		}
+
+		>legend {
+			display: flex;
+			flex-flow: row wrap;
+			border: 1px solid common.$theme-room-controls-room-border;
+			border-radius: 0.5em;
+			overflow: hidden;
+			padding: 0;
+			margin: 0 auto;
+
+			background: common.$theme-room-controls-room-border;
+			gap: 1px;
+
+			@include common.forcedColors {
+				background: common.$forcedColors-separator;
+				border-color: common.$forcedColors-separator;
+			}
+
+			>span, >div {
+				padding: 0.15em 0.4em;
+				border: 2px solid transparent;
+				flex-grow: 1;
+
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+
+				background: common.$theme-room-controls-character-background;
+				color: common.$theme-room-controls-character-text;
+
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+				}
+			}
+
+			.help-button {
+				margin: 0;
+			}
+		}
+	}

@@ -58,6 +58,26 @@ const PANDORA_BOT_SPACE_PERMISSIONS_DEFINITION = {
 	},
 } as const satisfies Record<string, PandoraBotSpacePermissionDefinition>;
 
+/** List of things that bots can ALWAYS do, for transparency */
+export const PANDORA_BOT_SPACE_PASSIVE_PERMISSIONS: { name: string; description: string; }[] = [
+	{
+		name: 'Read space\'s metadata',
+		description: 'Read info about the space, such as its unique id, name, owners, admin/allow/ban lists, and other settings.',
+	},
+	{
+		name: 'Read space\'s state',
+		description: 'Read the state of the space, including all rooms and all items or devices the rooms contain.',
+	},
+	{
+		name: 'Read space\'s characters',
+		description: 'Read which characters are present in the space, basic info about them, and their state, including body shape and worn items.',
+	},
+	{
+		name: 'Register custom commands',
+		description: `Register custom chat commands that can be used by using '!' instead of '/'.`,
+	},
+];
+
 // Both validate and export the config
 export const PANDORA_BOT_SPACE_PERMISSIONS: Readonly<Record<PandoraBotSpacePermission, PandoraBotSpacePermissionDefinition>> = PANDORA_BOT_SPACE_PERMISSIONS_DEFINITION;
 freeze(PANDORA_BOT_SPACE_PERMISSIONS, true);

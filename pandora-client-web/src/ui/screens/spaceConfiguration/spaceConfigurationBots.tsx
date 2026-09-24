@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { AssertNever, AssertNotNullable, GetLogger, Option, type SpaceBotAssignmentConfig } from 'pandora-common';
-import type { BotDefinition, BotId } from 'pandora-common/bots';
+import type { BotId, BotPublicInfo } from 'pandora-common/bots';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState, type ForwardedRef } from 'react';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
@@ -12,7 +12,6 @@ import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useResolveAccountName } from '../../../services/accountLogic/accountNameResolution.ts';
 import { RichTextDescription } from '../../components/richText/richText.tsx';
 import { BotSpacePermissions } from '../settings/botDevelopmentSettings/botPermissionSelection.tsx';
 import type { SpaceConfigurationTabProps } from './spaceConfiguration.tsx';
@@ -108,7 +107,7 @@ function SpaceConfigurationBotConfig({ canEdit, currentConfig, updateConfig }: {
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 
-	const [receivedDetails, setDetails] = useState<Option<BotDefinition | 'notFound' | 'error'>>(Option.None);
+	const [receivedDetails, setDetails] = useState<Option<BotPublicInfo | 'notFound' | 'error'>>(Option.None);
 	const details = receivedDetails.filter((it) => typeof it === 'string' || it?.id === currentConfig.bot);
 
 	const loadDetails = useCallback(() => {
@@ -171,11 +170,12 @@ function SpaceConfigurationBotConfig({ canEdit, currentConfig, updateConfig }: {
 		);
 	}
 
-	const { name, requestedPermissions } = details.value;
+	const { name, requestedPermissions, ownerAccount, ownerAccountName } = details.value;
 
 	return (
 		<>
 			<div>Selected bot: { name } (<code className='selectable-all'>{ currentConfig.bot }</code>)</div>
+			<span>Created by: { ownerAccountName } ({ ownerAccount })</span>
 			<Column gap='tiny'>
 				{ canEdit ? (
 					<>
@@ -222,9 +222,8 @@ function SpaceConfigurationBotSelectionDialog({ current, selectBot, close }: {
 	const directoryConnector = useDirectoryConnector();
 
 	const [selectedBot, setSelectedBot] = useState<BotId | null>(current);
-	const [receivedDetails, setDetails] = useState<Option<BotDefinition | 'error' | 'notFound'>>(Option.None);
+	const [receivedDetails, setDetails] = useState<Option<BotPublicInfo | 'error' | 'notFound'>>(Option.None);
 	const details = receivedDetails.filter((it) => typeof it === 'string' || it?.id === selectedBot);
-	const ownerName = useResolveAccountName(details.map((it) => typeof it !== 'string' ? it.ownerAccount : null).unwrap_or(null)) ?? '[unknown]';
 
 	const loadDetails = useCallback(() => {
 		if (selectedBot == null) {
@@ -275,7 +274,7 @@ function SpaceConfigurationBotSelectionDialog({ current, selectBot, close }: {
 					) : (
 						<>
 							<span>Bot: { details.value.name } (<code className='selectable-all'>{ details.value.id }</code>)</span>
-							<span>Created by: { ownerName } ({ details.value.ownerAccount })</span>
+							<span>Created by: { details.value.ownerAccountName } ({ details.value.ownerAccount })</span>
 							<Column gap='tiny'>
 								<span>Description:</span>
 								<RichTextDescription content={ details.value.description } />
@@ -314,7 +313,7 @@ export function BotSelectUi({ value, onChange, activeValue }: {
 	const directoryConnector = useDirectoryConnector();
 
 	const [nameFilter, setNameFilter] = useState('');
-	const [loadedBots, setLoadedBots] = useState<Immutable<BotDefinition[]> | null>(null);
+	const [loadedBots, setLoadedBots] = useState<Immutable<BotPublicInfo[]> | null>(null);
 
 	const activeBotRef = useRef<HTMLDivElement>(null);
 
@@ -336,7 +335,7 @@ export function BotSelectUi({ value, onChange, activeValue }: {
 	}, [loadBotList]);
 
 	/** Comparator for sorting backgrounds */
-	const botSortOrder = useCallback((a: Immutable<BotDefinition>, b: Immutable<BotDefinition>): number => {
+	const botSortOrder = useCallback((a: Immutable<BotPublicInfo>, b: Immutable<BotPublicInfo>): number => {
 		const ownBotA = a.ownerAccount === playerAccountId;
 		const ownBotB = b.ownerAccount === playerAccountId;
 
@@ -344,7 +343,9 @@ export function BotSelectUi({ value, onChange, activeValue }: {
 			return ownBotA ? -1 : 1;
 
 		if (a.ownerAccount !== b.ownerAccount)
-			return b.ownerAccount - a.ownerAccount; // TODO: Use names instead?
+			return a.ownerAccountName.localeCompare(b.ownerAccountName) ||
+				// Fall back to ids, if names match
+				b.ownerAccount - a.ownerAccount;
 
 		return a.name.localeCompare(b.name);
 	}, [playerAccountId]);
@@ -356,7 +357,8 @@ export function BotSelectUi({ value, onChange, activeValue }: {
 				b.id === value ||
 				filterParts.every((f) => b.name.toLowerCase().includes(f) ||
 					b.description.toLowerCase().includes(f) ||
-					b.ownerAccount.toString(10).includes(f),
+					b.ownerAccountName.toLowerCase().includes(f) ||
+					b.ownerAccount.toString(10).startsWith(f),
 				),
 			)
 			.sort(botSortOrder);
@@ -440,14 +442,12 @@ export function BotSelectUi({ value, onChange, activeValue }: {
 }
 
 function BotSelectUiElement({ bot, selected, active, onClick, ref }: {
-	bot: BotDefinition | BotId | null;
+	bot: BotPublicInfo | BotId | null;
 	selected: boolean;
 	active: boolean;
 	onClick: () => void;
 	ref?: ForwardedRef<HTMLDivElement>;
 }): ReactElement {
-	const ownerName = useResolveAccountName(bot != null && typeof bot !== 'string' ? bot.ownerAccount : null) ?? '[unknown]';
-
 	return (
 		<SelectionIndicator
 			ref={ ref }
@@ -468,7 +468,7 @@ function BotSelectUiElement({ bot, selected, active, onClick, ref }: {
 						) : (
 							<>
 								<strong>{ bot.name }</strong>
-								<span className='credits'>by { ownerName } ({ bot.ownerAccount })</span>
+								<span className='credits'>by { bot.ownerAccountName } ({ bot.ownerAccount })</span>
 							</>
 						) }
 					</Row>

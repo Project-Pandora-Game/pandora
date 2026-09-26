@@ -163,13 +163,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
+        version: 6.1.5(pixi.js@8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
+        version: 6.0.3(pixi.js@8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174))
       pixi.js:
-        specifier: 8.19.0
-        version: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+        specifier: 8.21.0
+        version: 8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
       react:
         specifier: 19.3.0
         version: 19.3.0
@@ -4624,8 +4624,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.19.0:
-    resolution: {integrity: sha512-pq1O6emA/GFjjeF+8d3Pb5t7knD8FsnfWGqQcRjYjsqFZ7QdzG1XgjLDUu0DFJRbafjV5+g8iNLFBx0b9649lg==}
+  pixi.js@8.21.0:
+    resolution: {integrity: sha512-GJ/KqBtUuWDBPMQu2D0ZHsRCYOcWRjjKrpyC+3jPQI5JTqHMC5dH8l9sSyvoUT4qJidvRzs1fwFWRWceno2Ltw==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -10722,16 +10722,16 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
+  pixi-filters@6.1.5(pixi.js@8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+      pixi.js: 8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi-viewport@6.0.3(pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
+  pixi-viewport@6.0.3(pixi.js@8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)):
     dependencies:
-      pixi.js: 8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
+      pixi.js: 8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174)
 
-  pixi.js@8.19.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174):
+  pixi.js@8.21.0(patch_hash=01bc4fa98d144c0586fa6d812dbd987e5e66d121177e7b6917dc4d4ac2437174):
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0

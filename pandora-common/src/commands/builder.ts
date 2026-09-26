@@ -162,7 +162,7 @@ export function CreateCommand<Context extends ICommandExecutionContext>(): Comma
 	return new CommandBuilder(new CommandBuilderRoot(), false);
 }
 
-function CommandStepOptional<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty>(
+export function CommandStepOptional<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty>(
 	processor: CommandStepProcessor<ResultType, Context, EntryArguments>,
 ): CommandStepProcessor<ResultType | undefined, Context, EntryArguments> {
 	const result: CommandStepProcessor<ResultType | undefined, Context, EntryArguments> = {
@@ -180,6 +180,16 @@ function CommandStepOptional<ResultType, Context extends ICommandExecutionContex
 		result.autocomplete = (input, context, args) => {
 			const options = originalAutocomplete(input, context, args);
 			return options.length > 0 ? options : [{ replaceValue: '', displayValue: 'none' }];
+		};
+	}
+	if (processor.getBotProcessor) {
+		const originalGetBotProcessor = processor.getBotProcessor.bind(processor);
+		result.getBotProcessor = (context, args) => {
+			const generatedBotProcessor = originalGetBotProcessor(context, args);
+			return generatedBotProcessor != null ? {
+				type: 'optional',
+				argument: generatedBotProcessor,
+			} : undefined;
 		};
 	}
 	return result;

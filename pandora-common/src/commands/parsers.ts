@@ -1,3 +1,5 @@
+import * as z from 'zod';
+import { KnownObject } from '../utility/misc.ts';
 import type { CommandStepProcessor } from './executor.ts';
 
 export function CommandParseQuotedString(input: string): { value: string; spacing: string; rest: string; } {
@@ -41,4 +43,18 @@ export const CommandSelectorAnyQuotedString = (): CommandStepProcessor<string> =
 	parse(input: string): { success: true; value: string; } {
 		return { success: true, value: input };
 	},
+	getBotProcessor() {
+		return { type: 'string' };
+	},
 });
+
+export type CommandStepPreparseProcessor = 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
+
+export const COMMAND_STEP_PREPARSE_PROCESSORS: Record<CommandStepPreparseProcessor, ((input: string) => { value: string; spacing: string; rest: string; })> = {
+	all: (input) => ({ value: input, spacing: '', rest: '' }),
+	allTrimmed: (input) => ({ value: input.trim(), spacing: '', rest: '' }),
+	quotedArg: CommandParseQuotedString,
+	quotedArgTrimmed: CommandParseQuotedStringTrim,
+};
+
+export const CommandStepPreparseProcessorSchema: z.ZodEnum<{ [t in CommandStepPreparseProcessor]: t }> = z.enum(KnownObject.keys(COMMAND_STEP_PREPARSE_PROCESSORS));

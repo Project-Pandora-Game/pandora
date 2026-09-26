@@ -1,4 +1,4 @@
-import { CommandStepProcessor, CreateCommand, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type AssetFrameworkCharacterState, type CommandBuilder, type IEmpty, type ItemPath } from 'pandora-common';
+import { AssertNotNullable, CommandStepProcessor, CreateCommand, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type AssetFrameworkCharacterState, type CommandBuilder, type IEmpty, type ItemPath } from 'pandora-common';
 import type { Character } from '../../../character/character.ts';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import type { ICommandExecutionContextClient } from './commandsProcessor.ts';
@@ -41,6 +41,8 @@ export const CommandSelectorCharacter = ({ allowSelf, filter }: {
 					error: `Character #${id} not found in the room.`,
 				};
 			}
+			const characterState = globalState.getCharacterState(target.id);
+			AssertNotNullable(characterState);
 			if (allowSelf !== 'any' && target.isPlayer()) {
 				return {
 					success: false,
@@ -51,6 +53,12 @@ export const CommandSelectorCharacter = ({ allowSelf, filter }: {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
+				};
+			}
+			if (filter != null && !filter({ character: target, characterState })) {
+				return {
+					success: false,
+					error: `${target.name} (${target.id}) is not a valid target for this command.`,
 				};
 			}
 			return {
@@ -66,21 +74,30 @@ export const CommandSelectorCharacter = ({ allowSelf, filter }: {
 			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
 
 		if (targets.length === 1) {
-			if (allowSelf !== 'any' && targets[0].isPlayer()) {
+			const target = targets[0];
+			const characterState = globalState.getCharacterState(target.id);
+			AssertNotNullable(characterState);
+			if (allowSelf !== 'any' && target.isPlayer()) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting yourself.`,
 				};
 			}
-			if (allowSelf === 'none' && targets[0].data.accountId === gameState.player?.data.accountId) {
+			if (allowSelf === 'none' && target.data.accountId === gameState.player?.data.accountId) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
 				};
 			}
+			if (filter != null && !filter({ character: target, characterState })) {
+				return {
+					success: false,
+					error: `${target.name} (${target.id}) is not a valid target for this command.`,
+				};
+			}
 			return {
 				success: true,
-				value: targets[0],
+				value: target,
 			};
 		} else if (targets.length === 0) {
 			return {

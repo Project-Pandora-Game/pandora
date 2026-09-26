@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import type { KeysMatching } from '../utility/misc.ts';
+import { KnownObject, type KeysMatching } from '../utility/misc.ts';
 
 export type IAccountRoleConfig = {
 	/** List of roles that are implied by this one, NOT transitive */
@@ -12,10 +12,10 @@ export type IAccountRoleConfig = {
 
 const ACCOUNT_ROLES_DEFINITION = {
 	'admin': {
-		implies: ['lead-developer', 'developer', 'contributor', 'moderator'],
+		implies: ['lead-developer', 'developer', 'contributor', 'moderator', 'bot-developer'],
 	},
 	'lead-developer': {
-		implies: ['developer', 'contributor', 'moderator'],
+		implies: ['developer', 'contributor', 'moderator', 'bot-developer'],
 	},
 	'developer': {
 		implies: ['contributor', 'moderator'],
@@ -26,12 +26,15 @@ const ACCOUNT_ROLES_DEFINITION = {
 	'moderator': {
 		assignable: true,
 	},
+	'bot-developer': {
+		assignable: true,
+	},
 } as const;
 
 //#endregion
 
 export type AccountRole = keyof typeof ACCOUNT_ROLES_DEFINITION;
-export const AccountRoleSchema = z.enum(Object.keys(ACCOUNT_ROLES_DEFINITION) as [AccountRole, ...(AccountRole)[]]);
+export const AccountRoleSchema: z.ZodEnum<{ [t in AccountRole]: t }> = z.enum(KnownObject.keys(ACCOUNT_ROLES_DEFINITION));
 
 // Both validate and export the config
 export const ACCOUNT_ROLES_CONFIG: Readonly<Record<AccountRole, IAccountRoleConfig>> = ACCOUNT_ROLES_DEFINITION;

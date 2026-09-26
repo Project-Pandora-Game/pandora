@@ -2,6 +2,8 @@ import * as z from 'zod';
 import { PandoraAccessTokenIdSchema, PandoraAccessTokenInfoSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/accessTokens.ts';
 import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../../../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../../../assets/item/unified.ts';
+import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
+import { BotConfigSchema, BotDefinitionSchema, BotPublicInfoSchema } from '../../../bots/botDefinition.ts';
 import { CharacterSelfInfoSchema } from '../../../character/characterData.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { ManagementAccountQueryResultSchema } from '../../../directory/management/account.ts';
@@ -569,6 +571,7 @@ export const ClientDirectorySchema = {
 				'notInPublicSpace', // Must be in a public space (not personal space) to do this
 				'noAccess', // Must be an admin
 				'targetNotAllowed', // Changes affecting specific accounts can be limited
+				'unknownBot', // Changes include setting a bot that Pandora does not know
 			]),
 		}),
 	},
@@ -838,6 +841,100 @@ export const ClientDirectorySchema = {
 			}),
 			z.object({
 				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
+	//#endregion
+
+	//#region Bots management
+
+	botDevelopmentListOwned: {
+		request: z.object({}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				bots: BotDefinitionSchema.array(),
+			}),
+			z.object({
+				result: z.literal('notLoggedIn'),
+			}),
+		]),
+	},
+	botDevelopmentCreate: {
+		request: z.object({
+			config: BotConfigSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				id: BotIdSchema,
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notAllowed'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+			}),
+		]),
+	},
+	botDevelopmentUpdate: {
+		request: z.object({
+			id: BotIdSchema,
+			config: BotConfigSchema.partial(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+			}),
+		]),
+	},
+	botDevelopmentDelete: {
+		request: z.object({
+			id: BotIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('sudoRequired'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+
+	botListPublic: {
+		request: z.object({}),
+		response: z.object({
+			bots: BotPublicInfoSchema.array(),
+		}),
+	},
+	botGetBotDetails: {
+		request: z.object({
+			id: BotIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				details: BotPublicInfoSchema,
 			}),
 			z.object({
 				result: z.literal('notFound'),

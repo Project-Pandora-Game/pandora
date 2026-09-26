@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type AssetFrameworkGlobalStateContainer, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type SpaceCharacterModifierEffectData } from 'pandora-common';
+import { CloneDeepMutable, EMPTY_ARRAY, TypedEventEmitter, type ActionSpaceContext, type AppearanceAction, type AppearanceActionContext, type AssetFrameworkGlobalStateContainer, type BotPublicData, type CharacterId, type ChatCharacterStatus, type CurrentSpaceInfo, type ICharacterRoomData, type SpaceCharacterModifierEffectData } from 'pandora-common';
 import type { IClientShardPromiseResult } from 'pandora-common/networking/api/shard_client';
 import type { Character } from '../character/character.ts';
 import type { PlayerCharacter } from '../character/player.ts';
@@ -38,6 +38,7 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 				owners: [editor.character.data.accountId],
 				ownerInvites: [],
 				spaceSwitchStatus: [],
+				bot: null,
 			},
 		});
 
@@ -55,6 +56,7 @@ export class EditorGameStateProxy extends TypedEventEmitter<GameStateEvents> imp
 
 	public readonly currentSpace: ReadonlyObservable<CurrentSpaceInfo>;
 	public readonly characterModifierEffects = new StaticObservable<Immutable<SpaceCharacterModifierEffectData>>({});
+	public readonly botState = new StaticObservable<BotPublicData | null>(null);
 
 	public doImmediateAction(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'] {
 		return Promise.resolve(this.editor.doImmediateAction(action));

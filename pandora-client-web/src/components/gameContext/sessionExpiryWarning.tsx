@@ -3,10 +3,10 @@ import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { useObservable } from '../../observable.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { ExtendCurrentSessionDialog } from '../../ui/components/security/extendSession.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { DraggableDialog } from '../dialog/dialog.tsx';
-import { ExtendCurrentSessionDialog } from '../settings/securitySettings/extendSession.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 
 const TIME_LEFT_WARNING = 24 * 60 * 60_000;

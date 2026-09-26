@@ -11,6 +11,10 @@
 		"./api": {
 			"types": "./dist/api/index.d.ts",
 			"default": "./dist/api/index.js"
+		},
+		"./bots": {
+			"types": "./dist/bots/index.d.ts",
+			"default": "./dist/bots/index.js"
 		}
 	},
 	"files": [
@@ -28,10 +32,11 @@
 		"test": "jest -c ../jest.config.js --selectProjects pandora-api",
 		"test:coverage": "jest -c ../jest.config.js --selectProjects pandora-api --coverage",
 		"test:watch": "jest -c ../jest.config.js --selectProjects pandora-api --watch",
-		"prepack": "pnpm run build"
+		"prepack": "pnpm --filter pandora-common run build && pnpm run build"
 	},
 	"dependencies": {
 		"async-lock": "1.4.1",
+		"immer": "11.1.18",
 		"socket.io-client": "4.8.3"
 	},
 	"devDependencies": {

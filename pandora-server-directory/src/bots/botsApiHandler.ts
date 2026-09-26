@@ -1,0 +1,40 @@
+import {
+	type MessageHandlers,
+} from 'pandora-common';
+import type { IApiDirectory, IApiDirectoryNormalResult, IApiDirectoryPromiseResult } from 'pandora-common/networking/api/directory_api';
+import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
+import { botManager } from './botManager.ts';
+
+export const ApiHandlersBots = {
+	botRunRegister: async ({ bot }, connection): IApiDirectoryPromiseResult['botRunRegister'] => {
+		const account = connection.verifyTokenUseAndGetAccount(['bots:run']);
+		if (account == null)
+			return { result: 'notAllowed' };
+
+		const botInstance = await botManager.loadBotById(bot);
+		if (botInstance == null || botInstance.ownerAccountId !== account.id)
+			return { result: 'notFound' };
+
+		// Race condition check
+		if (!connection.isConnected())
+			return { result: 'notAllowed' };
+
+		connection.addBotRegistration(botInstance);
+
+		return {
+			result: 'ok',
+		};
+	},
+	botRunUnregister: ({ bot }, connection): IApiDirectoryNormalResult['botRunUnregister'] => {
+		const botInstance = connection.registeredBots.get(bot);
+
+		if (botInstance == null)
+			return { result: 'notFound' };
+
+		connection.removeBotRegistration(botInstance);
+
+		return {
+			result: 'ok',
+		};
+	},
+} satisfies Partial<MessageHandlers<IApiDirectory, ApiConnection>>;

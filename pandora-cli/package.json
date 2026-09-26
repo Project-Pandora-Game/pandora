@@ -26,7 +26,7 @@
 		"test": "jest -c ../jest.config.js --selectProjects pandora-cli",
 		"test:coverage": "jest -c ../jest.config.js --selectProjects pandora-cli --coverage",
 		"test:watch": "jest -c ../jest.config.js --selectProjects pandora-cli --watch",
-		"prepack": "pnpm run build"
+		"prepack": "pnpm --filter pandora-common run build && pnpm --filter pandora-api run build && pnpm run build"
 	},
 	"dependencies": {
 		"pandora-api": "workspace:*",

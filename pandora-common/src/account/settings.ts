@@ -30,8 +30,10 @@ export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
  * A category of settings that is considered "advanced".
  * Advanced category needs to be enabled first before accessing it, after reading its disclaimer.
  */
-export type SettingsAdvancedCategory = 'access_tokens';
-export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum(['access_tokens']);
+export type SettingsAdvancedCategory = 'access_tokens' | 'bot_development';
+export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum([
+	'access_tokens', 'bot_development',
+]);
 
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),

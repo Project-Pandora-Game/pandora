@@ -10,6 +10,9 @@ const handleLog = (message: ConsoleMessage) => {
 		// Ignore socket.io errors (some tests test non-working server connection)
 		if (message.location().url.includes('/socket.io/'))
 			return;
+		// Ignore resource load errors (those should be handled internally and if they are not expected, then produce actual error)
+		if (message.text().startsWith('Failed to load resource:'))
+			return;
 
 		// eslint-disable-next-line no-console
 		console.error(

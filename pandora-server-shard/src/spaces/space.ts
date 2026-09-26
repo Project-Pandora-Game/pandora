@@ -33,6 +33,7 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 	type AppearanceActionProcessingResultValid,
+	type BotChatMessageEnvelope,
 	type ChatMessage,
 	type ChatMessageAction,
 	type ChatMessageActionLogEntry,
@@ -40,15 +41,19 @@ import {
 	type ChatMessageDirectoryAction,
 	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
+	type GameStateUpdate,
+	type IShardClientChangeEvents,
 	type RoomId,
 	type SpaceCharacterModifierEffectData,
 	type SpaceCharacterModifierEffectDataUpdate,
+	type SpaceLoadData,
 	type SpaceStateBundle,
 	type SpaceSwitchStatus,
 } from 'pandora-common';
-import type { GameStateUpdate, IClientShardNormalResult, IShardClient, SpaceLoadData } from 'pandora-common/networking/api/shard_client';
+import type { IClientShardNormalResult, IShardClient } from 'pandora-common/networking/api/shard_client';
 import { assetManager } from '../assets/assetManager.ts';
 import type { Character } from '../character/character.ts';
+import type { SpaceBot } from './spaceBot.ts';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -67,6 +72,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, MessageHistoryMetadata>>();
+	protected _botLastMessageId: number = 0;
 	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; targets?: readonly CharacterId[]; }>();
 	protected readonly actionCache = new Map<CharacterId, {
 		descriptor: IChatMessageActionTargetCharacter;
@@ -88,6 +94,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public abstract get ownerInvites(): readonly AccountId[];
 	public abstract get spaceSwitchStatus(): Immutable<SpaceSwitchStatus[]>;
 	public abstract get config(): SpaceDirectoryConfig;
+	public abstract get bot(): SpaceBot | null;
 
 	protected readonly logger: Logger;
 
@@ -142,6 +149,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
+		// FIXME: WTF? Nothing is sent here, ever? What happened here?
 
 		if (update.characters) {
 			this.sendUpdateToAllCharacters(update);
@@ -275,9 +283,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
-	public getLoadData(forCharacter: CharacterId): SpaceLoadData {
+	public getLoadData(forCharacter: CharacterId | 'bot'): SpaceLoadData {
 		const chatStatus: Record<CharacterId, ChatCharacterStatus> = {};
 		for (const [c, status] of this.status) {
+			if (forCharacter === 'bot')
+				continue; // Bots do not get typing indicators
+
 			if (this.getCharacterById(c) == null || status.status === 'none' || (status.targets != null && !status.targets.includes(forCharacter)))
 				continue;
 
@@ -289,6 +300,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => c.getRoomData()),
 			characterModifierEffects: this.getCharacterModifierEffects(),
+			bot: this.bot?.isValid ? this.bot.getPublicData() : null,
 			chatStatus,
 		};
 	}
@@ -519,6 +531,16 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public sendUpdateToAllCharacters(data: GameStateUpdate): void {
 		this.sendMessage('gameStateUpdate', data);
+		this.bot?.connection?.sendMessage('gameStateUpdate', data);
+	}
+
+	public sendSomethingChanged(...changes: IShardClientChangeEvents[]): void {
+		this.sendMessage('somethingChanged', {
+			changes,
+		});
+		this.bot?.connection?.sendMessage('somethingChanged', {
+			changes,
+		});
 	}
 
 	private lastMessageTime: number = 0;
@@ -647,6 +669,44 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 
 		return { result: 'ok' };
+	}
+
+	public handleBotMessages({ messages, id, editId }: BotChatMessageEnvelope): void {
+		// Skip re-sent messages
+		if (id <= this._botLastMessageId)
+			return;
+
+		this._botLastMessageId = id;
+		const queue: ChatMessage[] = [];
+
+		if (editId) {
+			queue.push({
+				type: 'deleted',
+				id: editId,
+				from: 'bot',
+				time: this.nextMessageTime(),
+			});
+		}
+		for (const message of messages) {
+			const finalMessage: ChatMessage = {
+				type: message.type,
+				id,
+				insertId: editId,
+				from: message.as,
+				room: message.room ?? null,
+				parts: typeof message.message === 'string' ? [['normal', message.message]] : message.message,
+				time: this.nextMessageTime(),
+			};
+			if ((message.type === 'chat' || message.type === 'ooc') && message.to != null) {
+				Assert(finalMessage.type === 'chat' || finalMessage.type === 'ooc');
+				finalMessage.to = message.to.map((t): ChatMessageChatCharacter | null => {
+					const target = this.getCharacterById(t);
+					return target != null ? { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor } : null;
+				}).filter(IsNotNullable);
+			}
+			queue.push(finalMessage);
+		}
+		this._queueMessages(queue);
 	}
 
 	public handleActionMessage(actionMessage: ActionHandlerMessage): void {

@@ -18,6 +18,7 @@ import {
 	type ApiDirectorySocketAuthMessage,
 	type IApiDirectory,
 	type IDirectoryApi,
+	type IDirectoryApiArgument,
 } from 'pandora-common/networking/api/directory_api';
 import {
 	SocketInterfaceRequest,
@@ -49,6 +50,10 @@ type ApiDirectoryConnectorServiceConfig = Satisfies<{
 		connected: void;
 		/** Connection failed */
 		connectError: Error;
+		/** Connection was lost. */
+		disconnected: void;
+		/** `botStateChanged` event */
+		botStateChanged: IDirectoryApiArgument['botStateChanged'];
 	};
 }, ServiceConfigBase>;
 
@@ -78,6 +83,7 @@ export class ApiDirectoryConnector extends Service<ApiDirectoryConnectorServiceC
 		// 1) Add the handler above directly to `messageHandlers`
 		// 2) Register into `messageHandlers` from `serviceInit` of a service that should be handling this message
 		const requiredHandlers: Record<keyof IDirectoryApi, true> = {
+			botStateChanged: true,
 		};
 
 		if (!CheckPropertiesNotNullable(this.messageHandlers, requiredHandlers)) {
@@ -87,6 +93,12 @@ export class ApiDirectoryConnector extends Service<ApiDirectoryConnectorServiceC
 
 		// Create message handler from these
 		this._messageHandler = new MessageHandler<IDirectoryApi>(this.messageHandlers);
+	}
+
+	protected override serviceInit(): void {
+		this.messageHandlers.botStateChanged = (data) => {
+			this.emit('botStateChanged', data);
+		};
 	}
 
 	public sendMessage<K extends SocketInterfaceOneshotMessages<IApiDirectory>>(messageType: K, message: SocketInterfaceRequest<IApiDirectory>[K]): void {
@@ -158,6 +170,8 @@ export class ApiDirectoryConnector extends Service<ApiDirectoryConnectorServiceC
 		this._state = newState;
 		if (newState === ApiDirectoryConnectionState.CONNECTED) {
 			this.emit('connected', undefined);
+		} else if (newState === ApiDirectoryConnectionState.DISCONNECTED) {
+			this.emit('disconnected', undefined);
 		}
 	}
 

@@ -76,17 +76,30 @@ export function ToastHandlePromise<T>(promise: Promise<T>, content: ToastPromise
 export class PersistentToast {
 	private id: string | number | null = null;
 	private shouldShow: boolean = false;
+	private pendingShow: number | null = null;
 
-	public show(style: 'progress' | 'success' | 'error', content: ToastContent): void {
+	public show(style: 'progress' | 'success' | 'warning' | 'error', content: ToastContent, additionalOptions?: ToastOptions): void {
+		// Cancel any pending show
+		if (this.pendingShow != null) {
+			clearTimeout(this.pendingShow);
+			this.pendingShow = null;
+		}
+
 		let options: ToastOptions;
 		if (style === 'progress') {
 			options = { ...TOAST_OPTIONS_PENDING };
 		} else if (style === 'success') {
 			options = { ...TOAST_OPTIONS_SUCCESS };
+		} else if (style === 'warning') {
+			options = { ...TOAST_OPTIONS_WARNING };
 		} else if (style === 'error') {
 			options = { ...TOAST_OPTIONS_ERROR };
 		} else {
 			AssertNever(style);
+		}
+
+		if (additionalOptions != null) {
+			Object.assign(options, additionalOptions);
 		}
 
 		this.shouldShow = true;
@@ -113,10 +126,11 @@ export class PersistentToast {
 		};
 
 		// Wait a tick before showing, in case multiple show/hide calls have been made within the current tick
-		setTimeout(() => {
-			if (!this.shouldShow) {
+		const timeoutId = this.pendingShow = setTimeout(() => {
+			if (!this.shouldShow || this.pendingShow !== timeoutId) {
 				return;
 			}
+			this.pendingShow = null;
 			if (this.id !== null) {
 				toast.update(this.id, {
 					...options,
@@ -129,6 +143,12 @@ export class PersistentToast {
 	}
 
 	public hide(): void {
+		// Cancel any pending show
+		if (this.pendingShow != null) {
+			clearTimeout(this.pendingShow);
+			this.pendingShow = null;
+		}
+
 		this.shouldShow = false;
 		if (this.id !== null) {
 			toast.dismiss(this.id);

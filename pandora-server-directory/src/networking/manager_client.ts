@@ -9,6 +9,7 @@ import { accountManager } from '../account/accountManager.ts';
 import { Base64UrlEncode, CreatePasskeyChallenge, GetPasskeyPrfSalt, ValidatePasskeyRegistration, VerifyPasskeyAssertion } from '../account/accountPasskeys.ts';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
 import { AccessTokensClientHandler } from '../account/secure/accessTokensClientHandler.ts';
+import { BotsClientHandler } from '../bots/botsClientHandler.ts';
 import { ENV } from '../config.ts';
 import { AUDIT_LOG } from '../logging.ts';
 import { GitHubVerifier } from '../services/github/githubVerify.ts';
@@ -100,6 +101,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			clearInterval(this.statusUpdateInterval);
 			this.statusUpdateInterval = undefined;
 		}
+
+		this._throttledOnSpaceListChange.cancel();
 	}
 
 	private statusUpdateInterval: NodeJS.Timeout | undefined;
@@ -190,11 +193,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			blockList: this.handleBlockList.bind(this),
 
 			// Access Tokens
-			accessTokensList: AccessTokensClientHandler.accessTokensList,
-			accessTokensCreate: AccessTokensClientHandler.accessTokensCreate,
-			accessTokenDelete: AccessTokensClientHandler.accessTokenDelete,
-			accessTokenUpdate: AccessTokensClientHandler.accessTokenUpdate,
-			accessTokenRegenerate: AccessTokensClientHandler.accessTokenRegenerate,
+			...AccessTokensClientHandler,
+
+			// Bots management
+			...BotsClientHandler,
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),

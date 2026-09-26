@@ -1,6 +1,6 @@
 import { SpaceRoleOrNoneSchema, SpaceRoleSchema, type SpaceRole, type SpaceRoleOrNone } from 'pandora-common';
 import type { ReactElement } from 'react';
-import { SelectSettingInput, type SelectSettingInputProps } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { SelectSettingInput, type SelectSettingInputProps } from '../settings/settingsInputs.tsx';
 
 const SPACE_ROLE_NO_NONE_TEXT: Readonly<Record<SpaceRole, string>> = {
 	owner: 'Owner',

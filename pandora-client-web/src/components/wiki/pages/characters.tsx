@@ -104,7 +104,12 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_posing'>Character posing</h4>
 			<p>
 				There are several ways to change the poses of your or other characters (if permitted). You can use the "Pose"-tab in the main room view or wardrobe.
-				There, you can select pre-existing pose templates or create and save your own ones. You can also configure all details of a pose manually.<br />
+				There, you can select pre-existing pose templates or create and save your own ones in the "Custom poses" section.<br />
+				As the amount of custom poses you can save is limited, you can also export custom poses and for instance copy the exported code into an item's description
+				to add it to the "Quick posing" section of the "Pose"-tab for convenient usage. Or copy the pose's exported code directly into the chat to share it with others.
+			</p>
+			<p>
+				In the "Manual posing" section of the "Pose"-tab, you can configure all details of a pose manually.
 				That said, the likely quicker way to do manual posing is using the "Pose"-mode that you can find in a character's context menu, by clicking on the character name.
 			</p>
 			<p>

@@ -179,6 +179,13 @@ export class Bot extends TypedEventEmitter<{
 		// Mark the bot - this prevents it from being newly used by spaces while deletion is running
 		this._deletionPending = true;
 		this.logger.info('Deleted');
+		// Remove it from all registered listeners
+		this._onSpacedChangedThrottled.cancel();
+		this.sendBotStatus(this.associatedApiConnections); // This will clear the status thanks to `isValid` failing inside
+		for (const connection of this.associatedApiConnections.clients) {
+			connection.removeBotRegistration(this);
+		}
+		Assert(!this.associatedApiConnections.hasClients());
 		// Remove it from all loaded spaces (not yet loaded ones do this on load)
 		for (const space of Array.from(this.spaces.values())) {
 			try {
@@ -187,9 +194,15 @@ export class Bot extends TypedEventEmitter<{
 				this.logger.error(`Error removing bot from space ${space.id} during delete:`, err);
 			}
 		}
+		if (this.spaces.size !== 0) {
+			this.logger.error('Failed to remove bot from all spaces while deleting it');
+		}
 		// Finally delete the bot from the database
 		await GetDatabase().deleteBot(this.id);
 		// And unload it from manager
+		if (this.isInUse()) {
+			this.logger.error('Still in use during delete');
+		}
 		queueMicrotask(() => {
 			botManager.tick();
 		});
@@ -197,7 +210,7 @@ export class Bot extends TypedEventEmitter<{
 
 	public sendBotStatus(to: ApiConnection | IServerRoom<IDirectoryApi, ApiConnection>): void {
 		const state: BotDirectoryStateInfo = {
-			spaces: Array.from(this.spaces.values())
+			spaces: this.isValid ? Array.from(this.spaces.values())
 				.filter((it) => it.assignedShard != null)
 				.map((it): BotSpaceStateInfo => ({
 					id: it.id,
@@ -205,7 +218,7 @@ export class Bot extends TypedEventEmitter<{
 						connectUrl: it.assignedShard.getInfo().publicURL,
 						secret: it.assignedBotSecret,
 					} : null,
-				})),
+				})) : [],
 		};
 
 		to.sendMessage('botStateChanged', {

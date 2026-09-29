@@ -144,6 +144,7 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 			return;
 
 		Assert(this.verifyTokenUse(['bots:run']));
+		Assert(bot.isValid);
 		this.logger.debug(`Register bot "${bot.id}"`);
 
 		bot.touch();

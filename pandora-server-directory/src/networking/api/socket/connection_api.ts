@@ -44,12 +44,24 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		this._tokenEventUnsubscribe = account.secure.accessTokens.onAny((event) => {
 			if (event.tokenInvalidated === this.tokenHash) {
 				if (this._account != null) {
+					// Immediately disconnect bot status updates
+					for (const bot of Array.from(this._registeredBots.values())) {
+						this.removeBotRegistration(bot);
+					}
+
 					// Slight delay to let ongoing responses finish
 					// This is not a security hole, as any existing request will already perform the action
 					// and any new one will fail on validation
 					setTimeout(() => {
 						this.disconnect('token invalidated');
 					}, 100);
+				}
+			} else if (event.tokenUpdated === this.tokenHash) {
+				// From persistent data only bots are affected by scope changes - re-verify this connection can still use bots if we have some
+				if (this._registeredBots.size > 0 && !this.verifyTokenUse(['bots:run'])) {
+					for (const bot of Array.from(this._registeredBots.values())) {
+						this.removeBotRegistration(bot);
+					}
 				}
 			}
 		});
@@ -128,8 +140,10 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 	 * Add a bot registration to this connection.
 	 */
 	public addBotRegistration(bot: Bot): void {
-		if (this._registeredBots.has(bot.id) || this._account == null)
+		if (this._registeredBots.has(bot.id))
 			return;
+
+		Assert(this.verifyTokenUse(['bots:run']));
 		this.logger.debug(`Register bot "${bot.id}"`);
 
 		bot.touch();

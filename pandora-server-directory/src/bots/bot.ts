@@ -176,8 +176,17 @@ export class Bot extends TypedEventEmitter<{
 	 */
 	@AsyncSynchronized('object')
 	public async delete(): Promise<void> {
+		// Mark the bot - this prevents it from being newly used by spaces while deletion is running
 		this._deletionPending = true;
 		this.logger.info('Deleted');
+		// Remove it from all loaded spaces (not yet loaded ones do this on load)
+		for (const space of Array.from(this.spaces.values())) {
+			try {
+				await space.removeBot(this);
+			} catch (err) {
+				this.logger.error(`Error removing bot from space ${space.id} during delete:`, err);
+			}
+		}
 		// Finally delete the bot from the database
 		await GetDatabase().deleteBot(this.id);
 		// And unload it from manager

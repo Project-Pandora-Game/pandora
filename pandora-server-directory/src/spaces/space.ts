@@ -102,7 +102,12 @@ export class Space {
 		// Assign bot
 		if (bot != null) {
 			Assert(bot.id === config.bot?.bot);
-			this._setBot(bot);
+			if (bot.isValid) {
+				this._setBot(bot);
+			} else {
+				// Possible race while other parts of the space were loading: If bot is invalid by this point, clear it and ignore it
+				config.bot = null;
+			}
 		} else {
 			Assert(config.bot == null);
 		}
@@ -461,7 +466,9 @@ export class Space {
 			Assert(bot !== undefined && bot?.id === changes.bot?.bot);
 			this.config.bot = cloneDeep(changes.bot);
 			this._setBot(null); // Even if the bot doesn't change, re-connect it
-			this._setBot(bot);
+			if (bot != null) {
+				this._setBot(bot);
+			}
 		}
 		if (changes.development !== undefined && this.config.features.includes('development') && (source == null || source.account.roles.isAuthorized('developer'))) {
 			this.config.development = changes.development;
@@ -1466,6 +1473,7 @@ export class Space {
 
 		// Actually assign to the bot
 		Assert(this._assignedBot == null);
+		Assert(bot.isValid);
 
 		this._assignedBot = bot;
 		this._assignedBotSecret = this.assignedShard != null ? bot.generateShardConnectSecret() : null;
@@ -1473,6 +1481,41 @@ export class Space {
 		bot.onSpacesChanged();
 
 		this.logger.debug('Assigned bot', bot.id);
+	}
+
+	/**
+	 * Remove bot for reasons others than admin changing config (e.g. bot deletion/invalidation/bot-developer driven removal of this bot from this space, ...)
+	 * @param botToRemove - Which bot is getting removed, passed to avoid race conditions
+	 * @returns - Whether the bot was successfully removed
+	 */
+	@AsyncSynchronized('object')
+	public async removeBot(botToRemove: Bot): Promise<boolean> {
+		// Bail out if space is invalidated
+		if (!this.isValid)
+			return false;
+		// Bail if the current bot is not the one to remove
+		if (this.assignedBot !== botToRemove)
+			return true;
+
+		// Remove the bot from config
+		this.config.bot = null;
+		this._setBot(null);
+
+		// Send message about the space being updated
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'spaceBotRemoved',
+		});
+
+		await Promise.all([
+			this._assignedShard?.update('spaces'),
+			GetDatabase().updateSpace(this.id, {
+				config: cloneDeep(this.config),
+			}, null),
+		]);
+
+		this.onSpacePresentationChanged();
+		return true;
 	}
 
 	//#endregion

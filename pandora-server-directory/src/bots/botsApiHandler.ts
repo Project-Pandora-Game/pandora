@@ -16,7 +16,7 @@ export const ApiHandlersBots = {
 			return { result: 'notFound' };
 
 		// Race condition check
-		if (!connection.isConnected())
+		if (!connection.isConnected() || !connection.verifyTokenUse(['bots:run']))
 			return { result: 'notAllowed' };
 
 		connection.addBotRegistration(botInstance);

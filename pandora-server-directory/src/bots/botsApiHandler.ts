@@ -12,7 +12,7 @@ export const ApiHandlersBots = {
 			return { result: 'notAllowed' };
 
 		const botInstance = await botManager.loadBotById(bot);
-		if (botInstance == null || botInstance.ownerAccountId !== account.id)
+		if (botInstance == null || !botInstance.isValid || botInstance.ownerAccountId !== account.id)
 			return { result: 'notFound' };
 
 		// Race condition check

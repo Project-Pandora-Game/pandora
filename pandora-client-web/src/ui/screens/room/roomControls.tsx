@@ -54,6 +54,7 @@ import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomDeviceButtons, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
@@ -184,8 +185,7 @@ export function RoomControls(): ReactElement | null {
 				globalState={ globalState }
 			/>
 			<DeviceOverlaySelector />
-			&nbsp;
-			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+			<DevDebugMenu />
 		</Column>
 	);
 }
@@ -360,8 +360,7 @@ export function PersonalSpaceControls(): ReactElement {
 			<PrivateRoomTutorialList />
 			&nbsp;
 			<DeviceOverlaySelector />
-			&nbsp;
-			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+			<DevDebugMenu />
 		</Column>
 	);
 }
@@ -387,6 +386,20 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	}
 
 	return null;
+}
+
+function DevDebugMenu(): ReactElement | null {
+	const { showDevDebugMenu } = useAccountSettings();
+
+	if (!USER_DEBUG || !showDevDebugMenu)
+		return null;
+
+	return (
+		<>
+			&nbsp;
+			<ChatroomDebugConfigView />
+		</>
+	);
 }
 
 function DeviceOverlaySelector(): ReactElement {

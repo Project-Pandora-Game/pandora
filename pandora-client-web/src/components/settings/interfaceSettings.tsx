@@ -282,6 +282,7 @@ function RoomGraphicsSettings(): ReactElement {
 				<ChatroomOfflineCharacters />
 				<ChatroomBlockedCharacters />
 				<ChatroomCharacterPosintStyle />
+				<ToggleAccountSetting setting='showDevDebugMenu' label='Show DEV-debug menu in the "Room"-tab' />
 			</Column>
 		</fieldset>
 	);

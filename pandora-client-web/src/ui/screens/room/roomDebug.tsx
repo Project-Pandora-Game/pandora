@@ -13,6 +13,7 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
@@ -38,7 +39,8 @@ const ChatroomDebugConfigStorage = BrowserStorage.create<ChatroomDebugConfig>('d
 
 export function useDebugConfig(): ChatroomDebugConfig {
 	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage);
-	return (USER_DEBUG && chatroomDebugConfig?.enabled) ? chatroomDebugConfig : undefined;
+	const { showDevDebugMenu } = useAccountSettings();
+	return (USER_DEBUG && showDevDebugMenu && chatroomDebugConfig?.enabled) ? chatroomDebugConfig : undefined;
 }
 
 export function ChatroomDebugConfigView(): ReactElement {

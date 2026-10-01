@@ -133,3 +133,10 @@ export const LIMIT_CHARACTER_MODIFIER_NAME_LENGTH = 48;
 export const LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT = 50;
 /** The maximum amount of conditions inside a single character modifier instance. */
 export const LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT = 50;
+
+/** The maximum length of a bot name */
+export const LIMIT_BOT_NAME_LENGTH = 48;
+/** The pattern used for validating bot's name */
+export const LIMIT_BOT_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
+/** The maximum length of a bot's description */
+export const LIMIT_BOT_DESCRIPTION_LENGTH = 10_000;

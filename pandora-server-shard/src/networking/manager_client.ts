@@ -41,6 +41,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 import promClient from 'prom-client';
 import { Character } from '../character/character.ts';
 import { CharacterManager } from '../character/characterManager.ts';
+import { ClientHandlersBotCommands } from './client/handlers/clientBotCommands.ts';
 import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
@@ -95,6 +96,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			characterModifierDelete: this.handleCharacterModifierDelete.bind(this),
 			characterModifierConfigure: this.handleCharacterModifierConfigure.bind(this),
 			characterModifierLock: this.handleCharacterModifierLock.bind(this),
+			...ClientHandlersBotCommands,
 		});
 	}
 

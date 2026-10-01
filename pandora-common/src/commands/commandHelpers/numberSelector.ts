@@ -18,7 +18,7 @@ export interface CommandSelectorNumberOptions {
 	allowDecimals?: boolean;
 }
 
-export function CommandSelectorNumber({ min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER, allowDecimals = false }: CommandSelectorNumberOptions = {}): CommandStepProcessor<number> {
+export function CommandSelectorNumber({ min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER, allowDecimals = false }: CommandSelectorNumberOptions = {}): CommandStepProcessor<number, object> {
 	return {
 		preparse: 'quotedArgTrimmed',
 		parse(selector) {
@@ -55,6 +55,14 @@ export function CommandSelectorNumber({ min = Number.MIN_SAFE_INTEGER, max = Num
 			return {
 				success: true,
 				value: number,
+			};
+		},
+		getBotProcessor() {
+			return {
+				type: 'number',
+				min,
+				max,
+				allowDecimals,
 			};
 		},
 	};

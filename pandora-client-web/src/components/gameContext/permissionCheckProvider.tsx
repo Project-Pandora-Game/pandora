@@ -14,7 +14,7 @@ import {
 import { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
-import { PermissionPromptHandler } from '../settings/permissionsSettings.tsx';
+import { PermissionPromptHandler } from '../../ui/components/settings/permissionPrompt.tsx';
 import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider.tsx';
 
 export class PermissionCheckServiceBase extends TypedEventEmitter<{

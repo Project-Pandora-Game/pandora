@@ -24,11 +24,13 @@ export interface DirectMessageCommandExecutionContext extends ICommandExecutionC
 }
 
 export function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeContext<DirectMessageCommandExecutionContext> {
+	const navigate = useNavigatePandora();
+
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	const gameState = useGameStateOptional();
+
 	const { chat, encryption } = useDirectMessageChat();
-	const navigate = useNavigatePandora();
 
 	const sendMessage = useCallback<DirectMessageCommandExecutionContext['sendMessage']>(async (message, editing) => {
 		const encrypted = message.length === 0 ? '' : await encryption.service.encrypt(message);

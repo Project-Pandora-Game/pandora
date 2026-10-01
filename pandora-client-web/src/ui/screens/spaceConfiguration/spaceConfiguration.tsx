@@ -53,7 +53,6 @@ import {
 } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
@@ -63,7 +62,9 @@ import { IsSpaceAdmin, useCharacterCurrentRoom, useGameState, useGlobalState, us
 import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
+import { SelectSettingInput, ToggleSettingInput, useBooleanInvertDriver, useEnumSetMembershipDriver, type SettingDriver } from '../../components/settings/settingsInputs.tsx';
 import './spaceConfiguration.scss';
+import { SpaceConfigurationBots } from './spaceConfigurationBots.tsx';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from './spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipInvitation, SpaceOwnershipInvitationConfirm } from './spaceOwnershipInvite.tsx';
 import { SpaceOwnershipRemoval } from './spaceOwnershipRemoval.tsx';
@@ -86,6 +87,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		public: 'private',
 		features: [],
 		ghostManagement: null,
+		bot: null,
 	};
 }
 
@@ -260,6 +262,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						noAccess: 'You must be an Admin or an Owner to do this',
 						notInPublicSpace: 'This action cannot be done inside personal space',
 						targetNotAllowed: 'Some of the changes are invalid (affecting some accounts/characters is limited)',
+						unknownBot: 'The assigned bot is invalid. Please re-select the bot.',
 					};
 
 					setCommitProcess(
@@ -434,7 +437,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	);
 }
 
-type SpaceConfigurationTabProps = {
+export type SpaceConfigurationTabProps = {
 	creation: boolean;
 	canEdit: boolean;
 	currentConfig: Immutable<SpaceDirectoryConfig>;
@@ -870,18 +873,26 @@ function SpaceConfigurationRights({
 }
 
 function SpaceConfigurationFeatures({
+	canEdit,
+	currentConfig,
+	updateConfig,
 	creation,
 	currentSpaceState,
 	getLogicSettingDriver,
 }: SpaceConfigurationTabProps): ReactElement {
-	if (creation || currentSpaceState == null) {
-		return (
-			<strong>Some space settings can only be changed from inside the space</strong>
-		);
-	}
-
 	return (
-		<SpaceConfigurationFeaturesInner getLogicSettingDriver={ getLogicSettingDriver } />
+		<>
+			{ creation || currentSpaceState == null ? (
+				<div className='warning-box'>Some space settings can only be changed from inside the space</div>
+			) : (
+				<SpaceConfigurationFeaturesInner getLogicSettingDriver={ getLogicSettingDriver } />
+			) }
+			<SpaceConfigurationBots
+				canEdit={ canEdit }
+				currentConfig={ currentConfig }
+				updateConfig={ updateConfig }
+			/>
+		</>
 	);
 }
 

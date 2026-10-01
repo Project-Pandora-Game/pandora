@@ -371,8 +371,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-sesv2':
-        specifier: 3.1138.0
-        version: 3.1138.0
+        specifier: 3.1139.0
+        version: 3.1139.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.972.84
         version: 3.972.84
@@ -624,8 +624,8 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@aws-sdk/client-sesv2@3.1138.0':
-    resolution: {integrity: sha512-26JZ2Cwtml45+GnF/u1m0humPG/5ZUiGdUsz5A4beqUs2RT9grN4a7qNnPSdtPFqob+xLN/LZOYP5HC7AF2olg==}
+  '@aws-sdk/client-sesv2@3.1139.0':
+    resolution: {integrity: sha512-//zG+y7csEFji/EKqrNT6fN5kB77ifnoGGo32XfVqFO3ZhNP0OwbmBqMLqVaU1u/UOBNUWz5z20iZ4OrF5pcPA==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.978.1':
@@ -6059,7 +6059,7 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@aws-sdk/client-sesv2@3.1138.0':
+  '@aws-sdk/client-sesv2@3.1139.0':
     dependencies:
       '@aws-sdk/core': 3.978.1
       '@aws-sdk/credential-provider-node': 3.972.84

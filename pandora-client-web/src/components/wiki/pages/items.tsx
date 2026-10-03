@@ -15,6 +15,8 @@ export function WikiItems(): ReactElement {
 				be a <Link to='#IT_Storage_modules'>storage module</Link> or <Link to='#IT_Lock_module'>lock modules</Link> on
 				an item, depending on what it is. These features can be accessed in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> by clicking
 				on items.<br />
+				You can give any item a custom name and a description with the "pen" button near the top. If you add and save an exported pose code or an URL to a space in Pandora into
+				the description of an item, they are turned into an embed for easier interaction.<br />
 				You can also open a popup with basic info about an item while in the room & chat view, by either clicking on the item name in any server messages in the chat,
 				by using the "/inspect" <Link to='/wiki/chat#CHA_Chat_commands'>command</Link>, or by clicking the "pin"-button in the detailed view of an item in the wardrobe at the top.
 			</p>
@@ -81,6 +83,7 @@ export function WikiItems(): ReactElement {
 					Users permitted to modify room-level items can change the visibility of those icons for each room-level item individually.
 					You can also hide these icons for yourself under the "Room"-tab".
 				</li>
+				<li>Adding a space invite URL into the description adds a new entry to the context menu opened via the blue icon, for quick space switching.</li>
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
 				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>

@@ -143,6 +143,10 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfacePosingStyle: z.enum(['inverse', 'forward', 'both']),
 	/**
+	 * Controls whether the "[DEV] Debug options" menu is shown in the "Room" tab
+	 */
+	showDevDebugMenu: z.boolean(),
+	/**
 	 * How should command autocomplete behave.
 	 * - `always-show` - The help is always shown while typing a command
 	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
@@ -187,6 +191,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeBigPreview: 'image',
 	wardrobePosePreview: true,
 	wardrobePosingCategoryDefault: 'custom',
+
 	wardrobeItemDisplayNameType: 'custom',
 	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',
 	interfaceAccentColor: '#3daee9',
@@ -202,6 +207,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom',
 	interfaceChatroomHideRoomDescriptionsRole: 'admin',
 	interfacePosingStyle: 'inverse',
+	showDevDebugMenu: false,
 	chatCommandHintBehavior: 'always-show',
 	chatMaxShownMessages: 100,
 	alwaysUseSpaceSwitchFlow: false,

@@ -1,18 +1,19 @@
 import classNames from 'classnames';
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type ActionTargetSelector, type AssetFrameworkRoomState, type ICharacterRoomData, type ItemContainerPath, type RoomId } from 'pandora-common';
+import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, SpaceId, type ActionTargetSelector, type AssetFrameworkRoomState, type ICharacterRoomData, type ItemContainerPath, type RoomId } from 'pandora-common';
 import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
+import doorIcon from '../../../assets/icons/closed-door.svg';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
-import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext, ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -28,6 +29,9 @@ import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlayState, useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
 import { PointLike } from '../../common/point.ts';
 import { useObservable } from '../../../observable.ts';
+import { FindFirstSpaceInvite } from '../../../ui/screens/spaceJoin/inviteEmbed.tsx';
+import { useSpaceExtendedInfo } from '../../../ui/screens/spacesSearch/useSpaceExtendedInfo.tsx';
+import { SpaceDetails } from '../../../ui/screens/spacesSearch/spaceDetails.tsx';
 
 function StoreDeviceMenu({ roomState, device, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -125,6 +129,64 @@ function MoveDeviceMenu({ roomState, device, close }: {
 			<img src={ arrowAllIcon } />
 			<span>Move</span>
 		</Button>
+	);
+}
+
+/** Placeholder id used only to keep the hook call unconditional when no invite is present; its result is discarded in that case. */
+const NO_INVITE_PLACEHOLDER_SPACE_ID = 's/000000000000000000000000' as SpaceId;
+
+function JoinSpaceInviteMenu({ device, close }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const invite = useMemo(() => {
+		const description = device.description;
+		if (!description)
+			return null;
+		return FindFirstSpaceInvite(description);
+	}, [device.description]);
+
+	const [open, setOpen] = useState(false);
+	const info = useSpaceExtendedInfo(invite?.spaceId ?? NO_INVITE_PLACEHOLDER_SPACE_ID, {
+		invite: invite?.invite,
+	});
+
+	if (invite == null)
+		return null;
+
+	const available = info != null && info.result === 'success' && info.invite?.id === invite.invite;
+
+	return (
+		<>
+			<Button
+				theme='transparent'
+				className={ classNames(
+					'withIcon',
+					available ? null : 'text-strikethrough',
+				) }
+				onClick={ () => {
+					if (!available)
+						return;
+					setOpen(true);
+				} }
+			>
+				<img src={ doorIcon } />
+				<span>Switch to space (in description)</span>
+			</Button>
+			{ (open && info != null && info.result === 'success') ? (
+				<ModalDialog>
+					<SpaceDetails
+						info={ info.data }
+						hasFullInfo
+						invite={ info.invite }
+						hide={ () => {
+							setOpen(false);
+							close();
+						} }
+					/>
+				</ModalDialog>
+			) : null }
+		</>
 	);
 }
 
@@ -375,6 +437,7 @@ function DeviceMainMenu({ roomState, device, position, close }: {
 				<hr />
 				<LeaveDeviceMenu roomState={ roomState } device={ device } close={ close } />
 				<OpenDeviceStorageMenu roomState={ roomState } device={ device } close={ close } />
+				<JoinSpaceInviteMenu device={ device } close={ close } />
 				{ canModifyRoom ? (
 					<>
 						<MoveDeviceMenu roomState={ roomState } device={ device } close={ close } />

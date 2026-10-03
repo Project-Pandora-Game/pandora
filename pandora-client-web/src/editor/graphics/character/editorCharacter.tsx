@@ -5,7 +5,7 @@ import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFun
 import { useObservable } from '../../../observable.ts';
 import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import type { EditorAssetGraphicsWornLayer } from '../../assets/editorAssetGraphicsWornLayer.ts';
-import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter.tsx';
+import { usePreviewCutterHideFaceEnabled, usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from './appearanceEditor.ts';
 
@@ -18,6 +18,7 @@ export function GraphicsCharacterEditor({
 	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const previewOverridesEnabled = usePreviewCutterOverridesEnabled();
+	const hideFaceEnabled = usePreviewCutterHideFaceEnabled();
 
 	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
 
@@ -27,6 +28,11 @@ export function GraphicsCharacterEditor({
 
 	const layerStateOverrideGetter = useCallback<LayerStateOverrideGetter>(
 		(layer) => {
+			if (hideFaceEnabled) {
+				if (layer.type === 'mesh' && layer.previewHideFace) {
+					return { alpha: 0 };
+				}
+			}
 			if (previewOverridesEnabled) {
 				if (layer.type === 'mesh' && layer.previewOverrides != null) {
 					return layer.previewOverrides;
@@ -36,7 +42,7 @@ export function GraphicsCharacterEditor({
 			return editorLayer != null ? editor.getLayerStateOverride(editorLayer) : undefined;
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[editor, editorGettersVersion, previewOverridesEnabled],
+		[editor, editorGettersVersion, previewOverridesEnabled, hideFaceEnabled],
 	);
 
 	useEffect(() => {

@@ -13,6 +13,8 @@ export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	pointType: z.string().array().optional(),
 	/** Overrides applied to this layer while generating an item preview. */
 	previewOverrides: LayerStateOverridesSchema.optional(),
+	/** If true, this layer is hidden in the editor preview while the preview cutter's "Hide face" option is enabled. */
+	previewHideFace: z.boolean().optional(),
 	mirror: LayerMirrorSchema,
 	colorizationKey: z.string().optional(),
 

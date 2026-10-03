@@ -348,6 +348,7 @@ async function LoadAssetImageLayerSingle(
 	if (layer.type === 'mesh') {
 		Assert(result.type === 'mesh');
 		result.previewOverrides = layer.previewOverrides;
+		result.previewHideFace = layer.previewHideFace;
 		result.colorizationKey = layer.colorizationKey;
 		result.normalMap = layer.normalMap;
 

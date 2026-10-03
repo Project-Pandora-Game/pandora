@@ -14,6 +14,8 @@ export const GraphicsMeshLayerSchema = RectangleSchema.extend({
 	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
 	/** Overrides applied to this layer while generating an item preview. */
 	previewOverrides: LayerStateOverridesSchema.optional(),
+	/** If true, this layer is hidden in the editor preview while the preview cutter's "Hide face" option is enabled. */
+	previewHideFace: z.boolean().optional(),
 	colorizationKey: z.string().optional(),
 
 	normalMap: LayerNormalDataSchema.optional(),

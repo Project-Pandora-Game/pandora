@@ -20,6 +20,8 @@ export const GraphicsSourceAutoMeshGraphicalLayerSchema = z.object({
 	imageOverrides: LayerImageOverrideSchema.array().optional(),
 	/** Overrides applied to this layer while generating an item preview. */
 	previewOverrides: LayerStateOverridesSchema.optional(),
+	/** If true, this layer is hidden in the editor preview while the preview cutter's "Hide face" option is enabled. */
+	previewHideFace: z.boolean().optional(),
 });
 export type GraphicsSourceAutoMeshGraphicalLayer = z.infer<typeof GraphicsSourceAutoMeshGraphicalLayerSchema>;
 

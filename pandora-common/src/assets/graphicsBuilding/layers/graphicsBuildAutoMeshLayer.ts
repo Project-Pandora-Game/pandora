@@ -252,6 +252,7 @@ export async function LoadAssetAutoMeshLayer(
 				points: layer.points,
 				pointType: templatePart.pointType,
 				previewOverrides: graphicalLayer.previewOverrides,
+				previewHideFace: graphicalLayer.previewHideFace,
 				mirror: templatePart.mirror ?? LayerMirror.NONE,
 				colorizationKey: graphicalLayer.colorizationKey,
 				normalMap: layer.normalMap,

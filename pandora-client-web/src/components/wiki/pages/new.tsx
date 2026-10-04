@@ -32,7 +32,7 @@ export function WikiNew(): ReactElement {
 			<p>
 				That said, if you do not want other users to be able to send you permission prompts, e.g. because your character is
 				a pure dominant, or you feel pressured by suddenly appearing permission popups from other users,
-				you should consider changing the "Interact and to use other allowed permissions" master-permission in
+				you should consider changing the "interact with you in general" master-permission in
 				the "Permissions" tab of the settings screen to "no".<br />
 				This would then show other users clearly that you are not interested in spontaneous plays without a
 				talk in advance.
@@ -152,7 +152,7 @@ export function WikiNew(): ReactElement {
 
 			<p>
 				While Pandora is a completely safe space as long as you do not give any <Link to='/wiki/characters#CH_Character_permissions'>permissions</Link> to
-				other users, the consequences of trusting someone with the general interaction permission to "Interact and to use other allowed permissions" is
+				other users, the consequences of trusting someone with the general interaction permission to "interact with you in general" is
 				not particularly problematic. The restraints and locks that are allowed to be used by other users by default can all be removed by
 				other users, too, when you ask for help.<br />
 				An exception are timer locks, that cannot be unlocked by other users before the time runs out, though there is an option that the one adding the

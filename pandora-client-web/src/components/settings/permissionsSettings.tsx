@@ -23,7 +23,7 @@ import {
 	PermissionGroup,
 	PermissionSetup,
 	PermissionType,
-	PermissionTypeSchema
+	PermissionTypeSchema,
 } from 'pandora-common';
 import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';

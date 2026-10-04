@@ -18,16 +18,15 @@ import {
 	KnownObject,
 	MakePermissionConfigFromDefault,
 	PERMISSION_MAX_CHARACTER_OVERRIDES,
-	PermissionConfig,
 	PermissionConfigChangeSelector,
 	PermissionConfigChangeType,
 	PermissionGroup,
 	PermissionSetup,
 	PermissionType,
-	PermissionTypeSchema,
+	PermissionTypeSchema
 } from 'pandora-common';
 import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import arrowRight from '../../assets/icons/arrow-right.svg';
@@ -569,6 +568,34 @@ export function PermissionPromptHandler(): ReactElement | null {
 }
 
 const PROMPT_SAFETY_COOLDOWN = 2_000;
+
+type PromptPermissionEntry = Readonly<{
+	key: string;
+	group: PermissionGroup;
+	id: string;
+	visibleName: string;
+	icon?: string;
+	groupName: string;
+	/** State for this requester at the time the prompt was created */
+	initial: PermissionType;
+}>;
+
+type PromptDecisions = Readonly<Partial<Record<string, PermissionType>>>;
+const NO_DECISIONS: PromptDecisions = {};
+
+function GetPermissionGroupName(group: PermissionGroup): string {
+	switch (group) {
+		case 'interaction':
+			return 'Interaction';
+		case 'assetPreferences':
+			return 'Item limit';
+		case 'characterModifierType':
+			return 'Character modifier';
+		default:
+			AssertNever(group);
+	}
+}
+
 function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 	prompt: PermissionPromptData;
 	dismiss: () => void;
@@ -582,18 +609,49 @@ function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
 		setFull(permissionGroup, permissionId, source.id, allowOthers);
 	}, [setFull, source.id]);
-	const acceptAll = useCallback(() => {
+
+	// Flatten all required permissions, each with its current state for this requester
+	const entries = useMemo(() => {
+		const result: PromptPermissionEntry[] = [];
 		for (const [group, permissions] of KnownObject.entries(requiredPermissions)) {
-			if (!permissions)
+			if (permissions == null)
 				continue;
 
-			for (const [setup] of permissions) {
-				setAnyConfig(group, setup.id, 'accept');
+			const groupName = GetPermissionGroupName(group);
+			for (const [setup, cfg] of permissions) {
+				result.push({
+					key: `${group}:${setup.id}`,
+					group,
+					id: setup.id,
+					visibleName: setup.displayName,
+					icon: setup.icon,
+					groupName,
+					initial: cfg.characterOverrides[source.id] ?? cfg.allowOthers,
+				});
 			}
 		}
-		dismiss();
-	}, [requiredPermissions, dismiss, setAnyConfig]);
-	const [allowAccept, disableAccept] = useReducer(() => false, true);
+		return result;
+	}, [requiredPermissions, source.id]);
+
+	// Decisions made in this dialog; bound to the prompt, so a refreshed prompt starts clean
+	const [decisionState, setDecisionState] = useState<{ prompt: PermissionPromptData; decisions: PromptDecisions; }>({ prompt, decisions: NO_DECISIONS });
+	const decisions = decisionState.prompt === prompt ? decisionState.decisions : NO_DECISIONS;
+
+	const getState = useCallback((entry: PromptPermissionEntry): PermissionType => decisions[entry.key] ?? entry.initial, [decisions]);
+
+	const decide = useCallback((list: readonly PromptPermissionEntry[], value: 'yes' | 'no' | 'accept') => {
+		const resulting: PermissionType = value === 'no' ? 'no' : 'yes';
+		for (const entry of list) {
+			setAnyConfig(entry.group, entry.id, value);
+		}
+		setDecisionState((old) => {
+			const result: Partial<Record<string, PermissionType>> = { ...(old.prompt === prompt ? old.decisions : NO_DECISIONS) };
+			for (const entry of list) {
+				result[entry.key] = resulting;
+			}
+			return { prompt, decisions: result };
+		});
+	}, [setAnyConfig, prompt]);
 
 	// Prevent the user from confirming the prompt by accident if it just changed by introducing confirm cooldown
 	const [safePrompt, setSafePrompt] = useState<PermissionPromptData | null>(null);
@@ -607,158 +665,178 @@ function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 	}, [prompt]);
 	const isSafe = prompt === safePrompt;
 
+	// Sections are based on the initial state, so rows don't jump around while deciding
+	const newEntries = entries.filter((e) => e.initial === 'prompt');
+	const deniedEntries = entries.filter((e) => e.initial === 'no');
+	const allowedEntries = entries.filter((e) => e.initial === 'yes');
+
+	const pending = newEntries.filter((e) => getState(e) === 'prompt');
+
 	return (
 		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose highlight={ !isSafe }>
-			<Row alignX='center'>
-				<h2>
-					<span style={ { textShadow: `${source.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor} 1px 2px` } }>
-						{ source.name }
-					</span>
-					{ ' ' }
-					({ source.id })
-					{ ' ' }
-					asks for permission to...
-				</h2>
-			</Row>
-			{
-				actions.length > 0 ? (
-					<Column alignX='center'>
-						<span>Requested actions:</span>
-						{
-							actions.map((action, i) => (
-								<DescribeGameLogicAction
-									key={ i }
-									action={ action }
-									actionOriginator={ source }
-									globalState={ globalState }
-								/>
-							))
-						}
-					</Column>
-				) : null
-			}
-			<Row padding='large' alignX='center'>
-				<p className='text-dim'>
-					<span>ⓘ </span>
-					<i>
-						All following permissions are required to do the actions above. The requester is missing one ore more of<br />
-						them - those where both buttons are active and lit up. Please review each and either permanently grant it, or<br />
-						block the character from asking again by always denying it. If taking no decision, they can ask again any time.
-					</i>
-				</p>
-			</Row>
-			<Column>
+			<Column className='permission-prompt'>
+				<Row alignX='center'>
+					<h2>
+						<span style={ { textShadow: `${source.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor} 1px 2px` } }>
+							{ source.name }
+						</span>
+						{ ' ' }
+						({ source.id })
+						{ ' ' }
+						asks for permission to...
+					</h2>
+				</Row>
 				{
-					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
-						permissions == null ? null : <PermissionPromptGroup key={ group } sourceId={ source.id } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
-					))
+					actions.length > 0 ? (
+						<Column alignX='center' padding='large'>
+							{
+								actions.map((action, i) => (
+									<DescribeGameLogicAction
+										key={ i }
+										action={ action }
+										actionOriginator={ source }
+										globalState={ globalState }
+									/>
+								))
+							}
+						</Column>
+					) : null
 				}
+
+				<PermissionPromptSection
+					tone='prompt'
+					title='New - needs your decision'
+					entries={ newEntries }
+					getState={ getState }
+					onDecide={ decide }
+				/>
+				<PermissionPromptSection
+					tone='no'
+					title='Currently denied'
+					entries={ deniedEntries }
+					getState={ getState }
+					onDecide={ decide }
+				/>
+				<PermissionPromptSection
+					tone='yes'
+					title='Already allowed'
+					entries={ allowedEntries }
+					getState={ getState }
+					onDecide={ decide }
+					collapsible
+					defaultOpen={ newEntries.length === 0 }
+				/>
+
+				<p className='text-dim hint'>
+					ⓘ <i>Decisions are saved and you won't be asked again for interactions with this character.</i>
+				</p>
+
+				<Row padding='medium' alignX='space-between' alignY='center'>
+					<Button onClick={ dismiss }>
+						{ pending.length > 0 ? 'Close without deciding' : 'Done' }
+					</Button>
+				</Row>
 			</Column>
-			<Row padding='large' alignX='space-between' alignY='center'>
-				<Button onClick={ dismiss }>Close with no further decisions</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept || !isSafe }>Allow all above always</Button>
-			</Row>
 		</DraggableDialog>
 	);
 }
 
-function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyConfig, disableAccept }: {
-	sourceId: CharacterId;
-	permissionGroup: PermissionGroup;
-	permissions: Immutable<[PermissionSetup, PermissionConfig][]>;
-	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
-	disableAccept: () => void;
-}): ReactElement {
-	let header;
-	switch (permissionGroup) {
-		case 'interaction':
-			header = 'Interactions';
-			break;
-		case 'assetPreferences':
-			header = 'Item Limits';
-			break;
-		case 'characterModifierType':
-			header = 'Character modifiers';
-			break;
-		default:
-			AssertNever(permissionGroup);
-	}
+function PermissionPromptSection({ tone, title, hint, entries, getState, onDecide, collapsible, defaultOpen }: {
+	tone: PermissionType;
+	title: string;
+	hint?: string;
+	entries: readonly PromptPermissionEntry[];
+	getState: (entry: PromptPermissionEntry) => PermissionType;
+	onDecide: (list: readonly PromptPermissionEntry[], value: 'yes' | 'no') => void;
+	collapsible?: boolean;
+	defaultOpen?: boolean;
+}): ReactElement | null {
+	if (entries.length === 0)
+		return null;
 
-	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon?: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
-		for (const [setup, cfg] of permissions) {
+	const heading = (
+		<>
+			<b>{ title } ({ entries.length })</b>
+			{ hint != null ? <span className='text-dim'> – { hint }</span> : null }
+		</>
+	);
 
-			result.push({
-				id: setup.id,
-				visibleName: setup.displayName,
-				icon: setup.icon,
-				allowOthers: cfg.allowOthers,
-				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
-			});
-		}
-		return result;
-	}, [permissions, sourceId]);
-
-	return (
-		<Column className='permissionPrompt'>
-			<h3>{ header }</h3>
+	const rows = (
+		<Column gap='tiny'>
 			{
-				perms.map((perm) => (
-					<div className='input-row flex-1' key={ perm.id }>
-						<label className='flex-1'>
-							{
-								perm.icon ? (
-									<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
-								) : null
-							}
-							&nbsp;&nbsp;
-							<span>{ perm.visibleName }</span>
-						</label>
-						<ShowAllowOthers config={ perm.allowOthers } />
-						<PermissionPromptButton
-							isAllowed={ perm.isAllowed }
-							setYes={ () => setAnyConfig(permissionGroup, perm.id, 'yes') }
-							setNo={ () => {
-								setAnyConfig(permissionGroup, perm.id, 'no');
-								disableAccept();
-							} }
-						/>
-					</div>
+				entries.map((entry) => (
+					<PermissionPromptRow key={ entry.key } entry={ entry } state={ getState(entry) } onDecide={ onDecide } />
 				))
 			}
 		</Column>
 	);
-}
 
-function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => void; setNo: () => void; isAllowed: boolean; }): ReactElement {
-	const [state, setState] = useState<'yes' | 'no' | null>(isAllowed ? 'yes' : null);
+	if (collapsible) {
+		return (
+			<details className={ `permission-prompt-section ${tone}` } open={ defaultOpen }>
+				<summary>{ heading }</summary>
+				{ rows }
+			</details>
+		);
+	}
 
 	return (
-		<>
-			<Button
-				className='slim'
-				disabled={ state === 'yes' }
-				onClick={ () => {
-					if (state !== 'yes') {
-						setYes();
-						setState('yes');
-					}
-				} }
-			>
-				Allow always
-			</Button>
-			<Button
-				className='slim'
-				onClick={ () => {
-					if (state !== 'no') {
-						setNo();
-						setState('no');
-					}
-				} }
-			>
-				Deny always
-			</Button>
-		</>
+		<section className={ `permission-prompt-section ${tone}` }>
+			<div className='section-heading'>{ heading }</div>
+			{ rows }
+		</section>
+	);
+}
+
+const PERMISSION_STATE_BADGE: Record<PermissionType, { src: string; label: string; }> = {
+	yes: { src: allow, label: 'Allowed' },
+	no: { src: forbid, label: 'Denied' },
+	prompt: { src: promptIcon, label: 'Undecided' },
+};
+
+function PermissionPromptRow({ entry, state, onDecide }: {
+	entry: PromptPermissionEntry;
+	state: PermissionType;
+	onDecide: (list: readonly PromptPermissionEntry[], value: 'yes' | 'no') => void;
+}): ReactElement {
+	const badge = PERMISSION_STATE_BADGE[state];
+
+	return (
+		<div className={ `permission-prompt-row ${state}` }>
+			{ entry.icon ? <img src={ GetIcon(entry.icon) } width='28' height='28' alt='' /> : null }
+			<div className='name flex-1'>
+				<span>{ entry.visibleName }</span>
+				<small className='text-dim'>{ entry.groupName }</small>
+			</div>
+			<span className='badge'>
+				<img src={ badge.src } width='16' height='16' alt='' />
+				{ badge.label }
+			</span>
+			<SelectionIndicator padding='tiny' selected={ state === 'yes' }>
+				<Button
+					slim
+					onClick={ () => {
+						if (state !== 'yes') {
+							onDecide([entry], 'yes');
+						}
+					} }
+				>
+					Allow
+				</Button>
+			</SelectionIndicator>
+			<SelectionIndicator padding='tiny' selected={ state === 'no' }>
+				<Button
+					slim
+					onClick={ () => {
+						if (state !== 'no') {
+							onDecide([entry], 'no');
+						}
+					} }
+				>
+					Deny
+				</Button>
+			</SelectionIndicator>
+		</div>
 	);
 }
 

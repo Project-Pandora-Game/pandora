@@ -8,10 +8,12 @@ import { botManager } from './botManager.ts';
 
 export const BotsClientHandler = {
 	botListPublic: async (_args, connection): IClientDirectoryPromiseResult['botListPublic'] => {
-		const accountId = connection.account?.id;
+		const account = connection.account;
+		if (account == null)
+			return { bots: [] };
 
 		const bots = (await botManager.loadAllBots())
-			.filter((it) => it.isPublic || it.ownerAccountId === accountId);
+			.filter((it) => it.canBeUsedBy(account));
 
 		return {
 			bots: bots.map((it) => it.getPublicDefinition()),

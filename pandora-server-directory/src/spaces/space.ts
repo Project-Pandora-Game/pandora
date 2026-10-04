@@ -424,7 +424,7 @@ export class Space {
 		if (changes.bot !== undefined) {
 			if (changes.bot != null) {
 				bot = await botManager.loadBotById(changes.bot.bot);
-				if (bot == null)
+				if (bot == null || (source != null && !bot.canBeUsedBy(source.account)))
 					return 'unknownBot';
 			} else {
 				bot = null;

@@ -17,6 +17,7 @@ import {
 import type { BotConfig, BotDefinition, BotDirectoryStateInfo, BotId, BotPublicInfo, BotSpaceStateInfo } from 'pandora-common/bots';
 import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import type { Account } from '../account/account.ts';
+import type { ActorIdentity } from '../account/actorIdentity.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseBot, DatabaseBotUpdate } from '../database/databaseStructure/bots.ts';
 import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
@@ -100,6 +101,14 @@ export class Bot extends TypedEventEmitter<{
 
 	public isOnline(): boolean {
 		return this.associatedApiConnections.hasClients();
+	}
+
+	/** Check if specified account is allowed to make use of this bot */
+	public canBeUsedBy(account: ActorIdentity): boolean {
+		// Owner can always use own bot
+		return this.ownerAccountId === account.id ||
+			// Public bots can be used by anyone
+			this.isPublic;
 	}
 
 	/** Get bot's definition */

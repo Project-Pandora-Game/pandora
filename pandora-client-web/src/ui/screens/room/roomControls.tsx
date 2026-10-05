@@ -33,7 +33,6 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { HoverElement } from '../../../components/hoverElement/hoverElement.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
-import { USER_DEBUG } from '../../../config/Environment.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
@@ -54,7 +53,6 @@ import './roomControls.scss';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 import { RoomPhotoDialog } from './roomPhoto.tsx';
 import { DeviceOverlayState, SettingDisplayCharacterName, SettingDisplayRoomDeviceButtons, SettingDisplayRoomLinks, SettingRoomCharacterListDisplayOffline } from './roomState.ts';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 
 export function RoomControls(): ReactElement | null {
 	const id = useId();
@@ -185,7 +183,7 @@ export function RoomControls(): ReactElement | null {
 				globalState={ globalState }
 			/>
 			<DeviceOverlaySelector />
-			<DevDebugMenu />
+			<ChatroomDebugConfigView />
 		</Column>
 	);
 }
@@ -360,7 +358,7 @@ export function PersonalSpaceControls(): ReactElement {
 			<PrivateRoomTutorialList />
 			&nbsp;
 			<DeviceOverlaySelector />
-			<DevDebugMenu />
+			<ChatroomDebugConfigView />
 		</Column>
 	);
 }
@@ -386,20 +384,6 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	}
 
 	return null;
-}
-
-function DevDebugMenu(): ReactElement | null {
-	const { showDevDebugMenu } = useAccountSettings();
-
-	if (!USER_DEBUG || !showDevDebugMenu)
-		return null;
-
-	return (
-		<>
-			&nbsp;
-			<ChatroomDebugConfigView />
-		</>
-	);
 }
 
 function DeviceOverlaySelector(): ReactElement {

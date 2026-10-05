@@ -20,10 +20,10 @@ import { useAssetManager } from '../../assets/assetManager.tsx';
 import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
-import { USER_DEBUG } from '../../config/Environment.ts';
 import { useAssetPreferenceVisibilityCheck } from '../../graphics/common/assetVisibilityCheck.ts';
 import { useObservable } from '../../observable.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useDevelopmentEnabled } from '../../ui/screens/room/roomDebug.tsx';
 import { Button, ButtonProps, IconButton } from '../common/button/button.tsx';
 import { HoverElement } from '../hoverElement/hoverElement.tsx';
 import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext.tsx';
@@ -107,6 +107,8 @@ export function WardrobeActionButtonElement({
 		};
 	}, [ref, currentAttempt]);
 
+	const developmentEnabled = useDevelopmentEnabled();
+
 	return (
 		<Element
 			id={ id }
@@ -130,8 +132,9 @@ export function WardrobeActionButtonElement({
 			} }
 			disabled={ disabled }
 			title={ title }
-			data-action={ (USER_DEBUG && actionData != null) ? JSON.stringify(actionData, undefined, '\t') : undefined }
-			data-action-localproblems={ (USER_DEBUG && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
+			// Action itself is attached regardless of development settings - used by tutorials
+			data-action={ (actionData != null) ? JSON.stringify(actionData, undefined, '\t') : undefined }
+			data-action-localproblems={ (developmentEnabled && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (

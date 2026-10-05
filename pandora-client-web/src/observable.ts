@@ -2,7 +2,7 @@ import { Draft, enableMapSet, freeze, produce } from 'immer';
 import { noop } from 'lodash-es';
 import { Assert, ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { NODE_ENV, USER_DEBUG } from './config/Environment.ts';
+import { DEVELOPMENT, NODE_ENV } from './config/Environment.ts';
 
 // Enable "Map" and "Set" support from immer, so they can be easily used in observables
 enableMapSet();
@@ -104,11 +104,11 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 }
 
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
-export const Observable = (USER_DEBUG && NODE_ENV !== 'test') ? RateLimitedObservable : NormalObservable;
+export const Observable = (DEVELOPMENT && NODE_ENV !== 'test') ? RateLimitedObservable : NormalObservable;
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
 export type Observable<T> = NormalObservable<T>;
 
-if (USER_DEBUG && NODE_ENV !== 'test') {
+if (DEVELOPMENT && NODE_ENV !== 'test') {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 	(window as any).RateLimitedObservable = RateLimitedObservable;
 }

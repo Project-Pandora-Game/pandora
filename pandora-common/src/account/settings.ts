@@ -30,8 +30,13 @@ export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
  * A category of settings that is considered "advanced".
  * Advanced category needs to be enabled first before accessing it, after reading its disclaimer.
  */
-export type SettingsAdvancedCategory = 'access_tokens';
-export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum(['access_tokens']);
+export type SettingsAdvancedCategory =
+	| 'access_tokens'
+	| 'development';
+export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum([
+	'access_tokens',
+	'development',
+]);
 
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
@@ -143,10 +148,6 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfacePosingStyle: z.enum(['inverse', 'forward', 'both']),
 	/**
-	 * Controls whether the "[DEV] Debug options" menu is shown in the "Room" tab
-	 */
-	showDevDebugMenu: z.boolean(),
-	/**
 	 * How should command autocomplete behave.
 	 * - `always-show` - The help is always shown while typing a command
 	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
@@ -172,6 +173,12 @@ export const AccountSettingsSchema = z.object({
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
 	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
+
+	/**
+	 * Controls whether the "[DEV]" menus are shown
+	 */
+	devShowMenus: z.boolean(),
+
 	/** List of advanced settings that the user enabled */
 	enabledAdvancedSettings: ZodArrayWithInvalidDrop(SettingsAdvancedCategorySchema, z.string(), SettingsAdvancedCategorySchema.options.length).readonly(),
 });
@@ -207,7 +214,6 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom',
 	interfaceChatroomHideRoomDescriptionsRole: 'admin',
 	interfacePosingStyle: 'inverse',
-	showDevDebugMenu: false,
 	chatCommandHintBehavior: 'always-show',
 	chatMaxShownMessages: 100,
 	alwaysUseSpaceSwitchFlow: false,
@@ -221,6 +227,9 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	notificationTypeSettings: {},
 	accessibilityForceSystemColors: false,
 	tutorialCompleted: EMPTY_ARRAY,
+
+	devShowMenus: false,
+
 	enabledAdvancedSettings: EMPTY_ARRAY,
 });
 

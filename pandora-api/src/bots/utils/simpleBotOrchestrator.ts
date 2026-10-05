@@ -145,13 +145,15 @@ export class SimpleBotOrchestrator {
 		const { spaces } = this._stateSnapshot;
 
 		// Process each space in the snapshot
+		const activeSpaces = new Set<SpaceId>;
 		for (const spaceState of spaces) {
+			activeSpaces.add(spaceState.id);
 			await this._handleSpace(spaceState);
 		}
 
 		// Disconnect any remaining connection whose space is no longer in the snapshot
 		for (const spaceId of Array.from(this._connections.keys())) {
-			if (!spaces.some((s) => s.id === spaceId)) {
+			if (!activeSpaces.has(spaceId)) {
 				await this._disconnectSpace(spaceId);
 			}
 		}

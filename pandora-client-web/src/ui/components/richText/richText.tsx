@@ -1,5 +1,6 @@
 import { Fragment, useMemo, type ReactElement } from 'react';
 import { CreateExportedDataMatcher } from '../../../components/exportImport/exportImportUtils.ts';
+import { TryParseSpaceInviteUrl, type ParsedSpaceInvite } from '../../screens/spaceJoin/inviteEmbed.tsx';
 import { RenderedPosePreset } from '../chat/embed_posePreset.tsx';
 import { RenderedLink } from '../chat/links.tsx';
 import './richText.scss';
@@ -60,29 +61,33 @@ function ProcessTextMatchers(text: string, matcherIndex: number = 0, keyStartInd
 	return result;
 }
 
-export const RICH_TEXT_MATCHERS: {
+interface RichTextMatcher {
 	matchRegex: RegExp;
 	eatSpaceAfter: boolean;
 	/** If set, then chat will autodetect this during send and send it as raw OOC message. */
 	autoDetect: boolean;
 	process: (match: RegExpExecArray) => ReactElement | null;
-}[] = [
-	// URLs
-	{
-		matchRegex: /(https?:\/\/\S+)(\s*)/g,
-		eatSpaceAfter: false,
-		autoDetect: true,
-		process: (match) => {
-			const url = URL.parse(match[1]);
+}
 
-			if (url != null) {
-				return (
-					<RenderedLink url={ url } text={ url.href } textAfter={ match[2] } />
-				);
-			}
-			return null;
-		},
+export const RICH_TEXT_URL_MATCHER: RichTextMatcher = {
+	matchRegex: /(https?:\/\/\S+)(\s*)/g,
+	eatSpaceAfter: false,
+	autoDetect: true,
+	process: (match) => {
+		const url = URL.parse(match[1]);
+
+		if (url != null) {
+			return (
+				<RenderedLink url={ url } text={ url.href } textAfter={ match[2] } />
+			);
+		}
+		return null;
 	},
+};
+
+export const RICH_TEXT_MATCHERS: RichTextMatcher[] = [
+	// URLs
+	RICH_TEXT_URL_MATCHER,
 	// Pose presets
 	{
 		matchRegex: CreateExportedDataMatcher('PosePreset', 'g'),
@@ -93,3 +98,24 @@ export const RICH_TEXT_MATCHERS: {
 		),
 	},
 ];
+
+/**
+ * Scans rich text for space invite links
+ * that resolves to a valid space invite, or `null` if there is none.
+ */
+export function FindRichTextSpaceInvites(text: string): ParsedSpaceInvite[] {
+	const result: ParsedSpaceInvite[] = [];
+
+	for (const match of text.matchAll(RICH_TEXT_URL_MATCHER.matchRegex)) {
+		const url = URL.parse(match[1]);
+
+		if (url != null) {
+			const invite = TryParseSpaceInviteUrl(url);
+
+			if (invite != null)
+				result.push(invite);
+		}
+	}
+
+	return result;
+}

@@ -10,7 +10,6 @@ import { useSpaceExtendedInfo } from '../spacesSearch/useSpaceExtendedInfo.tsx';
 import './inviteEmbed.scss';
 
 const SPACE_INVITE_URL_PATH_PREFIX = '/space/join/';
-const SPACE_INVITE_URL_REGEX = /https?:\/\/(?:www\.)?project-pandora\.com\S*/gi;
 
 export interface ParsedSpaceInvite {
 	spaceId: SpaceId;
@@ -49,27 +48,6 @@ export function TryParseSpaceInviteUrl(url: URL): ParsedSpaceInvite | null {
 		default:
 			return null;
 	}
-}
-
-/**
- * Scans free text for `project-pandora.com` URLs and returns the first one
- * that resolves to a valid space invite, or `null` if there is none.
- */
-export function FindFirstSpaceInvite(text: string): ParsedSpaceInvite | null {
-	const fullText = text;
-
-	for (const match of fullText.matchAll(SPACE_INVITE_URL_REGEX)) {
-		let url: URL;
-		try {
-			url = new URL(match[0]);
-		} catch (_error) {
-			continue;
-		}
-		const parsed = TryParseSpaceInviteUrl(url);
-		if (parsed != null)
-			return parsed;
-	}
-	return null;
 }
 
 export const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'], 'success'>, string> = {

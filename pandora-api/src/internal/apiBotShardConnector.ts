@@ -1,4 +1,6 @@
 import {
+	Assert,
+	AssertNever,
 	GetLogger,
 	HTTP_SOCKET_IO_BOT_PATH,
 	IConnectionBase,
@@ -140,10 +142,27 @@ export class ApiBotShardConnector extends TypedEventEmitter<{
 	 */
 	private setState(newState: ApiBotShardConnectionState): void {
 		this._state = newState;
-		if (newState === ApiBotShardConnectionState.WAIT_FOR_DATA) {
-			this.emit('connected', undefined);
-		} else if (newState === ApiBotShardConnectionState.DISCONNECTED) {
-			this.emit('disconnected', undefined);
+		switch (newState) {
+			case ApiBotShardConnectionState.NONE:
+				Assert(false, 'Connector should never reset to NONE');
+				break;
+			case ApiBotShardConnectionState.INITIAL_CONNECTION_PENDING:
+				break;
+			case ApiBotShardConnectionState.WAIT_FOR_DATA:
+				// We connected already - even if still waiting for data, the bot can start sending requests
+				this.emit('connected', undefined);
+				break;
+			case ApiBotShardConnectionState.CONNECTED:
+				// No event - handled by "loaded" on `BotConnection`
+				break;
+			case ApiBotShardConnectionState.CONNECTION_LOST:
+				this.emit('disconnected', undefined);
+				break;
+			case ApiBotShardConnectionState.DISCONNECTED:
+				this.emit('disconnected', undefined);
+				break;
+			default:
+				AssertNever(newState);
 		}
 	}
 

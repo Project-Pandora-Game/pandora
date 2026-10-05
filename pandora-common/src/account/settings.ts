@@ -4,7 +4,7 @@ import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
 import { SpaceRoleOrNoneSchema } from '../space/spaceRoles.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
-import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
+import { DisplayNameSchema, HexColorStringSchema, ZodArrayWithInvalidDrop } from '../validation.ts';
 import { AccountRoleSchema } from './accountRoles.ts';
 import { AccountOnlineStatusSchema } from './contacts.ts';
 import { TutorialIdSchema } from './tutorials.ts';
@@ -173,7 +173,7 @@ export const AccountSettingsSchema = z.object({
 	 */
 	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
 	/** List of advanced settings that the user enabled */
-	enabledAdvancedSettings: SettingsAdvancedCategorySchema.array().max(SettingsAdvancedCategorySchema.options.length).readonly(),
+	enabledAdvancedSettings: ZodArrayWithInvalidDrop(SettingsAdvancedCategorySchema, z.string(), SettingsAdvancedCategorySchema.options.length).readonly(),
 });
 
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;

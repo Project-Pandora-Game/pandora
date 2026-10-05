@@ -30,6 +30,7 @@ export const ClientHandlersBotCommands = {
 
 			return {
 				result: 'ok',
+				bot: bot.id,
 				commands: result.commands,
 			};
 		} catch (err) {
@@ -38,7 +39,7 @@ export const ClientHandlersBotCommands = {
 			return { result: 'botError' };
 		}
 	},
-	botCommandRun: async ({ command, args }, connection): IClientShardPromiseResult['botCommandRun'] => {
+	botCommandRun: async ({ command, args, bot: requestBot }, connection): IClientShardPromiseResult['botCommandRun'] => {
 		if (!connection.character)
 			throw new BadMessageError();
 
@@ -49,7 +50,7 @@ export const ClientHandlersBotCommands = {
 			return { result: 'noBot' };
 
 		const botConnection = bot.connection;
-		if (botConnection == null)
+		if (botConnection == null || bot.id !== requestBot)
 			return { result: 'botDisconnected' };
 
 		try {
@@ -66,7 +67,7 @@ export const ClientHandlersBotCommands = {
 			return { result: 'botError' };
 		}
 	},
-	botCommandGetStructurePart: async ({ command, args }, connection): IClientShardPromiseResult['botCommandGetStructurePart'] => {
+	botCommandGetStructurePart: async ({ command, args, bot: requestBot }, connection): IClientShardPromiseResult['botCommandGetStructurePart'] => {
 		if (!connection.character)
 			throw new BadMessageError();
 
@@ -77,7 +78,7 @@ export const ClientHandlersBotCommands = {
 			return { result: 'noBot' };
 
 		const botConnection = bot.connection;
-		if (botConnection == null)
+		if (botConnection == null || bot.id !== requestBot)
 			return { result: 'botDisconnected' };
 
 		try {

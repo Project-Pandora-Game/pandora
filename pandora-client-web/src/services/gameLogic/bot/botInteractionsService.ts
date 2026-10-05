@@ -62,7 +62,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 				toast(`Failed to process command: ${loadResult.error}`, TOAST_OPTIONS_ERROR);
 				return false;
 			}
-			const { structure, args, unparsedSuffix } = loadResult.value;
+			const { structure, args, unparsedSuffix, cacheKey } = loadResult.value;
 
 			const finalArgs = args.map((it) => it.parsedValue);
 
@@ -94,6 +94,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			const result = await this.serviceDeps.shardConnector.awaitResponse('botCommandRun', {
 				command: commandName,
 				args: finalArgs,
+				bot: cacheKey.bot,
 			});
 
 			if (result.result === 'ok') {
@@ -126,6 +127,13 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 	}
 
 	public async autocomplete(input: string): Promise<CommandAutocompleteResult> {
+		return (await this._autocompleteInternal(input))?.result ?? null;
+	}
+
+	private async _autocompleteInternal(input: string): Promise<{
+		result: CommandAutocompleteResult;
+		cacheKey: CommandCacheKey;
+	} | null> {
 		const { commandName, spacing, rest } = BotInteractionsService._parseCommandName(input);
 		const context = this._getCommandContext(commandName, 'autocomplete');
 		if (context == null) {
@@ -136,6 +144,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		try {
 			// If there is no space after commandName, we are autocompleting the command itself
 			if (!spacing) {
+				const spaceId = context.gameState.currentSpace.value.id;
 				const commands = await this.serviceDeps.shardConnector.awaitResponse('botCommandsGet', {});
 				// TODO: Cache the commands list
 
@@ -148,10 +157,17 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 							longDescription: c.longDescription,
 						}));
 
-					return options.length > 0 ? {
+					const result: CommandAutocompleteResult = options.length > 0 ? {
 						header: 'Custom Bot commands (arguments in <> are required, arguments in [] are optional)',
 						options,
 					} : null;
+					return {
+						result,
+						cacheKey: {
+							space: spaceId,
+							bot: commands.bot,
+						},
+					};
 				} else if (commands.result === 'botError') {
 					toast('The space\'s bot failed to produce command list', TOAST_OPTIONS_ERROR);
 					return null;
@@ -170,14 +186,17 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 				// Failed to run autocomplete, but this is to be expected, just keep it silent
 				return null;
 			}
-			const { structure, args, unparsedSuffix } = loadResult.value;
+			const { structure, args, unparsedSuffix, cacheKey } = loadResult.value;
 			const headerPrefix = `!${commandName} `;
 
 			// Rest argument has no autocomplete
 			if (structure.nextSegment === 'rest' || structure.nextSegment == null) {
 				return {
-					header: headerPrefix + structure.header,
-					options: [],
+					result: {
+						header: headerPrefix + structure.header,
+						options: [],
+					},
+					cacheKey,
 				};
 			} else {
 				const { value, spacing: lastArgumentSpacing, rest: lastArgumentRest } = COMMAND_STEP_PREPARSE_PROCESSORS[structure.nextSegment.preparse](unparsedSuffix);
@@ -188,11 +207,14 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 				const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
 				return {
-					header: headerPrefix + structure.header,
-					options: options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
-						...optionProps,
-						replaceValue: commandName + ' ' + args.map((it) => it.normalizedInput + ' ').join('') + (shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue),
-					})),
+					result: {
+						header: headerPrefix + structure.header,
+						options: options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
+							...optionProps,
+							replaceValue: commandName + ' ' + args.map((it) => it.normalizedInput + ' ').join('') + (shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue),
+						})),
+					},
+					cacheKey,
 				};
 			}
 		} catch (err) {
@@ -239,16 +261,16 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			};
 		}
 		this._lastAutocomplete = undefined;
-		const result = await this.autocomplete(input);
-		if (!result || result.options.length === 0) {
+		const result = await this._autocompleteInternal(input);
+		if (!result || !result.result || result.result.options.length === 0) {
 			return {
 				replace: input,
-				result,
+				result: null,
 				index: null,
 				nextSegment: false,
 			};
-		} else if (result.options.length === 1) {
-			const replace = result.options[0].replaceValue + ' ';
+		} else if (result.result.options.length === 1) {
+			const replace = result.result.options[0].replaceValue + ' ';
 			return {
 				replace,
 				result: await this.autocomplete(replace),
@@ -256,18 +278,18 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 				nextSegment: true,
 			};
 		}
-		const best = LongestCommonPrefix(result.options.map((i) => i.replaceValue));
+		const best = LongestCommonPrefix(result.result.options.map((i) => i.replaceValue));
 		// Only use the prefix if it matches with the already entered value
 		const bestReplacement = best.toLocaleLowerCase().startsWith(input.toLocaleLowerCase()) ? best : input;
 		this._lastAutocomplete = {
-			key: BotInteractionsService._getCurrentCacheKey(context),
+			key: result.cacheKey,
 			lastQuery: bestReplacement,
-			lastResult: result,
+			lastResult: result.result,
 			currentIndex: null,
 		};
 		return {
 			replace: bestReplacement,
-			result,
+			result: result.result,
 			index: null,
 			nextSegment: false,
 		};
@@ -283,12 +305,15 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		structure: BotCommandStructureResult;
 		args: readonly CommandParsedArg[];
 		unparsedSuffix: string;
+		cacheKey: CommandCacheKey;
 	}, string>> {
 		// Result
 		const args: CommandParsedArg[] = [];
 
 		// Try to handle things from the cache first
 		const cacheKey = BotInteractionsService._getCurrentCacheKey(context);
+		if (cacheKey == null)
+			return Result.Err(`This space has no active bot`);
 
 		const originalInput = input;
 		let allowRetry = false;
@@ -335,6 +360,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 						structure: cachedStructure,
 						args,
 						unparsedSuffix: input,
+						cacheKey,
 					});
 				}
 
@@ -347,6 +373,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 						structure: cachedStructure,
 						args,
 						unparsedSuffix: input,
+						cacheKey,
 					});
 				}
 
@@ -371,7 +398,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 
 		let lastStructure: BotCommandStructureResult | undefined;
 		while (true) {
-			const nextStructureResult = await this._loadCommandStructureTokenized(command, args.map((it) => it.parsedValue));
+			const nextStructureResult = await this._loadCommandStructureTokenized(command, args.map((it) => it.parsedValue), cacheKey.bot);
 			if (nextStructureResult.is_err())
 				return nextStructureResult;
 			const nextStructure = nextStructureResult.value;
@@ -435,13 +462,15 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			structure: lastStructure,
 			args,
 			unparsedSuffix: input,
+			cacheKey,
 		});
 	}
 
-	private async _loadCommandStructureTokenized(command: string, args: readonly string[]): Promise<Result<BotCommandStructureResult, string>> {
+	private async _loadCommandStructureTokenized(command: string, args: readonly string[], bot: BotId): Promise<Result<BotCommandStructureResult, string>> {
 		const result = await this.serviceDeps.shardConnector.awaitResponse('botCommandGetStructurePart', {
 			command,
 			args: args.slice(),
+			bot,
 		});
 
 		if (result.result === 'ok') {
@@ -473,12 +502,14 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		};
 	}
 
-	private static _getCurrentCacheKey(context: BotCommandContext): CommandCacheKey {
+	private static _getCurrentCacheKey(context: BotCommandContext): CommandCacheKey | null {
 		const spaceInfo = context.gameState.currentSpace.value;
+		if (spaceInfo.config.bot == null)
+			return null;
 
 		return {
 			space: spaceInfo.id,
-			bot: spaceInfo.config.bot?.bot ?? null,
+			bot: spaceInfo.config.bot.bot,
 		};
 	}
 
@@ -606,7 +637,7 @@ type BotCommandContext = ICommandClientNeededContext<'gameState' | 'globalState'
 
 interface CommandCacheKey {
 	space: SpaceId | null;
-	bot: BotId | null;
+	bot: BotId;
 }
 
 interface CommandParsedArg {

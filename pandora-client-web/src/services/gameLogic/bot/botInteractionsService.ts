@@ -68,7 +68,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 
 			// Process trailing argument (no space after it or it is a "rest" argument)
 			if (structure.nextSegment == null) {
-				if (rest.trim()) {
+				if (unparsedSuffix.trim()) {
 					toast(`Failed to process command: Unexpected input '${unparsedSuffix}' after last argument`, TOAST_OPTIONS_ERROR);
 					return false;
 				}

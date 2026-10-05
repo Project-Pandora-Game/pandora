@@ -4,6 +4,7 @@ import {
 	Assert,
 	AsyncSynchronized,
 	GetLogger,
+	IsNotNullable,
 	ServerRoom,
 	TypedEventEmitter,
 	type AccountId,
@@ -246,6 +247,22 @@ export class Bot extends TypedEventEmitter<{
 	}
 
 	public onBotInfoChange(): void {
+		// Update listening API connections
+		this.sendBotStatus(this.associatedApiConnections);
+		// Update loaded spaces
+		{
+			const shards = new Set(
+				Array.from(this.spaces.values())
+					.map((it) => it.assignedShard)
+					.filter(IsNotNullable),
+			);
+			for (const shard of shards) {
+				shard.update('spaces')
+					.catch((e) => {
+						this.logger.warning(`Error updating shard ${shard.id} during bot info change:`, e);
+					});
+			}
+		}
 		// Update anything else that subscribed
 		this.emit('botInfoChanged', undefined);
 	}

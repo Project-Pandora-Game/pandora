@@ -171,6 +171,14 @@ export class SimpleBotOrchestrator {
 						await this._disconnectSpace(spaceId);
 					}
 				}
+
+				// Disconnect if live update is not supported
+				this._connections.delete(spaceId);
+				try {
+					await currentConnection[1].disconnect();
+				} catch (err) {
+					this.logger.error(`Error while disconnecting from space ${spaceId} during reload:`, err);
+				}
 			}
 
 			// Spawn a new connection

@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { BotCommandDescriptorSchema, BotCommandGetStructureResultSchema, BotCommandRunResultSchema } from '../../../bots/index.ts';
+import { BotCommandDescriptorSchema, BotCommandGetStructureResultSchema, BotCommandRunResultSchema, BotIdSchema } from '../../../bots/index.ts';
 import { AssetPreferencesPublicSchema } from '../../../character/assetPreferences.ts';
 import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../../../character/characterSettings.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
@@ -327,6 +327,7 @@ export const ClientShardSchema = {
 			z.object({
 				/** Bot returned result. */
 				result: z.literal('ok'),
+				bot: BotIdSchema,
 				commands: BotCommandDescriptorSchema.array(),
 			}),
 			z.object({
@@ -347,6 +348,8 @@ export const ClientShardSchema = {
 		request: z.object({
 			command: z.string(),
 			args: z.string().array(),
+			/** Bot id, used to avoid race conditions */
+			bot: BotIdSchema,
 		}),
 		response: BotCommandRunResultSchema.or(z.discriminatedUnion('result', [
 			z.object({
@@ -367,6 +370,8 @@ export const ClientShardSchema = {
 		request: z.object({
 			command: z.string(),
 			args: z.string().array(),
+			/** Bot id, used to avoid race conditions */
+			bot: BotIdSchema,
 		}),
 		response: BotCommandGetStructureResultSchema.or(z.discriminatedUnion('result', [
 			z.object({

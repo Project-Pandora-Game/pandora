@@ -23,7 +23,7 @@ import {
 	type ServiceProviderDefinition,
 	type SpaceId,
 } from 'pandora-common';
-import type { BotCommandArgumentDescriptor, BotCommandArgumentProcessor, BotCommandStructureResult, BotId } from 'pandora-common/bots';
+import type { BotCommandArgumentDescriptor, BotCommandArgumentProcessor, BotCommandDescriptor, BotCommandStructureResult, BotId } from 'pandora-common/bots';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import type { ChatInputCommandRunner } from '../../../ui/components/chat/chatInputContext.ts';
@@ -35,6 +35,13 @@ type BotInteractionsServiceConfig = Satisfies<{
 	dependencies: Pick<ClientGameLogicServices, 'shardConnector' | 'gameState'> & Pick<ClientGameLogicServicesDependencies, never>;
 	events: false;
 }, ServiceConfigBase>;
+
+/**
+ * How long is the command cache valid for.
+ * This usually does not come into play, as cache is refreshed whenever user starts entering fresh command;
+ * only important when user falls asleep in the middle of command name and commands change meanwhile.
+ */
+const COMMAND_CACHE_VALIDITY = 60_000;
 
 /**
  * Class used for interacting with space's bot.
@@ -130,6 +137,12 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		return (await this._autocompleteInternal(input))?.result ?? null;
 	}
 
+	private _commandListCache: {
+		commands: BotCommandDescriptor[];
+		cacheKey: CommandCacheKey;
+		validUntil: number;
+	} | null = null;
+
 	private async _autocompleteInternal(input: string): Promise<{
 		result: CommandAutocompleteResult;
 		cacheKey: CommandCacheKey;
@@ -144,41 +157,59 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		try {
 			// If there is no space after commandName, we are autocompleting the command itself
 			if (!spacing) {
-				const spaceId = context.gameState.currentSpace.value.id;
-				const commands = await this.serviceDeps.shardConnector.awaitResponse('botCommandsGet', {});
-				// TODO: Cache the commands list
+				const listCacheKey = BotInteractionsService._getCurrentCacheKey(context);
+				if (listCacheKey == null)
+					return null;
 
-				if (commands.result === 'ok') {
-					const options = commands.commands
-						.filter((c) => (typeof c.key === 'string' ? c.key : c.key[0]).startsWith(commandName))
-						.map((c): CommandAutocompleteOption => ({
-							replaceValue: (typeof c.key === 'string' ? c.key : c.key[0]),
-							displayValue: `!${(typeof c.key === 'string' ? c.key : c.key[0])}${c.usage ? ' ' + c.usage : ''}${c.description ? ' - ' + c.description : ''}`,
-							longDescription: c.longDescription,
-						}));
+				// Fetch command list if cache is not valid, or if user just started entering command
+				if (this._commandListCache == null ||
+					!isEqual(this._commandListCache.cacheKey, listCacheKey) ||
+					Date.now() > this._commandListCache.validUntil ||
+					!commandName
+				) {
+					const commands = await this.serviceDeps.shardConnector.awaitResponse('botCommandsGet', {});
 
-					const result: CommandAutocompleteResult = options.length > 0 ? {
-						header: 'Custom Bot commands (arguments in <> are required, arguments in [] are optional)',
-						options,
-					} : null;
-					return {
-						result,
-						cacheKey: {
-							space: spaceId,
-							bot: commands.bot,
-						},
-					};
-				} else if (commands.result === 'botError') {
-					toast('The space\'s bot failed to produce command list', TOAST_OPTIONS_ERROR);
-					return null;
-				} else if (commands.result === 'botDisconnected') {
-					toast('The space\'s bot is not currently available', TOAST_OPTIONS_ERROR);
-					return null;
-				} else if (commands.result === 'noBot') {
-					toast('This space has no bot to send the command to', TOAST_OPTIONS_ERROR);
-					return null;
+					if (commands.result === 'ok') {
+						// Success, populate the cache
+						this._commandListCache = {
+							commands: commands.commands,
+							cacheKey: {
+								...listCacheKey,
+								bot: commands.bot,
+							},
+							validUntil: Date.now() + COMMAND_CACHE_VALIDITY,
+						};
+					} else if (commands.result === 'botError') {
+						toast('The space\'s bot failed to produce command list', TOAST_OPTIONS_ERROR);
+						return null;
+					} else if (commands.result === 'botDisconnected') {
+						toast('The space\'s bot is not currently available', TOAST_OPTIONS_ERROR);
+						return null;
+					} else if (commands.result === 'noBot') {
+						toast('This space has no bot to send the command to', TOAST_OPTIONS_ERROR);
+						return null;
+					} else {
+						AssertNever(commands);
+					}
 				}
-				AssertNever(commands);
+
+				// We have a valid cache by now
+				const options = this._commandListCache.commands
+					.filter((c) => (typeof c.key === 'string' ? c.key : c.key[0]).startsWith(commandName))
+					.map((c): CommandAutocompleteOption => ({
+						replaceValue: (typeof c.key === 'string' ? c.key : c.key[0]),
+						displayValue: `!${(typeof c.key === 'string' ? c.key : c.key[0])}${c.usage ? ' ' + c.usage : ''}${c.description ? ' - ' + c.description : ''}`,
+						longDescription: c.longDescription,
+					}));
+
+				const result: CommandAutocompleteResult = options.length > 0 ? {
+					header: 'Custom Bot commands (arguments in <> are required, arguments in [] are optional)',
+					options,
+				} : null;
+				return {
+					result,
+					cacheKey: this._commandListCache.cacheKey,
+				};
 			}
 
 			const loadResult = await this._loadCommandStructure(commandName, rest, context);

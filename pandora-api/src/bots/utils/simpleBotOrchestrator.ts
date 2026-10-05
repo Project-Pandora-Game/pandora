@@ -85,8 +85,17 @@ export class SimpleBotOrchestrator {
 		});
 
 		// Register bot with directory server
-		(await this.api.bots.botRunRegister(this.bot))
-			.expect('Failed to register bot');
+		try {
+			(await this.api.bots.botRunRegister(this.bot))
+				.expect('Failed to register bot');
+		} catch (err) {
+			// Unregister on failed start not to leak event handlers
+			this._unsubscribeBotStateChanged?.();
+			this._unsubscribeBotStateChanged = null;
+			this._unsubscribeConnected?.();
+			this._unsubscribeConnected = null;
+			throw err;
+		}
 
 		this._running = true;
 

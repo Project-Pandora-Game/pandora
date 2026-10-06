@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { Assert } from 'pandora-common';
 import type { Container as PixiContainer } from 'pixi.js';
 import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
-import type { EventPriority } from 'react-reconciler';
+import type { EventPriority, ReactContext } from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants.js';
 import { GIT_COMMIT_HASH } from '../../config/Environment.ts';
 import { PIXI_REGISTERED_COMPONENTS } from './component.ts';
@@ -18,55 +17,13 @@ import { PixiInternalElementInstance, type PixiRootContainer } from './element.t
 // Currently partially reusing: https://github.com/pmndrs/react-three-fiber/blob/v9/packages/fiber/src/core/reconciler.tsx
 // @ f7b56b06b36c65f7ae2bbfc5e487501b69fe5232
 
-type React19HostConfig<
-	Type,
-	Props,
-	Container,
-	Instance,
-	TextInstance,
-	SuspenseInstance,
-	HydratableInstance,
-	FormInstance,
-	PublicInstance,
-	HostContext,
-	ChildSet,
-	TimeoutHandle,
-	NoTimeout,
-	TransitionStatus,
-> = (Omit<
-	ReactReconciler.HostConfig<
-		Type,
-		Props,
-		Container,
-		Instance,
-		TextInstance,
-		SuspenseInstance,
-		HydratableInstance,
-		FormInstance,
-		PublicInstance,
-		HostContext,
-		ChildSet,
-		TimeoutHandle,
-		NoTimeout,
-		TransitionStatus
-	>,
-	'HostTransitionContext'
-> & {
-	// Fix typing of React.Context
-	HostTransitionContext: React.Context<TransitionStatus>;
-
-	// Extras from Pandora's research
-	rendererPackageName: string;
-	rendererVersion: string;
-	extraDevToolsConfig: unknown;
-});
-
-export type PixiHostConfig = React19HostConfig<
+export type PixiHostConfig = ReactReconciler.HostConfig<
 	string, // Type
 	any, // Props
 	PixiRootContainer, // Container
 	PixiInternalElementInstance<PixiContainer, never, any, any>, // Instance
 	never, // TextInstance
+	never, // ActivityInstance
 	never, // SuspenseInstance
 	never, // HydratableInstance
 	never, // FormInstance
@@ -75,7 +32,12 @@ export type PixiHostConfig = React19HostConfig<
 	never, // ChildSet
 	number, // TimeoutHandle
 	-1, // NoTimeout
-	null // TransitionStatus
+	null, // TransitionStatus
+	undefined, // SuspendedState
+	null, // RendererInspectionConfig
+	any, // FormStateMarkerInstance
+	any, // HoistableRoot
+	any // Resource
 >;
 
 const NO_CONTEXT: Record<string, never> = {};
@@ -93,6 +55,15 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	rendererVersion: '1.0.0+' + GIT_COMMIT_HASH,
 	rendererPackageName: 'pandora-client-web/pixi-renderer',
 	extraDevToolsConfig: null,
+	bindToConsole(methodName, args, _badgeName) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+		return Function.prototype.bind.apply(
+			// eslint-disable-next-line no-console
+			console[methodName as keyof Console],
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			[console, ...args],
+		);
+	},
 
 	//#region Basics
 
@@ -147,7 +118,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	warnsIfNotActing: false,
 	supportsMutation: true,
 	supportsPersistence: false,
-	supportsHydration: false,
 
 	getInstanceFromNode(_node) {
 		// TODO: Find out what this is.
@@ -165,24 +135,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	prepareScopeUpdate: MakeUnsupportedShim('React Scopes are not supported.'),
 	getInstanceFromScope: MakeUnsupportedShim('React Scopes are not supported.'),
 
-	setCurrentUpdatePriority(newPriority) {
-		CurrentUpdatePriority = newPriority;
-	},
-	getCurrentUpdatePriority() {
-		return CurrentUpdatePriority;
-	},
-	resolveUpdatePriority() { // Replaces getCurrentEventPriority
-		return CurrentUpdatePriority || DefaultEventPriority;
-	},
-	resolveEventType() {
-		return null;
-	},
-	resolveEventTimeStamp() {
-		return -1.1;
-	},
-	shouldAttemptEagerTransition() {
-		return false;
-	},
 	detachDeletedInstance(node) {
 		// This method isn't really documented by React.
 		// At the moment it appears it is called for all components when React doesn't intend to reuse them anymore,
@@ -193,31 +145,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 			node._getLogger().error('Error during instance destroy:', error);
 		}
 	},
-	requestPostPaintCallback() {
-		// Noop
-	},
-	maySuspendCommit() {
-		return false;
-	},
-	preloadInstance(_type, _props) {
-		return true; // true indicates already loaded
-	},
-	startSuspendingCommit() {
-		// Noop
-	},
-	suspendInstance() {
-		// Noop
-	},
-	waitForCommitToBeReady() {
-		return null;
-	},
-	NotPendingTransition: null,
-	HostTransitionContext: createContext<null>(null),
-	resetFormInstance() {
-		// Noop
-	},
-	// FIXME: Possibly still missing:
-	// bindToConsole
 
 	//#endregion
 
@@ -225,20 +152,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 
 	supportsMicrotasks: true,
 	scheduleMicrotask: queueMicrotask,
-
-	//#endregion
-
-	//#region Test selectors
-
-	//@ts-expect-error: It does exist in the reconciler code.
-	supportsTestSelectors: false,
-	findFiberRoot: MakeUnsupportedShim('Test selectors are not supported'),
-	getBoundingRect: MakeUnsupportedShim('Test selectors are not supported'),
-	getTextContent: MakeUnsupportedShim('Test selectors are not supported'),
-	isHiddenSubtree: MakeUnsupportedShim('Test selectors are not supported'),
-	matchAccessibilityRole: MakeUnsupportedShim('Test selectors are not supported'),
-	setFocusIfFocusable: MakeUnsupportedShim('Test selectors are not supported'),
-	setupIntersectionObserver: MakeUnsupportedShim('Test selectors are not supported'),
 
 	//#endregion
 
@@ -337,35 +250,114 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 
 	//#region Hydration
 
-	isSuspenseInstancePending: MakeUnsupportedShim('Hydration is not supported.'),
-	isSuspenseInstanceFallback: MakeUnsupportedShim('Hydration is not supported.'),
-	getSuspenseInstanceFallbackErrorDetails: MakeUnsupportedShim('Hydration is not supported.'),
-	registerSuspenseInstanceRetry: MakeUnsupportedShim('Hydration is not supported.'),
-	canHydrateFormStateMarker: MakeUnsupportedShim('Hydration is not supported.'),
-	isFormStateMarkerMatching: MakeUnsupportedShim('Hydration is not supported.'),
-	getNextHydratableSibling: MakeUnsupportedShim('Hydration is not supported.'),
-	getFirstHydratableChild: MakeUnsupportedShim('Hydration is not supported.'),
-	getFirstHydratableChildWithinContainer: MakeUnsupportedShim('Hydration is not supported.'),
-	getFirstHydratableChildWithinSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	supportsHydration: false,
 	canHydrateInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	canHydrateTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateActivityInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	canHydrateSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	isSuspenseInstancePending: MakeUnsupportedShim('Hydration is not supported.'),
+	isSuspenseInstanceFallback: MakeUnsupportedShim('Hydration is not supported.'),
+	registerSuspenseInstanceRetry: MakeUnsupportedShim('Hydration is not supported.'),
+	getNextHydratableSibling: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChild: MakeUnsupportedShim('Hydration is not supported.'),
 	hydrateInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	hydrateTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	hydrateActivityInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	hydrateSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	getNextHydratableInstanceAfterActivityInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	getNextHydratableInstanceAfterSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	commitHydratedContainer: MakeUnsupportedShim('Hydration is not supported.'),
-	commitHydratedSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	commitHydratedInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	commitHydratedActivityInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	finalizeHydratedChildren: MakeUnsupportedShim('Hydration is not supported.'),
+	flushHydrationEvents: MakeUnsupportedShim('Hydration is not supported.'),
+	clearActivityBoundary: MakeUnsupportedShim('Hydration is not supported.'),
 	clearSuspenseBoundary: MakeUnsupportedShim('Hydration is not supported.'),
+	clearActivityBoundaryFromContainer: MakeUnsupportedShim('Hydration is not supported.'),
 	clearSuspenseBoundaryFromContainer: MakeUnsupportedShim('Hydration is not supported.'),
+	hideDehydratedBoundary: MakeUnsupportedShim('Hydration is not supported.'),
+	unhideDehydratedBoundary: MakeUnsupportedShim('Hydration is not supported.'),
 	shouldDeleteUnhydratedTailInstances: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinContainer: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinActivityInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinSingleton: MakeUnsupportedShim('Hydration is not supported.'),
+	getNextHydratableSiblingAfterSingleton: MakeUnsupportedShim('Hydration is not supported.'),
+	getSuspenseInstanceFallbackErrorDetails: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateFormStateMarker: MakeUnsupportedShim('Hydration is not supported.'),
+	isFormStateMarkerMatching: MakeUnsupportedShim('Hydration is not supported.'),
 	diffHydratedPropsForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
 	diffHydratedTextForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
 	describeHydratableInstanceForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
 	validateHydratableInstance: MakeUnsupportedShim('Hydration is not supported.'),
 	validateHydratableTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	commitHydratedSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
 
 	//#endregion
+
+	NotPendingTransition: null,
+	HostTransitionContext: createContext<null>(null) as unknown as ReactContext<null>,
+
+	setCurrentUpdatePriority(newPriority) {
+		CurrentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority() {
+		return CurrentUpdatePriority;
+	},
+	resolveUpdatePriority() { // Replaces getCurrentEventPriority
+		return CurrentUpdatePriority || DefaultEventPriority;
+	},
+
+	resetFormInstance() {
+		// Noop
+	},
+
+	requestPostPaintCallback() {
+		// Noop
+	},
+
+	shouldAttemptEagerTransition() {
+		return false;
+	},
+
+	trackSchedulerEvent() {
+		// Noop
+	},
+
+	resolveEventType() {
+		return null;
+	},
+	resolveEventTimeStamp() {
+		return -1.1;
+	},
+
+	maySuspendCommit() {
+		return false;
+	},
+	maySuspendCommitOnUpdate() {
+		return false;
+	},
+	maySuspendCommitInSyncRender() {
+		return false;
+	},
+	preloadInstance(_type, _props) {
+		return true; // true indicates already loaded
+	},
+	startSuspendingCommit() {
+		// Noop
+	},
+	suspendInstance() {
+		// Noop
+	},
+	suspendOnActiveViewTransition() {
+		// Noop
+	},
+	waitForCommitToBeReady() {
+		return null;
+	},
+	getSuspendedCommitReason() {
+		return null;
+	},
 
 	//#region Resources
 
@@ -390,15 +382,23 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 
 	supportsSingletons: false,
 	resolveSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
-	clearSingleton: MakeUnsupportedShim('Singletons are not supported'),
 	acquireSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
 	releaseSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
 	isHostSingletonType: MakeUnsupportedShim('Singletons are not supported'),
+	isSingletonScope: MakeUnsupportedShim('Singletons are not supported'),
 
 	//#endregion
 
-	// TODO: Does this actually exist?
-	trackSchedulerEvent() {
-		// Noop
-	},
+	//#region Test selectors
+
+	supportsTestSelectors: false,
+	findFiberRoot: MakeUnsupportedShim('Test selectors are not supported'),
+	getBoundingRect: MakeUnsupportedShim('Test selectors are not supported'),
+	getTextContent: MakeUnsupportedShim('Test selectors are not supported'),
+	isHiddenSubtree: MakeUnsupportedShim('Test selectors are not supported'),
+	matchAccessibilityRole: MakeUnsupportedShim('Test selectors are not supported'),
+	setFocusIfFocusable: MakeUnsupportedShim('Test selectors are not supported'),
+	setupIntersectionObserver: MakeUnsupportedShim('Test selectors are not supported'),
+
+	//#endregion
 };

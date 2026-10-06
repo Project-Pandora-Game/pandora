@@ -20,7 +20,7 @@
 	"devDependencies": {
 		"@playwright/test": "1.63.0",
 		"@types/express": "5.0.6",
-		"@types/mailparser": "3.4.6",
+		"@types/mailparser": "3.9.0",
 		"@types/node": "24.19.0",
 		"express": "5.2.1",
 		"mailparser": "3.9.31",

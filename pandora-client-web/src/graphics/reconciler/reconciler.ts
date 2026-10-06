@@ -17,11 +17,9 @@ type PixiReconciler = ReactReconciler.Reconciler<
 >;
 
 /** React reconciler instance with config for working with Pixi elements. */
-// @ts-expect-error: No reconciler typings for React 19 are available yet.
 const PixiFiber: PixiReconciler = ReactReconciler(PIXI_FIBER_HOST_CONFIG);
 
 // Inject our fiber into devtools for both debugging and HMR support
-// @ts-expect-error: No reconciler typings for React 19 are available yet.
 PixiFiber.injectIntoDevTools();
 
 /** A root handle for working with a Pixi React root. */

@@ -1,4 +1,4 @@
-import { verifyAuthenticationResponse, verifyRegistrationResponse, type AuthenticatorTransportFuture, type VerifiedAuthenticationResponse, type VerifiedRegistrationResponse } from '@simplewebauthn/server';
+import { verifyAuthenticationResponse, verifyRegistrationResponse, type VerifiedAuthenticationResponse, type VerifiedRegistrationResponse } from '@simplewebauthn/server';
 import { createHash, randomBytes } from 'crypto';
 import { ACCOUNT_PASSKEYS_ALLOWED_ALGORITHMS, GetLogger, type AccountId } from 'pandora-common';
 import type { IAccountPasskeyCredential } from 'pandora-common/networking/api/directory_client';
@@ -99,7 +99,7 @@ export async function ValidatePasskeyRegistration(data: {
 					clientDataJSON: data.clientDataJSON,
 					attestationObject: data.attestationObject,
 					authenticatorData: data.authenticatorData,
-					transports: data.transports as (AuthenticatorTransportFuture[] | undefined),
+					transports: data.transports,
 					publicKeyAlgorithm: data.publicKeyAlgorithm,
 					publicKey: data.publicKey,
 				},
@@ -155,7 +155,7 @@ export async function VerifyPasskeyAssertion(passkey: IAccountPasskeyCredential,
 				id: passkey.credentialId,
 				publicKey: new Uint8Array(Base64UrlDecode(passkey.publicKey)),
 				counter: passkey.signCount,
-				transports: passkey.transports as (AuthenticatorTransportFuture[] | undefined),
+				transports: passkey.transports,
 			},
 			expectedChallenge(challenge) {
 				return ConsumePasskeyChallenge(challenge, data.accountId, data.purpose);

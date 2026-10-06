@@ -2,7 +2,7 @@ import { test } from '@playwright/test';
 import { fork, spawn, type ChildProcess } from 'child_process';
 import fs from 'node:fs';
 import path from 'path';
-import { PNPM_EXECUTABLE, TEST_ASSETS_DIR, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_LISTENER_HTTP_SERVER_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_SERVER_SHARD_ENTRYPOINT, TEST_SERVER_SHARD_SECRET, TEST_SERVER_SHARD_TEST_DIR, TEST_SHARD_PORT, TEST_TEMP } from '../_setup/config.ts';
+import { NODE_EXECUTABLE, TEST_ASSETS_DIR, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_LISTENER_HTTP_SERVER_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_SERVER_SHARD_ENTRYPOINT, TEST_SERVER_SHARD_SECRET, TEST_SERVER_SHARD_TEST_DIR, TEST_SHARD_PORT, TEST_TEMP } from '../_setup/config.ts';
 import { Assert, EnvStringify, Sleep } from './utils.ts';
 
 import type { ENV as DIRECTORY_ENV } from 'pandora-server-directory/src/config.ts';
@@ -109,9 +109,8 @@ class ServerInstance {
 				stdio: DEBUG_DIRECT_PRINT ? 'inherit' : 'pipe',
 			});
 		} else {
-			this.process = spawn(PNPM_EXECUTABLE, [
-				'exec',
-				'nyc',
+			this.process = spawn(NODE_EXECUTABLE, [
+				path.join(TEST_PROJECT_PANDORA_DIR, './pandora-tests/node_modules/nyc/bin/nyc.js'),
 				'--silent',
 				'--no-clean', // Clean is handled by global setup
 				'--cwd', TEST_PROJECT_PANDORA_DIR, // This is "working directory" only for istanbul, not for rest of command
@@ -152,7 +151,7 @@ class ServerInstance {
 			if (process.platform === 'win32') {
 				this.process.send('STOP');
 			} else {
-				this.process.kill('SIGINT');
+				this.process.kill('SIGTERM');
 			}
 		});
 	}

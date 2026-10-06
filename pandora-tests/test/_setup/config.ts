@@ -1,6 +1,7 @@
 import * as path from 'path';
 
 export const PNPM_EXECUTABLE = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+export const NODE_EXECUTABLE = process.platform === 'win32' ? 'node.exe' : 'node';
 
 // Test assets
 /** URL for test assets download. Replace `%v` with expected sha256 base64url hash of the uncompressed archive file. */

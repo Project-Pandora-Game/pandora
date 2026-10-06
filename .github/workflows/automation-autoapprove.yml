@@ -10,6 +10,7 @@ jobs:
   automation:
     name: Automation tasks
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       pull-requests: write
 

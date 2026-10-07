@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
 import { Switch } from '../../common/userInteraction/switch.tsx';
+import { DEVELOPMENT } from '../../config/Environment.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../common/button/button.tsx';
@@ -36,6 +37,21 @@ const ADVANCED_SETTINGS_CATEGORIES: Record<SettingsAdvancedCategory, {
 			</>
 		),
 		wait: 20_000,
+	},
+	development: {
+		name: 'Development settings',
+		warning: (
+			<>
+				<p>
+					Development settings allow you to access more of Pandora's internal settings and various development-focused tools.<br />
+					These are not intended to be used by normal users and are mainly useful when debugging an issue or for detailed exploration of Pandora's internal workings.
+				</p>
+				<div className='warning-box'>
+					Development settings allow you to change things that are not intended to be changed — you can break Pandora if these are used without care or understanding.
+				</div>
+			</>
+		),
+		wait: DEVELOPMENT ? 0 : 10_000,
 	},
 };
 

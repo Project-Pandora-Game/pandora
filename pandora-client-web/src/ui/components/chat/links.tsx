@@ -1,9 +1,7 @@
-import { SpaceIdSchema, SpaceInviteIdSchema } from 'pandora-common';
 import type { ReactElement, ReactNode } from 'react';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
-import { SpaceInviteEmbed } from '../../screens/spaceJoin/inviteEmbed.tsx';
+import { SpaceInviteEmbed, TryParseSpaceInviteUrl } from '../../screens/spaceJoin/inviteEmbed.tsx';
 
-const INVITE_PREFIX = '/space/join/';
 /**
  * A component for rendering a link and its embed in a profile or chat.
  */
@@ -13,39 +11,20 @@ export function RenderedLink({ url, text, textAfter }: {
 	/** Text after the link's text, but before embed */
 	textAfter?: ReactNode;
 }): ReactElement {
-	switch (url.hostname) {
-		case 'project-pandora.com':
-		case 'www.project-pandora.com':
-			if (url.pathname.startsWith(INVITE_PREFIX)) {
-				const invite = url.searchParams.get('invite') ?? undefined;
-				let spaceId: string | undefined;
-				try {
-					spaceId = decodeURIComponent(url.pathname.slice(INVITE_PREFIX.length));
-				} catch (_error) {
-					// Ignore decoding errors silently
-					spaceId = undefined;
-				}
-				if (spaceId && !spaceId.startsWith('s/')) {
-					spaceId = 's/' + spaceId;
-				}
-				const parsedSpaceId = SpaceIdSchema.safeParse(spaceId);
-				const parsedInvite = SpaceInviteIdSchema.optional().safeParse(invite);
+	const invite = TryParseSpaceInviteUrl(url);
 
-				if (!parsedSpaceId.success || !parsedInvite.success)
-					break;
-
-				return (
-					<>
-						<ExternalLink href={ url.href }>
-							{ text }
-						</ExternalLink>
-						{ textAfter }
-						<SpaceInviteEmbed spaceId={ parsedSpaceId.data } invite={ parsedInvite.data } />
-					</>
-				);
-			}
-			break;
+	if (invite != null) {
+		return (
+			<>
+				<ExternalLink href={ url.href }>
+					{ text }
+				</ExternalLink>
+				{ textAfter }
+				<SpaceInviteEmbed spaceId={ invite.spaceId } invite={ invite.invite } />
+			</>
+		);
 	}
+
 	return (
 		<>
 			<UntrustedLink href={ url.href }>

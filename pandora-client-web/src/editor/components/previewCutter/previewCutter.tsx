@@ -24,6 +24,7 @@ const PREVIEW_CUTTER_CENTERED_X = CharacterSize.WIDTH / 2;
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
 	overrideLayers: boolean;
+	hideFace: boolean;
 	size: number;
 	centered: boolean;
 	position: Readonly<{ x: number; y: number; }>;
@@ -32,6 +33,7 @@ type PreviewCutterState = Readonly<{
 const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	enabled: false,
 	overrideLayers: true,
+	hideFace: true,
 	size: 200,
 	centered: true,
 	position: { x: PREVIEW_CUTTER_CENTERED_X - 100, y: CharacterSize.HEIGHT / 2 - 100 },
@@ -51,6 +53,10 @@ export function usePreviewCutterEnabled(): boolean {
 export function usePreviewCutterOverridesEnabled(): boolean {
 	const state = useObservable(PREVIEW_CUTTER);
 	return state.enabled && state.overrideLayers;
+}
+export function usePreviewCutterHideFaceEnabled(): boolean {
+	const state = useObservable(PREVIEW_CUTTER);
+	return state.enabled && state.hideFace;
 }
 
 let editorSceneContext: EditorSceneContext | null = null;
@@ -191,6 +197,12 @@ export function PreviewCutter() {
 			overrideLayers: newValue,
 		};
 	}, []);
+	const setHideFace = React.useCallback((newValue: boolean) => {
+		PREVIEW_CUTTER.value = {
+			...PREVIEW_CUTTER.value,
+			hideFace: newValue,
+		};
+	}, []);
 	const createPreviewImage = useEvent(() => {
 		const container = editorSceneContext?.contentRef.current;
 		const app = editorSceneContext?.appRef.current;
@@ -240,6 +252,10 @@ export function PreviewCutter() {
 					If your preview covers the character head, please consider whether you want those to be included. Otherwise, please hide them manually.
 				</p>
 				<p>
+					The "Hide face" toggle (also pre-selected) hides the layers of the character's face (e.g. eyes, mouth, eyebrows) in the editor preview.<br />
+					It is independent of "Automatically configure layers" - each toggle affects a different set of layers.
+				</p>
+				<p>
 					Hint: Most existing assets have a comment in their `*.asset.ts` file about the size and position of the cut-out rectangle used<br />
 					to make their preview. That way, you can easily reuse this information for a new similar asset.
 				</p>
@@ -272,6 +288,10 @@ export function PreviewCutter() {
 			<div>
 				<label htmlFor='preview-cutter-overrides'>Automatically configure layers</label>
 				<Checkbox id='preview-cutter-overrides' checked={ state.overrideLayers } onChange={ setOverrideLayers } />
+			</div>
+			<div>
+				<label htmlFor='preview-cutter-hide-face'>Hide face</label>
+				<Checkbox id='preview-cutter-hide-face' checked={ state.hideFace } onChange={ setHideFace } />
 			</div>
 			<div>
 				<Button onClick={ createPreviewImage }>

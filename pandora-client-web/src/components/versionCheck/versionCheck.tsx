@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useMounted } from '../../common/useMounted.ts';
 import { VersionDataSchema, type VersionData } from '../../config/definition.ts';
-import { BUILD_TIME, GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment.ts';
+import { BUILD_TIME, GIT_COMMIT_HASH, NODE_ENV } from '../../config/Environment.ts';
 import { Button } from '../common/button/button.tsx';
 import { Row } from '../common/container/container.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 
-// In debug mode 30 seconds, otherwise 5 minutes per new version check
-const VERSION_CHECK_INTERVAL = USER_DEBUG ? 30_000 : (5 * 60_000);
+// Check for new version every 30 seconds
+const VERSION_CHECK_INTERVAL = 30_000;
 
 export function VersionCheck() {
 	return NODE_ENV === 'production' ? <VersionCheckImpl /> : null;

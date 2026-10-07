@@ -2,10 +2,8 @@ import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
 import {
 	ASSET_PREFERENCES_PERMISSIONS,
-	AssertNever,
 	AssetPreferenceType,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
-	CHARACTER_SETTINGS_DEFAULT,
 	CharacterId,
 	CharacterIdSchema,
 	CompareCharacterIds,
@@ -18,7 +16,6 @@ import {
 	KnownObject,
 	MakePermissionConfigFromDefault,
 	PERMISSION_MAX_CHARACTER_OVERRIDES,
-	PermissionConfig,
 	PermissionConfigChangeSelector,
 	PermissionConfigChangeType,
 	PermissionGroup,
@@ -27,7 +24,7 @@ import {
 	PermissionTypeSchema,
 } from 'pandora-common';
 import type { IClientShardNormalResult } from 'pandora-common/networking/api/shard_client';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import arrowRight from '../../assets/icons/arrow-right.svg';
@@ -54,17 +51,15 @@ import { useFunctionBind } from '../../common/useFunctionBind.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useGameStateOptional, useGlobalState, useResolveCharacterName, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
+import { useResolveCharacterName, useSpaceCharacters } from '../../services/gameLogic/gameStateHooks.ts';
 import { CharacterListInputActions } from '../../ui/components/characterListInput/characterListInput.tsx';
-import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { GridContainer } from '../common/container/gridContainer.tsx';
 import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle.tsx';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
 import { UsageMeter } from '../common/usageMeter/usageMeter.tsx';
-import { ButtonConfirm, DialogHeader, DraggableDialog, ModalDialog } from '../dialog/dialog.tsx';
-import type { GameState, PermissionPromptData } from '../gameContext/gameStateContextProvider.tsx';
+import { ButtonConfirm, DialogHeader, ModalDialog } from '../dialog/dialog.tsx';
 import { usePlayer } from '../gameContext/playerContextProvider.tsx';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HoverElement } from '../hoverElement/hoverElement.tsx';
@@ -107,7 +102,7 @@ function InteractionPermissions(): ReactElement {
 	);
 }
 
-function GetIcon(icon: string): string {
+export function GetPermissionIcon(icon: string): string {
 	switch (icon) {
 		case 'star':
 			return star;
@@ -250,7 +245,7 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 	);
 }
 
-function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void {
+export function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void {
 	const shardConnector = useShardConnector();
 	return useCallback((permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => {
 		if (shardConnector == null) {
@@ -302,7 +297,7 @@ export function PermissionSettingEntry({ visibleName, icon, permissionGroup, per
 		<Row alignY='center' padding='small'>
 			{
 				icon ? (
-					<img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' />
+					<img src={ GetPermissionIcon(icon) } width='28' height='28' alt='permission icon' />
 				) : null
 			}
 			<label className='flex-1'>
@@ -522,246 +517,6 @@ export function usePermissionData(permissionGroup: PermissionGroup, permissionId
 	return permissionConfig;
 }
 
-export function PermissionPromptHandler(): ReactElement | null {
-	const gameState = useGameStateOptional();
-	const [prompts, setPrompts] = useState<ReadonlyMap<CharacterId, PermissionPromptData>>(new Map());
-
-	useEffect(() => {
-		if (!gameState)
-			return undefined;
-
-		return gameState.on('permissionPrompt', (request) => {
-			setPrompts((requests) => {
-				const result = new Map(requests);
-				const id = request.source.id;
-				// We intentionally only keep the last prompt
-				result.set(id, request);
-				return result;
-			});
-		});
-	}, [gameState]);
-
-	const dismiss = useCallback((id: CharacterId) => {
-		setPrompts((requests) => {
-			const result = new Map(requests);
-			result.delete(id);
-			return result;
-		});
-	}, []);
-
-	if (gameState == null || prompts.size === 0)
-		return null;
-
-	return (
-		<>
-			{
-				Array.from(prompts.entries()).map(([characterId, characterPrompt]) => (
-					<PermissionPromptDialog
-						key={ characterId }
-						prompt={ characterPrompt }
-						dismiss={ () => dismiss(characterId) }
-						gameState={ gameState }
-					/>
-				))
-			}
-		</>
-	);
-}
-
-const PROMPT_SAFETY_COOLDOWN = 2_000;
-function PermissionPromptDialog({ prompt, dismiss, gameState }: {
-	prompt: PermissionPromptData;
-	dismiss: () => void;
-	gameState: GameState;
-}): ReactElement {
-	const globalState = useGlobalState(gameState);
-
-	const { source, requiredPermissions, actions } = prompt;
-
-	const setFull = usePermissionConfigSetAny();
-	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
-		setFull(permissionGroup, permissionId, source.id, allowOthers);
-	}, [setFull, source.id]);
-	const acceptAll = useCallback(() => {
-		for (const [group, permissions] of KnownObject.entries(requiredPermissions)) {
-			if (!permissions)
-				continue;
-
-			for (const [setup] of permissions) {
-				setAnyConfig(group, setup.id, 'accept');
-			}
-		}
-		dismiss();
-	}, [requiredPermissions, dismiss, setAnyConfig]);
-	const [allowAccept, disableAccept] = useReducer(() => false, true);
-
-	// Prevent the user from confirming the prompt by accident if it just changed by introducing confirm cooldown
-	const [safePrompt, setSafePrompt] = useState<PermissionPromptData | null>(null);
-	useEffect(() => {
-		const id = setTimeout(() => {
-			setSafePrompt(prompt);
-		}, PROMPT_SAFETY_COOLDOWN);
-		return () => {
-			clearTimeout(id);
-		};
-	}, [prompt]);
-	const isSafe = prompt === safePrompt;
-
-	return (
-		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose highlight={ !isSafe }>
-			<Row alignX='center'>
-				<h2>
-					<span style={ { textShadow: `${source.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor} 1px 2px` } }>
-						{ source.name }
-					</span>
-					{ ' ' }
-					({ source.id })
-					{ ' ' }
-					asks for permission to...
-				</h2>
-			</Row>
-			{
-				actions.length > 0 ? (
-					<Column alignX='center'>
-						<span>Requested actions:</span>
-						{
-							actions.map((action, i) => (
-								<DescribeGameLogicAction
-									key={ i }
-									action={ action }
-									actionOriginator={ source }
-									globalState={ globalState }
-								/>
-							))
-						}
-					</Column>
-				) : null
-			}
-			<Row padding='large' alignX='center'>
-				<p className='text-dim'>
-					<span>ⓘ </span>
-					<i>
-						All following permissions are required to do the actions above. The requester is missing one ore more of<br />
-						them - those where both buttons are active and lit up. Please review each and either permanently grant it, or<br />
-						block the character from asking again by always denying it. If taking no decision, they can ask again any time.
-					</i>
-				</p>
-			</Row>
-			<Column>
-				{
-					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
-						permissions == null ? null : <PermissionPromptGroup key={ group } sourceId={ source.id } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
-					))
-				}
-			</Column>
-			<Row padding='large' alignX='space-between' alignY='center'>
-				<Button onClick={ dismiss }>Close with no further decisions</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept || !isSafe }>Allow all above always</Button>
-			</Row>
-		</DraggableDialog>
-	);
-}
-
-function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyConfig, disableAccept }: {
-	sourceId: CharacterId;
-	permissionGroup: PermissionGroup;
-	permissions: Immutable<[PermissionSetup, PermissionConfig][]>;
-	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
-	disableAccept: () => void;
-}): ReactElement {
-	let header;
-	switch (permissionGroup) {
-		case 'interaction':
-			header = 'Interactions';
-			break;
-		case 'assetPreferences':
-			header = 'Item Limits';
-			break;
-		case 'characterModifierType':
-			header = 'Character modifiers';
-			break;
-		default:
-			AssertNever(permissionGroup);
-	}
-
-	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon?: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
-		for (const [setup, cfg] of permissions) {
-
-			result.push({
-				id: setup.id,
-				visibleName: setup.displayName,
-				icon: setup.icon,
-				allowOthers: cfg.allowOthers,
-				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
-			});
-		}
-		return result;
-	}, [permissions, sourceId]);
-
-	return (
-		<Column className='permissionPrompt'>
-			<h3>{ header }</h3>
-			{
-				perms.map((perm) => (
-					<div className='input-row flex-1' key={ perm.id }>
-						<label className='flex-1'>
-							{
-								perm.icon ? (
-									<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
-								) : null
-							}
-							&nbsp;&nbsp;
-							<span>{ perm.visibleName }</span>
-						</label>
-						<ShowAllowOthers config={ perm.allowOthers } />
-						<PermissionPromptButton
-							isAllowed={ perm.isAllowed }
-							setYes={ () => setAnyConfig(permissionGroup, perm.id, 'yes') }
-							setNo={ () => {
-								setAnyConfig(permissionGroup, perm.id, 'no');
-								disableAccept();
-							} }
-						/>
-					</div>
-				))
-			}
-		</Column>
-	);
-}
-
-function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => void; setNo: () => void; isAllowed: boolean; }): ReactElement {
-	const [state, setState] = useState<'yes' | 'no' | null>(isAllowed ? 'yes' : null);
-
-	return (
-		<>
-			<Button
-				className='slim'
-				disabled={ state === 'yes' }
-				onClick={ () => {
-					if (state !== 'yes') {
-						setYes();
-						setState('yes');
-					}
-				} }
-			>
-				Allow always
-			</Button>
-			<Button
-				className='slim'
-				onClick={ () => {
-					if (state !== 'no') {
-						setNo();
-						setState('no');
-					}
-				} }
-			>
-				Deny always
-			</Button>
-		</>
-	);
-}
-
 function ResolvedNamePreview({ characterId }: { characterId: CharacterId | null; }): ReactElement {
 	const resolvedName = useResolveCharacterName(characterId);
 
@@ -970,7 +725,7 @@ function PerCharacterPermissionRow({
 	if (permissionData == null) {
 		return (
 			<Row alignY='center' padding='small'>
-				{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+				{ icon ? <img src={ GetPermissionIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
 				<span className='flex-1'>{ visibleName }</span>
 				<span>Loading…</span>
 			</Row>
@@ -980,7 +735,7 @@ function PerCharacterPermissionRow({
 	if (permissionData.result !== 'ok') {
 		return (
 			<Row alignY='center' padding='small'>
-				{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+				{ icon ? <img src={ GetPermissionIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
 				<span className='flex-1'>{ visibleName }</span>
 				<span>Error: { permissionData.result }</span>
 			</Row>
@@ -994,7 +749,7 @@ function PerCharacterPermissionRow({
 
 	return (
 		<Row alignY='center' padding='small' gap='small'>
-			{ icon ? <img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
+			{ icon ? <img src={ GetPermissionIcon(icon) } width='28' height='28' alt='permission icon' /> : null }
 
 			<span className='flex-1'>{ visibleName } </span>
 

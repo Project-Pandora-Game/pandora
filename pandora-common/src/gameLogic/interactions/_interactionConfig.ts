@@ -6,7 +6,7 @@ import type { InteractionGenericId } from './interactionData.ts';
 
 export const INTERACTION_CONFIG = {
 	interact: {
-		visibleName: 'Interact and to use other allowed permissions',
+		visibleName: 'Interact with you in general',
 		icon: 'on-off',
 		defaultPermissions: {
 			allowOthers: 'prompt',
@@ -15,7 +15,7 @@ export const INTERACTION_CONFIG = {
 		maxCharacterOverrides: PERMISSION_MAX_CHARACTER_OVERRIDES * 3,
 	},
 	modifyBody: {
-		visibleName: `Modify this character's body`,
+		visibleName: `Modify your character's body`,
 		icon: 'body',
 		defaultPermissions: {
 			allowOthers: 'no',
@@ -64,7 +64,7 @@ export const INTERACTION_CONFIG = {
 		},
 	},
 	moveCharacter: {
-		visibleName: 'Move or lead this character inside rooms (even as non-admin)',
+		visibleName: 'Move or lead your character inside rooms (even as non-admin)',
 		icon: 'movement',
 		defaultPermissions: {
 			allowOthers: 'yes',
@@ -85,14 +85,14 @@ export const INTERACTION_CONFIG = {
 		},
 	},
 	modifyCharacterModifiers: {
-		visibleName: 'Add, remove, or configure this character\'s modifiers',
+		visibleName: 'Add, remove, or configure your character\'s modifiers',
 		icon: 'modification-edit',
 		defaultPermissions: {
 			allowOthers: 'prompt',
 		},
 	},
 	lockCharacterModifiers: {
-		visibleName: 'Lock this character\'s modifiers or interact with existing locks',
+		visibleName: 'Lock your character\'s modifiers or interact with existing locks',
 		icon: 'modification-lock',
 		defaultPermissions: {
 			allowOthers: 'no',

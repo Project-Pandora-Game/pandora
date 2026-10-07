@@ -33,7 +33,6 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { HoverElement } from '../../../components/hoverElement/hoverElement.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl } from '../../../components/wardrobe/wardrobeNavigation.tsx';
-import { USER_DEBUG } from '../../../config/Environment.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
@@ -184,8 +183,7 @@ export function RoomControls(): ReactElement | null {
 				globalState={ globalState }
 			/>
 			<DeviceOverlaySelector />
-			&nbsp;
-			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+			<ChatroomDebugConfigView />
 		</Column>
 	);
 }
@@ -360,8 +358,7 @@ export function PersonalSpaceControls(): ReactElement {
 			<PrivateRoomTutorialList />
 			&nbsp;
 			<DeviceOverlaySelector />
-			&nbsp;
-			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+			<ChatroomDebugConfigView />
 		</Column>
 	);
 }

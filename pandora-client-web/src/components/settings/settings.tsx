@@ -23,6 +23,7 @@ import { AccessibilitySettings } from './accessibilitySettings.tsx';
 import { AccountSettings } from './accountSettings.tsx';
 import { AdvancedSettingsGate, AdvancedSettingsScreen } from './advancedSettings.tsx';
 import { CharacterSettings } from './characterSettings.tsx';
+import { DevelopmentSettings } from './developmentSettings/developmentSettings.tsx';
 import { GraphicsSettings } from './graphicsSettings.tsx';
 import { InterfaceSettings } from './interfaceSettings.tsx';
 import { NotificationSettings } from './notificationSettings.tsx';
@@ -84,6 +85,12 @@ const SETTINGS_PAGES_SETUP = {
 		image: '',
 		element: PersonalAccessTokensSettings,
 		advanced: 'access_tokens',
+	},
+	development: {
+		name: 'Development settings',
+		image: '',
+		element: DevelopmentSettings,
+		advanced: 'development',
 	},
 } as const satisfies Readonly<Record<string, SettingsPageConfig>>;
 

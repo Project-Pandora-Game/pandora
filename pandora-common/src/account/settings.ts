@@ -4,7 +4,7 @@ import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
 import { SpaceRoleOrNoneSchema } from '../space/spaceRoles.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
-import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
+import { DisplayNameSchema, HexColorStringSchema, ZodArrayWithInvalidDrop } from '../validation.ts';
 import { AccountRoleSchema } from './accountRoles.ts';
 import { AccountOnlineStatusSchema } from './contacts.ts';
 import { TutorialIdSchema } from './tutorials.ts';
@@ -30,8 +30,13 @@ export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
  * A category of settings that is considered "advanced".
  * Advanced category needs to be enabled first before accessing it, after reading its disclaimer.
  */
-export type SettingsAdvancedCategory = 'access_tokens';
-export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum(['access_tokens']);
+export type SettingsAdvancedCategory =
+	| 'access_tokens'
+	| 'development';
+export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum([
+	'access_tokens',
+	'development',
+]);
 
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
@@ -168,8 +173,14 @@ export const AccountSettingsSchema = z.object({
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
 	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
+
+	/**
+	 * Controls whether the "[DEV]" menus are shown
+	 */
+	devShowMenus: z.boolean(),
+
 	/** List of advanced settings that the user enabled */
-	enabledAdvancedSettings: SettingsAdvancedCategorySchema.array().max(SettingsAdvancedCategorySchema.options.length).readonly(),
+	enabledAdvancedSettings: ZodArrayWithInvalidDrop(SettingsAdvancedCategorySchema, z.string(), SettingsAdvancedCategorySchema.options.length).readonly(),
 });
 
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
@@ -187,6 +198,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeBigPreview: 'image',
 	wardrobePosePreview: true,
 	wardrobePosingCategoryDefault: 'custom',
+
 	wardrobeItemDisplayNameType: 'custom',
 	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',
 	interfaceAccentColor: '#3daee9',
@@ -215,6 +227,9 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	notificationTypeSettings: {},
 	accessibilityForceSystemColors: false,
 	tutorialCompleted: EMPTY_ARRAY,
+
+	devShowMenus: false,
+
 	enabledAdvancedSettings: EMPTY_ARRAY,
 });
 

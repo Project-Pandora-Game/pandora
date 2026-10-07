@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash-es';
 import { Assert, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
-import { USER_DEBUG } from '../config/Environment.ts';
+import { DEVELOPMENT } from '../config/Environment.ts';
 import { GetGraphicsEffectiveAntialias } from './graphicsSettings.tsx';
 import { ConfigurePixiSettings } from './pixiSettings.ts';
 
@@ -43,11 +43,11 @@ interface WindowWithSharedApps extends Window {
 	pandoraPixiAppsAvailable?: GraphicsApplicationManager[];
 }
 
-const SharedApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
-const AvailableApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
+const SharedApps: GraphicsApplicationManager[] = (DEVELOPMENT && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
+const AvailableApps: GraphicsApplicationManager[] = (DEVELOPMENT && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
 const ManagerQueue: ((manager: GraphicsApplicationManager) => void)[] = [];
 
-if (USER_DEBUG) {
+if (DEVELOPMENT) {
 	(window as WindowWithSharedApps).pandoraPixiApps = SharedApps;
 	(window as WindowWithSharedApps).pandoraPixiAppsAvailable = AvailableApps;
 }

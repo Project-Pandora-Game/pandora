@@ -5,6 +5,7 @@ import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, Ite
 import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import doorIcon from '../../../assets/icons/closed-door.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import { Character, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
@@ -12,7 +13,7 @@ import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
-import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
+import { DialogInPortal, DraggableDialogPriorityContext, ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
@@ -20,14 +21,18 @@ import { ActionProblemsContent } from '../../../components/wardrobe/wardrobeActi
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { useWardrobeContainerAccessCheck } from '../../../components/wardrobe/wardrobeUtils.ts';
+import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
+import { FindRichTextSpaceInvites } from '../../../ui/components/richText/richText.tsx';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { DeviceOverlayState, useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
+import type { ParsedSpaceInvite } from '../../../ui/screens/spaceJoin/inviteEmbed.tsx';
+import { SpaceDetails } from '../../../ui/screens/spacesSearch/spaceDetails.tsx';
+import { useSpaceExtendedInfo } from '../../../ui/screens/spacesSearch/useSpaceExtendedInfo.tsx';
 import { PointLike } from '../../common/point.ts';
-import { useObservable } from '../../../observable.ts';
 
 function StoreDeviceMenu({ roomState, device, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -125,6 +130,76 @@ function MoveDeviceMenu({ roomState, device, close }: {
 			<img src={ arrowAllIcon } />
 			<span>Move</span>
 		</Button>
+	);
+}
+
+function JoinSpaceInviteMenu({ device, close }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const invite = useMemo(() => {
+		const description = device.description;
+		if (!description)
+			return null;
+		const invites = FindRichTextSpaceInvites(description);
+		return invites.length > 0 ? invites[0] : null;
+	}, [device.description]);
+
+	if (invite == null)
+		return null;
+
+	return (
+		<JoinSpaceInviteMenuInner
+			device={ device }
+			invite={ invite }
+			close={ close }
+		/>
+	);
+}
+
+function JoinSpaceInviteMenuInner({ invite, close }: {
+	device: ItemRoomDevice;
+	invite: ParsedSpaceInvite;
+	close: () => void;
+}) {
+	const [open, setOpen] = useState(false);
+	const info = useSpaceExtendedInfo(invite.spaceId, {
+		invite: invite.invite,
+	});
+
+	const available = info != null && info.result === 'success' && info.invite?.id === invite.invite;
+
+	return (
+		<>
+			<Button
+				theme='transparent'
+				className={ classNames(
+					'withIcon',
+					available ? null : 'text-strikethrough',
+				) }
+				onClick={ () => {
+					if (!available)
+						return;
+					setOpen(true);
+				} }
+			>
+				<img src={ doorIcon } />
+				<span>Switch to space { info == null ? '[Loading…]' : info.result === 'success' ? `"${info.data.name}"` : '[Invalid Invitation]' }</span>
+			</Button>
+			{ (open && info != null && info.result === 'success') ? (
+				<ModalDialog>
+					<SpaceDetails
+						info={ info.data }
+						hasFullInfo
+						invite={ info.invite }
+						hide={ () => {
+							setOpen(false);
+							close();
+						} }
+					/>
+				</ModalDialog>
+			) : null }
+		</>
 	);
 }
 
@@ -375,6 +450,7 @@ function DeviceMainMenu({ roomState, device, position, close }: {
 				<hr />
 				<LeaveDeviceMenu roomState={ roomState } device={ device } close={ close } />
 				<OpenDeviceStorageMenu roomState={ roomState } device={ device } close={ close } />
+				<JoinSpaceInviteMenu device={ device } close={ close } />
 				{ canModifyRoom ? (
 					<>
 						<MoveDeviceMenu roomState={ roomState } device={ device } close={ close } />

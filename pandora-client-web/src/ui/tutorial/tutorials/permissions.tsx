@@ -85,7 +85,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 						<>
 							<p>
 								The most important permission in Pandora is the general interaction permission to
-								"Interact and to use other allowed permissions". It is the one permission to literally rule them all!
+								"Interact with you in general". It is the one permission to literally rule them all!
 								Only when a character gets this master-permission, they can use all other permissions granted to them.
 							</p>
 							<p>
@@ -103,7 +103,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 					conditions: [{ type: 'next' }],
 					highlight: [{
 						query: '.settings-tab > .settings-tab-contents .flex-1',
-						filter: (e) => e.innerText.includes('Interact and to use other allowed permissions'),
+						filter: (e) => e.innerText.includes('Interact with you in general'),
 					}],
 				},
 				{
@@ -112,7 +112,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 							<p>
 								If you do not want other users to be able to send you permission prompts, e.g. because your character is
 								a pure dominant, or you feel pressured by suddenly appearing permission popups from other users,
-								you should consider changing the "Interact and to use other allowed permissions" master-permission to "no".
+								you should consider changing the "Interact with you in general" master-permission to "no".
 								This then also shows other users clearly that you are not interested in spontaneous plays without a
 								talk in advance.
 							</p>
@@ -127,7 +127,7 @@ export const TUTORIAL_PERMISSIONS: TutorialConfig = {
 					conditions: [{ type: 'next' }],
 					highlight: [{
 						query: '.settings-tab > .settings-tab-contents .flex-1',
-						filter: (e) => e.innerText.includes('Interact and to use other allowed permissions'),
+						filter: (e) => e.innerText.includes('Interact with you in general'),
 					}],
 				},
 			],

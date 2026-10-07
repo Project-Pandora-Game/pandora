@@ -544,6 +544,11 @@ $theme-settings-table-row-highlight-background: color-mix(in srgb, #2d373d, $the
 // Used for highlighting default permission in permission settings
 $theme-settings-permission-button-default-highlight: #999;
 
+// Permission prompt
+$theme-settings-permission-indication-pending: #fb0;
+$theme-settings-permission-indication-denied: #800;
+$theme-settings-permission-indication-allowed: #3e3;
+
 //#endregion
 
 //#region Login & Registration

@@ -13,6 +13,7 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
@@ -36,12 +37,49 @@ export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | un
 
 const ChatroomDebugConfigStorage = BrowserStorage.create<ChatroomDebugConfig>('debug-chatroom', undefined, ChatroomDebugConfigSchema);
 
-export function useDebugConfig(): ChatroomDebugConfig {
-	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage);
-	return (USER_DEBUG && chatroomDebugConfig?.enabled) ? chatroomDebugConfig : undefined;
+export function useDevelopmentEnabled(): boolean {
+	if (!USER_DEBUG)
+		return false;
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const { enabledAdvancedSettings } = useAccountSettings();
+	return enabledAdvancedSettings.includes('development');
 }
 
-export function ChatroomDebugConfigView(): ReactElement {
+export function useDevelopmentMenusEnabled(): boolean {
+	if (!USER_DEBUG)
+		return false;
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const { enabledAdvancedSettings, devShowMenus } = useAccountSettings();
+	return enabledAdvancedSettings.includes('development') && devShowMenus;
+}
+
+export function useDebugConfig(): ChatroomDebugConfig {
+	if (!USER_DEBUG)
+		return undefined;
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage);
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const developmentMenusEnabled = useDevelopmentMenusEnabled();
+
+	return (developmentMenusEnabled && chatroomDebugConfig?.enabled) ? chatroomDebugConfig : undefined;
+}
+
+export function ChatroomDebugConfigView(): ReactElement | null {
+	if (!USER_DEBUG)
+		return null;
+
+	// eslint-disable-next-line react-hooks/rules-of-hooks
+	const developmentMenusEnabled = useDevelopmentMenusEnabled();
+
+	return developmentMenusEnabled ? (
+		<ChatroomDebugConfigViewInner />
+	) : null;
+}
+
+function ChatroomDebugConfigViewInner(): ReactElement {
 	const gameState = useGameState();
 	const { globalState, playerState } = usePlayerState();
 	const currentRoomState = globalState.space.getRoom(playerState.currentRoom);

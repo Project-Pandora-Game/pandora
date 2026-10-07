@@ -15,7 +15,7 @@ import {
 } from 'discord.js';
 import { Assert, FormatTimeInterval, GetLogger } from 'pandora-common';
 import { ENV } from '../../../config.ts';
-import { BETA_REGISTRATION_COOLDOWN, BetaRegistrationService } from '../../betaRegistration/betaRegistration.ts';
+import { BETA_REGISTRATION_COOLDOWN, BetaRegistrations } from '../../betaRegistration/betaRegistration.ts';
 import { GetInteractionMember, type DiscordButtonDescriptor, type DiscordCommandDescriptor } from './_common.ts';
 
 const {
@@ -159,7 +159,7 @@ export const DISCORD_BUTTON_REGISTER: DiscordButtonDescriptor = {
 			return;
 		}
 
-		const registerResult = await BetaRegistrationService.registerUser(interaction.user.id);
+		const registerResult = await BetaRegistrations.registerUser(interaction.user.id);
 
 		await member.roles.remove(DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID, 'Automatic beta handout');
 		await member.roles.add(DISCORD_BETA_ACCESS_ROLE_ID, 'Automatic beta handout');

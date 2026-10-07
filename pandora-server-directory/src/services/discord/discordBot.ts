@@ -40,7 +40,7 @@ type Status<T> = {
 
 export type DiscordBotStatus = Status<number>;
 
-export const DiscordBot = new class DiscordBot implements ServerService {
+export const DiscordBot = new class DiscordBotService implements ServerService {
 	private _client?: Discord.Client;
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;

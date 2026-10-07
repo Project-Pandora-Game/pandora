@@ -11,7 +11,7 @@ const spacesMetric = new promClient.Gauge({
 	help: 'Current count of spaces loaded on this shard',
 });
 
-export const SpaceManager = new class SpaceManager {
+export const SpaceManager = new class SpaceManagerService {
 	private readonly _spaces: Map<SpaceId, PublicSpace> = new Map();
 
 	public getSpace(id: SpaceId): PublicSpace | undefined {

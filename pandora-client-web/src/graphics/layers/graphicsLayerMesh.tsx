@@ -12,7 +12,7 @@ import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, useLayerVerticesTransformData, type GraphicsLayerProps, type LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
 import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
-export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
+export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 	layer,
 	item,
 	poseEvaluator,
@@ -84,7 +84,7 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMesh({
 	);
 });
 
-export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMesh({
+export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMeshImpl({
 	item,
 	layer,
 	roomMask,

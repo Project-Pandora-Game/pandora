@@ -112,7 +112,7 @@ const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFram
 	},
 };
 
-export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithManager({
+export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithManagerImpl({
 	layerBuilder,
 	layerFilter,
 	characterState,

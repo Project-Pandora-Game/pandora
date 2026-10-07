@@ -230,7 +230,7 @@ export function RoomItemMovementTool({
 	);
 }
 
-export const RoomItemInteractive = memo(function RoomItemInteractive({
+export const RoomItemInteractive = memo(function RoomItemInteractiveImpl({
 	roomState,
 	item,
 	position,
@@ -365,7 +365,7 @@ export const RoomItemInteractive = memo(function RoomItemInteractive({
 	);
 });
 
-export const RoomItem = memo(function RoomItem({
+export const RoomItem = memo(function RoomItemImpl({
 	roomState,
 	item,
 	position,

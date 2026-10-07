@@ -97,7 +97,7 @@ export interface TabContainerRef {
 	setTabByName(name: string): void;
 }
 
-export const TabContainer = forwardRef(function TabContainer({
+export const TabContainer = forwardRef(function TabContainerImpl({
 	children,
 	className,
 	collapsable,

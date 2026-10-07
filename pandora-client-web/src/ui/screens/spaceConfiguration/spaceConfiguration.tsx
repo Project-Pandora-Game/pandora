@@ -954,7 +954,7 @@ function SpaceConfigurationFeaturesInner({
 	);
 }
 
-const SpaceConfigurationRoom = memo(function SpaceConfigurationRoom({
+const SpaceConfigurationRoom = memo(function SpaceConfigurationRoomImpl({
 	creation,
 	spaceId,
 }: Pick<SpaceConfigurationTabProps, 'creation'> & { spaceId: SpaceId | null; }): ReactElement {

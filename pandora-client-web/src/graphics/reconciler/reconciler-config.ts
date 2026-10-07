@@ -58,7 +58,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	bindToConsole(methodName, args, _badgeName) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 		return Function.prototype.bind.apply(
-			// eslint-disable-next-line no-console
+			// eslint-disable-next-line no-console, @typescript-eslint/unbound-method
 			console[methodName as keyof Console],
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			[console, ...args],

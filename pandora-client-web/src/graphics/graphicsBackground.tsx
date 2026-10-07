@@ -11,7 +11,7 @@ import { DEFAULT_BACKGROUND_COLOR } from './graphicsAppManager.ts';
 import { useRoomViewProjection } from './room/roomProjection.tsx';
 import { useTexture } from './useTexture.ts';
 
-export const GraphicsBackground = memo(function GraphicsBackground({
+export const GraphicsBackground = memo(function GraphicsBackgroundImpl({
 	background,
 	backgroundFilters,
 }: {

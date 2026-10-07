@@ -80,7 +80,7 @@ export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 export const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
 export const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
 
-export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
+export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveImpl({
 	character,
 	characterState,
 	spaceInfo,
@@ -256,7 +256,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractive({
 	);
 });
 
-export const RoomCharacter = memo(function RoomCharacter({
+export const RoomCharacter = memo(function RoomCharacterImpl({
 	character,
 	characterState,
 	projectionResolver,

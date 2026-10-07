@@ -11,7 +11,7 @@ const charactersMetric = new promClient.Gauge({
 	help: 'Current count of characters on this shard',
 });
 
-export const CharacterManager = new class CharacterManager {
+export const CharacterManager = new class CharacterManagerService {
 	private readonly _characters: Map<CharacterId, Character> = new Map();
 
 	public getCharacter(id: CharacterId): Character | undefined {

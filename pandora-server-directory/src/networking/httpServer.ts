@@ -13,7 +13,7 @@ import { SocketIOServerClient } from './socketio_client_server.ts';
 import { SocketIOServerShard } from './socketio_shard_server.ts';
 const { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 
-export const HttpServer = new class HttpServer implements ServerService {
+export const HttpServer = new class HttpServerService implements ServerService {
 	private _server?: NodeHttpServer;
 	private readonly _logger = GetLogger('Server');
 	private readonly _activeConnections = new Set<Socket>();

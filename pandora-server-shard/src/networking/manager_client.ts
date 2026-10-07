@@ -58,7 +58,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, ClientConnection> {
+export const ConnectionManagerClient = new class ConnectionManagerClientService implements IMessageHandler<IClientShard, ClientConnection> {
 	private readonly _connectedClients: Set<ClientConnection> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;

@@ -87,7 +87,7 @@ interface PointTransformComparsionDetailProps {
 	point: Immutable<PointDefinition>;
 }
 
-export const PointTransformComparsionDetail = memo(function PointTransformComparsionDetail({ point }: PointTransformComparsionDetailProps): ReactElement {
+export const PointTransformComparsionDetail = memo(function PointTransformComparsionDetailImpl({ point }: PointTransformComparsionDetailProps): ReactElement {
 	const assetManager = useAssetManager();
 
 	const [baselineTransforms, setBaselineTransforms] = useState(point.transforms);

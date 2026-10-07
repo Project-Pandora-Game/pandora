@@ -252,7 +252,7 @@ export function RoomDeviceMovementTool({
 	);
 }
 
-export const RoomDeviceInteractive = memo(function RoomDeviceInteractive({
+export const RoomDeviceInteractive = memo(function RoomDeviceInteractiveImpl({
 	characters,
 	charactersInDevice,
 	roomState,
@@ -568,7 +568,7 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 	);
 }
 
-export const RoomDevice = memo(function RoomDevice({
+export const RoomDevice = memo(function RoomDeviceImpl({
 	characters,
 	charactersInDevice,
 	roomState,

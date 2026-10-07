@@ -12,7 +12,7 @@ const betaRegistrationActive = new promClient.Gauge({
 
 export const BETA_REGISTRATION_COOLDOWN = TimeSpanMs(7, 'days');
 
-export const BetaRegistrationService = new class BetaRegistrationService implements ServerService {
+export const BetaRegistrations = new class BetaRegistrationService implements ServerService {
 	private _betaRegistrations: DatabaseBetaRegistration[] | null = null;
 	private readonly logger = GetLogger('BetaRegistration');
 

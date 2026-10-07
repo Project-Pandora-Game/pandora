@@ -4,15 +4,15 @@ import { BaseEmailSender } from './baseEmail.ts';
 const { EMAIL_WEBHOOK_URL } = ENV;
 
 import type { Transporter } from 'nodemailer';
-import type { SentMessageInfo } from 'nodemailer/lib/stream-transport/index.js';
+import type { StreamSentMessageInfo } from 'nodemailer/lib/stream-transport/index.js';
 
-export class WebhookEmail extends BaseEmailSender<SentMessageInfo> {
+export class WebhookEmail extends BaseEmailSender<StreamSentMessageInfo> {
 
 	constructor() {
 		super(GetLogger('WebhookEmail'));
 	}
 
-	protected async createTransport(): Promise<Transporter<SentMessageInfo>> {
+	protected async createTransport(): Promise<Transporter<StreamSentMessageInfo>> {
 		Assert(!!EMAIL_WEBHOOK_URL.trim() && URL.canParse(EMAIL_WEBHOOK_URL.trim()));
 
 		const { createTransport } = await import('nodemailer');
@@ -22,7 +22,7 @@ export class WebhookEmail extends BaseEmailSender<SentMessageInfo> {
 		});
 	}
 
-	protected handleSendResult(result: SentMessageInfo): void {
+	protected handleSendResult(result: StreamSentMessageInfo): void {
 		Assert(result.message instanceof Buffer);
 
 		if (result.rejected && result.rejected.length > 0) {

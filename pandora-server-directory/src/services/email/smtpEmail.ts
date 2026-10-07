@@ -4,15 +4,15 @@ import { BaseEmailSender } from './baseEmail.ts';
 const { EMAIL_SMTP_CONFIG, EMAIL_SMTP_PASSWORD } = ENV;
 
 import type { Transporter } from 'nodemailer';
-import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
+import type { SMTPSentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 
-export class SmtpEmail extends BaseEmailSender<SentMessageInfo> {
+export class SmtpEmail extends BaseEmailSender<SMTPSentMessageInfo> {
 
 	constructor() {
 		super(GetLogger('SmtpEmail'));
 	}
 
-	protected async createTransport(): Promise<Transporter<SentMessageInfo>> {
+	protected async createTransport(): Promise<Transporter<SMTPSentMessageInfo>> {
 		const { createTransport } = await import('nodemailer');
 		const [service, host, user] = EMAIL_SMTP_CONFIG.split(' ');
 		return createTransport({
@@ -27,7 +27,7 @@ export class SmtpEmail extends BaseEmailSender<SentMessageInfo> {
 		});
 	}
 
-	protected handleSendResult(result: SentMessageInfo): void {
+	protected handleSendResult(result: SMTPSentMessageInfo): void {
 		if (result.rejected.length > 0)
 			this.logger.error(`Email rejected: ${result.response}`);
 		else

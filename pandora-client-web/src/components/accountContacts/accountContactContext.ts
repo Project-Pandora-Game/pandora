@@ -27,7 +27,7 @@ export function GetCurrentAccountContacts(): readonly IAccountContact[] {
 	return ACCOUNT_CONTACTS.value;
 }
 
-export const AccountContactContext = new class AccountContactContext extends TypedEventEmitter<{
+export const AccountContactContext = new class AccountContactContextClass extends TypedEventEmitter<{
 	incoming: IAccountContact & { type: 'incoming'; };
 }> {
 	public handleAccountContactInit({ friends, contacts }: IDirectoryClientArgument['accountContactInit']): void {

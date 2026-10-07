@@ -175,7 +175,7 @@ export class SegmentParser {
 	}
 }
 
-export const ChatParser = new class ChatParser {
+export const ChatParser = new class ChatParserClass {
 	private readonly _lineParser = new LineParser();
 	private readonly _segmentParser = new SegmentParser();
 

@@ -11,7 +11,7 @@ import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { useItemColor, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export const GraphicsLayerText = memo(function GraphicsLayerText({
+export const GraphicsLayerText = memo(function GraphicsLayerTextImpl({
 	layer,
 	item,
 	poseEvaluator,
@@ -99,7 +99,7 @@ export const GraphicsLayerText = memo(function GraphicsLayerText({
 	);
 });
 
-export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceText({
+export const GraphicsLayerRoomDeviceText = memo(function GraphicsLayerRoomDeviceTextImpl({
 	layer,
 	item,
 	getFilters,

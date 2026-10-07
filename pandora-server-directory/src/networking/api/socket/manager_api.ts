@@ -22,7 +22,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerApi = new class ConnectionManagerApi implements IMessageHandler<IApiDirectory, ApiConnection>, ServerService {
+export const ConnectionManagerApi = new class ConnectionManagerApiService implements IMessageHandler<IApiDirectory, ApiConnection>, ServerService {
 	private readonly connectedClients: Set<ApiConnection> = new Set();
 	private readonly messageHandler: MessageHandler<IApiDirectory, ApiConnection>;
 

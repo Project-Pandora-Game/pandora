@@ -25,7 +25,7 @@ import { RenderActionContent, RenderActionContentToString } from './chatMessageA
 import { RenderChatPart, RenderChatPartToString } from './chatMessageText.tsx';
 import { IsActionMessage, type ChatActionMessagePreprocessed, type ChatMessagePreprocessed, type ChatMessageProcessedRoomData, type ChatNormalMessageProcessed } from './chatMessageTypes.ts';
 
-export const ChatMessage = memo(function ChatMessage({ message, playerId }: { message: ChatMessagePreprocessed; playerId: CharacterId | null; }): ReactElement | null {
+export const ChatMessage = memo(function ChatMessageImpl({ message, playerId }: { message: ChatMessagePreprocessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
@@ -367,7 +367,7 @@ function RenderChatNameToString(message: ChatMessageChat): string {
 	return before + message.from.name + after;
 }
 
-export const ActionMessageElement = memo(function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
+export const ActionMessageElement = memo(function ActionMessageElementImpl({ type, labelColor, messageTime, edited, repetitions = 1, dim = false, rooms = null, receivedRoomId, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number | null;

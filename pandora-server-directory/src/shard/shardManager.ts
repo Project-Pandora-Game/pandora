@@ -14,7 +14,7 @@ const shardsMetric = new promClient.Gauge({
 	help: 'Current count of shards',
 });
 
-export const ShardManager = new class ShardManager {
+export const ShardManager = new class ShardManagerService {
 	private readonly shards: Map<string, Shard> = new Map();
 	private _stopping: boolean = false;
 

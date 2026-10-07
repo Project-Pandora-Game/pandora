@@ -128,7 +128,7 @@ vec3 getNormal(vec2 pos) {
 	},
 };
 
-export const GetNormalMeshGlProgram = memoize(function GetNormalMeshGlProgram(): PIXI.GlProgram {
+export const GetNormalMeshGlProgram = memoize(function GetNormalMeshGlProgramImpl(): PIXI.GlProgram {
 	return PIXI.compileHighShaderGlProgram({
 		name: 'mesh',
 		bits: [
@@ -185,7 +185,7 @@ outColor.xyz += specular * outColor.w;
 	});
 });
 
-export const GetNormalMeshDebugNormalsGlProgram = memoize(function GetNormalMeshDebugNormalsGlProgram(): PIXI.GlProgram {
+export const GetNormalMeshDebugNormalsGlProgram = memoize(function GetNormalMeshDebugNormalsGlProgramImpl(): PIXI.GlProgram {
 	return PIXI.compileHighShaderGlProgram({
 		name: 'mesh',
 		bits: [

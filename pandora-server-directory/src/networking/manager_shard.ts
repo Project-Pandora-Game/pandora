@@ -14,7 +14,7 @@ const messagesMetric = new promClient.Counter({
 
 const logger = GetLogger('ConnectionManager-Shard');
 
-export const ConnectionManagerShard = new class ConnectionManagerShard implements IMessageHandler<IShardDirectory, IConnectionShard> {
+export const ConnectionManagerShard = new class ConnectionManagerShardService implements IMessageHandler<IShardDirectory, IConnectionShard> {
 	private readonly messageHandler: MessageHandler<IShardDirectory, IConnectionShard>;
 
 	public async onMessage<K extends keyof IShardDirectory>(

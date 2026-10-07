@@ -72,7 +72,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection>, ServerService {
+export const ConnectionManagerClient = new class ConnectionManagerClientService implements IMessageHandler<IClientDirectory, ClientConnection>, ServerService {
 	public announcement: DirectoryStatusAnnouncement | undefined;
 
 	private connectedClients: Set<ClientConnection> = new Set();
@@ -1634,7 +1634,7 @@ function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn:
 	};
 }
 
-const LoginManager = new class LoginManager {
+const LoginManager = new class LoginManagerService {
 	private invalidAttempts: { readonly timestamp: number; }[] = [];
 
 	public loginFailed(): void {

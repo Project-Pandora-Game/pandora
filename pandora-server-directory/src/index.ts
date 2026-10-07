@@ -9,7 +9,7 @@ import { AddDiscordLogOutput, AddFileOutput } from './logging.ts';
 import { ConnectionManagerApi } from './networking/api/socket/manager_api.ts';
 import { HttpServer } from './networking/httpServer.ts';
 import { ConnectionManagerClient } from './networking/manager_client.ts';
-import { BetaRegistrationService } from './services/betaRegistration/betaRegistration.ts';
+import { BetaRegistrations } from './services/betaRegistration/betaRegistration.ts';
 import { DiscordBot } from './services/discord/discordBot.ts';
 import GetEmailSender from './services/email/index.ts';
 import { GitHubVerifier } from './services/github/githubVerify.ts';
@@ -58,7 +58,7 @@ async function Start(): Promise<void> {
 	await ServiceInit(SpaceManager);
 	await ServiceInit(ConnectionManagerClient);
 	await ServiceInit(ConnectionManagerApi);
-	await ServiceInit(BetaRegistrationService);
+	await ServiceInit(BetaRegistrations);
 	logger.verbose('Initializing APIs...');
 	await ServiceInit(GitHubVerifier);
 	await ServiceInit(DiscordBot);

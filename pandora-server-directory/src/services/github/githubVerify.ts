@@ -33,7 +33,7 @@ const invalidTeams = new Set<string>();
 
 let octokitOrg!: Octokit;
 
-export const GitHubVerifier = new class GitHubVerifier implements ServerService {
+export const GitHubVerifier = new class GitHubVerifierService implements ServerService {
 	private _active = false;
 
 	public get active(): boolean {

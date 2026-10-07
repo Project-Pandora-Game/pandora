@@ -20,7 +20,7 @@ import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
-export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMesh({
+export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMeshImpl({
 	children,
 	layer,
 	item,

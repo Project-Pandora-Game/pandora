@@ -10,7 +10,7 @@ import { UseTextureGetterOverride } from '../../../graphics/useTexture.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 
-export const RoomConfigurationBackgroundPreview = memo(function RoomConfigurationBackgroundPreview({ background, previewSize, className }: {
+export const RoomConfigurationBackgroundPreview = memo(function RoomConfigurationBackgroundPreviewImpl({ background, previewSize, className }: {
 	background: Immutable<RoomBackgroundData> | null;
 	previewSize: number;
 	className?: string;

@@ -7,7 +7,7 @@ export interface ColoredNameProps extends React.DetailedHTMLProps<React.HTMLAttr
 	color: HexColorString;
 }
 
-export const ColoredName = memo(function ColoredName({ color, className, style, ...props }: ColoredNameProps): ReactElement {
+export const ColoredName = memo(function ColoredNameImpl({ color, className, style, ...props }: ColoredNameProps): ReactElement {
 	return (
 		<span
 			{ ...props }

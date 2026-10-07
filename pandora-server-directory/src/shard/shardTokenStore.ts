@@ -14,7 +14,7 @@ const logger = GetLogger('ShardTokenStore');
 
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
-export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
+export const ShardTokenStore = new class ShardTokenStoreService extends TokenStoreBase<IShardTokenInfo> {
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 	}

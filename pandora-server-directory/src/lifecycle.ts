@@ -5,7 +5,7 @@ import { GetDatabaseService } from './database/databaseProvider.ts';
 import { ConnectionManagerApi } from './networking/api/socket/manager_api.ts';
 import { HttpServer } from './networking/httpServer.ts';
 import { ConnectionManagerClient } from './networking/manager_client.ts';
-import { BetaRegistrationService } from './services/betaRegistration/betaRegistration.ts';
+import { BetaRegistrations } from './services/betaRegistration/betaRegistration.ts';
 import { DiscordBot } from './services/discord/discordBot.ts';
 import { GitHubVerifier } from './services/github/githubVerify.ts';
 import { ShardManager } from './shard/shardManager.ts';
@@ -41,7 +41,7 @@ async function StopGracefully(): Promise<void> {
 	// Stop APIs
 	await DestroyService(DiscordBot);
 	await DestroyService(GitHubVerifier);
-	await DestroyService(BetaRegistrationService);
+	await DestroyService(BetaRegistrations);
 	// Stop sending status updates
 	await DestroyService(ConnectionManagerApi);
 	await DestroyService(ConnectionManagerClient);

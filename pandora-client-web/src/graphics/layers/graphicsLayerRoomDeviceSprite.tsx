@@ -18,7 +18,7 @@ import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, type LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
 import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
 
-export const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSprite({ item, layer, roomMask, getFilters }: {
+export const GraphicsLayerRoomDeviceSprite = memo(function GraphicsLayerRoomDeviceSpriteImpl({ item, layer, roomMask, getFilters }: {
 	item: Item;
 	layer: Immutable<RoomDeviceGraphicsLayerSprite>;
 	roomMask?: PixiMaskSource;

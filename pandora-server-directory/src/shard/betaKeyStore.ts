@@ -15,7 +15,7 @@ const logger = GetLogger('BetaKeyStore');
 
 type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string; };
 
-export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaKeyInfo> {
+export const BetaKeyStore = new class BetaKeyStoreService extends TokenStoreBase<IBetaKeyInfo> {
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 		this.generator = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');

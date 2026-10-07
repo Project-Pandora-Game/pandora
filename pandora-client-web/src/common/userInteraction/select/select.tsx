@@ -9,7 +9,7 @@ export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes
 	scrollChange?: boolean;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function Select({
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function SelectImpl({
 	children,
 	onChange,
 	scrollChange = false,

@@ -1,13 +1,3 @@
-diff --git a/lib/Shaders.d.ts b/lib/Shaders.d.ts
-index 2aed566102cbf0dd92b0a9b9e08ca844722a0b6c..a48b8f5081dc4f14c374a515bfee55b65afb1709 100644
---- a/lib/Shaders.d.ts
-+++ b/lib/Shaders.d.ts
-@@ -1,5 +1,3 @@
--/// <reference types="@webgpu/types" />
--
- declare module '*.wgsl'
- {
-     const shader: 'string';
 diff --git a/lib/environment/canvas/ICanvas.d.ts b/lib/environment/canvas/ICanvas.d.ts
 index f48357aa773d5412c53bc841b5e77f5aaf7df9e9..0b935c244bae8dfa6e949c59299ba4726932372d 100644
 --- a/lib/environment/canvas/ICanvas.d.ts
@@ -47,19 +37,3 @@ index f48357aa773d5412c53bc841b5e77f5aaf7df9e9..0b935c244bae8dfa6e949c59299ba472
      /**
       * Get the content of the canvas as data URL.
       * @param {string} [type] - A string indicating the image format. The default type is `image/png`;
-diff --git a/lib/events/FederatedPointerEvent.d.ts b/lib/events/FederatedPointerEvent.d.ts
-index 51756e39e53fa27fb739c4ae5907c3390d1ffdcb..421eb598f2f556d33d6d6407123e8f57465052e4 100644
---- a/lib/events/FederatedPointerEvent.d.ts
-+++ b/lib/events/FederatedPointerEvent.d.ts
-@@ -46,6 +46,11 @@ import { FederatedMouseEvent } from './FederatedMouseEvent';
-  * @standard
-  */
- export declare class FederatedPointerEvent extends FederatedMouseEvent implements PointerEvent {
-+    /**
-+     * Persistent identifier of the source device.
-+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/persistentDeviceId}
-+     */
-+    persistentDeviceId: number;
-     /**
-      * The unique identifier of the pointer.
-      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}

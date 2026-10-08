@@ -1,7 +1,7 @@
+import promClient from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, EMPTY_ARRAY, GetLogger, ServerService } from 'pandora-common';
-import promClient from 'prom-client';
 import * as z from 'zod';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure.ts';

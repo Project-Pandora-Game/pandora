@@ -1,6 +1,6 @@
+import promClient from '@prometheus-io/client';
 import { Assert, CharacterId, GetLogger } from 'pandora-common';
 import type { IShardCharacterDefinition } from 'pandora-common/networking/api/directory_shard';
-import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager.ts';
 import { Character } from './character.ts';
 

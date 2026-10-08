@@ -1,3 +1,4 @@
+import promClient from '@prometheus-io/client';
 import { freeze } from 'immer';
 import {
 	AbortActionAttempt,
@@ -38,7 +39,6 @@ import type {
 	IClientShardPromiseResult,
 } from 'pandora-common/networking/api/shard_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
-import promClient from 'prom-client';
 import { Character } from '../character/character.ts';
 import { CharacterManager } from '../character/characterManager.ts';
 import { ClientConnection } from './connection_client.ts';

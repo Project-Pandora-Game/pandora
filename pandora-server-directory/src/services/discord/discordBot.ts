@@ -1,8 +1,8 @@
+import promClient from '@prometheus-io/client';
 import * as Discord from 'discord.js';
 import { Events, GatewayIntentBits, GuildChannel, REST, Routes, type ClientOptions, type Interaction } from 'discord.js';
 import { throttle } from 'lodash-es';
 import { Assert, GetLogger, ServerService } from 'pandora-common';
-import promClient from 'prom-client';
 import { ENV } from '../../config.ts';
 import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common.ts';
 import { DISCORD_COMMAND_PING } from './commands/ping.ts';

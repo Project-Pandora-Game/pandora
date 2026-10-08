@@ -1,6 +1,6 @@
+import promClient from '@prometheus-io/client';
 import { Assert, GetLogger, SpaceId } from 'pandora-common';
 import type { IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
-import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager.ts';
 import { PublicSpace } from './publicSpace.ts';
 

@@ -1,3 +1,4 @@
+import promClient from '@prometheus-io/client';
 import AsyncLock from 'async-lock';
 import { cloneDeep, debounce, uniq } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
@@ -12,7 +13,6 @@ import {
 	type PandoraAccessTokenScope,
 	type PandoraAccessTokenScopeList,
 } from 'pandora-common';
-import promClient from 'prom-client';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type { PandoraAccessTokenData } from '../../database/databaseStructure.ts';
 import type AccountSecure from '../accountSecure.ts';

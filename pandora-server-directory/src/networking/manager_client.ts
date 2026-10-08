@@ -1,8 +1,8 @@
+import promClient from '@prometheus-io/client';
 import { cloneDeep, throttle } from 'lodash-es';
 import { AccountRole, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, BadMessageError, GetLogger, IMessageHandler, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, ServerService, type CharacterId, type DirectoryStatusAnnouncement, type IDirectoryStatus } from 'pandora-common';
 import { ClientDirectoryAuthMessageSchema, type IAccountPasskeyCredential, type IAccountPasskeyInfo, type IClientDirectory, type IClientDirectoryArgument, type IClientDirectoryAuthMessage, type IClientDirectoryPromiseResult, type IClientDirectoryResult, type IDirectoryAccountInfo, type IShardTokenConnectInfo, type SecondFactorData, type SecondFactorResponse, type SecondFactorType } from 'pandora-common/networking/api/directory_client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
-import promClient from 'prom-client';
 import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';

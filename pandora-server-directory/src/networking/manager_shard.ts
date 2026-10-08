@@ -1,7 +1,7 @@
+import promClient from '@prometheus-io/client';
 import { BadMessageError, GetLogger, IMessageHandler, MessageHandler, PANDORA_VERSION_DATABASE } from 'pandora-common';
 import type { IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult } from 'pandora-common/networking/api/directory_shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
-import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ShardManager } from '../shard/shardManager.ts';
 import type { IConnectionShard } from './common.ts';

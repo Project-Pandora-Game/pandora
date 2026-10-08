@@ -1,5 +1,5 @@
+import promClient from '@prometheus-io/client';
 import { Assert, AsyncSynchronized, GetLogger, TimeSpanMs, type ServerService } from 'pandora-common';
-import promClient from 'prom-client';
 import { ACTOR_PANDORA } from '../../account/actorPandora.ts';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type { DatabaseBetaRegistration } from '../../database/databaseStructure.ts';

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import promClient from '@prometheus-io/client';
 import { GetLogger } from 'pandora-common';
-import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider.ts';
 
 new promClient.Gauge({

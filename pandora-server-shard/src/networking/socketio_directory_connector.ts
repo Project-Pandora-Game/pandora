@@ -1,3 +1,4 @@
+import promClient from '@prometheus-io/client';
 import {
 	AsyncSynchronized,
 	ConnectionBase,
@@ -19,7 +20,6 @@ import {
 	type IShardDirectory,
 } from 'pandora-common/networking/api/directory_shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
-import promClient from 'prom-client';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager.ts';
 import { APP_VERSION, ENV } from '../config.ts';

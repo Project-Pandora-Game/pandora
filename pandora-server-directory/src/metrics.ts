@@ -1,6 +1,6 @@
+import promClient from '@prometheus-io/client';
 import express, { Request, Response } from 'express';
 import { performance } from 'perf_hooks';
-import promClient from 'prom-client';
 
 /** Host the metrics as express endpoint */
 export function MetricsServe(): express.RequestHandler {
@@ -18,7 +18,7 @@ promClient.register.setDefaultLabels({
 promClient.collectDefaultMetrics({ prefix: 'pandora_directory_' });
 
 // Collect event loop timings
-// Not part of default metrics yet: https://github.com/siimon/prom-client/issues/399, https://github.com/siimon/prom-client/pull/474
+// Not part of default metrics yet: https://github.com/prometheus/client_js/issues/399, https://github.com/prometheus/client_js/pull/474
 if (performance.nodeTiming && performance.nodeTiming.idleTime !== undefined) {
 	let lastIdle = performance.nodeTiming.idleTime;
 

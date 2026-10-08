@@ -1,7 +1,7 @@
+import promClient from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
-import promClient from 'prom-client';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { ACTOR_PANDORA } from '../account/actorPandora.ts';

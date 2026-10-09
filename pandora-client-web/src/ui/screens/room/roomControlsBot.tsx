@@ -17,19 +17,7 @@ export function RoomControlsBotInfo(): ReactElement | null {
 			<legend>
 				<Row alignY='center'>
 					<span>Space's Bot</span>
-					<ContextHelpButton>
-						<p>
-							Bots are community-run projects that offer additional room for creativity by allowing
-							their creators to extend spaces with various automated features.<br />
-							Each space can have at most one bot active at a time.<br />
-							<strong>Bots are an experimental feature and will change in the future!</strong>
-						</p>
-						<p>
-							<strong>Bots are not official — they are hosted by community members like you!</strong><br />
-							A bot can do anything with the access it has to the space.
-							To see what this space's bot can do, see the "Features" tab in "Space Configuration" of this space.
-						</p>
-					</ContextHelpButton>
+					<SimpleSpaceBotsContextHelp />
 				</Row>
 			</legend>
 			<Column gap='tiny'>
@@ -46,5 +34,23 @@ export function RoomControlsBotInfo(): ReactElement | null {
 				) : null }
 			</Column>
 		</fieldset>
+	);
+}
+
+export function SimpleSpaceBotsContextHelp(): ReactElement {
+	return (
+		<ContextHelpButton>
+			<p>
+				Bots are community-run projects that offer additional room for creativity by allowing
+				their creators to extend spaces with various automated features.<br />
+				Each space can have at most one bot active at a time.<br />
+				<strong>Bots are an experimental feature and will change in the future!</strong>
+			</p>
+			<p>
+				<strong>Bots are not official — they are hosted by community members like you!</strong><br />
+				A bot can do anything with the access it has to the space.
+				To see what this space's bot can do, see the "Features" tab in "Space Configuration" of this space.
+			</p>
+		</ContextHelpButton>
 	);
 }

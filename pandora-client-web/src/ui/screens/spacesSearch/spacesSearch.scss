@@ -350,6 +350,15 @@
 	.buttons {
 		grid-column: 1 / 3;
 	}
+
+	.bot-info {
+		grid-column: 1 / 3;
+		border: 0.1em solid common.$theme-separator;
+
+		@include common.forcedColors {
+			border-color: common.$forcedColors-separator;
+		}
+	}
 }
 
 .infoBox {

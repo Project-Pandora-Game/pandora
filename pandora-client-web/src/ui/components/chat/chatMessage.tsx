@@ -13,6 +13,7 @@ import React, {
 	type ReactNode,
 } from 'react';
 import { GetCurrentAssetManager, useAssetManager } from '../../../assets/assetManager.tsx';
+import circuitIcon from '../../../assets/icons/circuit.svg';
 import { Button } from '../../../components/common/button/button.tsx';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu/index.ts';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
@@ -219,7 +220,9 @@ function DisplayInfo({ messageTime, edited, rooms, receivedRoomId, from }: {
 				</span>
 			) : null }
 			{ edited ? <span>[edited] </span> : null }
-			{ from?.id === 'bot' ? /* TODO: Consider bot icon (chip?) instead */ <span>[BOT] </span> : null }
+			{ from?.id === 'bot' ? (
+				<img className='botIcon' src={ circuitIcon } alt='[BOT] ' title='[BOT]' />
+			) : null }
 			{ rooms && rooms.length > 0 && (rooms.length > 1 || rooms[0].id !== receivedRoomId) ? (
 				<span className='roomInfo' title={ NaturalListJoin(rooms.map((r) => r.name)) }>
 					{ rooms.length > 1 ? '[multiple rooms] ' : <>[<span className='roomName'>{ rooms[0].name }</span>] </> }

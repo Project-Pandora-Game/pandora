@@ -37,10 +37,13 @@ export const BotDefinitionSchema: z.ZodObject<ZodObjectShape<BotDefinition>> = z
 /** Information about bot that is publicly visible */
 export interface BotPublicInfo extends BotDefinition {
 	ownerAccountName: string;
+	/** Whether the bot is currently online (has associated API connection listening for space loads) */
+	online: boolean;
 }
 /** Information about bot that is publicly visible */
 export const BotPublicInfoSchema: z.ZodObject<ZodObjectShape<BotPublicInfo>> = BotDefinitionSchema.extend({
 	ownerAccountName: z.string(),
+	online: z.boolean(),
 });
 
 /** Developer-specified configuration of a bot */

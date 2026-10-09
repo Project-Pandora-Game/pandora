@@ -129,6 +129,7 @@ export class Bot extends TypedEventEmitter<{
 		return {
 			...this.getDefinition(),
 			ownerAccountName: this.ownerAccount.displayName,
+			online: this.isOnline(),
 		};
 	}
 
@@ -147,7 +148,6 @@ export class Bot extends TypedEventEmitter<{
 			created: this.data.created,
 			updated: this.data.updated,
 			lastUse: this.data.lastUse,
-			online: this.isOnline(),
 		});
 	}
 

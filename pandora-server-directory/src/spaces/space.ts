@@ -216,6 +216,7 @@ export class Space {
 				isOnline: c.isOnline(),
 				isAdmin: this.isAdmin(c.baseInfo.account),
 			})),
+			bot: this.assignedBot?.getPublicDefinition() ?? null,
 		});
 	}
 

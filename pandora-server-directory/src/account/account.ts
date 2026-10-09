@@ -25,9 +25,11 @@ import {
 	type Logger,
 	type ManagementAccountInfo,
 } from 'pandora-common';
+import type { BotId } from 'pandora-common/bots';
 import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import type { AccountPublicInfo, IDirectoryAccountInfo, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
 import type { IShardAccountDefinition } from 'pandora-common/networking/api/directory_shard';
+import type { Bot } from '../bots/bot.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
 import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
@@ -58,6 +60,9 @@ export class Account extends TypedEventEmitter<{
 	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
 
 	public readonly characters: Map<CharacterId, CharacterInfo> = new Map();
+
+	/** Bots belonging to this account that are currently loaded. Loaded bots prevent an account from unloading. */
+	public readonly loadedBots: Map<BotId, Bot> = new Map();
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
@@ -120,8 +125,9 @@ export class Account extends TypedEventEmitter<{
 
 	public isInUse(): boolean {
 		return this.associatedConnections.hasClients() ||
+			Array.from(this.characters.values()).some((c) => c.isInUse()) ||
 			this.associatedApiConnections.hasClients() ||
-			Array.from(this.characters.values()).some((c) => c.isInUse());
+			this.loadedBots.size > 0;
 	}
 
 	public isOnline(): boolean {

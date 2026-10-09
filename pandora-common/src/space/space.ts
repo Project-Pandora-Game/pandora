@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import * as z from 'zod';
 import { AccountId } from '../account/account.ts';
 import type { AssetFrameworkGlobalState } from '../assets/state/globalState.ts';
+import type { BotPublicInfo } from '../bots/botDefinition.ts';
 import { CharacterId } from '../character/characterTypes.ts';
 import type { CharacterModifierEffectData } from '../gameLogic/index.ts';
 import { LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
@@ -87,6 +88,7 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 		isOnline: boolean;
 		isAdmin: boolean;
 	}[];
+	bot: BotPublicInfo | null;
 };
 
 /** Reason for why a character left (was removed from) a space */

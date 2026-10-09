@@ -34,6 +34,8 @@ const LAST_USE_UPDATE_DEBOUNCE = 5000; // Update "last use" value only at most e
 export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 	/** Token was invalidated. Content is token's hash. */
 	tokenInvalidated: string;
+	/** Token was updated. Content is token's hash. */
+	tokenUpdated: string;
 }> {
 	readonly #tokens: PandoraAccessTokenData[];
 	readonly #accountSecure: AccountSecure;
@@ -205,6 +207,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog.info(`Updated access token (id: ${token.id}; scopes: ${token.scopes.join(',')})`);
 
 		await this.#accountSecure.updateDatabase();
+		this.emit('tokenUpdated', token.tokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});

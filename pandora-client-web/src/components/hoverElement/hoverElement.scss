@@ -1,4 +1,6 @@
-.hover-element {
+@use '../../styles/common';
+
+.HoverElement {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -10,4 +12,21 @@
 	max-width: 95vw;
 	height: max-content;
 	max-height: 95vh;
+
+	background: common.$theme-hoverdialog-background;
+	color: common.$theme-hoverdialog-text;
+	border: 2px solid common.$theme-hoverdialog-border;
+	padding: 1em;
+	border-radius: 1em;
+	line-height: 1.5em;
+
+	@include common.forcedColors {
+		background: Canvas;
+		color: CanvasText;
+		border-color: common.$forcedColors-separator;
+	}
+
+	&.center {
+		text-align: center;
+	}
 }

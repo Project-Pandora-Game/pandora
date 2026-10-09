@@ -36,19 +36,20 @@ function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, typ
 						return { status: 'none' };
 					},
 				},
-				({ messageSender, inputHandlerContext }, _args, message) => {
+				({ messageSender, getChatMode, setChatMode }, _args, message) => {
 					message = message.trim();
 
 					if (!message) {
 						if (!allowModeSet)
 							return false;
 
-						if (inputHandlerContext.mode?.type === type && inputHandlerContext.mode?.raw === raw) {
-							inputHandlerContext.setMode(null);
+						const mode = getChatMode();
+						if (mode?.type === type && mode?.raw === raw) {
+							setChatMode(null);
 							return true;
 						}
 
-						inputHandlerContext.setMode({ type, raw });
+						setChatMode({ type, raw });
 						return true;
 					}
 
@@ -232,15 +233,15 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						return { status: 'none' };
 					},
 				},
-				({ messageSender, inputHandlerContext }, { target }, message) => {
+				({ messageSender, setChatTargets }, { target }, message) => {
 					if (!target) {
-						inputHandlerContext.setTargets(null);
+						setChatTargets(null);
 						return true;
 					}
 
 					message = message.trim();
 					if (!message) {
-						inputHandlerContext.setTargets([target.data.id]);
+						setChatTargets([target.data.id]);
 						return true;
 					}
 

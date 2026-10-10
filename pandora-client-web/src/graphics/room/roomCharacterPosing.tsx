@@ -2,7 +2,7 @@ import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
@@ -27,6 +27,76 @@ import { useTickerRef } from '../reconciler/tick.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
 import { PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition } from './roomCharacterPosition.ts';
+
+/** Wheel delta (in pixels) required to trigger a single step. One notch on a typical mouse is ~100. */
+const WHEEL_STEP_THRESHOLD = 100;
+/** Minimum time between steps, so trackpad inertia doesn't spin through all states at once */
+const WHEEL_STEP_COOLDOWN = 100;
+
+/**
+ * While `active`, converts mouse wheel movement into discrete steps (+1 / -1)
+ * and swallows the wheel event so the room doesn't zoom/scroll at the same time.
+ */
+function useWheelStepper(active: boolean, onStep: (direction: 1 | -1) => void): void {
+	const onStepEvent = useEvent(onStep);
+
+	useEffect(() => {
+		if (!active)
+			return;
+
+		let accumulated = 0;
+		let lastStep = 0;
+
+		const handler = (event: WheelEvent) => {
+			event.preventDefault();
+			event.stopPropagation();
+
+			const now = Date.now();
+			if (now - lastStep < WHEEL_STEP_COOLDOWN)
+				return;
+
+			const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 40 :
+				event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 800 :
+				1;
+			accumulated += event.deltaY * unit;
+
+			if (Math.abs(accumulated) >= WHEEL_STEP_THRESHOLD) {
+				onStepEvent(accumulated > 0 ? 1 : -1);
+				accumulated = 0;
+				lastStep = now;
+			}
+		};
+
+		window.addEventListener('wheel', handler, { capture: true, passive: false });
+		return () => {
+			window.removeEventListener('wheel', handler, { capture: true });
+		};
+	}, [active, onStepEvent]);
+}
+
+/**
+ * Returns a `step(direction)` function that moves through `options` (wrapping around).
+ * It remembers the value it just applied for a short while, because the real state only
+ * updates after the throttled action has been executed and rapid steps would otherwise
+ * all start from the same stale value.
+ */
+function useCycleStepper<T>(
+	options: readonly T[],
+	current: T,
+	apply: (value: T) => void,
+): (direction: 1 | -1) => void {
+	const pending = useRef<{ value: T; expires: number; } | null>(null);
+
+	return useEvent((direction: 1 | -1) => {
+		const now = Date.now();
+		const base = (pending.current != null && pending.current.expires > now) ? pending.current.value : current;
+		const index = options.indexOf(base);
+		const next = options[(index + direction + options.length) % options.length];
+
+		pending.current = { value: next, expires: now + 2 * LIVE_UPDATE_THROTTLE };
+		apply(next);
+	});
+}
 
 export function RoomCharacterMovementTool({
 	character,
@@ -276,6 +346,17 @@ export function RoomCharacterPosingTool({
 
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
+	const stepLeftArmPosition = useCycleStepper(
+		ArmPoseSchema.options,
+		characterState.requestedPose.leftArm.position,
+		(armPosition) => setPose({ leftArm: { position: armPosition } }),
+	);
+	const stepRightArmPosition = useCycleStepper(
+		ArmPoseSchema.options,
+		characterState.requestedPose.rightArm.position,
+		(armPosition) => setPose({ rightArm: { position: armPosition } }),
+	);
+
 	const {
 		position,
 		yOffsetExtra,
@@ -383,32 +464,16 @@ export function RoomCharacterPosingTool({
 					radius={ 25 }
 					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
 					poseCount={ ArmPoseSchema.options.length }
-					onClick={ () => {
-						setPose({
-							leftArm: {
-								position: characterState.requestedPose.leftArm.position === 'front_above_hair' ? 'front' :
-								characterState.requestedPose.leftArm.position === 'front' ? 'back' :
-								characterState.requestedPose.leftArm.position === 'back' ? 'back_below_hair' :
-								'front_above_hair',
-							},
-						});
-					} }
+					onClick={ () => stepLeftArmPosition(1) }
+					onWheelStep={ stepLeftArmPosition }
 				/>
 				<SwitchHandPositionButton
 					position={ { x: pivot.x - 100, y: pivot.y + 80 } }
 					radius={ 25 }
 					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
 					poseCount={ ArmPoseSchema.options.length }
-					onClick={ () => {
-						setPose({
-							rightArm: {
-								position: characterState.requestedPose.rightArm.position === 'front_above_hair' ? 'front' :
-								characterState.requestedPose.rightArm.position === 'front' ? 'back' :
-								characterState.requestedPose.rightArm.position === 'back' ? 'back_below_hair' :
-								'front_above_hair',
-							},
-						});
-					} }
+					onClick={ () => stepRightArmPosition(1) }
+					onWheelStep={ stepRightArmPosition }
 				/>
 			</Container>
 		</Container>
@@ -443,6 +508,22 @@ function PosingToolIKHandle({
 
 	const [held, setHeld] = useState(false);
 	const [hover, setHover] = useState(false);
+
+	/** Set when the wheel was used during the current press, so releasing doesn't count as a click */
+	const wheelUsedDuringPress = useRef(false);
+
+	const armKey = ikHandle.style === 'hand-right' ? 'rightArm' : 'leftArm';
+	const stepRotation = useCycleStepper(
+		ArmRotationSchema.options,
+		characterState.requestedPose[armKey].rotation,
+		(armRotation) => setPose({ [armKey]: { rotation: armRotation } }),
+	);
+
+	// Works while hovering the handle, and also while holding/dragging it
+	useWheelStepper(styleHasOpen && (hover || held), (direction) => {
+		wheelUsedDuringPress.current = true;
+		stepRotation(direction);
+	});
 
 	const {
 		yOffsetExtra,
@@ -513,6 +594,7 @@ function PosingToolIKHandle({
 			event.stopPropagation();
 			setHeld(true);
 			pointerDown.current = Date.now();
+			wheelUsedDuringPress.current = false;
 		}
 	}, []);
 
@@ -520,7 +602,8 @@ function PosingToolIKHandle({
 		dragging.current = null;
 		if (
 			pointerDown.current !== null &&
-			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		!wheelUsedDuringPress.current &&
+		Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
 		) {
 			// Handle short click
 			if (styleHasOpen) {
@@ -536,6 +619,7 @@ function PosingToolIKHandle({
 			}
 		}
 		pointerDown.current = null;
+		wheelUsedDuringPress.current = false;
 		setHeld(false);
 	});
 
@@ -969,12 +1053,14 @@ function SwitchHandPositionButton({
 	position,
 	radius,
 	onClick,
+	onWheelStep,
 	poseIndex,
 	poseCount,
 }: {
 	position: Readonly<PointLike>;
 	radius: number;
 	onClick: () => void;
+	onWheelStep: (direction: 1 | -1) => void;
 	poseIndex: number;
 	poseCount: number;
 }): ReactElement {
@@ -984,6 +1070,8 @@ function SwitchHandPositionButton({
 	const heldRef = useRef(false);
 	const [held, setHeld] = useState(false);
 	const [hover, setHover] = useState(false);
+
+	useWheelStepper(held || hover, onWheelStep);
 	/** Sized 32x32 */
 	const POSING_ICON_PATH_1 = 'M25 14a1 1 0 0 1-1-1v-2a5.006 5.006 0 0 0-5-5h-2a1 1 0 0 1 0-2h2a7.008 7.008 0 0 1 7 7v2a1 1 0 0 1-1 1z';
 	const POSING_ICON_PATH_2 = 'M17 8a1 1 0 0 1-.707-.293l-2-2a1 1 0 0 1 0-1.414l2-2a1 1 0 1 1 1.414 1.414L16.414 5l1.293 1.293A1 1 0 0 1 17 8zm-4 20h-2a5.006 5.006 0 0 1-5-5v-4a1 1 0 0 1 2 0v4a3 3 0 0 0 3 3h2a1 1 0 0 1 0 2z';

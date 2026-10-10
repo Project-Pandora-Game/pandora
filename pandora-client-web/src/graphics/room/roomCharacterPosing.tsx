@@ -25,18 +25,19 @@ import { MovementHelperGraphics, PosingStateHelperGraphics } from '../movementHe
 import { useTickerRef } from '../reconciler/tick.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
-import { PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition } from './roomCharacterPosition.ts';
+import { useRoomCharacterPosition } from './roomCharacterPosition.ts';
 
 /** Wheel delta (in pixels) required to trigger a single step. One notch on a typical mouse is ~100. */
 const WHEEL_STEP_THRESHOLD = 100;
 /** Minimum time between steps, so trackpad inertia doesn't spin through all states at once */
 const WHEEL_STEP_COOLDOWN = 100;
-/** Vertical position of the turn-around button, relative to pivot. */
+const TURN_AROUND_RADIUS = { small: 20, big: 32 } as const;
+const HAND_BUTTON_RADIUS = 25;
+const MOVE_HANDLE_RADIUS = 50;
+/** Spacing between neighbouring buttons */
+const LAYOUT_GAP = 15;
+/** The one real anchor: vertical position of the turn-around button, relative to pivot. Everything else is laid out relative to it. */
 const TURN_AROUND_OFFSET_Y = 15;
-/** Vertical position of the hand-position buttons, relative to pivot. Derived so their top edge aligns with the top edge of the turn-around button. */
-const HAND_BUTTON_OFFSET_Y = TURN_AROUND_OFFSET_Y - 20 + 25; // turn-around half-height is 20, hand button radius is 25
-/** Extra downward shift of both movement handles, so they clear the hand buttons. */
-const MOVE_HANDLES_OFFSET_Y = 10;
 const DISABLED_ALPHA = 0.35;
 
 function BlockedHint({ position, text }: {
@@ -93,6 +94,17 @@ export function RoomCharacterMovePoseTool({
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
+	// Turn-around button is the anchor
+	const turnAroundY = pivot.y + TURN_AROUND_OFFSET_Y;
+	// Hand buttons: top edge aligned with the top edge of the turn-around button
+	const handButtonY = turnAroundY - TURN_AROUND_RADIUS.small + HAND_BUTTON_RADIUS;
+	// Y-offset handle sits in the column of the right hand button (and the left one mirrors it).
+	// Its distance from the center leaves a gap next to the position handle.
+	const sideX = 2 * MOVE_HANDLE_RADIUS + LAYOUT_GAP;
+	// Both movement handles sit directly below the hand buttons
+	const moveHandlesY = handButtonY + HAND_BUTTON_RADIUS + LAYOUT_GAP + MOVE_HANDLE_RADIUS;
+	// Distance of the movement handles from the character's anchor, for the drag maths
+	const moveHandlesLocalY = moveHandlesY - pivot.y;
 
 	const characterRotationBone = bones.find((bone) => bone.name === 'character_rotation');
 	Assert(characterRotationBone != null, 'Character rotation bone not found');
@@ -119,11 +131,7 @@ export function RoomCharacterMovePoseTool({
 	});
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
-	const labelX = 0;
-	const labelY = PIVOT_TO_LABEL_OFFSET;
-
-	const moveHitAreaRadius = 50;
-	const moveHitArea = useMemo(() => new PIXI.Rectangle(-moveHitAreaRadius, -moveHitAreaRadius, 2 * moveHitAreaRadius, 2 * moveHitAreaRadius), [moveHitAreaRadius]);
+	const moveHitArea = useMemo(() => new PIXI.Rectangle(-MOVE_HANDLE_RADIUS, -MOVE_HANDLE_RADIUS, 2 * MOVE_HANDLE_RADIUS, 2 * MOVE_HANDLE_RADIUS), []);
 
 	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
@@ -148,14 +156,14 @@ export function RoomCharacterMovePoseTool({
 		if (pointerDownTarget.current === 'pos') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 
-			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - (PIVOT_TO_LABEL_OFFSET + MOVE_HANDLES_OFFSET_Y) * scale, 0);
+			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - moveHandlesLocalY * scale, 0);
 
 			// We force y to be at least 1. This allows for creation of rooms where there are room items always in front of the character.
 			setPositionThrottled(newX, Math.max(newY, 1), yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
 
-			const newYOffset = (pivot.y + labelY + MOVE_HANDLES_OFFSET_Y) - dragPointerEnd.y;
+			const newYOffset = moveHandlesY - dragPointerEnd.y;
 
 			setPositionThrottled(characterState.position.position[0], characterState.position.position[1], newYOffset);
 		}
@@ -319,9 +327,9 @@ export function RoomCharacterMovePoseTool({
 						) : null
 					}
 					<TurnAroundButton
-						position={ { x: pivot.x, y: pivot.y + TURN_AROUND_OFFSET_Y } }
-						radiusSmall={ 20 }
-						radiusBig={ 32 }
+						position={ { x: pivot.x, y: turnAroundY } }
+						radiusSmall={ TURN_AROUND_RADIUS.small }
+						radiusBig={ TURN_AROUND_RADIUS.big }
 						onClick={ () => {
 							setPose({
 								view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
@@ -329,16 +337,16 @@ export function RoomCharacterMovePoseTool({
 						} }
 					/>
 					<SwitchHandPositionButton
-						position={ { x: pivot.x + 100, y: pivot.y + HAND_BUTTON_OFFSET_Y } }
-						radius={ 25 }
+						position={ { x: pivot.x + sideX, y: handButtonY } }
+						radius={ HAND_BUTTON_RADIUS }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
 						onClick={ () => stepLeftArmPosition(1) }
 						onWheelStep={ stepLeftArmPosition }
 					/>
 					<SwitchHandPositionButton
-						position={ { x: pivot.x - 100, y: pivot.y + HAND_BUTTON_OFFSET_Y } }
-						radius={ 25 }
+						position={ { x: pivot.x - sideX, y: handButtonY } }
+						radius={ HAND_BUTTON_RADIUS }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
 						onClick={ () => stepRightArmPosition(1) }
@@ -359,7 +367,7 @@ export function RoomCharacterMovePoseTool({
 			{
 				movingDisabled ? (
 					<BlockedHint
-						position={ { x: pivot.x + labelX, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y + 50 } }
+						position={ { x: pivot.x, y: moveHandlesY + MOVE_HANDLE_RADIUS + LAYOUT_GAP } }
 						text={ followingBlocked ? 'Moving blocked (following)' : 'Moving blocked' }
 					/>
 				) : null
@@ -367,11 +375,11 @@ export function RoomCharacterMovePoseTool({
 
 			{ /* Movement handles (outer frame; must be direct children of this container for the drag maths) */ }
 			<MovementHelperGraphics
-				radius={ moveHitAreaRadius }
+				radius={ MOVE_HANDLE_RADIUS }
 				theme={ movingDisabled ? 'disabled' : heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
 				colorLeftRight={ 0xff0000 }
 				colorUpDown={ 0x00ff00 }
-				position={ { x: pivot.x + labelX, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y } }
+				position={ { x: pivot.x, y: moveHandlesY } }
 				scale={ { x: 1, y: 0.6 } }
 				hitArea={ moveHitArea }
 				eventMode='static'
@@ -388,10 +396,10 @@ export function RoomCharacterMovePoseTool({
 				}, []) }
 			/>
 			<MovementHelperGraphics
-				radius={ moveHitAreaRadius }
+				radius={ MOVE_HANDLE_RADIUS }
 				theme={ movingDisabled ? 'disabled' : heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
 				colorUpDown={ 0x0000ff }
-				position={ { x: pivot.x + labelX + 110, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y - yOffsetExtra } }
+				position={ { x: pivot.x + sideX, y: moveHandlesY - yOffsetExtra } }
 				hitArea={ moveHitArea }
 				eventMode='static'
 				cursor='ns-resize'

@@ -3,22 +3,21 @@ import { throttle } from 'lodash-es';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { Color } from '../../components/common/colorInput/colorInput.tsx';
-import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
+import { THEME_FONT, useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
-import { LIVE_UPDATE_ERROR_THROTTLE, LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
-import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
 import { useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
+import { Text } from '../baseComponents/text.ts';
 import { type PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
@@ -32,6 +31,384 @@ import { PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition } from './roomCharacter
 const WHEEL_STEP_THRESHOLD = 100;
 /** Minimum time between steps, so trackpad inertia doesn't spin through all states at once */
 const WHEEL_STEP_COOLDOWN = 100;
+/** Vertical position of the turn-around button, relative to pivot. */
+const TURN_AROUND_OFFSET_Y = 15;
+/** Vertical position of the hand-position buttons, relative to pivot. Derived so their top edge aligns with the top edge of the turn-around button. */
+const HAND_BUTTON_OFFSET_Y = TURN_AROUND_OFFSET_Y - 20 + 25; // turn-around half-height is 20, hand button radius is 25
+/** Extra downward shift of both movement handles, so they clear the hand buttons. */
+const MOVE_HANDLES_OFFSET_Y = 10;
+const DISABLED_ALPHA = 0.35;
+
+function BlockedHint({ position, text }: {
+	position: Readonly<PointLike>;
+	text: string;
+}): ReactElement {
+	const style = useMemo(() => new PIXI.TextStyle({
+		fontFamily: THEME_FONT.slice(),
+		fontSize: 28,
+		fill: 0xffaaaa,
+		align: 'center',
+		stroke: { color: 0x000000, width: 4 },
+	}), []);
+
+	return (
+		<Text
+			position={ position }
+			anchor={ { x: 0.5, y: 0.5 } }
+			style={ style }
+			text={ text }
+		/>
+	);
+}
+
+export function RoomCharacterMovePoseTool({
+	character,
+	characterState,
+	projectionResolver,
+}: RoomCharacterInteractiveProps): ReactElement | null {
+	const { interfacePosingStyle } = useAccountSettings();
+	const assetManager = useAssetManager();
+	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
+	const id = characterState.id;
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
+	const outerTickerRef = useTickerRef();
+	const innerTickerRef = useTickerRef();
+
+	const { setRoomSceneMode } = useRoomScreenContext();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
+
+	const canMoveCharacter = useCanMoveCharacter(character);
+	const canPoseCharacter = useCanPoseCharacter(character);
+	const followingBlocked = characterState.position.following != null && characterState.position.following.followType !== 'leash';
+	const movingDisabled = canMoveCharacter === 'forbidden' || followingBlocked;
+	const posingDisabled = canPoseCharacter === 'forbidden';
+
+	const {
+		position,
+		yOffsetExtra,
+		scale,
+		pivot,
+		rotationAngle,
+	} = useRoomCharacterPosition(characterState, projectionResolver);
+	const backView = characterState.actualPose.view === 'back';
+	const scaleX = backView ? -1 : 1;
+
+	const characterRotationBone = bones.find((bone) => bone.name === 'character_rotation');
+	Assert(characterRotationBone != null, 'Character rotation bone not found');
+
+	//#region Movement
+
+	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
+		if (movingDisabled)
+			return;
+
+		execute({
+			type: 'moveCharacter',
+			target: {
+				type: 'character',
+				characterId: id,
+			},
+			moveTo: {
+				type: 'normal',
+				room: characterState.currentRoom,
+				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
+				following: characterState.position.following,
+			},
+		});
+	});
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
+
+	const labelX = 0;
+	const labelY = PIVOT_TO_LABEL_OFFSET;
+
+	const moveHitAreaRadius = 50;
+	const moveHitArea = useMemo(() => new PIXI.Rectangle(-moveHitAreaRadius, -moveHitAreaRadius, 2 * moveHitAreaRadius, 2 * moveHitAreaRadius), [moveHitAreaRadius]);
+
+	const dragging = useRef<PIXI.Point | null>(null);
+	/** Time at which user pressed button/touched */
+	const pointerDown = useRef<number | null>(null);
+	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
+
+	const [heldPos, setHeldPos] = useState(false);
+	const [hoverPos, setHoverPos] = useState(false);
+	const [heldOffset, setHeldOffset] = useState(false);
+	const [hoverOffset, setHoverOffset] = useState(false);
+
+	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (dragging.current || !event.currentTarget.parent?.parent)
+			return;
+		dragging.current = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
+	}, []);
+
+	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
+		if (movingDisabled || !dragging.current || !event.currentTarget.parent?.parent)
+			return;
+
+		if (pointerDownTarget.current === 'pos') {
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
+
+			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - (PIVOT_TO_LABEL_OFFSET + MOVE_HANDLES_OFFSET_Y) * scale, 0);
+
+			// We force y to be at least 1. This allows for creation of rooms where there are room items always in front of the character.
+			setPositionThrottled(newX, Math.max(newY, 1), yOffsetExtra);
+		} else if (pointerDownTarget.current === 'offset') {
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
+
+			const newYOffset = (pivot.y + labelY + MOVE_HANDLES_OFFSET_Y) - dragPointerEnd.y;
+
+			setPositionThrottled(characterState.position.position[0], characterState.position.position[1], newYOffset);
+		}
+	});
+
+	const onPointerDownPos = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		setHeldPos(true);
+		pointerDown.current = Date.now();
+		pointerDownTarget.current = 'pos';
+	}, []);
+	const onPointerDownOffset = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		setHeldOffset(true);
+		pointerDown.current = Date.now();
+		pointerDownTarget.current = 'offset';
+	}, []);
+
+	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
+		dragging.current = null;
+		if (
+			pointerDown.current !== null &&
+			pointerDownTarget.current != null &&
+			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			if (pointerDownTarget.current === 'pos') {
+				// Short click on the position handle ends the mode (works even if moving is blocked)
+				setRoomSceneMode({ mode: 'normal' });
+			} else if (pointerDownTarget.current === 'offset' && !movingDisabled) {
+				setPositionThrottled(characterState.position.position[0], characterState.position.position[1], 0);
+			}
+		}
+		pointerDown.current = null;
+		pointerDownTarget.current = null;
+		setHeldPos(false);
+		setHeldOffset(false);
+	});
+
+	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (pointerDown.current !== null) {
+			event.stopPropagation();
+		}
+		if (dragging.current) {
+			onDragMove(event);
+		} else if (
+			pointerDown.current !== null &&
+			pointerDownTarget.current != null &&
+			Date.now() >= pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			onDragStart(event);
+		}
+	}, [onDragMove, onDragStart]);
+
+	//#endregion
+
+	//#region Posing
+
+	const setPoseDirect = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
+		execute({
+			type: 'pose',
+			target: id,
+			leftArm: { ...arms, ...leftArm },
+			rightArm: { ...arms, ...rightArm },
+			...copy,
+		});
+	}, [execute, id]);
+	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
+
+	const stepLeftArmPosition = useCycleStepper(
+		ArmPoseSchema.options,
+		characterState.requestedPose.leftArm.position,
+		(armPosition) => setPose({ leftArm: { position: armPosition } }),
+	);
+	const stepRightArmPosition = useCycleStepper(
+		ArmPoseSchema.options,
+		characterState.requestedPose.rightArm.position,
+		(armPosition) => setPose({ rightArm: { position: armPosition } }),
+	);
+
+	const ikRotationHandle = useMemo(() => ({
+		parentBone: characterRotationBone.name,
+		style: 'left-right',
+		x: pivot.x,
+		y: 650 - yOffsetExtra,
+	} as const), [characterRotationBone, pivot.x, yOffsetExtra]);
+
+	//#endregion
+
+	const duration = smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0;
+	const poseWrapperProps = {
+		alpha: posingDisabled ? DISABLED_ALPHA : 1,
+		eventMode: posingDisabled ? 'none' : 'passive',
+	} as const;
+
+	return (
+		<TransitionedContainer
+			position={ position }
+			scale={ { x: scale, y: scale } }
+			pivot={ pivot }
+			transitionDuration={ duration }
+			tickerRef={ outerTickerRef }
+		>
+			{ /* Character rotation handle (outer frame) */ }
+			<Container { ...poseWrapperProps }>
+				<PosingToolIKHandle
+					ikHandle={ ikRotationHandle }
+					characterState={ characterState }
+					projectionResolver={ projectionResolver }
+					setPose={ setPose }
+				/>
+			</Container>
+
+			{ /* Character frame (flipped and rotated with the character) */ }
+			<TransitionedContainer
+				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+				scale={ { x: scaleX, y: 1 } }
+				pivot={ pivot }
+				angle={ rotationAngle }
+				transitionDuration={ duration }
+				tickerRef={ innerTickerRef }
+			>
+				<ExitPosingUiButton
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+					radius={ 35 }
+					onClick={ () => {
+						setRoomSceneMode({ mode: 'normal' });
+					} }
+				/>
+				<Container { ...poseWrapperProps }>
+					{
+						(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
+							bones
+								.filter((b) => b.x !== 0 && b.y !== 0)
+								.map((bone) => (
+									<PosingToolBone
+										key={ bone.name }
+										characterState={ characterState }
+										definition={ bone }
+										onRotate={ (newRotation) => {
+											setPose({
+												bones: {
+													[bone.name]: newRotation,
+												},
+											});
+										} }
+									/>
+								))
+						) : null
+					}
+					{
+						(interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
+							graphicsManager?.inversePosingHandles.map((h, i) => (
+								<PosingToolIKHandle
+									key={ i }
+									ikHandle={ h }
+									characterState={ characterState }
+									projectionResolver={ projectionResolver }
+									setPose={ setPose }
+								/>
+							))
+						) : null
+					}
+					<TurnAroundButton
+						position={ { x: pivot.x, y: pivot.y + TURN_AROUND_OFFSET_Y } }
+						radiusSmall={ 20 }
+						radiusBig={ 32 }
+						onClick={ () => {
+							setPose({
+								view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+							});
+						} }
+					/>
+					<SwitchHandPositionButton
+						position={ { x: pivot.x + 100, y: pivot.y + HAND_BUTTON_OFFSET_Y } }
+						radius={ 25 }
+						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
+						poseCount={ ArmPoseSchema.options.length }
+						onClick={ () => stepLeftArmPosition(1) }
+						onWheelStep={ stepLeftArmPosition }
+					/>
+					<SwitchHandPositionButton
+						position={ { x: pivot.x - 100, y: pivot.y + HAND_BUTTON_OFFSET_Y } }
+						radius={ 25 }
+						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
+						poseCount={ ArmPoseSchema.options.length }
+						onClick={ () => stepRightArmPosition(1) }
+						onWheelStep={ stepRightArmPosition }
+					/>
+				</Container>
+			</TransitionedContainer>
+
+			{ /* Hints (outer frame, so the text is never mirrored or rotated) */ }
+			{
+				posingDisabled ? (
+					<BlockedHint
+						position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 - 35 - 25 - yOffsetExtra } }
+						text='Posing blocked'
+					/>
+				) : null
+			}
+			{
+				movingDisabled ? (
+					<BlockedHint
+						position={ { x: pivot.x + labelX, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y + 50 } }
+						text={ followingBlocked ? 'Moving blocked (following)' : 'Moving blocked' }
+					/>
+				) : null
+			}
+
+			{ /* Movement handles (outer frame; must be direct children of this container for the drag maths) */ }
+			<MovementHelperGraphics
+				radius={ moveHitAreaRadius }
+				theme={ movingDisabled ? 'disabled' : heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
+				colorLeftRight={ 0xff0000 }
+				colorUpDown={ 0x00ff00 }
+				position={ { x: pivot.x + labelX, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y } }
+				scale={ { x: 1, y: 0.6 } }
+				hitArea={ moveHitArea }
+				eventMode='static'
+				cursor='move'
+				onpointerdown={ onPointerDownPos }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverPos(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverPos(false);
+				}, []) }
+			/>
+			<MovementHelperGraphics
+				radius={ moveHitAreaRadius }
+				theme={ movingDisabled ? 'disabled' : heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
+				colorUpDown={ 0x0000ff }
+				position={ { x: pivot.x + labelX + 110, y: pivot.y + labelY + MOVE_HANDLES_OFFSET_Y - yOffsetExtra } }
+				hitArea={ moveHitArea }
+				eventMode='static'
+				cursor='ns-resize'
+				onpointerdown={ onPointerDownOffset }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
+				onpointerenter={ useCallback(() => {
+					setHoverOffset(true);
+				}, []) }
+				onpointerleave={ useCallback(() => {
+					setHoverOffset(false);
+				}, []) }
+			/>
+		</TransitionedContainer>
+	);
+}
 
 /**
  * While `active`, converts mouse wheel movement into discrete steps (+1 / -1)
@@ -96,388 +473,6 @@ function useCycleStepper<T>(
 		pending.current = { value: next, expires: now + 2 * LIVE_UPDATE_THROTTLE };
 		apply(next);
 	});
-}
-
-export function RoomCharacterMovementTool({
-	character,
-	characterState,
-	projectionResolver,
-}: RoomCharacterInteractiveProps): ReactElement | null {
-	const id = characterState.id;
-	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
-	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-
-	const {
-		setRoomSceneMode,
-	} = useRoomScreenContext();
-
-	const disableManualMove = characterState.position.following != null && characterState.position.following.followType !== 'leash';
-
-	const setPositionErrorCooldown = useRef<number>(null);
-	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
-		if (disableManualMove) {
-			if (setPositionErrorCooldown.current != null && setPositionErrorCooldown.current >= Date.now()) {
-				// Silent error because recently same one happened
-			} else {
-				setPositionErrorCooldown.current = Date.now() + LIVE_UPDATE_ERROR_THROTTLE;
-				toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
-			}
-			return;
-		}
-
-		execute({
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId: id,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
-				following: characterState.position.following,
-			},
-		});
-	});
-
-	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
-
-	const {
-		position,
-		yOffsetExtra,
-		scale,
-		pivot,
-		rotationAngle,
-	} = useRoomCharacterPosition(characterState, projectionResolver);
-	const backView = characterState.actualPose.view === 'back';
-	const scaleX = backView ? -1 : 1;
-
-	const labelX = 0;
-	const labelY = PIVOT_TO_LABEL_OFFSET;
-
-	const hitAreaRadius = 50;
-	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
-
-	const dragging = useRef<PIXI.Point | null>(null);
-	/** Time at which user pressed button/touched */
-	const pointerDown = useRef<number | null>(null);
-	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
-
-	const [heldPos, setHeldPos] = useState(false);
-	const [hoverPos, setHoverPos] = useState(false);
-	const [heldOffset, setHeldOffset] = useState(false);
-	const [hoverOffset, setHoverOffset] = useState(false);
-
-	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !event.currentTarget.parent?.parent)
-			return;
-		dragging.current = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
-	}, []);
-
-	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !event.currentTarget.parent?.parent)
-			return;
-
-		if (pointerDownTarget.current === 'pos') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
-
-			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
-
-			// We force y to be at least 1. This allows for creation of rooms where there are room items always in front of the character.
-			setPositionThrottled(newX, Math.max(newY, 1), yOffsetExtra);
-		} else if (pointerDownTarget.current === 'offset') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
-
-			const newYOffset = labelY - dragPointerEnd.y;
-
-			setPositionThrottled(characterState.position.position[0], characterState.position.position[1], newYOffset);
-		}
-	});
-
-	const onPointerDownPos = useCallback((event: PIXI.FederatedPointerEvent) => {
-		event.stopPropagation();
-		setHeldPos(true);
-		pointerDown.current = Date.now();
-		pointerDownTarget.current = 'pos';
-	}, []);
-	const onPointerDownOffset = useCallback((event: PIXI.FederatedPointerEvent) => {
-		event.stopPropagation();
-		setHeldOffset(true);
-		pointerDown.current = Date.now();
-		pointerDownTarget.current = 'offset';
-	}, []);
-
-	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
-		dragging.current = null;
-		if (
-			pointerDown.current !== null &&
-			pointerDownTarget.current != null &&
-			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
-		) {
-			if (pointerDownTarget.current === 'pos') {
-				setRoomSceneMode({ mode: 'normal' });
-			} else if (pointerDownTarget.current === 'offset') {
-				setPositionThrottled(characterState.position.position[0], characterState.position.position[1], 0);
-			}
-		}
-		pointerDown.current = null;
-		pointerDownTarget.current = null;
-		setHeldPos(false);
-		setHeldOffset(false);
-	});
-
-	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			event.stopPropagation();
-		}
-		if (dragging.current) {
-			onDragMove(event);
-		} else if (
-			pointerDown.current !== null &&
-			pointerDownTarget.current != null &&
-			Date.now() >= pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
-		) {
-			onDragStart(event);
-		}
-	}, [onDragMove, onDragStart]);
-
-	const canPoseCharacter = useCanPoseCharacter(character);
-
-	return (
-		<TransitionedContainer
-			position={ position }
-			scale={ { x: scale, y: scale } }
-			transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
-			tickerRef={ useTickerRef() }
-		>
-			<TransitionedContainer
-				position={ { x: 0, y: -yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
-				pivot={ pivot }
-				angle={ rotationAngle }
-				transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
-				tickerRef={ useTickerRef() }
-			>
-				{
-					canPoseCharacter !== 'forbidden' ? (
-						<SwitchModePosingButton
-							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
-							radius={ 40 }
-							onClick={ () => {
-								if (canPoseCharacter === 'prompt') {
-									toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
-								}
-								setRoomSceneMode({ mode: 'poseCharacter', characterId: id });
-							} }
-						/>
-					) : null
-				}
-			</TransitionedContainer>
-			<MovementHelperGraphics
-				radius={ hitAreaRadius }
-				theme={ heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
-				colorLeftRight={ 0xff0000 }
-				colorUpDown={ 0x00ff00 }
-				position={ { x: labelX, y: labelY } }
-				scale={ { x: 1, y: 0.6 } }
-				hitArea={ hitArea }
-				eventMode='static'
-				cursor='move'
-				onpointerdown={ onPointerDownPos }
-				onpointerup={ onPointerUp }
-				onpointerupoutside={ onPointerUp }
-				onglobalpointermove={ onPointerMove }
-				onpointerenter={ useCallback(() => {
-					setHoverPos(true);
-				}, []) }
-				onpointerleave={ useCallback(() => {
-					setHoverPos(false);
-				}, []) }
-			/>
-			<MovementHelperGraphics
-				radius={ hitAreaRadius }
-				theme={ heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
-				colorUpDown={ 0x0000ff }
-				position={ { x: labelX + 110, y: labelY - yOffsetExtra } }
-				hitArea={ hitArea }
-				eventMode='static'
-				cursor='ns-resize'
-				onpointerdown={ onPointerDownOffset }
-				onpointerup={ onPointerUp }
-				onpointerupoutside={ onPointerUp }
-				onglobalpointermove={ onPointerMove }
-				onpointerenter={ useCallback(() => {
-					setHoverOffset(true);
-				}, []) }
-				onpointerleave={ useCallback(() => {
-					setHoverOffset(false);
-				}, []) }
-			/>
-		</TransitionedContainer>
-	);
-}
-
-export function RoomCharacterPosingTool({
-	character,
-	characterState,
-	projectionResolver,
-}: RoomCharacterInteractiveProps): ReactElement | null {
-	const { interfacePosingStyle } = useAccountSettings();
-
-	const assetManager = useAssetManager();
-	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
-	const graphicsManager = useObservable(GraphicsManagerInstance);
-	const id = characterState.id;
-
-	const {
-		setRoomSceneMode,
-	} = useRoomScreenContext();
-
-	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const setPoseDirect = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
-		execute({
-			type: 'pose',
-			target: id,
-			leftArm: { ...arms, ...leftArm },
-			rightArm: { ...arms, ...rightArm },
-			...copy,
-		});
-	}, [execute, id]);
-
-	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
-
-	const stepLeftArmPosition = useCycleStepper(
-		ArmPoseSchema.options,
-		characterState.requestedPose.leftArm.position,
-		(armPosition) => setPose({ leftArm: { position: armPosition } }),
-	);
-	const stepRightArmPosition = useCycleStepper(
-		ArmPoseSchema.options,
-		characterState.requestedPose.rightArm.position,
-		(armPosition) => setPose({ rightArm: { position: armPosition } }),
-	);
-
-	const {
-		position,
-		yOffsetExtra,
-		scale,
-		pivot,
-		rotationAngle,
-	} = useRoomCharacterPosition(characterState, projectionResolver);
-	const backView = characterState.actualPose.view === 'back';
-	const scaleX = backView ? -1 : 1;
-
-	const characterRotationBone = bones.find((bone) => bone.name === 'character_rotation');
-	Assert(characterRotationBone != null, 'Character rotation bone not found');
-
-	const canMoveCharacter = useCanMoveCharacter(character);
-
-	return (
-		<Container
-			position={ position }
-			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
-		>
-			<PosingToolIKHandle
-				ikHandle={ useMemo(() => ({
-					parentBone: characterRotationBone.name,
-					style: 'left-right',
-					x: pivot.x,
-					y: 650 - yOffsetExtra,
-				}), [characterRotationBone, pivot.x, yOffsetExtra]) }
-				characterState={ characterState }
-				projectionResolver={ projectionResolver }
-				setPose={ setPose }
-			/>
-			<Container
-				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
-				pivot={ pivot }
-				angle={ rotationAngle }
-			>
-				<ExitPosingUiButton
-					position={ { x: 0.5 * CharacterSize.WIDTH, y: pivot.y + PIVOT_TO_LABEL_OFFSET } }
-					radius={ 35 }
-					onClick={ () => {
-						setRoomSceneMode({ mode: 'normal' });
-					} }
-				/>
-				{
-					canMoveCharacter !== 'forbidden' ? (
-						<SwitchModeMovementButton
-							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
-							radius={ 40 }
-							onClick={ () => {
-								if (canMoveCharacter === 'prompt') {
-									toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
-								}
-								setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
-							} }
-						/>
-					) : null
-				}
-				{
-					(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
-						bones
-							.filter((b) => b.x !== 0 && b.y !== 0)
-							.map((bone) => (
-								<PosingToolBone
-									key={ bone.name }
-									characterState={ characterState }
-									definition={ bone }
-									onRotate={ (newRotation) => {
-										setPose({
-											bones: {
-												[bone.name]: newRotation,
-											},
-										});
-									} }
-								/>
-							))
-					) : null
-				}
-				{
-					(interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
-						graphicsManager?.inversePosingHandles.map((h, i) => (
-							<PosingToolIKHandle
-								key={ i }
-								ikHandle={ h }
-								characterState={ characterState }
-								projectionResolver={ projectionResolver }
-								setPose={ setPose }
-							/>
-						))
-					) : null
-				}
-				<TurnAroundButton
-					position={ { x: pivot.x, y: pivot.y + 25 } }
-					radiusSmall={ 20 }
-					radiusBig={ 32 }
-					onClick={ () => {
-						setPose({
-							view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
-						});
-					} }
-				/>
-				<SwitchHandPositionButton
-					position={ { x: pivot.x + 100, y: pivot.y + 80 } }
-					radius={ 25 }
-					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
-					poseCount={ ArmPoseSchema.options.length }
-					onClick={ () => stepLeftArmPosition(1) }
-					onWheelStep={ stepLeftArmPosition }
-				/>
-				<SwitchHandPositionButton
-					position={ { x: pivot.x - 100, y: pivot.y + 80 } }
-					radius={ 25 }
-					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
-					poseCount={ ArmPoseSchema.options.length }
-					onClick={ () => stepRightArmPosition(1) }
-					onWheelStep={ stepRightArmPosition }
-				/>
-			</Container>
-		</Container>
-	);
 }
 
 type PosingToolIKHandleProps = {
@@ -903,142 +898,6 @@ function PosingToolBone({
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
 			onglobalpointermove={ onPointerMove }
-			onpointerenter={ useCallback(() => {
-				setHover(true);
-			}, []) }
-			onpointerleave={ useCallback(() => {
-				setHover(false);
-			}, []) }
-		/>
-	);
-}
-
-function SwitchModeMovementButton({
-	position,
-	radius,
-	onClick,
-}: {
-	position: Readonly<PointLike>;
-	radius: number;
-	onClick: () => void;
-}): ReactElement {
-	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const heldRef = useRef(false);
-
-	const [held, setHeld] = useState(false);
-	const [hover, setHover] = useState(false);
-
-	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button !== 1) {
-			event.stopPropagation();
-			setHeld(true);
-			heldRef.current = true;
-		}
-	}, []);
-
-	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (heldRef.current) {
-			event.stopPropagation();
-			heldRef.current = false;
-			onClick();
-		}
-		setHeld(false);
-	}, [onClick]);
-
-	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		heldRef.current = false;
-		setHeld(false);
-	}, []);
-
-	return (
-		<MovementHelperGraphics
-			radius={ radius }
-			theme={ held ? 'active' : hover ? 'hover' : 'normal' }
-			colorLeftRight={ 0xffffff }
-			colorUpDown={ 0xffffff }
-			position={ position }
-			hitArea={ hitArea }
-			eventMode='static'
-			cursor='pointer'
-			onpointerdown={ onPointerDown }
-			onpointerup={ onPointerUp }
-			onpointerupoutside={ onPointerUpOutside }
-			onpointerenter={ useCallback(() => {
-				setHover(true);
-			}, []) }
-			onpointerleave={ useCallback(() => {
-				setHover(false);
-			}, []) }
-		/>
-	);
-}
-
-function SwitchModePosingButton({
-	position,
-	radius,
-	onClick,
-}: {
-	position: Readonly<PointLike>;
-	radius: number;
-	onClick: () => void;
-}): ReactElement {
-	const { interfaceAccentColor } = useAccountSettings();
-
-	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
-	const heldRef = useRef(false);
-	const [held, setHeld] = useState(false);
-	const [hover, setHover] = useState(false);
-	/** Sized 24x24 */
-	const POSING_ICON_PATH = 'M12 1a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm8.79 4.546L14.776 6H9.223l-6.012-.454a.72.72 0 0 0-.168 1.428l6.106.97a.473.473 0 0 1 .395.409L10 12 6.865 22.067a.68.68 0 0 0 .313.808l.071.04a.707.707 0 0 0 .994-.338L12 13.914l3.757 8.663a.707.707 0 0 0 .994.338l.07-.04a.68.68 0 0 0 .314-.808L14 12l.456-3.647a.473.473 0 0 1 .395-.409l6.106-.97a.72.72 0 0 0-.168-1.428z';
-
-	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button !== 1) {
-			event.stopPropagation();
-			setHeld(true);
-			heldRef.current = true;
-		}
-	}, []);
-
-	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (heldRef.current) {
-			event.stopPropagation();
-			heldRef.current = false;
-			onClick();
-		}
-		setHeld(false);
-	}, [onClick]);
-
-	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
-		heldRef.current = false;
-		setHeld(false);
-	}, []);
-
-	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
-		const color = new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), held ? 0.65 : hover ? 0.35 : 0).toHex();
-
-		g
-			.ellipse(0, 0, radius, radius)
-			.fill({ color: 0x000000, alpha: 0.4 })
-			.stroke({ width: 4, color, alpha: 1 });
-
-		const iconButtonSize = 1.8 * (radius / 24);
-		g
-			.transform(iconButtonSize, 0, 0, iconButtonSize, -12 * iconButtonSize, -12 * iconButtonSize)
-			.path(new PIXI.GraphicsPath(POSING_ICON_PATH))
-			.resetTransform()
-			.fill({ color: 0xffffff, alpha: 1 });
-	}, [radius, held, hover, interfaceAccentColor]);
-
-	return (
-		<Graphics
-			position={ position }
-			draw={ graphicsDraw }
-			eventMode='static'
-			cursor='pointer'
-			hitArea={ hitArea }
-			onpointerdown={ onPointerDown }
-			onpointerup={ onPointerUp }
-			onpointerupoutside={ onPointerUpOutside }
 			onpointerenter={ useCallback(() => {
 				setHover(true);
 			}, []) }

@@ -224,12 +224,12 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveIm
 	}, [onDragMove, onDragStart]);
 
 	/** This character has special mode focusing it */
-	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') &&
-		roomSceneMode.characterId === character.id;
+	const isFocused = roomSceneMode.mode === 'moveCharacter' &&
+	roomSceneMode.characterId === character.id;
 	/** This character is following someone who has special mode focusing it */
 	const isFollowTargetFocused = characterState.position.following != null &&
-		(roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') &&
-		roomSceneMode.characterId === characterState.position.following.target;
+	roomSceneMode.mode === 'moveCharacter' &&
+	roomSceneMode.characterId === characterState.position.following.target;
 
 	const enableMenu = !isFocused;
 	// If this character has move menu open, we make transitions quick to allow for fine-grained positioning.

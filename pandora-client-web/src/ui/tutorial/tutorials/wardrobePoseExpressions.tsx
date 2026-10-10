@@ -5,7 +5,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	name: `Character Pose and Expressions`,
 	description: (
 		<p>
-			This tutorial will teach you about posing your character and changing its expression.
+			This tutorial will teach you about posing and moving your character and changing its expression.
 		</p>
 	),
 	stages: [
@@ -409,15 +409,16 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							In the context menu, select "Pose" to enter the posing mode that allows you to make changes to the current pose.
+							In the context menu, select "Move / Pose" to enter the mode that allows you to make changes to the current pose
+							and to move the character around the room.
 						</p>
 					),
 					highlight: [{
 						query: '.context-menu button',
-						filter: (element) => element.innerText.includes('Pose'),
+						filter: (element) => element.innerText.includes('Move / Pose'),
 					}],
 					conditions: [
-						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'poseCharacter'),
+						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'moveCharacter'),
 					],
 				},
 			],
@@ -437,23 +438,34 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 						<>
 							<p>
 								In this mode you can see buttons over the character's body that you can interact with to change the pose of
-								the body (move or minimize this popup if needed).<br />
+								the body and to move the character (move or minimize this popup if needed).<br />
 								You can drag the hand icons on top of both wrists to change lower and upper arms as you desire. The connected circles
 								next to hand buttons can be clicked or dragged to change the hands. Note that those additional UI elements can be toggled to be hidden by
-								clicking on the hand buttons.<br />
+								clicking on the hand buttons. While hovering over a hand button, or while dragging it, you can also use the mouse wheel to switch between the hand rotations.<br />
 								Similarly, you can drag the ankle buttons to change the leg angles. Dragging the left-right button over the stomach rotates the
 								whole character. Simply clicking it resets the rotation to the default.
 							</p>
 							<ul>
 								<li>Clicking the left-right arrow at the bottom allows you to turn the character around.</li>
-								<li>The four-way arrow in the center allows you to switch to the character move mode. Please note that this button might not always be available.</li>
-								<li>You can exit the manual posing mode by clicking the red "X" below the character.</li>
-								<li>The two squares left and right of the red "X" change each arm's position to be in oneof the four states behind or in front of the body.</li>
+								<li>
+									The four-way arrow below the character lets you drag the character around the room.
+									The up-down arrow next to it changes the character's Y offset (clicking it resets the offset).
+									Clicking the four-way arrow without dragging exits this mode.
+								</li>
+								<li>You can also exit this mode by clicking the red "X" above the character.</li>
+								<li>
+									The two squares left and right of the left-right arrow change each arm's position to be in one of the four states behind or in front of the body.
+									Hovering over them and using the mouse wheel also cycles through the states.
+								</li>
+								<li>
+									Moving and posing can be blocked independently of each other, for example by an item or a missing permission.
+									In that case the affected buttons are dimmed and a short note says what is blocked, while the other buttons keep working.
+								</li>
 							</ul>
 							<p>
 								<br />
-								Feel free to try posing your character in this mode before continuing.<br />
-								When you are done, exit the posing interface to proceed with the last part of this tutorial.
+								Feel free to try posing and moving your character in this mode before continuing.<br />
+								When you are done, exit the mode to proceed with the last part of this tutorial.
 							</p>
 						</>
 					),

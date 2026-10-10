@@ -479,7 +479,7 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	);
 }
 
-function MoveCharacterMenuItem(): ReactElement | null {
+function MovePoseCharacterMenuItem(): ReactElement | null {
 	const {
 		character,
 		close,
@@ -490,6 +490,7 @@ function MoveCharacterMenuItem(): ReactElement | null {
 
 	const characterState = useGlobalState(useGameState()).getCharacterState(character.id);
 	const canMoveCharacter = useCanMoveCharacter(character);
+	const canPoseCharacter = useCanPoseCharacter(character);
 
 	const spaceCharacters = useSpaceCharacters();
 	const followTargetData = useCharacterDataOptional(characterState?.position.type === 'normal' && characterState.position.following != null ? (
@@ -499,73 +500,44 @@ function MoveCharacterMenuItem(): ReactElement | null {
 	if (characterState == null)
 		return null;
 
+	const followingBlocked = characterState.position.type === 'normal' &&
+		characterState.position.following != null &&
+		characterState.position.following.followType !== 'leash';
+	const moveForbidden = canMoveCharacter === 'forbidden' || followingBlocked;
+	const bothForbidden = moveForbidden && canPoseCharacter === 'forbidden';
+
 	return (
 		<>
-			{ characterState.position.following == null || characterState.position.following.followType === 'leash' ? (
-				<Button
-					theme='transparent'
-					className={ classNames(
-						'withIcon',
-						(canMoveCharacter === 'forbidden') ? 'text-strikethrough' : null,
-					) }
-					onClick={ () => {
-						if (canMoveCharacter === 'forbidden') {
-							toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
-							return;
-						}
-						if (canMoveCharacter === 'prompt') {
-							toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
-						}
-						setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
-						close();
-					} }
-				>
-					<img src={ arrowAllIcon } />
-					<span>Move</span>
-				</Button>
-			) : null }
-			{ characterState?.position.type === 'normal' && characterState.position.following != null ? (
+			<Button
+				theme='transparent'
+				className={ classNames(
+					'withIcon',
+					bothForbidden ? 'text-strikethrough' : null,
+				) }
+				onClick={ () => {
+					if (bothForbidden) {
+						toast('You cannot move or pose this character.', TOAST_OPTIONS_WARNING);
+						return;
+					}
+					if (!moveForbidden && canMoveCharacter === 'prompt') {
+						toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
+					}
+					if (canPoseCharacter === 'prompt') {
+						toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
+					}
+					setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
+					close();
+				} }
+			>
+				<img src={ arrowAllIcon } />
+				<span>Move / Pose</span>
+			</Button>
+			{ characterState.position.type === 'normal' && characterState.position.following != null ? (
 				<span className='dim'>
 					Following { followTargetData?.name ?? '[unknown]' } ({ characterState.position.following.target })
 				</span>
 			) : null }
 		</>
-	);
-}
-
-function PoseCharacterMenuItem(): ReactElement | null {
-	const {
-		character,
-		close,
-	} = useCharacterMenuContext();
-	const {
-		setRoomSceneMode,
-	} = useRoomScreenContext();
-
-	const canPoseCharacter = useCanPoseCharacter(character);
-
-	return (
-		<Button
-			theme='transparent'
-			className={ classNames(
-				'withIcon',
-				(canPoseCharacter === 'forbidden') ? 'text-strikethrough' : null,
-			) }
-			onClick={ () => {
-				if (canPoseCharacter === 'forbidden') {
-					toast('You cannot pose this character.', TOAST_OPTIONS_WARNING);
-					return;
-				}
-				if (canPoseCharacter === 'prompt') {
-					toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
-				}
-				setRoomSceneMode({ mode: 'poseCharacter', characterId: character.id });
-				close();
-			} }
-		>
-			<img src={ bodyIcon } />
-			<span>Pose</span>
-		</Button>
 	);
 }
 
@@ -941,8 +913,7 @@ export function CharacterContextMenuContent({ character, onClose }: {
 							<img src={ profileIcon } />
 							<span>Profile</span>
 						</Button>
-						<PoseCharacterMenuItem />
-						<MoveCharacterMenuItem />
+						<MovePoseCharacterMenuItem />
 						<FollowCharacterMenuItem />
 						{ characterData.id !== player.id ? (
 							<Button theme='transparent' className='withIcon' onClick={ () => {

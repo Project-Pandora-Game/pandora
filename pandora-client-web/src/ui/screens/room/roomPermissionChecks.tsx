@@ -143,29 +143,24 @@ export function RoomScreenSceneModeCheckProvider(): null {
 	const spaceCharacters = useSpaceCharacters();
 	const globalState = useGlobalState(useGameState());
 
-	const moveTarget = (roomSceneMode.mode === 'moveCharacter' ? spaceCharacters.find((c) => c.id === roomSceneMode.characterId) : undefined) ?? null;
-	const moveTargetState = moveTarget != null ? globalState.getCharacterState(moveTarget.id) : null;
-	const canMoveTarget = useCanMoveCharacter(moveTarget);
-
-	const poseTarget = (roomSceneMode.mode === 'poseCharacter' ? spaceCharacters.find((c) => c.id === roomSceneMode.characterId) : undefined) ?? null;
-	const canPoseTarget = useCanPoseCharacter(poseTarget);
+	const target = (roomSceneMode.mode === 'moveCharacter' ? spaceCharacters.find((c) => c.id === roomSceneMode.characterId) : undefined) ?? null;
+	const targetState = target != null ? globalState.getCharacterState(target.id) : null;
+	const canMoveTarget = useCanMoveCharacter(target);
+	const canPoseTarget = useCanPoseCharacter(target);
 
 	useEffect(() => {
-		if (roomSceneMode.mode === 'moveCharacter') {
-			if (canMoveTarget === 'forbidden') {
-				toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
-				setRoomSceneMode({ mode: 'normal' });
-			} else if (moveTargetState?.position.following != null && moveTargetState.position.following.followType !== 'leash') {
-				toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
-				setRoomSceneMode({ mode: 'normal' });
-			}
-		}
+		if (roomSceneMode.mode !== 'moveCharacter')
+			return;
 
-		if (roomSceneMode.mode === 'poseCharacter' && canPoseTarget === 'forbidden') {
-			toast('You cannot pose this character.', TOAST_OPTIONS_WARNING);
+		const followingBlocked = targetState?.position.following != null && targetState.position.following.followType !== 'leash';
+		const moveForbidden = canMoveTarget === 'forbidden' || followingBlocked;
+
+		// The mode is only useless if neither half of it can be used
+		if (moveForbidden && canPoseTarget === 'forbidden') {
+			toast('You cannot move or pose this character.', TOAST_OPTIONS_WARNING);
 			setRoomSceneMode({ mode: 'normal' });
 		}
-	}, [roomSceneMode, setRoomSceneMode, canMoveTarget, canPoseTarget, moveTargetState]);
+	}, [roomSceneMode, setRoomSceneMode, canMoveTarget, canPoseTarget, targetState]);
 
 	return null;
 }

@@ -454,7 +454,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 								</li>
 								<li>You can also exit this mode by clicking the red "X" above the character.</li>
 								<li>
-									The two squares left and right of the left-right arrow change each arm's position to be in one of the four states behind or in front of the body.
+									The two squares to the left and right of the character, above the move circles, change each arm's position to be in one of the four states behind or in front of the body.
 									Hovering over them and using the mouse wheel also cycles through the states.
 								</li>
 								<li>

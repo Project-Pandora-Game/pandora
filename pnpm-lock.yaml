@@ -577,8 +577,8 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
       nodemailer:
-        specifier: 10.0.13
-        version: 10.0.13
+        specifier: 10.0.14
+        version: 10.0.14
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -738,8 +738,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(supports-color@8.1.1)
       mailparser:
-        specifier: 3.9.33
-        version: 3.9.33
+        specifier: 3.9.34
+        version: 3.9.34
       nyc:
         specifier: 18.0.0
         version: 18.0.0(supports-color@8.1.1)
@@ -4322,8 +4322,8 @@ packages:
   magic-bytes.js@1.13.1:
     resolution: {integrity: sha512-x5sn4UX2k5gCWlcfmoFwG4TPie8+dctESyqOBdhB5p6MsgWXdBKGmt9nXPObj/JI50TTL928lc5Yt1WntMn1bw==}
 
-  mailparser@3.9.33:
-    resolution: {integrity: sha512-+ZYhApN4f7B8+jokb7VZeml8lxYHixVJ3tJTB5iPG9/MJpy8YmBHGdy+AWJ9dmtUX6t0xlu4rxwj1b7eWCvbDA==}
+  mailparser@3.9.34:
+    resolution: {integrity: sha512-A43Mtua8Oe4LBQ5obGSehIg46vuY8lX68nwOYU41+Px5quVk7Pk+YL37xtkw+G7JlT7VIMhbJl2EGsycj3lrwQ==}
     engines: {node: '>=20.0.0'}
 
   make-dir@3.1.0:
@@ -4637,8 +4637,8 @@ packages:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
     engines: {node: '>=18'}
 
-  nodemailer@10.0.13:
-    resolution: {integrity: sha512-SzG86OlvcW/NNhUFC6uROMwRTL4n7MswfQqC/T8mhkmnY1YVa23zUEMYi4ijSeXSl9GLz9ZeTJDUatEDuY5FeQ==}
+  nodemailer@10.0.14:
+    resolution: {integrity: sha512-eJoLFKg55fesSlzUekmfOv/SBXh4KUYT8oiQc2RLP0tfG0rbNMJBK7wgHJwXTJwqyKlSJMz9UzDZ4v+aHEvo8g==}
     engines: {node: '>=20.0.0'}
 
   nodemon@3.1.14:
@@ -10561,7 +10561,7 @@ snapshots:
 
   magic-bytes.js@1.13.1: {}
 
-  mailparser@3.9.33:
+  mailparser@3.9.34:
     dependencies:
       '@zone-eu/mailsplit': 5.4.19
       encoding-japanese: 2.4.0
@@ -10570,7 +10570,7 @@ snapshots:
       iconv-lite: 0.7.3
       libmime: 5.4.6
       linkify-it: 5.0.2
-      nodemailer: 10.0.13
+      nodemailer: 10.0.14
       punycode.js: 2.3.1
       tlds: 1.261.0
 
@@ -10802,7 +10802,7 @@ snapshots:
 
   node-releases@2.0.57: {}
 
-  nodemailer@10.0.13: {}
+  nodemailer@10.0.14: {}
 
   nodemon@3.1.14:
     dependencies:

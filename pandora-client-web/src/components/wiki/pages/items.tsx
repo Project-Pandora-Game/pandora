@@ -15,7 +15,8 @@ export function WikiItems(): ReactElement {
 				be a <Link to='#IT_Storage_modules'>storage module</Link> or <Link to='#IT_Lock_module'>lock modules</Link> on
 				an item, depending on what it is. These features can be accessed in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> by clicking
 				on items.<br />
-				You can give any item a custom name and a description with the "pen" button near the top. If you add and save an exported pose code or an URL to a space in Pandora into
+				You can give any item a custom name and a description with the "pen" button near the top. See <Link to='#IT_Item_customization'>item customization</Link> for
+				details, such as embeds for pose codes and space invite links. If you add and save an exported pose code or an URL to a space in Pandora into
 				the description of an item, they are turned into an embed for easier interaction.<br />
 				You can also open a popup with basic info about an item while in the room & chat view, by either clicking on the item name in any server messages in the chat,
 				by using the "/inspect" <Link to='/wiki/chat#CHA_Chat_commands'>command</Link>, or by clicking the "pin"-button in the detailed view of an item in the wardrobe at the top.
@@ -30,6 +31,7 @@ export function WikiItems(): ReactElement {
 
 			<h3>Item-specific features</h3>
 			<ul>
+				<li><Link to='#IT_Item_customization'>Item customization</Link></li>
 				<li><Link to='#IT_Body_parts'>Body parts</Link></li>
 				<li><Link to='#IT_Room-level_items'>Room-level items</Link></li>
 				<li><Link to='#IT_Bound_usage'>Bound usage</Link></li>
@@ -40,6 +42,44 @@ export function WikiItems(): ReactElement {
 				<li><Link to='#IT_Item_layering_order'>Item layering order</Link></li>
 				<li><Link to='#IT_Layer_transparency'>Layer transparency</Link></li>
 				<li><Link to='#IT_Alpha_masks'>Alpha masks</Link></li>
+			</ul>
+
+			<h4 id='IT_Item_customization'>Item customization</h4>
+			<p>
+				Every item can be customized with a custom name and a description. To change them, click on the item in
+				the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> and use the "pen" button near the top of its detailed view.
+				The custom name is shown instead of the asset name in most places (but this can be configured in the interface settings), while the original asset
+				name remains visible in the item's details. The description is free text and is limited in length.<br />
+				Changing the name or description of an item is a normal wardrobe action. If the item is worn by another character, you need the
+				according <Link to='/wiki/characters#CH_Character_permissions'>permission</Link> to
+				edit it. The same applies to others who want to change the name or description of an item you are wearing or carrying.
+				Name and description are stored together with the item, so they are also kept when the item is part
+				of a <Link to='#IT_Saving_collections'>saved item collection</Link>.
+			</p>
+			<p>
+				Certain codes and links pasted into an item's description and saved are turned into an interactive embed that is shown inline with the text,
+				which makes them much easier to use than raw text. Currently, two kinds are supported:
+			</p>
+			<ul>
+				<li>
+					<strong>Space invite links:</strong> A link to a space in Pandora (a URL pointing to project-pandora.com) is converted into a preview embed
+					showing the space's name, how many characters are currently in it, and its description. Clicking the embed opens the space's details,
+					where you can look at the space and switch to it, just like with space links in chat messages, DMs, or character/account profiles.
+					If an invite link is no longer valid, or you have no access to the space, the embed tells you so instead.
+				</li>
+				<li>
+					<strong>Pose codes:</strong> Exported character pose preset templates can be copied as text code and pasted into chat messages, DMs, or item
+					descriptions. The code is then converted into an embed that can be clicked to save the pose, download it, or apply it to your own character.
+				</li>
+				<li>Embeds only appear after the description was saved. While editing, you only see the plain text.</li>
+				<li>
+					If the description of a <Link to='#IT_Room-level_items'>room-level item</Link> contains a space invite link, the context menu opened via the blue icon
+					below the item gets an additional entry that opens that space's details, for quick space switching. If there are several links, only the first one creates an entry.
+				</li>
+				<li>
+					When an item with a pose code in its description is worn, a button for that pose also appears in the "Quick Posing" section of the "Pose"-tab,
+					so you can strike the pose without opening the item first.
+				</li>
 			</ul>
 
 			<h4 id='IT_Body_parts'>Body parts</h4>

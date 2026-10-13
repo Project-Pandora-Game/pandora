@@ -21,7 +21,7 @@ import type { Account } from '../account/account.ts';
 import type { ActorIdentity } from '../account/actorIdentity.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseBot, DatabaseBotUpdate } from '../database/databaseStructure/bots.ts';
-import type { ApiConnection } from '../networking/api/socket/connection_api.ts';
+import { ApiConnection } from '../networking/api/socket/connection_api.ts';
 import { Space } from '../spaces/space.ts';
 import { botManager } from './botManager.ts';
 
@@ -219,6 +219,13 @@ export class Bot extends TypedEventEmitter<{
 	}
 
 	public sendBotStatus(to: ApiConnection | IServerRoom<IDirectoryApi, ApiConnection>): void {
+		// Verify all receivers are still valid
+		for (const client of (to instanceof ApiConnection ? [to] : to.clients.slice())) {
+			if (!client.verifyTokenUse(['bots:run'])) {
+				client.removeBotRegistration(this);
+			}
+		}
+
 		const state: BotDirectoryStateInfo = {
 			spaces: this.isValid ? Array.from(this.spaces.values())
 				.filter((it) => it.assignedShard != null)

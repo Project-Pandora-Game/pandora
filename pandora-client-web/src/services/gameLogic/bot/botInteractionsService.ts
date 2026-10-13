@@ -296,7 +296,7 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 		if (!result || !result.result || result.result.options.length === 0) {
 			return {
 				replace: input,
-				result: null,
+				result: result?.result ?? null,
 				index: null,
 				nextSegment: false,
 			};

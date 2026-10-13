@@ -555,6 +555,7 @@ export const ClientDirectorySchema = {
 				'ok',
 				'spaceOwnershipLimitReached',
 				'accountListNotAllowed', // Some accounts cannot be included in some lists upon space creation
+				'unknownBot', // The bot specified in the config was either not found, or this account is not allowed to select it
 				// The creation succeeded, but joining the just-created space failed
 				'restricted',
 				'inRoomDevice',

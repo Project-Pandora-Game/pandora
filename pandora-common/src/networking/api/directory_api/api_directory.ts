@@ -101,6 +101,7 @@ export const ApiDirectorySchema = {
 					'notAllowed', // Missing token scopes
 					'spaceOwnershipLimitReached',
 					'accountListNotAllowed', // API cannot fill admin and allow lists in advance - add accounts after target character joins the space
+					'unknownBot', // The bot specified in the config was either not found, or this account is not allowed to select it
 					'failed', // Generic failure
 				]),
 			}),

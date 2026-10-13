@@ -176,7 +176,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 	}
 
 	@AsyncSynchronized()
-	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'spaceOwnershipLimitReached'> {
+	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'unknownBot' | 'spaceOwnershipLimitReached'> {
 		// Only developers can create rooms with development mode enabled
 		if (config.features.includes('development') && !creator.roles.isAuthorized('developer')) {
 			logger.verbose(`Account ${creator.id} attempted to create a development space without being a developer`);
@@ -196,6 +196,13 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 					return 'accountListNotAllowed';
 				}
 			}
+		}
+
+		// Check that specified bot can be used by the creator
+		if (config.bot !== null) {
+			const bot = await botManager.loadBotById(config.bot.bot);
+			if (bot == null || !bot.canBeUsedBy(creator))
+				return 'unknownBot';
 		}
 
 		// Check, that owner is within limits

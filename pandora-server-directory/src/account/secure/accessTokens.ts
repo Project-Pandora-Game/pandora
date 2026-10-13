@@ -169,7 +169,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog.info(`Regenerated access token (id: ${tokenData.id})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenInvalidated', oldTokenHash);
+		this._onTokenInvalidated(tokenData.id, oldTokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -188,7 +188,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog.info(`Deleted access token (id: ${oldToken.id})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenInvalidated', oldToken.tokenHash);
+		this._onTokenInvalidated(oldToken.id, oldToken.tokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -207,7 +207,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this._auditLog.info(`Updated access token (id: ${token.id}; scopes: ${token.scopes.join(',')})`);
 
 		await this.#accountSecure.updateDatabase();
-		this.emit('tokenUpdated', token.tokenHash);
+		this._onTokenUpdated(token.id, token.tokenHash);
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
@@ -221,6 +221,30 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 	public static _generateRandomToken(): PandoraAccessToken {
 		return PandoraAccessTokenGenerate(AccessTokenSecretGenerator(32));
+	}
+
+	private _onTokenInvalidated(id: string, hash: string): void {
+		this.emit('tokenInvalidated', hash);
+
+		// Regenerate all bot connect secrets, as connection that newly shouldn't have access to bot might still have old token
+		for (const bot of this.#accountSecure.account.loadedBots.values()) {
+			bot.regenerateSpaceConnectSecrets()
+				.catch((err) => {
+					this._auditLog.fatal(`Crash while regenerating bot connect secrets during token invalidation for bot ${bot.id}:`, err);
+				});
+		}
+	}
+
+	private _onTokenUpdated(id: string, hash: string): void {
+		this.emit('tokenUpdated', hash);
+
+		// Regenerate all bot connect secrets, as connection that newly shouldn't have access to bot might still have old token
+		for (const bot of this.#accountSecure.account.loadedBots.values()) {
+			bot.regenerateSpaceConnectSecrets()
+				.catch((err) => {
+					this._auditLog.fatal(`Crash while regenerating bot connect secrets during token update for bot ${bot.id}:`, err);
+				});
+		}
 	}
 
 	private static readonly _enc = new TextEncoder();

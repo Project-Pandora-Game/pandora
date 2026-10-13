@@ -237,6 +237,20 @@ export class Bot extends TypedEventEmitter<{
 		});
 	}
 
+	/**
+	 * Regenerate bot's space connect secrets for all loaded spaces.
+	 */
+	public async regenerateSpaceConnectSecrets(): Promise<void> {
+		await Promise.all(
+			Array.from(this.spaces.values())
+				.map((space) => space.regenerateBotSecret()
+					.catch((err) => {
+						this.logger.error('Error regenerating connect secret for space', space.id, ':\n', err);
+					}),
+				),
+		);
+	}
+
 	// eslint-disable-next-line @typescript-eslint/require-await
 	public async onManagerDestroy(): Promise<void> {
 		// Disconnect bot API connections

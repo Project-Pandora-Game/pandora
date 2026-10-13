@@ -1485,6 +1485,25 @@ export class Space {
 	}
 
 	/**
+	 * Regenerate bot's secret, if one is set.
+	 */
+	@AsyncSynchronized('object')
+	public async regenerateBotSecret(): Promise<void> {
+		if (this._assignedBot == null || this._assignedShard == null) {
+			Assert(this._assignedBotSecret == null);
+			return;
+		}
+
+		this.logger.debug('Bot secret regenerated');
+		this._assignedBotSecret = this._assignedBot.generateShardConnectSecret();
+		await this._assignedShard.update(
+			'spaces',
+		);
+
+		this.assignedBot?.onSpacesChanged();
+	}
+
+	/**
 	 * Remove bot for reasons others than admin changing config (e.g. bot deletion/invalidation/bot-developer driven removal of this bot from this space, ...)
 	 * @param botToRemove - Which bot is getting removed, passed to avoid race conditions
 	 * @returns - Whether the bot was successfully removed

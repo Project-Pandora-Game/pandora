@@ -179,11 +179,10 @@ export class SimpleBotOrchestrator {
 						return;
 					} catch (err) {
 						this.logger.error(`Failed to update connection info for space ${spaceId}, doing reconnect instead:`, err);
-						await this._disconnectSpace(spaceId);
 					}
 				}
 
-				// Disconnect if live update is not supported
+				// Disconnect if live update is not supported or failed
 				this._connections.delete(spaceId);
 				try {
 					await currentConnection[1].disconnect();

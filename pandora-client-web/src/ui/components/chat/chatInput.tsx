@@ -1,6 +1,4 @@
-import classNames from 'classnames';
-import { clamp } from 'lodash-es';
-import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterFullStatus, type ChatCharacterStatus, type ICharacterRoomData, type Promisable } from 'pandora-common';
+import { Assert, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
 import React, { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -14,25 +12,23 @@ import { useEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
-import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column, Row } from '../../../components/common/container/container.tsx';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
+import { Row } from '../../../components/common/container/container.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { ChatSendError } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus } from '../../../services/gameLogic/chatHooks.ts';
-import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
-import { useService } from '../../../services/serviceProvider.tsx';
+import { useGameStateOptional, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
+import { useGameLogicServiceOptional, useService } from '../../../services/serviceProvider.tsx';
 import { ColoredName } from '../common/coloredName.tsx';
-import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
+import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputAutocompleteState, type ChatInputCommandRunner, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
+import { ChatInputTextArea, type ChatInputHistoryDriver, type ChatInputRestoreDriver } from './chatInputTextArea.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
+import { COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, CommandGetChatStatus, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor.ts';
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -49,9 +45,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [targets, setTargets] = useState<readonly Character[] | null>(null);
 	const [editing, setEditingState] = useState<ChatInputHandlerEditing | null>(null);
-	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplayData | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = useState<ChatInputAutocompleteState | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
+	const botInteractions = useGameLogicServiceOptional('botInteractions');
 	const gameState = useGameStateOptional();
 	const characters = useSpaceCharacters();
 	const playerId = usePlayerId();
@@ -104,14 +101,49 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		return true;
 	});
 
+	const newSetTargets = useCallback((newTargets: readonly CharacterId[] | null) => {
+		const targetCharacters: Character<ICharacterRoomData>[] | undefined = newTargets?.map((t) => t === playerId ? undefined : characters?.find((c) => c.data.id === t)).filter(IsNotNullable);
+		setTargets(targetCharacters != null && targetCharacters.length > 0 ? targetCharacters.toSorted((a, b) => a.name.localeCompare(b.name) || CompareCharacterIds(a.id, b.id)) : null);
+	}, [characters, playerId]);
+
+	const commandInvokeContextGenerator = useChatCommandContextGenerator(mode, setMode, newSetTargets);
+
+	const clientCommandRunner = useMemo((): ChatInputCommandRunner => ({
+		run(input) {
+			const ctx = commandInvokeContextGenerator();
+			Assert(ctx != null, 'Command run called whiled not ready');
+
+			return RunCommand(input, ctx, COMMANDS);
+		},
+		autocomplete(input) {
+			const ctx = commandInvokeContextGenerator();
+			Assert(ctx != null, 'Command autocomplete called whiled not ready');
+
+			return CommandAutocomplete(input, ctx, COMMANDS);
+		},
+		autocompleteCycle(input, reverse) {
+			const ctx = commandInvokeContextGenerator();
+			Assert(ctx != null, 'Command autocompleteCycle called whiled not ready');
+
+			return CommandAutocompleteCycle(input, ctx, COMMANDS, reverse);
+		},
+		getChatStatus(input) {
+			const ctx = commandInvokeContextGenerator();
+			Assert(ctx != null, 'Command getChatStatus called whiled not ready');
+
+			return CommandGetChatStatus(input, ctx, COMMANDS);
+		},
+	}), [commandInvokeContextGenerator]);
+
+	const commandsRunner = useMemo(() => ({
+		[COMMAND_KEY]: clientCommandRunner,
+		'!': botInteractions ?? undefined,
+	}), [clientCommandRunner, botInteractions]);
+
 	// Handler to autofocus chat input
 	useInputAutofocus(ref);
 
 	const context = useMemo((): IChatInputHandler => {
-		const newSetTargets = (newTargets: readonly CharacterId[] | null) => {
-			const targetCharacters: Character<ICharacterRoomData>[] | undefined = newTargets?.map((t) => t === playerId ? undefined : characters?.find((c) => c.data.id === t)).filter(IsNotNullable);
-			setTargets(targetCharacters != null && targetCharacters.length > 0 ? targetCharacters.toSorted((a, b) => a.name.localeCompare(b.name) || CompareCharacterIds(a.id, b.id)) : null);
-		};
 		return {
 			setValue: (value: string) => {
 				if (ref.current) {
@@ -141,10 +173,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			setMode,
 			showSelector,
 			setShowSelector,
-			allowCommands: editing == null && !mode?.raw,
+			commandsRunner: editing == null && !mode?.raw ? commandsRunner : null,
 			ref,
 		};
-	}, [targets, editing, setEditing, autocompleteHint, showSelector, setShowSelector, playerId, characters, mode]);
+	}, [targets, newSetTargets, editing, setEditing, autocompleteHint, commandsRunner, showSelector, setShowSelector, mode]);
 
 	return (
 		<ChatInputContext.Provider value={ context }>
@@ -191,326 +223,45 @@ function TextArea({ messagesDiv, scrollMessagesView, ref }: {
 	scrollMessagesView: (forceScroll: boolean) => void;
 	ref: ForwardedRef<HTMLTextAreaElement>;
 }) {
-	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const setPlayerStatus = useChatSetPlayerStatus();
-	const sender = useChatMessageSender();
-	const { targets, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = useChatInput();
-	const { chatCommandHintBehavior } = useAccountSettings();
-
-	const shardConnector = useShardConnector();
-	AssertNotNullable(shardConnector);
-
-	/**
-	 * Index of currently selected "recently sent" message.
-	 * -1 for when writing a new message.
-	 * @see InputHistory
-	 */
-	const inputHistoryIndex = useRef(-1);
-
-	const commandInvokeContext = useChatCommandContext();
-
-	const inputEnd = useEvent(() => {
-		if (timeout.current) {
-			clearTimeout(timeout.current);
-			timeout.current = null;
-		}
-		setPlayerStatus('none');
-	});
-
-	const updateCommandHelp = useEvent((textarea: HTMLTextAreaElement) => {
-		let input = textarea.value;
-		if (
-			input.startsWith(COMMAND_KEY) &&
-			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			allowCommands
-		) {
-			input = input.slice(1, textarea.selectionStart || textarea.value.length);
-
-			const autocompleteResult = CommandAutocomplete(input, commandInvokeContext, COMMANDS);
-
-			if (chatCommandHintBehavior === 'always-show') {
-				setAutocompleteHint({
-					replace: textarea.value,
-					result: autocompleteResult,
-					index: null,
-					nextSegment: false,
-				});
-			} else if (chatCommandHintBehavior === 'on-tab') {
-				if (autocompleteResult != null &&
-					autocompleteResult.options.length === 1 &&
-					autocompleteResult.options[0].replaceValue === input &&
-					!!autocompleteResult.options[0].longDescription
-				) {
-					// Display segments with long description anyway, if they match exactly
-					setAutocompleteHint({
-						replace: textarea.value,
-						result: autocompleteResult,
-						index: null,
-						nextSegment: false,
-					});
-				} else {
-					setAutocompleteHint(null);
+	const inputHistory = useMemo((): ChatInputHistoryDriver => ({
+		get(index) {
+			return InputHistory.value[index];
+		},
+		insert(index, value) {
+			InputHistory.produceImmer((arr) => {
+				arr.splice(index, 0, value);
+				if (arr.length > INPUT_HISTORY_MAX_LENGTH) {
+					arr.splice(INPUT_HISTORY_MAX_LENGTH, arr.length - INPUT_HISTORY_MAX_LENGTH);
 				}
-			} else {
-				AssertNever(chatCommandHintBehavior);
-			}
-		} else {
-			setAutocompleteHint(null);
-		}
-	});
-
-	const handleSend = useCallback((input: string, forceOOC: boolean): Promisable<boolean> => {
-		setAutocompleteHint(null);
-		if (
-			input.startsWith(COMMAND_KEY) &&
-			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			allowCommands
-		) {
-			// Process command
-			return RunCommand(input.slice(1), commandInvokeContext, COMMANDS);
-		} else {
-			// Double command key escapes itself
-			if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
-				input = input.slice(1);
-			}
-			input = input.trim();
-			const type = mode?.type || (forceOOC ? 'ooc' : undefined);
-			const raw = mode?.raw || undefined;
-			if (type === 'ooc' && !raw && input.startsWith('((')) {
-				input = input.slice(2).trim();
-			}
-			// Ignore empty input, unless editing
-			if (editing == null && !input) {
-				return false;
-			}
-			// TODO ... all options
-			sender.sendMessage(input, {
-				targets: targets?.map((t) => t.id),
-				editing: editing?.target || undefined,
-				type,
-				raw,
 			});
-			return true;
-		}
-	}, [allowCommands, commandInvokeContext, editing, mode, sender, setAutocompleteHint, targets]);
+		},
+		size() {
+			return InputHistory.value.length;
+		},
+	}), []);
 
-	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		const textarea = ev.currentTarget;
-		const input = textarea.value;
-		if (textarea.disabled || textarea.readOnly)
-			return;
+	const inputRestore = useMemo((): ChatInputRestoreDriver => ({
+		get() {
+			return InputRestore.value.input;
+		},
+		set(value) {
+			InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
+		},
+	}), []);
 
-		if (ev.key === 'Enter' && !ev.shiftKey) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			try {
-				function cleanup() {
-					textarea.value = '';
-					inputHistoryIndex.current = -1;
-					setEditing(null);
-
-					if (input && (InputHistory.value.length === 0 || InputHistory.value[0] !== input)) {
-						InputHistory.produceImmer((arr) => {
-							arr.unshift(input);
-							if (arr.length > INPUT_HISTORY_MAX_LENGTH) {
-								arr.splice(INPUT_HISTORY_MAX_LENGTH, arr.length - INPUT_HISTORY_MAX_LENGTH);
-							}
-						});
-					}
-				}
-
-				const result = handleSend(input, ev.altKey);
-				if (typeof result === 'boolean') {
-					if (result) {
-						cleanup();
-					}
-				} else {
-					textarea.disabled = true;
-					result.then((r) => {
-						textarea.disabled = false;
-						if (r) {
-							cleanup();
-						}
-						updateTypingStatus(textarea);
-					}, (error) => {
-						textarea.disabled = false;
-						updateTypingStatus(textarea);
-						toast('Error processing command', TOAST_OPTIONS_ERROR);
-						GetLogger('ChatInput').error('Error async processing input:', error);
-					});
-				}
-			} catch (error) {
-				if (error instanceof ChatSendError) {
-					toast(
-						<span className='display-linebreak'>
-							This message cannot be sent:<br />
-							{ error.reason }
-						</span>,
-						TOAST_OPTIONS_WARNING,
-					);
-				} else {
-					toast('Error sending chat message', TOAST_OPTIONS_ERROR);
-					GetLogger('ChatInput').error('Error sending message:', error);
-				}
-			}
-		} else if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			try {
-				// Process command
-				const inputPosition = textarea.selectionStart || textarea.value.length;
-				const command = textarea.value.slice(1, textarea.selectionStart);
-
-				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext, COMMANDS, ev.shiftKey);
-
-				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
-
-				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
-				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
-				if (chatCommandHintBehavior === 'always-show') {
-					setAutocompleteHint(autocompleteResult);
-				} else if (chatCommandHintBehavior === 'on-tab') {
-					setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
-				} else {
-					AssertNever(chatCommandHintBehavior);
-				}
-
-			} catch (error) {
-				if (error instanceof Error) {
-					toast(error.message, TOAST_OPTIONS_ERROR);
-				}
-			}
-		} else if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			const edit = sender.getLastMessageEdit();
-			if (edit) {
-				setEditing(edit);
-			}
-		} else if ((ev.key === 'PageUp' || ev.key === 'PageDown') && ev.shiftKey) {
-			// On PageUp/Down with shift we scroll chat window
-			ev.preventDefault();
-			ev.stopPropagation();
-
-			if (messagesDiv.current) {
-				messagesDiv.current.scrollTo({
-					top: clamp(
-						messagesDiv.current.scrollTop + Math.round((ev.key === 'PageUp' ? -0.5 : 0.5) * messagesDiv.current.clientHeight),
-						0,
-						messagesDiv.current.scrollHeight,
-					),
-					behavior: 'smooth',
-				});
-			}
-		} else if (ev.key === 'PageUp' && !ev.shiftKey) {
-			// On page up without shift, we show the previous sent message
-			ev.preventDefault();
-			ev.stopPropagation();
-
-			if (inputHistoryIndex.current + 1 < InputHistory.value.length) {
-				// Save the current input, if it has been modified
-				if (input && inputHistoryIndex.current < 0) {
-					InputHistory.produceImmer((arr) => {
-						arr.unshift(input);
-					});
-					inputHistoryIndex.current = 0;
-				} else if (input && InputHistory.value[inputHistoryIndex.current] !== input) {
-					InputHistory.produceImmer((arr) => {
-						arr.splice(inputHistoryIndex.current, 0, input);
-					});
-				}
-
-				// Replace current value with one from history
-				inputHistoryIndex.current++;
-				textarea.value = InputHistory.value[inputHistoryIndex.current];
-			}
-		} else if (ev.key === 'PageDown' && !ev.shiftKey) {
-			// On page down without shift, we show the next sent message (after going to previous)
-			ev.preventDefault();
-			ev.stopPropagation();
-
-			if (inputHistoryIndex.current >= 0) {
-				// Save the current input, if it has been modified
-				if (input !== '' && InputHistory.value[inputHistoryIndex.current] !== input) {
-					InputHistory.produceImmer((arr) => {
-						arr.splice(inputHistoryIndex.current, 0, input);
-					});
-				}
-
-				// Replace current value with one from history
-				inputHistoryIndex.current--;
-				textarea.value = inputHistoryIndex.current < 0 ? '' : InputHistory.value[inputHistoryIndex.current];
-			}
-		} else if (ev.key === 'Escape') {
-			ev.preventDefault();
-			ev.stopPropagation();
-
-			if (editing) {
-				// When editing, Esc cancels editing
-				setEditing(null);
-				setValue('');
-			} else {
-				// Otherwise scroll to end of messages view
-				scrollMessagesView(true);
-			}
-		}
-
-		// After running the whole handler update the typing status and saved restore state
-		updateTypingStatus(textarea);
-	});
-
-	const updateTypingStatus = (textarea: HTMLTextAreaElement) => {
-		const value = textarea.value;
-		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
-
-		let nextStatus: ChatCharacterFullStatus;
-		const trimmed = value.trim();
-		// Only start showing typing indicator once user wrote at least three characters. Commands handle it themselves
-		if (
-			value.startsWith(COMMAND_KEY) &&
-			!value.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			allowCommands
-		) {
-			nextStatus = CommandGetChatStatus(value.slice(1), commandInvokeContext, COMMANDS);
-		} else if (trimmed.length >= 3) {
-			nextStatus = { status: targets ? 'whispering' : 'typing', targets: targets?.map((t) => t.id) };
-		} else {
-			nextStatus = { status: 'none' };
-		}
-
-		if (nextStatus.status === 'none') {
-			inputEnd();
-			return;
-		}
-
-		setPlayerStatus(nextStatus.status, nextStatus.targets);
-
-		if (timeout.current) {
-			clearTimeout(timeout.current);
-			timeout.current = null;
-		}
-		timeout.current = setTimeout(() => inputEnd(), 3_000);
-	};
-
-	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const textarea = ev.target;
-		if (textarea.disabled || textarea.readOnly)
-			return;
-		updateCommandHelp(textarea);
-		updateTypingStatus(textarea);
-	});
-
-	useEffect(() => () => inputEnd(), [inputEnd]);
-	const actualRef = useTextFormattingOnKeyboardEvent(ref);
+	const sender = useChatMessageSender();
+	const setPlayerStatus = useChatSetPlayerStatus();
 
 	return (
-		<textarea
+		<ChatInputTextArea
+			messagesDiv={ messagesDiv }
+			scrollMessagesView={ scrollMessagesView }
+			inputHistory={ inputHistory }
+			inputRestore={ inputRestore }
+			messageSender={ sender }
+			setPlayerStatus={ setPlayerStatus }
 			placeholder='> Type message or /command'
-			ref={ actualRef }
-			onKeyDown={ onKeyDown }
-			onChange={ onChange }
-			onBlur={ inputEnd }
-			defaultValue={ InputRestore.value.input }
+			ref={ ref }
 		/>
 	);
 }
@@ -701,131 +452,46 @@ function ActionLogActiveNotifier(): ReactElement | null {
 	);
 }
 
-export function useChatCommandContext(): ICommandInvokeContext<ICommandExecutionContextClient> {
-	const gameState = useGameState();
-	const globalState = useGlobalState(gameState);
-	const sender = useChatMessageSender();
-	const chatInput = useChatInput();
+export function useChatCommandContextGenerator(
+	chatMode: ChatMode | null,
+	setChatMode: (mode: ChatMode | null) => void,
+	setChatTargets: (targets: readonly CharacterId[] | null) => void,
+): () => (ICommandInvokeContext<ICommandExecutionContextClient> | null) {
+	const navigate = useNavigatePandora();
+
+	const gameState = useGameStateOptional();
+	const shardConnector = useShardConnector();
+	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
+
 	const accountSettings = useAccountSettings();
 	const characterSettings = useCharacterSettings();
 
-	const directoryConnector = useDirectoryConnector();
-	const accountManager = useService('accountManager');
-	const shardConnector = useShardConnector();
-	const navigate = useNavigatePandora();
-	AssertNotNullable(shardConnector);
+	return useCallback((): ICommandInvokeContext<ICommandExecutionContextClient> | null => {
+		if (gameState == null || shardConnector == null)
+			return null;
 
-	return useMemo((): ICommandInvokeContext<ICommandExecutionContextClient> => ({
-		displayError(error) {
-			toast(error, TOAST_OPTIONS_ERROR);
-		},
-		shardConnector,
-		directoryConnector,
-		accountManager,
-		gameState,
-		globalState,
-		player: gameState.player,
-		accountSettings,
-		characterSettings,
-		messageSender: sender,
-		inputHandlerContext: chatInput,
-		navigate,
-	}), [chatInput, gameState, globalState, accountSettings, characterSettings, directoryConnector, accountManager, navigate, sender, shardConnector]);
-}
+		const globalState = gameState.globalState.currentState;
 
-export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctx, commands }: {
-	ctx: ICommandInvokeContext<TCommandExecutionContext>;
-	commands: readonly IClientCommand<TCommandExecutionContext>[];
-}): ReactElement | null {
-	const { autocompleteHint, ref, setAutocompleteHint, allowCommands } = useChatInput();
-	const { chatCommandHintBehavior } = useAccountSettings();
-	const selectedElementRef = useRef<HTMLSpanElement>(null);
-
-	useEffect(() => {
-		if (autocompleteHint?.index != null && selectedElementRef.current != null) {
-			selectedElementRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		}
-	}, [autocompleteHint?.index]);
-
-	if (!autocompleteHint?.result || !allowCommands)
-		return null;
-
-	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
-	let longDescriptionOption: number | null = null;
-	if (autocompleteHint.index != null) {
-		longDescriptionOption = autocompleteHint.index;
-	} else if (autocompleteHint.result.options.length === 1) {
-		longDescriptionOption = 0;
-	} else if (ref.current) {
-		longDescriptionOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
-	}
-	if (longDescriptionOption != null && !autocompleteHint.result.options[longDescriptionOption]?.longDescription) {
-		longDescriptionOption = null;
-	}
-
-	return (
-		<div className='autocomplete-hint'>
-			{ autocompleteHint.result.header }
-			{
-				autocompleteHint.result.options.length > 0 &&
-				<>
-					<hr />
-					<Scrollable className='flex-1'>
-						<Column gap='tiny'>
-							{
-								autocompleteHint.result.options.map((option, index) => (
-									<span key={ index }
-										className={ classNames({ selected: index === autocompleteHint.index }) }
-										ref={ index === autocompleteHint.index ? selectedElementRef : undefined }
-										onClick={ (ev) => {
-											const textarea = ref.current;
-											if (!textarea || textarea.disabled || textarea.readOnly)
-												return;
-
-											ev.preventDefault();
-											ev.stopPropagation();
-
-											const inputPosition = textarea.selectionStart || textarea.value.length;
-											const input = option.replaceValue + ' ';
-
-											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
-											textarea.focus();
-											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
-
-											const autocompleteResult: AutocompleteDisplayData = {
-												replace: textarea.value,
-												result: CommandAutocomplete(input, ctx, commands),
-												index: null,
-												nextSegment: true,
-											};
-
-											if (chatCommandHintBehavior === 'always-show') {
-												setAutocompleteHint(autocompleteResult);
-											} else if (chatCommandHintBehavior === 'on-tab') {
-												setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
-											} else {
-												AssertNever(chatCommandHintBehavior);
-											}
-										} }
-									>
-										{ option.displayValue }
-									</span>
-								))
-							}
-						</Column>
-					</Scrollable>
-				</>
-			}
-			{
-				longDescriptionOption != null ? (
-					<>
-						<hr />
-						{ autocompleteHint.result.options[longDescriptionOption]?.longDescription }
-					</>
-				) : null
-			}
-		</div>
-	);
+		return {
+			displayError(error) {
+				toast(error, TOAST_OPTIONS_ERROR);
+			},
+			shardConnector,
+			directoryConnector,
+			accountManager,
+			gameState,
+			globalState,
+			player: gameState.player,
+			accountSettings,
+			characterSettings,
+			messageSender: gameState,
+			getChatMode: () => chatMode,
+			setChatMode,
+			setChatTargets,
+			navigate,
+		};
+	}, [accountManager, accountSettings, characterSettings, directoryConnector, gameState, navigate, chatMode, setChatMode, setChatTargets, shardConnector]);
 }
 
 function ChatModeSelector(): ReactElement | null {

@@ -41,10 +41,10 @@ import {
 	type ChatMessage,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
+	type IShardClientChangeEvents,
 	type SpaceSwitchCharacterStatus,
 } from 'pandora-common';
 import type { IShardAccountDefinition, IShardCharacterDefinition } from 'pandora-common/networking/api/directory_shard';
-import type { IShardClientChangeEvents } from 'pandora-common/networking/api/shard_client';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ClientConnection } from '../networking/connection_client.ts';
@@ -159,7 +159,7 @@ export class Character {
 
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
-	private logger: Logger;
+	private readonly logger: Logger;
 
 	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
@@ -658,9 +658,7 @@ export class Character {
 
 	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
 		if (this.loadedSpace != null) {
-			this.loadedSpace.sendMessage('somethingChanged', {
-				changes,
-			});
+			this.loadedSpace.sendSomethingChanged(...changes);
 		} else {
 			this.connection?.sendMessage('somethingChanged', {
 				changes,

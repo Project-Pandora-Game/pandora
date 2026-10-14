@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@12.8.2+sha512.a5941679663d952c5f0ecc38ba98af98b4dc01b95780354f6894f2f873973cef2f7e2989d7db3ee5393938ae21f62fe06bcdf685d475ddad829a62095d2b8b11",
+	"packageManager": "pnpm@12.10.1+sha512.ba40a37eb1a370d60fea8c4cf1d364c13bcccef518e98ad2bcee954f539d38da37458e58261a3fa55e06523450ea0ffff9f497b135be41f2c15c1642bacace6c",
 	"engines": {
 		"node": ">=24.x"
 	},
@@ -9,7 +9,7 @@
 		"clean": "rimraf coverage && pnpm -r --parallel --silent run clean",
 		"setup-dev": "pnpm --filter pandora-common --silent run build",
 		"postinstall": "node .hooks/postinstall.mjs",
-		"ci": "pnpm run build && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
+		"ci": "pnpm run build && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e:coverage && pnpm run coverage:collect",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
@@ -19,14 +19,15 @@
 		"type-check": "pnpm -r --parallel run '/type-check:.*/'",
 		"type-check:test": "pnpm -r --parallel run '/type-check:test.*/'",
 		"test": "jest",
-		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e && pnpm run -C pandora-tests coverage:report",
+		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e",
+		"test-e2e:coverage": "pnpm run test-e2e && pnpm run -C pandora-tests coverage:report",
 		"coverage:collect": "node .hooks/coverage-collect.cjs",
 		"build": "pnpm -r run build",
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev",
 		"pandora-cli": "pnpm --filter pandora-cli run pandora-cli"
 	},
 	"dependencies": {
-		"js-yaml": "5.4.2"
+		"js-yaml": "5.4.3"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.39.5",
@@ -43,6 +44,6 @@
 		"rimraf": "6.1.3",
 		"ts-jest": "29.4.14",
 		"typescript": "6.0.3",
-		"typescript-eslint": "8.71.0"
+		"typescript-eslint": "8.71.1"
 	}
 }

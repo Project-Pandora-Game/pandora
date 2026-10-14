@@ -1,10 +1,11 @@
 import classNames from 'classnames';
-import { ReactElement, type DetailedHTMLProps, type HTMLAttributes } from 'react';
+import { ReactElement, type DetailedHTMLProps, type ForwardedRef, type HTMLAttributes } from 'react';
 import type { CommonProps } from '../../../common/reactTypes.ts';
 import type { ScssOverflow, ScssSpacing } from '../../../styles/constants.ts';
 import './container.scss';
 
 export interface DivContainerProps extends CommonProps, Pick<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, 'style' | 'inert' | 'title'> {
+	ref?: ForwardedRef<HTMLDivElement>;
 	// Flex properties
 
 	/** Default: row */

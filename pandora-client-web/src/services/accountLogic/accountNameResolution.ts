@@ -4,7 +4,7 @@ import { useAccountContacts } from '../../components/accountContacts/accountCont
 import { useSpaceCharacters } from '../gameLogic/gameStateHooks.ts';
 import { useCurrentAccount } from './accountManagerHooks.ts';
 
-export function useResolveAccountName(accountId: AccountId): string | null {
+export function useResolveAccountName(accountId: AccountId | null): string | null {
 	const currentAccount = useCurrentAccount();
 
 	// Look through contacts
@@ -16,7 +16,9 @@ export function useResolveAccountName(accountId: AccountId): string | null {
 	const character = characters.find((c) => c.data.accountId === accountId);
 	const characterData = useCharacterDataOptional(character ?? null);
 
-	if (accountId === 0) {
+	if (accountId == null) {
+		return null;
+	} else if (accountId === 0) {
 		return '[[Pandora]]';
 	} else if (currentAccount?.id === accountId) {
 		return currentAccount.displayName;

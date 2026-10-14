@@ -141,10 +141,6 @@
 				}
 			}
 
-			&.emote .name {
-				display: none;
-			}
-
 			&.dim {
 				opacity: common.$theme-chat-dim-opacity;
 
@@ -184,6 +180,12 @@
 						text-wrap: nowrap;
 						text-overflow: ellipsis;
 					}
+				}
+
+				.botIcon {
+					width: 1.5em;
+					height: 1.5em;
+					margin: 0.1em 0.25em;
 				}
 			}
 

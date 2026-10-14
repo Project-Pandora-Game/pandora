@@ -7,6 +7,8 @@ import {
 	type CharacterId,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
+import circuitSlashedIcon from '../../../assets/icons/circuit-slashed.svg';
+import circuitIcon from '../../../assets/icons/circuit.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
@@ -15,7 +17,7 @@ import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { useAccountContacts } from '../../../components/accountContacts/accountContactContext.ts';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Row } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
@@ -23,6 +25,7 @@ import { PersistentToast } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceCharacters, useSpaceInfoOptional } from '../../../services/gameLogic/gameStateHooks.ts';
+import { SimpleSpaceBotsContextHelp } from '../room/roomControlsBot.tsx';
 import { SPACE_DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES } from '../spaceConfiguration/spaceConfigurationDefinitions.tsx';
 import { SpaceOwnershipRemoval } from '../spaceConfiguration/spaceOwnershipRemoval.tsx';
 import { SpaceRoleDropButton } from '../spaceConfiguration/spaceRoleDrop.tsx';
@@ -59,6 +62,14 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Clo
 			.filter((f) => info.features.includes(f.id))
 			.map((f): [icon: string, name: string, extraClassNames?: string] => ([f.icon, f.name]));
 
+		if (info.bot != null) {
+			if (info.bot.online) {
+				result.push([circuitIcon, 'This space makes use of bots']);
+			} else {
+				result.push([circuitSlashedIcon, 'This space makes use of bots, but its bot is currently offline', 'warning']);
+			}
+		}
+
 		if (info.isAdmin) {
 			result.push([shieldIcon, 'You are an admin of this space']);
 		}
@@ -93,6 +104,22 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, closeText = 'Clo
 			</Row>
 			<div className='description-title'>Description:</div>
 			<textarea className='widebox' value={ info.description } rows={ SPACE_DESCRIPTION_TEXTBOX_SIZE } readOnly />
+			{ info.bot != null ? (
+				<fieldset className='bot-info'>
+					<legend>
+						<Row alignY='center'>
+							<span>Space's Bot</span>
+							<SimpleSpaceBotsContextHelp />
+						</Row>
+					</legend>
+					<Column gap='tiny'>
+						<Row wrap alignX='space-between'>
+							<div>Bot: { info.bot.name }</div>
+							<div className='text-dim'>Created by: { info.bot.ownerAccountName } ({ info.bot.ownerAccount })</div>
+						</Row>
+					</Column>
+				</fieldset>
+			) : null }
 			{
 				info.characters.length > 0 && (
 					<div className='title'>Characters currently in this space:

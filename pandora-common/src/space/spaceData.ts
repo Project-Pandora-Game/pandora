@@ -1,6 +1,7 @@
 import * as z from 'zod';
 import { AccountIdSchema, type AccountId } from '../account/account.ts';
 import { SPACE_STATE_BUNDLE_DEFAULT_PUBLIC_SPACE, SpaceStateBundleSchema, type SpaceStateBundle } from '../assets/state/spaceState.ts';
+import { BotIdSchema, PandoraBotSpacePermissionListSchema, type BotId, type PandoraBotSpacePermissionList } from '../bots/botBaseTypes.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits.ts';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
@@ -79,8 +80,20 @@ export const SpaceGhostManagementConfigSchema = z.object({
 	 */
 	affectCharactersInRoomDevice: z.boolean().catch(false),
 });
-
 export type SpaceGhostManagementConfig = z.infer<typeof SpaceGhostManagementConfigSchema>;
+
+/** Configuration describing bot assignment to a space. */
+export interface SpaceBotAssignmentConfig {
+	/** The selected bot. */
+	bot: BotId;
+	/** Permissions granted to the bot. */
+	permissions: PandoraBotSpacePermissionList;
+}
+/** Configuration describing bot assignment to a space. */
+export const SpaceBotAssignmentConfigSchema: z.ZodType<SpaceBotAssignmentConfig> = z.object({
+	bot: BotIdSchema,
+	permissions: PandoraBotSpacePermissionListSchema,
+});
 
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The requested features */
@@ -99,6 +112,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	allow: AccountIdSchema.array().catch(() => []),
 	/** Automatic space ghost management settings. `null` if disabled completely. */
 	ghostManagement: SpaceGhostManagementConfigSchema.nullable().catch(null),
+	/** Configuration about bot assigned to this space. `null` if no bot is assigned. */
+	bot: SpaceBotAssignmentConfigSchema.nullable().catch(null),
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 

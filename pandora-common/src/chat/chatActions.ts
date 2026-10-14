@@ -48,6 +48,10 @@ const CHAT_ACTIONS_DEF = {
 		type: 'system',
 		message: `SOURCE_CHARACTER changed COUNT space settings:`,
 	},
+	spaceBotRemoved: {
+		type: 'system',
+		message: `The space's bot has been removed from this space.`,
+	},
 	//#endregion
 
 	//#region Action messages

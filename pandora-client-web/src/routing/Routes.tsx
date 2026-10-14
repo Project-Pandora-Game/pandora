@@ -11,7 +11,6 @@ import { usePlayerData } from '../components/gameContext/playerContextProvider.t
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
 import { AuthPage } from '../components/login/authPage.tsx';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens.tsx';
-import { Settings } from '../components/settings/settings.tsx';
 import { WardrobeRouter } from '../components/wardrobe/wardrobe.tsx';
 import { ShardConnectionState } from '../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../observable.ts';
@@ -28,6 +27,7 @@ import { authPagePathsAndComponents } from './authRoutingData.ts';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management/index.tsx'));
+const SettingsScreen = lazy(() => import('../ui/screens/settings/settings.tsx').then((it) => ({ default: it.SettingsScreen })));
 const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 
 export function PandoraRoutes(): ReactElement {
@@ -40,7 +40,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/character/select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished /> } />
 
-			<Route path='/settings/*' element={ <RequiresLogin element={ Settings } /> } />
+			<Route path='/settings/*' element={ <RequiresLogin element={ SettingsScreen } /> } />
 
 			<Route path='/contacts/*' element={ <RequiresLogin element={ AccountContacts } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />

@@ -8,7 +8,6 @@ import { Column } from '../../components/common/container/container.tsx';
 import { ModalDialog } from '../../components/dialog/dialog.tsx';
 import { LocalErrorBoundary } from '../../components/error/localErrorBoundary.tsx';
 import { Header } from '../../components/header/Header.tsx';
-import { Settings } from '../../components/settings/settings.tsx';
 import { WardrobeRouter } from '../../components/wardrobe/wardrobe.tsx';
 import Wiki from '../../components/wiki/wiki.tsx';
 import { useNavigatePandora } from '../../routing/navigate.ts';
@@ -17,6 +16,7 @@ import { useGameLogicServiceManager } from '../../services/serviceProvider.tsx';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput.tsx';
 import { RoomScreen } from '../../ui/screens/room/room.tsx';
 import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog.tsx';
+import { SettingsScreen } from '../../ui/screens/settings/settings.tsx';
 import './pandoraEditorInstance.scss';
 
 export function PandoraInnerInstanceDriver(): ReactElement {
@@ -134,7 +134,7 @@ function EditorGameStateContextProvider(): null {
 function PandoraEditorInstanceRoutes(): ReactElement {
 	return (
 		<Routes>
-			<Route path='/settings/*' element={ <Settings /> } />
+			<Route path='/settings/*' element={ <SettingsScreen /> } />
 			<Route path='/room' element={ <RoomScreen /> } />
 			<Route path='/wardrobe/*' element={ <WardrobeRouter /> } />
 

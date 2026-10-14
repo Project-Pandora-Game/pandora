@@ -37,7 +37,7 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-sesv2": "3.1144.0",
+		"@aws-sdk/client-sesv2": "3.1147.0",
 		"@aws-sdk/credential-provider-node": "3.972.84",
 		"@octokit/auth-oauth-app": "9.0.5",
 		"@octokit/rest": "22.0.1",
@@ -52,8 +52,8 @@
 		"lodash-es": "4.18.1",
 		"mongodb": "7.7.0",
 		"mongodb-memory-server-core": "11.3.0",
-		"nanoid": "6.0.1",
-		"nodemailer": "10.0.13",
+		"nanoid": "6.0.2",
+		"nodemailer": "10.0.15",
 		"pandora-common": "workspace:*",
 		"socket.io": "4.8.4",
 		"wtfnode": "0.10.1",

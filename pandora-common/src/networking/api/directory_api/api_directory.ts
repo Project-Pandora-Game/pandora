@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { AccountIdSchema, PandoraAccessTokenIdSchema, PandoraAccessTokenNameSchema, PandoraAccessTokenSchema, PandoraAccessTokenScopeListSchema } from '../../../account/index.ts';
+import { BotIdSchema } from '../../../bots/botBaseTypes.ts';
 import { LIMIT_SPACE_SEARCH_COUNT } from '../../../inputLimits.ts';
 import { SpaceIdSchema, type SpaceListInfo } from '../../../space/space.ts';
 import { SpaceDirectoryConfigSchema } from '../../../space/spaceData.ts';
@@ -100,6 +101,7 @@ export const ApiDirectorySchema = {
 					'notAllowed', // Missing token scopes
 					'spaceOwnershipLimitReached',
 					'accountListNotAllowed', // API cannot fill admin and allow lists in advance - add accounts after target character joins the space
+					'unknownBot', // The bot specified in the config was either not found, or this account is not allowed to select it
 					'failed', // Generic failure
 				]),
 			}),
@@ -120,6 +122,45 @@ export const ApiDirectorySchema = {
 				'notFound', // Space not found
 				'notAnOwner', // You need to be an owner of the space to do this
 				'failed', // Generic failure
+			]),
+		}),
+	},
+
+	//#endregion
+
+	//#region Bots
+
+	/** Register this connection as one running bot with specific id. Requires the owner account to own this bot and the `bots:run` scope.
+	 * After the connection is registered for running the specified bot, the connection will start receiving the `botStateChanged` event.
+	 *
+	 * Note, that the registration **needs to happen after every re-connect** as well!
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	botRunRegister: {
+		request: z.object({
+			bot: BotIdSchema,
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'notAllowed', // Missing token scopes
+				'notFound', // Bot not found or not owned by the token's account
+			]),
+		}),
+	},
+	/** Stops receiving events related to bot registered using `botRunRegister`.
+	 *
+	 * **EXPERIMENTAL API** - Might change substantially or even be removed in future versions.
+	 */
+	botRunUnregister: {
+		request: z.object({
+			bot: BotIdSchema,
+		}),
+		response: z.object({
+			result: z.enum([
+				'ok',
+				'notFound', // Bot is not registered by this connection
 			]),
 		}),
 	},

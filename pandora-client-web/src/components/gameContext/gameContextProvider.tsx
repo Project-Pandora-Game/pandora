@@ -3,6 +3,7 @@ import { ReactElement } from 'react';
 import { AnchorAutoscroll } from '../../common/anchorAutoscroll.tsx';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
+import { SpaceBotOverlayProvider } from '../../services/gameLogic/bot/botOverlayProvider.tsx';
 import { ServiceManagerContextProvider } from '../../services/serviceProvider.tsx';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput.tsx';
 import { CharacterPreviewAutogenerationService } from '../../ui/screens/room/characterPreviewGeneration.tsx';
@@ -55,6 +56,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<CharacterPreviewAutogenerationService />
 				<StoredPosePresetsLoaderService />
 				<SessionExpiryWarningProvider />
+				<SpaceBotOverlayProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

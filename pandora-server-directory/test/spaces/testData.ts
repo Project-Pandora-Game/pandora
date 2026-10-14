@@ -11,6 +11,7 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	public: 'public-with-admin',
 	features: [],
 	ghostManagement: null,
+	bot: null,
 };
 
 export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {

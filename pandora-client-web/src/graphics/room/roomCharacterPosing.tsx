@@ -18,27 +18,23 @@ import { useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Text } from '../baseComponents/text.ts';
-import { type PointLike } from '../common/point.ts';
+import type { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MovementHelperGraphics, PosingStateHelperGraphics } from '../movementHelper.tsx';
+import { usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
 import { useRoomCharacterPosition } from './roomCharacterPosition.ts';
 
 /** Wheel delta (in pixels) required to trigger a single step. One notch on a typical mouse is ~100. */
-const WHEEL_STEP_THRESHOLD = 100;
-/** Minimum time between steps, so trackpad inertia doesn't spin through all states at once */
-const WHEEL_STEP_COOLDOWN = 100;
+const WHEEL_STEP_THRESHOLD = 80;
 const TURN_AROUND_RADIUS = { small: 20, big: 32 } as const;
 const HAND_BUTTON_RADIUS = 25;
 const MOVE_HANDLE_RADIUS = 50;
-/** Spacing between neighbouring buttons */
+/** Spacing between neighboring buttons */
 const LAYOUT_GAP = 15;
-/** The one real anchor: vertical position of the turn-around button, relative to pivot. Everything else is laid out relative to it. */
-const TURN_AROUND_OFFSET_Y = 15;
-const DISABLED_ALPHA = 0.35;
 
 function BlockedHint({ position, text }: {
 	position: Readonly<PointLike>;
@@ -67,17 +63,18 @@ export function RoomCharacterMovePoseTool({
 	characterState,
 	projectionResolver,
 }: RoomCharacterInteractiveProps): ReactElement | null {
-	const { interfacePosingStyle } = useAccountSettings();
 	const assetManager = useAssetManager();
 	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const graphicsManager = useObservable(GraphicsManagerInstance);
-	const id = characterState.id;
-	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
-	const outerTickerRef = useTickerRef();
-	const innerTickerRef = useTickerRef();
-
 	const { setRoomSceneMode } = useRoomScreenContext();
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
+
+	const characterId = characterState.id;
+	const { interfacePosingStyle } = useAccountSettings();
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
+
+	const outerTickerRef = useTickerRef();
+	const innerTickerRef = useTickerRef();
 
 	const canMoveCharacter = useCanMoveCharacter(character);
 	const canPoseCharacter = useCanPoseCharacter(character);
@@ -95,7 +92,7 @@ export function RoomCharacterMovePoseTool({
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 	// Turn-around button is the anchor
-	const turnAroundY = pivot.y + TURN_AROUND_OFFSET_Y;
+	const turnAroundY = pivot.y + 15;
 	// Hand buttons: top edge aligned with the top edge of the turn-around button
 	const handButtonY = turnAroundY - TURN_AROUND_RADIUS.small + HAND_BUTTON_RADIUS;
 	// Y-offset handle sits in the column of the right hand button (and the left one mirrors it).
@@ -119,7 +116,7 @@ export function RoomCharacterMovePoseTool({
 			type: 'moveCharacter',
 			target: {
 				type: 'character',
-				characterId: id,
+				characterId,
 			},
 			moveTo: {
 				type: 'normal',
@@ -224,23 +221,23 @@ export function RoomCharacterMovePoseTool({
 	const setPoseDirect = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
-			target: id,
+			target: characterId,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
 			...copy,
 		});
-	}, [execute, id]);
+	}, [execute, characterId]);
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const stepLeftArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.leftArm.position,
-		(armPosition) => setPose({ leftArm: { position: armPosition } }),
+		useCallback((armPosition) => setPose({ leftArm: { position: armPosition } }), [setPose]),
 	);
 	const stepRightArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.rightArm.position,
-		(armPosition) => setPose({ rightArm: { position: armPosition } }),
+		useCallback((armPosition) => setPose({ rightArm: { position: armPosition } }), [setPose]),
 	);
 
 	const ikRotationHandle = useMemo(() => ({
@@ -254,14 +251,14 @@ export function RoomCharacterMovePoseTool({
 
 	const duration = smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0;
 	const poseWrapperProps = {
-		alpha: posingDisabled ? DISABLED_ALPHA : 1,
+		alpha: posingDisabled ? 0.35 : 1,
 		eventMode: posingDisabled ? 'none' : 'passive',
 	} as const;
 
 	return (
 		<TransitionedContainer
 			position={ position }
-			scale={ { x: scale, y: scale } }
+			scale={ useMemo((): PointLike => ({ x: scale, y: scale }), [scale]) }
 			pivot={ pivot }
 			transitionDuration={ duration }
 			tickerRef={ outerTickerRef }
@@ -278,8 +275,8 @@ export function RoomCharacterMovePoseTool({
 
 			{ /* Character frame (flipped and rotated with the character) */ }
 			<TransitionedContainer
-				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
+				position={ useMemo((): PointLike => ({ x: pivot.x, y: pivot.y - yOffsetExtra }), [pivot, yOffsetExtra]) }
+				scale={ useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]) }
 				pivot={ pivot }
 				angle={ rotationAngle }
 				transitionDuration={ duration }
@@ -288,56 +285,52 @@ export function RoomCharacterMovePoseTool({
 				<ExitPosingUiButton
 					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
 					radius={ 35 }
-					onClick={ () => {
+					onClick={ useCallback(() => {
 						setRoomSceneMode({ mode: 'normal' });
-					} }
+					}, [setRoomSceneMode]) }
 				/>
 				<Container { ...poseWrapperProps }>
-					{
-						(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
-							bones
-								.filter((b) => b.x !== 0 && b.y !== 0)
-								.map((bone) => (
-									<PosingToolBone
-										key={ bone.name }
-										characterState={ characterState }
-										definition={ bone }
-										onRotate={ (newRotation) => {
-											setPose({
-												bones: {
-													[bone.name]: newRotation,
-												},
-											});
-										} }
-									/>
-								))
-						) : null
-					}
-					{
-						(interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
-							graphicsManager?.inversePosingHandles.map((h, i) => (
-								<PosingToolIKHandle
-									key={ i }
-									ikHandle={ h }
+					{ (interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
+						bones
+							.filter((b) => b.x !== 0 && b.y !== 0)
+							.map((bone) => (
+								<PosingToolBone
+									key={ bone.name }
 									characterState={ characterState }
-									projectionResolver={ projectionResolver }
-									setPose={ setPose }
+									definition={ bone }
+									onRotate={ (newRotation) => {
+										setPose({
+											bones: {
+												[bone.name]: newRotation,
+											},
+										});
+									} }
 								/>
 							))
-						) : null
-					}
+					) : null }
+					{ (interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
+						graphicsManager?.inversePosingHandles.map((h, i) => (
+							<PosingToolIKHandle
+								key={ i }
+								ikHandle={ h }
+								characterState={ characterState }
+								projectionResolver={ projectionResolver }
+								setPose={ setPose }
+							/>
+						))
+					) : null }
 					<TurnAroundButton
 						position={ { x: pivot.x, y: turnAroundY } }
 						radiusSmall={ TURN_AROUND_RADIUS.small }
 						radiusBig={ TURN_AROUND_RADIUS.big }
-						onClick={ () => {
+						onClick={ useEvent(() => {
 							setPose({
 								view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 							});
-						} }
+						}) }
 					/>
 					<SwitchHandPositionButton
-						position={ { x: pivot.x + sideX, y: handButtonY } }
+						position={ useMemo((): PointLike => ({ x: pivot.x + sideX, y: handButtonY }), [handButtonY, pivot, sideX]) }
 						radius={ HAND_BUTTON_RADIUS }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
@@ -345,7 +338,7 @@ export function RoomCharacterMovePoseTool({
 						onWheelStep={ stepLeftArmPosition }
 					/>
 					<SwitchHandPositionButton
-						position={ { x: pivot.x - sideX, y: handButtonY } }
+						position={ useMemo((): PointLike => ({ x: pivot.x - sideX, y: handButtonY }), [handButtonY, pivot, sideX]) }
 						radius={ HAND_BUTTON_RADIUS }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
@@ -356,22 +349,18 @@ export function RoomCharacterMovePoseTool({
 			</TransitionedContainer>
 
 			{ /* Hints (outer frame, so the text is never mirrored or rotated) */ }
-			{
-				posingDisabled ? (
-					<BlockedHint
-						position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 - 35 - 25 - yOffsetExtra } }
-						text='Posing blocked'
-					/>
-				) : null
-			}
-			{
-				movingDisabled ? (
-					<BlockedHint
-						position={ { x: pivot.x, y: moveHandlesY + MOVE_HANDLE_RADIUS + LAYOUT_GAP } }
-						text={ followingBlocked ? 'Moving blocked (following)' : 'Moving blocked' }
-					/>
-				) : null
-			}
+			{ posingDisabled ? (
+				<BlockedHint
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 - 35 - 25 - yOffsetExtra } }
+					text='Posing blocked'
+				/>
+			) : null }
+			{ movingDisabled ? (
+				<BlockedHint
+					position={ { x: pivot.x, y: moveHandlesY + MOVE_HANDLE_RADIUS + LAYOUT_GAP } }
+					text={ followingBlocked ? 'Moving blocked (following)' : 'Moving blocked' }
+				/>
+			) : null }
 
 			{ /* Movement handles (outer frame; must be direct children of this container for the drag maths) */ }
 			<MovementHelperGraphics
@@ -379,8 +368,8 @@ export function RoomCharacterMovePoseTool({
 				theme={ movingDisabled ? 'disabled' : heldPos ? 'active' : hoverPos ? 'hover' : 'normal' }
 				colorLeftRight={ 0xff0000 }
 				colorUpDown={ 0x00ff00 }
-				position={ { x: pivot.x, y: moveHandlesY } }
-				scale={ { x: 1, y: 0.6 } }
+				position={ useMemo((): PointLike => ({ x: pivot.x, y: moveHandlesY }), [moveHandlesY, pivot.x]) }
+				scale={ useMemo((): PointLike => ({ x: 1, y: 0.6 }), []) }
 				hitArea={ moveHitArea }
 				eventMode='static'
 				cursor='move'
@@ -399,7 +388,7 @@ export function RoomCharacterMovePoseTool({
 				radius={ MOVE_HANDLE_RADIUS }
 				theme={ movingDisabled ? 'disabled' : heldOffset ? 'active' : hoverOffset ? 'hover' : 'normal' }
 				colorUpDown={ 0x0000ff }
-				position={ { x: pivot.x + sideX, y: moveHandlesY - yOffsetExtra } }
+				position={ useMemo((): PointLike => ({ x: pivot.x + sideX, y: moveHandlesY - yOffsetExtra }), [moveHandlesY, pivot, sideX, yOffsetExtra]) }
 				hitArea={ moveHitArea }
 				eventMode='static'
 				cursor='ns-resize'
@@ -424,21 +413,18 @@ export function RoomCharacterMovePoseTool({
  */
 function useWheelStepper(active: boolean, onStep: (direction: 1 | -1) => void): void {
 	const onStepEvent = useEvent(onStep);
+	const app = usePixiAppOptional();
+	const eventDomElement = app?.renderer.events.domElement;
 
 	useEffect(() => {
-		if (!active)
+		if (!active || !eventDomElement)
 			return;
 
 		let accumulated = 0;
-		let lastStep = 0;
 
 		const handler = (event: WheelEvent) => {
 			event.preventDefault();
 			event.stopPropagation();
-
-			const now = Date.now();
-			if (now - lastStep < WHEEL_STEP_COOLDOWN)
-				return;
 
 			const unit = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 40 :
 				event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? 800 :
@@ -448,15 +434,14 @@ function useWheelStepper(active: boolean, onStep: (direction: 1 | -1) => void): 
 			if (Math.abs(accumulated) >= WHEEL_STEP_THRESHOLD) {
 				onStepEvent(accumulated > 0 ? 1 : -1);
 				accumulated = 0;
-				lastStep = now;
 			}
 		};
 
-		window.addEventListener('wheel', handler, { capture: true, passive: false });
+		eventDomElement.addEventListener('wheel', handler, { capture: true, passive: false });
 		return () => {
-			window.removeEventListener('wheel', handler, { capture: true });
+			eventDomElement.removeEventListener('wheel', handler, { capture: true });
 		};
-	}, [active, onStepEvent]);
+	}, [active, eventDomElement, onStepEvent]);
 }
 
 /**
@@ -472,7 +457,7 @@ function useCycleStepper<T>(
 ): (direction: 1 | -1) => void {
 	const pending = useRef<{ value: T; expires: number; } | null>(null);
 
-	return useEvent((direction: 1 | -1) => {
+	return useCallback((direction: 1 | -1) => {
 		const now = Date.now();
 		const base = (pending.current != null && pending.current.expires > now) ? pending.current.value : current;
 		const index = options.indexOf(base);
@@ -480,7 +465,7 @@ function useCycleStepper<T>(
 
 		pending.current = { value: next, expires: now + 2 * LIVE_UPDATE_THROTTLE };
 		apply(next);
-	});
+	}, [apply, current, options]);
 }
 
 type PosingToolIKHandleProps = {
@@ -519,7 +504,7 @@ function PosingToolIKHandle({
 	const stepRotation = useCycleStepper(
 		ArmRotationSchema.options,
 		characterState.requestedPose[armKey].rotation,
-		(armRotation) => setPose({ [armKey]: { rotation: armRotation } }),
+		useCallback((armRotation) => setPose({ [armKey]: { rotation: armRotation } }), [armKey, setPose]),
 	);
 
 	// Works while hovering the handle, and also while holding/dragging it
@@ -533,9 +518,7 @@ function PosingToolIKHandle({
 		pivot,
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const { bones } = useMemo((): {
-		bones: BoneDefinition[];
-	} => {
+	const bones = useMemo((): readonly BoneDefinition[] => {
 		const tmpBones: BoneDefinition[] = [];
 
 		let parentBone: BoneDefinition | undefined = assetManager.getBoneByName(ikHandle.parentBone);
@@ -553,9 +536,7 @@ function PosingToolIKHandle({
 			parentBone = parentBone.parent;
 		}
 
-		return {
-			bones: tmpBones,
-		};
+		return tmpBones;
 	}, [assetManager, ikHandle, yOffsetExtra, pivot]);
 
 	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
@@ -687,7 +668,7 @@ function PosingToolIKHandle({
 				colorLeftRight={ (ikHandle.style === 'left-right' || ikHandle.style === 'move') ? 0xcccccc : undefined }
 				drawExtra={ drawExtra }
 				angle={ currentAngle }
-				position={ { x: currentPosition.x, y: currentPosition.y } }
+				position={ useMemo((): PointLike => ({ x: currentPosition.x, y: currentPosition.y }), [currentPosition]) }
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='move'
@@ -702,53 +683,49 @@ function PosingToolIKHandle({
 					setHover(false);
 				}, []) }
 			/>
-			{
-				(open && styleHasOpen) ? (
-					<Container
-						angle={ currentAngle }
-						position={ { x: currentPosition.x, y: currentPosition.y } }
-					>
-						{
-							(ikHandle.style === 'hand-left' || ikHandle.style === 'hand-right') ? (
-								<>
-									<PosingStateHelperGraphics
-										values={ ArmRotationSchema.options }
-										centerValue={ ArmRotationSchema.options.indexOf('forward') }
-										value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
-										actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
-										onChange={ (newValue) => {
-											setPose({
-												[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
-													rotation: newValue,
-												},
-											});
-										} }
-										x={ ikHandle.style === 'hand-left' ? -60 : 60 }
-										y={ 0 }
-										angle={ 90 }
-									/>
-									<PosingStateHelperGraphics
-										values={ ArmFingersSchema.options }
-										value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
-										actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
-										centerValue={ 1 }
-										onChange={ (newValue) => {
-											setPose({
-												[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
-													fingers: newValue,
-												},
-											});
-										} }
-										x={ 0 }
-										y={ 60 }
-										angle={ ikHandle.style === 'hand-left' ? 180 : 0 }
-									/>
-								</>
-							) : null
-						}
-					</Container>
-				) : null
-			}
+			{ (open && styleHasOpen) ? (
+				<Container
+					angle={ currentAngle }
+					position={ { x: currentPosition.x, y: currentPosition.y } }
+				>
+					{ (ikHandle.style === 'hand-left' || ikHandle.style === 'hand-right') ? (
+						<>
+							<PosingStateHelperGraphics
+								values={ ArmRotationSchema.options }
+								centerValue={ ArmRotationSchema.options.indexOf('forward') }
+								value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
+								actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
+								onChange={ (newValue) => {
+									setPose({
+										[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
+											rotation: newValue,
+										},
+									});
+								} }
+								x={ ikHandle.style === 'hand-left' ? -60 : 60 }
+								y={ 0 }
+								angle={ 90 }
+							/>
+							<PosingStateHelperGraphics
+								values={ ArmFingersSchema.options }
+								value={ characterState.requestedPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
+								actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].fingers }
+								centerValue={ 1 }
+								onChange={ (newValue) => {
+									setPose({
+										[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
+											fingers: newValue,
+										},
+									});
+								} }
+								x={ 0 }
+								y={ 60 }
+								angle={ ikHandle.style === 'hand-left' ? 180 : 0 }
+							/>
+						</>
+					) : null }
+				</Container>
+			) : null }
 		</>
 	);
 }

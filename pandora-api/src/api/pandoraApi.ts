@@ -1,14 +1,25 @@
-import { GetLogger, PandoraAccessTokenSchema, Result } from 'pandora-common';
+import { GetLogger, PandoraAccessTokenSchema, Result, TypedEventEmitter } from 'pandora-common';
 import { InternalApiDirectory } from '../internal/apiDirectory.ts';
+import { PandoraApiBots } from './apis/bots.ts';
 import { PandoraApiSpaceManagement } from './apis/spaceManagement.ts';
 import { PandoraApiSpaceSearch } from './apis/spaceSearch.ts';
 import { PandoraApiToken } from './apis/token.ts';
 import { WELL_KNOWN_SERVER_ADDRESSES } from './wellKnownServerAddresses.ts';
 
 // Re-export all sub-api types
+export type * from './apis/bots.ts';
 export type * from './apis/spaceManagement.ts';
 export type * from './apis/spaceSearch.ts';
 export type * from './apis/token.ts';
+
+export type BotConnectionEvents = {
+	/** Connected (or re-connected) to Directory. */
+	connected: void;
+	/** Connection failed. */
+	connectError: Error;
+	/** Connection was lost. */
+	disconnected: void;
+};
 
 /**
  * The main instance of Pandora Api. Includes connection to the server and all API methods.
@@ -16,8 +27,9 @@ export type * from './apis/token.ts';
  * When you are done using the API, make sure you call `close`.
  * You can also use PandoraApi with `using` (see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management).
  */
-export class PandoraApi implements Disposable {
+export class PandoraApi extends TypedEventEmitter<BotConnectionEvents> implements Disposable {
 	private readonly _internal: InternalApiDirectory;
+	public readonly directoryConnectionAddress: string;
 
 	/** APIs related to working with Pandora tokens. */
 	public readonly token: PandoraApiToken;
@@ -25,12 +37,23 @@ export class PandoraApi implements Disposable {
 	public readonly spaceSearch: PandoraApiSpaceSearch;
 	/** APIs related to space management (creation, deletion, configuration, ...). */
 	public readonly spaceManagement: PandoraApiSpaceManagement;
+	/** APIs related to running bots. */
+	public readonly bots: PandoraApiBots;
 
-	private constructor(internal: InternalApiDirectory) {
+	private constructor(internal: InternalApiDirectory, directoryConnectionAddress: string) {
+		super();
 		this._internal = internal;
+		this.directoryConnectionAddress = directoryConnectionAddress;
+
 		this.token = PandoraApiToken._create(internal);
 		this.spaceSearch = PandoraApiSpaceSearch._create(internal);
 		this.spaceManagement = PandoraApiSpaceManagement._create(internal);
+		this.bots = PandoraApiBots._create(internal);
+
+		// Setup events forwarding
+		this._internal.directoryConnector.on('connected', (it) => this.emit('connected', it));
+		this._internal.directoryConnector.on('connectError', (it) => this.emit('connectError', it));
+		this._internal.directoryConnector.on('disconnected', (it) => this.emit('disconnected', it));
 	}
 
 	/**
@@ -53,10 +76,11 @@ export class PandoraApi implements Disposable {
 
 		const internalInstance = new InternalApiDirectory();
 		await internalInstance.init();
+		let directoryConnectionAddress: string;
 		try {
 			// Translate well-known names to addresses
 			const directoryConnectionName = options.directoryConnectionAddress ?? 'main';
-			const directoryConnectionAddress = Object.hasOwn(WELL_KNOWN_SERVER_ADDRESSES, directoryConnectionName) ?
+			directoryConnectionAddress = Object.hasOwn(WELL_KNOWN_SERVER_ADDRESSES, directoryConnectionName) ?
 				WELL_KNOWN_SERVER_ADDRESSES[directoryConnectionName as keyof typeof WELL_KNOWN_SERVER_ADDRESSES] :
 				directoryConnectionName;
 
@@ -70,7 +94,7 @@ export class PandoraApi implements Disposable {
 			return Result.Err('connectionFailed');
 		}
 
-		return Result.Ok(new PandoraApi(internalInstance));
+		return Result.Ok(new PandoraApi(internalInstance, directoryConnectionAddress));
 	}
 }
 

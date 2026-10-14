@@ -1,0 +1,225 @@
+@use '../../../styles/common';
+
+.SettingsScreen {
+	display: flex;
+	overflow: hidden;
+
+	.page-list {
+		overflow: auto;
+
+		&.left-list {
+			border-right: 2px solid common.$theme-separator;
+
+			@include common.forcedColors {
+				border-right-color: common.$forcedColors-separator;
+			}
+		}
+
+
+		button {
+			width: 12em;
+			height: 2.75em;
+		}
+	}
+
+
+	.tab-content {
+		max-width: 100vw;
+	}
+
+	.settings-tab-wrapper {
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+
+		border-top: 2px solid common.$theme-separator;
+
+		@include common.forcedColors {
+			border-top-color: common.$forcedColors-separator;
+		}
+	}
+
+	.settings-tab {
+		min-width: fit-content;
+		min-height: fit-content;
+		display: flex;
+		flex-flow: column;
+		align-items: center;
+
+		flex: 1;
+
+		.settings-tab-contents {
+			display: flex;
+			flex-flow: column;
+			justify-content: center;
+			align-items: stretch;
+
+			min-height: fit-content;
+			flex-grow: 1;
+
+			gap: 1em;
+			padding: 1em;
+
+			fieldset {
+				display: flex;
+				flex-direction: column;
+				gap: common.spacing('medium');
+				min-width: 30em;
+				background: common.$theme-settings-fieldset-background;
+				color: common.$theme-settings-fieldset-text;
+				border: 1px solid common.$theme-settings-fieldset-border;
+				border-radius: 0.5em;
+				padding-bottom: 0.8em;
+
+				@include common.forcedColors {
+					background: Canvas;
+					color: CanvasText;
+					border-color: common.$forcedColors-separator;
+				}
+
+				>legend {
+					font-size: 1.2em;
+					font-weight: bold;
+					margin-bottom: 0.5em;
+					background: common.$theme-settings-fieldset-legend-background;
+					color: common.$theme-settings-fieldset-legend-text;
+					border: 1px solid common.$theme-settings-fieldset-border;
+					border-radius: 0.5em;
+					padding: 0.2em;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+						border-color: common.$forcedColors-separator;
+					}
+				}
+			}
+
+			th, td {
+				text-align: center;
+			}
+
+			.input-row, .input-section {
+				display: flex;
+				gap: common.spacing('small');
+				justify-content: space-between;
+
+				&.input-row {
+					flex-direction: row;
+					align-items: center;
+
+
+					img {
+						vertical-align: middle;
+						margin-top: -0.1em;
+					}
+				}
+
+				&.input-section {
+					flex-direction: column;
+				}
+			}
+
+			.permission-list {
+				> div {
+					background: common.$theme-table-body-background;
+					color: common.$theme-table-body-text;
+
+					@include common.forcedColors {
+						background: Canvas;
+						color: CanvasText;
+					}
+
+					&:nth-child(2n) {
+						background: common.$theme-table-body-altbackground;
+
+						@include common.forcedColors {
+							background: Canvas;
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	tr.current-connection {
+		background: common.$theme-settings-table-row-highlight-background;
+
+		@include common.forcedColors {
+			background: SelectedItem;
+			color: SelectedItemText;
+		}
+	}
+
+	.accentColorPresets {
+		.colorPreset {
+			width: 2em;
+			height: 2em;
+			outline-width: 0.25em;
+			border-radius: 50%;
+
+			button {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				border-width: 2px;
+				// Intentionally not themed (black looks the best next to the other options)
+				background: #000;
+				color: #eee;
+				forced-color-adjust: none;
+			}
+		}
+	}
+
+	.notificationTypeSettingsGrid {
+		width: 100%;
+		display: grid;
+		grid-template-columns: 1fr repeat(4, 2em);
+		row-gap: common.spacing('medium');
+		column-gap: common.spacing('small');
+
+		.notificationTypeName {
+			justify-content: start;
+		}
+
+		.notificationTypeReset {
+			margin: 10%;
+		}
+
+		.groupName, .groupSeparator, .notificationTypeSettings {
+			grid-column: 1 / -1;
+		}
+
+		.groupSeparator {
+			width: 100%;
+		}
+
+		.notificationTypeSettings {
+			border-left: 2px solid common.$theme-normal-text;
+			margin-left: 1em;
+			margin-bottom: 1em;
+
+			@include common.forcedColors {
+				border-left-color: common.$forcedColors-separator;
+			}
+
+			.selectsArea {
+				display: grid;
+				grid-template-columns: max-content 1fr;
+				gap: common.spacing('medium');
+				align-items: center;
+			}
+		}
+
+		.notificationToggleIcon {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+
+			&.disabled {
+				opacity: 0.25;
+			}
+		}
+	}
+}

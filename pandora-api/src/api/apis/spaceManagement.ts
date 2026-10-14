@@ -7,6 +7,7 @@ export type CreateSpaceError =
 	| { type: 'notAllowed'; }
 	| { type: 'spaceOwnershipLimitReached'; }
 	| { type: 'accountListNotAllowed'; }
+	| { type: 'unknownBot'; }
 	| { type: 'failed'; };
 
 export type AbandonSpaceError =
@@ -35,6 +36,7 @@ export class PandoraApiSpaceManagement {
 	 * - `notAllowed` - Missing token scope or the account is missing role necessary for specific configuration option (e.g. development options are restricted).
 	 * - `spaceOwnershipLimitReached` - Account has a limit of how many spaces can be owned.
 	 * - `accountListNotAllowed` - Filling admin and allow lists in advance is not allowed for API - add accounts after target character joins the space.
+	 * - `unknownBot` - The bot specified in the config was either not found, or this account is not allowed to select it.
 	 * - `failed` - Internal failure on Pandora's server - retry later.
 	 *
 	 * @param config - Configuration for the space. Unstable argument - might change over time.

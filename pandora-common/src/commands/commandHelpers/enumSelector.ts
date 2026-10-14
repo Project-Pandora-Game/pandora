@@ -4,7 +4,7 @@ import type { CommandStepProcessor } from '../executor.ts';
  * Create argument selector that expects one of given options.
  * @param options - List of allowed options. Each option can either be the value or pair `[value, description]`
  */
-export function CommandSelectorEnum<const TOption extends string>(options: readonly (TOption | readonly [value: TOption, description: string])[], autocompleteShowValues: boolean = false): CommandStepProcessor<TOption> {
+export function CommandSelectorEnum<const TOption extends string>(options: readonly (TOption | readonly [value: TOption, description: string])[], autocompleteShowValues: boolean = false): CommandStepProcessor<TOption, object> {
 	return {
 		preparse: 'quotedArgTrimmed',
 		parse(selector) {
@@ -53,5 +53,19 @@ export function CommandSelectorEnum<const TOption extends string>(options: reado
 		},
 		autocompleteShowValue: autocompleteShowValues,
 		autocompleteCustomName: autocompleteShowValues ? options.map(([k]) => k).join(' | ') : undefined,
+		getBotProcessor() {
+			return {
+				type: 'enum',
+				options: options.map((it) => {
+					if (typeof it === 'string')
+						return it;
+
+					return {
+						value: it[0],
+						description: it[1],
+					};
+				}),
+			};
+		},
 	};
 }

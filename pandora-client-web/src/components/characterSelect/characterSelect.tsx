@@ -82,7 +82,7 @@ type CharacterListItemProps = Partial<CharacterSelfInfo> & {
 	onClick: () => void;
 };
 
-function CharacterListItem({ id, name, state, onClick }: CharacterListItemProps): ReactElement {
+function CharacterListItem({ id, name, state, inCreation, onClick }: CharacterListItemProps): ReactElement {
 	return (
 		<button className='card' onClick={ onClick }>
 			<div className='border'>
@@ -90,7 +90,7 @@ function CharacterListItem({ id, name, state, onClick }: CharacterListItemProps)
 				<div className='title'>{ name }</div>
 				{
 					id != null ? (
-						<Preview name={ name } id={ id } />
+						<Preview name={ name } id={ id } inCreation={ inCreation } />
 					) : null
 				}
 				<div className='id'>{ id && <p>{ 'ID: ' + id }</p> }</div>
@@ -114,14 +114,16 @@ function State({ state }: { state?: string; }): ReactElement | null {
 interface PreviewProps {
 	name: string;
 	id: CharacterId;
+	inCreation?: true;
 }
 
-function Preview({ name, id }: PreviewProps): ReactElement | null {
+function Preview({ name, id, inCreation }: PreviewProps): ReactElement | null {
 	const [preview, setPreview] = useState<string | null>(null);
 	const auth = useAuthTokenHeader();
 
 	useEffect(() => {
-		if (!auth)
+		// Do not try getting preview if we have no auth, or if the character is in creation (has no preview yet)
+		if (!auth || inCreation)
 			return;
 
 		let valid = true;
@@ -157,7 +159,7 @@ function Preview({ name, id }: PreviewProps): ReactElement | null {
 		return () => {
 			valid = false;
 		};
-	}, [id, auth]);
+	}, [id, auth, inCreation]);
 
 	return (
 		<div className={ classNames('frame', preview == null ? 'placeholder' : null) }>

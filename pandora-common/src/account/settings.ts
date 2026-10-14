@@ -32,9 +32,11 @@ export type CharacterHideSetting = z.infer<typeof CharacterHideSettingSchema>;
  */
 export type SettingsAdvancedCategory =
 	| 'access_tokens'
+	| 'bot_development'
 	| 'development';
 export const SettingsAdvancedCategorySchema: z.ZodEnum<{ [t in SettingsAdvancedCategory]: t }> = z.enum([
 	'access_tokens',
+	'bot_development',
 	'development',
 ]);
 

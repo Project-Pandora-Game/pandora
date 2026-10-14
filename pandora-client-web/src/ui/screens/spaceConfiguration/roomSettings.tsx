@@ -7,9 +7,9 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { ToggleSettingInput, type SettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
+import { ToggleSettingInput, type SettingDriver } from '../../components/settings/settingsInputs.tsx';
 
 export function RoomSettingsDialog({ room, spaceState, close }: {
 	room: AssetFrameworkRoomState;

@@ -6,6 +6,8 @@ import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { ACTOR_PANDORA } from '../account/actorPandora.ts';
 import { CharacterInfo } from '../account/character.ts';
+import type { Bot } from '../bots/bot.ts';
+import { botManager } from '../bots/botManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { ConnectionManagerClient } from '../networking/manager_client.ts';
 import { Space } from './space.ts';
@@ -174,7 +176,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 	}
 
 	@AsyncSynchronized()
-	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'spaceOwnershipLimitReached'> {
+	public async createSpace(config: SpaceDirectoryConfig, creator: Account): Promise<Space | 'failed' | 'notAllowed' | 'accountListNotAllowed' | 'unknownBot' | 'spaceOwnershipLimitReached'> {
 		// Only developers can create rooms with development mode enabled
 		if (config.features.includes('development') && !creator.roles.isAuthorized('developer')) {
 			logger.verbose(`Account ${creator.id} attempted to create a development space without being a developer`);
@@ -194,6 +196,13 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 					return 'accountListNotAllowed';
 				}
 			}
+		}
+
+		// Check that specified bot can be used by the creator
+		if (config.bot !== null) {
+			const bot = await botManager.loadBotById(config.bot.bot);
+			if (bot == null || !bot.canBeUsedBy(creator))
+				return 'unknownBot';
 		}
 
 		// Check, that owner is within limits
@@ -251,6 +260,16 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 			delete result.data.config.development;
 		}
 
+		// Load bot
+		let bot: Bot | null = null;
+		if (result.data.config.bot != null) {
+			bot = await botManager.loadBotById(result.data.config.bot.bot);
+			if (bot == null) {
+				logger.warning(`Space [${data.id} - ${data.config.name}] had bot assigned, but the bot was not found. Removing bot assignment.`);
+				result.data.config.bot = null;
+			}
+		}
+
 		{
 			const validated = pick(result.data, ...SPACE_DIRECTORY_PROPERTIES);
 			const original = pick(data, ...SPACE_DIRECTORY_PROPERTIES);
@@ -264,7 +283,7 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		const { id } = result.data;
 
 		// Load the space itself
-		const space = new Space(result.data);
+		const space = new Space(result.data, bot);
 
 		// Load characters relevant to the space
 		const characterList = await GetDatabase().getCharactersInSpace(id);
@@ -319,6 +338,8 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 		}
 		Assert(space.trackingCharacters.size === 0);
 
+		// Unload the space itself
+		space.onUnload();
 		Assert(this.loadedSpaces.get(space.id) === space);
 		this.loadedSpaces.delete(space.id);
 		loadedSpacesMetric.set(this.loadedSpaces.size);

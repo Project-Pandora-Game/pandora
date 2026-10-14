@@ -33,6 +33,11 @@ You can, however, exclude characters or specific words from its effect or specif
 			type: 'characterList',
 			default: [],
 		},
+		includeBots: {
+			name: 'Also affect messages sent by bots',
+			type: 'toggle',
+			default: false,
+		},
 		wordAllowlist: {
 			name: 'Words that can always be understood',
 			type: 'stringList',
@@ -65,7 +70,7 @@ You can, however, exclude characters or specific words from its effect or specif
 	},
 
 	processReceivedChatMessageBeforeFilters(config, content, metadata) {
-		if (config.characterWhitelist.includes(metadata.from))
+		if (metadata.from === 'bot' ? (!config.includeBots) : config.characterWhitelist.includes(metadata.from))
 			return content;
 
 		const customImpairment = new HearingImpairment(metadata.from, {

@@ -1,11 +1,12 @@
 import type { Immutable } from 'immer';
 import * as z from 'zod';
-import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets/index.ts';
 import { RoomNameSchema } from '../../../assets/appearanceTypes.ts';
 import { EffectNameSchema } from '../../../assets/effects.ts';
+import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets/index.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits.ts';
-import { SpaceIdSchema, SpacePublicSettingSchema, type CurrentSpaceInfo } from '../../../space/index.ts';
+import { SpaceIdSchema, SpacePublicSettingSchema } from '../../../space/space.ts';
+import type { CurrentSpaceInfo } from '../../../space/spaceData.ts';
 import { AssertNever, type Satisfies } from '../../../utility/index.ts';
 import type { GameLogicCharacter } from '../../character/character.ts';
 

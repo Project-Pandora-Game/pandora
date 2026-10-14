@@ -1,7 +1,9 @@
 import { Assert, AssertNever, EMPTY_ARRAY, GetLogger, IncomingConnection, IncomingSocket, IServerSocket, type PandoraAccessTokenInfo, type PandoraAccessTokenScope } from 'pandora-common';
+import type { BotId } from 'pandora-common/bots';
 import { ApiDirectorySchema, DirectoryApiSchema, type IApiDirectory, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
 import type { Account } from '../../../account/account.ts';
+import type { Bot } from '../../../bots/bot.ts';
 import { ConnectionManagerApi } from './manager_api.ts';
 
 /** Class housing connection from public API */
@@ -15,6 +17,11 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 	private _account: Account | null;
 	private _accountEventUnsubscribe: (() => void) | null = null;
 	private _tokenEventUnsubscribe: (() => void) | null = null;
+
+	private readonly _registeredBots: Map<BotId, Bot> = new Map<BotId, Bot>();
+	public get registeredBots(): ReadonlyMap<BotId, Bot> {
+		return this._registeredBots;
+	}
 
 	constructor(server: IServerSocket<IDirectoryApi>, socket: IncomingSocket, account: Account, tokenHash: string, tokenInfo: PandoraAccessTokenInfo) {
 		super(server, socket, [DirectoryApiSchema, ApiDirectorySchema], GetLogger('Connection-Api', `[Connection-Api ${socket.id}]`));
@@ -37,12 +44,24 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		this._tokenEventUnsubscribe = account.secure.accessTokens.onAny((event) => {
 			if (event.tokenInvalidated === this.tokenHash) {
 				if (this._account != null) {
+					// Immediately disconnect bot status updates
+					for (const bot of Array.from(this._registeredBots.values())) {
+						this.removeBotRegistration(bot);
+					}
+
 					// Slight delay to let ongoing responses finish
 					// This is not a security hole, as any existing request will already perform the action
 					// and any new one will fail on validation
 					setTimeout(() => {
 						this.disconnect('token invalidated');
 					}, 100);
+				}
+			} else if (event.tokenUpdated === this.tokenHash) {
+				// From persistent data only bots are affected by scope changes - re-verify this connection can still use bots if we have some
+				if (this._registeredBots.size > 0 && !this.verifyTokenUse(['bots:run'])) {
+					for (const bot of Array.from(this._registeredBots.values())) {
+						this.removeBotRegistration(bot);
+					}
 				}
 			}
 		});
@@ -117,6 +136,40 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		return this.verifyTokenUse(requiredScopes) ? this._account : null;
 	}
 
+	/**
+	 * Add a bot registration to this connection.
+	 */
+	public addBotRegistration(bot: Bot): void {
+		if (this._registeredBots.has(bot.id))
+			return;
+
+		Assert(this.verifyTokenUse(['bots:run']));
+		Assert(bot.isValid);
+		this.logger.debug(`Register bot "${bot.id}"`);
+
+		bot.touch();
+		this._registeredBots.set(bot.id, bot);
+		bot.associatedApiConnections.join(this);
+
+		// Send initial state data
+		bot.sendBotStatus(this);
+	}
+
+	/**
+	 * Remove a bot registration from this connection.
+	 */
+	public removeBotRegistration(bot: Bot): void {
+		if (!this._registeredBots.has(bot.id))
+			return;
+		this.logger.debug(`Unregister bot "${bot.id}"`);
+
+		Assert(this.rooms.has(bot.associatedApiConnections));
+
+		bot.touch();
+		bot.associatedApiConnections.leave(this);
+		this._registeredBots.delete(bot.id);
+	}
+
 	/** Deauthenticate this connection. This does not close the connection - it should be done right before close or in response to it */
 	private _deAuth(reason: string): void {
 		if (this._account == null)
@@ -132,5 +185,11 @@ export class ApiConnection extends IncomingConnection<IDirectoryApi, IApiDirecto
 		this._tokenEventUnsubscribe?.();
 		this._tokenEventUnsubscribe = null;
 		this._account = null;
+
+		// Clear bot assignments
+		for (const bot of Array.from(this._registeredBots.values())) {
+			this.removeBotRegistration(bot);
+		}
+		Assert(this._registeredBots.size === 0);
 	}
 }

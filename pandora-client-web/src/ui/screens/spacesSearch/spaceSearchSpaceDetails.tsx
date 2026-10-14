@@ -25,6 +25,7 @@ export function SpaceDetailsDialog({ baseInfo, hide }: {
 			isAdmin: false,
 			isAllowed: false,
 			characters: [],
+			bot: null,
 			...baseInfo,
 		};
 	}, [extendedInfo, baseInfo, accountId]);

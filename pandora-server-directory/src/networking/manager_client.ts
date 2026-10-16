@@ -1197,7 +1197,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		if (!connection.account)
 			throw new BadMessageError();
 
-		const result = await connection.account.secure.setCryptoKey(cryptoKey, allowReset);
+		const result = await connection.account.secure.setCryptoKey(cryptoKey, allowReset, connection.hasSudo());
 
 		return { result };
 	}

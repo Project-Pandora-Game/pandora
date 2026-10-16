@@ -1,6 +1,6 @@
 import * as argon2 from 'argon2';
 import { createHash, randomInt } from 'crypto';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
 import { Assert, AssertNever, AsyncSynchronized, GenerateHighEntropyToken, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, NormalizeHighEntropyToken, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
@@ -280,14 +280,19 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms'): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+	@AsyncSynchronized()
+	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms', hasSudo: boolean = false): Promise<'ok' | 'invalid' | 'keyAlreadySet' | 'sudoRequired'> {
 		if (this.#secure.cryptoKey != null) {
+			if (isEqual(this.#secure.cryptoKey, key))
+				return 'ok';
 			if (
 				allowReset !== 'replace-deleting-dms' &&
 				(allowReset !== 'same-key' || this.#secure.cryptoKey.publicKey !== key.publicKey)
 			) {
 				return 'keyAlreadySet';
 			}
+			if (!hasSudo)
+				return 'sudoRequired';
 		}
 
 		if (!await this.#validateCryptoKey(key))

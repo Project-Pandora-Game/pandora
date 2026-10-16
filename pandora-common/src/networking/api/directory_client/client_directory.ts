@@ -285,7 +285,7 @@ export const ClientDirectorySchema = {
 			 */
 			allowReset: z.enum(['same-key', 'replace-deleting-dms']).optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
+		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet' | 'sudoRequired'; }>(),
 	},
 	queryConnections: {
 		request: z.object({}),

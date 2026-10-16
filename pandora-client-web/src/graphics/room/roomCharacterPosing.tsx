@@ -54,7 +54,7 @@ function MergePartialPose(base: PartialAppearancePose, update: PartialAppearance
 			result[key] = value;
 		}
 	}
-	return result as PartialAppearancePose;
+	return result;
 }
 
 function BlockedHint({ position, text }: {

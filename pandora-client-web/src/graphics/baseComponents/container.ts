@@ -25,6 +25,8 @@ export const CONTAINER_EVENTS = {
 	pointerenter: true,
 	pointerleave: true,
 	globalpointermove: true,
+	wheel: true,
+	wheelcapture: true,
 } as const satisfies Readonly<Partial<Record<DisplayObjectEventNames<PixiContainer>, true>>>;
 export type ContainerEventMap = Pick<ContainerEvents<ContainerChild>, keyof typeof CONTAINER_EVENTS>;
 

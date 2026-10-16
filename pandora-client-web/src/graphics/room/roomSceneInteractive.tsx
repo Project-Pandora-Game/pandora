@@ -50,11 +50,11 @@ import { GraphicsBackground } from '../graphicsBackground.tsx';
 import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { UseTextureGetterOverride } from '../useTexture.ts';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
-import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 import { RoomItemInteractive, RoomItemMovementTool } from './roomItem.tsx';
 import { RoomLinkNodeGraphics } from './roomLinkNodeGraphics.tsx';
 import { useRoomViewProjection } from './roomProjection.tsx';
+import { RoomCharacterMovePoseTool } from './roomCharacterPosing.tsx';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -278,24 +278,7 @@ export function RoomGraphicsInteractive({
 								return null;
 
 							return (
-								<RoomCharacterMovementTool
-									key={ character.id }
-									characterState={ characterState }
-									character={ character }
-									spaceInfo={ info }
-									debugConfig={ debugConfig }
-									projectionResolver={ projectionResolver }
-									visionFilters={ character.isPlayer() ? playerSelfVisionFilters : playerVisionFilters }
-								/>
-							);
-						} else if (roomSceneMode.mode === 'poseCharacter') {
-							const character = characters.find((c) => c.id === roomSceneMode.characterId);
-							const characterState = globalState.characters.get(roomSceneMode.characterId);
-							if (character == null || characterState == null || characterState.currentRoom !== room.id)
-								return null;
-
-							return (
-								<RoomCharacterPosingTool
+								<RoomCharacterMovePoseTool
 									key={ character.id }
 									characterState={ characterState }
 									character={ character }

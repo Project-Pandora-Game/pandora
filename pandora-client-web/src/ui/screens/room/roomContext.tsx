@@ -10,9 +10,6 @@ export type IRoomSceneMode = {
 	mode: 'moveCharacter';
 	characterId: CharacterId;
 } | {
-	mode: 'poseCharacter';
-	characterId: CharacterId;
-} | {
 	mode: 'moveDevice';
 	deviceItemId: ItemId;
 } | {

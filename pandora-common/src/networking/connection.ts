@@ -199,7 +199,7 @@ export abstract class ConnectionBase<
 
 		// If we have schema, validate received message
 		if (this.schema) {
-			const messageSchema = this.schema.incoming[messageType];
+			const messageSchema = Object.hasOwn(this.schema.incoming, messageType) ? this.schema.incoming[messageType] : null;
 			if (messageSchema == null) {
 				this.logger.warning(`Invalid message type: '${messageType}'`);
 				callback?.('Unknown request');

@@ -7,7 +7,7 @@ import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../../../ch
 import { AppearanceActionSchema } from '../../../gameLogic/actionLogic/actions/_index.ts';
 import { AppearanceActionData, AppearanceActionProblem } from '../../../gameLogic/actionLogic/appearanceActionProblems.ts';
 import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../../../gameLogic/index.ts';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../../../inputLimits.ts';
+import { LIMIT_CHARACTER_PROFILE_LENGTH, LIMIT_PERMISSION_PROMPT_ENTRIES } from '../../../inputLimits.ts';
 import { CardGameActionSchema } from '../../../utility/cards.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../../../validation.ts';
@@ -81,7 +81,7 @@ export const ClientShardSchema = {
 		request: z.object({
 			target: CharacterIdSchema,
 			/** List of requested permissions. If any of the permissions cannot be prompted, the request fails. */
-			permissions: z.tuple([PermissionGroupSchema, z.string()]).array(),
+			permissions: z.tuple([PermissionGroupSchema, z.string()]).array().min(1).max(LIMIT_PERMISSION_PROMPT_ENTRIES),
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({

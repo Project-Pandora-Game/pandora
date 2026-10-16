@@ -46,6 +46,9 @@ import { ClientHandlersBotCommands } from './client/handlers/clientBotCommands.t
 import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
+const REQUEST_BURST_LIMIT = 64;
+const REQUEST_REFILL_PER_SECOND = 4;
+const PERMISSION_PROMPT_COST = 4;
 
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_shard_client_connections',
@@ -66,6 +69,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
+	private readonly requestBudgets = new WeakMap<Character, { tokens: number; updatedAt: number; }>();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -153,6 +157,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		// Ignore empty messages
 		if (messages.length === 0 && editId === undefined)
 			return { result: 'ok' };
+		if (!this.consumeRequestBudget(client.character, Math.max(1, messages.length)))
+			return { result: 'blocked', reason: 'Too many chat messages sent recently' };
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
@@ -254,6 +260,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		const character = client.character;
 		if (!character)
 			throw new BadMessageError();
+		if (!this.consumeRequestBudget(character, PERMISSION_PROMPT_COST))
+			return { result: 'failure' };
 
 		const space = character.getOrLoadSpace();
 		const player = character.gameLogicCharacter;
@@ -292,6 +300,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			actions: [],
 		});
 		return { result: 'promptSent' };
+	}
+
+	/** Limit bursts per character, including across client reconnects, without penalizing others in the space. */
+	private consumeRequestBudget(character: Character, cost: number): boolean {
+		const now = Date.now();
+		const previous = this.requestBudgets.get(character);
+		const tokens = previous == null ? REQUEST_BURST_LIMIT : Math.min(REQUEST_BURST_LIMIT, previous.tokens + Math.max(0, now - previous.updatedAt) * REQUEST_REFILL_PER_SECOND / 1000);
+		this.requestBudgets.set(character, { tokens: tokens < cost ? tokens : tokens - cost, updatedAt: now });
+		return tokens >= cost;
 	}
 
 	private handleChangeSettings(request: IClientShardArgument['changeSettings'], client: ClientConnection): IClientShardNormalResult['changeSettings'] {

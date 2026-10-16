@@ -36,6 +36,27 @@ const MOVE_HANDLE_RADIUS = 50;
 /** Spacing between neighboring buttons */
 const LAYOUT_GAP = 15;
 
+/**
+ * Merges two partial poses.
+ * Nested objects (`bones`, `leftArm`, ...) are merged one level deep, so changes to different fields survive.
+ * For the same field, the newer value wins.
+ */
+function MergePartialPose(base: PartialAppearancePose, update: PartialAppearancePose): PartialAppearancePose {
+	const result: Record<string, unknown> = { ...base };
+	for (const [key, value] of Object.entries(update)) {
+		if (value === undefined)
+			continue;
+
+		const existing = result[key];
+		if (typeof value === 'object' && value !== null && typeof existing === 'object' && existing !== null) {
+			result[key] = { ...existing, ...value };
+		} else {
+			result[key] = value;
+		}
+	}
+	return result as PartialAppearancePose;
+}
+
 function BlockedHint({ position, text }: {
 	position: Readonly<PointLike>;
 	text: string;
@@ -227,7 +248,26 @@ export function RoomCharacterMovePoseTool({
 			...copy,
 		});
 	}, [execute, characterId]);
-	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
+
+	// Pose updates from different sources (dragging bones, wheel stepping, buttons) are merged while waiting for the throttle,
+	// so a later update never replaces a still-pending update of a different field.
+	const pendingPose = useRef<PartialAppearancePose | null>(null);
+	const flushPose = useEvent(() => {
+		const pose = pendingPose.current;
+		pendingPose.current = null;
+		if (pose != null) {
+			setPoseDirect(pose);
+		}
+	});
+	const flushPoseThrottled = useMemo(() => throttle(flushPose, LIVE_UPDATE_THROTTLE), [flushPose]);
+	const setPose = useCallback((newPose: PartialAppearancePose) => {
+		// Never dispatch pose actions while posing is blocked
+		if (posingDisabled)
+			return;
+
+		pendingPose.current = pendingPose.current != null ? MergePartialPose(pendingPose.current, newPose) : newPose;
+		flushPoseThrottled();
+	}, [posingDisabled, flushPoseThrottled]);
 
 	const stepLeftArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
@@ -270,6 +310,7 @@ export function RoomCharacterMovePoseTool({
 					characterState={ characterState }
 					projectionResolver={ projectionResolver }
 					setPose={ setPose }
+					disabled={ posingDisabled }
 				/>
 			</Container>
 
@@ -316,6 +357,7 @@ export function RoomCharacterMovePoseTool({
 								characterState={ characterState }
 								projectionResolver={ projectionResolver }
 								setPose={ setPose }
+								disabled={ posingDisabled }
 							/>
 						))
 					) : null }
@@ -332,6 +374,7 @@ export function RoomCharacterMovePoseTool({
 					<SwitchHandPositionButton
 						position={ useMemo((): PointLike => ({ x: pivot.x + sideX, y: handButtonY }), [handButtonY, pivot, sideX]) }
 						radius={ HAND_BUTTON_RADIUS }
+						disabled={ posingDisabled }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
 						onClick={ () => stepLeftArmPosition(1) }
@@ -340,6 +383,7 @@ export function RoomCharacterMovePoseTool({
 					<SwitchHandPositionButton
 						position={ useMemo((): PointLike => ({ x: pivot.x - sideX, y: handButtonY }), [handButtonY, pivot, sideX]) }
 						radius={ HAND_BUTTON_RADIUS }
+						disabled={ posingDisabled }
 						poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
 						poseCount={ ArmPoseSchema.options.length }
 						onClick={ () => stepRightArmPosition(1) }
@@ -473,6 +517,8 @@ type PosingToolIKHandleProps = {
 	characterState: AssetFrameworkCharacterState;
 	projectionResolver: RoomProjectionResolver;
 	setPose: (newPose: PartialAppearancePose) => void;
+	/** Posing is blocked: the handle must not react to the mouse wheel (and must not capture it) */
+	disabled?: boolean;
 };
 
 /** A single inverse kinematics posing handle. Handles are defined in asset repository. */
@@ -481,6 +527,7 @@ function PosingToolIKHandle({
 	characterState,
 	projectionResolver,
 	setPose,
+	disabled = false,
 }: PosingToolIKHandleProps): ReactElement {
 	const assetManager = useAssetManager();
 
@@ -507,8 +554,8 @@ function PosingToolIKHandle({
 		useCallback((armRotation) => setPose({ [armKey]: { rotation: armRotation } }), [armKey, setPose]),
 	);
 
-	// Works while hovering the handle, and also while holding/dragging it
-	useWheelStepper(styleHasOpen && (hover || held), (direction) => {
+	// Works while hovering the handle, and also while holding/dragging it (but never while posing is blocked)
+	useWheelStepper(!disabled && styleHasOpen && (hover || held), (direction) => {
 		wheelUsedDuringPress.current = true;
 		stepRotation(direction);
 	});
@@ -586,8 +633,8 @@ function PosingToolIKHandle({
 		dragging.current = null;
 		if (
 			pointerDown.current !== null &&
-		!wheelUsedDuringPress.current &&
-		Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+			!wheelUsedDuringPress.current &&
+			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
 		) {
 			// Handle short click
 			if (styleHasOpen) {
@@ -896,6 +943,7 @@ function PosingToolBone({
 function SwitchHandPositionButton({
 	position,
 	radius,
+	disabled = false,
 	onClick,
 	onWheelStep,
 	poseIndex,
@@ -903,6 +951,8 @@ function SwitchHandPositionButton({
 }: {
 	position: Readonly<PointLike>;
 	radius: number;
+	/** Posing is blocked: the button must not react to the mouse wheel (and must not capture it) */
+	disabled?: boolean;
 	onClick: () => void;
 	onWheelStep: (direction: 1 | -1) => void;
 	poseIndex: number;
@@ -915,7 +965,7 @@ function SwitchHandPositionButton({
 	const [held, setHeld] = useState(false);
 	const [hover, setHover] = useState(false);
 
-	useWheelStepper(held || hover, onWheelStep);
+	useWheelStepper(!disabled && (held || hover), onWheelStep);
 	/** Sized 32x32 */
 	const POSING_ICON_PATH_1 = 'M25 14a1 1 0 0 1-1-1v-2a5.006 5.006 0 0 0-5-5h-2a1 1 0 0 1 0-2h2a7.008 7.008 0 0 1 7 7v2a1 1 0 0 1-1 1z';
 	const POSING_ICON_PATH_2 = 'M17 8a1 1 0 0 1-.707-.293l-2-2a1 1 0 0 1 0-1.414l2-2a1 1 0 1 1 1.414 1.414L16.414 5l1.293 1.293A1 1 0 0 1 17 8zm-4 20h-2a5.006 5.006 0 0 1-5-5v-4a1 1 0 0 1 2 0v4a3 3 0 0 0 3 3h2a1 1 0 0 1 0 2z';

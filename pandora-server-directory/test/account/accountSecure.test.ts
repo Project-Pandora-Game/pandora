@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Account, CreateAccountData } from '../../src/account/account.ts';
-import { IsHighEntropyToken, LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
+import { CreateManuallyResolvedPromise, IsHighEntropyToken, LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
 import AccountSecure, { AccountToken, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { AccountSecureAccessTokenStore } from '../../src/account/secure/accessTokens.ts';
 import { AccountTokenReason, DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
 import { MockDatabase } from '../../src/database/mockDb.ts';
 import GetEmailSender from '../../src/services/email/index.ts';
@@ -375,6 +376,47 @@ describe('AccountSecure', () => {
 			expect(regenerated[1].scopes).toEqual(['bots:run']);
 			expect(active.accessTokens.verifyToken(regenerated[1].tokenHash, ['bots:run'])).toBe('ok');
 			expect(active.accessTokens.verifyToken(first[1].tokenHash, [])).toBe('invalidToken');
+		});
+
+		it('invalidates a token created concurrently with password recovery', async () => {
+			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			await active.resetPassword(TEST_EMAIL);
+			const token = mockReset.mock.calls.at(-1)?.[2];
+			if (token == null)
+				throw new Error('No password reset token sent');
+
+			const hashStarted = CreateManuallyResolvedPromise<void>();
+			const releaseHash = CreateManuallyResolvedPromise<void>();
+			const invalidateStarted = CreateManuallyResolvedPromise<void>();
+			const originalHash = AccountSecureAccessTokenStore.hashToken.bind(AccountSecureAccessTokenStore);
+			const hashSpy = jest.spyOn(AccountSecureAccessTokenStore, 'hashToken').mockImplementation(async (value) => {
+				hashStarted.resolve();
+				await releaseHash.promise;
+				return originalHash(value);
+			});
+			const originalInvalidate = active.accessTokens.invalidateAllTokensForRecovery.bind(active.accessTokens);
+			const invalidateSpy = jest.spyOn(active.accessTokens, 'invalidateAllTokensForRecovery').mockImplementation(() => {
+				invalidateStarted.resolve();
+				return originalInvalidate();
+			});
+			try {
+				const creating = active.accessTokens.createToken('racing', [], null);
+				await hashStarted.promise;
+				const resetting = active.finishPasswordReset(token, 'newPassword');
+				await invalidateStarted.promise;
+				releaseHash.resolve();
+				const created = await creating;
+				await resetting;
+				if (typeof created === 'string')
+					throw new Error('Failed to create racing token');
+				expect(active.accessTokens.listTokens()).toMatchObject([{ id: created[1].id }]);
+				expect(active.accessTokens.listTokens()[0].expires).toBeLessThanOrEqual(Date.now());
+				expect(active.accessTokens.verifyToken(created[1].tokenHash, [])).toBe('invalidToken');
+			} finally {
+				releaseHash.resolve();
+				hashSpy.mockRestore();
+				invalidateSpy.mockRestore();
+			}
 		});
 
 		describe('resetPassword()', () => {

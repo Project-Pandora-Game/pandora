@@ -200,9 +200,10 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 	 * Invalidate every personal access token as part of account recovery. The
 	 * caller must persist the enclosing AccountSecure immediately afterward.
 	 */
-	public invalidateAllTokensForRecovery(): void {
+	@AsyncSynchronized('object')
+	public invalidateAllTokensForRecovery(): Promise<void> {
 		if (this.#tokens.length === 0)
-			return;
+			return Promise.resolve();
 
 		const invalidatedAt = Date.now();
 		for (const token of this.#tokens)
@@ -217,6 +218,7 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
 			changes: ['accessTokens'],
 		});
+		return Promise.resolve();
 	}
 
 	@AsyncSynchronized('object')

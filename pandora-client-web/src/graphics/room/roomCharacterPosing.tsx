@@ -1,6 +1,6 @@
 import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
@@ -35,27 +35,6 @@ const HAND_BUTTON_RADIUS = 25;
 const MOVE_HANDLE_RADIUS = 50;
 /** Spacing between neighboring buttons */
 const LAYOUT_GAP = 15;
-
-/**
- * Merges two partial poses.
- * Nested objects (`bones`, `leftArm`, ...) are merged one level deep, so changes to different fields survive.
- * For the same field, the newer value wins.
- */
-function MergePartialPose(base: PartialAppearancePose, update: PartialAppearancePose): PartialAppearancePose {
-	const result: Record<string, unknown> = { ...base };
-	for (const [key, value] of Object.entries(update)) {
-		if (value === undefined)
-			continue;
-
-		const existing = result[key];
-		if (typeof value === 'object' && value !== null && typeof existing === 'object' && existing !== null) {
-			result[key] = { ...existing, ...value };
-		} else {
-			result[key] = value;
-		}
-	}
-	return result;
-}
 
 function BlockedHint({ position, text }: {
 	position: Readonly<PointLike>;
@@ -265,7 +244,7 @@ export function RoomCharacterMovePoseTool({
 		if (posingDisabled)
 			return;
 
-		pendingPose.current = pendingPose.current != null ? MergePartialPose(pendingPose.current, newPose) : newPose;
+		pendingPose.current = pendingPose.current != null ? MergePartialAppearancePoses(pendingPose.current, newPose) : newPose;
 		flushPoseThrottled();
 	}, [posingDisabled, flushPoseThrottled]);
 

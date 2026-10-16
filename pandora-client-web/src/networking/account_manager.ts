@@ -1,4 +1,4 @@
-import { EMPTY, GetLogger } from 'pandora-common';
+import { EMPTY, GetLogger, NormalizeHighEntropyToken } from 'pandora-common';
 import type { IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
@@ -171,7 +171,7 @@ export function useDirectoryPasswordResetConfirm(): PasswordResetConfirmCallback
 	return useCallback(async (username, token, password) => {
 		const passwordSha512 = await PrehashPassword(password);
 		const result = await directoryConnector.awaitResponse('passwordResetConfirm',
-			{ username, token, passwordSha512 });
+			{ username, token: NormalizeHighEntropyToken(token), passwordSha512 });
 		return result.result;
 	}, [directoryConnector]);
 }

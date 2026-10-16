@@ -225,5 +225,25 @@ export const SIMPLE_TOKEN_LENGTH = 6;
 export const SimpleTokenSchema = z.string().length(SIMPLE_TOKEN_LENGTH).regex(/^[0-9]+$/);
 export const IsSimpleToken = ZodMatcher(SimpleTokenSchema);
 
+/** 16 characters from a human-readable 32-symbol alphabet provide 80 bits of entropy. */
+export const HIGH_ENTROPY_TOKEN_LENGTH = 16;
+export const HIGH_ENTROPY_TOKEN_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+export const HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH = 64;
+
+/** Ignore separators and letter case when checking a manually entered token. */
+export function NormalizeHighEntropyToken(token: string): string {
+	return token.replace(/[\s-]/g, '').replace(/[a-z]/g, (character) => character.toUpperCase());
+}
+
+export function FormatHighEntropyToken(token: string): string {
+	return token.match(/.{1,4}/g)?.join('-') ?? '';
+}
+
+const CanonicalHighEntropyTokenSchema = z.string().length(HIGH_ENTROPY_TOKEN_LENGTH).regex(/^[2-9A-HJ-NP-Z]+$/);
+// Do not transform this network schema: connection validation logs messages that change during parsing.
+export const HighEntropyTokenSchema = z.string().max(HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH)
+	.refine((token) => CanonicalHighEntropyTokenSchema.safeParse(NormalizeHighEntropyToken(token)).success);
+export const IsHighEntropyToken = ZodMatcher(HighEntropyTokenSchema);
+
 export const PasswordSchema = z.string().min(8);
 export const PasswordSha512Schema = z.string().regex(/^[a-zA-Z0-9+/]{86}==$/);

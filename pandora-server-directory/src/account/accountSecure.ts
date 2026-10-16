@@ -3,7 +3,7 @@ import { createHash, randomInt } from 'crypto';
 import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
-import { Assert, AssertNever, AsyncSynchronized, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
+import { Assert, AssertNever, AsyncSynchronized, GenerateHighEntropyToken, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, NormalizeHighEntropyToken, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import type { IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo } from 'pandora-common/networking/api/directory_client';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -148,7 +148,7 @@ export default class AccountSecure {
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
+		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, NormalizeHighEntropyToken(token)))
 			return false;
 
 		// Invalidate all login tokens
@@ -499,7 +499,7 @@ const TOKEN_TYPES = {
 		limit: 1,
 	},
 	[AccountTokenReason.PASSWORD_RESET]: {
-		generate: GenerateSimpleToken,
+		generate: GenerateHighEntropyToken,
 		expiration: PASSWORD_RESET_TOKEN_EXPIRATION,
 		limit: 1,
 	},

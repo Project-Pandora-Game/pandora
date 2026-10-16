@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Account, CreateAccountData } from '../../src/account/account.ts';
-import { LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
+import { IsHighEntropyToken, LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
 import AccountSecure, { AccountToken, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
 import { AccountTokenReason, DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
 import { MockDatabase } from '../../src/database/mockDb.ts';
@@ -352,7 +352,8 @@ describe('AccountSecure', () => {
 				expect(mockReset).toHaveBeenNthCalledWith(1, TEST_EMAIL, TEST_USERNAME, expect.any(String));
 				// Save token for later use
 				resetToken = mockReset.mock.calls[0][2];
-				expect(resetToken).toBeTruthy();
+				expect(IsHighEntropyToken(resetToken)).toBe(true);
+				expect(resetToken).toMatch(/^[2-9A-HJ-NP-Z]{16}$/);
 				// Saves data
 				expect(mockSaving).toHaveBeenCalledTimes(1);
 			});
@@ -387,6 +388,16 @@ describe('AccountSecure', () => {
 				expect(account.isActivated()).toBe(true);
 				// Saves data
 				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+
+			it('accepts a lowercase reset code with spaces and dashes', async () => {
+				const separateAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
+				await separateAccount.resetPassword(TEST_EMAIL);
+				const token = mockReset.mock.calls.at(-1)?.[2];
+				if (token == null)
+					throw new Error('No password reset token sent');
+				const formatted = `${ token.slice(0, 4) } - ${ token.slice(4, 8) } ${ token.slice(8, 12) }-${ token.slice(12) }`.toLowerCase();
+				await expect(separateAccount.finishPasswordReset(formatted, 'newPassword')).resolves.toBe(true);
 			});
 
 			it('Invalidates token after use', async () => {

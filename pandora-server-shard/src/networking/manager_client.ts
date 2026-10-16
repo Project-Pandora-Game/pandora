@@ -233,6 +233,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			if (target.connection == null) {
 				return { result: 'promptFailedCharacterOffline' };
 			}
+			if (!this.consumeRequestBudget(character, PERMISSION_PROMPT_COST))
+				return { result: 'failure', problems: result.problems.slice() };
 			const requiredPermissions: [PermissionSetup, PermissionConfig | null][] = [];
 			for (const permission of result.requiredPermissions) {
 				if (permission instanceof GameLogicPermissionServer) {

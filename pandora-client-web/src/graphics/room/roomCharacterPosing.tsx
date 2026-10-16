@@ -942,10 +942,15 @@ function SwitchHandPositionButton({
 	const accentColor = useInterfaceAccentColorPacked();
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
 	const heldRef = useRef(false);
+	/** Set when the wheel was used during the current press, so releasing doesn't count as a click */
+	const wheelUsedDuringPress = useRef(false);
 	const [held, setHeld] = useState(false);
 	const [hover, setHover] = useState(false);
 
-	useWheelStepper(!disabled && (held || hover), onWheelStep);
+	useWheelStepper(!disabled && (held || hover), (direction) => {
+		wheelUsedDuringPress.current = true;
+		onWheelStep(direction);
+	});
 	/** Sized 32x32 */
 	const POSING_ICON_PATH_1 = 'M25 14a1 1 0 0 1-1-1v-2a5.006 5.006 0 0 0-5-5h-2a1 1 0 0 1 0-2h2a7.008 7.008 0 0 1 7 7v2a1 1 0 0 1-1 1z';
 	const POSING_ICON_PATH_2 = 'M17 8a1 1 0 0 1-.707-.293l-2-2a1 1 0 0 1 0-1.414l2-2a1 1 0 1 1 1.414 1.414L16.414 5l1.293 1.293A1 1 0 0 1 17 8zm-4 20h-2a5.006 5.006 0 0 1-5-5v-4a1 1 0 0 1 2 0v4a3 3 0 0 0 3 3h2a1 1 0 0 1 0 2z';
@@ -956,6 +961,7 @@ function SwitchHandPositionButton({
 			event.stopPropagation();
 			setHeld(true);
 			heldRef.current = true;
+			wheelUsedDuringPress.current = false;
 		}
 	}, []);
 
@@ -963,13 +969,17 @@ function SwitchHandPositionButton({
 		if (heldRef.current) {
 			event.stopPropagation();
 			heldRef.current = false;
-			onClick();
+			if (!wheelUsedDuringPress.current) {
+				onClick();
+			}
 		}
+		wheelUsedDuringPress.current = false;
 		setHeld(false);
 	}, [onClick]);
 
 	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
 		heldRef.current = false;
+		wheelUsedDuringPress.current = false;
 		setHeld(false);
 	}, []);
 

@@ -19,6 +19,7 @@ import { ShardTokenStore } from '../shard/shardTokenStore.ts';
 import { SpaceManager } from '../spaces/spaceManager.ts';
 import { Sleep } from '../utility.ts';
 import type { ClientConnection } from './connection_client.ts';
+import { LoginAttemptTracker } from './loginAttemptTracker.ts';
 
 const {
 	BETA_KEY_ENABLED,
@@ -249,7 +250,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	 */
 	private async handleLogin({ username, passwordSha512, verificationToken, secondFactor }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
 		{
-			const r = await LoginManager.testOptionalCaptcha(secondFactor);
+			const r = await LoginManager.testOptionalCaptcha(username, secondFactor);
 			if (r != null) {
 				logger.debug(`${connection.id} failed captcha check during login: ${r.result}`);
 				return r;
@@ -259,7 +260,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
-			LoginManager.loginFailed();
+			LoginManager.loginFailed(username);
 			AUDIT_LOG.verbose(`${connection.id} failed login: ${account ? 'invalid password' : 'invalid username'}`);
 			return { result: 'unknownCredentials' };
 		}
@@ -334,13 +335,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		};
 	}
 
-	private async handlePasskeyLoginStart({ secondFactor }: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryPromiseResult['passkeyLoginStart'] {
+	private handlePasskeyLoginStart(_data: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryResult['passkeyLoginStart'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
-
-		const secondFactorResponse = await LoginManager.testOptionalCaptcha(secondFactor);
-		if (secondFactorResponse != null)
-			return secondFactorResponse;
 
 		return {
 			result: 'ok',
@@ -356,7 +353,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 
 		const account = await accountManager.loadAccountByPasskeyCredentialId(credentialId);
 		if (!account) {
-			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
 		}
 		const verification = await this.verifyPasskeyAssertionForAccount(account, 'login', {
@@ -366,7 +362,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			signature,
 		});
 		if (!verification.ok) {
-			LoginManager.loginFailed();
 			return { result: 'failed' };
 		}
 
@@ -1637,18 +1632,14 @@ function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn:
 }
 
 const LoginManager = new class LoginManagerService {
-	private invalidAttempts: { readonly timestamp: number; }[] = [];
+	private readonly invalidAttempts = new LoginAttemptTracker(ENV.LOGIN_ATTEMPT_WINDOW, ENV.LOGIN_ATTEMPT_LIMIT);
 
-	public loginFailed(): void {
-		const now = Date.now();
-		this.invalidAttempts.push({ timestamp: now });
-		this.invalidAttempts = this.invalidAttempts
-			.slice(-ENV.LOGIN_ATTEMPT_LIMIT)
-			.filter((attempt) => (attempt.timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > now);
+	public loginFailed(username: string): void {
+		this.invalidAttempts.recordFailure(username);
 	}
 
-	public async testOptionalCaptcha(data: SecondFactorData | undefined): Promise<null | SecondFactorResponse> {
-		if (!this.isCaptchaRequired()) {
+	public async testOptionalCaptcha(username: string, data: SecondFactorData | undefined): Promise<null | SecondFactorResponse> {
+		if (!this.isCaptchaRequired(username)) {
 			return null;
 		}
 		const types: SecondFactorType[] = ['captcha'];
@@ -1664,10 +1655,10 @@ const LoginManager = new class LoginManagerService {
 		return null;
 	}
 
-	private isCaptchaRequired(): boolean {
+	private isCaptchaRequired(username: string): boolean {
 		if (!HCAPTCHA_SECRET_KEY || !HCAPTCHA_SITE_KEY)
 			return false;
 
-		return this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT && (this.invalidAttempts[0].timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > Date.now();
+		return this.invalidAttempts.requiresCaptcha(username);
 	}
 };

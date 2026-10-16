@@ -160,15 +160,13 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'failed'; }>(),
 	},
 	passkeyLoginStart: {
-		request: z.object({
-			secondFactor: SecondFactorDataSchema.optional(),
-		}),
+		request: z.object({}),
 		response: ZodCast<{
 			result: 'ok';
 			rpId: string;
 			challenge: string;
 			prfSalt: string;
-		} | SecondFactorResponse>(),
+		}>(),
 	},
 	passkeyLoginFinish: {
 		request: z.object({

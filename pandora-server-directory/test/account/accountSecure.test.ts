@@ -338,6 +338,45 @@ describe('AccountSecure', () => {
 			account = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
+		it('Invalidates all personal access tokens, preserves their settings, and notifies active API connections', async () => {
+			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			const first = await active.accessTokens.createToken('first', ['bots:run'], null);
+			const second = await active.accessTokens.createToken('second', [], null);
+			if (typeof first === 'string' || typeof second === 'string')
+				throw new Error('Failed to create recovery test tokens');
+			const invalidated: string[] = [];
+			active.accessTokens.on('tokenInvalidated', (hash) => invalidated.push(hash));
+
+			await active.resetPassword(TEST_EMAIL);
+			const token = mockReset.mock.calls.at(-1)?.[2];
+			if (token == null)
+				throw new Error('No password reset token sent');
+			mockSaving.mockClear();
+			await expect(active.finishPasswordReset(token, 'newPassword')).resolves.toBe(true);
+
+			const listedTokens = active.accessTokens.listTokens();
+			expect(listedTokens).toHaveLength(2);
+			expect(listedTokens.map((listedToken) => listedToken.id)).toEqual([first[1].id, second[1].id]);
+			expect(listedTokens.map((listedToken) => listedToken.name)).toEqual(['first', 'second']);
+			expect(listedTokens.map((listedToken) => listedToken.scopes)).toEqual([['bots:run'], []]);
+			for (const listedToken of listedTokens)
+				expect(listedToken.expires).toBeLessThanOrEqual(Date.now());
+			expect(active.accessTokens.verifyToken(first[1].tokenHash, [])).toBe('invalidToken');
+			expect(active.accessTokens.verifyToken(second[1].tokenHash, [])).toBe('invalidToken');
+			expect(invalidated).toEqual([first[1].tokenHash, second[1].tokenHash]);
+			expect(mockSaving).toHaveBeenCalledTimes(1);
+			expect(mockSaving.mock.calls[0][1].accessTokens?.map((savedToken) => savedToken.expires)).toEqual(listedTokens.map((listedToken) => listedToken.expires));
+
+			const regenerated = await active.accessTokens.regenerateToken(first[1].id, null);
+			if (typeof regenerated === 'string')
+				throw new Error('Could not regenerate invalidated token');
+			expect(regenerated[1].id).toBe(first[1].id);
+			expect(regenerated[1].name).toBe('first');
+			expect(regenerated[1].scopes).toEqual(['bots:run']);
+			expect(active.accessTokens.verifyToken(regenerated[1].tokenHash, ['bots:run'])).toBe('ok');
+			expect(active.accessTokens.verifyToken(first[1].tokenHash, [])).toBe('invalidToken');
+		});
+
 		describe('resetPassword()', () => {
 			it('Does nothing when email is wrong', async () => {
 				await expect(account.resetPassword('nonexistent@project-pandora.com')).resolves.toBe(false);

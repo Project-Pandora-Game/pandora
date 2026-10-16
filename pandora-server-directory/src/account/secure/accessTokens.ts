@@ -196,6 +196,29 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 		return true;
 	}
 
+	/**
+	 * Invalidate every personal access token as part of account recovery. The
+	 * caller must persist the enclosing AccountSecure immediately afterward.
+	 */
+	public invalidateAllTokensForRecovery(): void {
+		if (this.#tokens.length === 0)
+			return;
+
+		const invalidatedAt = Date.now();
+		for (const token of this.#tokens)
+			token.expires = invalidatedAt;
+		this._auditLog.info(`Invalidated ${this.#tokens.length} access tokens during account recovery`);
+		for (const token of this.#tokens)
+			this.emit('tokenInvalidated', token.tokenHash);
+
+		// A bot's existing connect secrets may still grant Shard access after its
+		// owner's PAT is invalidated. Regenerate once for the whole batch.
+		this._regenerateBotConnectSecrets();
+		this.#accountSecure.account.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['accessTokens'],
+		});
+	}
+
 	@AsyncSynchronized('object')
 	public async updateToken(id: string, name: string, scopes: PandoraAccessTokenScopeList): Promise<boolean> {
 		const token = this.#tokens.find((t) => t.id === id);
@@ -225,19 +248,15 @@ export class AccountSecureAccessTokenStore extends TypedEventEmitter<{
 
 	private _onTokenInvalidated(id: string, hash: string): void {
 		this.emit('tokenInvalidated', hash);
-
-		// Regenerate all bot connect secrets, as connection that newly shouldn't have access to bot might still have old token
-		for (const bot of this.#accountSecure.account.loadedBots.values()) {
-			bot.regenerateSpaceConnectSecrets()
-				.catch((err) => {
-					this._auditLog.fatal(`Crash while regenerating bot connect secrets during token invalidation for bot ${bot.id}:`, err);
-				});
-		}
+		this._regenerateBotConnectSecrets();
 	}
 
 	private _onTokenUpdated(id: string, hash: string): void {
 		this.emit('tokenUpdated', hash);
+		this._regenerateBotConnectSecrets();
+	}
 
+	private _regenerateBotConnectSecrets(): void {
 		// Regenerate all bot connect secrets, as connection that newly shouldn't have access to bot might still have old token
 		for (const bot of this.#accountSecure.account.loadedBots.values()) {
 			bot.regenerateSpaceConnectSecrets()

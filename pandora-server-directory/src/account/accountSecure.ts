@@ -159,6 +159,7 @@ export default class AccountSecure {
 		this.#secure.password = await GeneratePasswordHash(password);
 		this.#secure.cryptoKey = undefined;
 		this.#secure.passkeys = undefined;
+		this.accessTokens.invalidateAllTokensForRecovery();
 
 		await this.updateDatabase();
 

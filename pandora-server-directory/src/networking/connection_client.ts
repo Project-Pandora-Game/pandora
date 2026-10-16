@@ -8,6 +8,8 @@ import { AccountTokenReason } from '../database/databaseStructure.ts';
 import { ConnectionManagerClient } from './manager_client.ts';
 
 const SUDO_TTL = 5 * 60_000;
+const PASSKEY_LOGIN_START_WINDOW = 5 * 60_000;
+const PASSKEY_LOGIN_START_LIMIT = 10;
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
@@ -26,6 +28,15 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	private _loginTokenEventUnsubscribe: (() => void) | null = null;
 	private _loginToken: AccountToken | null = null;
 	private _sudoExpires = 0;
+	private _passkeyLoginStarts: number[] = [];
+
+	public canStartPasskeyLogin(now: number = Date.now()): boolean {
+		this._passkeyLoginStarts = this._passkeyLoginStarts.filter((time) => time + PASSKEY_LOGIN_START_WINDOW > now);
+		if (this._passkeyLoginStarts.length >= PASSKEY_LOGIN_START_LIMIT)
+			return false;
+		this._passkeyLoginStarts.push(now);
+		return true;
+	}
 
 	public get loginTokenId(): string | null {
 		return this._loginToken ? this._loginToken.getId() : null;

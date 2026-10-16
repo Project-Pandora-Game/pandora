@@ -161,7 +161,7 @@ export const ClientDirectorySchema = {
 	},
 	passkeyLoginStart: {
 		request: z.object({}),
-		response: ZodCast<{
+		response: ZodCast<{ result: 'rateLimited'; } | {
 			result: 'ok';
 			rpId: string;
 			challenge: string;

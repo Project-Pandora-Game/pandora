@@ -338,6 +338,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private handlePasskeyLoginStart(_data: IClientDirectoryArgument['passkeyLoginStart'], connection: ClientConnection): IClientDirectoryResult['passkeyLoginStart'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+		if (!connection.canStartPasskeyLogin())
+			return { result: 'rateLimited' };
 
 		return {
 			result: 'ok',

@@ -45,6 +45,13 @@ describe('passkey login flow', () => {
 		connection.disconnect();
 	});
 
+	it('limits anonymous challenge starts on one connection', async () => {
+		for (let i = 0; i < 10; i++) {
+			await expect(connection.awaitResponse('passkeyLoginStart', {})).resolves.toMatchObject({ result: 'ok' });
+		}
+		await expect(connection.awaitResponse('passkeyLoginStart', {})).resolves.toEqual({ result: 'rateLimited' });
+	});
+
 	it('registers a passkey and logs in with the passkey-wrapped DM key', async () => {
 		const username = `passkey-${Date.now()}`;
 		const password = 'test-password';

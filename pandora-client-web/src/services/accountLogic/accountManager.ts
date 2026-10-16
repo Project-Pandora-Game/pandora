@@ -117,6 +117,8 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 	public async loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse> {
 		const { directoryConnector } = this.serviceDeps;
 		const start = await directoryConnector.awaitResponse('passkeyLoginStart', {});
+		if (start.result === 'rateLimited')
+			return 'rateLimited';
 
 		const assertion = await GetPasskeyAssertion(start, options);
 		const result = await directoryConnector.awaitResponse('passkeyLoginFinish', {

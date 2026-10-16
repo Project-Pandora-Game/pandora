@@ -4,12 +4,38 @@ import type { IClientShardArgument } from 'pandora-common/networking/api/shard_c
 import type { Character } from '../src/character/character.ts';
 import type { ClientConnection } from '../src/networking/connection_client.ts';
 import { ConnectionManagerClient } from '../src/networking/manager_client.ts';
+import { Space } from '../src/spaces/space.ts';
 
 afterEach(() => {
 	jest.restoreAllMocks();
 });
 
 describe('Shard chat burst budget', () => {
+	it('bounds status updates per character', async () => {
+		const updateStatus = jest.fn();
+		const character = { getOrLoadSpace: () => ({ updateStatus }) } as unknown as Character;
+		const connection = { character } as unknown as ClientConnection;
+		for (let i = 0; i < 64; i++) {
+			await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
+		}
+		await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
+		expect(updateStatus).toHaveBeenCalledTimes(64);
+	});
+
+	it('deduplicates targets and does not re-send unchanged status', () => {
+		const sendMessage = jest.fn();
+		const target = { connection: { sendMessage } };
+		const space = {
+			status: new Map(),
+			getCharacterById: () => target,
+			sendMessage: jest.fn(),
+		} as unknown as Space;
+		const character = { id: 'c1' } as unknown as Character;
+		Space.prototype.updateStatus.call(space, character, 'typing', ['c2', 'c3', 'c2']);
+		Space.prototype.updateStatus.call(space, character, 'typing', ['c3', 'c2']);
+		expect(sendMessage).toHaveBeenCalledTimes(2);
+	});
+
 	it('bounds a single character across reconnects and refills over time', async () => {
 		let now = 1000;
 		jest.spyOn(Date, 'now').mockImplementation(() => now);

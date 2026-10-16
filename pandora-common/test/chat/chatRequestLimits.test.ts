@@ -26,6 +26,8 @@ describe('client chat request limits', () => {
 		const maxRecipients = LIMIT_SPACE_MAX_CHARACTER_NUMBER + LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
 		expect(ClientChatMessagesSchema.safeParse([{ ...message, to: Array.from({ length: maxRecipients }, (_, i) => `c${i}`) }]).success).toBe(true);
 		expect(ClientChatMessagesSchema.safeParse([{ ...message, to: Array.from({ length: maxRecipients + 1 }, (_, i) => `c${i}`) }]).success).toBe(false);
+		expect(ClientShardSchema.chatStatus.request.safeParse({ status: 'typing', targets: Array.from({ length: maxRecipients }, (_, i) => `c${i}`) }).success).toBe(true);
+		expect(ClientShardSchema.chatStatus.request.safeParse({ status: 'typing', targets: Array.from({ length: maxRecipients + 1 }, (_, i) => `c${i}`) }).success).toBe(false);
 
 		const permission = ['interaction', 'test'];
 		const request = (length: number) => ({ target: 'c1', permissions: Array.from({ length }, () => permission) });

@@ -176,6 +176,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private handleChatStatus({ status, targets }: IClientShardArgument['chatStatus'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
+		if (!this.consumeRequestBudget(client.character, 1))
+			return;
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;

@@ -7,7 +7,7 @@ import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../../../ch
 import { AppearanceActionSchema } from '../../../gameLogic/actionLogic/actions/_index.ts';
 import { AppearanceActionData, AppearanceActionProblem } from '../../../gameLogic/actionLogic/appearanceActionProblems.ts';
 import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../../../gameLogic/index.ts';
-import { LIMIT_CHARACTER_PROFILE_LENGTH, LIMIT_PERMISSION_PROMPT_ENTRIES } from '../../../inputLimits.ts';
+import { LIMIT_CHARACTER_PROFILE_LENGTH, LIMIT_PERMISSION_PROMPT_ENTRIES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../../../inputLimits.ts';
 import { CardGameActionSchema } from '../../../utility/cards.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../../../validation.ts';
@@ -40,7 +40,7 @@ export const ClientShardSchema = {
 	chatStatus: {
 		request: z.object({
 			status: ChatCharacterStatusSchema,
-			targets: CharacterIdSchema.array().optional(),
+			targets: CharacterIdSchema.array().max(LIMIT_SPACE_MAX_CHARACTER_NUMBER + LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS).optional(),
 		}),
 		response: null,
 	},

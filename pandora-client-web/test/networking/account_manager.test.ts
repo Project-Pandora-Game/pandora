@@ -191,12 +191,12 @@ describe('Account Manager', () => {
 					.mockResolvedValue({ result: directoryResponse });
 				const { result } = renderHookWithTestProviders(useDirectoryPasswordResetConfirm);
 
-				const response = await result.current('test-user', '123456', 'qwerty');
+				const response = await result.current('test-user', 'abcd - efgh jklm-npqr', 'qwerty');
 				expect(response).toBe(directoryResponse);
 				expect(awaitResponseMock).toHaveBeenCalledTimes(1);
 				expect(awaitResponseMock).toHaveBeenCalledWith('passwordResetConfirm', {
 					username: 'test-user',
-					token: '123456',
+					token: 'ABCDEFGHJKLMNPQR',
 					passwordSha512: '3pxNDzPgVbuz9CUcrKZkup3gCVgXvECda7tiSrTHaoUiDf7E7hjtAtJEFm4tdnlgGV17x+Gm6AxkisMHP3iNrA==',
 				});
 			},

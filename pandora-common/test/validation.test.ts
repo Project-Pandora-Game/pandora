@@ -1,7 +1,23 @@
 import { describe, expect, it } from '@jest/globals';
-import { IsObject, ZodTrimedRegex } from '../src/validation.ts';
+import { FormatHighEntropyToken, HighEntropyTokenSchema, IsObject, NormalizeHighEntropyToken, ZodTrimedRegex } from '../src/validation.ts';
 
 describe('Validation', () => {
+
+	it('accepts canonical, lowercase, spaced and dashed high-entropy tokens', () => {
+		const token = 'ABCDEFGHJKLMNPQR';
+		const enteredToken = 'abcd - efgh  jklm-\tnpqr';
+		expect(HighEntropyTokenSchema.safeParse(token).success).toBe(true);
+		expect(HighEntropyTokenSchema.parse(enteredToken)).toBe(enteredToken);
+		expect(NormalizeHighEntropyToken(enteredToken)).toBe(token);
+		expect(FormatHighEntropyToken(token)).toBe('ABCD-EFGH-JKLM-NPQR');
+	});
+
+	it.each(['012345', 'ABCDEFGHJKLMNPQ', 'ABCDEFGHJKLMNPQRR', 'ABCD-EFGH-JKLM-NP0R', 'ABCD-EFGH-JKLM-NP1R', 'ABCD-EFGH-JKLM-NPIR', 'ABCD-EFGH-JKLM-NPOR', 'ABCD_EFGH_JKLM_NPQR', 'ABCDEFGHJKLMNPß'])(
+		'rejects invalid high-entropy token %p',
+		(token) => {
+			expect(HighEntropyTokenSchema.safeParse(token).success).toBe(false);
+		},
+	);
 
 	describe('IsObject', () => {
 

@@ -56,6 +56,34 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		await closeDb();
 	});
 
+	describe('setDirectMessage()', () => {
+		it.each([
+			['edit', 'replacement'],
+			['delete', ''],
+		])('does not let the other participant %s a message', async (_action, content) => {
+			const accounts = `${Math.min(accountId1, accountId2)}-${Math.max(accountId1, accountId2)}` as const;
+			const original = { content: 'original', source: accountId1, time: 100 };
+			expect(await db.setDirectMessage(accounts, 'key-hash', original, 10)).toBe(true);
+
+			const unauthorized = { content, source: accountId2, time: original.time, edited: 200 };
+			expect(await db.setDirectMessage(accounts, 'key-hash', unauthorized, 10)).toBe(false);
+			expect((await db.getDirectMessages(accounts))?.messages).toEqual([original]);
+
+			const authorized = { ...unauthorized, source: accountId1 };
+			expect(await db.setDirectMessage(accounts, 'key-hash', authorized, 10)).toBe(true);
+			expect((await db.getDirectMessages(accounts))?.messages).toEqual(content ? [authorized] : []);
+		});
+
+		it('does not clear messages when an edit has a different key hash', async () => {
+			const accounts = `${Math.min(accountId1, accountId2)}-${Math.max(accountId1, accountId2)}` as const;
+			const original = { content: 'original', source: accountId1, time: 100 };
+			expect(await db.setDirectMessage(accounts, 'original-key', original, 10)).toBe(true);
+
+			expect(await db.setDirectMessage(accounts, 'different-key', { ...original, content: 'replacement', edited: 200 }, 10)).toBe(false);
+			expect(await db.getDirectMessages(accounts)).toMatchObject({ accounts, keyHash: 'original-key', messages: [original] });
+		});
+	});
+
 	describe('getAccountById()', () => {
 		it('returns null if account not found', async () => {
 			expect(await db.getAccountById(999)).toBeNull();

@@ -1,9 +1,9 @@
 import * as argon2 from 'argon2';
 import { createHash, randomInt } from 'crypto';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
-import { Assert, AssertNever, AsyncSynchronized, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
+import { Assert, AssertNever, AsyncSynchronized, GenerateHighEntropyToken, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, NormalizeHighEntropyToken, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import type { IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo } from 'pandora-common/networking/api/directory_client';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -148,7 +148,7 @@ export default class AccountSecure {
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
+		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, NormalizeHighEntropyToken(token)))
 			return false;
 
 		// Invalidate all login tokens
@@ -159,6 +159,7 @@ export default class AccountSecure {
 		this.#secure.password = await GeneratePasswordHash(password);
 		this.#secure.cryptoKey = undefined;
 		this.#secure.passkeys = undefined;
+		await this.accessTokens.invalidateAllTokensForRecovery();
 
 		await this.updateDatabase();
 
@@ -279,14 +280,19 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms'): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+	@AsyncSynchronized()
+	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms', hasSudo: boolean = false): Promise<'ok' | 'invalid' | 'keyAlreadySet' | 'sudoRequired'> {
 		if (this.#secure.cryptoKey != null) {
+			if (isEqual(this.#secure.cryptoKey, key))
+				return 'ok';
 			if (
 				allowReset !== 'replace-deleting-dms' &&
 				(allowReset !== 'same-key' || this.#secure.cryptoKey.publicKey !== key.publicKey)
 			) {
 				return 'keyAlreadySet';
 			}
+			if (!hasSudo)
+				return 'sudoRequired';
 		}
 
 		if (!await this.#validateCryptoKey(key))
@@ -499,7 +505,7 @@ const TOKEN_TYPES = {
 		limit: 1,
 	},
 	[AccountTokenReason.PASSWORD_RESET]: {
-		generate: GenerateSimpleToken,
+		generate: GenerateHighEntropyToken,
 		expiration: PASSWORD_RESET_TOKEN_EXPIRATION,
 		limit: 1,
 	},

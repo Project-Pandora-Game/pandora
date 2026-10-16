@@ -6,6 +6,7 @@ import {
 } from 'pandora-common';
 import type { IClientShard, IClientShardPromiseResult } from 'pandora-common/networking/api/shard_client';
 import type { ClientConnection } from '../../connection_client.ts';
+import { botCommandRequestLimiter } from './botCommandRequestLimiter.ts';
 
 /** Client message handlers related to custom bot commands. */
 export const ClientHandlersBotCommands = {
@@ -22,6 +23,9 @@ export const ClientHandlersBotCommands = {
 		const botConnection = bot.connection;
 		if (botConnection == null)
 			return { result: 'botDisconnected' };
+		const release = botCommandRequestLimiter.acquire(character, 'list');
+		if (release == null)
+			return { result: 'rateLimited' };
 
 		try {
 			const result = await botConnection.awaitResponse('getCharacterCommands', {
@@ -37,6 +41,8 @@ export const ClientHandlersBotCommands = {
 			GetLogger('BotHandlersChat')
 				.verbose(`Error while querying bot ${bot.id}|${space.id} during botCommandsGet from ${character.id}:`, err);
 			return { result: 'botError' };
+		} finally {
+			release();
 		}
 	},
 	botCommandRun: async ({ command, args, bot: requestBot }, connection): IClientShardPromiseResult['botCommandRun'] => {
@@ -52,6 +58,9 @@ export const ClientHandlersBotCommands = {
 		const botConnection = bot.connection;
 		if (botConnection == null || bot.id !== requestBot)
 			return { result: 'botDisconnected' };
+		const release = botCommandRequestLimiter.acquire(character, 'run');
+		if (release == null)
+			return { result: 'rateLimited' };
 
 		try {
 			const result = await botConnection.awaitResponse('runCharacterCommand', {
@@ -65,6 +74,8 @@ export const ClientHandlersBotCommands = {
 			GetLogger('BotHandlersChat')
 				.verbose(`Error while querying bot ${bot.id}|${space.id} during botCommandsGet from ${character.id}:`, err);
 			return { result: 'botError' };
+		} finally {
+			release();
 		}
 	},
 	botCommandGetStructurePart: async ({ command, args, bot: requestBot }, connection): IClientShardPromiseResult['botCommandGetStructurePart'] => {
@@ -80,6 +91,9 @@ export const ClientHandlersBotCommands = {
 		const botConnection = bot.connection;
 		if (botConnection == null || bot.id !== requestBot)
 			return { result: 'botDisconnected' };
+		const release = botCommandRequestLimiter.acquire(character, 'structure');
+		if (release == null)
+			return { result: 'rateLimited' };
 
 		try {
 			const result = await botConnection.awaitResponse('getCharacterCommandStructurePart', {
@@ -93,6 +107,8 @@ export const ClientHandlersBotCommands = {
 			GetLogger('BotHandlersChat')
 				.verbose(`Error while querying bot ${bot.id}|${space.id} during botCommandsGet from ${character.id}:`, err);
 			return { result: 'botError' };
+		} finally {
+			release();
 		}
 	},
 } satisfies Partial<MessageHandlers<IClientShard, ClientConnection>>;

@@ -4,6 +4,7 @@ import type { IAccountPasskeyCredential } from 'pandora-common/networking/api/di
 import {
 	Base64UrlEncode,
 	CreatePasskeyChallenge,
+	PasskeyChallengeStore,
 	ValidatePasskeyRegistration,
 	VerifyPasskeyAssertion,
 } from '../../src/account/accountPasskeys.ts';
@@ -13,6 +14,28 @@ const ORIGIN = 'http://localhost:6969';
 const RP_ID = 'localhost';
 
 describe('accountPasskeys', () => {
+	it('does not let anonymous login challenges evict account-bound challenges', () => {
+		const store = new PasskeyChallengeStore(2, 2);
+		const sudo = store.issue(ACCOUNT_ID, 'sudo', 0);
+		const register = store.issue(ACCOUNT_ID, 'register', 0);
+		const firstLogin = store.issue(null, 'login', 1);
+		expect(store.issue(null, 'login', 2)).not.toBeNull();
+		expect(store.issue(null, 'login', 3)).not.toBeNull();
+		expect(store.consume(firstLogin, ACCOUNT_ID, 'login', 3)).toBe(false);
+		expect(store.consume(sudo, ACCOUNT_ID, 'sudo', 3)).toBe(true);
+		expect(store.consume(register, ACCOUNT_ID, 'register', 3)).toBe(true);
+	});
+
+	it('reclaims expired anonymous challenge slots', () => {
+		const store = new PasskeyChallengeStore(1, 1);
+		const first = store.issue(null, 'login', 0);
+		expect(first).not.toBeNull();
+		const second = store.issue(null, 'login', 5 * 60_000 + 1);
+		expect(second).not.toBe(first);
+		expect(store.consume(first, ACCOUNT_ID, 'login', 5 * 60_000 + 1)).toBe(false);
+		expect(store.consume(second, ACCOUNT_ID, 'login', 5 * 60_000 + 1)).toBe(true);
+	});
+
 	it('validates a registration response and consumes the challenge', async () => {
 		const keyPair = CreateP256KeyPair();
 		const challenge = CreatePasskeyChallenge(ACCOUNT_ID, 'register');

@@ -557,9 +557,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public updateStatus(character: Character, status: ChatCharacterStatus, targets?: readonly CharacterId[]): void {
 		const last = this.status.get(character.id) ?? { status: 'none', targets: undefined };
-		this.status.set(character.id, { status, targets: targets?.slice() });
+		const uniqueTargets = targets == null ? undefined : [...new Set(targets)].sort();
+		if (status === last.status && isEqual(uniqueTargets, last.targets))
+			return;
+		this.status.set(character.id, { status, targets: uniqueTargets });
 
-		if (!isEqual(targets, last.targets) && last.status !== 'none') {
+		if (!isEqual(uniqueTargets, last.targets) && last.status !== 'none') {
 			if (last.targets != null) {
 				for (const lastTarget of last.targets) {
 					const conn = this.getCharacterById(lastTarget)?.connection;
@@ -572,7 +575,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				return;
 		}
 
-		const sendTo = targets ? targets.map((t) => this.getCharacterById(t)?.connection) : [this];
+		const sendTo = uniqueTargets ? uniqueTargets.map((t) => this.getCharacterById(t)?.connection) : [this];
 		for (const conn of sendTo) {
 			conn?.sendMessage('chatCharacterStatus', { id: character.id, status });
 		}

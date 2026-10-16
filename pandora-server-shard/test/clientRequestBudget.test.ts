@@ -124,4 +124,24 @@ describe('Shard chat burst budget', () => {
 		expect(await ConnectionManagerClient.onMessage('gameLogicAction', request, connection)).toMatchObject({ result: 'failure' });
 		expect(sendMessage).toHaveBeenCalledTimes(16);
 	});
+
+	it('bounds full reloads after failed game actions', async () => {
+		let now = 1000;
+		jest.spyOn(Date, 'now').mockImplementation(() => now);
+		const sendLoadMessage = jest.fn();
+		const state = { assetManager: {}, produceCharacterState: () => null };
+		const space = { currentState: state, getCharacterById: jest.fn() };
+		const restrictionManager = { appearance: { id: 'c1' } };
+		const context = { player: { id: 'c1' }, getCharacter: () => ({ getRestrictionManager: () => restrictionManager }) };
+		const character = { getOrLoadSpace: () => space, getAppearanceActionContext: () => context } as unknown as Character;
+		const connection = { character, sendLoadMessage } as unknown as ClientConnection;
+
+		for (let i = 0; i < 9; i++) {
+			expect(await ConnectionManagerClient.onMessage('gameLogicAction', { operation: 'complete' }, connection)).toMatchObject({ result: 'failure' });
+		}
+		expect(sendLoadMessage).toHaveBeenCalledTimes(1);
+		now += 2_000;
+		await ConnectionManagerClient.onMessage('gameLogicAction', { operation: 'complete' }, connection);
+		expect(sendLoadMessage).toHaveBeenCalledTimes(2);
+	});
 });

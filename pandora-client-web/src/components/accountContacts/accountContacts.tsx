@@ -358,7 +358,7 @@ function FriendRow({
 	}, [navigate, id, location.pathname]);
 
 	return (
-		<tr className={ (status !== 'offline') ? 'friend online' : 'friend offline' }>
+		<tr className={ (status !== 'offline') ? 'friend online' : 'friend offline' } data-id={ id }>
 			<td className='selectable'>{ id }</td>
 			<td
 				className='selectable'

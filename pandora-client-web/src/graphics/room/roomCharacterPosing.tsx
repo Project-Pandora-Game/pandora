@@ -31,6 +31,7 @@ import { useRoomCharacterPosition } from './roomCharacterPosition.ts';
 /** Wheel delta (in pixels) required to trigger a single step. One notch on a typical mouse is ~100. */
 const WHEEL_STEP_THRESHOLD = 80;
 const TURN_AROUND_RADIUS = { small: 20, big: 32 } as const;
+const TURN_AROUND_OFFSET_Y = 15;
 const HAND_BUTTON_RADIUS = 25;
 const MOVE_HANDLE_RADIUS = 50;
 /** Spacing between neighboring buttons */
@@ -92,7 +93,7 @@ export function RoomCharacterMovePoseTool({
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 	// Turn-around button is the anchor
-	const turnAroundY = pivot.y + 15;
+	const turnAroundY = pivot.y + TURN_AROUND_OFFSET_Y;
 	// Hand buttons: top edge aligned with the top edge of the turn-around button
 	const handButtonY = turnAroundY - TURN_AROUND_RADIUS.small + HAND_BUTTON_RADIUS;
 	// Y-offset handle sits in the column of the right hand button (and the left one mirrors it).

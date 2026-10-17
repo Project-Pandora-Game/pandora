@@ -52,7 +52,7 @@ export class BrowserStorage<T> extends Observable<T> {
 						this._saveInhibit = false;
 					}
 				} else {
-					this.logger.error('Error validating value:', z.prettifyError(validated.error));
+					this.logger.error('Error validating value:', validated.error);
 				}
 			}
 		} catch (err) {

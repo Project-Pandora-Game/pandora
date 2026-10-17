@@ -2,7 +2,6 @@ import promClient from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, EMPTY_ARRAY, GetLogger, ServerService } from 'pandora-common';
-import * as z from 'zod';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure.ts';
 import { AUDIT_LOG } from '../logging.ts';
@@ -158,7 +157,7 @@ export class AccountManager implements ServerService {
 		rawData = omit(rawData, '_id');
 		const parsedData = DatabaseAccountWithSecureSchema.safeParse(rawData);
 		if (!parsedData.success) {
-			logger.error(`Failed to load account ${rawData.id}:\n`, z.prettifyError(parsedData.error));
+			logger.error(`Failed to load account ${rawData.id}:\n`, parsedData.error);
 			return null;
 		}
 		// Save data modified by migration and catches

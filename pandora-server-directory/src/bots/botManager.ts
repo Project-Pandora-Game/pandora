@@ -3,7 +3,6 @@ import { diffString } from 'json-diff';
 import { isEqual, omit, pick, uniq } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, IsNotNullable, ServerService, type AccountId } from 'pandora-common';
 import { CreateRandomBotId, type BotConfig, type BotId } from 'pandora-common/bots';
-import * as z from 'zod';
 import type { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -108,7 +107,7 @@ export class BotManager implements ServerService {
 		rawData = omit(rawData, '_id');
 		const parsedData = DatabaseBotSchema.safeParse(rawData);
 		if (!parsedData.success) {
-			logger.error(`Failed to load bot "${rawData.id}":\n`, z.prettifyError(parsedData.error));
+			logger.error(`Failed to load bot "${rawData.id}":\n`, parsedData.error);
 			return null;
 		}
 		// Save data modified by migration and catches

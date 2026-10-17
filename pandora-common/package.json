@@ -53,7 +53,7 @@
 		"dev": "tsc -p ./tsconfig.json -w --skipLibCheck",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
-		"type-check": "pnpm run '/type-check:.*/'",
+		"type-check": "pnpm run \"/type-check:.*/\"",
 		"type-check:test": "tsc -p ./test/tsconfig.json --noEmit",
 		"type-check:src": "tsc -p ./tsconfig.json --noEmit",
 		"test": "jest -c ../jest.config.js --selectProjects pandora-common",

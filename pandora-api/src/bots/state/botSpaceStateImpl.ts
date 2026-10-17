@@ -78,7 +78,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 
 		this._botPrivateData = botPrivate;
 		this._characters = [];
-		this._replaceCharacters(characters);
+		this._updateCharacters(characters);
 
 		this._characterModifierEffects = freeze(characterModifierEffects, true);
 
@@ -104,7 +104,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		Assert(oldSpace.id === id, 'Bot\'s space cannot change');
 
 		this._botPrivateData = botPrivate;
-		const characterUpdates = this._replaceCharacters(characters);
+		const characterUpdates = this._updateCharacters(characters);
 
 		this.logger.debug('Loaded space data');
 
@@ -165,7 +165,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 				char = new BotSpaceCharacterImpl(join);
 				this._characters = [...this._characters, char];
 			} else {
-				const change = this._applyCharacterUpdate(char, join);
+				const change = this._updateCharacter(char, join);
 				if (change) statusChanges.push(change);
 			}
 		}
@@ -177,7 +177,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 				if (!char) {
 					this.logger.error('Character not found during update', id);
 				} else {
-					const change = this._applyCharacterUpdate(char, characterData);
+					const change = this._updateCharacter(char, characterData);
 					if (change) statusChanges.push(change);
 				}
 			}
@@ -226,7 +226,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 	}
 
 	/** Updates the character and reports an online/offline transition, if there was one */
-	private _applyCharacterUpdate(char: BotSpaceCharacterImpl, data: Partial<BotSpaceCharacterData>): CharacterStatusChange | null {
+	private _updateCharacter(char: BotSpaceCharacterImpl, data: Partial<BotSpaceCharacterData>): CharacterStatusChange | null {
 		// Without an onlineStatus in the delta there cannot be a transition
 		if (data.onlineStatus === undefined) {
 			char.update(data);
@@ -246,7 +246,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		}
 	}
 
-	private _replaceCharacters(characters: readonly ICharacterRoomData[]): {
+	private _updateCharacters(characters: readonly ICharacterRoomData[]): {
 		joined: BotSpaceCharacterImpl[];
 		left: CharacterId[];
 		statusChanges: CharacterStatusChange[];
@@ -256,7 +256,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		this._characters = characters.map((c) => {
 			let char = oldCharacters.find((oc) => oc.id === c.id);
 			if (char) {
-				const change = this._applyCharacterUpdate(char, c);
+				const change = this._updateCharacter(char, c);
 				if (change) statusChanges.push(change);
 			} else {
 				char = new BotSpaceCharacterImpl(c);

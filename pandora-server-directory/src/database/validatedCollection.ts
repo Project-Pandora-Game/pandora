@@ -185,7 +185,7 @@ export class ValidatedCollection<T extends Document> {
 			const parsedData = this.schema.safeParse(originalData);
 			if (!parsedData.success) {
 				migration.success = false;
-				log.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, z.prettifyError(parsedData.error));
+				log.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, parsedData.error);
 				continue;
 			}
 
@@ -257,7 +257,7 @@ async function* ValidatingAsyncIter<T extends Document>(
 
 		const parsedData = schema.safeParse(originalData);
 		if (!parsedData.success) {
-			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, z.prettifyError(parsedData.error));
+			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, parsedData.error);
 			onError();
 			yield null;
 		} else {

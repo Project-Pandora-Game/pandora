@@ -13,7 +13,7 @@ import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceInviteCrea
 import { SpaceSearchArgumentsSchema, SpaceSearchResultSchema } from '../../../space/spaceSearch.ts';
 import { SpaceSwitchCommandSchema } from '../../../space/spaceSwitch.ts';
 import { Satisfies } from '../../../utility/misc.ts';
-import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../../../validation.ts';
+import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, HighEntropyTokenSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../../../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
 import { ACCOUNT_PASSKEY_TRANSPORT_COUNT_MAX, AccountCryptoKeySchema, AccountPasskeyAuthenticatorDataSchema, AccountPasskeyClientDataSchema, AccountPasskeyCredentialIdSchema, AccountPasskeyInfoSchema, AccountPasskeyNameSchema, AccountPasskeyPublicKeySchema, AccountPasskeySignatureSchema, AccountPasskeyTransportSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo, type IAccountCryptoKey, type IAccountPasskeyInfo } from './directory_client.ts';
 
@@ -155,20 +155,18 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			username: UserNameSchema,
 			passwordSha512: PasswordSha512Schema,
-			token: SimpleTokenSchema,
+			token: HighEntropyTokenSchema,
 		}),
 		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'failed'; }>(),
 	},
 	passkeyLoginStart: {
-		request: z.object({
-			secondFactor: SecondFactorDataSchema.optional(),
-		}),
-		response: ZodCast<{
+		request: z.object({}),
+		response: ZodCast<{ result: 'rateLimited'; } | {
 			result: 'ok';
 			rpId: string;
 			challenge: string;
 			prfSalt: string;
-		} | SecondFactorResponse>(),
+		}>(),
 	},
 	passkeyLoginFinish: {
 		request: z.object({
@@ -287,7 +285,7 @@ export const ClientDirectorySchema = {
 			 */
 			allowReset: z.enum(['same-key', 'replace-deleting-dms']).optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
+		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet' | 'sudoRequired'; }>(),
 	},
 	queryConnections: {
 		request: z.object({}),

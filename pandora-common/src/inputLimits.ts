@@ -4,7 +4,6 @@ import { TimeSpanMs } from './utility/formatting.ts';
 - Space admin list
 - Space banned list
 - Space owner list
-- Chat limits are per-segment
 */
 
 /** The maximum length of an account name */
@@ -80,6 +79,18 @@ export const LIMIT_SPACE_ENTRYTEXT_LENGTH = 10_000;
 
 /** The maximum length of a chat message */
 export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
+/** Maximum length of a bot command name. */
+export const LIMIT_BOT_COMMAND_NAME_LENGTH = 128;
+/** Maximum number of parsed arguments sent to a bot. */
+export const LIMIT_BOT_COMMAND_ARGUMENT_COUNT = 32;
+/** Maximum total length of a bot command and its parsed arguments. */
+export const LIMIT_BOT_COMMAND_INPUT_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
+/** Maximum number of chat messages produced by one input. */
+export const LIMIT_CHAT_MESSAGES_PER_REQUEST = 64;
+/** Maximum number of formatting segments across one chat request. */
+export const LIMIT_CHAT_SEGMENTS_PER_REQUEST = 512;
+/** Maximum number of permission entries in one explicit permission prompt. */
+export const LIMIT_PERMISSION_PROMPT_ENTRIES = 32;
 
 /** The maximum length of a direct message
  *

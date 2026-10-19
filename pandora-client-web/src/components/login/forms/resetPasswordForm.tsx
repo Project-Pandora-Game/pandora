@@ -1,4 +1,4 @@
-import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
+import { AssertNever, HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH, HIGH_ENTROPY_TOKEN_LENGTH, IsHighEntropyToken, NormalizeHighEntropyToken, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
@@ -94,19 +94,23 @@ function ResetPasswordFormInner(): ReactElement {
 					type='text'
 					id='reset-password-token'
 					autoComplete='one-time-code'
+					autoCapitalize='characters'
+					autoCorrect='off'
+					spellCheck={ false }
+					placeholder='XXXX-XXXX-XXXX-XXXX'
 					register={ register }
 					name='token'
 					options={ {
 						required: 'Reset code is required',
-						minLength: {
-							message: `Reset code must be exactly ${ SIMPLE_TOKEN_LENGTH } characters`,
-							value: SIMPLE_TOKEN_LENGTH,
-						},
 						maxLength: {
-							message: `Reset code must be exactly ${ SIMPLE_TOKEN_LENGTH } characters`,
-							value: SIMPLE_TOKEN_LENGTH,
+							message: 'Reset code is too long',
+							value: HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH,
 						},
-						validate: (token) => IsSimpleToken(token) || 'Invalid reset code format',
+						validate: (token) => {
+							if (NormalizeHighEntropyToken(token).length !== HIGH_ENTROPY_TOKEN_LENGTH)
+								return `Reset code must be exactly ${ HIGH_ENTROPY_TOKEN_LENGTH } characters`;
+							return IsHighEntropyToken(token) || 'Invalid reset code format';
+						},
 					} }
 				/>
 				<FormFieldError error={ errors.token } />

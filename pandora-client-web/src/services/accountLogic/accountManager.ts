@@ -36,9 +36,7 @@ export type PasskeyDirectMessageUnlock = {
 	wrappingSecret: string;
 };
 
-export type PasskeyLoginOptions = PasskeyAssertionOptions & {
-	secondFactor?: SecondFactorData;
-};
+export type PasskeyLoginOptions = PasskeyAssertionOptions;
 
 type AccountManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector'>;
@@ -118,29 +116,11 @@ class AccountManager extends Service<AccountManagerServiceConfig> implements IAc
 
 	public async loginWithPasskey(options?: PasskeyLoginOptions): Promise<LoginResponse> {
 		const { directoryConnector } = this.serviceDeps;
-		const { secondFactor, ...assertionOptions } = options ?? {};
-		const start = await directoryConnector.awaitResponse('passkeyLoginStart', { secondFactor });
-		if (start.result === 'secondFactorRequired' || start.result === 'secondFactorInvalid') {
-			if (options?.mediation === 'conditional') {
-				throw new Error('Conditional sign in aborted, because server requested second factor during start');
-			}
-			if (this.secondFactorHandler) {
-				const nextSecondFactor = await this.secondFactorHandler(start);
-				if (nextSecondFactor) {
-					return this.loginWithPasskey({
-						...assertionOptions,
-						secondFactor: nextSecondFactor,
-					});
-				}
-			}
-			return 'invalidSecondFactor';
-		}
-		if (start.result !== 'ok') {
-			await this.handleAccountChange({ account: null, character: null });
-			return 'unknownCredentials';
-		}
+		const start = await directoryConnector.awaitResponse('passkeyLoginStart', {});
+		if (start.result === 'rateLimited')
+			return 'rateLimited';
 
-		const assertion = await GetPasskeyAssertion(start, assertionOptions);
+		const assertion = await GetPasskeyAssertion(start, options);
 		const result = await directoryConnector.awaitResponse('passkeyLoginFinish', {
 			credentialId: assertion.credentialId,
 			clientDataJSON: assertion.clientDataJSON,

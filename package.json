@@ -27,7 +27,7 @@
 		"pandora-cli": "pnpm --filter pandora-cli run pandora-cli"
 	},
 	"dependencies": {
-		"js-yaml": "5.4.3"
+		"js-yaml": "5.5.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "9.39.5",

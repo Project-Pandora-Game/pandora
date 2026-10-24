@@ -36,3 +36,5 @@ minimumReleaseAgeExclude:
   - js-yaml@5.2.2
   # Renovate security update: nodemailer@9.1.1 || 10.0.9
   - nodemailer@9.1.1 || 10.0.9
+  # Renovate security update: zod@4.6.6
+  - zod@4.6.6

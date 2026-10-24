@@ -762,8 +762,8 @@ importers:
         specifier: 6.1.3
         version: 6.1.3
       superstatic:
-        specifier: 11.0.0
-        version: 11.0.0(supports-color@8.1.1)
+        specifier: 11.1.0
+        version: 11.1.0(supports-color@8.1.1)
       tar:
         specifier: 7.5.22
         version: 7.5.22
@@ -5603,8 +5603,8 @@ packages:
     peerDependencies:
       webpack: ^5.27.0
 
-  superstatic@11.0.0:
-    resolution: {integrity: sha512-1+rx9hPdO4Oe4bk0CnXYF/J2x9tiV4qlBZ44y7Y9o/KkTAXkx+zz45sFNKVICOMh8Vf79pYdIcbuGGY8MKLz4g==}
+  superstatic@11.1.0:
+    resolution: {integrity: sha512-cAPmqAXF0bsKVIMzGKtCuf5AXsW3xjqJcZ67Lw9DlLuesCDvzIX44uMrjwfv18DIDjaUiIM9BUGQO0dipc4Qsw==}
     engines: {node: 22 || 24 || 26}
     hasBin: true
 
@@ -11846,7 +11846,7 @@ snapshots:
     dependencies:
       webpack: 5.111.1(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
 
-  superstatic@11.0.0(supports-color@8.1.1):
+  superstatic@11.1.0(supports-color@8.1.1):
     dependencies:
       basic-auth-connect: 1.1.0
       commander: 10.0.1

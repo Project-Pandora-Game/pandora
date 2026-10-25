@@ -170,7 +170,7 @@ overrides:
 patchedDependencies:
   pixi.js: 7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1
   react-switch: a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6
-  zod@4.6.6: 3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685
+  zod@4.6.7: 3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685
 
 importers:
 
@@ -363,8 +363,8 @@ importers:
         specifier: 4.8.4
         version: 4.8.4(supports-color@8.1.1)
       zod:
-        specifier: 4.6.6
-        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
+        specifier: 4.6.7
+        version: 4.6.7(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -527,8 +527,8 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
       zod:
-        specifier: 4.6.6
-        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
+        specifier: 4.6.7
+        version: 4.6.7(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
 
   pandora-server-directory:
     dependencies:
@@ -581,8 +581,8 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
       nodemailer:
-        specifier: 10.1.4
-        version: 10.1.4
+        specifier: 10.1.5
+        version: 10.1.5
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -593,8 +593,8 @@ importers:
         specifier: 0.10.1
         version: 0.10.1
       zod:
-        specifier: 4.6.6
-        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
+        specifier: 4.6.7
+        version: 4.6.7(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -681,8 +681,8 @@ importers:
         specifier: 0.10.1
         version: 0.10.1
       zod:
-        specifier: 4.6.6
-        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
+        specifier: 4.6.7
+        version: 4.6.7(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -742,8 +742,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0(supports-color@8.1.1)
       mailparser:
-        specifier: 3.9.40
-        version: 3.9.40
+        specifier: 3.9.44
+        version: 3.9.44
       nyc:
         specifier: 18.0.0
         version: 18.0.0(supports-color@8.1.1)
@@ -2237,8 +2237,8 @@ packages:
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
 
-  '@zone-eu/mailsplit@5.4.23':
-    resolution: {integrity: sha512-2skZfQY5iOAIFwVO4jZzqtMPJyxFpCKemQGVT7O8QxUjHAK+W7LQY/UbK9BWrxeS0wZ64rKZaATY+T9BsF4JSw==}
+  '@zone-eu/mailsplit@5.4.25':
+    resolution: {integrity: sha512-cxrz8950Pzg/kFj5fP6pOEOYHbRlWvST6hb1XiJ6eMn4cSyMk9R+Gby8dUYmg+6AB9T/PTBPJF2oRblqJkoX/g==}
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -4307,8 +4307,8 @@ packages:
   magic-bytes.js@1.13.1:
     resolution: {integrity: sha512-x5sn4UX2k5gCWlcfmoFwG4TPie8+dctESyqOBdhB5p6MsgWXdBKGmt9nXPObj/JI50TTL928lc5Yt1WntMn1bw==}
 
-  mailparser@3.9.40:
-    resolution: {integrity: sha512-HixDwYB8sWHgng8/+9picXAh+cPGeI9RWlUyL6AD2m4EE6kV0/UtbmAVx9UyPys3Lu9FO4qUrXOoAgGowEebPQ==}
+  mailparser@3.9.44:
+    resolution: {integrity: sha512-2+AqdgwEN+G6yPfvxotfp5lPyiQYaHYB+nvyKLKtjTykCyX7HCHpQl7jYqAvk2knmJMPyreTJ9VR8CUdgSa7lw==}
     engines: {node: '>=20.0.0'}
 
   make-dir@3.1.0:
@@ -4622,12 +4622,8 @@ packages:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
     engines: {node: '>=18'}
 
-  nodemailer@10.1.2:
-    resolution: {integrity: sha512-rnQn9Rzh8RAwcp42MVsIvxbsv6YZ2a2/av+uyJ/LPU1+2QSlrRgFsWWZTKenyRUqkIl8urOI0c4+CEcmFdsvQw==}
-    engines: {node: '>=20.0.0'}
-
-  nodemailer@10.1.4:
-    resolution: {integrity: sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==}
+  nodemailer@10.1.5:
+    resolution: {integrity: sha512-lftc1Fxos2mPXHChDaCtkyD9umvlLw1iMREXgXv6LAaJycVzJ8GcpE90o02B+AqnICq8zy8gzo8FrKEzXZhlGg==}
     engines: {node: '>=20.0.0'}
 
   nodemon@3.1.14:
@@ -6204,8 +6200,8 @@ packages:
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
-  zod@4.6.6:
-    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
@@ -8017,7 +8013,7 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@zone-eu/mailsplit@5.4.23':
+  '@zone-eu/mailsplit@5.4.25':
     dependencies:
       libbase64: 1.3.3
       libmime: 5.4.9
@@ -10538,16 +10534,16 @@ snapshots:
 
   magic-bytes.js@1.13.1: {}
 
-  mailparser@3.9.40:
+  mailparser@3.9.44:
     dependencies:
-      '@zone-eu/mailsplit': 5.4.23
+      '@zone-eu/mailsplit': 5.4.25
       encoding-japanese: 2.4.0
       he: 1.2.0
       html-to-text: 10.0.1
       iconv-lite: 0.7.3
       libmime: 5.4.9
       linkify-it: 5.0.2
-      nodemailer: 10.1.2
+      nodemailer: 10.1.5
       punycode.js: 2.3.1
       tlds: 1.261.0
 
@@ -10779,9 +10775,7 @@ snapshots:
 
   node-releases@2.0.57: {}
 
-  nodemailer@10.1.2: {}
-
-  nodemailer@10.1.4: {}
+  nodemailer@10.1.5: {}
 
   nodemon@3.1.14:
     dependencies:
@@ -12541,4 +12535,4 @@ snapshots:
 
   zod@4.4.3: {}
 
-  zod@4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685): {}
+  zod@4.6.7(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685): {}

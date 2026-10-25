@@ -1,4 +1,3 @@
-import { describe, it } from '@jest/globals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState, type ReactElement } from 'react';
 import { Button } from '../../../src/components/common/button/button.tsx';

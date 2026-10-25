@@ -10,6 +10,26 @@ export function requireDestructuredProps() {
 	return (context, { collect }) => {
 		const { query, visitor } = collect.components(context);
 		return merge(visitor, {
+			MemberExpression(node) {
+				const source = node.object;
+				if (source.type !== 'MemberExpression' || source.object.type !== 'ThisExpression' || source.property.type !== 'Identifier')
+					return;
+				if (!['props', 'state', 'context'].includes(source.property.name) || node.optional)
+					return;
+				if (node.parent.type === 'AssignmentExpression' && node.parent.left === node)
+					return;
+				let parent = node.parent;
+				while (parent.type !== 'ClassDeclaration' && parent.type !== 'ClassExpression' && parent.parent != null) {
+					parent = parent.parent;
+				}
+				if (parent.type !== 'ClassDeclaration' && parent.type !== 'ClassExpression')
+					return;
+				const base = parent.superClass;
+				const baseName = base?.type === 'Identifier' ? base.name : base?.type === 'MemberExpression' && base.property.type === 'Identifier' ? base.property.name : null;
+				if (baseName !== 'Component' && baseName !== 'PureComponent')
+					return;
+				context.report({ node, message: `Use destructuring assignment for component ${source.property.name}.` });
+			},
 			'Program:exit'(program) {
 				for (const { name, node } of query.all(program)) {
 					// JSX-producing helpers and render callbacks also appear in the collector.

@@ -30,6 +30,12 @@ test('ordinary helpers and graphics builders are not component props', () => {
 	assert.deepEqual(rulesFor('function BuildLayer(layer, previous, reverse) { return <div>{layer.id}</div>; }'), []);
 });
 
+test('class component props and state still require destructuring', () => {
+	assert.ok(rulesFor('class Example extends React.Component { render() { return <div>{this.props.value}</div>; } }').includes('@eslint-react/kit/require-destructured-props'));
+	assert.ok(rulesFor('class Example extends React.PureComponent { render() { return <div>{this.state.value}</div>; } }').includes('@eslint-react/kit/require-destructured-props'));
+	assert.deepEqual(rulesFor('class Example extends React.Component { render() { const { value } = this.props; return <div>{value}</div>; } }'), []);
+});
+
 test('raw form elements are restricted but wrappers are allowed', () => {
 	assert.ok(rulesFor('const element = <input />;').includes('no-restricted-syntax'));
 	assert.ok(rulesFor('const element = <select />;').includes('no-restricted-syntax'));

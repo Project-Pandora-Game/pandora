@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-syntax */
 import { pick } from 'lodash-es';
 import { Assert } from 'pandora-common';
 import { type InputHTMLAttributes, ReactNode } from 'react';

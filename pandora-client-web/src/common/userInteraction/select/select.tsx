@@ -64,7 +64,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
 	}, [innerRef, onWheelHandler]);
 
 	return (
-		// eslint-disable-next-line no-restricted-syntax
 		<select { ...props } onChange={ onChange } ref={ innerRef }>
 			{ children }
 		</select>

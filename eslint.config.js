@@ -10,6 +10,21 @@ import eslintReactHooksPlugin from 'eslint-plugin-react-hooks';
 import { join } from 'path';
 import * as tsEslint from 'typescript-eslint';
 
+const zodImportRestriction = {
+	message: "Do not import z namespace from zod. Use `import * as z from 'zod';` instead.",
+	// Reason for this is to allow better tree-shaking
+	selector: 'ImportDeclaration[source.value="zod"] ImportSpecifier Identifier[name="z"]',
+};
+const rawSelectRestriction = {
+	selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="select"]',
+	message: 'use <Select> instead',
+};
+const rawInputRestriction = {
+	// Date pickers and file uploads have no equivalent Pandora input component.
+	selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="input"]:not(:has(JSXAttribute[name.name="type"][value.value=/^(date|file)$/]))',
+	message: 'use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>, <FormInput>',
+};
+
 export default tsEslint.config(
 	{
 		ignores: [
@@ -118,13 +133,7 @@ export default tsEslint.config(
 					'**/pandora-client-web/webpack.config.ts',
 				],
 			}],
-			'no-restricted-syntax': ['warn',
-				{
-					message: "Do not import z namespace from zod. Use `import * as z from 'zod';` instead.",
-					// Reason for this is to allow better tree-shaking
-					selector: 'ImportDeclaration[source.value="zod"] ImportSpecifier Identifier[name="z"]',
-				},
-			],
+			'no-restricted-syntax': ['warn', zodImportRestriction],
 			// Stylistic rules
 			'@stylistic/semi': ['warn', 'always'],
 			'@stylistic/semi-style': ['warn', 'last'],
@@ -411,20 +420,30 @@ export default tsEslint.config(
 					'prop': 'ignore',
 				},
 			],
-			'no-restricted-syntax': ['warn',
-				{
-					message: "Do not import z namespace from zod. Use `import * as z from 'zod';` instead.",
-					selector: 'ImportDeclaration[source.value="zod"] ImportSpecifier Identifier[name="z"]',
-				},
-				{
-					selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="select"]',
-					message: 'use <Select> instead',
-				},
-				{
-					selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="input"]',
-					message: 'use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>, <FormInput>',
-				},
-			],
+		},
+	},
+	{
+		name: 'pandora/client/form-controls',
+		files: ['pandora-client-web/**/*.{js,cjs,mjs,ts,tsx}'],
+		ignores: [
+			// These components implement the native controls used by the rest of the UI.
+			'pandora-client-web/src/common/userInteraction/checkbox.tsx',
+			'pandora-client-web/src/common/userInteraction/input/{formInput,numberInput,textInput}.tsx',
+			'pandora-client-web/src/common/userInteraction/select/select.tsx',
+		],
+		rules: {
+			'no-restricted-syntax': ['warn', zodImportRestriction, rawSelectRestriction, rawInputRestriction],
+		},
+	},
+	{
+		name: 'pandora/client/asset-info-color',
+		files: ['pandora-client-web/src/editor/components/assetInfo/assetInfo.tsx'],
+		rules: {
+			// Preserve the native color field; ColorInput would introduce a custom editor dialog.
+			'no-restricted-syntax': ['warn', zodImportRestriction, rawSelectRestriction, {
+				...rawInputRestriction,
+				selector: rawInputRestriction.selector + ':not(:has(JSXAttribute[name.name="type"][value.value="color"]):has(JSXAttribute[name.name="readOnly"][value=null]))',
+			}],
 		},
 	},
 	{

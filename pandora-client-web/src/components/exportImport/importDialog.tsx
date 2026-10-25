@@ -116,7 +116,6 @@ export function ImportDialog<T extends z.ZodType>({
 					</Row>
 				</fieldset>
 				<label htmlFor={ importInputId } className='flex-1 hiddenUpload'>
-					{ /* eslint-disable-next-line no-restricted-syntax */ }
 					<input
 						accept='text/plain'
 						id={ importInputId }

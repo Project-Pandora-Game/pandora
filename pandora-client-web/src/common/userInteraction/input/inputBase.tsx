@@ -95,8 +95,8 @@ export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, T
 		const { value } = this.props;
 
 		if (value !== prevProps.value) {
-			// If value changed, check that we can just reset it
-			if (!this.isSelected() && !this._cooldownState) {
+			// Read-only fields must reflect new props even while focused or cooling down.
+			if (this.isReadonly() || (!this.isSelected() && !this._cooldownState)) {
 				this._resetValue();
 			}
 		}

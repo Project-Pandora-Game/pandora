@@ -1,9 +1,12 @@
-/* eslint-disable no-restricted-syntax */
 import { Immutable } from 'immer';
+import { noop } from 'lodash-es';
 import { AssetDefinition, AssetModuleDefinition, EFFECTS_DEFAULT, ModuleType, type EffectsDefinition } from 'pandora-common';
 import { IModuleConfigCommon } from 'pandora-common/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/assets/modules/typed';
 import { ReactElement, useId, useMemo } from 'react';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
@@ -40,17 +43,17 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 			<h3>Asset: { StripAssetIdPrefix(asset.id) }</h3>
 			<Row alignY='center'>
 				<label htmlFor='id'>ID: </label>
-				<input id='id' type='text' value={ definition.id } readOnly />
+				<TextInput id='id' value={ definition.id } readOnly />
 			</Row>
 			<Row alignY='center'>
 				<label htmlFor='name'>Name: </label>
-				<input id='name' type='text' value={ definition.name } readOnly />
+				<TextInput id='name' value={ definition.name } readOnly />
 			</Row>
 			{
 				asset.isType('bodypart') ? (
 					<Row alignY='center'>
 						<label htmlFor='bodypart'>Body part: </label>
-						<input id='bodypart' type='text' value={ asset.definition.bodypart } readOnly />
+						<TextInput id='bodypart' value={ asset.definition.bodypart } readOnly />
 					</Row>
 				) : null
 			}
@@ -71,7 +74,7 @@ function Colorization({ colorization }: { colorization: Immutable<AssetDefinitio
 			{ Object.entries(colorization).map(([key, color]) => (
 				<div key={ key }>
 					<label htmlFor={ `color-${key}-name` }>{ key }: </label>
-					<input id={ `color-${key}-name` } type='text' value={ color.name ?? '' } readOnly />
+					<TextInput id={ `color-${key}-name` } value={ color.name ?? '' } readOnly />
 					<input id={ `color-${key}-color` } type='color' value={ color.default } readOnly />
 				</div>
 			)) }
@@ -89,11 +92,11 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition<'bodypart' | '
 				<div key={ key }>
 					<label htmlFor={ `${id}-${key}` }>{ key }: </label>
 					{ typeof value === 'boolean' ? (
-						<input id={ `${id}-${key}` } type='checkbox' checked={ value } disabled />
+						<Checkbox id={ `${id}-${key}` } checked={ value } onChange={ noop } disabled />
 					) : typeof value === 'number' ? (
-						<input id={ `${id}-${key}` } type='number' value={ value } readOnly />
+						<NumberInput id={ `${id}-${key}` } value={ value } readOnly />
 					) : (
-						<input id={ `${id}-${key}` } type='text' value={ value } readOnly />
+						<TextInput id={ `${id}-${key}` } value={ value } readOnly />
 					) }
 				</div>
 			)) }
@@ -129,7 +132,7 @@ function Module({ name, module }: { name: string; module: Immutable<AssetModuleD
 		<div>
 			<div>
 				<label htmlFor={ `module-${name}` }>Key: </label>
-				<input id={ `module-${name}` } type='text' value={ name } readOnly />
+				<TextInput id={ `module-${name}` } value={ name } readOnly />
 			</div>
 			<ModuleCommon module={ module } />
 			{ moduleInfo }
@@ -161,15 +164,15 @@ function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption
 		<div>
 			<div>
 				<label htmlFor={ `module-type-${id}-id` }>Id: </label>
-				<input id={ `module-type-${id}-id` } type='text' value={ options.id } readOnly />
+				<TextInput id={ `module-type-${id}-id` } value={ options.id } readOnly />
 			</div>
 			<div>
 				<label htmlFor={ `module-type-${id}-name` }>Name: </label>
-				<input id={ `module-type-${id}-name` } type='text' value={ options.name } readOnly />
+				<TextInput id={ `module-type-${id}-name` } value={ options.name } readOnly />
 			</div>
 			<div>
 				<label htmlFor={ `module-type-${id}-default` }>Default: </label>
-				<input id={ `module-type-${id}-default` } type='checkbox' checked={ options.default } disabled />
+				<Checkbox id={ `module-type-${id}-default` } checked={ options.default ?? false } onChange={ noop } disabled />
 			</div>
 		</div>
 	);
@@ -181,15 +184,15 @@ function ModuleCommon({ module }: { module: IModuleConfigCommon<ModuleType>; }):
 		<>
 			<div>
 				<label htmlFor={ `module-${id}-type` }>Type: </label>
-				<input id={ `module-${id}-type` } type='text' value={ module.type } readOnly />
+				<TextInput id={ `module-${id}-type` } value={ module.type } readOnly />
 			</div>
 			<div>
 				<label htmlFor={ `module-${id}-name` }>Name: </label>
-				<input id={ `module-${id}-name` } type='text' value={ module.name } readOnly />
+				<TextInput id={ `module-${id}-name` } value={ module.name } readOnly />
 			</div>
 			<div>
 				<label htmlFor={ `module-${id}-expression` }>Expression: </label>
-				<input id={ `module-${id}-expression` } type='text' value={ module.expression ?? '' } readOnly />
+				<TextInput id={ `module-${id}-expression` } value={ module.expression ?? '' } readOnly />
 			</div>
 		</>
 	);

@@ -22,12 +22,10 @@ export type LogicConditionEditorConditionComponentProps<TCondition> = {
 };
 
 type ConditionRenderer<TCondition> = {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ConditionComponent: FC<LogicConditionEditorConditionComponentProps<TCondition>>;
+	conditionComponent: FC<LogicConditionEditorConditionComponentProps<TCondition>>;
 	renderCondition?: never;
 } | {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ConditionComponent?: never;
+	conditionComponent?: never;
 	/** Render callback without hooks; its identity can change without remounting children. */
 	renderCondition: (props: LogicConditionEditorConditionComponentProps<TCondition>) => ReactNode;
 };
@@ -41,7 +39,7 @@ export type LogicConditionEditorProps<TCondition> = {
 export function LogicConditionEditor<TCondition>({
 	conditions,
 	onChange,
-	ConditionComponent,
+	conditionComponent: ConditionComponent,
 	renderCondition,
 	processing = false,
 }: LogicConditionEditorProps<TCondition>): ReactElement {
@@ -134,7 +132,7 @@ export function LogicConditionEditor<TCondition>({
 
 								onChange(newValue);
 							}) : undefined }
-							ConditionComponent={ ConditionComponent }
+							conditionComponent={ ConditionComponent }
 							renderCondition={ renderCondition }
 							processing={ processing }
 							group={ group }
@@ -146,7 +144,7 @@ export function LogicConditionEditor<TCondition>({
 	);
 }
 
-function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, ConditionComponent, renderCondition, processing, group }: {
+function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, conditionComponent: ConditionComponent, renderCondition, processing, group }: {
 	record: LogicConditionEditorCondition<TCondition>;
 	firstEntry: boolean;
 	lastEntry: boolean;
@@ -157,7 +155,7 @@ function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, o
 	processing: boolean;
 	/** For first element of "AND" group - details about this group. */
 	group: { size: number; active?: boolean; } | null;
-} & Pick<ConditionRenderer<TCondition>, 'ConditionComponent' | 'renderCondition'>): ReactElement {
+} & Pick<ConditionRenderer<TCondition>, 'conditionComponent' | 'renderCondition'>): ReactElement {
 	const conditionProps: LogicConditionEditorConditionComponentProps<TCondition> = {
 		condition: record.condition,
 		setCondition: onChange != null ? ((newCondition) => {

@@ -157,16 +157,14 @@ export function LayerOffsetSetting({ layer }: {
 export type SettingConditionOverrideTemplateDetails<OverrideEntry> = React.FC<{ entry: OverrideEntry; update: (newValue: OverrideEntry) => void; }>;
 export type SettingConditionOverrideTemplateRenderDetails<OverrideEntry> = (props: Parameters<SettingConditionOverrideTemplateDetails<OverrideEntry>>[0]) => ReactNode;
 type OverrideDetailsRenderer<OverrideEntry> = {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	EntryDetails: SettingConditionOverrideTemplateDetails<OverrideEntry>;
+	entryDetails: SettingConditionOverrideTemplateDetails<OverrideEntry>;
 	renderEntryDetails?: never;
 } | {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	EntryDetails?: never;
+	entryDetails?: never;
 	/** Render callback without hooks; its identity can change without remounting children. */
 	renderEntryDetails: SettingConditionOverrideTemplateRenderDetails<OverrideEntry>;
 };
-export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, renderEntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator, conditionsMetadata }: {
+export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, entryDetails: EntryDetails, renderEntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator, conditionsMetadata }: {
 	overrides: readonly OverrideEntry[];
 	update: (newValue: readonly OverrideEntry[]) => void;
 	getConditions: (entry: OverrideEntry) => Immutable<Condition>;

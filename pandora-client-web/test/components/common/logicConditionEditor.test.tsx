@@ -25,9 +25,9 @@ describe('LogicConditionEditor renderers', () => {
 
 	it('continues to render hook-using component children as components', () => {
 		const conditions = [{ logic: 'and' as const, condition: 'component' }];
-		const view = render(<LogicConditionEditor conditions={ conditions } ConditionComponent={ StatefulCondition } />);
+		const view = render(<LogicConditionEditor conditions={ conditions } conditionComponent={ StatefulCondition } />);
 		fireEvent.click(screen.getByRole('button', { name: 'component: 0' }));
-		view.rerender(<LogicConditionEditor conditions={ conditions } ConditionComponent={ StatefulCondition } processing />);
+		view.rerender(<LogicConditionEditor conditions={ conditions } conditionComponent={ StatefulCondition } processing />);
 		expect(screen.getByRole('button', { name: 'component: 1' })).toBeVisible();
 	});
 });

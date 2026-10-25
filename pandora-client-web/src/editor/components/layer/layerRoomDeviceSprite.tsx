@@ -79,7 +79,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 						}
 					});
 				} }
-				EntryDetails={ SlotPositionOverridesDetail }
+				entryDetails={ SlotPositionOverridesDetail }
 				getConditions={ (entry) => entry.condition }
 				withConditions={ (entry, newConditions) => produce(entry, (d) => {
 					d.condition = castDraft(newConditions);

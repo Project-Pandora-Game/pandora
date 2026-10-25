@@ -223,7 +223,7 @@ export class DualQuaternion {
 		target[offset++] = this.ae;
 		target[offset++] = this.be;
 		target[offset++] = this.ce;
-		target[offset++] = this.de;
+		target[offset] = this.de;
 	}
 
 	public toTransformationMatrix(target: Matrix4x4): void {

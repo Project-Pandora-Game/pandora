@@ -34,14 +34,14 @@ export const HttpServer = new class HttpServerService implements ServerService {
 				certData = fs.readFileSync(SERVER_HTTPS_CERT, { encoding: 'utf-8' });
 			} catch (e) {
 				this._logger.error('Failed to read SERVER_HTTPS_CERT file', e);
-				throw new Error('Failed to read SERVER_HTTPS_CERT file');
+				throw new Error('Failed to read SERVER_HTTPS_CERT file', { cause: e });
 			}
 			let keyData: string;
 			try {
 				keyData = fs.readFileSync(SERVER_HTTPS_KEY, { encoding: 'utf-8' });
 			} catch (e) {
 				this._logger.error('Failed to read SERVER_HTTPS_KEY file', e);
-				throw new Error('Failed to read SERVER_HTTPS_KEY file');
+				throw new Error('Failed to read SERVER_HTTPS_KEY file', { cause: e });
 			}
 			this._server = new NodeHttpsServer({
 				cert: certData,

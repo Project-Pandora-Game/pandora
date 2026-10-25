@@ -70,8 +70,8 @@ async function GetCurrentVersion(loader: IGraphicsLoader): Promise<string> {
 	let hash: string;
 	try {
 		hash = (await loader.loadTextFile('current')).trim();
-	} catch (_error) {
-		throw new Error('Failed to get the assets version.');
+	} catch (error) {
+		throw new Error('Failed to get the assets version.', { cause: error });
 	}
 	return hash;
 }

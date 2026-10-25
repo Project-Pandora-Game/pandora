@@ -67,7 +67,7 @@ div.main-container {
 
 	> .Toastify {
 		position: relative;
-		--toastify-font-family: $theme-font-family-variable;
+		--toastify-font-family: #{common.$theme-font-family-variable};
 		--toastify-z-index: 99000;
 
 		// Preserve the pre-v11 spacing and reserve room for the close button.

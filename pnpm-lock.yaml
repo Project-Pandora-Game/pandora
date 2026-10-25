@@ -405,8 +405,8 @@ importers:
         specifier: 19.3.0
         version: 19.3.0(@types/react@19.3.0)
       '@types/react-reconciler':
-        specifier: 0.33.1
-        version: 0.33.1(@types/react@19.3.0)
+        specifier: 0.34.0
+        version: 0.34.0(@types/react@19.3.0)
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
@@ -1944,8 +1944,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
 
-  '@types/react-reconciler@0.33.1':
-    resolution: {integrity: sha512-0kF59ji2mKuHUd5wytHSpmORybMYVerJvq0K10pz9ZFoOlJ3e+w1LBjLshWpCrokeyQOioRodNbO4PH4ddvRfg==}
+  '@types/react-reconciler@0.34.0':
+    resolution: {integrity: sha512-zVDzX0Fk1XgDP2IutTpSrxd57jwOHlX3rlPrFz68Sc+06tpgOFRlqSUK2ZiqQeQXqnIfUb2cfJQUupXBKy498w==}
     peerDependencies:
       '@types/react': '*'
 
@@ -7695,7 +7695,7 @@ snapshots:
     dependencies:
       '@types/react': 19.3.0
 
-  '@types/react-reconciler@0.33.1(@types/react@19.3.0)':
+  '@types/react-reconciler@0.34.0(@types/react@19.3.0)':
     dependencies:
       '@types/react': 19.3.0
 

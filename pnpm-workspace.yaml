@@ -5,6 +5,8 @@ overrides:
 patchedDependencies:
   pixi.js: patches/pixi.js.patch
   react-switch: patches/react-switch.patch
+  # Zod's URL helper types must also compile without DOM or Node ambient globals.
+  zod@4.6.6: patches/zod@4.6.6.patch
 allowBuilds:
   argon2: true
   unrs-resolver: true

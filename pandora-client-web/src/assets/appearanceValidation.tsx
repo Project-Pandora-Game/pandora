@@ -1,4 +1,3 @@
-/* eslint-disable react/destructuring-assignment */
 import {
 	AppearanceActionProblem,
 	AssertNever,

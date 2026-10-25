@@ -14,7 +14,7 @@
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
 		"lint": "pnpm -r --parallel run lint",
-		"lint:root": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --max-warnings 0 .",
+		"lint:root": "pnpm run lint:config && cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --max-warnings 0 .",
 		"lint:fix": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" eslint --fix .",
 		"type-check": "pnpm -r --parallel run \"/type-check:.*/\"",
 		"type-check:test": "pnpm -r --parallel run \"/type-check:test.*/\"",
@@ -24,19 +24,22 @@
 		"coverage:collect": "node .hooks/coverage-collect.cjs",
 		"build": "pnpm -r run build",
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev",
-		"pandora-cli": "pnpm --filter pandora-cli run pandora-cli"
+		"pandora-cli": "pnpm --filter pandora-cli run pandora-cli",
+		"lint:config": "node --test .hooks/eslint-react-rules.test.mjs"
 	},
 	"dependencies": {
 		"js-yaml": "5.5.0"
 	},
 	"devDependencies": {
+		"@eslint-react/eslint-plugin": "5.28.7",
+		"@eslint-react/kit": "5.28.7",
 		"@eslint/js": "10.0.1",
 		"@jest/globals": "30.5.2",
 		"@stylistic/eslint-plugin": "5.10.0",
 		"cross-env": "10.1.0",
 		"eslint": "10.13.0",
-		"eslint-plugin-import": "2.32.0",
-		"eslint-plugin-react": "7.37.5",
+		"eslint-import-resolver-typescript": "4.4.5",
+		"eslint-plugin-import-x": "4.17.1",
 		"eslint-plugin-react-hooks": "7.1.1",
 		"jest": "30.5.2",
 		"jest-environment-jsdom": "30.5.2",

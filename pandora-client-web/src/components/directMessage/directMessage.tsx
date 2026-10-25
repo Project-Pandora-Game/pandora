@@ -302,7 +302,7 @@ function DirectMessageContents({ message }: { message: Immutable<LoadedDirectMes
 	}
 
 	return (
-		// eslint-disable-next-line react/jsx-no-useless-fragment
+		// eslint-disable-next-line @eslint-react/jsx-no-useless-fragment
 		<>
 			{ ...message.decrypted.map((c, i) => RenderChatPart(c, i, true)) }
 		</>

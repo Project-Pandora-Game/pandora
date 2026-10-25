@@ -335,7 +335,6 @@ export const RoomDeviceInteractive = memo(function RoomDeviceInteractiveImpl({
 		return {
 			hitArea: roomHitArea,
 			stopClickPropagation: true,
-			// eslint-disable-next-line react/no-unstable-nested-components
 			getSelectionButtonContents() {
 				return (
 					<WardrobeItemName item={ item } />
@@ -526,7 +525,6 @@ function RoomDeviceCharacterName({ character, x, y, zIndex, scale, spacing }: {
 		return {
 			hitArea: roomHitArea,
 			stopClickPropagation: true,
-			// eslint-disable-next-line react/no-unstable-nested-components
 			getSelectionButtonContents() {
 				const { publicSettings, name, id } = character.data;
 

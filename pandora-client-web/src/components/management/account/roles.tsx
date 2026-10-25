@@ -120,7 +120,7 @@ function ManageRoleGrant(): ReactElement {
 			<div className='input-row'>
 				<label>Expires</label>
 				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() : undefined) } />
-				{ /* eslint-disable-next-line react/forbid-elements */ }
+				{ /* eslint-disable-next-line no-restricted-syntax */ }
 				<input type='date' value={ expires } onChange={ (e) => setExpires(new Date(e.target.value).getTime()) } readOnly={ expires === undefined } />
 			</div>
 			<div className='input-row'>

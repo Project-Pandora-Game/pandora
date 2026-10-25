@@ -1,4 +1,4 @@
-/* eslint-disable react/forbid-elements */
+/* eslint-disable no-restricted-syntax */
 import { pick } from 'lodash-es';
 import type { InputHTMLAttributes, ReactElement } from 'react';
 

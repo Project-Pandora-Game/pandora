@@ -116,7 +116,7 @@ export function AssetUI() {
 				</ContextHelpButton>
 			</h4>
 			<label htmlFor='upload-button' className='hiddenUpload'>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
+				{ /* eslint-disable-next-line no-restricted-syntax */ }
 				<input
 					accept='image/png'
 					id='upload-button'
@@ -272,7 +272,7 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 			<Row>
 				<Button onClick={ exportToClipboard } className='flex-2' >Export definition to clipboard</Button>
 				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
+					{ /* eslint-disable-next-line no-restricted-syntax */ }
 					<input
 						accept='application/json'
 						id='asset-import-button'

@@ -167,7 +167,7 @@ function BetaKeyCreate(): ReactElement {
 			<div className='input-row'>
 				<label>Expires</label>
 				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() + ONE_DAY : undefined) } disabled={ !isAdmin } />
-				{ /* eslint-disable-next-line react/forbid-elements */ }
+				{ /* eslint-disable-next-line no-restricted-syntax */ }
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ updateExpires } />
 			</div>
 			<div className='input-row'>

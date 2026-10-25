@@ -64,7 +64,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function 
 	}, [innerRef, onWheelHandler]);
 
 	return (
-		// eslint-disable-next-line react/forbid-elements
+		// eslint-disable-next-line no-restricted-syntax
 		<select { ...props } onChange={ onChange } ref={ innerRef }>
 			{ children }
 		</select>

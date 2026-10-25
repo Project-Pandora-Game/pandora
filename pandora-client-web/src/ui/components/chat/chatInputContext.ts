@@ -71,7 +71,6 @@ export function useChatFocusModeForced(): boolean | null {
 }
 
 export function GetChatFocusModeForced(playerRestrictionManager: CharacterRestrictionsManager): boolean | null {
-	// eslint-disable-next-line react/destructuring-assignment
 	return playerRestrictionManager.getModifierEffectsByType('setting_room_focus')[0]?.config.value ?? null;
 }
 

@@ -156,10 +156,10 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 			};
 		} else {
 			toast(
-				<>
+				<div>
 					<strong className='fontSize-l'>{ title }</strong>
 					<p>{ notification.content }</p>
-				</>,
+				</div>,
 				{
 					type: 'info',
 					icon: false,

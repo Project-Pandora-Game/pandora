@@ -69,6 +69,42 @@ div.main-container {
 		position: relative;
 		--toastify-font-family: $theme-font-family-variable;
 		--toastify-z-index: 99000;
+
+		// Preserve the pre-v11 spacing and reserve room for the close button.
+		.Toastify__toast-container {
+			width: var(--toastify-toast-width);
+			padding: 4px;
+
+			@media only screen and (max-width: 480px) {
+				width: 100vw;
+				padding: 0;
+			}
+		}
+
+		.Toastify__toast {
+			width: 100%;
+			justify-content: space-between;
+
+			> :not(.Toastify__toast-icon, .Toastify__close-button, .Toastify__progress-bar--wrp) {
+				flex: 1;
+				min-width: 0;
+			}
+		}
+
+		.Toastify__toast-icon {
+			width: 20px;
+			margin-inline-end: 10px;
+		}
+
+		.Toastify__close-button {
+			position: static;
+			flex-shrink: 0;
+			align-self: flex-start;
+			margin-block-start: -6px;
+			margin-inline-start: auto;
+			padding-inline-start: 6px;
+			margin-inline-end: -6px;
+		}
 	}
 }
 

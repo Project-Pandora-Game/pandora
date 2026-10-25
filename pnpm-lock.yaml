@@ -170,6 +170,7 @@ overrides:
 patchedDependencies:
   pixi.js: 7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1
   react-switch: a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6
+  zod@4.6.6: 3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685
 
 importers:
 
@@ -368,8 +369,8 @@ importers:
         specifier: 4.8.4
         version: 4.8.4(supports-color@8.1.1)
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.6
+        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -532,8 +533,8 @@ importers:
         specifier: 6.0.3
         version: 6.0.3
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.6
+        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
 
   pandora-server-directory:
     dependencies:
@@ -598,8 +599,8 @@ importers:
         specifier: 0.10.1
         version: 0.10.1
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.6
+        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -686,8 +687,8 @@ importers:
         specifier: 0.10.1
         version: 0.10.1
       zod:
-        specifier: 4.4.3
-        version: 4.4.3
+        specifier: 4.6.6
+        version: 4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685)
     devDependencies:
       '@jest/globals':
         specifier: 30.5.2
@@ -6364,6 +6365,9 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
 snapshots:
 
@@ -12921,3 +12925,5 @@ snapshots:
       zod: 4.4.3
 
   zod@4.4.3: {}
+
+  zod@4.6.6(patch_hash=3c0ee6bec5c62b66725a9eab9a82e44f8eb12d4668def44bac1147d17a42d685): {}

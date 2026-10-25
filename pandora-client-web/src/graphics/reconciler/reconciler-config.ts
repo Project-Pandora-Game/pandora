@@ -101,7 +101,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		parentInstance.addChild(child.instance);
 		parentInstance.emitNeedsUpdate();
 	},
-	finalizeInitialChildren(_instance, _type, _props, _rootContainer, _hostContext) {
+	finalizeInitialChildren(_instance, _type, _props, _hostContext) {
 		// Called right after `createInstance` and all `appendInitialChild` calls - marking the instance ready
 		return false; // No work scheduled on mount
 	},

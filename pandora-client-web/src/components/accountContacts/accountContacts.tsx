@@ -243,7 +243,7 @@ function ShowFriends() {
 		));
 	}, [friends, status, sortConfig]);
 
-	const SortHeader = useCallback(({ label, col }: { label: string; col: FriendSortKey; }) => (
+	const renderSortHeader = useCallback(({ label, col }: { label: string; col: FriendSortKey; }) => (
 		<th key={ col }
 			className={ classNames('sortable', sortConfig.by === col ? 'active' : null) }
 			onClick={ () => handleSort(col) }
@@ -273,11 +273,11 @@ function ShowFriends() {
 				</colgroup>
 				<thead>
 					<tr>
-						<SortHeader label='ID' col='id' />
-						<SortHeader label='Name' col='name' />
-						<SortHeader label='Status' col='status' />
+						{ renderSortHeader({ label: 'ID', col: 'id' }) }
+						{ renderSortHeader({ label: 'Name', col: 'name' }) }
+						{ renderSortHeader({ label: 'Status', col: 'status' }) }
 						<th>Online Characters</th>
-						<SortHeader label='Since' col='since' />
+						{ renderSortHeader({ label: 'Since', col: 'since' }) }
 						<th>Actions</th>
 					</tr>
 				</thead>

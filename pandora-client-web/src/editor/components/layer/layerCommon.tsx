@@ -155,26 +155,40 @@ export function LayerOffsetSetting({ layer }: {
 }
 
 export type SettingConditionOverrideTemplateDetails<OverrideEntry> = React.FC<{ entry: OverrideEntry; update: (newValue: OverrideEntry) => void; }>;
-export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator, conditionsMetadata }: {
-	overrides: readonly OverrideEntry[];
-	update: (newValue: readonly OverrideEntry[]) => void;
+export type SettingConditionOverrideTemplateRenderDetails<OverrideEntry> = (props: Parameters<SettingConditionOverrideTemplateDetails<OverrideEntry>>[0]) => ReactNode;
+type OverrideDetailsRenderer<OverrideEntry> = {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	EntryDetails: SettingConditionOverrideTemplateDetails<OverrideEntry>;
+	renderEntryDetails?: never;
+} | {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	EntryDetails?: never;
+	/** Render callback without hooks; its identity can change without remounting children. */
+	renderEntryDetails: SettingConditionOverrideTemplateRenderDetails<OverrideEntry>;
+};
+export function SettingConditionOverrideTemplate<OverrideEntry>({ overrides, update, EntryDetails, renderEntryDetails, getConditions, withConditions, makeNewEntry, conditionEvalutator, conditionsMetadata }: {
+	overrides: readonly OverrideEntry[];
+	update: (newValue: readonly OverrideEntry[]) => void;
 	getConditions: (entry: OverrideEntry) => Immutable<Condition>;
 	withConditions: (entry: OverrideEntry, newConditions: Immutable<Condition>) => OverrideEntry;
 	makeNewEntry: () => OverrideEntry;
 	conditionEvalutator?: (condition: Immutable<AtomicCondition>) => boolean | undefined;
 	conditionsMetadata?: Immutable<EditorConditionInputMetadata>;
-}): ReactElement {
+} & OverrideDetailsRenderer<OverrideEntry>): ReactElement {
 	return (
 		<Column className='SettingConditionOverrideTemplate' padding='small'>
 			{ overrides.map((entry, i) => (
 				<Column key={ i } className='override-entry' padding='small'>
 					<Row gap='small'>
 						<Column className='zero-width flex-1'>
-							<EntryDetails entry={ entry } update={ (newValue) => {
-								update(overrides.toSpliced(i, 1, newValue));
-							} } />
+							{ EntryDetails != null ? (
+								<EntryDetails entry={ entry } update={ (newValue) => {
+									update(overrides.toSpliced(i, 1, newValue));
+								} } />
+							) : renderEntryDetails({
+								entry,
+								update: (newValue) => update(overrides.toSpliced(i, 1, newValue)),
+							}) }
 						</Column>
 						<Row gap='small' alignY='start'>
 							<Button slim onClick={ () => {

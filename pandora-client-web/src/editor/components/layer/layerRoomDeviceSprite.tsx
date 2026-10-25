@@ -11,7 +11,7 @@ import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsRoomDeviceLayer } from '../../assets/editorAssetGraphicsRoomDeviceLayer.ts';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
-import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
+import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails, type SettingConditionOverrideTemplateRenderDetails } from './layerCommon.tsx';
 import { EditorLayerColorPicker, LayerColorizationSetting } from './layerMesh.tsx';
 
 export function LayerRoomDeviceSpriteUI({ layer }: {
@@ -43,7 +43,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 		return evaluator.evalCondition(c, item ?? null);
 	}, [evaluator, item]);
 
-	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<RoomDeviceLayerImageOverride>>>(({ entry, update }) => {
+	const renderImageOverridesDetail = useCallback<SettingConditionOverrideTemplateRenderDetails<Immutable<RoomDeviceLayerImageOverride>>>(({ entry, update }) => {
 		return (
 			<>
 				<LayerImageSelectInput
@@ -150,7 +150,7 @@ export function LayerRoomDeviceSpriteUI({ layer }: {
 						}
 					});
 				} }
-				EntryDetails={ ImageOverridesDetail }
+				renderEntryDetails={ renderImageOverridesDetail }
 				getConditions={ (entry) => entry.condition }
 				withConditions={ (entry, newConditions) => produce(entry, (d) => {
 					d.condition = castDraft(newConditions);

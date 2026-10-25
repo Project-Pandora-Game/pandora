@@ -189,7 +189,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 }): ReactElement {
 	const [controlIndividually, setControlIndividually] = useBrowserStorage<boolean>('posing.arms-control-individually', false, z.boolean());
 
-	const ArmPosition = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+	const renderArmPosition = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
 		<td>
 			<Row gap='tiny' wrap>
 				{
@@ -215,7 +215,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			</Row>
 		</td>
 	), [characterState, setPose]);
-	const ArmFingers = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+	const renderArmFingers = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
 		<td>
 			<Row gap='tiny' wrap>
 				<PoseButton
@@ -241,7 +241,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			</Row>
 		</td>
 	), [characterState, setPose]);
-	const ArmRotation = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+	const renderArmRotation = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
 		<td>
 			<Row gap='tiny' wrap>
 				{
@@ -262,7 +262,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			</Row>
 		</td>
 	), [characterState, setPose]);
-	const ArmSegmentOrder = useCallback(({ segment, colSpan }: { segment: 'upper'; colSpan?: number; }): ReactElement => (
+	const renderArmSegmentOrder = useCallback(({ segment, colSpan }: { segment: 'upper'; colSpan?: number; }): ReactElement => (
 		<td colSpan={ colSpan }>
 			<Row gap='tiny' wrap>
 				<PoseButton
@@ -311,19 +311,19 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 						<tbody>
 							<tr>
 								<td>Position</td>
-								<ArmPosition arm='arms' />
+								{ renderArmPosition({ arm: 'arms' }) }
 							</tr>
 							<tr>
 								<td>Fingers</td>
-								<ArmFingers arm='arms' />
+								{ renderArmFingers({ arm: 'arms' }) }
 							</tr>
 							<tr>
 								<td>Rotation</td>
-								<ArmRotation arm='arms' />
+								{ renderArmRotation({ arm: 'arms' }) }
 							</tr>
 							<tr>
 								<td>Upper arm order</td>
-								<ArmSegmentOrder segment='upper' />
+								{ renderArmSegmentOrder({ segment: 'upper' }) }
 							</tr>
 						</tbody>
 					</table>
@@ -339,22 +339,22 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 						<tbody>
 							<tr>
 								<td>Position</td>
-								<ArmPosition arm='leftArm' />
-								<ArmPosition arm='rightArm' />
+								{ renderArmPosition({ arm: 'leftArm' }) }
+								{ renderArmPosition({ arm: 'rightArm' }) }
 							</tr>
 							<tr>
 								<td>Fingers</td>
-								<ArmFingers arm='leftArm' />
-								<ArmFingers arm='rightArm' />
+								{ renderArmFingers({ arm: 'leftArm' }) }
+								{ renderArmFingers({ arm: 'rightArm' }) }
 							</tr>
 							<tr>
 								<td>Rotation</td>
-								<ArmRotation arm='leftArm' />
-								<ArmRotation arm='rightArm' />
+								{ renderArmRotation({ arm: 'leftArm' }) }
+								{ renderArmRotation({ arm: 'rightArm' }) }
 							</tr>
 							<tr>
 								<td>Upper arm order</td>
-								<ArmSegmentOrder segment='upper' colSpan={ 2 } />
+								{ renderArmSegmentOrder({ segment: 'upper', colSpan: 2 }) }
 							</tr>
 						</tbody>
 					</table>

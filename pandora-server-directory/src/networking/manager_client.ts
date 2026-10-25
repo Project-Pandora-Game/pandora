@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter, Gauge } from '@prometheus-io/client';
 import { cloneDeep, throttle } from 'lodash-es';
 import { AccountRole, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, BadMessageError, GetLogger, IMessageHandler, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_CHARACTER_COUNT, MessageHandler, Promisable, ServerService, type CharacterId, type DirectoryStatusAnnouncement, type IDirectoryStatus } from 'pandora-common';
 import { ClientDirectoryAuthMessageSchema, type IAccountPasskeyCredential, type IAccountPasskeyInfo, type IClientDirectory, type IClientDirectoryArgument, type IClientDirectoryAuthMessage, type IClientDirectoryPromiseResult, type IClientDirectoryResult, type IDirectoryAccountInfo, type IShardTokenConnectInfo, type SecondFactorData, type SecondFactorResponse, type SecondFactorType } from 'pandora-common/networking/api/directory_client';
@@ -60,13 +60,13 @@ type PasskeyAssertionData = {
 };
 type PasskeyAssertionVerification = { ok: true; passkey: IAccountPasskeyCredential; signCount: number; } | { ok: false; };
 
-const connectedClientsMetric = new promClient.Gauge({
+const connectedClientsMetric = new Gauge({
 	name: 'pandora_directory_client_connections',
 	help: 'Current count of connections from clients',
 	labelNames: [],
 });
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_directory_client_messages',
 	help: 'Count of received messages from clients',
 	labelNames: ['messageType'],

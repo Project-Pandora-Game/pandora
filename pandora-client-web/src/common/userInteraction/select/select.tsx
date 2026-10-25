@@ -1,5 +1,5 @@
 import { Assert } from 'pandora-common';
-import React, { DetailedHTMLProps, ReactElement, SelectHTMLAttributes, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import { DetailedHTMLProps, ReactElement, SelectHTMLAttributes, useCallback, useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 
 export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'onChange'> {
 	onChange?: (ev: {
@@ -9,7 +9,7 @@ export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes
 	scrollChange?: boolean;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function SelectImpl({
+export const Select = forwardRef<HTMLSelectElement, SelectProps>(function SelectImpl({
 	children,
 	onChange,
 	scrollChange = false,

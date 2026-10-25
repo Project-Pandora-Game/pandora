@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Assert, AssertNotNullable, Asset, AssetId, EMPTY_ARRAY, GetLogger, Item } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { ReactElement, useCallback, useMemo, useState, useSyncExternalStore, DetailedHTMLProps, LiHTMLAttributes, MouseEvent } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
@@ -230,7 +230,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 		useCallback(() => editor.getLayersAlphaOverrideIndex(...layers), [editor, layers]),
 	);
 
-	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
+	const toggleAlpha = (event: MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		if (editorAssetGraphicsWorn) {
 			editor.setLayerAlphaOverride(layers, alphaIndex + 1);
@@ -286,7 +286,7 @@ function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsWornLayer; }):
 	const tint = useEditorLayerTint(layer);
 	const visibleName = useLayerName(layer);
 
-	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
+	const toggleAlpha = (event: MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		editor.setLayerAlphaOverride([layer], alphaIndex + 1);
 	};
@@ -319,7 +319,7 @@ export class ToggleLiState extends ObservableClass<{ open: boolean; }> {
 	}
 }
 
-type ToggleLiProps<T extends { open: boolean; }> = React.DetailedHTMLProps<React.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement> & {
+type ToggleLiProps<T extends { open: boolean; }> = DetailedHTMLProps<LiHTMLAttributes<HTMLLIElement>, HTMLLIElement> & {
 	state: IObservableClass<T>;
 	name: string;
 	className?: string;
@@ -330,7 +330,7 @@ function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, childr
 	const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children;
 	const spanClass = !hasChildren ? undefined : open ? 'opened' : 'closed';
 
-	const onClick = (event: React.MouseEvent<HTMLElement>) => {
+	const onClick = (event: MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		state.open = !open;
 	};

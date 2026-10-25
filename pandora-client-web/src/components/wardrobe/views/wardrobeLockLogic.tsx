@@ -12,7 +12,7 @@ import {
 	type LockSetup,
 	type LockTimerOptions,
 } from 'pandora-common';
-import React, { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState, type ReactElement, FC } from 'react';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { useCharacterRestrictionManager } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -41,7 +41,7 @@ export interface WardrobeLockLogicExecuteButtonProps<TActionContext> extends Chi
 export interface WardrobeLockLogicProps<TActionContext> {
 	lockLogic: LockLogic;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ActionButton: React.FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
+	ActionButton: FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
 	actionContext: TActionContext;
 }
 
@@ -318,7 +318,7 @@ function CharacterList<TActionContext>({
 	fingerprint: Immutable<NonNullable<LockSetup['fingerprint']>>;
 	content: readonly CharacterId[];
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ActionButton: React.FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
+	ActionButton: FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
 	actionContext: TActionContext;
 }) {
 
@@ -341,7 +341,7 @@ function CharacterList<TActionContext>({
 
 interface CharacterListButtonContext<TActionContext> {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ActionButton: React.FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
+	ActionButton: FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
 	outerActionContext: TActionContext;
 }
 

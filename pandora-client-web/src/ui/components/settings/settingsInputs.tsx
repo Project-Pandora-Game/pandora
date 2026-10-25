@@ -1,5 +1,5 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
-import React, { useCallback, useId, useMemo, useState, type DependencyList, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useId, useMemo, useState, type DependencyList, type ReactElement, type ReactNode, Fragment } from 'react';
 import type { OptionalKeysOf } from 'type-fest';
 import type { ZodType } from 'zod';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -233,7 +233,7 @@ export function NumberSettingInput({
 		},
 	});
 
-	const Wrapper = useMemo(() => (noWrapper ? React.Fragment : ({ children: wrapperChildren }: ChildrenProps) => <Column gap='small'>{ wrapperChildren }</Column>), [noWrapper]);
+	const Wrapper = useMemo(() => (noWrapper ? Fragment : ({ children: wrapperChildren }: ChildrenProps) => <Column gap='small'>{ wrapperChildren }</Column>), [noWrapper]);
 
 	return (
 		<Wrapper>
@@ -331,7 +331,7 @@ export function SelectSettingInput<TValue extends string>({ driver, label, strin
 		));
 	}, [stringify, optionOrder]);
 
-	const Wrapper = useMemo(() => (noWrapper ? React.Fragment : ({ children: wrapperChildren }: ChildrenProps) => <div className='input-section'>{ wrapperChildren }</div>), [noWrapper]);
+	const Wrapper = useMemo(() => (noWrapper ? Fragment : ({ children: wrapperChildren }: ChildrenProps) => <div className='input-section'>{ wrapperChildren }</div>), [noWrapper]);
 
 	return (
 		<Wrapper>

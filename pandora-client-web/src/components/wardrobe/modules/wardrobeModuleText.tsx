@@ -8,7 +8,7 @@ import {
 	type AppearanceAction,
 } from 'pandora-common';
 import { ItemModuleText, ModuleItemDataTextAlignSchema } from 'pandora-common/assets/modules/text';
-import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button, IconButton } from '../../common/button/button.tsx';
@@ -18,7 +18,7 @@ import { WardrobeActionButton } from '../wardrobeComponents.tsx';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 
 export function WardrobeModuleConfigText({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleText>): ReactElement {
-	const [edit, setEdit] = React.useState(false);
+	const [edit, setEdit] = useState(false);
 
 	if (edit) {
 		return (

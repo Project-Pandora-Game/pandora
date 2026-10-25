@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 import { pick } from 'lodash-es';
 import { Assert } from 'pandora-common';
-import React, { type InputHTMLAttributes } from 'react';
+import { type InputHTMLAttributes, ReactNode } from 'react';
 import { InputBase, type InputBaseProps } from './inputBase.tsx';
 
 const FORWARDED_PROPS = [
@@ -41,7 +41,7 @@ export interface NumberInputProps extends InputBaseProps<number>, Pick<InputHTML
 
 export class NumberInput extends InputBase<number, NumberInputProps, HTMLInputElement> {
 
-	public override render(): React.ReactNode {
+	public override render(): ReactNode {
 		const {
 			value,
 			min,

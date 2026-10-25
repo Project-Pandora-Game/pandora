@@ -3,7 +3,7 @@ import {
 	GetLogger,
 } from 'pandora-common';
 import type { IDirectoryClientChangeEvents } from 'pandora-common/networking/api/directory_client';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { useErrorHandler } from '../../common/useErrorHandler.ts';
 import { DIRECTORY_ADDRESS } from '../../config/Environment.ts';
@@ -104,9 +104,9 @@ export function useAuthTokenHeader(): string | undefined {
 
 export function useAuthTokenIsValid(): boolean {
 	const authToken = useAuthToken();
-	const [isValid, setIsValid] = React.useState(authToken != null && authToken.expires >= Date.now());
+	const [isValid, setIsValid] = useState(authToken != null && authToken.expires >= Date.now());
 
-	React.useEffect(() => {
+	useEffect(() => {
 		const now = Date.now();
 
 		if (authToken == null || authToken.expires <= now) {

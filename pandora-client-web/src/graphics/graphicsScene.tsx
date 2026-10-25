@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
 import type { Application } from 'pixi.js';
-import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState, DetailedHTMLProps, HTMLAttributes } from 'react';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { useDevicePixelRatio } from '../services/screenResolution/screenResolutionHooks.ts';
@@ -127,7 +127,7 @@ export function GraphicsScene({
 	className: string | undefined;
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
-} & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
+} & DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
 	const { renderResolution, upscaling } = useGraphicsSettings();
 	const dpr = useDevicePixelRatio();
 

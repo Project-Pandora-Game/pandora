@@ -1,7 +1,7 @@
 import { clamp } from 'lodash-es';
 import { CharacterSize, GetLogger } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DownloadAsFile } from '../../../common/downloadHelper.ts';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -66,12 +66,12 @@ function PreviewCutterRectangleInner({
 	centered,
 	position,
 }: PreviewCutterState) {
-	const [dragging, setDragging] = React.useState(false);
-	const graphic = React.useRef<PIXI.Graphics>(null);
+	const [dragging, setDragging] = useState(false);
+	const graphic = useRef<PIXI.Graphics>(null);
 	const x = centered ? (PREVIEW_CUTTER_CENTERED_X - size / 2) : position.x;
 	const y = position.y;
 
-	const draw = React.useCallback((g: PIXI.GraphicsContext) => {
+	const draw = useCallback((g: PIXI.GraphicsContext) => {
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
 			.rect(
@@ -82,15 +82,15 @@ function PreviewCutterRectangleInner({
 			)
 			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1, pixelLine: true });
 	}, [dragging, size]);
-	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
+	const onPointerDown = useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();
 		setDragging(true);
 	}, []);
-	const onPointerUp = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
+	const onPointerUp = useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();
 		setDragging(false);
 	}, []);
-	const onPointerMove = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
+	const onPointerMove = useCallback((ev: PIXI.FederatedPointerEvent) => {
 		if (!dragging || !graphic.current?.parent)
 			return;
 
@@ -104,7 +104,7 @@ function PreviewCutterRectangleInner({
 			},
 		};
 	}, [size, dragging]);
-	React.useEffect(() => {
+	useEffect(() => {
 		const handler = (ev: KeyboardEvent) => {
 			ev.stopPropagation();
 			const delta = ev.shiftKey ? 10 : 1;
@@ -130,7 +130,7 @@ function PreviewCutterRectangleInner({
 	}, [size]);
 
 	const context = useEditorSceneContext();
-	React.useEffect(() => {
+	useEffect(() => {
 		editorSceneContext = context;
 		return () => {
 			editorSceneContext = null;
@@ -155,13 +155,13 @@ function PreviewCutterRectangleInner({
 
 export function PreviewCutter() {
 	const state = useObservable(PREVIEW_CUTTER);
-	const onChange = React.useCallback((enabled: boolean) => {
+	const onChange = useCallback((enabled: boolean) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			enabled,
 		};
 	}, []);
-	const setX = React.useCallback((x: number) => {
+	const setX = useCallback((x: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -170,7 +170,7 @@ export function PreviewCutter() {
 			},
 		};
 	}, []);
-	const setY = React.useCallback((y: number) => {
+	const setY = useCallback((y: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -179,25 +179,25 @@ export function PreviewCutter() {
 			},
 		};
 	}, []);
-	const setSize = React.useCallback((size: number) => {
+	const setSize = useCallback((size: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			size,
 		};
 	}, []);
-	const setCentered = React.useCallback((newValue: boolean) => {
+	const setCentered = useCallback((newValue: boolean) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			centered: newValue,
 		};
 	}, []);
-	const setOverrideLayers = React.useCallback((newValue: boolean) => {
+	const setOverrideLayers = useCallback((newValue: boolean) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			overrideLayers: newValue,
 		};
 	}, []);
-	const setHideFace = React.useCallback((newValue: boolean) => {
+	const setHideFace = useCallback((newValue: boolean) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			hideFace: newValue,

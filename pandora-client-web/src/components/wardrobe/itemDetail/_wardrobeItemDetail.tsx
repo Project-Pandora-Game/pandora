@@ -11,7 +11,7 @@ import {
 	type Item,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as z from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -243,13 +243,13 @@ export function WardrobeItemConfigMenu({
 function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: Item<'personal' | 'roomDevice'>; item: ItemPath; }): ReactElement {
 	const { targetSelector } = useWardrobeContext();
 
-	const actionSetRequired = React.useMemo<AppearanceAction>(() => ({
+	const actionSetRequired = useMemo<AppearanceAction>(() => ({
 		type: 'customize',
 		target: targetSelector,
 		item,
 		requireFreeHandsToUse: true,
 	}), [targetSelector, item]);
-	const actionSetOptional = React.useMemo<AppearanceAction>(() => ({
+	const actionSetOptional = useMemo<AppearanceAction>(() => ({
 		type: 'customize',
 		target: targetSelector,
 		item,
@@ -299,9 +299,9 @@ function WardrobeItemNameAndDescription({ item, itemPath, showAssetInfo }: {
 	itemPath: ItemPath;
 	showAssetInfo?: () => void;
 }): ReactElement {
-	const [edit, setEdit] = React.useState(false);
-	const onStartEdit = React.useCallback(() => setEdit(true), []);
-	const onEndEdit = React.useCallback(() => setEdit(false), []);
+	const [edit, setEdit] = useState(false);
+	const onStartEdit = useCallback(() => setEdit(true), []);
+	const onEndEdit = useCallback(() => setEdit(false), []);
 
 	if (edit) {
 		return <WardrobeItemNameAndDescriptionEdit item={ item } itemPath={ itemPath } onEndEdit={ onEndEdit } />;
@@ -324,7 +324,7 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 	showAssetInfo?: () => void;
 }): ReactElement {
 	const { targetSelector } = useWardrobeContext();
-	const action = React.useMemo<AppearanceAction>(() => ({
+	const action = useMemo<AppearanceAction>(() => ({
 		type: 'customize',
 		target: targetSelector,
 		item: itemPath,
@@ -398,10 +398,10 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit, showA
 function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { item: Item; itemPath: ItemPath; onEndEdit: () => void; }): ReactElement {
 	const confirm = useConfirmDialog();
 	const { targetSelector } = useWardrobeContext();
-	const [name, setName] = React.useState(item.name ?? '');
-	const [description, setDescription] = React.useState(item.description ?? '');
+	const [name, setName] = useState(item.name ?? '');
+	const [description, setDescription] = useState(item.description ?? '');
 
-	const nameError = React.useMemo(() => (
+	const nameError = useMemo(() => (
 		FormCreateStringValidator(z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN), 'name')(name)
 	), [name]);
 

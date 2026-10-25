@@ -1,4 +1,4 @@
-import React, { type ChangeEvent } from 'react';
+import { type ChangeEvent, Component } from 'react';
 
 /** Dictates how long will the element definitely not update for after being modified */
 const INPUT_CHANGE_COOLDOWN_PERIOD = 500;
@@ -14,7 +14,7 @@ export interface IInputBase {
 	readonly readOnly: boolean;
 }
 
-export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, TElement extends HTMLElement> extends React.Component<TProps> implements IInputBase {
+export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, TElement extends HTMLElement> extends Component<TProps> implements IInputBase {
 
 	private _element: TElement | null = null;
 	public get element(): TElement | null {

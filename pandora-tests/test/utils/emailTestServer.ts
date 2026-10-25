@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import express, { Router } from 'express';
+import { Router, raw } from 'express';
 import { simpleParser, type ParsedMail } from 'mailparser';
 import { Assert, CreateManuallyResolvedPromise, type ManuallyResolvedPromise } from 'pandora-common';
 
@@ -57,7 +57,7 @@ export class TestEmailServer {
 
 		this.router.route('/send_email')
 			.post(
-				express.raw({ type: 'message/rfc822' }),
+				raw({ type: 'message/rfc822' }),
 				async (req, res) => {
 					expect(req.body).toBeInstanceOf(Buffer);
 					Assert(req.body instanceof Buffer);

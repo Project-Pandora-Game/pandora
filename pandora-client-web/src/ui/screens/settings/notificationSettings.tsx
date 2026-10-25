@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
 import { AssertNotNullable, CLIENT_NOTIFICATION_GROUPS, CLIENT_NOTIFICATION_TYPES, ClientNotificationSoundSchema, ClientNotificationSuppressionSettingSchema, KnownObject, type AccountSettings, type ClientNotificationSound, type ClientNotificationType } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState, Fragment } from 'react';
 import * as z from 'zod';
 import popupIcon from '../../../assets/icons/bubble.svg';
 import notificationIcon from '../../../assets/icons/notification.svg';
@@ -93,7 +93,7 @@ function NotificationIndividualSettings(): ReactElement {
 			<div className='notificationTypeSettingsGrid'>
 				{
 					Object.entries(CLIENT_NOTIFICATION_GROUPS).map(([group, groupDefinition], i) => (
-						<React.Fragment key={ group }>
+						<Fragment key={ group }>
 							{ i !== 0 ? <hr className='groupSeparator' /> : null }
 							<h2 className='groupName'>{ groupDefinition.name }</h2>
 							{
@@ -105,7 +105,7 @@ function NotificationIndividualSettings(): ReactElement {
 									/>
 								))
 							}
-						</React.Fragment>
+						</Fragment>
 					))
 				}
 			</div>

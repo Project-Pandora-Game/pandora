@@ -6,7 +6,7 @@ import {
 	SpaceListExtendedInfo,
 	type CharacterId,
 } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo, MouseEvent } from 'react';
 import circuitSlashedIcon from '../../../assets/icons/circuit-slashed.svg';
 import circuitIcon from '../../../assets/icons/circuit.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
@@ -232,7 +232,7 @@ function GuardedJoinButton({ info, hide, invite }: {
 	const gameState = useGameStateOptional();
 
 	const [join, processingJoin] = useAsyncEvent(
-		async (e: React.MouseEvent<HTMLButtonElement>) => {
+		async (e: MouseEvent<HTMLButtonElement>) => {
 			e.stopPropagation();
 
 			if (info.public === 'locked') {

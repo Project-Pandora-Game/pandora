@@ -1,7 +1,7 @@
 import { clamp } from 'lodash-es';
 import { EMPTY, IsAuthorized } from 'pandora-common';
 import type { IBetaKeyInfo } from 'pandora-common/networking/api/directory_client';
-import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState, ChangeEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -130,7 +130,7 @@ function BetaKeyCreate(): ReactElement {
 		}
 	}, [isAdmin]);
 
-	const updateExpires = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+	const updateExpires = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		const value = ev.target.value;
 		if (value === '') {
 			setExpires(undefined);

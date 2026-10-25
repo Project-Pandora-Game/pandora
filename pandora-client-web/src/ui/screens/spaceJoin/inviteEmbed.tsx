@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { AssertNever, SpaceIdSchema, SpaceInviteIdSchema, type CharacterId, type SpaceId, type SpaceInviteId } from 'pandora-common';
 import type { SpaceExtendedInfoResponse } from 'pandora-common/networking/api/directory_client';
-import React, { ReactElement } from 'react';
+import { ReactElement, useState } from 'react';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { SpaceDetails } from '../spacesSearch/spaceDetails.tsx';
@@ -63,7 +63,7 @@ export function SpaceInviteEmbed({ spaceId, invite, invitedBy, viewOnly = false 
 	/** If set, the dialog will not offer any options regarded to switching - only display details */
 	viewOnly?: boolean;
 }): ReactElement {
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = useState(false);
 	const info = useSpaceExtendedInfo(spaceId, { invite, invitedBy });
 
 	if (info == null) {

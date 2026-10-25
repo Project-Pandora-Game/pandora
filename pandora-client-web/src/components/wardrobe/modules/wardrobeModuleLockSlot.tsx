@@ -6,7 +6,7 @@ import {
 	type ItemPath,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo, MouseEvent } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import closedLock from '../../../assets/icons/lock_closed.svg';
@@ -24,7 +24,7 @@ import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTyp
 
 export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { focuser, currentRoomSelector } = useWardrobeContext();
-	const onFocus = useCallback((e: React.MouseEvent) => {
+	const onFocus = useCallback((e: MouseEvent) => {
 		e.stopPropagation();
 		focuser.focusItemModule(item, moduleName, target);
 	}, [item, target, moduleName, focuser]);

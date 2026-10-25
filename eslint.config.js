@@ -47,7 +47,11 @@ export default tsEslint.config(
 			reportUnusedDisableDirectives: 'warn',
 		},
 		settings: {
-			'import-x/resolver-next': [createTypeScriptImportResolver({ project: 'pandora-*/tsconfig.json' })],
+			'import-x/resolver-next': [createTypeScriptImportResolver({
+				project: 'pandora-*/tsconfig.json',
+				// Bowser's export= declarations hide its real browser ESM default export.
+				alias: { 'bowser$': ['bowser/src/bowser.js'] },
+			})],
 		},
 		rules: {
 			// Disabled recommended rules
@@ -230,9 +234,6 @@ export default tsEslint.config(
 			'@typescript-eslint/no-inferrable-types': 'off',
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
 			'import-x/namespace': 'off', // TypeScript ensures the validity better
-			// TypeScript understands synthetic default imports and CommonJS export assignments.
-			'import-x/default': 'off',
-			'import-x/no-named-as-default-member': 'off',
 			// NOs
 			'@typescript-eslint/only-throw-error': 'error',
 			// Warnings

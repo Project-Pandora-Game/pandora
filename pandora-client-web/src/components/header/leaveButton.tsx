@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
-import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
+import { ReactElement, createContext, useCallback, useContext, useState, MouseEvent as ReactMouseEvent } from 'react';
 import { toast } from 'react-toastify';
 import listIcon from '../../assets/icons/list.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
@@ -180,7 +180,7 @@ function CharacterLeave(): ReactElement {
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 	const closeDialog = useContext(leaveButtonContext);
 
-	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+	const onClick = useCallback((e: ReactMouseEvent<HTMLButtonElement, MouseEvent>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		accountManager.disconnectFromCharacter();
@@ -214,7 +214,7 @@ function AccountLeave(): ReactElement {
 	const logout = useLogout();
 	const closeDialog = useContext(leaveButtonContext);
 
-	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+	const onClick = useCallback((e: ReactMouseEvent<HTMLButtonElement, MouseEvent>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		logout();

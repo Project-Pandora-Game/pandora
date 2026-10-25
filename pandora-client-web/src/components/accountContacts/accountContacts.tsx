@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { AccountId, AssertNever, FriendSortKeySchema, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus, type FriendSortKey } from 'pandora-common';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router';
 import * as z from 'zod';
 import statusIconAway from '../../assets/icons/state-away.svg';
@@ -31,7 +31,7 @@ export function AccountContacts() {
 	const navigate = useNavigatePandora();
 	const directMessageManager = useService('directMessageManager');
 
-	useKeyDownEvent(React.useCallback(() => {
+	useKeyDownEvent(useCallback(() => {
 		navigate('/');
 		return true;
 	}, [navigate]), 'Escape');

@@ -1,5 +1,5 @@
 import { AssertNotNullable, FormatTimeInterval, GetRestrictionOverrideConfig, RestrictionOverride } from 'pandora-common';
-import React, { ReactElement, useCallback, useContext, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useContext, useMemo, useState, createContext } from 'react';
 import { PlayerCharacter } from '../../character/player.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
@@ -17,7 +17,7 @@ export type RestrictionOverrideDialogContext = {
 	hide: () => void;
 };
 
-const RestrictionOverrideDialogContext = React.createContext<RestrictionOverrideDialogContext | null>(null);
+const RestrictionOverrideDialogContext = createContext<RestrictionOverrideDialogContext | null>(null);
 
 export function useRestrictionOverrideDialogContext(): RestrictionOverrideDialogContext {
 	const context = useContext(RestrictionOverrideDialogContext);

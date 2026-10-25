@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { GetLogger, LIMIT_DIRECT_MESSAGE_STORE_COUNT } from 'pandora-common';
 import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
-import React, { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
+import { ReactElement, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject, Fragment } from 'react';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
 import { useObservable } from '../../observable.ts';
@@ -36,9 +36,9 @@ export function DirectMessage({ accountId }: {
 function DirectMessageChat({ accountId }: {
 	accountId: number;
 }): ReactElement {
-	const ref = React.useRef<HTMLTextAreaElement>(null);
+	const ref = useRef<HTMLTextAreaElement>(null);
 	const chatId: string = `chat:${accountId}`;
-	const [autocompleteHint, setAutocompleteHint] = React.useState<ChatInputAutocompleteState | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = useState<ChatInputAutocompleteState | null>(null);
 
 	const messagesDiv = useRef<HTMLDivElement>(null);
 	const scrollFnRef = useRef<(forceScroll: boolean, behavior?: ScrollBehavior) => void>(null);
@@ -67,7 +67,7 @@ function DirectMessageChat({ accountId }: {
 	// Handler to autofocus chat input
 	useInputAutofocus(ref);
 
-	const ctx = React.useMemo((): IChatInputHandler => ({
+	const ctx = useMemo((): IChatInputHandler => ({
 		setValue: (value: string) => {
 			if (ref.current) {
 				ref.current.value = value;
@@ -180,7 +180,7 @@ function DirectMessageList({ scrollRef, ref }: {
 						<span>Only the <strong>last { LIMIT_DIRECT_MESSAGE_STORE_COUNT } messages</strong> per chat are saved</span>
 					</Column>
 					{ encryptedMessages.map((message, i) => (
-						<React.Fragment key={ message.time }>
+						<Fragment key={ message.time }>
 							<DirectMessageElement
 								message={ message }
 								currentAccount={ account }
@@ -190,7 +190,7 @@ function DirectMessageList({ scrollRef, ref }: {
 									<OldMessagesKeyWarning />
 								) : null
 							}
-						</React.Fragment>
+						</Fragment>
 					)) }
 				</Column>
 			</Scrollable>

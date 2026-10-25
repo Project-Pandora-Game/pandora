@@ -10,7 +10,7 @@ import {
 	ItemTemplate,
 	LIMIT_OUTFIT_NAME_LENGTH,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState, Fragment } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -238,7 +238,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 							}
 							{
 								outfit.items.map((item, index) => (
-									<React.Fragment key={ index }>
+									<Fragment key={ index }>
 										<div className='overlayDropContainer'>
 											{
 												heldItem.type !== 'nothing' ? (
@@ -262,7 +262,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 												setEditedItemIndex(index);
 											} }
 										/>
-									</React.Fragment>
+									</Fragment>
 								))
 							}
 							<div className='overlayDropContainer'>
@@ -287,7 +287,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 function OutfitExportDialog({ outfit, close }: {
 	outfit: AssetFrameworkOutfit;
 	close: () => void;
-}): React.ReactNode {
+}): ReactNode {
 	const serviceManager = useServiceManager();
 	const { player, playerState, globalState } = usePlayerState();
 

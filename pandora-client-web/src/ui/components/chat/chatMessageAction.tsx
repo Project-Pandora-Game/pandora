@@ -11,7 +11,7 @@ import {
 	type IChatMessageActionItem,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import React, {
+import {
 	Fragment,
 	ReactElement,
 } from 'react';
@@ -30,7 +30,7 @@ import type {
 function ActionMessageDictionaryTemplate(strings: TemplateStringsArray, ...substitutions: ChatMessageProcessedDictionaryEntry[]): ChatMessageProcessedDictionaryEntry {
 	Assert(strings.length === substitutions.length + 1);
 	return {
-		rich: <>{ substitutions.map((v, i) => <React.Fragment key={ i }>{ strings[i] }{ typeof v === 'string' ? v : v.rich }</React.Fragment>) }{ strings[strings.length - 1] }</>,
+		rich: <>{ substitutions.map((v, i) => <Fragment key={ i }>{ strings[i] }{ typeof v === 'string' ? v : v.rich }</Fragment>) }{ strings[strings.length - 1] }</>,
 		text: substitutions.flatMap((v, i) => [strings[i], typeof v === 'string' ? v : v.text]).concat(strings[strings.length - 1]).join(''),
 	};
 }

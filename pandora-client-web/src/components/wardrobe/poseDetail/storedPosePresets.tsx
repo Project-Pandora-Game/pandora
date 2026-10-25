@@ -12,7 +12,7 @@ import {
 	type AssetFrameworkPosePresetWithId,
 	type PartialAppearancePose,
 } from 'pandora-common';
-import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactElement, type ReactNode, createContext, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -55,9 +55,9 @@ export function WardrobeStoredPosePresets(props: WardrobeStoredPosePresetsProps)
 }
 
 function WardrobeStoredPosePresetsContent(): ReactNode {
-	const [showEditSaved, setShowEditSaved] = React.useState(false);
-	const openEditSaved = React.useCallback(() => setShowEditSaved(true), []);
-	const closeEditSaved = React.useCallback(() => setShowEditSaved(false), []);
+	const [showEditSaved, setShowEditSaved] = useState(false);
+	const openEditSaved = useCallback(() => setShowEditSaved(true), []);
+	const closeEditSaved = useCallback(() => setShowEditSaved(false), []);
 
 	const { presets } = usePosePresetContext();
 	const empty = presets == null || presets.length === 0;
@@ -110,10 +110,10 @@ type PosePresetContextType = WardrobeStoredPosePresetsProps & {
 	update: (preset: AssetFrameworkPosePresetWithId) => void;
 };
 
-const PosePresetContext = React.createContext<PosePresetContextType | null>(null);
+const PosePresetContext = createContext<PosePresetContextType | null>(null);
 
 function usePosePresetContext(): PosePresetContextType {
-	const context = React.useContext(PosePresetContext);
+	const context = useContext(PosePresetContext);
 	AssertNotNullable(context);
 	return context;
 }
@@ -131,10 +131,10 @@ export function useSavedPosePresetsProvider(): {
 	};
 }
 
-function PosePresetContextProvider({ setPose, characterState, children }: WardrobeStoredPosePresetsProps & { children: React.ReactNode; }): ReactNode {
+function PosePresetContextProvider({ setPose, characterState, children }: WardrobeStoredPosePresetsProps & { children: ReactNode; }): ReactNode {
 	const { stored, save } = useSavedPosePresetsProvider();
 
-	const reorder = React.useCallback((id: string, shift: number) => {
+	const reorder = useCallback((id: string, shift: number) => {
 		if (stored == null) {
 			return;
 		}
@@ -154,7 +154,7 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		save(newStorage);
 	}, [stored, save]);
 
-	const remove = React.useCallback((id: string) => {
+	const remove = useCallback((id: string) => {
 		if (stored == null) {
 			return;
 		}
@@ -171,7 +171,7 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		save(newStorage);
 	}, [stored, save]);
 
-	const update = React.useCallback((preset: AssetFrameworkPosePresetWithId) => {
+	const update = useCallback((preset: AssetFrameworkPosePresetWithId) => {
 		if (stored == null) {
 			return;
 		}
@@ -186,7 +186,7 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		}
 	}, [stored, save]);
 
-	const [edit, setEditRaw] = React.useState<AssetFrameworkPosePresetWithId | null>(null);
+	const [edit, setEditRaw] = useState<AssetFrameworkPosePresetWithId | null>(null);
 
 	const setEdit = useCallback((preset: AssetFrameworkPosePresetWithId | null) => {
 		if (preset == null) {
@@ -215,7 +215,7 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		}
 	}, []);
 
-	const context = React.useMemo((): PosePresetContextType => ({
+	const context = useMemo((): PosePresetContextType => ({
 		presets: stored,
 		reorder,
 		remove,
@@ -235,10 +235,10 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 
 function PosePresetImportButton(): ReactNode {
 	const { update } = usePosePresetContext();
-	const [show, setShow] = React.useState(false);
-	const open = React.useCallback(() => setShow(true), []);
-	const close = React.useCallback(() => setShow(false), []);
-	const onImport = React.useCallback((data: AssetFrameworkPosePreset) => {
+	const [show, setShow] = useState(false);
+	const open = useCallback(() => setShow(true), []);
+	const close = useCallback(() => setShow(false), []);
+	const onImport = useCallback((data: AssetFrameworkPosePreset) => {
 		update({
 			...data,
 			id: nanoid(),
@@ -286,7 +286,7 @@ function PosePresetButton({ preset }: { preset: AssetFrameworkPosePresetWithId; 
 function PosePresetEditing(): ReactNode {
 	const { edit, setEdit } = usePosePresetContext();
 
-	const close = React.useCallback(() => setEdit(null), [setEdit]);
+	const close = useCallback(() => setEdit(null), [setEdit]);
 
 	if (edit == null) {
 		return null;
@@ -299,7 +299,7 @@ function PosePresetEditing(): ReactNode {
 
 function PosePresetCreateButton(): ReactNode {
 	const { characterState, edit, setEdit } = usePosePresetContext();
-	const onClick = React.useCallback(() => {
+	const onClick = useCallback(() => {
 		if (edit != null) {
 			return;
 		}
@@ -330,27 +330,27 @@ function PosePresetCreateButton(): ReactNode {
 
 function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPosePresetWithId; close: () => void; }): ReactNode {
 	const { characterState, update, presets, setEdit } = usePosePresetContext();
-	const onNameChange = React.useCallback((newValue: string) => {
+	const onNameChange = useCallback((newValue: string) => {
 		setEdit({ ...preset, name: newValue });
 	}, [preset, setEdit]);
 
-	const onSave = React.useCallback(() => {
+	const onSave = useCallback(() => {
 		update(preset);
 		close();
 	}, [update, preset, close]);
 
-	const title = React.useMemo(() => {
+	const title = useMemo(() => {
 		if (presets?.some((p) => p.id === preset.id)) {
 			return 'Edit saved pose';
 		}
 		return 'Save current pose';
 	}, [presets, preset]);
 
-	const [exported, setExported] = React.useState<AssetFrameworkPosePreset | null>(null);
-	const onExport = React.useCallback(() => {
+	const [exported, setExported] = useState<AssetFrameworkPosePreset | null>(null);
+	const onExport = useCallback(() => {
 		setExported(omit(cloneDeep(preset), 'id'));
 	}, [preset]);
-	const closeExport = React.useCallback(() => {
+	const closeExport = useCallback(() => {
 		setExported(null);
 	}, []);
 
@@ -482,17 +482,17 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
 	const { reorder, remove, edit, setEdit } = usePosePresetContext();
 
-	const onMoveUp = React.useCallback(() => reorder(preset.id, -1), [reorder, preset.id]);
-	const onMoveDown = React.useCallback(() => reorder(preset.id, 1), [reorder, preset.id]);
-	const onRemove = React.useCallback(() => remove(preset.id), [remove, preset.id]);
-	const onEdit = React.useCallback(() => setEdit(cloneDeep(preset)), [setEdit, preset]);
-	const [exported, setExported] = React.useState<AssetFrameworkPosePreset | null>(null);
+	const onMoveUp = useCallback(() => reorder(preset.id, -1), [reorder, preset.id]);
+	const onMoveDown = useCallback(() => reorder(preset.id, 1), [reorder, preset.id]);
+	const onRemove = useCallback(() => remove(preset.id), [remove, preset.id]);
+	const onEdit = useCallback(() => setEdit(cloneDeep(preset)), [setEdit, preset]);
+	const [exported, setExported] = useState<AssetFrameworkPosePreset | null>(null);
 
-	const onExport = React.useCallback(() => {
+	const onExport = useCallback(() => {
 		setExported(omit(cloneDeep(preset), 'id'));
 	}, [preset]);
 
-	const closeExport = React.useCallback(() => {
+	const closeExport = useCallback(() => {
 		setExported(null);
 	}, []);
 
@@ -537,7 +537,7 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 function useSaveStoredOutfits(): (newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => void {
 	const directoryConnector = useServiceOptional('directoryConnector');
 
-	return React.useCallback((newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => {
+	return useCallback((newStorage: AssetFrameworkPosePresetWithId[], onSuccess?: () => void) => {
 		if (directoryConnector == null) {
 			toast(`Error saving changes:\nNot connected`, TOAST_OPTIONS_ERROR);
 			return;

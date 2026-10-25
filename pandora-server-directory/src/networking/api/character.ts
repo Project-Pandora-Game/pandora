@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import { Router, raw } from 'express';
 import { Assert, CharacterIdSchema, LIMIT_CHARACTER_PREVIEW_SIZE } from 'pandora-common';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import { GetApiRequestAccount } from './_utils.ts';
@@ -36,7 +36,7 @@ export function PandoraApiCharacter(): Router {
 				.send(result);
 		})
 		.put(
-			express.raw({ type: 'image/png', limit: LIMIT_CHARACTER_PREVIEW_SIZE }),
+			raw({ type: 'image/png', limit: LIMIT_CHARACTER_PREVIEW_SIZE }),
 			async (req, res) => {
 				const characterIdParsed = CharacterIdSchema.safeParse(req.params.characterId);
 				if (!characterIdParsed.success || !(req.body instanceof Buffer)) {

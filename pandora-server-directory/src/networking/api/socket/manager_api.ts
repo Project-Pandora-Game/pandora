@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter, Gauge } from '@prometheus-io/client';
 import { GetLogger, IMessageHandler, MessageHandler, ServerService } from 'pandora-common';
 import type { IApiDirectory } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
@@ -10,13 +10,13 @@ import { ApiHandlersToken } from './handlers/token.ts';
 
 const logger = GetLogger('ConnectionManager-Api');
 
-const connectedClientsMetric = new promClient.Gauge({
+const connectedClientsMetric = new Gauge({
 	name: 'pandora_directory_api_socket_connections',
 	help: 'Current count of connections from API',
 	labelNames: [],
 });
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_directory_api_socket_messages',
 	help: 'Count of received messages from API',
 	labelNames: ['messageType'],

@@ -1,5 +1,5 @@
 import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../../common/useColorInput.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
@@ -69,7 +69,7 @@ function LabelColor(): ReactElement {
 function Pronouns(): ReactElement {
 	const settingDriver = useCharacterSettingDriver('pronoun');
 	const currentEffectiveValue = settingDriver.currentValue ?? settingDriver.defaultValue;
-	const [pronoun, setPronoun] = React.useState(currentEffectiveValue);
+	const [pronoun, setPronoun] = useState(currentEffectiveValue);
 
 	return (
 		<fieldset>

@@ -20,7 +20,7 @@ import {
 	type AssetsPosePresetCategory,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useId, useMemo, useState, MouseEvent } from 'react';
 import * as z from 'zod';
 import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
@@ -629,7 +629,7 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 	}, [actions, globalState, targetSelector]);
 	const checkResult = useCheckAddPermissions(checkResultInitial);
 
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.stopPropagation();
 		if (!checkResult.valid) {
 			if (checkResult.prompt != null) {

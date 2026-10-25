@@ -275,7 +275,7 @@ export function useWardrobeExecuteChecked(action: Nullable<Immutable<AppearanceA
 				return;
 
 			if (!result.valid && result.prompt == null) {
-				toast(<ActionProblemsContent problems={ result.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+				toast(<div><ActionProblemsContent problems={ result.problems } prompt={ false } /></div>, TOAST_OPTIONS_WARNING);
 				return;
 			}
 

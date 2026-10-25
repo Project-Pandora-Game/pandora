@@ -111,7 +111,7 @@ function MoveDeviceMenu({ roomState, device, close }: {
 			return;
 		}
 		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
-			toast(<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+			toast(<div><ActionProblemsContent problems={ checkResult.problems } prompt={ false } /></div>, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		setRoomSceneMode({ mode: 'moveDevice', deviceItemId: device.id });

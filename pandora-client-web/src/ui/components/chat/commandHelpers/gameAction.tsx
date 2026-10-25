@@ -30,7 +30,7 @@ export function CommandDoGameAction(gameState: GameState, action: AppearanceActi
 	const checkResult = ApplyAction(processingContext, action);
 
 	if (!checkResult.valid && checkResult.prompt == null) {
-		toast(<ActionProblemsContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+		toast(<div><ActionProblemsContent problems={ checkResult.problems } prompt={ false } /></div>, TOAST_OPTIONS_WARNING);
 		return false;
 	}
 

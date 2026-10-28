@@ -232,8 +232,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       immer:
-        specifier: 11.1.21
-        version: 11.1.21
+        specifier: 11.2.3
+        version: 11.2.3
       socket.io-client:
         specifier: 4.8.4
         version: 4.8.4(supports-color@8.1.1)
@@ -306,8 +306,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       immer:
-        specifier: 11.1.21
-        version: 11.1.21
+        specifier: 11.2.3
+        version: 11.2.3
       inter-ui:
         specifier: 4.1.1
         version: 4.1.1
@@ -499,8 +499,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       immer:
-        specifier: 11.1.21
-        version: 11.1.21
+        specifier: 11.2.3
+        version: 11.2.3
       lodash-es:
         specifier: 4.18.1
         version: 4.18.1
@@ -563,8 +563,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0(supports-color@8.1.1)
       immer:
-        specifier: 11.1.21
-        version: 11.1.21
+        specifier: 11.2.3
+        version: 11.2.3
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -654,8 +654,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0(supports-color@8.1.1)
       immer:
-        specifier: 11.1.21
-        version: 11.1.21
+        specifier: 11.2.3
+        version: 11.2.3
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -3760,8 +3760,8 @@ packages:
     resolution: {integrity: sha512-/8UvqAPU9DGTI9k4mxtf49U37Isfwr8Uts96+SBHIkFxPJnHS0Ew4f00sM4Scd8V8EjM0jUNtVDdv1kPdt35lg==}
     engines: {node: '>= 4'}
 
-  immer@11.1.21:
-    resolution: {integrity: sha512-bZSadeCPGdaY5/qRLgr6mDSH1ra21rD3rqpiWk7+QTr4ayYPTE9qZYdLh/NdPhMe0wSrTvHD/Lk8q5EwhUs0aw==}
+  immer@11.2.3:
+    resolution: {integrity: sha512-FbR9W6jf7+tvOCuDmOLJy3yStLCvoRDODRARzfeaWmn75+1fW4hFbMv5X5cWgEkxgWcC/eC5Nva00ZV1iv+0EA==}
 
   immutable@5.1.9:
     resolution: {integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==}
@@ -9939,7 +9939,7 @@ snapshots:
 
   ignore@7.0.12: {}
 
-  immer@11.1.21: {}
+  immer@11.2.3: {}
 
   immutable@5.1.9: {}
 

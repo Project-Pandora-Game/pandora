@@ -29,7 +29,7 @@ export const BetaKeyStore = new class BetaKeyStoreService extends TokenStoreBase
 				created: { id: 0, username: '[[Pandora]]', time: 0 },
 				uses: 0,
 			}))
-				this.logger.info(`Token '${BETA_KEY_GLOBAL}' created`);
+				this.logger.info('Configured global beta key created');
 		}
 	}
 

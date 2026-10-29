@@ -2,10 +2,12 @@ import { noop } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, GetLogger } from 'pandora-common';
 import React, { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router';
+import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { KeyExchange } from '../../crypto/keyExchange.ts';
 import { useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useRoutingParentPath } from '../../routing/routingUtils.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
@@ -163,7 +165,7 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 
 	const [unlock, processing] = useAsyncEvent(async () => {
 		const key = account?.cryptoKey;
-		if (key == null)
+		if (key == null || account == null)
 			return;
 
 		setUnlockResult(undefined);
@@ -186,8 +188,12 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 				const oldResult = await directMessageManager.loadKey(key, oldPassword);
 				// If successful, force re-sync to the server
 				if (oldResult === 'ok') {
-					await directMessageManager.updateSavedKey();
-					return;
+					const migrated = await directMessageManager.updateSavedKey(account.username, unlockPassword);
+					if (!migrated) {
+						GetLogger('DirectMessageCryptoWarningLoadError').warning('Unlocked a legacy DM key, but could not migrate it; current account password is required');
+						toast('Your DMs are unlocked, but key migration needs your current account password. The old key is still stored.', TOAST_OPTIONS_WARNING);
+					}
+					return 'ok';
 				}
 			}
 		}

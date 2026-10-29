@@ -1,6 +1,7 @@
 import { waitFor } from '@testing-library/react';
 import { Assert, type ServiceManager } from 'pandora-common';
-import type { IAccountCryptoKey, IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
+import type { IAccountCryptoKey, IClientDirectoryArgument, IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
+import { PrehashPassword } from '../../src/crypto/helpers.ts';
 import { KeyExchange } from '../../src/crypto/keyExchange.ts';
 import { DirectoryConnector } from '../../src/networking/directoryConnector.ts';
 import type { PasskeyDirectMessageUnlock } from '../../src/services/accountLogic/accountManager.ts';
@@ -68,6 +69,55 @@ describe('DirectMessageManager', () => {
 		});
 
 		await waitFor(() => expect(directMessageManager.cryptoState.value).toBe('ready'));
+	});
+
+	it('keeps passkey login usable but refuses a stale wrapped DM key after replacement', async () => {
+		const oldCrypto = await KeyExchange.generate();
+		const currentCrypto = await KeyExchange.generate();
+		const oldKey = await oldCrypto.export('old-passkey-secret');
+		const currentKey = await currentCrypto.export('current-password-secret');
+
+		await sendConnectionState({
+			account: CreateAccount('passkey-user', currentKey),
+			character: null,
+			passkeyUnlock: {
+				cryptoKey: oldKey,
+				wrappingSecret: 'old-passkey-secret',
+			},
+		});
+		await waitFor(() => expect(directMessageManager.cryptoState.value).toBe('loadError'));
+		await expect(directMessageManager.loadKey(currentKey, 'current-password-secret')).resolves.toBe('ok');
+		expect(directMessageManager.cryptoState.value).toBe('ready');
+	});
+
+	it('confirms the current password before uploading a rewrapped legacy key', async () => {
+		const crypto = await KeyExchange.generate();
+		await expect(directMessageManager.loadKey(await crypto.export('legacy-secret'), 'legacy-secret')).resolves.toBe('ok');
+		const response = jest.spyOn(directoryConnector, 'awaitResponse');
+		response.mockResolvedValueOnce({ result: 'ok', expires: Date.now() + 60_000 });
+		response.mockResolvedValueOnce({ result: 'ok' });
+
+		await expect(directMessageManager.updateSavedKey('alice', 'current-password')).resolves.toBe(true);
+		expect(response).toHaveBeenNthCalledWith(1, 'sudoAuthenticate', {
+			passwordSha512: await PrehashPassword('current-password'),
+		});
+		expect(response.mock.calls[1]?.[0]).toBe('setCryptoKey');
+		const upload = response.mock.calls[1]?.[1] as IClientDirectoryArgument['setCryptoKey'] | undefined;
+		expect(upload?.allowReset).toBe('same-key');
+		expect(upload?.cryptoKey.publicKey).toBe(await crypto.exportPublicKey());
+	});
+
+	it('does not upload a rewrapped key if sudo authentication fails', async () => {
+		const crypto = await KeyExchange.generate();
+		await expect(directMessageManager.loadKey(await crypto.export('legacy-secret'), 'legacy-secret')).resolves.toBe('ok');
+		const response = jest.spyOn(directoryConnector, 'awaitResponse');
+		response.mockResolvedValueOnce({ result: 'invalidPassword' });
+
+		await expect(directMessageManager.updateSavedKey('alice', 'old-password')).resolves.toBe(false);
+		expect(response).toHaveBeenCalledTimes(1);
+		expect(response).toHaveBeenCalledWith('sudoAuthenticate', {
+			passwordSha512: await PrehashPassword('old-password'),
+		});
 	});
 
 	async function loadServices(): Promise<void> {

@@ -7,11 +7,18 @@ import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../../../ch
 import { AppearanceActionSchema } from '../../../gameLogic/actionLogic/actions/_index.ts';
 import { AppearanceActionData, AppearanceActionProblem } from '../../../gameLogic/actionLogic/appearanceActionProblems.ts';
 import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../../../gameLogic/index.ts';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../../../inputLimits.ts';
+import { LIMIT_BOT_COMMAND_ARGUMENT_COUNT, LIMIT_BOT_COMMAND_INPUT_LENGTH, LIMIT_BOT_COMMAND_NAME_LENGTH, LIMIT_CHARACTER_PROFILE_LENGTH, LIMIT_PERMISSION_PROMPT_ENTRIES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../../../inputLimits.ts';
 import { CardGameActionSchema } from '../../../utility/cards.ts';
 import { Satisfies } from '../../../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../../../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from '../../helpers.ts';
+
+const BotCommandClientRequestSchema = z.object({
+	command: z.string().max(LIMIT_BOT_COMMAND_NAME_LENGTH),
+	args: z.string().max(LIMIT_BOT_COMMAND_INPUT_LENGTH).array().max(LIMIT_BOT_COMMAND_ARGUMENT_COUNT),
+	/** Bot id, used to avoid race conditions */
+	bot: BotIdSchema,
+}).refine(({ command, args }) => command.length + args.reduce((total, arg) => total + arg.length, 0) <= LIMIT_BOT_COMMAND_INPUT_LENGTH);
 
 /** Client->Shard messages */
 export const ClientShardSchema = {
@@ -40,7 +47,7 @@ export const ClientShardSchema = {
 	chatStatus: {
 		request: z.object({
 			status: ChatCharacterStatusSchema,
-			targets: CharacterIdSchema.array().optional(),
+			targets: CharacterIdSchema.array().max(LIMIT_SPACE_MAX_CHARACTER_NUMBER + LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS).optional(),
 		}),
 		response: null,
 	},
@@ -81,7 +88,7 @@ export const ClientShardSchema = {
 		request: z.object({
 			target: CharacterIdSchema,
 			/** List of requested permissions. If any of the permissions cannot be prompted, the request fails. */
-			permissions: z.tuple([PermissionGroupSchema, z.string()]).array(),
+			permissions: z.tuple([PermissionGroupSchema, z.string()]).array().min(1).max(LIMIT_PERMISSION_PROMPT_ENTRIES),
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({
@@ -342,15 +349,11 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
+			z.object({ result: z.literal('rateLimited') }),
 		]),
 	},
 	botCommandRun: {
-		request: z.object({
-			command: z.string(),
-			args: z.string().array(),
-			/** Bot id, used to avoid race conditions */
-			bot: BotIdSchema,
-		}),
+		request: BotCommandClientRequestSchema,
 		response: BotCommandRunResultSchema.or(z.discriminatedUnion('result', [
 			z.object({
 				/** There is no bot in this space. */
@@ -364,15 +367,11 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
+			z.object({ result: z.literal('rateLimited') }),
 		])),
 	},
 	botCommandGetStructurePart: {
-		request: z.object({
-			command: z.string(),
-			args: z.string().array(),
-			/** Bot id, used to avoid race conditions */
-			bot: BotIdSchema,
-		}),
+		request: BotCommandClientRequestSchema,
 		response: BotCommandGetStructureResultSchema.or(z.discriminatedUnion('result', [
 			z.object({
 				/** There is no bot in this space. */
@@ -386,6 +385,7 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
+			z.object({ result: z.literal('rateLimited') }),
 		])),
 	},
 	//#endregion

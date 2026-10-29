@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { isEqual } from 'lodash-es';
 import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, EMPTY_ARRAY, GetLogger, IsAuthorized, type AccountOnlineStatus, type CharacterId } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useRef, useState, MouseEvent } from 'react';
 import { toast } from 'react-toastify';
 import crossIcon from '../../assets/icons/cross.svg';
 import friendsIcon from '../../assets/icons/friends.svg';
@@ -280,7 +280,7 @@ export const HEADER_STATUS_SELECTOR_NAMES: Record<AccountOnlineStatus, string> =
 function NotificationButton({ icon, title, onClick }: {
 	icon: string;
 	title: string;
-	onClick: (_: React.MouseEvent<HTMLButtonElement>) => void;
+	onClick: (_: MouseEvent<HTMLButtonElement>) => void;
 }): ReactElement {
 	const [notifications, clearNotifications] = useNotificationHeader();
 	const [showOverlay, setShowOverlay] = useState(false);
@@ -289,7 +289,7 @@ function NotificationButton({ icon, title, onClick }: {
 	const notificationPermissionState = useObservable((useService('browserPermissionManager')).permissionStates).notifications;
 	const shouldNotifyAboutNotificationPermission = notificationGlobalSettings.usePlatformPopup && notificationPermissionState === 'prompt';
 
-	const onNotificationClick = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
+	const onNotificationClick = useCallback((ev: MouseEvent<HTMLButtonElement>) => {
 		setShowOverlay((v) => {
 			if (!v) {
 				// Hide collapsable header after 200ms (matching opening transition of notification menu), if opening the menu

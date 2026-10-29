@@ -1,6 +1,6 @@
 import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
 import { Container, type Application } from 'pixi.js';
-import React, { Context, ReactElement, ReactNode } from 'react';
+import { Context, ReactElement, ReactNode, Component, StrictMode } from 'react';
 import { CalculationQueue } from '../common/calculationQueue.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { useErrorHandler } from '../common/useErrorHandler.ts';
@@ -25,7 +25,7 @@ export interface GraphicsSceneRendererProps extends ChildrenProps {
 	forwardContexts: readonly Context<any>[];
 }
 
-class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
+class GraphicsSceneRendererSharedImpl extends Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
 	private _needsUpdate: boolean = true;
 	private _animationFrameRequest: number | null = null;
 	private _cleanupUpdateCallback: undefined | (() => void);
@@ -37,7 +37,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 	private readonly logger = GetLogger('GraphicsSceneRendererShared');
 
-	public override render(): React.ReactNode {
+	public override render(): ReactNode {
 		return null;
 	}
 
@@ -286,9 +286,9 @@ export function GraphicsSceneRendererShared({
 				</ForwardingErrorBoundary>
 			</GraphicsSceneRendererSharedImpl>
 		) }>
-			<React.StrictMode>
+			<StrictMode>
 				{ children }
-			</React.StrictMode>
+			</StrictMode>
 		</ContextBridge>
 	);
 }
@@ -301,7 +301,7 @@ const backgroundRenderingQueue = new CalculationQueue({
 	normal: 25,
 });
 
-class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
+class GraphicsSceneBackgroundRendererImpl extends Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'> & { errorHandler: (error: unknown) => void; }> {
 	private readonly logger = GetLogger('BackgroundRenderer');
 
 	private _needsUpdate: boolean = false;
@@ -316,7 +316,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	private _app: Application | null = null;
 	private readonly ticker = new PixiTicker();
 
-	public override render(): React.ReactNode {
+	public override render(): ReactNode {
 		const { renderArea } = this.props;
 
 		return (
@@ -528,9 +528,9 @@ function GraphicsSceneBackgroundRendererUnsafe({
 				</ForwardingErrorBoundary>
 			</GraphicsSceneBackgroundRendererImpl>
 		) }>
-			<React.StrictMode>
+			<StrictMode>
 				{ children }
-			</React.StrictMode>
+			</StrictMode>
 		</ContextBridge>
 	);
 }

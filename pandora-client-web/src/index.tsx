@@ -1,7 +1,7 @@
 import './earlyload.ts'; // Stuff that must happen before ANYTHING else
 
 import { GetLogger, SetConsoleOutput } from 'pandora-common';
-import React, { lazy, Suspense } from 'react';
+import { lazy, Suspense, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import 'react-toastify/dist/ReactToastify.css' with { type: 'css' };
 import { Dialogs } from './components/dialog/dialog.tsx';
@@ -71,14 +71,14 @@ async function Start(): Promise<void> {
 	await serviceManager.load();
 
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
-		<React.StrictMode>
+		<StrictMode>
 			<Dialogs location='global' />
 			<EulaGate>
 				<Suspense fallback={ <div className='Loading'><LoadIndicator /></div> }>
 					<Main serviceManager={ serviceManager } />
 				</Suspense>
 			</EulaGate>
-		</React.StrictMode>,
+		</StrictMode>,
 	);
 
 	// Preload main application for when user confirms EULA

@@ -567,7 +567,7 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(null);
 
 		if (accessId === false)
-			char.accessId = accessId = nanoid(8);
+			char.accessId = nanoid(8);
 		else if (accessId !== char.accessId)
 			return Promise.resolve(null);
 

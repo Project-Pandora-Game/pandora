@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, EMPTY_ARRAY, GetLogger, ServerService } from 'pandora-common';
@@ -16,37 +16,37 @@ export const ACCOUNTMANAGER_TICK_INTERVAL = 15_000;
 
 const logger = GetLogger('AccountManager');
 
-const totalAccountsMetric = new promClient.Gauge({
+const totalAccountsMetric = new Gauge({
 	name: 'pandora_directory_accounts',
 	help: 'Total count of accounts ever created',
 });
 
-const totalCharactersMetric = new promClient.Gauge({
+const totalCharactersMetric = new Gauge({
 	name: 'pandora_directory_characters',
 	help: 'Total count of characters ever created',
 });
 
-const loadedAccountsMetric = new promClient.Gauge({
+const loadedAccountsMetric = new Gauge({
 	name: 'pandora_directory_accounts_loaded',
 	help: 'Current count of accounts loaded into memory',
 });
 
-const inUseAccountsMetric = new promClient.Gauge({
+const inUseAccountsMetric = new Gauge({
 	name: 'pandora_directory_accounts_in_use',
 	help: 'Current count of accounts in use',
 });
 
-const onlineAccountsMetric = new promClient.Gauge({
+const onlineAccountsMetric = new Gauge({
 	name: 'pandora_directory_accounts_online',
 	help: 'Current count of accounts considered online',
 });
 
-const inUseCharactersMetric = new promClient.Gauge({
+const inUseCharactersMetric = new Gauge({
 	name: 'pandora_directory_characters_in_use',
 	help: 'Current count of characters in use',
 });
 
-const onlineCharactersMetric = new promClient.Gauge({
+const onlineCharactersMetric = new Gauge({
 	name: 'pandora_directory_characters_online',
 	help: 'Current count of characters considered online',
 });

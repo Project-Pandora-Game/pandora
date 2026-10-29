@@ -9,7 +9,7 @@ import {
 	ItemPath,
 	type AppearanceItems,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState, type ReactNode, Fragment } from 'react';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import roomIcon from '../../../assets/icons/room.svg';
 import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
@@ -104,7 +104,7 @@ function SecondaryInventoryViewContent({ children, targetSelector, container, it
 			{ children }
 			{
 				items.map((i) => (
-					<React.Fragment key={ i.id }>
+					<Fragment key={ i.id }>
 						<div className='overlayDropContainer'>
 							{
 								heldItem.type !== 'nothing' ? (
@@ -122,7 +122,7 @@ function SecondaryInventoryViewContent({ children, targetSelector, container, it
 							quickActionTarget={ quickActionTarget }
 							quickActionTargetContainer={ quickActionTargetContainer }
 						/>
-					</React.Fragment>
+					</Fragment>
 				))
 			}
 			<div className='overlayDropContainer'>

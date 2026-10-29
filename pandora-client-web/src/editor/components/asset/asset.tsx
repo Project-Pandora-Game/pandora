@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { AssertNever, AssetSourceGraphicsDefinitionSchema, AssetSourceGraphicsRoomDeviceDefinitionSchema, GetLogger, SortPathStrings, type Asset, type RoomDeviceSlot } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import { ReactElement, useCallback, useMemo, useState, useSyncExternalStore, MouseEvent } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -116,7 +116,6 @@ export function AssetUI() {
 				</ContextHelpButton>
 			</h4>
 			<label htmlFor='upload-button' className='hiddenUpload'>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					accept='image/png'
 					id='upload-button'
@@ -272,7 +271,6 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 			<Row>
 				<Button onClick={ exportToClipboard } className='flex-2' >Export definition to clipboard</Button>
 				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						accept='application/json'
 						id='asset-import-button'
@@ -586,7 +584,7 @@ function AssetLayerListLayer({ layer }: { layer: EditorAssetGraphicsWornLayer | 
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
-	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
+	const toggleAlpha = (event: MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		editor.setLayerAlphaOverride([layer], alphaIndex + 1);
 	};
@@ -650,7 +648,7 @@ function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraph
 		setPreview(preview ? '' : asset.getTextureImageSource(image) ?? '');
 	});
 
-	const onDelete = useEvent((event: React.MouseEvent<HTMLElement>) => {
+	const onDelete = useEvent((event: MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		// eslint-disable-next-line no-alert
 		if (!confirm(`Are you sure you want to delete image '${image}'?`))

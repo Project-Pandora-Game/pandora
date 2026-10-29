@@ -8,7 +8,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { loadEnvFile } from 'node:process';
 import { join } from 'path';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
-import webpack from 'webpack';
+import webpackRuntime from 'webpack';
 import 'webpack-dev-server';
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
@@ -38,13 +38,13 @@ const SRC_DIR = join(import.meta.dirname, 'src');
 const DIST_DIR = DIST_DIR_OVERRIDE ?? join(import.meta.dirname, 'dist');
 const GAME_NAME = 'Pandora';
 
-type WebpackMinimizer = webpack.WebpackPluginInstance | '...';
+type WebpackMinimizer = webpackRuntime.WebpackPluginInstance | '...';
 
 interface WebpackEnv {
 	prod?: boolean;
 }
 
-export default function (env: WebpackEnv): webpack.Configuration {
+export default function (env: WebpackEnv): webpackRuntime.Configuration {
 	const mode = env.prod ? 'production' : 'development';
 	return {
 		devServer: {
@@ -128,8 +128,8 @@ export default function (env: WebpackEnv): webpack.Configuration {
 	};
 }
 
-function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
-	const plugins: webpack.WebpackPluginInstance[] = [
+function GeneratePlugins(env: WebpackEnv): webpackRuntime.WebpackPluginInstance[] {
+	const plugins: webpackRuntime.WebpackPluginInstance[] = [
 		new ForkTsCheckerWebpackPlugin({
 			async: false,
 			typescript: {
@@ -145,7 +145,7 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 				},
 			},
 		}),
-		new webpack.DefinePlugin({
+		new webpackRuntime.DefinePlugin({
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',
 				GAME_NAME,
@@ -198,8 +198,8 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 	return plugins;
 }
 
-function GenerateRules(env: WebpackEnv): webpack.RuleSetRule[] {
-	const moduleRules: webpack.RuleSetRule[] = [
+function GenerateRules(env: WebpackEnv): webpackRuntime.RuleSetRule[] {
+	const moduleRules: webpackRuntime.RuleSetRule[] = [
 		{
 			test: /\.tsx?$/i,
 			exclude: /node_modules/,
@@ -244,8 +244,8 @@ function GenerateMinimizer(_env: WebpackEnv): WebpackMinimizer[] {
 	return minimizer;
 }
 
-function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
-	const styleLoaders: webpack.RuleSetUseItem[] = [
+function GenerateStyleLoaders(env: WebpackEnv): webpackRuntime.RuleSetUseItem[] {
+	const styleLoaders: webpackRuntime.RuleSetUseItem[] = [
 		(env.prod ? MiniCssExtractPlugin.loader : { loader: 'style-loader' }),
 		{ loader: 'css-loader' },
 		{
@@ -275,12 +275,12 @@ class GenerateStringPlugin {
 		this._value = value;
 	}
 
-	public apply(compiler: webpack.Compiler) {
+	public apply(compiler: webpackRuntime.Compiler) {
 		compiler.hooks.compilation.tap(this, (compilation) => {
 			compilation.hooks.processAssets.tap(
 				{
 					name: 'GenerateVersionJson',
-					stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+					stage: webpackRuntime.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 				},
 				(assets) => {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

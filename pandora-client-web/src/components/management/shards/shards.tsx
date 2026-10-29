@@ -162,7 +162,6 @@ function ShardCreate(): ReactElement {
 			<div className='input-row'>
 				<label>Expires</label>
 				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() : undefined) } />
-				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ (e) => setExpires(e.target.value === '' ? undefined : new Date(e.target.value).getTime()) } />
 			</div>
 			<div className='input-row'>

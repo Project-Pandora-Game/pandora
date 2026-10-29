@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { Assert } from 'pandora-common';
 import type { IDirectoryShardInfo, IShardTokenType } from 'pandora-common/networking/api/directory_client';
 import { Shard } from './shard.ts';
@@ -9,7 +9,7 @@ export const SHARD_TIMEOUT = 10_000;
 
 export const SHARD_WAIT_STOP = Date.now() + SHARD_TIMEOUT;
 
-const shardsMetric = new promClient.Gauge({
+const shardsMetric = new Gauge({
 	name: 'pandora_directory_shards',
 	help: 'Current count of shards',
 });

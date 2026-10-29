@@ -1,5 +1,5 @@
 import { GetLogger } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useEffect, useId, useRef, useState, SubmitEvent } from 'react';
 import { toast } from 'react-toastify';
 import lockIcon from '../../../../assets/icons/lock_closed.svg';
 import lockIconOpen from '../../../../assets/icons/lock_open.svg';
@@ -47,7 +47,7 @@ export function SudoModeButton({
 	disabled?: boolean;
 	theme?: ButtonTheme;
 }): ReactElement {
-	const [showPrompt, setShowPrompt] = React.useState(false);
+	const [showPrompt, setShowPrompt] = useState(false);
 	const { sudoActive } = useSudoMode();
 
 	return (
@@ -88,7 +88,7 @@ export function SudoDialog({ hide }: {
 		toast('Access confirmed', TOAST_OPTIONS_SUCCESS);
 	}, [hide]);
 
-	const [authenticateWithPassword, passwordProcessing] = useAsyncEvent(async (ev: React.SubmitEvent) => {
+	const [authenticateWithPassword, passwordProcessing] = useAsyncEvent(async (ev: SubmitEvent) => {
 		ev.preventDefault();
 
 		return await directoryConnector.awaitResponse('sudoAuthenticate', {

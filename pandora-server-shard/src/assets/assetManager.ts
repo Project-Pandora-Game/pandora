@@ -1,4 +1,4 @@
-import express from 'express';
+import { RequestHandler, static as expressStatic } from 'express';
 import { readFileSync, statSync } from 'fs';
 import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora-common';
 import { join } from 'path';
@@ -71,7 +71,7 @@ function WatchAssetDefinitionsTick(): void {
 	}
 }
 
-export function AssetsServe(): express.RequestHandler {
+export function AssetsServe(): RequestHandler {
 	if (!ASSETS_DEFINITION_PATH) {
 		throw new Error('Missing required ASSETS_DEFINITION_PATH config');
 	}
@@ -79,7 +79,7 @@ export function AssetsServe(): express.RequestHandler {
 		throw new Error('ASSETS_DEFINITION_PATH is not a directory');
 	}
 
-	return express.static(ASSETS_DEFINITION_PATH, {
+	return expressStatic(ASSETS_DEFINITION_PATH, {
 		dotfiles: 'ignore',
 		lastModified: true,
 		cacheControl: true,

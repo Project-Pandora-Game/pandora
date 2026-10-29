@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useState, SubmitEvent } from 'react';
 import { Navigate } from 'react-router';
 import { useCreateCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
@@ -65,7 +65,7 @@ export function CharacterCreate(): ReactElement | null {
 			}
 		});
 
-	const onSubmit = useCallback((event: React.SubmitEvent<HTMLFormElement>) => {
+	const onSubmit = useCallback((event: SubmitEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 		handleSubmit();

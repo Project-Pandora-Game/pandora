@@ -1,10 +1,10 @@
-import React, { Suspense, type ReactElement } from 'react';
+import { Suspense, type ReactElement, lazy, useCallback } from 'react';
 import { useObservable } from '../../../observable.ts';
 import { useIsVeryNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import { FormField, FormFieldError } from './form.tsx';
 
-const HCaptcha = React.lazy(() => import('@hcaptcha/react-hcaptcha'));
+const HCaptcha = lazy(() => import('@hcaptcha/react-hcaptcha'));
 
 export function FormFieldCaptcha({
 	setCaptchaToken,
@@ -17,7 +17,7 @@ export function FormFieldCaptcha({
 	const captchaSiteKey = useObservable(directoryConnector.directoryStatus).captchaSiteKey;
 	const isVeryNarrowScreen = useIsVeryNarrowScreen();
 
-	const clear = React.useCallback(() => {
+	const clear = useCallback(() => {
 		setCaptchaToken('');
 	}, [setCaptchaToken]);
 

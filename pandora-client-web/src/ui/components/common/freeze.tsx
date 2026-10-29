@@ -1,10 +1,10 @@
-import React, { Suspense } from 'react';
+import { Suspense, ReactNode } from 'react';
 
 const infinite = { then: () => { /** noop */ } };
 
 function Suspender({ freeze, children }: {
 	freeze: boolean;
-	children: React.ReactNode;
+	children: ReactNode;
 }) {
 	if (freeze) {
 		// eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -15,8 +15,8 @@ function Suspender({ freeze, children }: {
 
 export function Freeze({ freeze, children, placeholder = null }: {
 	freeze: boolean;
-	children: React.ReactNode;
-	placeholder?: React.ReactNode;
+	children: ReactNode;
+	placeholder?: ReactNode;
 }) {
 	return (
 		<Suspense fallback={ placeholder }>

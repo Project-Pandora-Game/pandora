@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { Assert, CloneDeepMutable, GetLogger, SpaceId } from 'pandora-common';
 import type { IShardSpaceDefinition } from 'pandora-common/networking/api/directory_shard';
 import { assetManager } from '../assets/assetManager.ts';
@@ -6,7 +6,7 @@ import { PublicSpace } from './publicSpace.ts';
 
 const logger = GetLogger('SpaceManager');
 
-const spacesMetric = new promClient.Gauge({
+const spacesMetric = new Gauge({
 	name: 'pandora_shard_spaces',
 	help: 'Current count of spaces loaded on this shard',
 });

@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { uniq } from 'lodash-es';
 import { CharacterId, CharacterIdSchema, ChatMessageChat, NaturalListJoin, type AccountSettings, type ChatMessageChatCharacter, type ChatMessageChatNPC, type HexColorString, type RoomId } from 'pandora-common';
-import React, {
+import {
 	memo,
 	ReactElement,
 	useCallback,
@@ -11,6 +11,8 @@ import React, {
 	useRef,
 	useState,
 	type ReactNode,
+	Fragment,
+	MouseEvent,
 } from 'react';
 import { GetCurrentAssetManager, useAssetManager } from '../../../assets/assetManager.tsx';
 import circuitIcon from '../../../assets/icons/circuit.svg';
@@ -251,7 +253,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 		}
 	}, [message.type, message.parts]);
 
-	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
+	const onClick = useCallback((event: MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();
 		event.preventDefault();
 
@@ -275,7 +277,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 		}
 	}, [setTargets, whisperTargets, playerId]);
 
-	const replyAll = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
+	const replyAll = useCallback((event: MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();
 		event.preventDefault();
 
@@ -308,7 +310,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 				</span>
 				{ ' ' }
 				{ message.to.map((t, i) => (
-					<React.Fragment key={ i }>
+					<Fragment key={ i }>
 						{ i !== 0 ? ', ' : null }
 						<ColoredName
 							className='to cursor-pointer'
@@ -319,7 +321,7 @@ function DisplayName({ message, color }: { message: ChatMessageChat; color: HexC
 						>
 							{ t.name }
 						</ColoredName>
-					</React.Fragment>
+					</Fragment>
 				)) }
 				{ after }
 			</span>

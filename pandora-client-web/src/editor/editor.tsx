@@ -73,7 +73,6 @@ export class Editor extends TypedEventEmitter<{
 			if (layer && this.targetAsset.value !== layer.assetGraphics) {
 				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
 				this.targetLayer.value = null;
-				layer = null;
 			}
 		});
 

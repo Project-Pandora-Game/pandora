@@ -1,6 +1,6 @@
 import { AssertNever, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, LIMIT_ACCOUNT_PASSKEY_NAME_LENGTH, PasswordSchema } from 'pandora-common';
 import type { IClientDirectoryNormalResult, IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
-import React, { ReactElement, useCallback, useEffect, useId, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../../common/useEvent.ts';
@@ -42,7 +42,7 @@ type AccountConnectedClients = IClientDirectoryNormalResult['queryConnections'][
 
 function ConnectedClients(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [connections, setConnections] = React.useState<AccountConnectedClients | null>(null);
+	const [connections, setConnections] = useState<AccountConnectedClients | null>(null);
 
 	const [load, processing] = useAsyncEvent(
 		async () => await directoryConnector.awaitResponse('queryConnections', {}),
@@ -94,7 +94,7 @@ function PasskeySettings(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directMessageManager = useService('directMessageManager');
 	const { sudoActive, clearSudoMode } = useSudoMode();
-	const [passkeys, setPasskeys] = React.useState<AccountPasskeys | null>(null);
+	const [passkeys, setPasskeys] = useState<AccountPasskeys | null>(null);
 	const passkeySupported = IsPasskeySupported();
 	const defaultPasskeyName = 'Security key';
 
@@ -345,7 +345,7 @@ function ConnectedClientConnection({ connection }: { connection: AccountConnecte
 
 	const { loginTokenId, connectionCount, connectedCharacters } = connection;
 
-	const disconnect = React.useCallback(() => {
+	const disconnect = useCallback(() => {
 		void confirm('Are you sure you want to disconnect this client?').then((confirmed) => {
 			if (confirmed) {
 				directoryConnector.sendMessage('logout', { type: 'selected', accountTokenId: loginTokenId });
@@ -377,7 +377,7 @@ function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; proc
 	const authToken = useObservable(directoryConnector.authToken);
 	const confirm = useConfirmDialog();
 
-	const logout = React.useCallback(() => {
+	const logout = useCallback(() => {
 		void confirm('Are you sure you want to logout?').then((confirmed) => {
 			if (confirmed) {
 				directoryConnector.sendMessage('logout', { type: 'self' });
@@ -385,7 +385,7 @@ function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; proc
 		});
 	}, [confirm, directoryConnector]);
 
-	const logoutAll = React.useCallback(() => {
+	const logoutAll = useCallback(() => {
 		void confirm('Are you sure you want to logout from all clients?').then((confirmed) => {
 			if (confirmed) {
 				directoryConnector.sendMessage('logout', { type: 'all' });
@@ -410,7 +410,7 @@ function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; proc
 }
 
 function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
-	const [show, setShow] = React.useState(false);
+	const [show, setShow] = useState(false);
 
 	const hide = useCallback(() => {
 		setShow(false);

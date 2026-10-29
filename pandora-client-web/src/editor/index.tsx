@@ -1,7 +1,7 @@
 import '../earlyload.ts'; // Stuff that must happen before ANYTHING else
 
 import { GetLogger, SetConsoleOutput } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { ToastContainer, toast } from 'react-toastify';
@@ -70,7 +70,7 @@ async function Start(): Promise<void> {
 	serviceManager.services.screenResolution!.forceFullResolution = true;
 
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
-		<React.StrictMode>
+		<StrictMode>
 			<EulaGate>
 				<BrowserRouter basename='/editor'>
 					<EditorContextProvider serviceManager={ serviceManager }>
@@ -86,7 +86,7 @@ async function Start(): Promise<void> {
 					</EditorContextProvider>
 				</BrowserRouter>
 			</EulaGate>
-		</React.StrictMode>,
+		</StrictMode>,
 	);
 	return Promise.resolve();
 }

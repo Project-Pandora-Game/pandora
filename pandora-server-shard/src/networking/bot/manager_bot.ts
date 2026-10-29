@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter, Gauge } from '@prometheus-io/client';
 import {
 	GetLogger,
 	IMessageHandler,
@@ -11,13 +11,13 @@ import { BotHandlersChat } from './handlers/botChat.ts';
 
 const logger = GetLogger('ConnectionManager-Bot');
 
-const connectedBotsMetric = new promClient.Gauge({
+const connectedBotsMetric = new Gauge({
 	name: 'pandora_shard_bot_connections',
 	help: 'Current count of connections from bots',
 	labelNames: ['messageType'],
 });
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_shard_bot_messages',
 	help: 'Count of received messages from bots',
 	labelNames: ['messageType'],

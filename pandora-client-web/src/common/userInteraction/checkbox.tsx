@@ -1,4 +1,3 @@
-/* eslint-disable react/forbid-elements */
 import { pick } from 'lodash-es';
 import type { InputHTMLAttributes, ReactElement } from 'react';
 

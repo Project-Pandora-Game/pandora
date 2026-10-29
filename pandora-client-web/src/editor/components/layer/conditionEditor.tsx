@@ -233,7 +233,7 @@ function ConditionInputEditor({ condition, update, conditionEvalutator }: {
 
 							update(result);
 						} }
-						ConditionComponent={ ConditionInputEntry }
+						conditionComponent={ ConditionInputEntry }
 					/>
 				)
 			}

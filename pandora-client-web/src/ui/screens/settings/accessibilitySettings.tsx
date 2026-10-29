@@ -10,12 +10,7 @@ export function AccessibilitySettings(): ReactElement | null {
 	if (!account)
 		return <>Not logged in</>;
 
-	return (
-		// eslint-disable-next-line react/jsx-no-useless-fragment
-		<>
-			<InterfaceAccessibilitySettings />
-		</>
-	);
+	return <InterfaceAccessibilitySettings />;
 }
 
 function InterfaceAccessibilitySettings(): ReactElement {

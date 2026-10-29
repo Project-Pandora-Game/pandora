@@ -441,7 +441,6 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 					allowRetry = false;
 					input = originalInput;
 					args.length = 0;
-					lastStructure = undefined;
 					continue;
 				}
 				return Result.Err(`Bot returned conflicting arguments structure while processing the command:\n${JSON.stringify(nextStructure.arguments, undefined, '    ')}\nvs\n${JSON.stringify(currentStructure, undefined, '    ')}`);

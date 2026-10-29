@@ -1,5 +1,5 @@
 import { GetLogger, SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router';
 import { DivContainer } from '../../../components/common/container/container.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -12,7 +12,7 @@ export function SpaceJoin(): ReactElement {
 	const { spaceId: spaceIdParam } = useParams();
 	const { search } = useLocation();
 
-	const { spaceId, invite } = React.useMemo(() => {
+	const { spaceId, invite } = useMemo(() => {
 		let tmpSpaceId = spaceIdParam;
 		if (tmpSpaceId && !tmpSpaceId?.startsWith('s/')) {
 			tmpSpaceId = 's/' + tmpSpaceId;

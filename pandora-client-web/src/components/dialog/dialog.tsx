@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { clamp, isObject, sortBy } from 'lodash-es';
 import { GetLogger } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
+import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref, ForwardedRef, forwardRef, MouseEvent } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import crossIcon from '../../assets/icons/cross.svg';
@@ -155,7 +155,7 @@ export function ModalDialog({ children, priority, position = 'center', rawConten
 	allowClickBubbling?: boolean;
 }): ReactElement {
 
-	const clickSink = useCallback((ev: React.MouseEvent) => {
+	const clickSink = useCallback((ev: MouseEvent) => {
 		if (allowClickBubbling)
 			return;
 
@@ -616,14 +616,14 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 	}), [entry]);
 }
 
-function ButtonConfirmImpl({ title, content, priority, onClick, disabled, children, ...props }: Omit<ButtonProps, 'title' | 'content'> & { title: string; content?: ReactNode; priority?: number; }, ref: React.ForwardedRef<HTMLButtonElement>) {
+function ButtonConfirmImpl({ title, content, priority, onClick, disabled, children, ...props }: Omit<ButtonProps, 'title' | 'content'> & { title: string; content?: ReactNode; priority?: number; }, ref: ForwardedRef<HTMLButtonElement>) {
 	const confirm = useConfirmDialog();
 
-	const [onActualClick, processing] = useAsyncEvent(async (ev: React.MouseEvent<HTMLButtonElement>) => {
+	const [onActualClick, processing] = useAsyncEvent(async (ev: MouseEvent<HTMLButtonElement>) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		return [await confirm(title, content, priority), ev] as const;
-	}, ([result, ev]: readonly [boolean, React.MouseEvent<HTMLButtonElement>]) => {
+	}, ([result, ev]: readonly [boolean, MouseEvent<HTMLButtonElement>]) => {
 		if (result) {
 			onClick?.(ev);
 		}
@@ -636,4 +636,4 @@ function ButtonConfirmImpl({ title, content, priority, onClick, disabled, childr
 	);
 }
 
-export const ButtonConfirm = React.forwardRef(ButtonConfirmImpl);
+export const ButtonConfirm = forwardRef(ButtonConfirmImpl);

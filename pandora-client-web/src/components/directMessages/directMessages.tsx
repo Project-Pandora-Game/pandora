@@ -1,6 +1,6 @@
 import { noop } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, GetLogger } from 'pandora-common';
-import React, { useCallback, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useState, type ReactElement, KeyboardEvent, useDeferredValue } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
@@ -19,7 +19,7 @@ import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { DirectMessage } from '../directMessage/directMessage.tsx';
 import './directMessages.scss';
 
-export function DirectMessages(): React.ReactElement {
+export function DirectMessages(): ReactElement {
 	const { pathnameBase } = useRoutingParentPath();
 
 	return (
@@ -33,7 +33,7 @@ export function DirectMessages(): React.ReactElement {
 
 function DirectMessagesInner(): ReactElement {
 	const directMessageManager = useService('directMessageManager');
-	const [filter, setFilter] = React.useState('');
+	const [filter, setFilter] = useState('');
 	const chats = useObservable(directMessageManager.chats);
 	const cryptoState = useObservable(directMessageManager.cryptoState);
 
@@ -51,7 +51,7 @@ function DirectMessagesInner(): ReactElement {
 		navigate(`/contacts/dm/${account}`);
 	}, [navigate]);
 
-	const flt = React.useDeferredValue(filter.toLowerCase().trim());
+	const flt = useDeferredValue(filter.toLowerCase().trim());
 	const filtered = useMemo((): readonly DirectMessageChat[] => {
 		const arr = flt.split(/\s+/).filter((s) => s.length > 0);
 		return chats
@@ -238,7 +238,7 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 	);
 }
 
-function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat; selected: boolean; select: (id: AccountId) => void; }): React.ReactElement {
+function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat; selected: boolean; select: (id: AccountId) => void; }): ReactElement {
 	const { displayName, hasUnread } = useObservable(chat.displayInfo);
 	const show = useCallback(() => {
 		select(chat.id);
@@ -252,19 +252,19 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 	);
 }
 
-function OpenConversation({ select }: { select: (id: AccountId) => void; }): React.ReactElement {
+function OpenConversation({ select }: { select: (id: AccountId) => void; }): ReactElement {
 	const directMessageManager = useService('directMessageManager');
 	const accountId = useCurrentAccount()?.id;
 	const [value, setValue] = useState('');
 
-	const onClick = React.useCallback(() => {
+	const onClick = useCallback(() => {
 		const parsed = parseInt(value, 10);
 		if (Number.isInteger(parsed) && parsed > 0 && parsed !== accountId) {
 			const chat = directMessageManager.getChat(parsed);
 			select(chat.id);
 		}
 	}, [accountId, directMessageManager, select, value]);
-	const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+	const onKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
 			onClick();

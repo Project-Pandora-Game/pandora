@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { Assert, CharacterId, GetLogger } from 'pandora-common';
 import type { IShardCharacterDefinition } from 'pandora-common/networking/api/directory_shard';
 import { assetManager } from '../assets/assetManager.ts';
@@ -6,7 +6,7 @@ import { Character } from './character.ts';
 
 const logger = GetLogger('CharacterManager');
 
-const charactersMetric = new promClient.Gauge({
+const charactersMetric = new Gauge({
 	name: 'pandora_shard_characters',
 	help: 'Current count of characters on this shard',
 });

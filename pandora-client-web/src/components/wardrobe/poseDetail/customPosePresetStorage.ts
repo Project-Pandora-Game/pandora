@@ -7,7 +7,7 @@ import {
 	type AssetManager,
 	type AssetsPosePreset,
 } from 'pandora-common';
-import React, { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { DirectoryConnectionState } from '../../../networking/directoryConnector.ts';
 import { Observable, type ReadonlyObservable } from '../../../observable.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
@@ -54,7 +54,7 @@ export function StoredPosePresetsLoaderService(): null {
 	const directoryConnector = useDirectoryConnector();
 	const currentAccount = useCurrentAccount();
 
-	const fetchStoredPosePresets = React.useCallback(async () => {
+	const fetchStoredPosePresets = useCallback(async () => {
 		if (currentAccount == null) {
 			StoredPosePresetsInternal.value = undefined;
 			return;

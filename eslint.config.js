@@ -1,11 +1,29 @@
 //@ts-check
 import eslintJsPlugin from '@eslint/js';
 import eslintStylisticPlugin from '@stylistic/eslint-plugin';
-import * as eslintImportPlugin from 'eslint-plugin-import';
-import eslintReactPlugin from 'eslint-plugin-react';
+import * as eslintImportPlugin from 'eslint-plugin-import-x';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import eslintReactPlugin from '@eslint-react/eslint-plugin';
+import eslintReactKit from '@eslint-react/kit';
+import { requireDestructuredProps } from './.hooks/eslint-react-rules.js';
 import eslintReactHooksPlugin from 'eslint-plugin-react-hooks';
 import { join } from 'path';
-import tsEslint from 'typescript-eslint';
+import * as tsEslint from 'typescript-eslint';
+
+const zodImportRestriction = {
+	message: "Do not import z namespace from zod. Use `import * as z from 'zod';` instead.",
+	// Reason for this is to allow better tree-shaking
+	selector: 'ImportDeclaration[source.value="zod"] ImportSpecifier Identifier[name="z"]',
+};
+const rawSelectRestriction = {
+	selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="select"]',
+	message: 'use <Select> instead',
+};
+const rawInputRestriction = {
+	// Date pickers and file uploads have no equivalent Pandora input component.
+	selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name="input"]:not(:has(JSXAttribute[name.name="type"][value.value=/^(date|file)$/]))',
+	message: 'use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>, <FormInput>',
+};
 
 export default tsEslint.config(
 	{
@@ -43,10 +61,17 @@ export default tsEslint.config(
 		linterOptions: {
 			reportUnusedDisableDirectives: 'warn',
 		},
+		settings: {
+			'import-x/resolver-next': [createTypeScriptImportResolver({
+				project: 'pandora-*/tsconfig.json',
+				// Bowser's export= declarations hide its real browser ESM default export.
+				alias: { 'bowser$': ['bowser/src/bowser.js'] },
+			})],
+		},
 		rules: {
 			// Disabled recommended rules
 			'@typescript-eslint/no-inferrable-types': 'off',
-			'import/no-unresolved': 'off', // Breaks with "exports" mappings (https://github.com/import-js/eslint-plugin-import/issues/2703)
+			'import-x/no-unresolved': 'off', // TypeScript resolves imports, including package exports.
 			// NOs
 			'@typescript-eslint/ban-ts-comment': [
 				'error',
@@ -92,13 +117,14 @@ export default tsEslint.config(
 			'no-multiple-empty-lines': ['warn', { 'max': 1, 'maxBOF': 0, 'maxEOF': 1 }],
 			'operator-assignment': 'warn',
 			'prefer-object-spread': 'warn',
-			'import/no-cycle': 'warn',
-			'import/no-internal-modules': ['error', {
+			'import-x/no-cycle': 'warn',
+			'import-x/no-internal-modules': ['error', {
 				forbid: [
-					'zod/**',
+					'zod/?*',
+					'zod/?*/**',
 				],
 			}],
-			'import/no-extraneous-dependencies': ['warn', {
+			'import-x/no-extraneous-dependencies': ['warn', {
 				'devDependencies': [
 					'.hooks/**',
 					'**/eslint.config.js',
@@ -107,13 +133,7 @@ export default tsEslint.config(
 					'**/pandora-client-web/webpack.config.ts',
 				],
 			}],
-			'no-restricted-syntax': ['warn',
-				{
-					message: "Do not import z namespace from zod. Use `import * as z from 'zod';` instead.",
-					// Reason for this is to allow better tree-shaking
-					selector: 'ImportDeclaration[source.value="zod"] ImportSpecifier Identifier[name="z"]',
-				},
-			],
+			'no-restricted-syntax': ['warn', zodImportRestriction],
 			// Stylistic rules
 			'@stylistic/semi': ['warn', 'always'],
 			'@stylistic/semi-style': ['warn', 'last'],
@@ -222,7 +242,7 @@ export default tsEslint.config(
 			// Disabled recommended rules
 			'@typescript-eslint/no-inferrable-types': 'off',
 			'@typescript-eslint/prefer-nullish-coalescing': 'off',
-			'import/namespace': 'off', // TypeScript ensures the validity better
+			'import-x/namespace': 'off', // TypeScript ensures the validity better
 			// NOs
 			'@typescript-eslint/only-throw-error': 'error',
 			// Warnings
@@ -319,7 +339,7 @@ export default tsEslint.config(
 		],
 		rules: {
 			// Disabled recommended rules
-			'import/no-cycle': 'off',
+			'import-x/no-cycle': 'off',
 		},
 	},
 	{
@@ -332,25 +352,37 @@ export default tsEslint.config(
 			'pandora-client-web/**/*.tsx',
 		],
 		extends: [
-			eslintReactPlugin.configs.flat.recommended,
-			eslintReactPlugin.configs.flat['jsx-runtime'],
+			{
+				...eslintReactKit().use(requireDestructuredProps).getConfig(),
+				rules: { '@eslint-react/kit/require-destructured-props': 'warn' },
+			},
 		],
 		plugins: {
-			'react': eslintReactPlugin,
+			'@eslint-react': eslintReactPlugin,
 			'react-hooks': eslintReactHooksPlugin,
 		},
-		settings: {
-			react: {
-				version: 'detect',
-			},
-		},
 		rules: {
-			// Disabled recommended rules
-			'react/prop-types': 'off',
-			// NOs
-			'react/no-unsafe': ['error', { 'checkAliases': true }],
-			'react/no-unstable-nested-components': 'error',
-			'react/jsx-no-script-url': 'error',
+			// Preserve React checks explicitly rather than adopting additional recommended rules.
+			'@eslint-react/no-missing-component-display-name': 'error',
+			'@eslint-react/no-missing-key': 'error',
+			'@eslint-react/jsx-no-comment-textnodes': 'error',
+			'@eslint-react/jsx-no-children-prop': 'error',
+			'@eslint-react/dom-no-dangerously-set-innerhtml-with-children': 'error',
+			'@eslint-react/dom-no-unsafe-target-blank': 'error',
+			'@eslint-react/dom-no-unknown-property': 'error',
+			'@eslint-react/dom-no-find-dom-node': 'error',
+			'@eslint-react/dom-no-render-return-value': 'error',
+			'@eslint-react/dom-no-render': 'error',
+			'@eslint-react/dom-no-hydrate': 'error',
+			'@eslint-react/no-direct-mutation-state': 'error',
+			'@eslint-react/no-component-will-mount': 'error',
+			'@eslint-react/no-component-will-receive-props': 'error',
+			'@eslint-react/no-component-will-update': 'error',
+			'@eslint-react/no-unsafe-component-will-mount': 'error',
+			'@eslint-react/no-unsafe-component-will-receive-props': 'error',
+			'@eslint-react/no-unsafe-component-will-update': 'error',
+			'@eslint-react/no-nested-component-definitions': 'error',
+			'@eslint-react/dom-no-script-url': 'error',
 			'react-hooks/rules-of-hooks': 'error',
 			'no-restricted-globals': [
 				'error',
@@ -362,13 +394,13 @@ export default tsEslint.config(
 			// Warnings
 			'react-hooks/exhaustive-deps': 'warn',
 			'no-alert': 'warn',
-			'react/default-props-match-prop-types': 'warn',
-			'react/no-typos': 'warn',
-			'react/prefer-stateless-function': 'warn',
-			'react/style-prop-object': 'warn',
-			'react/void-dom-elements-no-children': 'warn',
-			'react/jsx-no-constructed-context-values': 'warn',
-			'react/jsx-no-useless-fragment': ['warn', { 'allowExpressions': true }],
+			'@eslint-react/dom-no-string-style-prop': 'warn',
+			'@eslint-react/dom-no-void-elements-with-children': 'warn',
+			'@eslint-react/no-unstable-context-value': 'warn',
+			'@eslint-react/jsx-no-useless-fragment': ['warn', { 'allowExpressions': true }],
+			// TypeScript checks prop types, duplicate/undefined JSX names, render returns,
+			// string refs, JSX file extensions, and the unescaped `>`/`}` characters.
+			// ESLint 10 tracks JSX references, replacing react/jsx-uses-vars.
 			// Stylistic rules
 			'@stylistic/jsx-closing-tag-location': 'warn',
 			'@stylistic/jsx-curly-newline': ['warn', 'consistent'],
@@ -388,33 +420,30 @@ export default tsEslint.config(
 					'prop': 'ignore',
 				},
 			],
-			// Other style rules
-			'react/destructuring-assignment': ['warn', 'always'],
-			'react/jsx-filename-extension': ['warn', { 'extensions': ['.jsx', '.tsx'] }],
-			'react/no-unescaped-entities': [
-				'warn',
-				{
-					'forbid': [
-						{
-							'char': '>',
-							'alternatives': ['&gt;'],
-						},
-						{
-							'char': '}',
-							'alternatives': ['&#125;'],
-						},
-					],
-				},
-			],
-			'react/forbid-elements': [
-				'warn',
-				{
-					'forbid': [
-						{ 'element': 'select', 'message': 'use <Select> instead' },
-						{ 'element': 'input', 'message': 'use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>, <FormInput>' },
-					],
-				},
-			],
+		},
+	},
+	{
+		name: 'pandora/client/form-controls',
+		files: ['pandora-client-web/**/*.{js,cjs,mjs,ts,tsx}'],
+		ignores: [
+			// These components implement the native controls used by the rest of the UI.
+			'pandora-client-web/src/common/userInteraction/checkbox.tsx',
+			'pandora-client-web/src/common/userInteraction/input/{formInput,numberInput,textInput}.tsx',
+			'pandora-client-web/src/common/userInteraction/select/select.tsx',
+		],
+		rules: {
+			'no-restricted-syntax': ['warn', zodImportRestriction, rawSelectRestriction, rawInputRestriction],
+		},
+	},
+	{
+		name: 'pandora/client/asset-info-color',
+		files: ['pandora-client-web/src/editor/components/assetInfo/assetInfo.tsx'],
+		rules: {
+			// Preserve the native color field; ColorInput would introduce a custom editor dialog.
+			'no-restricted-syntax': ['warn', zodImportRestriction, rawSelectRestriction, {
+				...rawInputRestriction,
+				selector: rawInputRestriction.selector + ':not(:has(JSXAttribute[name.name="type"][value.value="color"]):has(JSXAttribute[name.name="readOnly"][value=null]))',
+			}],
 		},
 	},
 	{

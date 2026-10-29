@@ -1,6 +1,6 @@
 import { pick } from 'lodash-es';
 import { Assert } from 'pandora-common';
-import React, { type TextareaHTMLAttributes } from 'react';
+import { type TextareaHTMLAttributes, ReactNode } from 'react';
 import { InputBase, type InputBaseProps } from './inputBase.tsx';
 
 const FORWARDED_PROPS = [
@@ -37,7 +37,7 @@ export interface TextInputProps extends InputBaseProps<string>, Pick<TextareaHTM
 
 export class TextAreaInput extends InputBase<string, TextInputProps, HTMLTextAreaElement> {
 
-	public override render(): React.ReactNode {
+	public override render(): ReactNode {
 		const forwardedProps = pick(this.props, FORWARDED_PROPS);
 
 		return (

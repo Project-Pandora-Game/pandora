@@ -51,7 +51,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 		};
 	}), [conditions, globalState, spaceInfo, character]);
 
-	const ConditionComponent = useCallback(({ condition, processing: innerProcessing, setCondition }: LogicConditionEditorConditionComponentProps<Immutable<CharacterModifierConditionListEntryData>>) => {
+	const renderCondition = useCallback(({ condition, processing: innerProcessing, setCondition }: LogicConditionEditorConditionComponentProps<Immutable<CharacterModifierConditionListEntryData>>) => {
 		return (
 			<CharacterModifierConditionListEntry
 				condition={ condition.condition }
@@ -92,7 +92,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 										invert: c.condition.invert,
 									})));
 								} : undefined }
-								ConditionComponent={ ConditionComponent }
+								renderCondition={ renderCondition }
 								processing={ processing }
 							/>
 						</>

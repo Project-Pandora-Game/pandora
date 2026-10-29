@@ -1,10 +1,10 @@
-import React from 'react';
+import { ForwardedRef, RefObject, useEffect } from 'react';
 import { useWrappedRef } from './useWrappedRef.ts';
 
-export function useTextFormattingOnKeyboardEvent(originalRef: React.ForwardedRef<HTMLTextAreaElement>): React.RefObject<HTMLTextAreaElement | null> {
+export function useTextFormattingOnKeyboardEvent(originalRef: ForwardedRef<HTMLTextAreaElement>): RefObject<HTMLTextAreaElement | null> {
 	const ref = useWrappedRef(originalRef);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		if (ref.current == null)
 			return;
 

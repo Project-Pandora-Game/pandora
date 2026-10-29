@@ -581,8 +581,8 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
       nodemailer:
-        specifier: 10.1.4
-        version: 10.1.4
+        specifier: 10.2.0
+        version: 10.2.0
       pandora-common:
         specifier: workspace:*
         version: link:../pandora-common
@@ -4686,12 +4686,12 @@ packages:
     resolution: {integrity: sha512-kQK9LGGFiHtrWiNhZtA7Qbw17AQz+dmsEKODRIVTXA9+e5MS/2gZEBhYJt13GrAz5/IOZKddH/0Z3TP/Zgo+yw==}
     engines: {node: '>=18'}
 
-  nodemailer@10.1.4:
-    resolution: {integrity: sha512-EsMnOR2oRv4LGnWvHgcVYkkQ4O2j8KO4WTw6l+PHR4sOXo8SAgIraxtEnGDmotjbhv0hDsu3IuDIFZm8iXwO4A==}
-    engines: {node: '>=20.0.0'}
-
   nodemailer@10.1.7:
     resolution: {integrity: sha512-OQa6FDln5fLttmqSbjDiRYvFDOFNrBqfiOwHPlEbURil3b+vPB1v8xpi+Sp46drzNDlsTnNsS502vthmz56r4w==}
+    engines: {node: '>=20.0.0'}
+
+  nodemailer@10.2.0:
+    resolution: {integrity: sha512-/XyGw6kX2stMdKGUJdAQmYAeY1FscWfdRydfd2NtK3A3KDfUUXCqZzExSNAt2xhh90X2qLCR+o2Gd48YPJcJwA==}
     engines: {node: '>=20.0.0'}
 
   nodemon@3.1.14:
@@ -10980,9 +10980,9 @@ snapshots:
 
   node-releases@2.0.57: {}
 
-  nodemailer@10.1.4: {}
-
   nodemailer@10.1.7: {}
+
+  nodemailer@10.2.0: {}
 
   nodemon@3.1.14:
     dependencies:

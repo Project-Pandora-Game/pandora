@@ -31,7 +31,7 @@
 		"bowser": "2.14.1",
 		"classnames": "2.5.1",
 		"client-zip": "2.5.1",
-		"color-parse": "2.1.2",
+		"color-parse": "2.2.0",
 		"history": "5.3.0",
 		"immer": "11.2.3",
 		"inter-ui": "4.1.1",

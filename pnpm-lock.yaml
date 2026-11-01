@@ -300,8 +300,8 @@ importers:
         specifier: 2.5.1
         version: 2.5.1
       color-parse:
-        specifier: 2.1.2
-        version: 2.1.2
+        specifier: 2.2.0
+        version: 2.2.0
       history:
         specifier: 5.3.0
         version: 5.3.0
@@ -2754,8 +2754,8 @@ packages:
     resolution: {integrity: sha512-p2FdgwVx1a9yWBHP2wI0VgShkDpgN4kZISkxdNipGBJWpa5G6b04OINlVWCyJj0JmfvcPrgqt95E9k8yvaOJFg==}
     engines: {node: '>=12.20'}
 
-  color-parse@2.1.2:
-    resolution: {integrity: sha512-z0f1xKxh4za/RSprsmxNkFcyO2o/4VJ2QxiiRRIjfqAsqOXys+BvpOCINNAKOX9AQ/alpS03Wc0WMtEmtLmHzw==}
+  color-parse@2.2.0:
+    resolution: {integrity: sha512-VnwiJDEGueFpC37QvftF8OiFUn+WstToFD7tylHHGi/zocuZsZTVvu2J0ZFkeV7HY0dGHhXVfHEOO7CmTsEUjg==}
 
   colorjs.io@0.7.1:
     resolution: {integrity: sha512-LY7OHnJZxHwT5UlzNa9bbhHHDbzB6yE5+3MIPwJEQKRvSCt/T4G7epsj+9j2BExUIIfXFIJGsIXUKdfrK9Q5tA==}
@@ -8723,7 +8723,7 @@ snapshots:
 
   color-name@2.1.1: {}
 
-  color-parse@2.1.2:
+  color-parse@2.2.0:
     dependencies:
       color-name: 2.1.1
 

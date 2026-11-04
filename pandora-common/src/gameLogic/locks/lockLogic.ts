@@ -146,8 +146,7 @@ export class LockLogic {
 				},
 			};
 		}
-		return this.lockData;
-	}
+git 	}
 
 	public exportToServerBundle(): LockDataBundle {
 		return this.lockData;

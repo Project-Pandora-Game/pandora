@@ -92,15 +92,16 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 	}, [lockLogic, now]);
 	const timerExpired = useMemo(() => (timeLeft == null || timeLeft <= 0), [timeLeft]);
 	const timerText = useMemo(() => {
+		if (lockLogic.lockData.locked?.hideTimeFromLockee)
+			return <>Remaining time: <i>Unknown</i></>;
 		if (timerExpired)
 			return <>Remaining time: <i>Timer expired</i></>;
-
 		return (
 			<>
 				Remaining time: { FormatTimeInterval(timeLeft ?? 0) }
 			</>
 		);
-	}, [timeLeft, timerExpired]);
+	}, [lockLogic.lockData.locked?.hideTimeFromLockee, timeLeft, timerExpired]);
 
 	const [password, setPassword] = useState<string>('');
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
@@ -221,7 +222,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			allowEarlyUnlock: timerAllowEarly,
 			hideTimeFromLockee: hideFromLockee,
 		};
-	}, [timer, timerAllowEarly]);
+	}, [timer, timerAllowEarly, hideFromLockee]);
 
 	const setTimerAllowEarlyWithConfirm = useCallback((newValue: boolean) => {
 		if (newValue) {
@@ -280,7 +281,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 						</Row>
 						<Row className='WardrobeInputRow'>
 							<Checkbox id={ `${id}-hideFromLockee` } checked={ hideFromLockee } onChange={ setHideFromLockee } />
-							<label htmlFor={ `${id}-hideFromLockee` }>The time can not be seen by the lockee</label>
+							<label htmlFor={ `${id}-hideFromLockee` }>The time can't be seen by the locked person</label>
 						</Row>
 						<TimerInput
 							value={ timer }

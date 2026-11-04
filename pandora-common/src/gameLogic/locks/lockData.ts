@@ -14,7 +14,7 @@ export interface LockDataBundle {
 		/** Whether the character that locked it is allowed to unlock the timer early */
 		disallowEarlyUnlock?: boolean;
 		/** Show the time of the timer to the locked character */
-		hideTimeFromLockee?: boolean;
+		hideRemainingTime?: boolean;
 	};
 	/** Data applicable only to locks with fingerprint */
 	fingerprint?: {
@@ -47,7 +47,7 @@ export const LockDataBundleSchema: z.ZodType<LockDataBundle> = z.object({
 		/** Whether the character that locked it is allowed to unlock the timer early */
 		disallowEarlyUnlock: z.boolean().optional(),
 		/** Whether the locked person is able to see the remaining time */
-		hideTimeFromLockee: z.boolean(),
+		hideRemainingTime: z.boolean(),
 	}).optional(),
 	/** Data applicable only to locks with fingerprint */
 	fingerprint: z.object({

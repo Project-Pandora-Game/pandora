@@ -92,7 +92,7 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 	}, [lockLogic, now]);
 	const timerExpired = useMemo(() => (timeLeft == null || timeLeft <= 0), [timeLeft]);
 	const timerText = useMemo(() => {
-		if (lockLogic.lockData.locked?.hideTimeFromLockee)
+		if (lockLogic.lockData.locked?.hideRemainingTime)
 			return <>Remaining time: <i>Unknown</i></>;
 		if (timerExpired)
 			return <>Remaining time: <i>Timer expired</i></>;
@@ -101,7 +101,7 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 				Remaining time: { FormatTimeInterval(timeLeft ?? 0) }
 			</>
 		);
-	}, [lockLogic.lockData.locked?.hideTimeFromLockee, timeLeft, timerExpired]);
+	}, [lockLogic.lockData.locked?.hideRemainingTime, timeLeft, timerExpired]);
 
 	const [password, setPassword] = useState<string>('');
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
@@ -200,7 +200,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
 	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
-	const [hideFromLockee, setHideFromLockee] = useState(false);
+	const [hideRemainingTime, setHideRemainingTime] = useState(false);
 	const confirm = useConfirmDialog();
 
 	// Attempted action for locking or unlocking the lock
@@ -220,9 +220,9 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 		return {
 			timer,
 			allowEarlyUnlock: timerAllowEarly,
-			hideTimeFromLockee: hideFromLockee,
+			hideRemainingTime,
 		};
-	}, [timer, timerAllowEarly, hideFromLockee]);
+	}, [timer, timerAllowEarly, hideRemainingTime]);
 
 	const setTimerAllowEarlyWithConfirm = useCallback((newValue: boolean) => {
 		if (newValue) {
@@ -280,8 +280,8 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 							<label htmlFor={ `${id}-timerAllowEarly` }>The lock can be unlocked by you even the before timer runs out</label>
 						</Row>
 						<Row className='WardrobeInputRow'>
-							<Checkbox id={ `${id}-hideFromLockee` } checked={ hideFromLockee } onChange={ setHideFromLockee } />
-							<label htmlFor={ `${id}-hideFromLockee` }>The time can't be seen by the locked person</label>
+							<Checkbox id={ `${id}-hideRemainingTime` } checked={ hideRemainingTime } onChange={ setHideRemainingTime } />
+							<label htmlFor={ `${id}-hideRemainingTime` }>The remaining time is hidden</label>
 						</Row>
 						<TimerInput
 							value={ timer }

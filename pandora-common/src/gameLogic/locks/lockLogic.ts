@@ -15,7 +15,8 @@ export const LockTimerOptionsSchema = z.object({
 	timer: z.number().int().nonnegative(),
 	/** Whether the character that locked it is allowed to unlock the timer early, default true */
 	allowEarlyUnlock: z.boolean(),
-	hideTimeFromLockee: z.boolean(),
+	/** Whether the character that locked it is allowed to see the remaining time, default false */
+	hideRemainingTime: z.boolean(),
 });
 export type LockTimerOptions = z.infer<typeof LockTimerOptionsSchema>;
 
@@ -146,7 +147,8 @@ export class LockLogic {
 				},
 			};
 		}
-git 	}
+		return this.lockData;
+	}
 
 	public exportToServerBundle(): LockDataBundle {
 		return this.lockData;
@@ -263,7 +265,6 @@ git 	}
 				time: lockTime,
 				lockedUntil,
 				disallowEarlyUnlock: !timerOptions?.allowEarlyUnlock,
-				hideTimeFromLockee: timerOptions?.hideTimeFromLockee,
 			};
 		});
 

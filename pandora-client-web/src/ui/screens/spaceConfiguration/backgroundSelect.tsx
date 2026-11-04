@@ -19,7 +19,7 @@ import {
 	type RoomGeometryConfig,
 	type RoomId,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useId, useMemo, useRef, useState, MouseEvent } from 'react';
 import * as z from 'zod';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import iconSortAlphabetically from '../../../assets/icons/sort-alphabetic.svg';
@@ -771,7 +771,7 @@ function TagCategoryButton({ category, selection, setSelection }: {
 	setSelection: (selection: BackgroundSelectionStateClass) => void;
 }): ReactElement {
 	const selected = selection.isSelectedCategory(category);
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		setSelection(selection.toggleCategory(category));
@@ -798,12 +798,12 @@ function TagButton({ id, name, selection, setSelection }: {
 	setSelection: (selection: BackgroundSelectionStateClass) => void;
 }): ReactElement {
 	const selected = selection.isSelectedTag(id);
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		setSelection(selection.toggleTag(id));
 	}, [id, selection, setSelection]);
-	const onDoubleClick = useCallback((ev: React.MouseEvent) => {
+	const onDoubleClick = useCallback((ev: MouseEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		setSelection(selection.fullToggleTag(id));

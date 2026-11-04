@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter } from '@prometheus-io/client';
 import { BadMessageError, GetLogger, IMessageHandler, MessageHandler, PANDORA_VERSION_DATABASE } from 'pandora-common';
 import type { IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult } from 'pandora-common/networking/api/directory_shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/networking/helpers';
@@ -6,7 +6,7 @@ import { GetDatabase } from '../database/databaseProvider.ts';
 import { ShardManager } from '../shard/shardManager.ts';
 import type { IConnectionShard } from './common.ts';
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_directory_shard_messages',
 	help: 'Count of received messages from shards',
 	labelNames: ['messageType'],

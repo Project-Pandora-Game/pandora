@@ -17,8 +17,8 @@ async function Load(loader: IGraphicsLoader): Promise<AssetManagerEditor> {
 	let hash: string;
 	try {
 		hash = (await loader.loadTextFile('current')).trim();
-	} catch (_error) {
-		throw new Error('Failed to get the assets version.\nIs the target server running and reachable?');
+	} catch (error) {
+		throw new Error('Failed to get the assets version.\nIs the target server running and reachable?', { cause: error });
 	}
 
 	return await LoadEditorAssets(loader, hash);

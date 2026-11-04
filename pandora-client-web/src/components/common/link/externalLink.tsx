@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode, AnchorHTMLAttributes, DetailedHTMLProps, ForwardedRef, forwardRef, MouseEvent, useCallback, useRef, useState } from 'react';
 import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -6,7 +6,7 @@ import { ModalDialog } from '../../dialog/dialog.tsx';
 import { Button } from '../button/button.tsx';
 import { Column, Row } from '../container/container.tsx';
 
-export type ExternalLinkProps = Omit<React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, 'target' | 'referrerPolicy' | 'rel'> & {
+export type ExternalLinkProps = Omit<DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, 'target' | 'referrerPolicy' | 'rel'> & {
 	/**
 	 * Whether to send referrer
 	 * @default false
@@ -14,7 +14,7 @@ export type ExternalLinkProps = Omit<React.DetailedHTMLProps<React.AnchorHTMLAtt
 	sendReferrer?: boolean;
 };
 
-function ExternalLinkImpl({ children, sendReferrer = false, ...props }: ExternalLinkProps, ref: React.ForwardedRef<HTMLAnchorElement>): ReactElement {
+function ExternalLinkImpl({ children, sendReferrer = false, ...props }: ExternalLinkProps, ref: ForwardedRef<HTMLAnchorElement>): ReactElement {
 	return (
 		<a
 			{ ...props }
@@ -28,7 +28,7 @@ function ExternalLinkImpl({ children, sendReferrer = false, ...props }: External
 	);
 }
 
-export const ExternalLink = React.forwardRef(ExternalLinkImpl);
+export const ExternalLink = forwardRef(ExternalLinkImpl);
 
 const BASE_TRUSTED_DOMAINS: readonly string[] = ['project-pandora.com'];
 const trustedDomains = BrowserStorage.create<string[]>('trustedDomains', [], z.array(z.string()));
@@ -48,9 +48,9 @@ export function UntrustedLink({ href, children }: {
 	href: string;
 	children: ReactNode;
 }): ReactElement {
-	const [showWarning, setShowWarning] = React.useState(false);
+	const [showWarning, setShowWarning] = useState(false);
 
-	const onClick = React.useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+	const onClick = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
 		if (IsTrustedLink(href))
 			return;
 
@@ -73,8 +73,8 @@ function PromptUntrustedLink({ href, close }: {
 	href: string;
 	close: () => void;
 }): ReactElement {
-	const ref = React.useRef<HTMLAnchorElement>(null);
-	const [remember, setRemember] = React.useState(false);
+	const ref = useRef<HTMLAnchorElement>(null);
+	const [remember, setRemember] = useState(false);
 
 	const parsedLink = new URL(href);
 

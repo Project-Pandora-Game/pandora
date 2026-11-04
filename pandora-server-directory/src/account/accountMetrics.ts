@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { GetLogger } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 
-new promClient.Gauge({
+new Gauge({
 	name: 'pandora_directory_account_active_total',
 	help: 'Total count of accounts active in a given timeframe',
 	labelNames: ['period'] as const,

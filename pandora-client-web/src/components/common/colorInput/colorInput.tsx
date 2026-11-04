@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import parse from 'color-parse';
 import { clamp, throttle } from 'lodash-es';
 import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
-import React, { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useCallback, useEffect, useMemo, useRef, useState, ClipboardEvent, MouseEvent, PointerEvent } from 'react';
 import { toast } from 'react-toastify';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
@@ -60,7 +60,7 @@ export function ColorInputRGBA({
 		}
 	}, [minAlpha, setInput, onChangeCallerThrottled]);
 
-	const onPaste = useCallback((ev: React.ClipboardEvent<HTMLInputElement>) => {
+	const onPaste = useCallback((ev: ClipboardEvent<HTMLInputElement>) => {
 		const result = ColorParsePaste(ev, minAlpha < Color.maxAlpha);
 		if (result) {
 			changeCallback(result);
@@ -73,7 +73,7 @@ export function ColorInputRGBA({
 		setInput(color);
 	}, [onChangeCallerThrottled]);
 
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.stopPropagation();
 		setShowEditor(true);
 	}, [setShowEditor]);
@@ -176,7 +176,7 @@ function ColorEditor({
 		}
 	}, [color, setState, minAlpha]);
 
-	const onPaste = useCallback((ev: React.ClipboardEvent<HTMLInputElement>) => {
+	const onPaste = useCallback((ev: ClipboardEvent<HTMLInputElement>) => {
 		const result = ColorParsePaste(ev, minAlpha < Color.maxAlpha);
 		if (result) {
 			onTextInput(result);
@@ -184,19 +184,19 @@ function ColorEditor({
 		}
 	}, [onTextInput, minAlpha]);
 
-	const onPointerDown = useCallback((ev: React.PointerEvent) => {
+	const onPointerDown = useCallback((ev: PointerEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		ev.currentTarget.setPointerCapture(ev.pointerId);
 		setDragging(true);
 	}, [setDragging]);
-	const onPointerUp = useCallback((ev: React.PointerEvent) => {
+	const onPointerUp = useCallback((ev: PointerEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
 		ev.currentTarget.releasePointerCapture(ev.pointerId);
 		setDragging(false);
 	}, [setDragging]);
-	const onPointerMove = useCallback((ev: React.PointerEvent) => {
+	const onPointerMove = useCallback((ev: PointerEvent) => {
 		if (!dragging) return;
 		ev.preventDefault();
 		ev.stopPropagation();
@@ -230,7 +230,7 @@ function ColorEditor({
 	);
 }
 
-function ColorParsePaste(ev: React.ClipboardEvent, allowAlpha: boolean): string | undefined {
+function ColorParsePaste(ev: ClipboardEvent, allowAlpha: boolean): string | undefined {
 	ev.preventDefault();
 	let text = ev.clipboardData.getData('text').trim();
 	if (/^[0-9a-f]{3,8}/i.test(text)) {

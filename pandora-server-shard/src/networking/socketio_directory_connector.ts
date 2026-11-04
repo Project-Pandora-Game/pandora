@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter } from '@prometheus-io/client';
 import {
 	AsyncSynchronized,
 	ConnectionBase,
@@ -65,7 +65,7 @@ function CreateConnection(uri: string, secret: string = ''): Socket {
 	});
 }
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_shard_directory_messages',
 	help: 'Count of received messages from directory',
 	labelNames: ['messageType'],

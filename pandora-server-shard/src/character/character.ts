@@ -291,7 +291,7 @@ export class Character {
 	private linkSpace(id: SpaceId | null): void {
 		Assert(this.isValid, 'Character state should not load while invalid');
 
-		let space: Space | null = null;
+		let space: Space | null;
 		if (id != null) {
 			space = SpaceManager.getSpace(id) ?? null;
 		} else {

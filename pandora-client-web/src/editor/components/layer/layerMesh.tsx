@@ -1,7 +1,7 @@
 import { castDraft, produce, type Immutable } from 'immer';
 import { capitalize, cloneDeep, remove, uniq } from 'lodash-es';
 import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority, SortPathStrings, type AtomicCondition, type LayerImageOverride } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useId, useMemo, useState, Fragment } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -21,7 +21,7 @@ import { useEditorLayerTint } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 import { GetEditorConditionInputMetadataForAsset } from './conditionEditor.tsx';
-import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateDetails } from './layerCommon.tsx';
+import { LayerHeightAndWidthSetting, LayerImageSelectInput, LayerOffsetSetting, SettingConditionOverrideTemplate, type SettingConditionOverrideTemplateRenderDetails } from './layerCommon.tsx';
 
 export function LayerMeshUI({ layer }: {
 	layer: EditorAssetGraphicsWornLayer<'mesh' | 'alphaImageMesh'>;
@@ -511,7 +511,7 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphi
 		return evaluator.evalCondition(c, wornItem ?? null);
 	}, [evaluator, wornItem]);
 
-	const ImageOverridesDetail = useCallback<SettingConditionOverrideTemplateDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
+	const renderImageOverridesDetail = useCallback<SettingConditionOverrideTemplateRenderDetails<Immutable<LayerImageOverride>>>(({ entry, update }) => {
 		return (
 			<>
 				<LayerImageSelectInput
@@ -551,7 +551,7 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphi
 						res.overrides = castDraft(newOverrides);
 					});
 				} }
-				EntryDetails={ ImageOverridesDetail }
+				renderEntryDetails={ renderImageOverridesDetail }
 				getConditions={ (entry) => entry.condition }
 				withConditions={ (entry, newConditions) => produce(entry, (d) => {
 					d.condition = castDraft(newConditions);
@@ -708,7 +708,7 @@ function LayerScalingList({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh
 				<Button className='slim' onClick={ doAdd }>Add</Button>
 			</Row>
 			{ scalingStops?.map((stop) => (
-				<React.Fragment key={ `${stop[0]}-header` }>
+				<Fragment key={ `${stop[0]}-header` }>
 					<Row alignY='center'>
 						<h3 className='flex-1'>{ possibleStops.find((p) => p[1] === stop[0])?.[0] ?? `${stop[0]}` }</h3>
 						<Button className='slim' onClick={ () => {
@@ -723,7 +723,7 @@ function LayerScalingList({ layer }: { layer: EditorAssetGraphicsWornLayer<'mesh
 					</Row>
 					<LayerImageSelect layer={ layer } stop={ stop[0] } />
 					<LayerImageOverridesTextarea layer={ layer } stop={ stop[0] } />
-				</React.Fragment>
+				</Fragment>
 			)) }
 		</>
 	);

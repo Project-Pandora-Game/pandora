@@ -1,11 +1,11 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { Assert, AsyncSynchronized, GetLogger, TimeSpanMs, type ServerService } from 'pandora-common';
 import { ACTOR_PANDORA } from '../../account/actorPandora.ts';
 import { GetDatabase } from '../../database/databaseProvider.ts';
 import type { DatabaseBetaRegistration } from '../../database/databaseStructure.ts';
 import { BetaKeyStore } from '../../shard/betaKeyStore.ts';
 
-const betaRegistrationActive = new promClient.Gauge({
+const betaRegistrationActive = new Gauge({
 	name: 'pandora_directory_beta_registration_active_total',
 	help: 'Current count of active registrations for beta',
 });

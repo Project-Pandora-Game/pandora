@@ -1,8 +1,7 @@
 import { freeze } from 'immer';
 import { Assert, type ConditionalKeys, type Satisfies } from 'pandora-common';
 import { type ColorSource, type Container, type EventEmitter, type PointData } from 'pixi.js';
-import type React from 'react';
-import type { ReactNode } from 'react';
+import type { ExoticComponent, PropsWithoutRef, ReactNode, RefAttributes } from 'react';
 import type { ReadonlyKeysOf } from 'type-fest';
 
 // This file extensively does type trickery - attempting to concentrate all type tricks to this file,
@@ -161,9 +160,9 @@ export type PixiComponentFullProps<
 	CustomProps = {},
 > =
 	// The props visible to the component itself
-	React.PropsWithoutRef<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>> &
+	PropsWithoutRef<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>> &
 	// The `ref`
-	React.RefAttributes<Element> &
+	RefAttributes<Element> &
 	// Children, if allowed
 	{ children?: Element extends Container ? ReactNode : undefined; };
 
@@ -181,7 +180,7 @@ export function RegisterPixiComponent<
 >(
 	uniqueName: string,
 	config: PixiComponentConfig<Element, AutoPropKeys, EventMap, CustomProps>,
-): React.ExoticComponent<PixiComponentFullProps<Element, AutoPropKeys, EventMap, CustomProps>> {
+): ExoticComponent<PixiComponentFullProps<Element, AutoPropKeys, EventMap, CustomProps>> {
 	Assert(!PIXI_REGISTERED_COMPONENTS.has(uniqueName), `Component '${uniqueName}' was already registered.`);
 
 	PIXI_REGISTERED_COMPONENTS.set(uniqueName, freeze(config, true));

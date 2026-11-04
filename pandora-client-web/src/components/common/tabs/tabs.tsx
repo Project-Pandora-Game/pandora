@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import React, { forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useState, type ForwardedRef } from 'react';
+import { forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useState, type ForwardedRef, Fragment, MouseEventHandler } from 'react';
 import { matchPath, Navigate, resolvePath, Route, Routes, useLocation } from 'react-router';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -19,7 +19,7 @@ export interface TabProps extends ChildrenProps {
 	 */
 	badgeType?: 'active' | 'passive';
 	default?: boolean;
-	onClick?: React.MouseEventHandler;
+	onClick?: MouseEventHandler;
 	tabClassName?: string;
 }
 
@@ -33,7 +33,7 @@ export interface TabConfig {
 	 */
 	badgeType?: 'active' | 'passive';
 	active: boolean;
-	onClick: React.MouseEventHandler;
+	onClick: MouseEventHandler;
 	tabClassName?: string;
 }
 
@@ -158,9 +158,9 @@ export const TabContainer = forwardRef(function TabContainerImpl({
 
 	return (
 		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
-			<React.Fragment key={ currentTab }>
+			<Fragment key={ currentTab }>
 				{ currentTab < children.length ? children[currentTab] : null }
-			</React.Fragment>
+			</Fragment>
 		</Tabulation>
 	);
 });
@@ -168,7 +168,7 @@ export const TabContainer = forwardRef(function TabContainerImpl({
 /** Props where at least one of urlChunk and onClick handler is required */
 type UrlTabProps = (
 	TabProps & {
-		onClick: React.MouseEventHandler;
+		onClick: MouseEventHandler;
 		urlChunk?: string;
 	}
 ) | (
@@ -239,9 +239,9 @@ export function UrlTabContainer({
 							<Route
 								key={ index }
 								element={ (
-									<React.Fragment key={ tab.props.urlChunk }>
+									<Fragment key={ tab.props.urlChunk }>
 										{ tab }
-									</React.Fragment>
+									</Fragment>
 								) }
 								path={ tab.props.urlChunk + '/*' }
 							/>
@@ -249,9 +249,9 @@ export function UrlTabContainer({
 							<Route
 								key={ index }
 								element={ (
-									<React.Fragment key='!index'>
+									<Fragment key='!index'>
 										{ tab }
-									</React.Fragment>
+									</Fragment>
 								) }
 								index
 							/>

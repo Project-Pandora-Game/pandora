@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, omit, pick, uniq } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, IsNotNullable, ServerService, type AccountId } from 'pandora-common';
@@ -17,17 +17,17 @@ export const BOTMANAGER_TICK_INTERVAL = 15_000;
 
 const logger = GetLogger('BotManager');
 
-const loadedBotsMetric = new promClient.Gauge({
+const loadedBotsMetric = new Gauge({
 	name: 'pandora_directory_bots_loaded',
 	help: 'Current count of bots loaded into memory',
 });
 
-const inUseBotsMetric = new promClient.Gauge({
+const inUseBotsMetric = new Gauge({
 	name: 'pandora_directory_bots_in_use',
 	help: 'Current count of bots in use',
 });
 
-const onlineBotsMetric = new promClient.Gauge({
+const onlineBotsMetric = new Gauge({
 	name: 'pandora_directory_bots_online',
 	help: 'Current count of bots considered online',
 });

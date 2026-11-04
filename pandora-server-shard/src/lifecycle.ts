@@ -1,5 +1,5 @@
 import { GetLogger, IEmpty, ServerService, logConfig } from 'pandora-common';
-import wtfnode from 'wtfnode';
+import { dump, setLogger } from 'wtfnode';
 import { CharacterManager } from './character/characterManager.ts';
 import { GetDatabaseService } from './database/databaseProvider.ts';
 import { HttpServer } from './networking/httpServer.ts';
@@ -10,9 +10,9 @@ const logger = GetLogger('Lifecycle');
 
 {
 	const wtfNodeLogger = GetLogger('wtfnode');
-	wtfnode.setLogger('info', (...message) => wtfNodeLogger.info(...message));
-	wtfnode.setLogger('warn', (...message) => wtfNodeLogger.warning(...message));
-	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
+	setLogger('info', (...message) => wtfNodeLogger.info(...message));
+	setLogger('warn', (...message) => wtfNodeLogger.warning(...message));
+	setLogger('error', (...message) => wtfNodeLogger.error(...message));
 }
 
 let destroying = 'unknown service';
@@ -52,7 +52,7 @@ export function Stop(): Promise<IEmpty> {
 	setTimeout(() => {
 		logger.fatal(`Stop timed out! Destroying ${destroying}!`);
 		// Dump what is running
-		wtfnode.dump();
+		dump();
 		// Force exit the process
 		process.exit();
 	}, STOP_TIMEOUT).unref();

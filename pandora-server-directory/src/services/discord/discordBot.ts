@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter } from '@prometheus-io/client';
 import * as Discord from 'discord.js';
 import { Events, GatewayIntentBits, GuildChannel, REST, Routes, type ClientOptions, type Interaction } from 'discord.js';
 import { throttle } from 'lodash-es';
@@ -27,7 +27,7 @@ const DISCORD_BUTTONS: readonly DiscordButtonDescriptor[] = [
 
 const logger = GetLogger('DiscordBot');
 
-const buttonInteractionMetric = new promClient.Counter({
+const buttonInteractionMetric = new Counter({
 	name: 'pandora_discord_button_interaction_total',
 	help: 'Count of received button interactions',
 	labelNames: ['buttonId'],

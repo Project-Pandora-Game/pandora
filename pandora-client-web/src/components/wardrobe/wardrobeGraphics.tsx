@@ -12,7 +12,7 @@ import {
 	type Item,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState, Ref } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
@@ -137,7 +137,7 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 	globalState: AssetFrameworkGlobalState;
 	hideClothes?: boolean;
 	overlay?: ReactNode;
-	viewportRef?: React.Ref<PixiViewportRef>;
+	viewportRef?: Ref<PixiViewportRef>;
 }): ReactElement {
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 

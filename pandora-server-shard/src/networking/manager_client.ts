@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter, Gauge } from '@prometheus-io/client';
 import { freeze } from 'immer';
 import {
 	AbortActionAttempt,
@@ -46,13 +46,13 @@ import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
 
-const connectedClientsMetric = new promClient.Gauge({
+const connectedClientsMetric = new Gauge({
 	name: 'pandora_shard_client_connections',
 	help: 'Current count of connections from clients',
 	labelNames: ['messageType'],
 });
 
-const messagesMetric = new promClient.Counter({
+const messagesMetric = new Counter({
 	name: 'pandora_shard_client_messages',
 	help: 'Count of received messages from clients',
 	labelNames: ['messageType'],

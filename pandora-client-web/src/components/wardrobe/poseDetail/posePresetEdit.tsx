@@ -133,7 +133,7 @@ function PosePresetView({ preset, update, sourcePose }: PosePresetEditTableProps
 
 function PosePresetArmPoses({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
 
-	const Arm = useCallback(<TArmKey extends keyof AppearanceArmPose>({ side, part }: { side: 'left' | 'right'; part: TArmKey; }): ReactNode => (
+	const renderArm = useCallback(<TArmKey extends keyof AppearanceArmPose>({ side, part }: { side: 'left' | 'right'; part: TArmKey; }): ReactNode => (
 		<tr>
 			<td>
 				<Checkbox
@@ -162,19 +162,19 @@ function PosePresetArmPoses({ preset, update, sourcePose }: PosePresetEditTableP
 
 	return (
 		<>
-			<Arm side='right' part='position' />
-			<Arm side='right' part='rotation' />
-			<Arm side='right' part='fingers' />
-			<Arm side='left' part='position' />
-			<Arm side='left' part='rotation' />
-			<Arm side='left' part='fingers' />
+			{ renderArm({ side: 'right', part: 'position' }) }
+			{ renderArm({ side: 'right', part: 'rotation' }) }
+			{ renderArm({ side: 'right', part: 'fingers' }) }
+			{ renderArm({ side: 'left', part: 'position' }) }
+			{ renderArm({ side: 'left', part: 'rotation' }) }
+			{ renderArm({ side: 'left', part: 'fingers' }) }
 		</>
 	);
 }
 
 function PosePresetArmsOrder({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
 
-	const Arm = useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
+	const renderArm = useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
 		<tr>
 			<td>
 				<Checkbox
@@ -200,7 +200,7 @@ function PosePresetArmsOrder({ preset, update, sourcePose }: PosePresetEditTable
 	), [preset, update, sourcePose]);
 
 	return (
-		<Arm part='upper' />
+		renderArm({ part: 'upper' })
 	);
 }
 

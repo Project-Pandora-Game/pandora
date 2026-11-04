@@ -3,6 +3,17 @@ import { PseudoRandom } from '../../src/math/pseudoRandom.ts';
 
 describe('PseudoRandom', () => {
 	describe('random()', () => {
+		it('preserves the existing seeded sequence', () => {
+			const rand = new PseudoRandom('my seed');
+			expect(Array.from({ length: 5 }, () => rand.random())).toEqual([
+				0.8485174064990133,
+				0.5301634420175105,
+				0.9759870001580566,
+				0.7654609193559736,
+				0.2989338841289282,
+			]);
+		});
+
 		it('should return a random number between 0 -> 1', () => {
 			const rand = new PseudoRandom('my seed');
 			for (let i = 0; i < 200; i++) {

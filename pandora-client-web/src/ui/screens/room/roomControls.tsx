@@ -1,10 +1,12 @@
 import { Assert, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CompareSpaceRoles, GenerateInitialRoomPosition, ICharacterRoomData, ParseNotNullable, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState } from 'pandora-common';
-import React, {
-	ReactElement, useCallback,
+import {
+	ReactElement,
+	useCallback,
 	useId,
 	useMemo,
 	useState,
 	type ReactNode,
+	MouseEvent,
 } from 'react';
 import { useLocation } from 'react-router';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -680,7 +682,7 @@ function DisplayCharacter({ char, globalState }: {
 		return result;
 	}, [isAdmin, isBlocked]);
 
-	const openMenu = useCallback((event: React.MouseEvent) => {
+	const openMenu = useCallback((event: MouseEvent) => {
 		openContextMenu({
 			type: 'character',
 			character: char,

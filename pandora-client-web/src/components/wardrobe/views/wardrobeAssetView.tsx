@@ -13,7 +13,7 @@ import {
 	ResolveAssetPreference,
 	type ICharacterRoomData,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState, ComponentType } from 'react';
 import * as z from 'zod';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -102,7 +102,7 @@ export function WardrobeAssetList({ header, children, overlay, assets, container
 	attributesFilterOptions?: readonly string[];
 	itemSortIgnorePreferenceOrdering?: boolean;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ListItemComponent: React.ComponentType<WardrobeAssetListItemProps>;
+	ListItemComponent: ComponentType<WardrobeAssetListItemProps>;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const viewMode = useObservable(WardrobeAssetListViewMode);
@@ -499,7 +499,7 @@ export function useAssetPreferenceResolver(): (asset: Asset | null) => AssetPref
 	const { player } = useWardrobeActionContext();
 	const preferences = useAssetPreferences();
 
-	return React.useCallback((asset) => {
+	return useCallback((asset) => {
 		// Use normal if we have no preference data (targetting a room)
 		if (preferences == null || asset == null)
 			return 'normal';

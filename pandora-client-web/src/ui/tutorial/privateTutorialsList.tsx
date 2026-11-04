@@ -1,5 +1,5 @@
 import { Assert } from 'pandora-common';
-import React, { type ReactElement } from 'react';
+import { type ReactElement, Dispatch, SetStateAction } from 'react';
 import { Column, Row } from '../../components/common/container/container.tsx';
 import { InteractiveLink } from '../../components/common/link/interactiveLink.tsx';
 import { useObservable } from '../../observable.ts';
@@ -38,7 +38,7 @@ export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 Assert(new Set(PRIVATE_TUTORIALS.map((t) => t.id)).size === PRIVATE_TUTORIALS.length, 'Private tutorials need to have a unique id');
 
 export default function PrivateRoomTutorialListContent({ setOpenDetailsTutorial }: {
-	setOpenDetailsTutorial: React.Dispatch<React.SetStateAction<TutorialConfig | null>>;
+	setOpenDetailsTutorial: Dispatch<SetStateAction<TutorialConfig | null>>;
 }): ReactElement {
 	return (
 		<Column>

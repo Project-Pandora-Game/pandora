@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { GetLogger, ZodTransformReadonly, type CharacterId, type ChatCharacterStatus } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, type RefObject } from 'react';
+import { ReactElement, useCallback, useMemo, type RefObject, ForwardedRef } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -24,7 +24,7 @@ export function DirectMessageInput({ chatId, messagesDiv, scrollMessagesView, re
 	chatId: string;
 	messagesDiv: RefObject<HTMLDivElement | null>;
 	scrollMessagesView: (forceScroll: boolean) => void;
-	ref: React.ForwardedRef<HTMLTextAreaElement>;
+	ref: ForwardedRef<HTMLTextAreaElement>;
 }): ReactElement | null {
 	const commandInvokeContext = useDirectMessageCommandContext(true);
 	const chat = commandInvokeContext.chat;

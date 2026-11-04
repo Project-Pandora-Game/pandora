@@ -24,20 +24,15 @@ export class PseudoRandom {
 		return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
 	}
 
-	/** random between 0 -> 1 and uses xoshiro128ss under the hood */
+	/** Deterministic hash-based random value in [0, 1). */
 	public random(): number {
 		const h = this.cyrb128(this.hash.toString());
 
-		let a = h[0];
-		let b = h[1];
-		let c = h[2];
-		let d = h[3];
 		this.hash = h;
 
-		const t = b << 9; let r = a * 5; r = (r << 7 | r >>> 25) * 9;
-		c ^= a; d ^= b;
-		b ^= c; a ^= d; c ^= t;
-		d = d << 11 | d >>> 21;
+		// Only the output scramble affects the result; the next call rehashes `h`.
+		let r = h[0] * 5;
+		r = (r << 7 | r >>> 25) * 9;
 		return (r >>> 0) / 4294967296;
 	}
 

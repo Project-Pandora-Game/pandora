@@ -1,7 +1,6 @@
-/* eslint-disable react/forbid-elements */
 import { pick } from 'lodash-es';
 import { Assert } from 'pandora-common';
-import React, { type InputHTMLAttributes } from 'react';
+import { type InputHTMLAttributes, ReactNode } from 'react';
 import { InputBase, type InputBaseProps } from './inputBase.tsx';
 
 const FORWARDED_PROPS = [
@@ -44,7 +43,7 @@ export interface TextInputProps extends InputBaseProps<string>, Pick<InputHTMLAt
 
 export class TextInput extends InputBase<string, TextInputProps, HTMLInputElement> {
 
-	public override render(): React.ReactNode {
+	public override render(): ReactNode {
 		const {
 			password = false,
 		} = this.props;

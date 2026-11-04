@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import { Router, json } from 'express';
 import { DirectoryStatusAnnouncementSchema, ParseNotNullable } from 'pandora-common';
 import type { ActorIdentity } from '../../account/actorIdentity.ts';
 import { AUDIT_LOG } from '../../logging.ts';
@@ -32,7 +32,7 @@ export function PandoraApiManagement(): Router {
 
 	router.route('/announcement')
 		.put<unknown, unknown, unknown, unknown, Partial<PandoraApiManagementLocals>>(
-			express.json(),
+			json(),
 			(req, res) => {
 				const actor = ParseNotNullable(res.locals.actor);
 				const announcement = DirectoryStatusAnnouncementSchema.safeParse(req.body);

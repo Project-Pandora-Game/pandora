@@ -109,7 +109,6 @@ export async function RenderGraphicsTreeInBackground(
 		// Cleanup resources we used
 		if (app != null) {
 			app.stage.removeChildren();
-			app = undefined;
 		}
 		if (appManager != null) {
 			ReleaseApplicationManager(appManager);

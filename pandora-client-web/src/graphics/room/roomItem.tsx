@@ -286,7 +286,6 @@ export const RoomItemInteractive = memo(function RoomItemInteractiveImpl({
 			hitArea: roomHitArea,
 			// Intentionally not stopping propagation, as we want people to be able to move background even through the item
 			stopClickPropagation: false,
-			// eslint-disable-next-line react/no-unstable-nested-components
 			getSelectionButtonContents() {
 				return (
 					<WardrobeItemName item={ item } />

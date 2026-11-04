@@ -5,7 +5,7 @@ import {
 	AssetFrameworkCharacterState,
 	BoneName,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState, MouseEvent } from 'react';
 import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
@@ -76,7 +76,7 @@ export function WardrobeBodySizeGate({ children }: ChildrenProps): ReactElement 
 	}, [actions, globalState, targetSelector]);
 	const checkResult = useCheckAddPermissions(checkResultInitial);
 
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.stopPropagation();
 		if (!checkResult.valid) {
 			if (checkResult.prompt != null) {

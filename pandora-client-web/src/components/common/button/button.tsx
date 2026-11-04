@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement, type ReactNode } from 'react';
+import { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement, type ReactNode, ForwardedRef, forwardRef } from 'react';
 import './button.scss';
 
 export type ButtonTheme = 'default' | 'defaultActive' | 'danger' | 'transparent' | 'semiTransparent';
@@ -46,7 +46,7 @@ export interface IconButtonProps extends Omit<ButtonProps, 'children'> {
 	alt: string;
 }
 
-function IconButtonImpl({ src, alt, className, title, ...buttonProps }: IconButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
+function IconButtonImpl({ src, alt, className, title, ...buttonProps }: IconButtonProps, ref: ForwardedRef<HTMLButtonElement>): ReactElement {
 	return (
 		<Button { ...buttonProps } className={ classNames('IconButton', className) } title={ title ?? alt } ref={ ref }>
 			<img src={ src } alt={ alt } crossOrigin='anonymous' />
@@ -54,4 +54,4 @@ function IconButtonImpl({ src, alt, className, title, ...buttonProps }: IconButt
 	);
 }
 
-export const IconButton = React.forwardRef(IconButtonImpl);
+export const IconButton = forwardRef(IconButtonImpl);

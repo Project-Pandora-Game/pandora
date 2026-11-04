@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Gauge } from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
@@ -25,12 +25,12 @@ const logger = GetLogger('SpaceManager');
 //     help: 'Total count of spaces that exist',
 // });
 
-const loadedSpacesMetric = new promClient.Gauge({
+const loadedSpacesMetric = new Gauge({
 	name: 'pandora_directory_spaces_loaded',
 	help: 'Current count of spaces loaded into memory',
 });
 
-const inUseSpacesMetric = new promClient.Gauge({
+const inUseSpacesMetric = new Gauge({
 	name: 'pandora_directory_spaces_in_use',
 	help: 'Current count of spaces in use',
 });

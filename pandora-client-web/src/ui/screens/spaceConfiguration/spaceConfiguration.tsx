@@ -29,7 +29,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import type { IDirectoryAccountInfo, IDirectoryShardInfo } from 'pandora-common/networking/api/directory_client';
-import React, { memo, ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
+import { memo, ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState, MouseEvent } from 'react';
 import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -1159,7 +1159,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 
 	const permaLink = `https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}`;
 
-	const copyPublic = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+	const copyPublic = useCallback((ev: MouseEvent<HTMLElement>) => {
 		ev.stopPropagation();
 		CopyToClipboard(permaLink, () => toast('Copied invite to clipboard'));
 	}, [permaLink]);
@@ -1305,7 +1305,7 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 	const confirm = useConfirmDialog();
 
 	const [onDelete, processing] = useAsyncEvent(
-		async (ev: React.MouseEvent<HTMLElement>) => {
+		async (ev: MouseEvent<HTMLElement>) => {
 			ev.stopPropagation();
 			if (!await confirm('Are you sure you want to delete this invite?', `Id: ${invite.id}`))
 				return null;
@@ -1325,7 +1325,7 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 		},
 	);
 
-	const copy = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+	const copy = useCallback((ev: MouseEvent<HTMLElement>) => {
 		ev.stopPropagation();
 		CopyToClipboard(`https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}?invite=${encodeURIComponent(invite.id)}`, () => toast('Copied invite id to clipboard'));
 	}, [spaceId, invite.id]);

@@ -1,5 +1,5 @@
 import { Assert, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
-import React, { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
+import { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent, Fragment, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
 import focusIcon from '../../../assets/icons/focus.svg';
@@ -41,7 +41,7 @@ const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatIn
 /** How many last sent messages are remembered in the session storage */
 const INPUT_HISTORY_MAX_LENGTH = 64;
 
-export function ChatInputContextProvider({ children }: { children: React.ReactNode; }) {
+export function ChatInputContextProvider({ children }: { children: ReactNode; }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [targets, setTargets] = useState<readonly Character[] | null>(null);
 	const [editing, setEditingState] = useState<ChatInputHandlerEditing | null>(null);
@@ -272,7 +272,7 @@ function TypingIndicator(): ReactElement {
 	const playerId = player.id;
 	const { showSelector, setShowSelector } = useChatInput();
 
-	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
+	const onClick = useCallback((ev: ReactMouseEvent<HTMLDivElement>) => {
 		ev.stopPropagation();
 		setShowSelector(!showSelector);
 	}, [showSelector, setShowSelector]);
@@ -384,12 +384,12 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 				<span>
 					{ 'Whispering to ' }
 					{ targets.map((t, i) => (
-						<React.Fragment key={ i }>
+						<Fragment key={ i }>
 							{ i !== 0 ? ', ' : null }
 							<ColoredName color={ t.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor }>{ t.data.name }</ColoredName>
 							{ ' ' }
 							({ t.data.id })
-						</React.Fragment>
+						</Fragment>
 					)) }
 					{ ' ' }
 					{ editing === null && (

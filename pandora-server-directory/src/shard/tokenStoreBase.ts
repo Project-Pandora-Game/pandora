@@ -44,7 +44,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 		id: string;
 		token: string;
 	}> {
-		let id = '';
+		let id: string;
 		do {
 			id = this.generator(this.idLength);
 		} while (this.#tokens.has(id));

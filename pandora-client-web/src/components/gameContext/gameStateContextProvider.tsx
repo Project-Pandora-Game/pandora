@@ -360,9 +360,9 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 			});
 		}
 		if (join) {
-			let char = this.characters.value.find((oc) => oc.data.id === join.id);
+			const char = this.characters.value.find((oc) => oc.data.id === join.id);
 			if (!char) {
-				this.characters.value = [...this.characters.value, char = new CharacterImpl(join)];
+				this.characters.value = [...this.characters.value, new CharacterImpl(join)];
 			} else {
 				char.update(join);
 				this.characters.value = [...this.characters.value];
@@ -735,7 +735,7 @@ export class GameStateImpl extends TypedEventEmitter<GameStateEvents> implements
 		if (message.length > LIMIT_CHAT_MESSAGE_LENGTH) {
 			throw new ChatSendError(`Message must not be longer than ${LIMIT_CHAT_MESSAGE_LENGTH} characters (currently: ${message.length})`);
 		}
-		let messages: IClientMessage[] = [];
+		let messages: IClientMessage[];
 		if (type !== undefined) {
 			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message, type === 'ooc'), to: targets }];
 		} else if (raw) {

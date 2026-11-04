@@ -23,7 +23,7 @@ import {
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState, PointerEvent } from 'react';
 import * as zod from 'zod';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character } from '../../character/character.ts';
@@ -351,7 +351,7 @@ export function RoomSceneInteractive({ className }: {
 	const playerState = useCharacterState(globalState, player.id);
 	AssertNotNullable(playerState);
 
-	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+	const onPointerDown = useEvent((event: PointerEvent<HTMLDivElement>) => {
 		if (contextMenuFocus != null) {
 			openContextMenu(null);
 			event.stopPropagation();
@@ -410,7 +410,7 @@ export function RoomSceneInteractive({ className }: {
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
-	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+	const onDoubleClick = useEvent((event: PointerEvent<HTMLDivElement>) => {
 		const viewport = viewportRef.current?.viewport;
 		if (viewport == null)
 			return;

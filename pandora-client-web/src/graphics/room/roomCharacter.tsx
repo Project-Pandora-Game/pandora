@@ -322,7 +322,6 @@ export const RoomCharacter = memo(function RoomCharacterImpl({
 		return {
 			hitArea: roomHitArea,
 			stopClickPropagation: true,
-			// eslint-disable-next-line react/no-unstable-nested-components
 			getSelectionButtonContents() {
 				const { publicSettings, name, id } = character.data;
 

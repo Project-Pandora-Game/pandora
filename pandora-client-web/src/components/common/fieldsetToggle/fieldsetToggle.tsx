@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ReactNode, useReducer } from 'react';
+import { ReactNode, useReducer, MouseEvent } from 'react';
 import { useEvent } from '../../../common/useEvent.ts';
 import './fieldsetToggle.scss';
 
@@ -17,7 +17,7 @@ export function FieldsetToggle({ legend, children, className, open: initialState
 
 	const effectiveOpen = forceOpen != null ? forceOpen : open;
 
-	const onClick = useEvent((event: React.MouseEvent<HTMLElement>) => {
+	const onClick = useEvent((event: MouseEvent<HTMLElement>) => {
 		event.preventDefault();
 		onChange?.(!effectiveOpen);
 		if (forceOpen == null) {

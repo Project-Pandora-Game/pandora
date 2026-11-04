@@ -1,5 +1,5 @@
 import { AccountId, FormatTimeInterval, GetLogger, ManagementAccountQueryResult, type ManagementAccountInfo } from 'pandora-common';
-import React, { useCallback, useEffect, useId, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useId, useState, type ReactElement, Fragment } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
@@ -185,7 +185,7 @@ function ManagementAccountDetails({ info, reload }: {
 				<Column>
 					{
 						info.characters.map((c, index) => (
-							<React.Fragment key={ c.id }>
+							<Fragment key={ c.id }>
 								{
 									index !== 0 ? (
 										<hr className='fill-x' />
@@ -210,7 +210,7 @@ function ManagementAccountDetails({ info, reload }: {
 										</ExternalLink>
 									</Row>
 								</Column>
-							</React.Fragment>
+							</Fragment>
 						))
 					}
 				</Column>

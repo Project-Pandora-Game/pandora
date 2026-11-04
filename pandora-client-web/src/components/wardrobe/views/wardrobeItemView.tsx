@@ -19,7 +19,7 @@ import {
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/assets/modules/lockSlot';
-import React, { ReactElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ReactElement, useEffect, useMemo, useRef, useState, type ReactNode, Dispatch, Fragment, SetStateAction } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import broomIcon from '../../../assets/icons/broom.svg';
@@ -252,7 +252,7 @@ function InventoryItemViewContent({ children, targetSelector, container, contain
 			{ children }
 			{
 				items.map((i) => (
-					<React.Fragment key={ i.id }>
+					<Fragment key={ i.id }>
 						<div className='overlayDropContainer'>
 							{
 								heldItem.type !== 'nothing' ? (
@@ -269,7 +269,7 @@ function InventoryItemViewContent({ children, targetSelector, container, contain
 							selected={ isEqual(focus.container, container) && i.id === focus.itemId }
 							singleItemContainer={ singleItemContainer }
 						/>
-					</React.Fragment>
+					</Fragment>
 				))
 			}
 			<div className='overlayDropContainer'>
@@ -528,10 +528,10 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 
 export function ViewStorageButton({ showContent, setShowContent, targetSelector, container }: {
 	showContent: boolean;
-	setShowContent: React.Dispatch<React.SetStateAction<boolean>>;
+	setShowContent: Dispatch<SetStateAction<boolean>>;
 	targetSelector: ActionTargetSelector;
 	container: ItemContainerPath;
-}): React.ReactNode {
+}): ReactNode {
 	const containerAccessCheck = useWardrobeContainerAccessCheck(targetSelector, container);
 	const [requestPermission, requestPermissionPending] = useWardrobePermissionRequestCallback();
 
@@ -564,7 +564,7 @@ export function ViewStorageButton({ showContent, setShowContent, targetSelector,
 	);
 }
 
-export function ViewStorageButtonPlaceholder(): React.ReactNode {
+export function ViewStorageButtonPlaceholder(): ReactNode {
 	return (
 		<WardrobeActionButtonElement
 			check={ null }

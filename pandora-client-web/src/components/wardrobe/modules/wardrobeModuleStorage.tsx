@@ -4,7 +4,7 @@ import {
 	ItemInteractionType,
 } from 'pandora-common';
 import { ItemModuleStorage } from 'pandora-common/assets/modules/storage';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState, MouseEvent } from 'react';
 import { Row } from '../../common/container/container.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
@@ -31,7 +31,7 @@ export function WardrobeModuleConfigStorage({ target, item, moduleName, m }: War
 
 	const checkResult = useCheckAddPermissions(checkResultInitial);
 
-	const onClick = useCallback((ev: React.MouseEvent) => {
+	const onClick = useCallback((ev: MouseEvent) => {
 		ev.stopPropagation();
 		if (!checkResult.valid) {
 			if (checkResult.prompt != null) {

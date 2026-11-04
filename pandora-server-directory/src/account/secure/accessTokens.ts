@@ -1,4 +1,4 @@
-import promClient from '@prometheus-io/client';
+import { Counter } from '@prometheus-io/client';
 import AsyncLock from 'async-lock';
 import { cloneDeep, debounce, uniq } from 'lodash-es';
 import { customAlphabet as nanoCustomAlphabet, nanoid } from 'nanoid';
@@ -23,7 +23,7 @@ const GlobalTokenLock = new AsyncLock({
 
 const AccessTokenSecretGenerator = nanoCustomAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
-const tokenUseMetric = new promClient.Counter({
+const tokenUseMetric = new Counter({
 	name: 'pandora_directory_access_token_usage',
 	help: 'Count of uses of access tokens by scope. Use requiring multiple scopes counts multiple times.',
 	labelNames: ['scope'],

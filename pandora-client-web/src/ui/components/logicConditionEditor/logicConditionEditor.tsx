@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { produce } from 'immer';
 import { AssertNever } from 'pandora-common';
-import type { FC, ReactElement } from 'react';
+import type { FC, ReactElement, ReactNode } from 'react';
 import crossImage from '../../../assets/icons/cross.svg';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { DivContainer, Row } from '../../../components/common/container/container.tsx';
@@ -21,18 +21,26 @@ export type LogicConditionEditorConditionComponentProps<TCondition> = {
 	processing: boolean;
 };
 
-export interface LogicConditionEditorProps<TCondition> {
+type ConditionRenderer<TCondition> = {
+	conditionComponent: FC<LogicConditionEditorConditionComponentProps<TCondition>>;
+	renderCondition?: never;
+} | {
+	conditionComponent?: never;
+	/** Render callback without hooks; its identity can change without remounting children. */
+	renderCondition: (props: LogicConditionEditorConditionComponentProps<TCondition>) => ReactNode;
+};
+
+export type LogicConditionEditorProps<TCondition> = {
 	conditions: readonly LogicConditionEditorCondition<TCondition>[];
 	onChange?: (newValue: readonly LogicConditionEditorCondition<TCondition>[]) => void;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ConditionComponent: FC<LogicConditionEditorConditionComponentProps<TCondition>>;
 	processing?: boolean;
-}
+} & ConditionRenderer<TCondition>;
 
 export function LogicConditionEditor<TCondition>({
 	conditions,
 	onChange,
-	ConditionComponent,
+	conditionComponent: ConditionComponent,
+	renderCondition,
 	processing = false,
 }: LogicConditionEditorProps<TCondition>): ReactElement {
 	return (
@@ -124,7 +132,8 @@ export function LogicConditionEditor<TCondition>({
 
 								onChange(newValue);
 							}) : undefined }
-							ConditionComponent={ ConditionComponent }
+							conditionComponent={ ConditionComponent }
+							renderCondition={ renderCondition }
 							processing={ processing }
 							group={ group }
 						/>
@@ -135,7 +144,7 @@ export function LogicConditionEditor<TCondition>({
 	);
 }
 
-function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, ConditionComponent, processing, group }: {
+function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, conditionComponent: ConditionComponent, renderCondition, processing, group }: {
 	record: LogicConditionEditorCondition<TCondition>;
 	firstEntry: boolean;
 	lastEntry: boolean;
@@ -143,12 +152,17 @@ function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, o
 	onDelete?: () => void;
 	onMoveUp?: () => void;
 	onMoveDown?: () => void;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ConditionComponent: FC<LogicConditionEditorConditionComponentProps<TCondition>>;
 	processing: boolean;
 	/** For first element of "AND" group - details about this group. */
 	group: { size: number; active?: boolean; } | null;
-}): ReactElement {
+} & Pick<ConditionRenderer<TCondition>, 'conditionComponent' | 'renderCondition'>): ReactElement {
+	const conditionProps: LogicConditionEditorConditionComponentProps<TCondition> = {
+		condition: record.condition,
+		setCondition: onChange != null ? ((newCondition) => {
+			onChange({ ...record, condition: newCondition });
+		}) : undefined,
+		processing,
+	};
 	return (
 		<>
 			{
@@ -184,16 +198,7 @@ function ConditionRecordListEntry<TCondition>({ record, firstEntry, lastEntry, o
 				align='center'
 				className={ classNames('conditionDetails', record.active == null ? null : record.active ? 'active' : 'inactive') }
 			>
-				<ConditionComponent
-					condition={ record.condition }
-					setCondition={ onChange != null ? ((newCondition) => {
-						onChange({
-							...record,
-							condition: newCondition,
-						});
-					}) : undefined }
-					processing={ processing }
-				/>
+				{ ConditionComponent != null ? <ConditionComponent { ...conditionProps } /> : renderCondition?.(conditionProps) }
 			</DivContainer>
 			<Row className='quickActions' gap='small'>
 				<Button

@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useState, type ReactElement } from 'react';
+import { Suspense, useCallback, useState, type ReactElement, lazy } from 'react';
 import { Button } from '../../components/common/button/button.tsx';
 import { Column, Row } from '../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../components/common/fieldsetToggle/index.tsx';
@@ -8,7 +8,7 @@ import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tut
 import { TutorialRunner } from './tutorialSystem/tutorialRunner.ts';
 import { ActiveTutorial } from './tutorialSystem/tutorialService.tsx';
 
-const PrivateRoomTutorialListContent = React.lazy(() => import('./privateTutorialsList.tsx'));
+const PrivateRoomTutorialListContent = lazy(() => import('./privateTutorialsList.tsx'));
 
 export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);

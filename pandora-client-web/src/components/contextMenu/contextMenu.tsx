@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import React, { ForwardedRef, forwardRef, ReactElement, RefObject, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { ForwardedRef, forwardRef, ReactElement, RefObject, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, MouseEvent } from 'react';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useMounted } from '../../common/useMounted.ts';
@@ -9,7 +9,7 @@ import { DialogInPortal, DraggableDialogPriorityContext } from '../dialog/dialog
 import './contextMenu.scss';
 
 type ContextMenuHandle = {
-	onContextMenu: (event: React.MouseEvent<HTMLDivElement>) => void;
+	onContextMenu: (event: MouseEvent<HTMLDivElement>) => void;
 	close: () => void;
 };
 
@@ -22,7 +22,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 	const mounted = useMounted();
 	const priority = useContext(DraggableDialogPriorityContext);
 
-	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
+	const onContextMenu = useEvent((event: MouseEvent<HTMLDivElement>) => {
 		// If already open, close instead and allow default context menu
 		if (show) {
 			setShow(false);
@@ -90,9 +90,9 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 
 export const ContextMenu = forwardRef<ContextMenuHandle, CommonProps>(ContextMenuImpl);
 
-export function useContextMenu(): [RefObject<ContextMenuHandle | null>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
+export function useContextMenu(): [RefObject<ContextMenuHandle | null>, (event: MouseEvent<HTMLDivElement>) => void, () => void] {
 	const ref = useRef<ContextMenuHandle>(null);
-	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
+	const onContextMenu = useEvent((event: MouseEvent<HTMLDivElement>) => {
 		// Ignore custom context menu when holding shift
 		if (event.shiftKey)
 			return;

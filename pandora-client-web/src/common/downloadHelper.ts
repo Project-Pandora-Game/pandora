@@ -4,7 +4,7 @@ export function DownloadAsFile(content: Blob, filename: string): void;
 export function DownloadAsFile(content: DataString, filename: string): void;
 export function DownloadAsFile(content: string, filename: string, type: string): void;
 export function DownloadAsFile(content: string | Blob, filename: string, type?: string): void {
-	let url = '';
+	let url: string;
 	if (typeof content === 'string') {
 		if (!type) {
 			AssertDataString(content);

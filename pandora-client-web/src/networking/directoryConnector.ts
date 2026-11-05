@@ -39,7 +39,6 @@ export type LoginResponse =
 	| 'invalidToken'
 	| 'unknownCredentials'
 	| 'failed'
-	| 'rateLimited'
 	| 'invalidSecondFactor'
 	| { result: 'accountDisabled'; reason: string; };
 

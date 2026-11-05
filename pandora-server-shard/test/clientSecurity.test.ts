@@ -46,6 +46,17 @@ describe('Shard client authorization', () => {
 		expect(sendLoadMessage).not.toHaveBeenCalled();
 	});
 
+	it.each(['invalid current-secret', 'c1', ''])('rejects malformed authorization %p before looking up a character', (authorization) => {
+		const getCharacter = jest.spyOn(CharacterManager, 'getCharacter');
+		const abortConnection = jest.fn();
+		const loadCharacter = jest.fn();
+		const connection = { headers: { authorization }, abortConnection, loadCharacter } as unknown as ClientConnection;
+		ConnectionManagerClient.onConnect(connection);
+		expect(abortConnection).toHaveBeenCalledTimes(1);
+		expect(getCharacter).not.toHaveBeenCalled();
+		expect(loadCharacter).not.toHaveBeenCalled();
+	});
+
 	it('loads a character when the secret is still current', () => {
 		const sendAllPendingMessages = jest.fn();
 		const character = { isValid: true, connectSecret: 'current-secret', sendAllPendingMessages } as unknown as Character;

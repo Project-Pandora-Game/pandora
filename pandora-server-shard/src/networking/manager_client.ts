@@ -21,7 +21,7 @@ import {
 	GameLogicPermissionServer,
 	GetLogger,
 	IMessageHandler,
-	IsCharacterId,
+	CharacterIdSchema,
 	MessageHandler,
 	NaturalListJoin,
 	PermissionConfig,
@@ -109,15 +109,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 
 	/** Handle new incoming connection */
 	public onConnect(connection: ClientConnection): void {
-		const [characterId, secret] = (connection.headers.authorization || '').split(' ');
+		const [rawCharacterId, secret] = (connection.headers.authorization || '').split(' ');
+		const characterId = CharacterIdSchema.safeParse(rawCharacterId);
 		// The initial HTTP request may have been authorized before Directory revoked or rotated this secret.
-		if (!IsCharacterId(characterId) || !secret || !this.isAuthorized(characterId, secret)) {
+		if (!characterId.success || !secret || !this.isAuthorized(characterId.data, secret)) {
 			connection.abortConnection();
 			return;
 		}
 		this._connectedClients.add(connection);
 		connectedClientsMetric.set(this._connectedClients.size);
-		if (!connection.loadCharacter(characterId) || !connection.character)
+		if (!connection.loadCharacter(characterId.data) || !connection.character)
 			return;
 		connection.sendLoadMessage();
 		connection.character.sendAllPendingMessages();

@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import type { CharacterId } from 'pandora-common';
+import { MockConnectionSocket, MockServerSocket, type CharacterId } from 'pandora-common';
+import type { IShardClient } from 'pandora-common/networking/api/shard_client';
 import type { Character } from '../src/character/character.ts';
 import { CharacterManager } from '../src/character/characterManager.ts';
-import type { ClientConnection } from '../src/networking/connection_client.ts';
+import { ClientConnection } from '../src/networking/connection_client.ts';
 import { ConnectionManagerClient } from '../src/networking/manager_client.ts';
 
 afterEach(() => {
@@ -10,6 +11,19 @@ afterEach(() => {
 });
 
 describe('Shard client authorization', () => {
+	it('reports an aborted connection as disconnected before the transport closes', () => {
+		jest.spyOn(ConnectionManagerClient, 'onConnect').mockImplementation(() => { /* NOOP */ });
+		const socket = new MockConnectionSocket('aborted-client');
+		const disconnect = jest.spyOn(socket, 'disconnect').mockImplementation(() => { /* Transport close is asynchronous. */ });
+		const connection = new ClientConnection(new MockServerSocket<IShardClient>(), socket, {});
+		expect(connection.isConnected()).toBe(true);
+		connection.abortConnection();
+		expect(socket.isConnected()).toBe(true);
+		expect(connection.isConnected()).toBe(false);
+		connection.abortConnection();
+		expect(disconnect).toHaveBeenCalledTimes(1);
+	});
+
 	it('rejects a secret revoked after the initial transport authorization, before loading private data', () => {
 		const character = { isValid: true, connectSecret: 'old-secret' };
 		jest.spyOn(CharacterManager, 'getCharacter').mockReturnValue(character as Character);

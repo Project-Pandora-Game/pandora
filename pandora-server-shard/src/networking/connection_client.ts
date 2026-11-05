@@ -36,6 +36,10 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		}
 	}
 
+	public override isConnected(): boolean {
+		return !this.aborted && super.isConnected();
+	}
+
 	/** Handler for when client disconnects */
 	protected override onDisconnect(reason: string): void {
 		this.character?.setConnection(null);

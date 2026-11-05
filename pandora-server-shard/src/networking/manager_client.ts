@@ -49,7 +49,6 @@ const logger = GetLogger('ConnectionManager-Client');
 const PERMISSION_PROMPT_BURST_LIMIT = 64;
 const PERMISSION_PROMPT_REFILL_PER_SECOND = 4;
 const PERMISSION_PROMPT_COST = 4;
-const FULL_RELOAD_COOLDOWN_MS = 2_000;
 
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_shard_client_connections',
@@ -71,7 +70,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
 	private readonly permissionPromptBudgets = new WeakMap<Character, { tokens: number; updatedAt: number; }>();
-	private readonly lastFullReload = new WeakMap<Character, number>();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -221,11 +219,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 					} else {
 						logger.error(`Failed to abort action attempt by ${character.id} for failed action completion:\n`, cancelResult.problems);
 					}
-				}
-				// If the action failed, client might be out of sync. Suppress repeated full reloads.
-				if (now - (this.lastFullReload.get(character) ?? -Infinity) >= FULL_RELOAD_COOLDOWN_MS) {
-					this.lastFullReload.set(character, now);
-					client.sendLoadMessage();
 				}
 				return {
 					result: 'failure',

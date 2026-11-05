@@ -36,7 +36,7 @@ describe('Shard request handling', () => {
 		expect(sendMessage).toHaveBeenCalledTimes(2);
 	});
 
-	it('does not rate-limit chat messages or consume the permission prompt budget', async () => {
+	it('does not rate-limit chat messages across reconnects', async () => {
 		let now = 1000;
 		jest.spyOn(Date, 'now').mockImplementation(() => now);
 		const handleMessages = jest.fn().mockReturnValue({ result: 'ok' });
@@ -125,7 +125,7 @@ describe('Shard request handling', () => {
 		expect(sendMessage).toHaveBeenCalledTimes(16);
 	});
 
-	it('bounds full reloads after failed game actions', async () => {
+	it('does not force full reloads after failed game actions', async () => {
 		let now = 1000;
 		jest.spyOn(Date, 'now').mockImplementation(() => now);
 		const sendLoadMessage = jest.fn();
@@ -139,9 +139,9 @@ describe('Shard request handling', () => {
 		for (let i = 0; i < 9; i++) {
 			expect(await ConnectionManagerClient.onMessage('gameLogicAction', { operation: 'complete' }, connection)).toMatchObject({ result: 'failure' });
 		}
-		expect(sendLoadMessage).toHaveBeenCalledTimes(1);
+		expect(sendLoadMessage).not.toHaveBeenCalled();
 		now += 2_000;
 		await ConnectionManagerClient.onMessage('gameLogicAction', { operation: 'complete' }, connection);
-		expect(sendLoadMessage).toHaveBeenCalledTimes(2);
+		expect(sendLoadMessage).not.toHaveBeenCalled();
 	});
 });

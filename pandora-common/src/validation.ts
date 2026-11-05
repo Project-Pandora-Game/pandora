@@ -240,11 +240,8 @@ export function FormatHighEntropyToken(token: string): string {
 	return token.match(/.{1,4}/g)?.join('-') ?? '';
 }
 
-const CanonicalHighEntropyTokenSchema = z.string().length(HIGH_ENTROPY_TOKEN_LENGTH).regex(/^[2-9A-HJ-NP-Z]+$/);
-const IsCanonicalHighEntropyToken = ZodMatcher(CanonicalHighEntropyTokenSchema);
-// Do not transform this network schema: connection validation logs messages that change during parsing.
-export const HighEntropyTokenSchema = z.string().max(HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH)
-	.refine((token) => IsCanonicalHighEntropyToken(NormalizeHighEntropyToken(token)));
+// Network requests must already be normalized by the client.
+export const HighEntropyTokenSchema = z.string().length(HIGH_ENTROPY_TOKEN_LENGTH).regex(/^[2-9A-HJ-NP-Z]+$/);
 export const IsHighEntropyToken = ZodMatcher(HighEntropyTokenSchema);
 
 export const PasswordSchema = z.string().min(8);

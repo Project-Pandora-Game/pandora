@@ -1,15 +1,24 @@
 import { describe, expect, it } from '@jest/globals';
+import { ClientDirectorySchema } from '../src/networking/api/directory_client/client_directory.ts';
 import { FormatHighEntropyToken, HighEntropyTokenSchema, IsObject, NormalizeHighEntropyToken, ZodTrimedRegex } from '../src/validation.ts';
 
 describe('Validation', () => {
 
-	it('accepts canonical, lowercase, spaced and dashed high-entropy tokens', () => {
+	it('accepts only canonical network tokens and normalizes manually entered tokens', () => {
 		const token = 'ABCDEFGHJKLMNPQR';
 		const enteredToken = 'abcd - efgh  jklm-\tnpqr';
 		expect(HighEntropyTokenSchema.safeParse(token).success).toBe(true);
-		expect(HighEntropyTokenSchema.parse(enteredToken)).toBe(enteredToken);
+		expect(HighEntropyTokenSchema.safeParse(enteredToken).success).toBe(false);
+		expect(HighEntropyTokenSchema.parse(NormalizeHighEntropyToken(enteredToken))).toBe(token);
 		expect(NormalizeHighEntropyToken(enteredToken)).toBe(token);
 		expect(FormatHighEntropyToken(token)).toBe('ABCD-EFGH-JKLM-NPQR');
+	});
+
+	it('requires reset-confirm requests to carry a normalized token', () => {
+		const schema = ClientDirectorySchema.passwordResetConfirm.request;
+		const request = { username: 'test-user', passwordSha512: `${ 'a'.repeat(86) }==`, token: 'ABCD-EFGH-JKLM-NPQR' };
+		expect(schema.safeParse(request).success).toBe(false);
+		expect(schema.parse({ ...request, token: NormalizeHighEntropyToken(request.token) }).token).toBe('ABCDEFGHJKLMNPQR');
 	});
 
 	it('does not normalize Unicode case expansions into valid token characters', () => {

@@ -109,7 +109,7 @@ function ResetPasswordFormInner(): ReactElement {
 						validate: (token) => {
 							if (NormalizeHighEntropyToken(token).length !== HIGH_ENTROPY_TOKEN_LENGTH)
 								return `Reset code must be exactly ${ HIGH_ENTROPY_TOKEN_LENGTH } characters`;
-							return IsHighEntropyToken(token) || 'Invalid reset code format';
+							return IsHighEntropyToken(NormalizeHighEntropyToken(token)) || 'Invalid reset code format';
 						},
 					} }
 				/>

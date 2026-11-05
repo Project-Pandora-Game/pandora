@@ -1,4 +1,4 @@
-import { AssertNever, HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH, HIGH_ENTROPY_TOKEN_LENGTH, IsHighEntropyToken, NormalizeHighEntropyToken, PasswordSchema, UserNameSchema } from 'pandora-common';
+import { AssertNever, FormatHighEntropyToken, HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH, HIGH_ENTROPY_TOKEN_LENGTH, IsHighEntropyToken, NormalizeHighEntropyToken, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
@@ -97,7 +97,7 @@ function ResetPasswordFormInner(): ReactElement {
 					autoCapitalize='characters'
 					autoCorrect='off'
 					spellCheck={ false }
-					placeholder='XXXX-XXXX-XXXX-XXXX'
+					placeholder={ FormatHighEntropyToken('X'.repeat(HIGH_ENTROPY_TOKEN_LENGTH)) }
 					register={ register }
 					name='token'
 					options={ {

@@ -115,8 +115,10 @@ export default class AccountSecure {
 		return this.#secure.emailHash === emailHash;
 	}
 
-	public verifyPassword(password: string): Promise<boolean> {
-		return argon2.verify(this.#secure.password, password);
+	public async verifyPassword(password: string): Promise<boolean> {
+		const passwordHash = this.#secure.password;
+		const valid = await argon2.verify(passwordHash, password);
+		return valid && this.#secure.password === passwordHash;
 	}
 
 	public async changePasswordAfterSudo(passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<'ok' | 'invalidCryptoKey'> {
@@ -148,17 +150,22 @@ export default class AccountSecure {
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, NormalizeHighEntropyToken(token)))
+		const resetToken = this.#findToken(AccountTokenReason.PASSWORD_RESET, NormalizeHighEntropyToken(token));
+		if (resetToken == null)
 			return false;
 
-		// Invalidate all login tokens
-		this.#invalidateToken(AccountTokenReason.LOGIN);
+		// Hash before changing credentials: hashing can fail or allow other requests to run.
+		const passwordHash = await GeneratePasswordHash(password);
+		if (this.#findToken(AccountTokenReason.PASSWORD_RESET, resetToken.value) !== resetToken)
+			return false;
 
-		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
-		this.#secure.password = await GeneratePasswordHash(password);
+		this.#secure.password = passwordHash;
 		this.#secure.cryptoKey = undefined;
 		this.#secure.passkeys = undefined;
+		// Revoke tokens issued up to the point where the new credentials take effect.
+		this.#invalidateToken(AccountTokenReason.LOGIN);
+		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		await this.accessTokens.invalidateAllTokensForRecovery();
 
 		await this.updateDatabase();

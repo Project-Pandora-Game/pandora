@@ -349,7 +349,6 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
-			z.object({ result: z.literal('rateLimited') }),
 		]),
 	},
 	botCommandRun: {
@@ -367,7 +366,6 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
-			z.object({ result: z.literal('rateLimited') }),
 		])),
 	},
 	botCommandGetStructurePart: {
@@ -385,7 +383,6 @@ export const ClientShardSchema = {
 				/** The bot didn't reply properly (or at all). */
 				result: z.literal('botError'),
 			}),
-			z.object({ result: z.literal('rateLimited') }),
 		])),
 	},
 	//#endregion

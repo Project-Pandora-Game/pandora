@@ -118,9 +118,6 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			} else if (result.result === 'botError') {
 				toast('The space\'s bot failed to process the command', TOAST_OPTIONS_ERROR);
 				return false;
-			} else if (result.result === 'rateLimited') {
-				toast('Too many bot commands. Please try again shortly.', TOAST_OPTIONS_ERROR);
-				return false;
 			} else if (result.result === 'botDisconnected') {
 				toast('The space\'s bot is not currently available to process the command', TOAST_OPTIONS_ERROR);
 				return false;
@@ -184,8 +181,6 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 						};
 					} else if (commands.result === 'botError') {
 						toast('The space\'s bot failed to produce command list', TOAST_OPTIONS_ERROR);
-						return null;
-					} else if (commands.result === 'rateLimited') {
 						return null;
 					} else if (commands.result === 'botDisconnected') {
 						toast('The space\'s bot is not currently available', TOAST_OPTIONS_ERROR);
@@ -517,8 +512,6 @@ export class BotInteractionsService extends Service<BotInteractionsServiceConfig
 			return Result.Err(`Error processing arguments: ${result.message}`);
 		} else if (result.result === 'botError') {
 			return Result.Err('The space\'s bot failed to process the command');
-		} else if (result.result === 'rateLimited') {
-			return Result.Err('Too many bot command requests. Please try again shortly.');
 		} else if (result.result === 'botDisconnected') {
 			return Result.Err('The space\'s bot is not currently available to process the command');
 		} else if (result.result === 'noBot') {

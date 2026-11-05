@@ -12,6 +12,13 @@ describe('Validation', () => {
 		expect(FormatHighEntropyToken(token)).toBe('ABCD-EFGH-JKLM-NPQR');
 	});
 
+	it('does not normalize Unicode case expansions into valid token characters', () => {
+		for (const token of ['ABCDEFGHJKLMNPß', 'ſ'.repeat(16)]) {
+			expect(NormalizeHighEntropyToken(token)).toBe(token);
+			expect(HighEntropyTokenSchema.safeParse(NormalizeHighEntropyToken(token)).success).toBe(false);
+		}
+	});
+
 	it.each(['012345', 'ABCDEFGHJKLMNPQ', 'ABCDEFGHJKLMNPQRR', 'ABCD-EFGH-JKLM-NP0R', 'ABCD-EFGH-JKLM-NP1R', 'ABCD-EFGH-JKLM-NPIR', 'ABCD-EFGH-JKLM-NPOR', 'ABCD_EFGH_JKLM_NPQR', 'ABCDEFGHJKLMNPß'])(
 		'rejects invalid high-entropy token %p',
 		(token) => {

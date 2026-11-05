@@ -232,6 +232,7 @@ export const HIGH_ENTROPY_TOKEN_INPUT_MAX_LENGTH = 64;
 
 /** Ignore separators and letter case when checking a manually entered token. */
 export function NormalizeHighEntropyToken(token: string): string {
+	// Only fold ASCII: Unicode uppercasing can turn invalid characters such as ß into valid token characters (SS).
 	return token.replace(/[\s-]/g, '').replace(/[a-z]/g, (character) => character.toUpperCase());
 }
 

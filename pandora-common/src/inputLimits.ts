@@ -79,10 +79,10 @@ export const LIMIT_SPACE_ENTRYTEXT_LENGTH = 10_000;
 
 /** The maximum length of a chat message */
 export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
-/** Maximum length of a bot command name. */
-export const LIMIT_BOT_COMMAND_NAME_LENGTH = 128;
-/** Maximum number of parsed arguments sent to a bot. */
-export const LIMIT_BOT_COMMAND_ARGUMENT_COUNT = 32;
+/** Allow any bot command name that fits within a chat message. */
+export const LIMIT_BOT_COMMAND_NAME_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
+/** Allow any argument list expressible within a chat message, including empty arguments. */
+export const LIMIT_BOT_COMMAND_ARGUMENT_COUNT = LIMIT_CHAT_MESSAGE_LENGTH;
 /** Maximum total length of a bot command and its parsed arguments. */
 export const LIMIT_BOT_COMMAND_INPUT_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
 /** Maximum number of chat messages produced by one input. */

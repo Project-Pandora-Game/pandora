@@ -46,8 +46,8 @@ import { ClientHandlersBotCommands } from './client/handlers/clientBotCommands.t
 import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
-const REQUEST_BURST_LIMIT = 64;
-const REQUEST_REFILL_PER_SECOND = 4;
+const PERMISSION_PROMPT_BURST_LIMIT = 64;
+const PERMISSION_PROMPT_REFILL_PER_SECOND = 4;
 const PERMISSION_PROMPT_COST = 4;
 const FULL_RELOAD_COOLDOWN_MS = 2_000;
 
@@ -70,7 +70,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
-	private readonly requestBudgets = new WeakMap<Character, { tokens: number; updatedAt: number; }>();
+	private readonly permissionPromptBudgets = new WeakMap<Character, { tokens: number; updatedAt: number; }>();
 	private readonly lastFullReload = new WeakMap<Character, number>();
 
 	public async onMessage<K extends keyof IClientShard>(
@@ -160,8 +160,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		// Ignore empty messages
 		if (messages.length === 0 && editId === undefined)
 			return { result: 'ok' };
-		if (!this.consumeRequestBudget(client.character, Math.max(1, messages.length)))
-			return { result: 'blocked', reason: 'Too many chat messages sent recently' };
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
@@ -179,8 +177,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private handleChatStatus({ status, targets }: IClientShardArgument['chatStatus'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
-		if (!this.consumeRequestBudget(client.character, 1))
-			return;
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
@@ -239,7 +235,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			if (target.connection == null) {
 				return { result: 'promptFailedCharacterOffline' };
 			}
-			if (!this.consumeRequestBudget(character, PERMISSION_PROMPT_COST))
+			if (!this.consumePermissionPromptBudget(character, PERMISSION_PROMPT_COST))
 				return { result: 'failure', problems: result.problems.slice() };
 			const requiredPermissions: [PermissionSetup, PermissionConfig | null][] = [];
 			for (const permission of result.requiredPermissions) {
@@ -270,7 +266,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		const character = client.character;
 		if (!character)
 			throw new BadMessageError();
-		if (!this.consumeRequestBudget(character, PERMISSION_PROMPT_COST))
+		if (!this.consumePermissionPromptBudget(character, PERMISSION_PROMPT_COST))
 			return { result: 'failure' };
 
 		const space = character.getOrLoadSpace();
@@ -313,11 +309,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	}
 
 	/** Limit bursts per character, including across client reconnects, without penalizing others in the space. */
-	private consumeRequestBudget(character: Character, cost: number): boolean {
+	private consumePermissionPromptBudget(character: Character, cost: number): boolean {
 		const now = Date.now();
-		const previous = this.requestBudgets.get(character);
-		const tokens = previous == null ? REQUEST_BURST_LIMIT : Math.min(REQUEST_BURST_LIMIT, previous.tokens + Math.max(0, now - previous.updatedAt) * REQUEST_REFILL_PER_SECOND / 1000);
-		this.requestBudgets.set(character, { tokens: tokens < cost ? tokens : tokens - cost, updatedAt: now });
+		const previous = this.permissionPromptBudgets.get(character);
+		const tokens = previous == null ? PERMISSION_PROMPT_BURST_LIMIT : Math.min(PERMISSION_PROMPT_BURST_LIMIT, previous.tokens + Math.max(0, now - previous.updatedAt) * PERMISSION_PROMPT_REFILL_PER_SECOND / 1000);
+		this.permissionPromptBudgets.set(character, { tokens: tokens < cost ? tokens : tokens - cost, updatedAt: now });
 		return tokens >= cost;
 	}
 

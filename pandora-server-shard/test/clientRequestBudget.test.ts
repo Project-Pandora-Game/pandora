@@ -10,8 +10,8 @@ afterEach(() => {
 	jest.restoreAllMocks();
 });
 
-describe('Shard chat burst budget', () => {
-	it('bounds status updates per character', async () => {
+describe('Shard request handling', () => {
+	it('does not apply a request budget to chat status', async () => {
 		const updateStatus = jest.fn();
 		const character = { getOrLoadSpace: () => ({ updateStatus }) } as unknown as Character;
 		const connection = { character } as unknown as ClientConnection;
@@ -19,7 +19,7 @@ describe('Shard chat burst budget', () => {
 			await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
 		}
 		await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
-		expect(updateStatus).toHaveBeenCalledTimes(64);
+		expect(updateStatus).toHaveBeenCalledTimes(65);
 	});
 
 	it('deduplicates targets and does not re-send unchanged status', () => {
@@ -36,7 +36,7 @@ describe('Shard chat burst budget', () => {
 		expect(sendMessage).toHaveBeenCalledTimes(2);
 	});
 
-	it('bounds a single character across reconnects and refills over time', async () => {
+	it('does not rate-limit chat messages or consume the permission prompt budget', async () => {
 		let now = 1000;
 		jest.spyOn(Date, 'now').mockImplementation(() => now);
 		const handleMessages = jest.fn().mockReturnValue({ result: 'ok' });
@@ -47,12 +47,12 @@ describe('Shard chat burst budget', () => {
 		const request = { id: 1, messages: Array.from({ length: 64 }, () => message) };
 
 		expect(await ConnectionManagerClient.onMessage('chatMessage', request, firstConnection)).toEqual({ result: 'ok' });
-		expect(await ConnectionManagerClient.onMessage('chatMessage', { id: 2, messages: request.messages.slice(0, 1) }, secondConnection)).toEqual({ result: 'blocked', reason: 'Too many chat messages sent recently' });
-		expect(handleMessages).toHaveBeenCalledTimes(1);
+		expect(await ConnectionManagerClient.onMessage('chatMessage', { id: 2, messages: request.messages.slice(0, 1) }, secondConnection)).toEqual({ result: 'ok' });
+		expect(handleMessages).toHaveBeenCalledTimes(2);
 
 		now += 1000;
 		expect(await ConnectionManagerClient.onMessage('chatMessage', { id: 3, messages: request.messages.slice(0, 1) }, secondConnection)).toEqual({ result: 'ok' });
-		expect(handleMessages).toHaveBeenCalledTimes(2);
+		expect(handleMessages).toHaveBeenCalledTimes(3);
 	});
 
 	it('bounds permission prompts from one character', async () => {

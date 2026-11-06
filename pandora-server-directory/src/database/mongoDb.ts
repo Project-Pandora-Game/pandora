@@ -967,7 +967,7 @@ export default class MongoDatabase implements PandoraDatabase {
 					database: 0,
 				},
 			};
-			logger.info('Initializing database for the first time');
+			logger.alert('Initializing database for the first time');
 		} else {
 			const databaseVersionData = DatabaseVersionConfigSchema.nullable().safeParse(await rawConfigCollection.findOne({ type: 'version' }));
 			if (!databaseVersionData.success) {
@@ -976,7 +976,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			}
 
 			if (databaseVersionData.data == null) {
-				// No version data - completely fresh database
+				// No version data - database is pre-versioning
 				originalVersionData = {
 					type: 'version',
 					data: {
@@ -987,7 +987,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				originalVersionData = databaseVersionData.data;
 			}
 
-			if (originalVersionData.data.database < MINIMUM_SUPPORTED_DATABASE_VERSION && originalVersionData.data.database !== 0) {
+			if (originalVersionData.data.database < MINIMUM_SUPPORTED_DATABASE_VERSION) {
 				logger.fatal(`Failed to migrate database data: Database has version ${originalVersionData.data.database}, but minimum supported is ${MINIMUM_SUPPORTED_DATABASE_VERSION}\n` +
 					`\tTo load Pandora either wipe your local development data, or checkout earlier version to complete migration of old data.\n` +
 					`\tThe last commit that supports the previous version is: ${PREVIOUS_VERSION_COMMIT}\n` +

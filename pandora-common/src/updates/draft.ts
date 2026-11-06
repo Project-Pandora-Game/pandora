@@ -13,6 +13,15 @@ export const UPDATE_SECTIONS = ['Platform changes', 'Assets', 'Fixes', 'Asset cr
 export const UPDATE_PINGS = ['Any update', 'Asset updates', 'Asset creation changes', 'Major updates'] as const;
 export type UpdatePing = (typeof UPDATE_PINGS)[number];
 
+// These maintainers historically publish their changes without an appended credit.
+// This is an announcement convention, independent of current account roles.
+const UNATTRIBUTED_UPDATE_AUTHORS = new Set(['clare', 'jomshir', 'jomshir98', 'claudia', 'claudiamia', 'sekkmer']);
+
+function IsUnattributedUpdateAuthor(author: string): boolean {
+	const names = author.split(/\s*(?:&|,|\band\b)\s*/i);
+	return names.every((name) => UNATTRIBUTED_UPDATE_AUTHORS.has(name.trim().replace(/^@/, '').toLowerCase()));
+}
+
 export interface UpdateEntry {
 	section: string;
 	text: string;
@@ -78,7 +87,7 @@ export function ParseUpdateChangelog(body: string, fallbackAuthor: string, pr: s
 		return { entries: [], warnings, author: fallbackAuthor };
 	const credit = changelog.find((line) => /^Authored by:\s*\S/i.test(line.trim()));
 	const author = credit?.trim().replace(/^Authored by:\s*/i, '').trim() || fallbackAuthor;
-	if (!credit)
+	if (!credit && !IsUnattributedUpdateAuthor(fallbackAuthor))
 		warnings.push(`Missing "Authored by:"; using GitHub login ${fallbackAuthor}. Check the display name and coauthors.`);
 	const entries: UpdateEntry[] = [];
 	let section: string | undefined;
@@ -136,7 +145,7 @@ export function RenderUpdateAnnouncement(entries: readonly UpdateEntry[], pings:
 	for (const section of sections) {
 		const lines = entries.filter((e) => e.section === section)
 			.sort((a, b) => a.author.localeCompare(b.author, 'en', { sensitivity: 'base' }))
-			.map((entry) => /\[by\s+[^\]]+\]/i.test(entry.text) ? entry.text : `${entry.text} [by ${entry.author}]`);
+			.map((entry) => /\[by\s+[^\]]+\]/i.test(entry.text) || IsUnattributedUpdateAuthor(entry.author) ? entry.text : `${entry.text} [by ${entry.author}]`);
 		parts.push(`${section}:\n${lines.join('\n')}`);
 	}
 	return parts.join('\n\n');

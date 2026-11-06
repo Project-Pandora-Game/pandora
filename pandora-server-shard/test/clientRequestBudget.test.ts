@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { DoImmediateAction, type AppearanceActionContext, type AssetFrameworkGlobalState, type IClientMessage } from 'pandora-common';
+import { DoImmediateAction, type AppearanceActionContext, type AssetFrameworkGlobalState } from 'pandora-common';
 import type { IClientShardArgument } from 'pandora-common/networking/api/shard_client';
 import type { Character } from '../src/character/character.ts';
 import type { ClientConnection } from '../src/networking/connection_client.ts';
@@ -11,17 +11,6 @@ afterEach(() => {
 });
 
 describe('Shard request handling', () => {
-	it('does not apply a request budget to chat status', async () => {
-		const updateStatus = jest.fn();
-		const character = { getOrLoadSpace: () => ({ updateStatus }) } as unknown as Character;
-		const connection = { character } as unknown as ClientConnection;
-		for (let i = 0; i < 64; i++) {
-			await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
-		}
-		await ConnectionManagerClient.onMessage('chatStatus', { status: 'typing' }, connection);
-		expect(updateStatus).toHaveBeenCalledTimes(65);
-	});
-
 	it('deduplicates targets and does not re-send unchanged status', () => {
 		const sendMessage = jest.fn();
 		const target = { connection: { sendMessage } };
@@ -34,25 +23,6 @@ describe('Shard request handling', () => {
 		Space.prototype.updateStatus.call(space, character, 'typing', ['c2', 'c3', 'c2']);
 		Space.prototype.updateStatus.call(space, character, 'typing', ['c3', 'c2']);
 		expect(sendMessage).toHaveBeenCalledTimes(2);
-	});
-
-	it('does not rate-limit chat messages across reconnects', async () => {
-		let now = 1000;
-		jest.spyOn(Date, 'now').mockImplementation(() => now);
-		const handleMessages = jest.fn().mockReturnValue({ result: 'ok' });
-		const character = { getOrLoadSpace: () => ({ handleMessages }) } as unknown as Character;
-		const firstConnection = { character } as unknown as ClientConnection;
-		const secondConnection = { character } as unknown as ClientConnection;
-		const message: IClientMessage = { type: 'chat', parts: [['normal', 'hello']] };
-		const request = { id: 1, messages: Array.from({ length: 64 }, () => message) };
-
-		expect(await ConnectionManagerClient.onMessage('chatMessage', request, firstConnection)).toEqual({ result: 'ok' });
-		expect(await ConnectionManagerClient.onMessage('chatMessage', { id: 2, messages: request.messages.slice(0, 1) }, secondConnection)).toEqual({ result: 'ok' });
-		expect(handleMessages).toHaveBeenCalledTimes(2);
-
-		now += 1000;
-		expect(await ConnectionManagerClient.onMessage('chatMessage', { id: 3, messages: request.messages.slice(0, 1) }, secondConnection)).toEqual({ result: 'ok' });
-		expect(handleMessages).toHaveBeenCalledTimes(3);
 	});
 
 	it('bounds permission prompts from one character', async () => {

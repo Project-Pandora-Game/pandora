@@ -17,6 +17,8 @@ export interface LockSetup {
 	timer?: {
 		/** Max allowed time (in ms) lock can be locked for */
 		maxDuration: number;
+		/** Show the remaining time to the lockee */
+		hideRemainingTime: boolean;
 	};
 	/** Configuration to enable fingerprint on this lock */
 	fingerprint?: {

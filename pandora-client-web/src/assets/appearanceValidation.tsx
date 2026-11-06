@@ -135,7 +135,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 			case 'covered':
 				return `The ${describeItem(e.asset, e.itemName)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
-				return `You need to be able to use the hands to do this.`;
+				return `You need to be able to use your hands to do this.`;
 			case 'blockedMove':
 				return `An item or character modifier is preventing you from moving.`;
 			case 'safemodeInteractOther':

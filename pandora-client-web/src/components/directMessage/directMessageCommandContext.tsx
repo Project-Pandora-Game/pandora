@@ -1,13 +1,16 @@
-import { ICommandExecutionContext, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { ICommandExecutionContext, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, type AccountSettings } from 'pandora-common';
 import { useCallback, useMemo } from 'react';
-import type { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import type { DirectoryConnector } from '../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../networking/shardConnector.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useNavigatePandora } from '../../routing/navigate.ts';
+import { useNavigatePandora, type NavigateFunctionPandora } from '../../routing/navigate.ts';
+import type { IAccountManager } from '../../services/accountLogic/accountManager.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useGameStateOptional } from '../../services/gameLogic/gameStateHooks.ts';
+import { useService } from '../../services/serviceProvider.tsx';
 import type { ICommandInvokeContext } from '../../ui/components/chat/commandsProcessor.ts';
 import { useDirectMessageChat } from '../gameContext/directMessageChannelProvieder.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
@@ -16,10 +19,12 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider.
 
 export interface DirectMessageCommandExecutionContext extends ICommandExecutionContext {
 	directoryConnector: DirectoryConnector;
+	accountManager: IAccountManager;
 	shardConnector: ShardConnector | null;
 	gameState: GameState | null;
+	accountSettings: Immutable<AccountSettings>;
 	chat: DirectMessageChat;
-	navigate: ReturnType<typeof useNavigate>;
+	navigate: NavigateFunctionPandora;
 	sendMessage: (message: string, editing?: number) => Promise<void>;
 }
 
@@ -29,6 +34,9 @@ export function useDirectMessageCommandContext(displayError: boolean): ICommandI
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	const gameState = useGameStateOptional();
+	const accountManager = useService('accountManager');
+
+	const accountSettings = useAccountSettings();
 
 	const { chat, encryption } = useDirectMessageChat();
 
@@ -46,11 +54,13 @@ export function useDirectMessageCommandContext(displayError: boolean): ICommandI
 
 	return useMemo((): ICommandInvokeContext<DirectMessageCommandExecutionContext> => ({
 		directoryConnector,
+		accountManager,
 		shardConnector,
 		gameState,
+		accountSettings,
 		chat,
 		navigate,
 		sendMessage,
 		displayError: displayError ? (message) => toast(message, TOAST_OPTIONS_ERROR) : undefined,
-	}), [directoryConnector, shardConnector, gameState, chat, navigate, sendMessage, displayError]);
+	}), [directoryConnector, accountManager, shardConnector, gameState, accountSettings, chat, navigate, sendMessage, displayError]);
 }

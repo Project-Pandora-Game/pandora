@@ -59,8 +59,9 @@ export interface CharacterSpaceAssignment {
 }
 /** Data about how character is assigned to a space. */
 export const CharacterSpaceAssignmentSchema: z.ZodType<CharacterSpaceAssignment> = z.preprocess((value) => {
-	// Migration: Old format was `currentSpace: SpaceId | null`
+	// Migration (11/2026): Old format was `currentSpace: SpaceId | null`
 	if (value === null || typeof value === 'string') {
+		// Safe to cast: The value will be re-validated after return from preprocess
 		return { space: value as (SpaceId | null) } satisfies CharacterSpaceAssignment;
 	}
 	return value;

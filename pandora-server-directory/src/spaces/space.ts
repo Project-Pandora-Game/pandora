@@ -859,14 +859,17 @@ export class Space {
 		return true;
 	}
 
-	public canCreateInvite(source: Character, inviteType: SpaceInvite['type']): 'ok' | 'requireAdmin' | 'tooManyInvites' {
+	public canCreateInvite(source: Character, inviteData: Pick<SpaceInviteCreate, 'type' | 'roomId'>): 'ok' | 'requireAdmin' | 'tooManyInvites' {
 		const account = source.baseInfo.account;
 
-		switch (inviteType) {
+		switch (inviteData.type) {
 			case 'joinMe': {
 				// If the room is not marked as public, then only admins can invite inside
 				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
 				if (!isPublic && !this.isAdmin(account))
+					return 'requireAdmin';
+				// Creating invite to a specific room requires admin rights
+				if (inviteData.roomId !== undefined && !this.isAdmin(account))
 					return 'requireAdmin';
 
 				return 'ok';
@@ -879,7 +882,7 @@ export class Space {
 
 				return 'ok';
 		}
-		AssertNever(inviteType);
+		AssertNever(inviteData.type);
 	}
 
 	@AsyncSynchronized('object')
@@ -888,7 +891,7 @@ export class Space {
 
 		const now = Date.now();
 		const account = source.baseInfo.account;
-		const canCreate = this.canCreateInvite(source, data.type);
+		const canCreate = this.canCreateInvite(source, data);
 		if (canCreate !== 'ok')
 			return canCreate;
 
@@ -1646,7 +1649,7 @@ export class Space {
 			return { result: 'noAccess', problematicCharacter: initiator.baseInfo.id };
 
 		// Check that characters can join the target space, with or without invitation (this also handles invited character being banned)
-		const canInvite = targetSpace.canCreateInvite(initiator, 'joinMe') === 'ok';
+		const canInvite = targetSpace.canCreateInvite(initiator, { type: 'joinMe' }) === 'ok';
 		const noAccessCharacter = invitedCharacters.find((c) => targetSpace.checkAllowEnter(c, { ignoreCharacterLimit: true, assumeValidInvite: canInvite }) !== 'ok');
 		if (noAccessCharacter != null)
 			return { result: 'noAccess', problematicCharacter: noAccessCharacter.baseInfo.id };

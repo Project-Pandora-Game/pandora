@@ -38,6 +38,7 @@ import {
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
 	type CharacterSettingsKeys,
+	type CharacterSpaceAssignment,
 	type ChatMessage,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
@@ -69,6 +70,7 @@ export class Character {
 	private readonly data: Omit<ICharacterDataShard, ManuallyGeneratedKeys>;
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
+	public spaceAssignment: CharacterSpaceAssignment;
 	public lastOnline: number;
 
 	private readonly _personalSpace: PersonalSpace;
@@ -161,11 +163,12 @@ export class Character {
 
 	private readonly logger: Logger;
 
-	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
+	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, space: CharacterSpaceAssignment) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
 		this.connectSecret = connectSecret;
+		this.spaceAssignment = space;
 		this.lastOnline = Date.now();
 
 		this._personalSpace = new PersonalSpace(this, data.personalSpace?.spaceState ?? CloneDeepMutable(SPACE_STATE_BUNDLE_DEFAULT_PERSONAL_SPACE));
@@ -188,7 +191,7 @@ export class Character {
 		};
 
 		// Load into the space
-		this.linkSpace(spaceId);
+		this.linkSpace(space);
 
 		// Link events from game logic parts
 		this.gameLogicCharacter.on('dataChanged', (type) => {
@@ -277,6 +280,7 @@ export class Character {
 				}
 			}
 		}
+		this.spaceAssignment = data.space;
 		this.linkSpace(data.space);
 		const roomDataUpdate = CalculateObjectKeysDelta(oldData, this.getRoomData());
 		if (roomDataUpdate != null) {
@@ -288,12 +292,12 @@ export class Character {
 		return IsAuthorized(this.accountData.roles ?? {}, role);
 	}
 
-	private linkSpace(id: SpaceId | null): void {
+	private linkSpace(assignment: CharacterSpaceAssignment): void {
 		Assert(this.isValid, 'Character state should not load while invalid');
 
 		let space: Space | null = null;
-		if (id != null) {
-			space = SpaceManager.getSpace(id) ?? null;
+		if (assignment.space != null) {
+			space = SpaceManager.getSpace(assignment.space) ?? null;
 		} else {
 			space = this._personalSpace;
 		}
@@ -313,7 +317,7 @@ export class Character {
 			);
 			Assert(NOT_NARROWING_FALSE || this._context.state === 'space');
 		} else {
-			this.logger.error(`Failed to link character to space ${id}; not found`);
+			this.logger.error(`Failed to link character to space ${assignment.space}; not found`);
 			// Trigger fallback load into personal space
 			this.getOrLoadSpace();
 		}

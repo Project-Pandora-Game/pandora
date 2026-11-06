@@ -1,7 +1,7 @@
 import promClient from '@prometheus-io/client';
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash-es';
-import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
+import { Assert, AssertNotNullable, AsyncSynchronized, CloneDeepMutable, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceActivityGetNextInterval, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId, type SpaceSearchArguments, type SpaceSearchResult } from 'pandora-common';
 import { Account } from '../account/account.ts';
 import { accountManager } from '../account/accountManager.ts';
 import { ACTOR_PANDORA } from '../account/actorPandora.ts';
@@ -315,8 +315,11 @@ export const SpaceManager = new class SpaceManagerClass implements ServerService
 
 		// Assign all the characters
 		for (const character of characters) {
-			if (character != null) {
-				character.load(space);
+			if (character != null && character.data.currentSpace.space === space.id) {
+				character.load({
+					space,
+					assignment: CloneDeepMutable(character.data.currentSpace),
+				});
 			}
 		}
 

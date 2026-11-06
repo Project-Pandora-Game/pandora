@@ -326,7 +326,7 @@ export class MockDatabase implements PandoraDatabase {
 	}[]> {
 		return Promise.resolve(
 			Array.from(this.characterDb.values())
-				.filter((c) => c.currentSpace === spaceId)
+				.filter((c) => c.currentSpace.space === spaceId)
 				.map((c): {
 					accountId: AccountId;
 					characterId: CharacterId;

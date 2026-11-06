@@ -241,7 +241,7 @@ export class AssetFrameworkGlobalState {
 				} else if (characterData[0] === 'full') {
 					newCharacters.set(
 						characterId,
-						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData[1], space, null, logger),
+						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData[1], space, null, undefined, logger),
 					);
 				} else if (characterData[0] === 'delta') {
 					const originalCharacter = this.characters.get(characterId);
@@ -445,6 +445,7 @@ export class AssetFrameworkGlobalState {
 							.filter((c) => c.id !== forCharacter && c.currentRoom === room.id)
 							.map((c) => c.position.position);
 					},
+					undefined,
 					logger,
 				),
 			);

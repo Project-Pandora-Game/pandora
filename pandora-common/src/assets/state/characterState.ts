@@ -360,7 +360,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	}
 
 	public static createDefault(assetManager: AssetManager, characterId: CharacterId, spaceState: AssetFrameworkSpaceState): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, null, undefined);
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceState, null, undefined, undefined);
 	}
 
 	/**
@@ -378,6 +378,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		bundle: AppearanceBundle | undefined,
 		spaceState: AssetFrameworkSpaceState,
 		getAvoidedRoomPositions: ((room: AssetFrameworkRoomState, forCharacter: CharacterId) => RoomPosition[]) | null,
+		preferredInitialRoom: RoomId | undefined,
 		logger: Logger | undefined,
 	): AssetFrameworkCharacterState {
 		const fixup = bundle?.clientOnly !== true;
@@ -390,7 +391,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		if (spaceState.spaceId !== bundle.space || roomState == null) {
 			Assert(fixup, 'DESYNC: Character is in different space or unknown room');
 			Assert(spaceState.rooms.length > 0);
-			roomState = spaceState.rooms[0];
+			// Find preferred initial room, or use the first room as the join room
+			roomState = (preferredInitialRoom != null ? spaceState.rooms.find((room) => room.id === preferredInitialRoom) : undefined) ?? spaceState.rooms[0];
 			position = {
 				type: 'normal',
 				room: roomState.id,

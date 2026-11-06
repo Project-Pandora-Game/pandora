@@ -726,7 +726,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 						// Initiator is present, can see the space themselves, and can invite
 						invitationInitiator != null &&
 						space.checkAllowEnter(invitationInitiator, { ignoreCharacterLimit: true }) === 'ok' &&
-						space.canCreateInvite(invitationInitiator, 'joinMe') === 'ok'
+						space.canCreateInvite(invitationInitiator, { type: 'joinMe' }) === 'ok'
 					) {
 						assumeValidInvite = true;
 					}

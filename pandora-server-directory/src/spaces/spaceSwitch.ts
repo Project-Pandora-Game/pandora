@@ -66,7 +66,7 @@ export class SpaceSwitchCoordinator {
 				return initiatorAllowEnter;
 			}
 
-			this._assumeInvite = this.newSpace.canCreateInvite(this.initiator, 'joinMe') === 'ok';
+			this._assumeInvite = this.newSpace.canCreateInvite(this.initiator, { type: 'joinMe' }) === 'ok';
 			// Ignore character limit if initiator is admin - convenience as they could change it after joining
 			this._ignoreCharacterLimit = this.newSpace.isAdmin(this.initiator.baseInfo.account);
 

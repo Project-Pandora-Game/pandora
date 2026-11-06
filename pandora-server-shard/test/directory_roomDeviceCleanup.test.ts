@@ -209,7 +209,7 @@ function CreateCharacterDefinition(id: IShardCharacterDefinition['id'], space: S
 		},
 		accessId: `access-${id}`,
 		connectSecret: null,
-		space,
+		space: { space },
 	};
 }
 

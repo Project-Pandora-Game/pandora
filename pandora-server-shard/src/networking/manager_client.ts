@@ -46,9 +46,6 @@ import { ClientHandlersBotCommands } from './client/handlers/clientBotCommands.t
 import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
-const PERMISSION_PROMPT_BURST_LIMIT = 64;
-const PERMISSION_PROMPT_REFILL_PER_SECOND = 4;
-const PERMISSION_PROMPT_COST = 4;
 
 const connectedClientsMetric = new promClient.Gauge({
 	name: 'pandora_shard_client_connections',
@@ -69,7 +66,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
-	private readonly permissionPromptBudgets = new WeakMap<Character, { tokens: number; updatedAt: number; }>();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -228,8 +224,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			if (target.connection == null) {
 				return { result: 'promptFailedCharacterOffline' };
 			}
-			if (!this.consumePermissionPromptBudget(character, PERMISSION_PROMPT_COST))
-				return { result: 'failure', problems: result.problems.slice() };
 			const requiredPermissions: [PermissionSetup, PermissionConfig | null][] = [];
 			for (const permission of result.requiredPermissions) {
 				if (permission instanceof GameLogicPermissionServer) {
@@ -259,8 +253,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 		const character = client.character;
 		if (!character)
 			throw new BadMessageError();
-		if (!this.consumePermissionPromptBudget(character, PERMISSION_PROMPT_COST))
-			return { result: 'failure' };
 
 		const space = character.getOrLoadSpace();
 		const player = character.gameLogicCharacter;
@@ -299,15 +291,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 			actions: [],
 		});
 		return { result: 'promptSent' };
-	}
-
-	/** Limit bursts per character, including across client reconnects, without penalizing others in the space. */
-	private consumePermissionPromptBudget(character: Character, cost: number): boolean {
-		const now = Date.now();
-		const previous = this.permissionPromptBudgets.get(character);
-		const tokens = previous == null ? PERMISSION_PROMPT_BURST_LIMIT : Math.min(PERMISSION_PROMPT_BURST_LIMIT, previous.tokens + Math.max(0, now - previous.updatedAt) * PERMISSION_PROMPT_REFILL_PER_SECOND / 1000);
-		this.permissionPromptBudgets.set(character, { tokens: tokens < cost ? tokens : tokens - cost, updatedAt: now });
-		return tokens >= cost;
 	}
 
 	private handleChangeSettings(request: IClientShardArgument['changeSettings'], client: ClientConnection): IClientShardNormalResult['changeSettings'] {

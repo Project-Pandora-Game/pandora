@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { RunUpdatesCommand } from '../src/commands/updates.ts';
+import { RunUpdatesCommand } from '../src/updateAnnouncements.ts';
 
 afterEach(() => {
 	jest.restoreAllMocks();

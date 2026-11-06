@@ -35,7 +35,3 @@ This repository contains the following projects:
 # Contribution
 
 If you are interesting in contributing to the project, please see the [`CONTRIBUTING`](CONTRIBUTING.md) file.
-
-## Update announcements
-
-Lead developers can generate editable release announcements through Management → Updates or the CLI, including before deployment. See [Update announcement drafts](docs/update-announcements.md) for local usage, GitHub authentication, and review steps.

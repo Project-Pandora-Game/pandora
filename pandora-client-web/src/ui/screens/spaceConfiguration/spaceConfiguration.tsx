@@ -1265,7 +1265,7 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 					accountId: allowAccount ? account : undefined,
 					characterId: allowCharacter ? `c${character}` : undefined,
 					maxUses: (allowMaxUses && isPlayerAdmin) ? uses : undefined,
-					roomId: targetRoom ?? undefined,
+					roomId: isPlayerAdmin ? (targetRoom ?? undefined) : undefined,
 					type: isPlayerAdmin ? 'spaceBound' : 'joinMe',
 				},
 			});
@@ -1290,6 +1290,14 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 		onChange: setTargetRoom,
 	}), [globalState.space.rooms, targetRoom]);
 
+	const targetRoomnames = useMemo(() => {
+		const roomNames: Record<RoomId, string> = {};
+		for (const room of globalState.space.rooms) {
+			roomNames[room.id] = room.displayName;
+		}
+		return roomNames;
+	}, [globalState.space.rooms]);
+
 	return (
 		<ModalDialog>
 			<Column>
@@ -1302,31 +1310,28 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 					<Checkbox checked={ allowCharacter } onChange={ setAllowCharacter } />
 					<NumberInput min={ 0 } value={ character } onChange={ setCharacter } readOnly={ !allowCharacter } />
 
-					<label>Target room</label>
-					<Checkbox checked={ targetRoom != null } onChange={ (newValue) => {
-						if (newValue) {
-							setTargetRoom(globalState.space.rooms[0].id);
-						} else {
-							setTargetRoom(null);
-						}
-					} } />
-					<SelectSettingInput
-						driver={ targetRoomDriver }
-						label={ null }
-						schema={ RoomIdSchema }
-						stringify={ useMemo(() => {
-							const roomNames: Record<RoomId, string> = {};
-							for (const room of globalState.space.rooms) {
-								// TODO: Do we want to filter rooms in here?
-								roomNames[room.id] = room.displayName;
-							}
-							return roomNames;
-						}, [globalState.space.rooms]) }
-						optionOrder={ globalState.space.rooms.map((it) => it.id) }
-						disabled={ targetRoom == null }
-						noWrapper
-						noReset
-					/>
+					{ isPlayerAdmin ? (
+						<>
+							<label>Target room</label>
+							<Checkbox checked={ targetRoom != null } onChange={ (newValue) => {
+								if (newValue) {
+									setTargetRoom(globalState.space.rooms[0].id);
+								} else {
+									setTargetRoom(null);
+								}
+							} } />
+							<SelectSettingInput
+								driver={ targetRoomDriver }
+								label={ null }
+								schema={ RoomIdSchema }
+								stringify={ targetRoomnames }
+								optionOrder={ globalState.space.rooms.map((it) => it.id) }
+								disabled={ targetRoom == null }
+								noWrapper
+								noReset
+							/>
+						</>
+					) : null }
 
 					{ isPlayerAdmin ? (
 						<>

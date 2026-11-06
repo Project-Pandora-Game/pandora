@@ -10,8 +10,8 @@ import {
 	Logger,
 	NOT_NARROWING_FALSE,
 	NOT_NARROWING_TRUE,
-	SpaceId,
 	SpaceInviteId,
+	type CharacterSpaceAssignment,
 	type ICharacterData,
 	type ICharacterDataDirectoryUpdate,
 	type ManagementAccountInfoCharacter,
@@ -137,10 +137,10 @@ export class CharacterInfo {
 		if (this._loadedCharacter != null && NOT_NARROWING_TRUE)
 			return this._loadedCharacter;
 
-		const currentSpaceId: SpaceId | null = this._data.currentSpace ?? null;
-		if (currentSpaceId != null) {
+		const currentSpace: CharacterSpaceAssignment = this._data.currentSpace;
+		if (currentSpace.space != null) {
 			// If we want to load into a space, load it
-			const space = await SpaceManager.loadSpace(currentSpaceId);
+			const space = await SpaceManager.loadSpace(currentSpace.space);
 			if (space != null) {
 				// If there is a space, check we were loaded into it
 				Assert(this._loadedCharacter != null);
@@ -148,7 +148,7 @@ export class CharacterInfo {
 			}
 			// If the space failed to load, kick the character out of it
 			this.logger.warning('Failed to load current space, force-kick');
-			await this.updateDirectoryData({ currentSpace: null });
+			await this.updateDirectoryData({ currentSpace: { space: null } });
 			// Fallthrough to behaviour outside of a space
 		}
 
@@ -158,7 +158,7 @@ export class CharacterInfo {
 		return this._loadedCharacter;
 	}
 
-	public load(space: Space | null): void {
+	public load(space: { space: Space; assignment: CharacterSpaceAssignment; } | null): void {
 		Assert(this._loadedCharacter == null);
 		// This should only happen if unloaded space the character is in is being loaded.
 		// If the character is invalid, simply ignore the load (it will get skipped by the space)
@@ -273,6 +273,7 @@ export type CharacterAssignment = {
 	// Character is in the specified space
 	type: 'space-joined';
 	space: Space;
+	assignment: CharacterSpaceAssignment;
 };
 
 /** This class contains data present for characters ready to be loaded onto a shard */
@@ -342,17 +343,20 @@ export class Character {
 		return this.baseInfo.loadedCharacter !== this;
 	}
 
-	constructor(baseInfo: CharacterInfo, initialSpace: Space | null) {
+	constructor(baseInfo: CharacterInfo, initialSpace: { space: Space; assignment: CharacterSpaceAssignment; } | null) {
 		this.logger = GetLogger('Character', `[Character ${baseInfo.id}]`);
 		this.baseInfo = baseInfo;
 		if (initialSpace != null) {
 			// This is for initializing character that is already in a space. It should only be used by the space itself when it loads
-			Assert(initialSpace.assignedShard == null);
-			initialSpace.trackingCharacters.add(this);
-			initialSpace.characters.add(this);
+			Assert(initialSpace.space.assignedShard == null);
+			Assert(initialSpace.assignment.space === initialSpace.space.id);
+
+			initialSpace.space.trackingCharacters.add(this);
+			initialSpace.space.characters.add(this);
 			this.assignment = {
 				type: 'space-joined',
-				space: initialSpace,
+				space: initialSpace.space,
+				assignment: initialSpace.assignment,
 			};
 		} else {
 			this.assignment = null;
@@ -828,6 +832,7 @@ export class Character {
 			// If we are joining a public space, then run checks for being able to enter it
 
 			// Must be allowed to join the space (second check to prevent race conditions)
+			const inviteData = invite != null ? space.getValidInvite(this, invite) : null;
 			const allowResult2 = space.checkAllowEnter(this, {
 				inviteId: invite,
 				assumeValidInvite: coordinator?.assumeInvite ?? false,
@@ -871,7 +876,7 @@ export class Character {
 			}
 
 			// Actually add the character to the space
-			if (!await space.addCharacter(this, invite)) {
+			if (!await space.addCharacter(this, invite, inviteData?.roomId)) {
 				// Load us into personal space if actual join failed
 				await this._unassign();
 				await this._assignToShard('auto');

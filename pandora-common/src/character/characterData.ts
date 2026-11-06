@@ -1,6 +1,6 @@
 import * as z from 'zod';
 import { AccountIdSchema, type AccountId } from '../account/index.ts';
-import { SpaceStateBundleSchema, type SpaceStateBundle } from '../assets/index.ts';
+import { RoomIdSchema, SpaceStateBundleSchema, type RoomId, type SpaceStateBundle } from '../assets/index.ts';
 import { AppearanceBundleSchema, type AppearanceBundle } from '../assets/state/characterStateTypes.ts';
 import { CharacterModifierSystemDataSchema, type CharacterModifierSystemData } from '../gameLogic/characterModifiers/characterModifierData.ts';
 import { InteractionSystemDataSchema, type InteractionSystemData } from '../gameLogic/interactions/interactionData.ts';
@@ -50,6 +50,25 @@ export const CharacterPrivateDataSchema: z.ZodObject<ZodObjectShape<ICharacterPr
 	settings: CharacterSettingsSchema.partial(),
 });
 
+/** Data about how character is assigned to a space. */
+export interface CharacterSpaceAssignment {
+	/** Space id, `null` means personal space. */
+	space: SpaceId | null;
+	/** If specified, then this room is preferred when generating initial position within the space. Set by space inivite. */
+	initialRoom?: RoomId;
+}
+/** Data about how character is assigned to a space. */
+export const CharacterSpaceAssignmentSchema: z.ZodType<CharacterSpaceAssignment> = z.preprocess((value) => {
+	// Migration: Old format was `currentSpace: SpaceId | null`
+	if (value === null || typeof value === 'string') {
+		return { space: value as (SpaceId | null) } satisfies CharacterSpaceAssignment;
+	}
+	return value;
+}, z.object({
+	space: SpaceIdSchema.nullable(),
+	initialRoom: RoomIdSchema.optional(),
+}));
+
 /** Data about character, as seen by server.
  * All of this is persisted in the Pandora database
  **/
@@ -61,8 +80,8 @@ export interface ICharacterData extends ICharacterPrivateData {
 	 * Stored as binary data in database.
 	 */
 	preview?: unknown;
-	/** The space the character is currently in. `null` means personal space. */
-	currentSpace: SpaceId | null;
+	/** The space the character is currently in.  */
+	currentSpace: CharacterSpaceAssignment;
 	personalSpace?: {
 		spaceState: SpaceStateBundle;
 	};
@@ -77,7 +96,7 @@ export const CharacterDataSchema: z.ZodObject<ZodObjectShape<ICharacterData>> = 
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
 	preview: z.unknown().optional(),
-	currentSpace: SpaceIdSchema.nullable().catch(null),
+	currentSpace: CharacterSpaceAssignmentSchema.catch({ space: null }),
 	personalSpace: z.object({
 		spaceState: SpaceStateBundleSchema,
 	}).optional(),
@@ -123,13 +142,13 @@ export interface CharacterSelfInfo {
 	id: CharacterId;
 	name: string;
 	state: string;
-	currentSpace: SpaceId | null;
+	currentSpace: CharacterSpaceAssignment;
 	inCreation?: true;
 }
 export const CharacterSelfInfoSchema: z.ZodObject<ZodObjectShape<CharacterSelfInfo>> = z.object({
 	id: CharacterIdSchema,
 	name: z.string(),
 	state: z.string(),
-	currentSpace: SpaceIdSchema.nullable(),
+	currentSpace: CharacterSpaceAssignmentSchema,
 	inCreation: z.literal(true).optional(),
 });

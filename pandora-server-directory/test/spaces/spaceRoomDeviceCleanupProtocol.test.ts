@@ -61,7 +61,7 @@ describe('Space room device cleanup protocol', () => {
 		expect(updates[0]).toEqual(expect.objectContaining({
 			characters: [expect.objectContaining({
 				id: character.baseInfo.id,
-				space: null,
+				space: { space: null },
 			})],
 			spaces: [expect.objectContaining({
 				id: space.id,
@@ -109,10 +109,10 @@ async function CreateLoadedSpaceWithCharacter(config: SpaceDirectoryConfig): Pro
 	Assert(space instanceof Space);
 
 	await GetDatabase().updateCharacter(character.id, {
-		currentSpace: space.id,
+		currentSpace: { space: space.id },
 	}, null);
 
-	character.load(space);
+	character.load({ space, assignment: { space: space.id } });
 	await space.connect();
 
 	return space;

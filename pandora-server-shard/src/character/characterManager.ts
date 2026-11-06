@@ -1,5 +1,5 @@
 import promClient from '@prometheus-io/client';
-import { Assert, CharacterId, GetLogger } from 'pandora-common';
+import { Assert, CharacterId, CloneDeepMutable, GetLogger } from 'pandora-common';
 import type { IShardCharacterDefinition } from 'pandora-common/networking/api/directory_shard';
 import { assetManager } from '../assets/assetManager.ts';
 import { Character } from './character.ts';
@@ -29,7 +29,7 @@ export const CharacterManager = new class CharacterManagerService {
 				account: char.accountData,
 				accessId: char.accessId,
 				connectSecret: char.connectSecret,
-				space: char.getCurrentPublicSpaceId(),
+				space: CloneDeepMutable(char.spaceAssignment),
 			}));
 	}
 

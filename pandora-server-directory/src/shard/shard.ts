@@ -141,7 +141,7 @@ export class Shard {
 
 					const characterAccessIds = new Map<CharacterId, string>();
 					for (const character of data.characters) {
-						if (character.space === space.id) {
+						if (character.space.space === space.id) {
 							characterAccessIds.set(character.id, character.accessId);
 						}
 					}
@@ -163,7 +163,7 @@ export class Shard {
 				continue;
 			}
 
-			const space = characterData.space ? this.spaces.get(characterData.space) : undefined;
+			const space = characterData.space.space ? this.spaces.get(characterData.space.space) : undefined;
 
 			await character.shardReconnect({
 				shard: this,
@@ -422,7 +422,12 @@ export class Shard {
 				account: character.baseInfo.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
-				space: character.space ? character.space.id : null,
+				space: character.assignment?.type === 'space-joined' ? {
+					space: character.assignment.space.id,
+					initialRoom: character.assignment.assignment.initialRoom,
+				} : {
+					space: null,
+				},
 			});
 		}
 		return result;

@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, CloneDeepMutable, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type ChatMessageDirectoryAction, type SpaceActivitySavedData, type SpaceDirectoryData, type SpacePublicSetting, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, CloneDeepMutable, GetLogger, KnownObject, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SPACE_ACTIVITY_SCORE_DECAY, SpaceActivityGetNextInterval, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, SpaceSwitchResolveCharacterStatusToClientStatus, type CharacterSpaceAssignment, type ChatMessageDirectoryAction, type RoomId, type SpaceActivitySavedData, type SpaceDirectoryData, type SpacePublicSetting, type SpaceSwitchCommand, type SpaceSwitchShardStatusUpdate, type SpaceSwitchStatus } from 'pandora-common';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common/networking/api/directory_client';
 import type { IShardDirectoryArgument, ShardSpaceBotState, SpaceCharacterRemoval } from 'pandora-common/networking/api/directory_shard';
 import { Account } from '../account/account.ts';
@@ -759,7 +759,7 @@ export class Space {
 		if (opts.assumeValidInvite) {
 			return 'ok';
 		} else if (opts.inviteId != null) {
-			const invite = this._getValidInvite(character, opts.inviteId);
+			const invite = this.getValidInvite(character, opts.inviteId);
 			// The invite must exist
 			if (!invite)
 				return 'invalidInvite';
@@ -794,7 +794,7 @@ export class Space {
 		return size !== this._invites.length;
 	}
 
-	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
+	public getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
 		const invite = this._invites.find((i) => i.id === id);
 		if (!invite || !this._isValidInvite(invite))
 			return undefined;
@@ -833,7 +833,7 @@ export class Space {
 		if (!id)
 			return undefined;
 
-		return cloneDeep(this._getValidInvite(character, id));
+		return cloneDeep(this.getValidInvite(character, id));
 	}
 
 	public getInvites(source: Character): SpaceInvite[] {
@@ -1026,7 +1026,7 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async addCharacter(character: Character, invite?: SpaceInviteId): Promise<boolean> {
+	public async addCharacter(character: Character, invite?: SpaceInviteId, initialRoom?: RoomId): Promise<boolean> {
 		// Ignore if space is invalidated
 		if (!this.isValid) {
 			return false;
@@ -1043,9 +1043,14 @@ export class Space {
 
 		this.logger.debug(`Character ${character.baseInfo.id} entered`);
 		this.characters.add(character);
+		const assignmentData: CharacterSpaceAssignment = {
+			space: this.id,
+			initialRoom,
+		};
 		character.assignment = {
 			type: 'space-joined',
 			space: this,
+			assignment: assignmentData,
 		};
 
 		// Report the enter
@@ -1074,7 +1079,12 @@ export class Space {
 		this.onSpacePresentationChanged();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
-			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
+			character.baseInfo.updateDirectoryData({
+				currentSpace: {
+					space: this.id,
+					initialRoom,
+				},
+			}),
 			this._useInvite(character, invite),
 		]);
 
@@ -1082,7 +1092,7 @@ export class Space {
 	}
 
 	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
-		const invite = id ? this._getValidInvite(character, id) : undefined;
+		const invite = id ? this.getValidInvite(character, id) : undefined;
 		if (!invite)
 			return;
 
@@ -1125,7 +1135,7 @@ export class Space {
 		Assert(character.assignment?.type === 'space-joined' && character.assignment.space === this);
 		Assert(this.trackingCharacters.has(character));
 
-		await character.baseInfo.updateDirectoryData({ currentSpace: null });
+		await character.baseInfo.updateDirectoryData({ currentSpace: { space: null } });
 
 		// Update space activity right before removal, so this character still counts as active at the last moment
 		this.updateActivityData();

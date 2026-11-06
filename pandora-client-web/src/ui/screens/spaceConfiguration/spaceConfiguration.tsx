@@ -15,6 +15,8 @@ import {
 	LIMIT_SPACE_ENTRYTEXT_LENGTH,
 	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	LIMIT_SPACE_NAME_LENGTH,
+	RoomId,
+	RoomIdSchema,
 	SpaceBaseInfoSchema,
 	SpaceDirectoryConfig,
 	SpaceDirectoryConfigSchema,
@@ -58,7 +60,7 @@ import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { IsSpaceAdmin, useCharacterCurrentRoom, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, useSpaceState } from '../../../services/gameLogic/gameStateHooks.ts';
+import { IsSpaceAdmin, useCharacterCurrentRoom, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters, useSpaceInfo, useSpaceState } from '../../../services/gameLogic/gameStateHooks.ts';
 import { Sleep } from '../../../utility.ts';
 import { AccountListInput, AccountListInputActions } from '../../components/accountListInput/accountListInput.tsx';
 import { SpaceRoleOrNoneSelectInput } from '../../components/commonInputs/spaceRoleSelect.tsx';
@@ -1140,6 +1142,8 @@ function GhostManagement({ config, setConfig, canEdit }: {
 
 function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const gameState = useGameStateOptional();
+
 	const [invites, setInvites] = useState<{ invites: readonly SpaceInvite[]; someHidden: boolean; }>({ invites: [], someHidden: false });
 	const [showCreation, setShowCreation] = useState(false);
 
@@ -1209,6 +1213,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 							<th>Uses</th>
 							<th>Limited To Account</th>
 							<th>Limited To Character</th>
+							<th>Target room</th>
 							<th>Expires</th>
 							<th>Type</th>
 							<th>Actions</th>
@@ -1227,7 +1232,9 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 						<div className='warning-box'>This space has invites you cannot see</div>
 					</Row>
 				) : null }
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } onChange={ update } isPlayerAdmin={ isPlayerAdmin } /> }
+				{ showCreation && gameState != null ? (
+					<SpaceInviteCreation closeDialog={ () => setShowCreation(false) } onChange={ update } isPlayerAdmin={ isPlayerAdmin } />
+				) : null }
 			</Column>
 		</fieldset>
 	);
@@ -1235,12 +1242,16 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 
 function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDialog: () => void; onChange: () => void; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+
 	const [allowAccount, setAllowAccount] = useState(!isPlayerAdmin);
 	const [account, setAccount] = useState(0);
 	const [allowCharacter, setAllowCharacter] = useState(false);
 	const [character, setCharacter] = useState(0);
 	const [allowMaxUses, setAllowMaxUses] = useState(false);
 	const [uses, setUses] = useState(1);
+	const [targetRoom, setTargetRoom] = useState<RoomId | null>(null);
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {
@@ -1254,6 +1265,7 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 					accountId: allowAccount ? account : undefined,
 					characterId: allowCharacter ? `c${character}` : undefined,
 					maxUses: (allowMaxUses && isPlayerAdmin) ? uses : undefined,
+					roomId: targetRoom ?? undefined,
 					type: isPlayerAdmin ? 'spaceBound' : 'joinMe',
 				},
 			});
@@ -1272,6 +1284,12 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 		},
 	);
 
+	const targetRoomDriver = useMemo((): SettingDriver<RoomId> => ({
+		currentValue: targetRoom ?? undefined,
+		defaultValue: globalState.space.rooms[0].id,
+		onChange: setTargetRoom,
+	}), [globalState.space.rooms, targetRoom]);
+
 	return (
 		<ModalDialog>
 			<Column>
@@ -1283,6 +1301,32 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 					<label>Limit To Character ID</label>
 					<Checkbox checked={ allowCharacter } onChange={ setAllowCharacter } />
 					<NumberInput min={ 0 } value={ character } onChange={ setCharacter } readOnly={ !allowCharacter } />
+
+					<label>Target room</label>
+					<Checkbox checked={ targetRoom != null } onChange={ (newValue) => {
+						if (newValue) {
+							setTargetRoom(globalState.space.rooms[0].id);
+						} else {
+							setTargetRoom(null);
+						}
+					} } />
+					<SelectSettingInput
+						driver={ targetRoomDriver }
+						label={ null }
+						schema={ RoomIdSchema }
+						stringify={ useMemo(() => {
+							const roomNames: Record<RoomId, string> = {};
+							for (const room of globalState.space.rooms) {
+								// TODO: Do we want to filter rooms in here?
+								roomNames[room.id] = room.displayName;
+							}
+							return roomNames;
+						}, [globalState.space.rooms]) }
+						optionOrder={ globalState.space.rooms.map((it) => it.id) }
+						disabled={ targetRoom == null }
+						noWrapper
+						noReset
+					/>
 
 					{ isPlayerAdmin ? (
 						<>
@@ -1303,6 +1347,8 @@ function SpaceInviteCreation({ closeDialog, onChange, isPlayerAdmin }: { closeDi
 
 function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { spaceId: SpaceId; invite: SpaceInvite; directoryConnector: DirectoryConnector; update: () => void; }): ReactElement {
 	const confirm = useConfirmDialog();
+	const gameState = useGameStateOptional();
+	const globalState = useGlobalState(gameState);
 
 	const [onDelete, processing] = useAsyncEvent(
 		async (ev: React.MouseEvent<HTMLElement>) => {
@@ -1348,6 +1394,13 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 			<td>{ invite.uses } / { invite.maxUses ?? '∞' }</td>
 			<td>{ invite.accountId ?? '' }</td>
 			<td>{ invite.characterId ?? '' }</td>
+			<td className={ invite.roomId != null ? '' : 'text-dim' }>
+				{ invite.roomId != null ? (
+					globalState?.space.getRoom(invite.roomId)?.displayName ?? `[Unknown room ${invite.roomId}]`
+				) : (
+					globalState?.space.rooms[0].displayName ?? '[default room]'
+				) }
+			</td>
 			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
 			<td>{ type }</td>
 			<td>

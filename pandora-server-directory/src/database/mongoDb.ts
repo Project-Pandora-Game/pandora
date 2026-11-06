@@ -633,7 +633,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	}[]> {
 		const characters = await this._characters
 			.find({
-				currentSpace: spaceId,
+				'currentSpace.space': spaceId,
 			})
 			.project<Pick<ICharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
 			.toArray();
@@ -1065,7 +1065,7 @@ export default class MongoDatabase implements PandoraDatabase {
 									character: {
 										id: character.id,
 										name: character.name,
-										currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
+										currentSpace: typeof character.currentRoom === 'string' ? { space: UpdateSpaceId(character.currentRoom) } : { space: null },
 										inCreation: character.inCreation,
 									},
 								});

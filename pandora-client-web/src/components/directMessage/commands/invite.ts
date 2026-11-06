@@ -1,4 +1,4 @@
-import { FormatTimeInterval, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY } from 'pandora-common';
+import { CommandSelectorEnum, FormatTimeInterval, LIMIT_JOIN_ME_INVITE_MAX_VALIDITY } from 'pandora-common';
 import type { IClientCommand } from '../../../ui/components/chat/commandsProcessor.ts';
 import type { DirectMessageCommandExecutionContext } from '../directMessageCommandContext.tsx';
 import { CreateDMCommand } from '../directMessageCommandHelpers.ts';
@@ -9,18 +9,25 @@ export const COMMAND_DM_INVITE: IClientCommand<DirectMessageCommandExecutionCont
 	description: 'Creates an invite link to your current space',
 	longDescription: `Creates an invite link to your current space. This invite is limited to the account, is only valid for ${FormatTimeInterval(LIMIT_JOIN_ME_INVITE_MAX_VALIDITY)}, and has a single use.`,
 	handler: CreateDMCommand()
-		.handler(async ({ directoryConnector, gameState, chat, displayError, sendMessage }) => {
+		.argumentOptional('room', CommandSelectorEnum([
+			['space', 'Character joins the space as usual [default]'],
+			['currentRoom', 'Character is invited directly into the room you are currently in'],
+		]))
+		.handler(async ({ directoryConnector, gameState, chat, displayError, sendMessage }, { room }) => {
 			if (gameState?.currentSpace.value.id == null) {
 				displayError?.('You are not in a space');
 				return false;
 			}
 
 			const spaceId = gameState.currentSpace.value.id;
+			const playerAppearance = gameState.player.getAppearance(gameState.globalState.currentState);
+
 			const resp = await directoryConnector.awaitResponse('spaceInvite', {
 				action: 'create',
 				data: {
 					type: 'joinMe',
 					accountId: chat.id,
+					roomId: room === 'currentRoom' ? playerAppearance.characterState.currentRoom : undefined,
 				},
 			});
 			if (resp.result === 'created') {

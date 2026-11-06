@@ -202,7 +202,7 @@ function ManagementAccountDetails({ info, reload }: {
 										<span>State:</span><span>{ c.state } { c.inCreation ? '(in creation)' : null }</span>
 									</Row>
 									<Row alignY='center'>
-										<span>Current space:</span><span>{ c.currentSpace ?? <i>None</i> }</span>
+										<span>Current space:</span><span>{ c.currentSpace.space ?? <i>None</i> }</span>
 									</Row>
 									<Row alignY='center'>
 										<ExternalLink href={ `/profiles/character/${encodeURIComponent(c.id)}` }>

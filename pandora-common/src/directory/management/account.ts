@@ -2,8 +2,8 @@ import * as z from 'zod';
 import { AccountIdSchema, AccountManagementDisableInfoSchema } from '../../account/account.ts';
 import type { IAccountRoleManageInfo } from '../../account/accountRoles.ts';
 import { AccountOnlineStatusSchema } from '../../account/contacts.ts';
+import { CharacterSpaceAssignmentSchema } from '../../character/characterData.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
-import { SpaceIdSchema } from '../../space/space.ts';
 import { ZodCast } from '../../validation.ts';
 
 export const ManagementAccountInfoSecureSchema = z.object({
@@ -16,7 +16,7 @@ export type ManagementAccountInfoSecure = z.infer<typeof ManagementAccountInfoSe
 export const ManagementAccountInfoCharacterSchema = z.object({
 	id: CharacterIdSchema,
 	name: z.string(),
-	currentSpace: SpaceIdSchema.nullable(),
+	currentSpace: CharacterSpaceAssignmentSchema,
 	inCreation: z.literal(true).optional(),
 	state: z.string(),
 });

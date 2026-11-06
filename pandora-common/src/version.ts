@@ -8,6 +8,6 @@
  *
  * This should be increased whenever there is an backwards-incompatible migration introduced.
  *
- * Last updated: 2025/11
+ * Last updated: 2026/11
  */
-export const PANDORA_VERSION_DATABASE = 1;
+export const PANDORA_VERSION_DATABASE = 2;

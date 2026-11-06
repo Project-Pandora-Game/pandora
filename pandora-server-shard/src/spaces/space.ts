@@ -416,6 +416,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 							.filter((c) => c.id !== forCharacter && c.currentRoom === room.id)
 							.map((c) => c.position.position);
 					},
+					character.spaceAssignment.initialRoom,
 					logger,
 				);
 			newState = newState.withCharacter(character.id, characterState);

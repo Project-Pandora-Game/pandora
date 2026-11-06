@@ -9,6 +9,7 @@ import { ZodArrayWithInvalidDrop, type ZodObjectShape } from '../validation.ts';
 import { SPACE_ACTIVITY_DATA_DEFAULT, SpaceActivitySavedDataSchema, type SpaceActivitySavedData } from './activity.ts';
 import { SpaceFeatureSchema, SpaceIdSchema, SpaceInviteIdSchema, SpaceNameSchema, SpacePublicSettingSchema, type SpaceId } from './space.ts';
 import { SpaceSwitchClientStatusSchema } from './spaceSwitch.ts';
+import { RoomIdSchema } from '../assets/index.ts';
 
 export const SpaceBaseInfoSchema = z.object({
 	/** The name of the space */
@@ -36,6 +37,8 @@ export const SpaceInviteSchema = z.object({
 	accountId: AccountIdSchema.optional(),
 	/** Character that this invite limited to */
 	characterId: CharacterIdSchema.optional(),
+	/** The room the invite leads into. If unspecified, the space's default room is used. */
+	roomId: RoomIdSchema.optional(),
 	/** The time when the invite expires */
 	expires: z.number().int().optional(),
 	/** Type of the invite */

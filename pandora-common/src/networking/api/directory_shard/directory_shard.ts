@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { AccountIdSchema, type AccountId } from '../../../account/account.ts';
 import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../../../account/index.ts';
 import { BotIdSchema, PandoraBotSpacePermissionListSchema, type BotId, type PandoraBotSpacePermissionList } from '../../../bots/botBaseTypes.ts';
-import { CharacterIdSchema } from '../../../character/index.ts';
+import { CharacterIdSchema, CharacterSpaceAssignmentSchema } from '../../../character/index.ts';
 import { ChatMessageDirectoryActionSchema } from '../../../chat/chat.ts';
 import { SpaceIdSchema, SpaceLeaveReasonSchema } from '../../../space/space.ts';
 import { SpaceDataSchema } from '../../../space/spaceData.ts';
@@ -27,7 +27,7 @@ export const ShardCharacterDefinitionSchema = z.object({
 	/** Secret for client to connect; `null` means this character is only loaded in a space, but not connected to by any client ("offline") */
 	connectSecret: z.string().nullable(),
 	/** Which space this character is in; `null` means this character is in their personal space */
-	space: SpaceIdSchema.nullable(),
+	space: CharacterSpaceAssignmentSchema,
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 

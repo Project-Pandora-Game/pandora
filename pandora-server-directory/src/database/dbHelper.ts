@@ -19,7 +19,7 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		inCreation: true,
 		id,
 		name: '',
-		currentSpace: null,
+		currentSpace: { space: null },
 	};
 
 	const char: ICharacterData = {
@@ -27,7 +27,7 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		id,
 		accountId,
 		name: info.name,
-		currentSpace: null,
+		currentSpace: { space: null },
 		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),

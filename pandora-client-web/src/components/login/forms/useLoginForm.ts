@@ -75,7 +75,6 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			// NOOP
 		} else if (result === 'failed') {
 			setErrorMessage('Login failed');
-
 		} else if (result.result === 'accountDisabled') {
 			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
 		} else {
@@ -88,7 +87,6 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			setErrorMessage('');
 		} else if (result === 'unknownCredentials') {
 			setErrorMessage('No matching passkey was found');
-
 		} else if (typeof result === 'object' && result.result === 'accountDisabled') {
 			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
 		} else {

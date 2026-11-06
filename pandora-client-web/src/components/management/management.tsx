@@ -9,6 +9,7 @@ import { ManagementAccounts } from './account/account.tsx';
 import { BetaKeys } from './betaKeys/betaKeys.tsx';
 import './management.scss';
 import { ServerManagement } from './server/server.tsx';
+import { UpdateAnnouncements } from './updates/updates.tsx';
 import { Shards } from './shards/shards.tsx';
 
 export function ManagementRoutes(): ReactElement | null {
@@ -37,6 +38,9 @@ export function ManagementRoutes(): ReactElement | null {
 			}
 			<UrlTab name='Server' urlChunk='server'>
 				<ServerManagement />
+			</UrlTab>
+			<UrlTab name='Updates' urlChunk='updates'>
+				<UpdateAnnouncements />
 			</UrlTab>
 			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 		</UrlTabContainer>

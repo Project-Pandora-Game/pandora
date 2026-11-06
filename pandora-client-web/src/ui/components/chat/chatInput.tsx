@@ -1,4 +1,4 @@
-import { Assert, CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
+import { CHARACTER_SETTINGS_DEFAULT, CharacterId, CompareCharacterIds, EMPTY_ARRAY, IChatType, IsNotNullable, SpaceIdSchema, ZodTransformReadonly, type ChatCharacterStatus, type ICharacterRoomData } from 'pandora-common';
 import React, { ForwardedRef, ReactElement, RefObject, useCallback, useEffect, useId, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { toast } from 'react-toastify';
 import * as z from 'zod';
@@ -14,7 +14,6 @@ import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocu
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
-import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { useCharacterSettings, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
@@ -23,7 +22,7 @@ import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus } from '../../../services/gameLogic/chatHooks.ts';
 import { useGameStateOptional, useSpaceCharacters } from '../../../services/gameLogic/gameStateHooks.ts';
-import { useGameLogicServiceOptional, useService } from '../../../services/serviceProvider.tsx';
+import { useGameLogicServiceOptional, useService, useServiceOptional } from '../../../services/serviceProvider.tsx';
 import { ColoredName } from '../common/coloredName.tsx';
 import { ChatActionLog, ChatFocusMode, ChatInputContext, useChatActionLogDisabled, useChatFocusModeForced, useChatInput, type ChatInputAutocompleteState, type ChatInputCommandRunner, type ChatInputHandlerEditing, type ChatMode, type IChatInputHandler } from './chatInputContext.ts';
 import { ChatInputTextArea, type ChatInputHistoryDriver, type ChatInputRestoreDriver } from './chatInputTextArea.tsx';
@@ -108,28 +107,24 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 
 	const commandInvokeContextGenerator = useChatCommandContextGenerator(mode, setMode, newSetTargets);
 
-	const clientCommandRunner = useMemo((): ChatInputCommandRunner => ({
+	const clientCommandRunner = useMemo((): ChatInputCommandRunner | undefined => commandInvokeContextGenerator == null ? undefined : ({
 		run(input) {
 			const ctx = commandInvokeContextGenerator();
-			Assert(ctx != null, 'Command run called whiled not ready');
 
 			return RunCommand(input, ctx, COMMANDS);
 		},
 		autocomplete(input) {
 			const ctx = commandInvokeContextGenerator();
-			Assert(ctx != null, 'Command autocomplete called whiled not ready');
 
 			return CommandAutocomplete(input, ctx, COMMANDS);
 		},
 		autocompleteCycle(input, reverse) {
 			const ctx = commandInvokeContextGenerator();
-			Assert(ctx != null, 'Command autocompleteCycle called whiled not ready');
 
 			return CommandAutocompleteCycle(input, ctx, COMMANDS, reverse);
 		},
 		getChatStatus(input) {
 			const ctx = commandInvokeContextGenerator();
-			Assert(ctx != null, 'Command getChatStatus called whiled not ready');
 
 			return CommandGetChatStatus(input, ctx, COMMANDS);
 		},
@@ -456,24 +451,22 @@ export function useChatCommandContextGenerator(
 	chatMode: ChatMode | null,
 	setChatMode: (mode: ChatMode | null) => void,
 	setChatTargets: (targets: readonly CharacterId[] | null) => void,
-): () => (ICommandInvokeContext<ICommandExecutionContextClient> | null) {
+): (() => ICommandInvokeContext<ICommandExecutionContextClient>) | null {
 	const navigate = useNavigatePandora();
 
 	const gameState = useGameStateOptional();
 	const shardConnector = useShardConnector();
-	const directoryConnector = useDirectoryConnector();
+	const directoryConnector = useServiceOptional('directoryConnector');
 	const accountManager = useService('accountManager');
 
 	const accountSettings = useAccountSettings();
 	const characterSettings = useCharacterSettings();
 
-	return useCallback((): ICommandInvokeContext<ICommandExecutionContextClient> | null => {
-		if (gameState == null || shardConnector == null)
+	return useMemo(() => {
+		if (gameState == null || shardConnector == null || directoryConnector == null)
 			return null;
 
-		const globalState = gameState.globalState.currentState;
-
-		return {
+		return (): ICommandInvokeContext<ICommandExecutionContextClient> => ({
 			displayError(error) {
 				toast(error, TOAST_OPTIONS_ERROR);
 			},
@@ -481,7 +474,7 @@ export function useChatCommandContextGenerator(
 			directoryConnector,
 			accountManager,
 			gameState,
-			globalState,
+			globalState: gameState.globalState.currentState,
 			player: gameState.player,
 			accountSettings,
 			characterSettings,
@@ -490,7 +483,7 @@ export function useChatCommandContextGenerator(
 			setChatMode,
 			setChatTargets,
 			navigate,
-		};
+		});
 	}, [accountManager, accountSettings, characterSettings, directoryConnector, gameState, navigate, chatMode, setChatMode, setChatTargets, shardConnector]);
 }
 

@@ -72,8 +72,11 @@ export function WikiCharacters(): ReactElement {
 
 			<h4 id='CH_Character_movement'>Character movement</h4>
 			<p>
-				You can move your character inside a room by dragging the name under it. Alternatively, you can activate a dedicated move mode
-				in a character's menu that you can open by clicking on the character name in the room itself or in the character list in the "Room"-tab.<br />
+				You can move your character inside a room by dragging the name under it. Alternatively, you can activate the dedicated move / pose mode
+				in a character's menu that you can open by clicking on the character name in the room itself or in the character list in the "Room"-tab.
+				In this move /pose mode, the four-way arrow below the character lets you drag the character around the room. The up-down arrow next to
+				it changes the character's Y offset (clicking it resets the offset).
+				<br />
 				In this menu, you can also select "Lead / Follow" on other characters, if you have the according <Link to='#CH_Character_permissions'>permission</Link>.
 				This activates a special move mode where one character moves with the other one: Either as if they were glued together
 				(keep relative position) or by following as if on a leash (keep distance). The distance can be configured in the menu.
@@ -110,11 +113,11 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<p>
 				In the "Manual posing" section of the "Pose"-tab, you can configure all details of a pose manually.
-				That said, the likely quicker way to do manual posing is using the "Pose"-mode that you can find in a character's context menu, by clicking on the character name.
+				That said, the likely quicker way to do manual posing is using the "Move / Pose"-mode that you can find in a character's context menu, by clicking on the character name.
 			</p>
 			<p>
 				In this mode you can see buttons over the character's body that you can interact with to change the pose of
-				the body.<br />
+				the body and to move the character.<br />
 				You can drag the hand icons on top of both wrists to change lower and upper arms as you desire. The connected circles
 				next to hand buttons can be clicked or dragged to change the hands. Note that those additional UI elements can be toggled to be hidden by
 				clicking on the hand buttons.<br />
@@ -123,12 +126,25 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>Clicking the left-right arrow at the bottom allows you to turn the character around.</li>
-				<li>The four-way arrow in the center allows you to switch to the character move mode. Please note that this button might not always be available.</li>
-				<li>You can exit the manual posing mode by clicking the red "X" below the character.</li>
-				<li>The two squares left and right of the red "X" change each arm's position to be in oneof the four states behind or in front of the body.</li>
+				<li>
+					The four-way arrow below the character lets you drag the character around the room. The up-down arrow next to it changes the character's Y offset
+					(clicking it resets the offset). Clicking the four-way arrow without dragging exits this mode.
+				</li>
+				<li>You can also exit this mode by clicking the red "X" above the character.</li>
+				<li>
+					The two squares to the left and right of the character, above the move circles, change each arm's position to be in one of the four states behind or in front of the body.
+					Hovering over them and using the mouse wheel also cycles through the states.
+				</li>
+				<li>
+					While hovering over a hand button, or while dragging it, the mouse wheel switches between the four hand rotations.
+				</li>
+				<li>
+					Moving and posing can be blocked independently of each other, for example by an item or a missing permission.
+					In that case the affected buttons are dimmed and a short note says what is blocked, while the other buttons keep working.
+				</li>
 			</ul>
 			<p>
-				Note that you can configure the UI style of the "Pose"-mode in the room graphics interface settings.<br />
+				Note that you can configure the posing UI style of the "Move / Pose"-mode in the room graphics interface settings.<br />
 				There, you can switch to or additionally add forward posing buttons that allow more direct control over the angles of the limbs.
 				With the forward posing interface you can see circles over the joints of a character's body that you can drag to rotate the various joints/bones of
 				the character body.
@@ -143,12 +159,13 @@ export function WikiCharacters(): ReactElement {
 				While characters are inside a <Link to='/wiki/items#IT_Room-level_items'>room-level item</Link>, you can alternatively open the context menu
 				by opening the room item's context menu, opening the slot the character is inside, and then clicking on the character name.
 				Finally, you can open the context menu by pressing on a character's name in the "Room" tab. This is useful if the name in the room scene is covered by something.<br />
-				The character context menu has different features depending on whom it is opened on. When an option on another character is crossed out,
-				it is not possible to do right now, for instance because you are lacking a permission. Clicking such option will display the reason.
+				The character context menu has different features depending on whom it is opened on. When an option on another character is crossed out, it is not possible to do
+				right now, for instance because you are lacking a permission. Clicking such option will display the reason. The "Move / Pose" entry is only crossed out when
+				neither moving nor posing is possible; if only one of them is blocked, the mode still opens and the blocked buttons are dimmed.
 			</p>
 			<ul>
 				<li>You can use it to quickly open your or another character's profile or wardrobe.</li>
-				<li>You can use it to enter move or pose mode on your or another character.</li>
+				<li>You can use it to enter the move / pose mode on your or another character.</li>
 				<li>You can select "Lead / Follow" on other characters to activate a special <Link to='#CH_Character_movement'>move mode</Link> where one character moves with the other one.</li>
 				<li>There is an "Admin" sub-menu when you are an owner or admin in a space.</li>
 				<li>

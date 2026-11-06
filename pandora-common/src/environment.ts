@@ -56,9 +56,8 @@ export function CreateEnvParser<TEnvSchema extends Record<string, z.ZodType> = N
 		}
 		const parsed = z.object(transformed).safeParse(obj);
 		if (!parsed.success) {
-			const errString = z.prettifyError(parsed.error);
-			logger.fatal('Failed to create env:\n', errString);
-			throw new Error('Failed to create env:\n' + errString);
+			logger.fatal('Failed to create env:\n', parsed.error);
+			throw new Error('Failed to create env');
 		}
 		return parsed.data as unknown as EnvOutput<TEnvSchema>;
 	};

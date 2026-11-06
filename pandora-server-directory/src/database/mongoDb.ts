@@ -988,7 +988,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		} else {
 			const databaseVersionData = DatabaseVersionConfigSchema.nullable().safeParse(await rawConfigCollection.findOne({ type: 'version' }));
 			if (!databaseVersionData.success) {
-				logger.fatal(`Failed to parse database version info:`, z.prettifyError(databaseVersionData.error));
+				logger.fatal(`Failed to parse database version info:`, databaseVersionData.error);
 				throw new Error('Failed to parse database version info');
 			}
 

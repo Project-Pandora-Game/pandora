@@ -1,6 +1,5 @@
 import { isEqual } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import * as z from 'zod';
 import type { Logger } from '../logging/logger.ts';
 import { GetLogger } from '../logging/logging.ts';
 import { AssertNotNullable } from '../utility/misc.ts';
@@ -84,7 +83,7 @@ export abstract class ConnectionBase<
 			const result = schema.safeParse(message);
 
 			if (!result.success) {
-				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error);
 				return;
 			} else if (!isEqual(message, result.data)) {
 				this.logger.warning(`Message '${messageType}' updated before send:\n`, JSON.stringify(message), '\n->\n', JSON.stringify(result.data), '\nTrace:', new Error());
@@ -114,7 +113,7 @@ export abstract class ConnectionBase<
 			const result = schema.safeParse(message);
 
 			if (!result.success) {
-				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error);
 				return Promise.reject(new Error('Invalid message'));
 			} else if (!isEqual(message, result.data)) {
 				this.logger.warning(`Message '${messageType}' updated before send:\n`, JSON.stringify(message), '\n->\n', JSON.stringify(result.data), '\nTrace:', new Error());
@@ -154,7 +153,7 @@ export abstract class ConnectionBase<
 					const result = responseSchema.safeParse(response);
 
 					if (!result.success) {
-						this.logger.warning(`Bad response content for '${messageType}'.\n`, z.prettifyError(result.error), '\n', response);
+						this.logger.warning(`Bad response content for '${messageType}'.\n`, result.error, '\n', response);
 						return reject(new Error('Invalid response'));
 					} else if (!isEqual(response, result.data)) {
 						this.logger.warning(`Response for '${messageType}' updated during receive:\n`, JSON.stringify(response), '\n->\n', JSON.stringify(result.data), '\nTrace:', new Error());
@@ -215,7 +214,7 @@ export abstract class ConnectionBase<
 			const result = messageSchema.request.safeParse(message);
 
 			if (!result.success) {
-				this.logger.warning(`Bad message content for '${messageType}'.\n`, z.prettifyError(result.error), '\n', message);
+				this.logger.warning(`Bad message content for '${messageType}'.\n`, result.error, '\n', message);
 				callback?.('Bad message content');
 				return;
 			} else if (!isEqual(message, result.data)) {
@@ -257,7 +256,7 @@ export abstract class ConnectionBase<
 				const result = responseSchema.safeParse(cbResult);
 
 				if (!result.success) {
-					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', z.prettifyError(result.error));
+					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', result.error);
 					return outerCallback('Bad response');
 				} else if (!isEqual(cbResult, result.data)) {
 					this.logger.warning(`Response to message '${messageType}' updated before send:\n`, JSON.stringify(cbResult), '\n->\n', JSON.stringify(result.data), '\nTrace:', new Error());

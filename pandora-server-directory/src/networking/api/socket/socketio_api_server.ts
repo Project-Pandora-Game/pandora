@@ -3,7 +3,6 @@ import { Assert, GetLogger, HTTP_SOCKET_IO_API_PATH, IIncomingConnection, type I
 import { ApiDirectorySocketAuthMessageSchema, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/networking/helpers';
 import type { DefaultEventsMap, ExtendedError, Socket } from 'socket.io';
-import * as z from 'zod';
 import { accountManager } from '../../../account/accountManager.ts';
 import { AccountSecureAccessTokenStore } from '../../../account/secure/accessTokens.ts';
 import { SocketIOServer } from '../../socketio_common_server.ts';
@@ -25,7 +24,7 @@ export class SocketIOServerApi extends SocketIOServer<{ tokenHash: string; }> im
 			(async (): Promise<ExtendedError | undefined> => {
 				const parsedAuth = ApiDirectorySocketAuthMessageSchema.safeParse(socket.handshake.auth);
 				if (!parsedAuth.success) {
-					logger.verbose('Rejecting connection due to invalid auth:\n', z.prettifyError(parsedAuth.error));
+					logger.verbose('Rejecting connection due to invalid auth:\n', parsedAuth.error);
 					return new Error('Failed to parse auth message');
 				}
 

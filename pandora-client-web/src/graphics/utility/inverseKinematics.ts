@@ -36,17 +36,17 @@ const LARGE_MOVEMENT_POWER = 1.5;
  * @returns The calculated optimal rotations for each bone
  */
 export function FindInverseKinematicOptimum(
-	bones: BoneDefinition[],
+	bones: readonly BoneDefinition[],
 	startPoint: readonly [number, number],
 	target: readonly [number, number],
-	initialPosition: number[],
+	initialPosition: readonly number[],
 ): number[] {
 	Assert(bones.length === initialPosition.length);
 	const m = new Matrix();
 	const targetPoint = new Point(...target);
 
 	// Helper for calculating distance from the target after applying rotations given as argument.
-	function calculateDistance(position: number[]): number {
+	function calculateDistance(position: readonly number[]): number {
 		const point = new Point(...startPoint);
 		m.identity();
 		const link = new Point();

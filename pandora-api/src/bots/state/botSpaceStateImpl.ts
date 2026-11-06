@@ -17,9 +17,14 @@ import {
 } from 'pandora-common';
 import type { BotId } from 'pandora-common/bots';
 import type { IShardBotArgument } from 'pandora-common/networking/api/shard_bot';
-import type { BotSpaceCharacter } from './botSpaceCharacter.ts';
+import type { BotSpaceCharacter, BotSpaceCharacterData } from './botSpaceCharacter.ts';
 import { BotSpaceCharacterImpl } from './botSpaceCharacterImpl.ts';
 import type { BotSpaceState, BotSpaceStateEvents } from './botSpaceState.ts';
+
+interface CharacterStatusChange {
+	readonly character: BotSpaceCharacterImpl;
+	readonly disconnected: boolean;
+}
 
 export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> implements BotSpaceState {
 	private readonly logger: Logger;
@@ -122,6 +127,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		for (const joined of characterUpdates.joined) {
 			this.emit('characterJoined', joined);
 		}
+		this._emitStatusChanges(characterUpdates.statusChanges);
 		this.emit('globalStateChanged', {
 			previousState: oldState,
 			newState: this._globalState,
@@ -139,6 +145,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 
 	public handleUpdate(data: GameStateUpdate): void {
 		const { info, globalState, join, leave, characters, characterModifierEffects } = data;
+		const statusChanges: CharacterStatusChange[] = [];
 
 		if (info) {
 			this._currentSpace = {
@@ -158,7 +165,8 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 				char = new BotSpaceCharacterImpl(join);
 				this._characters = [...this._characters, char];
 			} else {
-				char.update(join);
+				const change = this._updateCharacter(char, join);
+				if (change) statusChanges.push(change);
 			}
 		}
 		if (characters) {
@@ -169,7 +177,8 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 				if (!char) {
 					this.logger.error('Character not found during update', id);
 				} else {
-					char.update(characterData);
+					const change = this._updateCharacter(char, characterData);
+					if (change) statusChanges.push(change);
 				}
 			}
 		}
@@ -204,6 +213,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 			const char = ParseNotNullable(this._characters.find((it) => it.id === join.id));
 			this.emit('characterJoined', char);
 		}
+		this._emitStatusChanges(statusChanges);
 		if (oldState !== this._globalState) {
 			this.emit('globalStateChanged', {
 				previousState: oldState,
@@ -215,12 +225,39 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		}
 	}
 
-	private _updateCharacters(characters: readonly ICharacterRoomData[]): { joined: BotSpaceCharacterImpl[]; left: CharacterId[]; } {
+	/** Updates the character and reports an online/offline transition, if there was one */
+	private _updateCharacter(char: BotSpaceCharacterImpl, data: Partial<BotSpaceCharacterData>): CharacterStatusChange | null {
+		// Without an onlineStatus in the delta there cannot be a transition
+		if (data.onlineStatus === undefined) {
+			char.update(data);
+			return null;
+		}
+		const wasOffline = char.data.onlineStatus === 'offline';
+		char.update(data);
+		const isOffline = char.data.onlineStatus === 'offline';
+		if (wasOffline === isOffline)
+			return null;
+		return { character: char, disconnected: isOffline };
+	}
+
+	private _emitStatusChanges(changes: readonly CharacterStatusChange[]): void {
+		for (const { character, disconnected } of changes) {
+			this.emit(disconnected ? 'characterDisconnected' : 'characterReconnected', character);
+		}
+	}
+
+	private _updateCharacters(characters: readonly ICharacterRoomData[]): {
+		joined: BotSpaceCharacterImpl[];
+		left: CharacterId[];
+		statusChanges: CharacterStatusChange[];
+	} {
 		const oldCharacters = this._characters;
+		const statusChanges: CharacterStatusChange[] = [];
 		this._characters = characters.map((c) => {
 			let char = oldCharacters.find((oc) => oc.id === c.id);
 			if (char) {
-				char.update(c);
+				const change = this._updateCharacter(char, c);
+				if (change) statusChanges.push(change);
 			} else {
 				char = new BotSpaceCharacterImpl(c);
 			}
@@ -230,6 +267,7 @@ export class BotSpaceStateImpl extends TypedEventEmitter<BotSpaceStateEvents> im
 		return {
 			joined: this._characters.filter((it) => !oldCharacters.some((oc) => oc.id === it.id)),
 			left: oldCharacters.filter((it) => !this._characters.some((c) => c.id === it.id)).map((it) => it.id),
+			statusChanges,
 		};
 	}
 }

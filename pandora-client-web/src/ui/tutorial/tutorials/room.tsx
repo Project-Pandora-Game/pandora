@@ -331,24 +331,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<ul>
-							<li>Entering move mode, allowing for movement in the room.</li>
+							<li>Entering move / pose mode, allowing for movement in the room and custom poses. (posing is explained in later tutorial)</li>
 						</ul>
 					),
 					highlight: [{
 						query: '.context-menu button',
-						filter: (element) => element.innerText.includes('Move'),
-					}],
-					conditions: [{ type: 'next' }],
-				},
-				{
-					text: (
-						<ul>
-							<li>Entering posing mode, allowing for custom poses. (posing is explained in later tutorial)</li>
-						</ul>
-					),
-					highlight: [{
-						query: '.context-menu button',
-						filter: (element) => element.innerText.includes('Pose'),
+						filter: (element) => element.innerText.includes('Move / Pose'),
 					}],
 					conditions: [{ type: 'next' }],
 				},
@@ -367,12 +355,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please click the "Move" button to switch to the move mode.
+							Please click the "Move / Pose" button to switch to the movement and posing mode.
 						</p>
 					),
 					highlight: [{
 						query: '.context-menu button',
-						filter: (element) => element.innerText.includes('Move'),
+						filter: (element) => element.innerText.includes('Move / Pose'),
 					}],
 					conditions: [
 						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'moveCharacter'),
@@ -391,10 +379,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							<p>
 								You can also click the circles:<br />
 								Clicking the circle with blue up/down arrow resets your elevation,
-								while clicking the circle with red/green arrows exits the move mode.
+								while clicking the circle with red/green arrows exits the mode.
+								You can exit the mode as well with the red "X" button on the torso of the character.
 							</p>
 							<p>
-								In the middle of the character there is also third button that allows you to quickly switch to character posing mode.
+								The remaining buttons on and around the character's body are used for posing.
+								They are explained in a later tutorial, so you can ignore them for now.
 							</p>
 							<p>
 								Feel free to experiment with moving your character and then click next.
@@ -419,7 +409,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please exit the movement mode by clicking the circle with the red/green arrows.
+							Please exit the move / pose mode by clicking the circle with the red/green arrows
+							(or the red "X" on the character).
 						</p>
 					),
 					conditions: [

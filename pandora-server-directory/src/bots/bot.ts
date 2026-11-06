@@ -16,7 +16,7 @@ import {
 	type SpaceId,
 } from 'pandora-common';
 import type { BotConfig, BotDefinition, BotDirectoryStateInfo, BotId, BotPublicInfo, BotSpaceStateInfo } from 'pandora-common/bots';
-import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
+import { DirectoryApiSchema, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
 import type { Account } from '../account/account.ts';
 import type { ActorIdentity } from '../account/actorIdentity.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -41,7 +41,7 @@ export class Bot extends TypedEventEmitter<{
 	private data: DatabaseBot;
 
 	/** List of API connections listening to bot change events */
-	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
+	public readonly associatedApiConnections: ServerRoom<IDirectoryApi, ApiConnection>;
 	/** List of *active* spaces associated to this bot */
 	public readonly spaces = new Map<SpaceId, Space>();
 
@@ -75,6 +75,7 @@ export class Bot extends TypedEventEmitter<{
 
 		super();
 		this.logger = GetLogger('Bot', `[Bot ${data.id}]`);
+		this.associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>(this.logger.prefixMessages('[Api connections]'), DirectoryApiSchema);
 		this.lastActivity = Date.now();
 		this.data = data;
 		this.ownerAccount = ownerAccount;

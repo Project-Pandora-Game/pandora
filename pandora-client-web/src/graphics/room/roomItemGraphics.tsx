@@ -30,6 +30,7 @@ import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
 import { GraphicsLayerRoomDeviceSlot } from '../layers/graphicsLayerRoomDeviceSlot.tsx';
 import { GraphicsLayerRoomDeviceSprite } from '../layers/graphicsLayerRoomDeviceSprite.tsx';
 import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
+import { useAssetPreferenceVisibilityCheck } from '../common/assetVisibilityCheck.ts';
 
 export interface RoomItemGraphicsProps extends ChildrenProps {
 	item: Item;
@@ -114,6 +115,8 @@ function RoomItemGraphicsWithManager({
 
 	const roomMask = usePixiMaskSource();
 
+	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
+
 	const layers = useMemo<Immutable<RoomDeviceGraphicsLayer[]>>(() => {
 		const graphics = graphicsGetter(asset.id);
 		if (!graphics) {
@@ -122,11 +125,15 @@ function RoomItemGraphicsWithManager({
 		} else if (graphics.type === 'roomDevice') {
 			return graphics.layers;
 		} else if (graphics.type === 'worn') {
+		// If player marked item as "do not render", then hide it
+			if (!assetPreferenceIsVisible(asset))
+				return EMPTY_ARRAY;
+
 			return graphics.roomLayers ?? EMPTY_ARRAY;
 		}
 
 		AssertNever(graphics);
-	}, [asset, graphicsGetter]);
+	}, [asset, graphicsGetter, assetPreferenceIsVisible]);
 
 	const actualContainerFilters = useMemo<PIXI.Filter[] | undefined>(() => containerFilters?.().slice(), [containerFilters]);
 

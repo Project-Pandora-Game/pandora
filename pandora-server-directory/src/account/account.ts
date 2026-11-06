@@ -26,8 +26,8 @@ import {
 	type ManagementAccountInfo,
 } from 'pandora-common';
 import type { BotId } from 'pandora-common/bots';
-import type { IDirectoryApi } from 'pandora-common/networking/api/directory_api';
-import type { AccountPublicInfo, IDirectoryAccountInfo, IDirectoryClient } from 'pandora-common/networking/api/directory_client';
+import { DirectoryApiSchema, type IDirectoryApi } from 'pandora-common/networking/api/directory_api';
+import { DirectoryClientSchema, type AccountPublicInfo, type IDirectoryAccountInfo, type IDirectoryClient } from 'pandora-common/networking/api/directory_client';
 import type { IShardAccountDefinition } from 'pandora-common/networking/api/directory_shard';
 import type { Bot } from '../bots/bot.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -55,9 +55,9 @@ export class Account extends TypedEventEmitter<{
 	/** The account's saved data */
 	public data: Omit<DatabaseAccount, 'secure' | 'characters'>;
 	/** List of connections logged in as this account */
-	public readonly associatedConnections = new ServerRoom<IDirectoryClient, ClientConnection>();
+	public readonly associatedConnections: ServerRoom<IDirectoryClient, ClientConnection>;
 	/** List of API connections authenticated to this account */
-	public readonly associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>();
+	public readonly associatedApiConnections: ServerRoom<IDirectoryApi, ApiConnection>;
 
 	public readonly characters: Map<CharacterId, CharacterInfo> = new Map();
 
@@ -87,6 +87,8 @@ export class Account extends TypedEventEmitter<{
 	constructor(data: DatabaseAccountWithSecure, characters: readonly DatabaseCharacterSelfInfo[]) {
 		super();
 		this.logger = GetLogger('Account', `[Account ${data.id}]`);
+		this.associatedConnections = new ServerRoom<IDirectoryClient, ClientConnection>(this.logger.prefixMessages('[Client connections]'), DirectoryClientSchema);
+		this.associatedApiConnections = new ServerRoom<IDirectoryApi, ApiConnection>(this.logger.prefixMessages('[Api connections]'), DirectoryApiSchema);
 		this.lastActivity = Date.now();
 		// Shallow copy to preserve received data when cleaning up secure
 		this.data = omit(data, 'secure', 'roles', 'characters');

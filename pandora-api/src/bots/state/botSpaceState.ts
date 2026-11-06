@@ -21,6 +21,10 @@ export type BotSpaceStateEvents = {
 	characterModifiersChanged: void;
 	characterJoined: BotSpaceCharacter;
 	characterLeft: CharacterId;
+	/** Character is still in the space, but its online status changed to 'offline' */
+	characterDisconnected: BotSpaceCharacter;
+	/** Character is still in the space, but its online status changed from 'offline' to anything else */
+	characterReconnected: BotSpaceCharacter;
 };
 
 export interface BotSpaceState extends ITypedEventEmitter<BotSpaceStateEvents> {

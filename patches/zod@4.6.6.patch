@@ -1,0 +1,30 @@
+diff --git a/v4/core/schemas.d.ts b/v4/core/schemas.d.ts
+--- a/v4/core/schemas.d.ts
++++ b/v4/core/schemas.d.ts
+@@ -188,6 +188,11 @@
+ }
+ /** The `://` guard rejected the input before the URL constructor saw it. */
+ export declare const URL_BAD_FORMAT = 1;
++// Preserve native URL types where available without requiring DOM or Node globals.
++// The platform-neutral fallback contains the properties used by these helpers.
++type URL = typeof globalThis extends {
++    URL: { prototype: infer U };
++} ? U : { hostname: string; protocol: string };
+ /** The URL parser rejected the input. */
+ export declare const URL_UNPARSEABLE = 2;
+ export declare function canParseURL(input: string): boolean;
+diff --git a/v4/core/schemas.d.cts b/v4/core/schemas.d.cts
+--- a/v4/core/schemas.d.cts
++++ b/v4/core/schemas.d.cts
+@@ -188,6 +188,11 @@
+ }
+ /** The `://` guard rejected the input before the URL constructor saw it. */
+ export declare const URL_BAD_FORMAT = 1;
++// Preserve native URL types where available without requiring DOM or Node globals.
++// The platform-neutral fallback contains the properties used by these helpers.
++type URL = typeof globalThis extends {
++    URL: { prototype: infer U };
++} ? U : { hostname: string; protocol: string };
+ /** The URL parser rejected the input. */
+ export declare const URL_UNPARSEABLE = 2;
+ export declare function canParseURL(input: string): boolean;

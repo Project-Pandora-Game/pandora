@@ -6,7 +6,7 @@ import { Graphics, type GraphicsProps } from './baseComponents/graphics.ts';
 
 export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {
 	radius: number;
-	theme: 'normal' | 'hover' | 'active';
+	theme: 'normal' | 'hover' | 'active' | 'disabled';
 	colorUpDown?: number;
 	colorLeftRight?: number;
 	drawExtra?: (g: PIXI.GraphicsContext) => void;
@@ -29,7 +29,11 @@ export function MovementHelperGraphics({
 	const centerOffset = Math.ceil(0.1 * radius);
 	const circleEdgeWidth = 4;
 
-	const color = useMemo(() => new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), theme === 'active' ? 0.65 : theme === 'hover' ? 0.35 : 0).toHex(), [interfaceAccentColor, theme]);
+	const disabled = theme === 'disabled';
+	const effectiveColorUpDown = (disabled && colorUpDown != null) ? 0x666666 : colorUpDown;
+	const effectiveColorLeftRight = (disabled && colorLeftRight != null) ? 0x666666 : colorLeftRight;
+
+	const color = useMemo(() => disabled ? 0x777777 : new Color('#ffffff').mixSrgb(new Color(interfaceAccentColor), theme === 'active' ? 0.65 : theme === 'hover' ? 0.35 : 0).toHex(), [interfaceAccentColor, theme, disabled]);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
@@ -37,7 +41,7 @@ export function MovementHelperGraphics({
 			.fill({ color: 0x000000, alpha: 0.4 })
 			.stroke({ width: circleEdgeWidth, color, alpha: 1 });
 
-		if (colorLeftRight != null) {
+		if (effectiveColorLeftRight != null) {
 			g
 				.poly([
 					centerOffset + 1, -arrowWidthInner,
@@ -48,7 +52,7 @@ export function MovementHelperGraphics({
 					centerOffset + 1 + arrowBodyLength, arrowWidthInner,
 					centerOffset + 1, arrowWidthInner,
 				])
-				.fill({ color: colorLeftRight, alpha: 1 })
+				.fill({ color: effectiveColorLeftRight, alpha: 1 })
 				.poly([
 					- centerOffset - 1, arrowWidthInner,
 					- centerOffset - 1 - arrowBodyLength, arrowWidthInner,
@@ -58,10 +62,10 @@ export function MovementHelperGraphics({
 					- centerOffset - 1 - arrowBodyLength, -arrowWidthInner,
 					- centerOffset - 1, -arrowWidthInner,
 				])
-				.fill({ color: colorLeftRight, alpha: 1 });
+				.fill({ color: effectiveColorLeftRight, alpha: 1 });
 		}
 
-		if (colorUpDown != null) {
+		if (effectiveColorUpDown != null) {
 			g
 				.poly([
 					- arrowWidthInner, -centerOffset - 1,
@@ -72,7 +76,7 @@ export function MovementHelperGraphics({
 					arrowWidthInner, - centerOffset - 1 - arrowBodyLength,
 					arrowWidthInner, - centerOffset - 1,
 				])
-				.fill({ color: colorUpDown, alpha: 1 })
+				.fill({ color: effectiveColorUpDown, alpha: 1 })
 				.poly([
 					- arrowWidthInner, centerOffset + 1,
 					- arrowWidthInner, centerOffset + 1 + arrowBodyLength,
@@ -82,21 +86,23 @@ export function MovementHelperGraphics({
 					arrowWidthInner, centerOffset + 1 + arrowBodyLength,
 					arrowWidthInner, centerOffset + 1,
 				])
-				.fill({ color: colorUpDown, alpha: 1 });
+				.fill({ color: effectiveColorUpDown, alpha: 1 });
 		}
 
-		if (colorLeftRight != null || colorUpDown != null) {
+		if (effectiveColorLeftRight != null || effectiveColorUpDown != null) {
 			g
 				.ellipse(0, 0, centerOffset, centerOffset)
 				.fill({ color: 0xcccccc, alpha: 1 });
 		}
 
 		drawExtra?.(g);
-	}, [radius, colorLeftRight, colorUpDown, color, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
+	}, [radius, effectiveColorLeftRight, effectiveColorUpDown, color, drawExtra, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
 
 	return (
 		<Graphics
 			{ ...props }
+			alpha={ disabled ? 0.5 : props.alpha }
+			cursor={ disabled ? 'not-allowed' : props.cursor }
 			draw={ graphicsDraw }
 		/>
 	);

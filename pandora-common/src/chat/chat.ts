@@ -2,7 +2,7 @@ import * as z from 'zod';
 import { RoomIdSchema, type RoomId } from '../assets/appearanceTypes.ts';
 import { VirtualBotCharacterSchema, type VirtualBotCharacter } from '../bots/botBaseTypes.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
-import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
+import { LIMIT_CHAT_MESSAGE_LENGTH, LIMIT_CHAT_MESSAGES_PER_REQUEST, LIMIT_CHAT_SEGMENTS_PER_REQUEST, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits.ts';
 import { HexColorStringSchema, type HexColorString } from '../validation.ts';
 import { ChatMessageActionLogSchema, type ChatMessageActionLog } from './actionLog.ts';
 import { ChatActionIdSchema } from './chatActions.ts';
@@ -20,17 +20,17 @@ export type IChatType = z.infer<typeof ChatTypeSchema>;
 export const ClientMessageSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.enum(['me', 'emote']),
-		parts: z.array(ChatSegmentSchema),
+		parts: z.array(ChatSegmentSchema).max(LIMIT_CHAT_SEGMENTS_PER_REQUEST),
 	}),
 	z.object({
 		type: z.literal('ooc'),
-		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.array().optional(),
+		parts: z.array(ChatSegmentSchema).max(LIMIT_CHAT_SEGMENTS_PER_REQUEST),
+		to: CharacterIdSchema.array().max(LIMIT_SPACE_MAX_CHARACTER_NUMBER + LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS).optional(),
 	}),
 	z.object({
 		type: z.literal('chat'),
-		parts: z.array(ChatSegmentSchema),
-		to: CharacterIdSchema.array().optional(),
+		parts: z.array(ChatSegmentSchema).max(LIMIT_CHAT_SEGMENTS_PER_REQUEST),
+		to: CharacterIdSchema.array().max(LIMIT_SPACE_MAX_CHARACTER_NUMBER + LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS).optional(),
 	}),
 ]);
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
@@ -48,11 +48,17 @@ export function CalculateChatMessagesLength(message: IClientMessage[], maxLength
 	return length;
 }
 
-export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine((val, ctx) => {
+export const ClientChatMessagesSchema = z.array(ClientMessageSchema).max(LIMIT_CHAT_MESSAGES_PER_REQUEST).superRefine((val, ctx) => {
 	if (CalculateChatMessagesLength(val, LIMIT_CHAT_MESSAGE_LENGTH) > LIMIT_CHAT_MESSAGE_LENGTH) {
 		ctx.addIssue({
 			code: 'custom',
 			message: `Message is too long, maximum length is ${LIMIT_CHAT_MESSAGE_LENGTH}`,
+		});
+	}
+	if (val.reduce((count, message) => count + message.parts.length, 0) > LIMIT_CHAT_SEGMENTS_PER_REQUEST) {
+		ctx.addIssue({
+			code: 'custom',
+			message: `Too many chat segments, maximum is ${LIMIT_CHAT_SEGMENTS_PER_REQUEST}`,
 		});
 	}
 });

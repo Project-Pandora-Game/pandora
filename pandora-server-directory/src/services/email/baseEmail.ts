@@ -1,5 +1,5 @@
 import type { Transporter } from 'nodemailer';
-import type { Logger } from 'pandora-common';
+import { FormatHighEntropyToken, type Logger } from 'pandora-common';
 import type { IEmailSender } from './index.ts';
 
 const ENVELOPE_FROM = 'game@project-pandora.com';
@@ -32,7 +32,7 @@ export abstract class BaseEmailSender<T> implements IEmailSender {
 Hello ${username},
 
 You have requested a password reset.
-Please enter the following token to reset your password: ${token}
+Please enter the following code to reset your password: ${FormatHighEntropyToken(token)}
 
 If you did not request a password reset, please ignore this email.
 `);

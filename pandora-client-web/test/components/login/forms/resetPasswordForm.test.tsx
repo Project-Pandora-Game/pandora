@@ -1,14 +1,17 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { HIGH_ENTROPY_TOKEN_LENGTH } from 'pandora-common';
 import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm.tsx';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
 import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
-import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS, INVALID_USERNAMES } from '../loginTestData.ts';
+import { INVALID_USERNAMES } from '../loginTestData.ts';
 
 describe('Reset Password Form', () => {
 	const defaultUsername = 'test-user';
-	const defaultResetCode = '123456';
+	const defaultResetCode = 'A'.repeat(HIGH_ENTROPY_TOKEN_LENGTH);
 	const defaultPassword = 'password123';
+	const invalidLengthResetCodes = ['A', 'A'.repeat(6), 'A'.repeat(HIGH_ENTROPY_TOKEN_LENGTH - 1), 'A'.repeat(HIGH_ENTROPY_TOKEN_LENGTH + 1)];
+	const invalidFormatResetCodes = ['!', '+', '/', '=', '0', '1', 'I', 'O', '_'].map((invalidCharacter) => 'A'.repeat(HIGH_ENTROPY_TOKEN_LENGTH - 1) + invalidCharacter);
 
 	let user: ReturnType<typeof userEvent.setup>;
 	let pathname: string;
@@ -94,7 +97,7 @@ describe('Reset Password Form', () => {
 		await ExpectFieldToBeInvalid('Username');
 	});
 
-	it.each(INVALID_LENGTH_TOKENS)(
+	it.each(invalidLengthResetCodes)(
 		'should not permit the invalid reset code %p to be submitted',
 		async (invalidResetCode) => {
 			// TODO: Expand this to actually check that a WS message hasn't been sent
@@ -106,16 +109,19 @@ describe('Reset Password Form', () => {
 			await user.type(screen.getByLabelText('Reset code'), invalidResetCode);
 			await user.click(screen.getByRole('button'));
 
-			await ExpectFieldToBeInvalid('Reset code', 'Reset code must be exactly 6 characters');
+			await ExpectFieldToBeInvalid('Reset code', `Reset code must be exactly ${ HIGH_ENTROPY_TOKEN_LENGTH } characters`);
 		},
 	);
 
-	it('should prevent a reset code longer than 6 characters from being entered', async () => {
-		await user.type(screen.getByLabelText('Reset code'), '1234567890');
-		expect(screen.getByLabelText('Reset code')).toHaveValue('123456');
+	it('accepts a grouped reset code pasted from the email', async () => {
+		const input = screen.getByLabelText('Reset code');
+		await user.click(input);
+		await user.paste('abcd-efgh-jklm-npqr');
+		expect(input).toHaveValue('abcd-efgh-jklm-npqr');
+		expect(input).toBeValid();
 	});
 
-	it.each(INVALID_FORMAT_TOKENS)(
+	it.each(invalidFormatResetCodes)(
 		'should not permit the invalid reset code %p to be submitted',
 		async (invalidResetCode) => {
 			// TODO: Expand this to actually check that a WS message hasn't been sent

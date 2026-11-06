@@ -28,7 +28,7 @@ export const ShardTokenStore = new class ShardTokenStoreService extends TokenSto
 				created: { id: 0, username: '[[Pandora]]', time: 0 },
 				expires: undefined,
 			}))
-				this.logger.info(`Token '${SHARD_SHARED_SECRET}' created`);
+				this.logger.info('Configured stable shard token created');
 		}
 	}
 

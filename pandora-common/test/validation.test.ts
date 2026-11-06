@@ -1,7 +1,39 @@
 import { describe, expect, it } from '@jest/globals';
-import { IsObject, ZodTrimedRegex } from '../src/validation.ts';
+import { ClientDirectorySchema } from '../src/networking/api/directory_client/client_directory.ts';
+import { FormatHighEntropyToken, HighEntropyTokenSchema, IsObject, NormalizeHighEntropyToken, ZodTrimedRegex } from '../src/validation.ts';
 
 describe('Validation', () => {
+
+	it('accepts only canonical network tokens and normalizes manually entered tokens', () => {
+		const token = 'ABCDEFGHJKLMNPQR';
+		const enteredToken = 'abcd - efgh  jklm-\tnpqr';
+		expect(HighEntropyTokenSchema.safeParse(token).success).toBe(true);
+		expect(HighEntropyTokenSchema.safeParse(enteredToken).success).toBe(false);
+		expect(HighEntropyTokenSchema.parse(NormalizeHighEntropyToken(enteredToken))).toBe(token);
+		expect(NormalizeHighEntropyToken(enteredToken)).toBe(token);
+		expect(FormatHighEntropyToken(token)).toBe('ABCD-EFGH-JKLM-NPQR');
+	});
+
+	it('requires reset-confirm requests to carry a normalized token', () => {
+		const schema = ClientDirectorySchema.passwordResetConfirm.request;
+		const request = { username: 'test-user', passwordSha512: `${ 'a'.repeat(86) }==`, token: 'ABCD-EFGH-JKLM-NPQR' };
+		expect(schema.safeParse(request).success).toBe(false);
+		expect(schema.parse({ ...request, token: NormalizeHighEntropyToken(request.token) }).token).toBe('ABCDEFGHJKLMNPQR');
+	});
+
+	it('does not normalize Unicode case expansions into valid token characters', () => {
+		for (const token of ['ABCDEFGHJKLMNPß', 'ſ'.repeat(16)]) {
+			expect(NormalizeHighEntropyToken(token)).toBe(token);
+			expect(HighEntropyTokenSchema.safeParse(NormalizeHighEntropyToken(token)).success).toBe(false);
+		}
+	});
+
+	it.each(['012345', 'ABCDEFGHJKLMNPQ', 'ABCDEFGHJKLMNPQRR', 'ABCD-EFGH-JKLM-NP0R', 'ABCD-EFGH-JKLM-NP1R', 'ABCD-EFGH-JKLM-NPIR', 'ABCD-EFGH-JKLM-NPOR', 'ABCD_EFGH_JKLM_NPQR', 'ABCDEFGHJKLMNPß'])(
+		'rejects invalid high-entropy token %p',
+		(token) => {
+			expect(HighEntropyTokenSchema.safeParse(token).success).toBe(false);
+		},
+	);
 
 	describe('IsObject', () => {
 

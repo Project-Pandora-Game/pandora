@@ -153,24 +153,20 @@ export class AccountDirectMessages {
 		if (!target) {
 			return { result: 'notFound' };
 		}
+		const dms = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target));
+		if (!dms?.messages.length && !await target.contacts.canReceiveDM(this._account)) {
+			return { result: 'denied' };
+		}
 		if (!target.directMessages._publicKey) {
 			return { result: 'noKeyAvailable' };
-		}
-		const dms = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target));
-		if (dms == null || dms.messages.length === 0) {
-			return {
-				result: 'ok',
-				account: target.directMessages._getAccountInfo(),
-				messages: [],
-			};
 		}
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),
-			messages: dms.messages.map((message) => ({
+			messages: dms?.messages.map((message) => ({
 				...message,
 				keyHash: dms.keyHash,
-			})),
+			})) ?? [],
 		};
 	}
 

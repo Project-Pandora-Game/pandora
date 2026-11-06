@@ -28,12 +28,16 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this);
 
-		if (!this.isConnected()) {
+		if (!this.aborted && !this.isConnected()) {
 			this.logger.warning('Client disconnect before onConnect finished');
 			queueMicrotask(() => {
 				this.onDisconnect('isConnected check failed');
 			});
 		}
+	}
+
+	public override isConnected(): boolean {
+		return !this.aborted && super.isConnected();
 	}
 
 	/** Handler for when client disconnects */

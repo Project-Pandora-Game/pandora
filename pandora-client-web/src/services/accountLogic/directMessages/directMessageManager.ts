@@ -19,6 +19,7 @@ import {
 } from 'pandora-common/networking/api/directory_client';
 import * as z from 'zod';
 import { BrowserStorage } from '../../../browserStorage.ts';
+import { PrehashPassword } from '../../../crypto/helpers.ts';
 import { KeyExchange } from '../../../crypto/keyExchange.ts';
 import type { SymmetricEncryption } from '../../../crypto/symmetric.ts';
 import type { DirectoryConnector } from '../../../networking/directoryConnector.ts';
@@ -146,8 +147,12 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 
 			const cryptoPassword = DmCryptoPassword.value;
 			if (passkeyUnlock != null) {
-				const loadResult = await this.loadKey(passkeyUnlock.cryptoKey, passkeyUnlock.wrappingSecret);
-				if (loadResult !== 'ok') {
+				if (passkeyUnlock.cryptoKey.publicKey !== account.cryptoKey?.publicKey) {
+					// A passkey can still authenticate after the account's DM key has
+					// been replaced, but its old wrapped key must not unlock the new DMs.
+					DmCryptoPasskeyUnlock.value = undefined;
+					this._cryptoState.value = 'loadError';
+				} else if (await this.loadKey(passkeyUnlock.cryptoKey, passkeyUnlock.wrappingSecret) !== 'ok') {
 					this._cryptoState.value = 'loadError';
 				} else {
 					DmCryptoPasskeyUnlock.value = {
@@ -228,24 +233,33 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		return await this.#crypto.export(wrappingSecret);
 	}
 
-	/** Update key stored on server. Mainly for the purpose of migrating off of old key formats. */
-	public async updateSavedKey(): Promise<void> {
+	/** Rewrap and upload a legacy key after confirming the account password. */
+	public async updateSavedKey(username: string, password: string): Promise<boolean> {
 		const { directoryConnector } = this.serviceDeps;
 
 		this.logger.verbose('Uploading current key to server...');
-		const password = DmCryptoPassword.value;
-		Assert(password != null, 'Missing password while updating saved key');
 		Assert(this.#crypto != null, 'Missing crypto while updating saved key');
 
+		const sudo = await directoryConnector.awaitResponse('sudoAuthenticate', {
+			passwordSha512: await PrehashPassword(password),
+		});
+		if (sudo.result !== 'ok') {
+			this.logger.warning('Could not confirm identity for DM key migration');
+			return false;
+		}
+
+		const wrappingPassword = await KeyExchange.generateKeyPassword(username, password);
 		const { result } = await directoryConnector.awaitResponse('setCryptoKey', {
-			cryptoKey: await this.#crypto.export(password),
+			cryptoKey: await this.#crypto.export(wrappingPassword),
 			allowReset: 'same-key',
 		});
 		if (result !== 'ok') {
 			this.logger.warning('Failed to update cryptokey:', result);
-			throw new Error('Failed to update cryptokey');
+			return false;
 		}
+		DmCryptoPassword.value = wrappingPassword;
 		this.logger.verbose('Successfully updated server crypto key.');
+		return true;
 	}
 
 	/** Attempt to eagerly refresh all chat crypto keys, allowing for smoother transitions and possibly decrypting message contents in the background. */

@@ -45,6 +45,12 @@ describe('passkey login flow', () => {
 		connection.disconnect();
 	});
 
+	it('allows repeated passkey starts without a per-connection quota', async () => {
+		for (let i = 0; i < 64; i++) {
+			await expect(connection.awaitResponse('passkeyLoginStart', {})).resolves.toMatchObject({ result: 'ok' });
+		}
+	});
+
 	it('registers a passkey and logs in with the passkey-wrapped DM key', async () => {
 		const username = `passkey-${Date.now()}`;
 		const password = 'test-password';

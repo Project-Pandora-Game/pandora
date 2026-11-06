@@ -1,9 +1,9 @@
 import * as argon2 from 'argon2';
 import { createHash, randomInt } from 'crypto';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { webcrypto } from 'node:crypto';
-import { Assert, AssertNever, AsyncSynchronized, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
+import { Assert, AssertNever, AsyncSynchronized, GenerateHighEntropyToken, GetLogger, LIMIT_ACCOUNT_PASSKEY_COUNT, Logger, NormalizeHighEntropyToken, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import type { IAccountCryptoKey, IAccountPasskeyCredential, IAccountPasskeyInfo } from 'pandora-common/networking/api/directory_client';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -115,8 +115,10 @@ export default class AccountSecure {
 		return this.#secure.emailHash === emailHash;
 	}
 
-	public verifyPassword(password: string): Promise<boolean> {
-		return argon2.verify(this.#secure.password, password);
+	public async verifyPassword(password: string): Promise<boolean> {
+		const passwordHash = this.#secure.password;
+		const valid = await argon2.verify(passwordHash, password);
+		return valid && this.#secure.password === passwordHash;
 	}
 
 	public async changePasswordAfterSudo(passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<'ok' | 'invalidCryptoKey'> {
@@ -148,17 +150,23 @@ export default class AccountSecure {
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
+		const resetToken = this.#findToken(AccountTokenReason.PASSWORD_RESET, NormalizeHighEntropyToken(token));
+		if (resetToken == null)
 			return false;
 
-		// Invalidate all login tokens
-		this.#invalidateToken(AccountTokenReason.LOGIN);
+		// Hash before changing credentials: hashing can fail or allow other requests to run.
+		const passwordHash = await GeneratePasswordHash(password);
+		if (this.#findToken(AccountTokenReason.PASSWORD_RESET, resetToken.value) !== resetToken)
+			return false;
 
-		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
-		this.#secure.password = await GeneratePasswordHash(password);
+		this.#secure.password = passwordHash;
 		this.#secure.cryptoKey = undefined;
 		this.#secure.passkeys = undefined;
+		// Revoke tokens issued up to the point where the new credentials take effect.
+		this.#invalidateToken(AccountTokenReason.LOGIN);
+		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
+		await this.accessTokens.invalidateAllTokensForRecovery();
 
 		await this.updateDatabase();
 
@@ -279,14 +287,19 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms'): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+	@AsyncSynchronized()
+	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms', hasSudo: boolean = false): Promise<'ok' | 'invalid' | 'keyAlreadySet' | 'sudoRequired'> {
 		if (this.#secure.cryptoKey != null) {
+			if (isEqual(this.#secure.cryptoKey, key))
+				return 'ok';
 			if (
 				allowReset !== 'replace-deleting-dms' &&
 				(allowReset !== 'same-key' || this.#secure.cryptoKey.publicKey !== key.publicKey)
 			) {
 				return 'keyAlreadySet';
 			}
+			if (!hasSudo)
+				return 'sudoRequired';
 		}
 
 		if (!await this.#validateCryptoKey(key))
@@ -499,7 +512,7 @@ const TOKEN_TYPES = {
 		limit: 1,
 	},
 	[AccountTokenReason.PASSWORD_RESET]: {
-		generate: GenerateSimpleToken,
+		generate: GenerateHighEntropyToken,
 		expiration: PASSWORD_RESET_TOKEN_EXPIRATION,
 		limit: 1,
 	},

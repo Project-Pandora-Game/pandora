@@ -252,7 +252,7 @@ export interface PandoraDatabase extends ServerService {
 	 * @param keyHash - Hash of the key used to encrypt the message
 	 * @param message - Message to set
 	 * @param maxCount - Maximum number of messages to keep
-	 * @returns false only if message was an edit and it was not found
+	 * @returns false if the edited message was not found or belongs to a different sender
 	 */
 	setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean>;
 

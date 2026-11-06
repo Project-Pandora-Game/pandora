@@ -795,7 +795,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			data.messages = [];
 
 		if (message.edited != null) {
-			const index = data.messages.findIndex((m) => m.time === message.time);
+			const index = data.messages.findIndex((m) => m.time === message.time && m.source === message.source);
 			if (index === -1)
 				return false;
 

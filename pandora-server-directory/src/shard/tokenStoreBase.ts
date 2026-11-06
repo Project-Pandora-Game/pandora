@@ -64,7 +64,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 
 		this.#tokens.set(id, info);
 
-		this.logger.info(`${creator.username} (${creator.id}) created token '${id}': `, info);
+		this.logger.info(`${creator.username} (${creator.id}) created token '${id}': `, omit(info, 'token'));
 
 		await this._save();
 

@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Account, CreateAccountData } from '../../src/account/account.ts';
-import { LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
+import { CreateManuallyResolvedPromise, IsHighEntropyToken, LIMIT_ACCOUNT_PASSKEY_COUNT } from 'pandora-common';
 import AccountSecure, { AccountToken, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { AccountSecureAccessTokenStore } from '../../src/account/secure/accessTokens.ts';
 import { AccountTokenReason, DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
 import { MockDatabase } from '../../src/database/mockDb.ts';
 import GetEmailSender from '../../src/services/email/index.ts';
@@ -338,6 +339,86 @@ describe('AccountSecure', () => {
 			account = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
+		it('Invalidates all personal access tokens, preserves their settings, and notifies active API connections', async () => {
+			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			const first = await active.accessTokens.createToken('first', ['bots:run'], null);
+			const second = await active.accessTokens.createToken('second', [], null);
+			if (typeof first === 'string' || typeof second === 'string')
+				throw new Error('Failed to create recovery test tokens');
+			const invalidated: string[] = [];
+			active.accessTokens.on('tokenInvalidated', (hash) => invalidated.push(hash));
+
+			await active.resetPassword(TEST_EMAIL);
+			const token = mockReset.mock.calls.at(-1)?.[2];
+			if (token == null)
+				throw new Error('No password reset token sent');
+			mockSaving.mockClear();
+			await expect(active.finishPasswordReset(token, 'newPassword')).resolves.toBe(true);
+
+			const listedTokens = active.accessTokens.listTokens();
+			expect(listedTokens).toHaveLength(2);
+			expect(listedTokens.map((listedToken) => listedToken.id)).toEqual([first[1].id, second[1].id]);
+			expect(listedTokens.map((listedToken) => listedToken.name)).toEqual(['first', 'second']);
+			expect(listedTokens.map((listedToken) => listedToken.scopes)).toEqual([['bots:run'], []]);
+			for (const listedToken of listedTokens)
+				expect(listedToken.expires).toBeLessThanOrEqual(Date.now());
+			expect(active.accessTokens.verifyToken(first[1].tokenHash, [])).toBe('invalidToken');
+			expect(active.accessTokens.verifyToken(second[1].tokenHash, [])).toBe('invalidToken');
+			expect(invalidated).toEqual([first[1].tokenHash, second[1].tokenHash]);
+			expect(mockSaving).toHaveBeenCalledTimes(1);
+			expect(mockSaving.mock.calls[0][1].accessTokens?.map((savedToken) => savedToken.expires)).toEqual(listedTokens.map((listedToken) => listedToken.expires));
+
+			const regenerated = await active.accessTokens.regenerateToken(first[1].id, null);
+			if (typeof regenerated === 'string')
+				throw new Error('Could not regenerate invalidated token');
+			expect(regenerated[1].id).toBe(first[1].id);
+			expect(regenerated[1].name).toBe('first');
+			expect(regenerated[1].scopes).toEqual(['bots:run']);
+			expect(active.accessTokens.verifyToken(regenerated[1].tokenHash, ['bots:run'])).toBe('ok');
+			expect(active.accessTokens.verifyToken(first[1].tokenHash, [])).toBe('invalidToken');
+		});
+
+		it('invalidates a token created concurrently with password recovery', async () => {
+			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			await active.resetPassword(TEST_EMAIL);
+			const token = mockReset.mock.calls.at(-1)?.[2];
+			if (token == null)
+				throw new Error('No password reset token sent');
+
+			const hashStarted = CreateManuallyResolvedPromise<void>();
+			const releaseHash = CreateManuallyResolvedPromise<void>();
+			const invalidateStarted = CreateManuallyResolvedPromise<void>();
+			const originalHash = AccountSecureAccessTokenStore.hashToken.bind(AccountSecureAccessTokenStore);
+			const hashSpy = jest.spyOn(AccountSecureAccessTokenStore, 'hashToken').mockImplementation(async (value) => {
+				hashStarted.resolve();
+				await releaseHash.promise;
+				return originalHash(value);
+			});
+			const originalInvalidate = active.accessTokens.invalidateAllTokensForRecovery.bind(active.accessTokens);
+			const invalidateSpy = jest.spyOn(active.accessTokens, 'invalidateAllTokensForRecovery').mockImplementation(() => {
+				invalidateStarted.resolve();
+				return originalInvalidate();
+			});
+			try {
+				const creating = active.accessTokens.createToken('racing', [], null);
+				await hashStarted.promise;
+				const resetting = active.finishPasswordReset(token, 'newPassword');
+				await invalidateStarted.promise;
+				releaseHash.resolve();
+				const created = await creating;
+				await resetting;
+				if (typeof created === 'string')
+					throw new Error('Failed to create racing token');
+				expect(active.accessTokens.listTokens()).toMatchObject([{ id: created[1].id }]);
+				expect(active.accessTokens.listTokens()[0].expires).toBeLessThanOrEqual(Date.now());
+				expect(active.accessTokens.verifyToken(created[1].tokenHash, [])).toBe('invalidToken');
+			} finally {
+				releaseHash.resolve();
+				hashSpy.mockRestore();
+				invalidateSpy.mockRestore();
+			}
+		});
+
 		describe('resetPassword()', () => {
 			it('Does nothing when email is wrong', async () => {
 				await expect(account.resetPassword('nonexistent@project-pandora.com')).resolves.toBe(false);
@@ -352,7 +433,8 @@ describe('AccountSecure', () => {
 				expect(mockReset).toHaveBeenNthCalledWith(1, TEST_EMAIL, TEST_USERNAME, expect.any(String));
 				// Save token for later use
 				resetToken = mockReset.mock.calls[0][2];
-				expect(resetToken).toBeTruthy();
+				expect(IsHighEntropyToken(resetToken)).toBe(true);
+				expect(resetToken).toMatch(/^[2-9A-HJ-NP-Z]{16}$/);
 				// Saves data
 				expect(mockSaving).toHaveBeenCalledTimes(1);
 			});
@@ -387,6 +469,16 @@ describe('AccountSecure', () => {
 				expect(account.isActivated()).toBe(true);
 				// Saves data
 				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+
+			it('accepts a lowercase reset code with spaces and dashes', async () => {
+				const separateAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
+				await separateAccount.resetPassword(TEST_EMAIL);
+				const token = mockReset.mock.calls.at(-1)?.[2];
+				if (token == null)
+					throw new Error('No password reset token sent');
+				const formatted = `${ token.slice(0, 4) } - ${ token.slice(4, 8) } ${ token.slice(8, 12) }-${ token.slice(12) }`.toLowerCase();
+				await expect(separateAccount.finishPasswordReset(formatted, 'newPassword')).resolves.toBe(true);
 			});
 
 			it('Invalidates token after use', async () => {

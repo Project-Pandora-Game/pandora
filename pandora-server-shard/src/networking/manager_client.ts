@@ -21,6 +21,7 @@ import {
 	GameLogicPermissionServer,
 	GetLogger,
 	IMessageHandler,
+	CharacterIdSchema,
 	MessageHandler,
 	NaturalListJoin,
 	PermissionConfig,
@@ -102,10 +103,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 
 	/** Handle new incoming connection */
 	public onConnect(connection: ClientConnection): void {
-		const [characterId] = (connection.headers.authorization || '').split(' ');
+		const [rawCharacterId, secret] = (connection.headers.authorization || '').split(' ');
+		const characterId = CharacterIdSchema.safeParse(rawCharacterId);
+		// The initial HTTP request may have been authorized before Directory revoked or rotated this secret.
+		if (!characterId.success || !secret || !this.isAuthorized(characterId.data, secret)) {
+			connection.abortConnection();
+			return;
+		}
 		this._connectedClients.add(connection);
 		connectedClientsMetric.set(this._connectedClients.size);
-		if (!connection.loadCharacter(characterId as CharacterId) || !connection.character)
+		if (!connection.loadCharacter(characterId.data) || !connection.character)
 			return;
 		connection.sendLoadMessage();
 		connection.character.sendAllPendingMessages();
@@ -209,8 +216,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 						logger.error(`Failed to abort action attempt by ${character.id} for failed action completion:\n`, cancelResult.problems);
 					}
 				}
-				// If the action failed, client might be out of sync, force-send full reload
-				client.sendLoadMessage();
 				return {
 					result: 'failure',
 					problems: result.problems.slice(),

@@ -27,40 +27,72 @@ const PASSKEY_CHALLENGE_BYTE_LENGTH = 32;
 const PASSKEY_PRF_SALT_BYTE_LENGTH = 32;
 const CHALLENGE_TTL = 5 * 60_000;
 const MAX_PASSKEY_CHALLENGES = 10_000;
+const MAX_ANONYMOUS_LOGIN_CHALLENGES = 2_000;
 const PASSKEY_PRF_SALT = Base64UrlEncode(createHash('sha256')
 	.update(`project-pandora:passkey-prf:${PASSKEY_RP_ID}`, 'utf-8')
 	.digest()
 	.subarray(0, PASSKEY_PRF_SALT_BYTE_LENGTH));
 
-const Challenges = new Map<string, ChallengeRecord>();
+/** Keep unauthenticated requests from evicting account-bound challenges. */
+export class PasskeyChallengeStore {
+	readonly #login = new Map<string, ChallengeRecord>();
+	readonly #account = new Map<string, ChallengeRecord>();
+	private readonly maxLogin: number;
+	private readonly maxAccount: number;
+
+	constructor(
+		maxLogin: number,
+		maxAccount: number,
+	) {
+		this.maxLogin = maxLogin;
+		this.maxAccount = maxAccount;
+	}
+
+	public issue(accountId: AccountId | null, purpose: ChallengePurpose, now: number = Date.now()): string {
+		const challenges = purpose === 'login' ? this.#login : this.#account;
+		this.#pruneExpired(challenges, now);
+		const capacity = purpose === 'login' ? this.maxLogin : this.maxAccount;
+		if (challenges.size >= capacity) {
+			// A saturated anonymous pool must not deny fresh logins globally.
+			// Eviction remains within the same purpose's pool.
+			const oldest = challenges.keys().next().value;
+			if (oldest != null)
+				challenges.delete(oldest);
+		}
+
+		let challenge: string;
+		do {
+			challenge = Base64UrlEncode(randomBytes(PASSKEY_CHALLENGE_BYTE_LENGTH));
+		} while (this.#login.has(challenge) || this.#account.has(challenge));
+		challenges.set(challenge, { accountId, purpose, created: now });
+		return challenge;
+	}
+
+	public consume(challenge: string, accountId: AccountId, purpose: ChallengePurpose, now: number = Date.now()): boolean {
+		const record = this.#login.get(challenge) ?? this.#account.get(challenge);
+		this.#login.delete(challenge);
+		this.#account.delete(challenge);
+		return record != null &&
+			(record.accountId == null || record.accountId === accountId) &&
+			record.purpose === purpose &&
+			now - record.created <= CHALLENGE_TTL;
+	}
+
+	#pruneExpired(challenges: Map<string, ChallengeRecord>, now: number): void {
+		// Insertion order is issuance order. This costs O(expired), not O(active)
+		// on every anonymous challenge start.
+		for (const [challenge, record] of challenges) {
+			if (now - record.created <= CHALLENGE_TTL)
+				break;
+			challenges.delete(challenge);
+		}
+	}
+}
+
+const Challenges = new PasskeyChallengeStore(MAX_ANONYMOUS_LOGIN_CHALLENGES, MAX_PASSKEY_CHALLENGES);
 
 export function CreatePasskeyChallenge(accountId: AccountId | null, purpose: ChallengePurpose): string {
-	const now = Date.now();
-	PruneExpiredPasskeyChallenges(now);
-
-	const challenge = Base64UrlEncode(randomBytes(PASSKEY_CHALLENGE_BYTE_LENGTH));
-	Challenges.set(challenge, {
-		accountId,
-		purpose,
-		created: now,
-	});
-	PruneOldestPasskeyChallenges();
-	return challenge;
-}
-
-function PruneExpiredPasskeyChallenges(now: number): void {
-	for (const [challenge, record] of Challenges) {
-		if (now - record.created > CHALLENGE_TTL)
-			Challenges.delete(challenge);
-	}
-}
-
-function PruneOldestPasskeyChallenges(): void {
-	for (const challenge of Challenges.keys()) {
-		if (Challenges.size <= MAX_PASSKEY_CHALLENGES)
-			return;
-		Challenges.delete(challenge);
-	}
+	return Challenges.issue(accountId, purpose);
 }
 
 export function GetPasskeyPrfSalt(): string {
@@ -68,15 +100,7 @@ export function GetPasskeyPrfSalt(): string {
 }
 
 export function ConsumePasskeyChallenge(challenge: string, accountId: AccountId, purpose: ChallengePurpose): boolean {
-	const record = Challenges.get(challenge);
-	Challenges.delete(challenge);
-	if (record == null)
-		return false;
-	if (record.accountId != null && record.accountId !== accountId)
-		return false;
-	if (record.purpose !== purpose)
-		return false;
-	return Date.now() - record.created <= CHALLENGE_TTL;
+	return Challenges.consume(challenge, accountId, purpose);
 }
 
 export async function ValidatePasskeyRegistration(data: {

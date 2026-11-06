@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { EmitterWithAck, IEmpty, MESSAGE_HANDLER_DEBUG_MESSAGES } from '../../src/index.ts';
 import { GetLogger, LogLevel } from '../../src/logging/index.ts';
-import { ConnectionBase } from '../../src/networking/connection.ts';
+import { ConnectionBase, IncomingConnection, MockServerSocket } from '../../src/networking/connection.ts';
+import { MockConnectionSocket } from '../../src/networking/socket.ts';
 
 const mockEmitCB = jest.fn((_event: string, _arg: unknown, _cb?: (arg: unknown) => void) => {/**nothing */ });
 const mockEmitTCB = jest.fn((_event: string, _arg: unknown, _cb?: (error: unknown, arg: unknown) => void) => {/**nothing */ });
@@ -63,5 +64,20 @@ describe('ConnectionBase', () => {
 			void mock.awaitResponse('debuggedType' as never, 'message' as never, 1);
 			expect(mockLogMessage.mock.calls.length).toBe(1);
 		});
+	});
+});
+
+describe('IncomingConnection', () => {
+	it.each(['constructor', '__proto__', 'toString'])('rejects inherited event name %s', (eventName) => {
+		class TestConnection extends IncomingConnection<IEmpty, IEmpty> {
+			protected onMessage(): Promise<never> {
+				throw new Error('Unexpected message');
+			}
+		}
+
+		const socket = new MockConnectionSocket('test');
+		new TestConnection(new MockServerSocket(), socket, [{}, {}], mockLogger);
+
+		expect(() => socket.remote.emit(eventName, {})).not.toThrow();
 	});
 });

@@ -135,13 +135,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManager, result
 			case 'covered':
 				return `The ${describeItem(e.asset, e.itemName)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
-				return `You need to be able to use hands to do this.`;
+				return `You need to be able to use your hands to do this.`;
 			case 'blockedMove':
 				return `An item or character modifier is preventing you from moving.`;
 			case 'safemodeInteractOther':
 				return `You cannot touch others while either you or they are in safemode or timeout mode.`;
 			case 'modifyBodyRoom':
-				return `You cannot modify body in this room.`;
+				return `You cannot modify a body in this room.`;
 			case 'missingSpaceRole':
 				if (e.required === 'none')
 					return `The current space settings do not allow anyone to perform this action.`;

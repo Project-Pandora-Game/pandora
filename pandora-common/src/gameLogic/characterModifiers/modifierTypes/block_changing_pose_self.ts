@@ -17,7 +17,7 @@ Other characters can still change the pose of this character normally, if they h
 			default: true,
 		},
 		limitRotating: {
-			name: 'Prevent rotating the body',
+			name: 'Prevent rotating the body and the arms/legs',
 			type: 'toggle',
 			default: true,
 		},

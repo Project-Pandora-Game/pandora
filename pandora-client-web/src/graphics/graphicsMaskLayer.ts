@@ -14,6 +14,7 @@ import {
 	TextureMatrix,
 	UniformGroup,
 } from 'pixi.js';
+import { GetAlphaMaskGpuProgram } from './graphicsMaskShader.ts';
 
 const FILTER_CONDITION = 'masky.a > 0.5 && masky.r < 0.5';
 
@@ -180,9 +181,11 @@ class AlphaMaskFilter extends Filter {
 
 		super({
 			glProgram,
+			gpuProgram: GetAlphaMaskGpuProgram(),
 			resources: {
 				filterUniforms,
 				uMaskTexture: mask.texture.source,
+				uMaskSampler: mask.texture.source.style,
 			},
 			resolution: 'inherit',
 		});
@@ -203,6 +206,7 @@ class AlphaMaskFilter extends Filter {
 		).prepend(this._textureMatrix.mapCoord);
 
 		this.resources.uMaskTexture = this._maskSprite.texture.source;
+		this.resources.uMaskSampler = this._maskSprite.texture.source.style;
 
 		filterManager.applyFilter(this, input, output, clearMode);
 	}

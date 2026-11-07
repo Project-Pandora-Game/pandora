@@ -50,6 +50,7 @@ function EffectsSettings(): ReactElement {
 function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
+		stencil: 'Stencil (experimental)',
 		pixi: 'Pixi.js',
 		customShader: 'Custom Pandora shader (recommended for less clipping)',
 		disabled: 'Ignore masks (recommended for avoiding lag)',
@@ -104,9 +105,9 @@ function QualitySettings(): ReactElement {
 				<Column gap='none'>
 					<ToggleSettingInput
 						driver={ useGraphicsSettingDriver('antialias') }
-						disabled={ currentGraphicsSettings.alphamaskEngine !== 'disabled' }
+						disabled={ !['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) }
 						label={
-							currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
+							!['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) ? (
 								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
 							) : (
 								<>
@@ -119,8 +120,8 @@ function QualitySettings(): ReactElement {
 						}
 					/>
 					{
-						currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-							<span>Unavailable as "Alphamasking engine" is not set to "Ignore masks"</span>
+						!['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) ? (
+							<span>Available with "Ignore masks" or experimental stencil masking</span>
 						) : null
 					}
 				</Column>
@@ -142,7 +143,7 @@ function QualitySettings(): ReactElement {
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
 									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
-									Our current implementation of alphamasking is also not compatible with Antialiasing.
+									The older masking engines are not compatible with Antialiasing. The experimental stencil engine allows it.
 								</p>
 
 								<p>
@@ -156,7 +157,7 @@ function QualitySettings(): ReactElement {
 								</p>
 							</ContextHelpButton>
 							<br />
-							<strong>The current implementation is known to cause lag on most devices</strong>
+							<strong>{ currentGraphicsSettings.alphamaskEngine === 'stencil' ? 'Experimental: clipping and performance are still being evaluated' : 'The current implementation is known to cause lag on most devices' }</strong>
 						</>
 					}
 					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }

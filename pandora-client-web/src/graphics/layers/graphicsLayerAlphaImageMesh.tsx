@@ -9,58 +9,49 @@ import { memo, ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useS
 import { useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { type PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { Sprite } from '../baseComponents/sprite.ts';
+import { CompactMaskMeshPoints } from '../graphicsMaskGeometry.ts';
 import { GraphicsMaskLayer } from '../graphicsMaskLayer.ts';
 import { useGraphicsSettings } from '../graphicsSettings.tsx';
 import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
+import { GraphicsStencilMaskContainer } from './graphicsStencilMaskContainer.tsx';
 
-export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMeshImpl({
-	children,
-	layer,
-	item,
-	poseEvaluator,
-	wornItems,
-	displayUvPose = false,
-	characterBlinking,
-}: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
+export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImageMeshImpl(props: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
+	const { alphamaskEngine } = useGraphicsSettings();
+	const app = usePixiAppOptional();
+	// A disabled mask must not deform geometry or load its texture.
+	if (alphamaskEngine === 'disabled' || !app)
+		return <Container>{ props.children }</Container>;
+	return <GraphicsLayerAlphaImageMeshEnabled { ...props } />;
+});
 
-	const { points, triangles } = useLayerMeshPoints(layer);
-
+function GraphicsLayerAlphaImageMeshEnabled(props: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
+	const { layer, item, poseEvaluator, wornItems, characterBlinking, children } = props;
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
 	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
-
-	const {
-		image,
-		imageUvPose,
-	} = useLayerImageSource(evaluator, layer, item);
-
-	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
-
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
-
-	const alphaImage = image;
-	const alphaMesh = useMemo(() => ({
-		vertices,
-		uvs: uv,
-		indices: triangles,
-	}), [vertices, uv, triangles]);
-
 	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
 		return <Container>{ children }</Container>;
+	return <GraphicsLayerAlphaImageMeshGeometry { ...props } evaluator={ evaluator } />;
+}
 
-	return (
-		<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh }>
-			{ children }
-		</MaskContainer>
-	);
-});
+function GraphicsLayerAlphaImageMeshGeometry({
+	children, layer, item, poseEvaluator, displayUvPose = false, evaluator,
+}: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps & { evaluator: AppearanceConditionEvaluator; }): ReactElement {
+	const mesh = useLayerMeshPoints(layer);
+	const { points, triangles } = CompactMaskMeshPoints(mesh.points, mesh.triangles);
+	const { image, imageUvPose } = useLayerImageSource(evaluator, layer, item);
+	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
+	const alphaMesh = useMemo(() => ({ vertices, uvs: uv, indices: triangles }), [vertices, uv, triangles]);
+	return <MaskContainer maskImage={ image } maskMesh={ alphaMesh }>{ children }</MaskContainer>;
+}
 
 const MASK_X_OVERSCAN = 250;
 export const MASK_SIZE: Readonly<PandoraRectangle> = {
@@ -82,6 +73,9 @@ function MaskContainer({
 	// Rendering in background needs to create tree even without presence of pixi.js application, but masks require it
 	const hasApp = usePixiAppOptional() != null;
 
+	if (alphamaskEngine === 'stencil' && hasApp)
+		return <MaskContainerStencil { ...props }>{ children }</MaskContainerStencil>;
+
 	if (alphamaskEngine === 'pixi' && hasApp)
 		return <MaskContainerPixi { ...props }>{ children }</MaskContainerPixi>;
 
@@ -90,6 +84,12 @@ function MaskContainer({
 
 	// Default - ignore masks
 	return <Container>{ children }</Container>;
+}
+
+function MaskContainerStencil({ children, maskImage, maskMesh }: MaskContainerProps): ReactElement {
+	const app = usePixiApp();
+	const texture = useTexture(maskImage, true);
+	return <GraphicsStencilMaskContainer app={ app } texture={ texture } maskMesh={ maskMesh }>{ children }</GraphicsStencilMaskContainer>;
 }
 
 function MaskContainerPixi({

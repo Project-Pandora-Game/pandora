@@ -10,16 +10,21 @@ import type { SettingDriver } from '../ui/components/settings/settingsInputs.tsx
 export const GraphicsUpscalingSettingSchema = z.enum(['smooth', 'crisp-edges', 'pixelated']);
 export type GraphicsUpscalingSetting = z.infer<typeof GraphicsUpscalingSettingSchema>;
 
+export const GraphicsRendererPreferenceSchema = z.enum(['webgl', 'webgpu']);
+export type GraphicsRendererPreference = z.infer<typeof GraphicsRendererPreferenceSchema>;
+
 export const GraphicsSettingsSchema = z.object({
 	// Effects
 	effectBlinking: z.boolean(),
 	smoothMovement: z.enum(['auto', 'enabled', 'disabled']),
 	// Quality
+	/** Rendering backend. Requires page reload; WebGPU remains opt-in. */
+	renderer: GraphicsRendererPreferenceSchema,
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	renderResolution: z.number().int().min(0).max(100),
 	upscaling: GraphicsUpscalingSettingSchema,
-	/** Non-disabled alphamasking suppresses antialias. */
-	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
+	/** Legacy alphamasking engines suppress antialias. */
+	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled', 'stencil', 'directShader']),
 	/** Whether to tell browser we prefer antialiasing. Requires page reload. */
 	antialias: z.boolean(),
 });
@@ -30,6 +35,7 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	effectBlinking: true,
 	smoothMovement: 'auto',
 	// Quality
+	renderer: 'webgl',
 	textureResolution: 'auto',
 	renderResolution: 100,
 	upscaling: 'smooth',
@@ -54,12 +60,20 @@ export function SetGraphicsSettings(changes: Partial<GraphicsSettings>): void {
 	};
 }
 
+export function GetGraphicsRendererPreference(): GraphicsRendererPreference {
+	return GraphicsSettingsStorage.value.renderer ?? GRAPHICS_SETTINGS_DEFAULT.renderer;
+}
+
 export function GetGraphicsEffectiveAntialias(): boolean {
 	const { antialias, alphamaskEngine } = ({
 		...GRAPHICS_SETTINGS_DEFAULT,
 		...GraphicsSettingsStorage.value,
 	});
-	return antialias && alphamaskEngine === 'disabled';
+	return antialias && GraphicsMaskSupportsAntialias(alphamaskEngine);
+}
+
+export function GraphicsMaskSupportsAntialias(engine: GraphicsSettings['alphamaskEngine']): boolean {
+	return engine === 'disabled' || engine === 'stencil' || engine === 'directShader';
 }
 
 export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {

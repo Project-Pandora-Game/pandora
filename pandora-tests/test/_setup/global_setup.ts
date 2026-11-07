@@ -85,20 +85,20 @@ setup('Prepare test assets', async () => {
 	// Get the archive
 	const TEMP_ARCHIVE_PATH = resolve(TEST_TEMP, './assets.tar');
 	const ASSETS_PROJECT_ARCHIVE_PATH = resolve(TEST_PROJECT_ASSETS_DIR, './out-for-test.tar');
-	if (fs.existsSync(ASSETS_PROJECT_ARCHIVE_PATH) && fs.statSync(ASSETS_PROJECT_ARCHIVE_PATH).isFile()) {
+	const bundleVersion = fs.readFileSync(resolve(TEST_PROJECT_PANDORA_DIR, './pandora-common/test/testAssetsVersion.txt'), { encoding: 'utf-8' }).trim();
+	if (fs.existsSync(ASSETS_PROJECT_ARCHIVE_PATH) && fs.statSync(ASSETS_PROJECT_ARCHIVE_PATH).isFile() &&
+		createHash('sha256').update(fs.readFileSync(ASSETS_PROJECT_ARCHIVE_PATH)).digest('base64url') === bundleVersion) {
 		console.log('  Using test archive from local pandora-assets project');
 		fs.copyFileSync(ASSETS_PROJECT_ARCHIVE_PATH, TEMP_ARCHIVE_PATH);
 	} else {
-		const bundleVersion = fs.readFileSync(resolve(TEST_PROJECT_PANDORA_DIR, './pandora-common/test/testAssetsVersion.txt'), { encoding: 'utf-8' }).trim();
-
 		if (fs.existsSync(TEMP_ARCHIVE_PATH) && createHash('sha256').update(fs.readFileSync(TEMP_ARCHIVE_PATH)).digest('base64url') === bundleVersion) {
 			console.log('  Using cached test assets');
 		} else {
 			// Download archive bundle
-			const url = TEST_ASSETS_DOWNLOAD_URL.replace('%v', bundleVersion);
+			const url = TEST_ASSETS_DOWNLOAD_URL.replaceAll('%v', bundleVersion);
 			console.log('  Downloading test assets from', url);
 
-			const testAssetsCompressed = await fetch(url).then((r) => {
+			const testAssetsCompressed = await fetch(url, { signal: AbortSignal.timeout(30_000) }).then((r) => {
 				if (!r.ok) {
 					throw new Error(`Received ${r.status} ${r.statusText} response`);
 				}

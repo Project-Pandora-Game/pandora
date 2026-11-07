@@ -1,12 +1,15 @@
 import { memoize, noop } from 'lodash-es';
-import { MAX_BONE_COUNT } from 'pandora-common';
+import { MAX_BONE_COUNT, type LayerNormalData } from 'pandora-common';
 import * as PIXI from 'pixi.js';
+import { CreateGraphicsSkinningShader, UpdateGraphicsSkinningShaderPalette, type GraphicsBonePalette } from '../graphicsBonePalette.ts';
 
 export const DEFAULT_NORMAL_TEXTURE = new PIXI.Texture({
 	source: new PIXI.BufferImageSource({
 		resource: new Uint8Array([127, 127, 255, 255]),
 		width: 1,
 		height: 1,
+		// The bytes below are RGBA; BufferImageSource otherwise defaults to BGRA on WebGPU.
+		format: 'rgba8unorm',
 		alphaMode: 'premultiply-alpha-on-upload',
 		label: 'DEFAULT_NORMAL',
 	}),
@@ -34,7 +37,9 @@ const SHADER_NORMALS_BIT_GL: PIXI.HighShaderBit = {
 	vertex: {
 		header: /* glsl */`
 uniform mat3 uTextureMatrix;
-uniform vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+layout(std140) uniform skinningUniforms {
+	vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+};
 in uvec4 aBoneIndices; // Indices of bones, in uBoneQuat
 in vec4 aBoneWeights; // Weights of bones, in uBoneQuat
 out mat3 vTBN;
@@ -206,3 +211,229 @@ outColor.xyz = packNormal(normal) * outColor.w;
 		],
 	});
 });
+
+/** Match the GLSL tangent frame, including its existing 2D model transform convention. */
+const SHADER_NORMALS_BIT: PIXI.HighShaderBit = {
+	name: 'normals-bit',
+	vertex: {
+		header: /* wgsl */`
+@in aBoneIndices: vec4<u32>;
+@in aBoneWeights: vec4<f32>;
+@out vTangent: vec3<f32>;
+@out vBitangent: vec3<f32>;
+@out vNormal: vec3<f32>;
+
+struct TextureUniforms {
+	uTextureMatrix: mat3x3<f32>,
+	uBaseColor: vec4<f32>,
+};
+@group(2) @binding(2) var<uniform> textureUniforms: TextureUniforms;
+struct SkinningUniforms {
+	uBoneQuat: array<vec4<f32>, ${2 * MAX_BONE_COUNT}>,
+};
+@group(3) @binding(0) var<uniform> skinningUniforms: SkinningUniforms;
+
+fn skinQuaternionToTransformationMatrix(realQuat: vec4<f32>, dualQuat: vec4<f32>) -> mat4x4<f32> {
+	let inverseLength = 1. / length(realQuat);
+	let r = realQuat.yzwx * inverseLength;
+	let d = dualQuat.yzwx * inverseLength;
+	let translation = 2. * vec3<f32>(
+		-d.w * r.x + d.x * r.w - d.y * r.z + d.z * r.y,
+		-d.w * r.y + d.x * r.z + d.y * r.w - d.z * r.x,
+		-d.w * r.z - d.x * r.y + d.y * r.x + d.z * r.w
+	);
+	return mat4x4<f32>(
+		vec4<f32>(1. - 2. * r.y * r.y - 2. * r.z * r.z, 2. * r.x * r.y + 2. * r.w * r.z, 2. * r.x * r.z - 2. * r.w * r.y, 0.),
+		vec4<f32>(2. * r.x * r.y - 2. * r.w * r.z, 1. - 2. * r.x * r.x - 2. * r.z * r.z, 2. * r.y * r.z + 2. * r.w * r.x, 0.),
+		vec4<f32>(2. * r.x * r.z + 2. * r.w * r.y, 2. * r.y * r.z - 2. * r.w * r.x, 1. - 2. * r.x * r.x - 2. * r.y * r.y, 0.),
+		vec4<f32>(translation, 1.)
+	);
+}
+`,
+		main: /* wgsl */`
+uv = (textureUniforms.uTextureMatrix * vec3<f32>(uv, 1.)).xy;
+var realQuat = vec4<f32>(0.);
+var dualQuat = vec4<f32>(0.);
+var remainingWeight = 1.;
+for (var si = 0u; si < 4u; si++) {
+	let weight = aBoneWeights[si];
+	let boneIndex = aBoneIndices[si];
+	if (boneIndex == 0u || weight == 0.) { continue; }
+	realQuat += weight * skinningUniforms.uBoneQuat[2u * boneIndex];
+	dualQuat += weight * skinningUniforms.uBoneQuat[2u * boneIndex + 1u];
+	remainingWeight -= weight;
+}
+if (remainingWeight != 0.) {
+	realQuat += remainingWeight * skinningUniforms.uBoneQuat[0];
+	dualQuat += remainingWeight * skinningUniforms.uBoneQuat[1];
+}
+let skinMatrix = skinQuaternionToTransformationMatrix(realQuat, dualQuat);
+position = (skinMatrix * vec4<f32>(position, 0., 1.)).xy;
+var tangent = normalize((skinMatrix * vec4<f32>(1., 0., 0., 0.)).xyz);
+var bitangent = normalize((skinMatrix * vec4<f32>(0., 1., 0., 0.)).xyz);
+let normal = normalize((skinMatrix * vec4<f32>(0., 0., 1., 0.)).xyz);
+let model = worldTransformMatrix * modelMatrix;
+let model2D = mat2x2<f32>(model[0].xy, model[1].xy);
+let tangentXY = normalize(model2D * tangent.xy);
+let bitangentXY = normalize(model2D * bitangent.xy);
+tangent = vec3<f32>(tangentXY, tangent.z);
+bitangent = vec3<f32>(bitangentXY, bitangent.z);
+vTangent = tangent;
+vBitangent = bitangent;
+vNormal = normal;
+`,
+	},
+	fragment: {
+		header: /* wgsl */`
+@in vTangent: vec3<f32>;
+@in vBitangent: vec3<f32>;
+@in vNormal: vec3<f32>;
+@group(2) @binding(0) var uTexture: texture_2d<f32>;
+@group(2) @binding(1) var uSampler: sampler;
+@group(2) @binding(3) var uNormalMap: texture_2d<f32>;
+@group(2) @binding(4) var uNormalSampler: sampler;
+
+fn unpackNormal(color: vec3<f32>) -> vec3<f32> {
+	let normal = color * 2. - 1.;
+	// Pixi coordinates: X right, Y down, Z toward the camera.
+	return vec3<f32>(normal.x, -normal.y, normal.z);
+}
+fn packNormal(normal: vec3<f32>) -> vec3<f32> {
+	return (vec3<f32>(normal.x, -normal.y, normal.z) + 1.) / 2.;
+}
+fn transformNormal(color: vec3<f32>, tangent: vec3<f32>, bitangent: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
+	return normalize(mat3x3<f32>(tangent, bitangent, normal) * unpackNormal(color));
+}
+`,
+		main: /* wgsl */`
+let normal = transformNormal(textureSample(uNormalMap, uNormalSampler, vUV).rgb, vTangent, vBitangent, vNormal);
+outColor = textureSample(uTexture, uSampler, vUV);
+`,
+	},
+};
+
+export const GetNormalMeshGpuProgram = memoize(function GetNormalMeshGpuProgramImpl(): PIXI.GpuProgram {
+	return PIXI.compileHighShaderGpuProgram({
+		name: 'pandora-normal-mesh',
+		bits: [
+			PIXI.localUniformBit,
+			SHADER_NORMALS_BIT,
+			{
+				name: 'normal-mesh-lighting-bit',
+				fragment: {
+					header: /* wgsl */`
+struct TextureUniforms {
+	uTextureMatrix: mat3x3<f32>,
+	uBaseColor: vec4<f32>,
+};
+@group(2) @binding(2) var<uniform> textureUniforms: TextureUniforms;
+struct PbrUniforms {
+	uAmbientStrength: f32,
+	uSpecularStrength: f32,
+	uRoughness: f32,
+};
+@group(2) @binding(5) var<uniform> pbrUniforms: PbrUniforms;
+`,
+					main: /* wgsl */`
+let lightDir = normalize(vec3<f32>(2.7, -2.5, 3.7));
+let ambient = vec3<f32>(clamp(pbrUniforms.uAmbientStrength, 0., 1.));
+let lambertian = clamp(dot(lightDir, normal), 0., 1.);
+var diffuse = vec3<f32>(0.4 + 0.6 * lambertian);
+var specular = vec3<f32>(0.);
+if (lambertian > 0.) {
+	let viewDir = vec3<f32>(0., 0., 1.);
+	let shininess = pow(2., (1. - pbrUniforms.uRoughness) * 4.);
+	let reflection = 2. * dot(normal, lightDir) * normal - lightDir;
+	var specularStrength = pow(clamp(dot(reflection, viewDir), 0., 1.), shininess);
+	specularStrength *= pbrUniforms.uSpecularStrength;
+	if (specularStrength > 0.) {
+		specular = vec3<f32>(specularStrength);
+		diffuse *= 1. - specularStrength;
+	}
+}
+outColor *= textureUniforms.uBaseColor;
+outColor = vec4<f32>(outColor.rgb * (ambient + diffuse) + specular * outColor.a, outColor.a);
+`,
+				},
+			},
+			PIXI.roundPixelsBit,
+		],
+	});
+});
+
+export const GetNormalMeshDebugNormalsGpuProgram = memoize(function GetNormalMeshDebugNormalsGpuProgramImpl(): PIXI.GpuProgram {
+	return PIXI.compileHighShaderGpuProgram({
+		name: 'pandora-normal-mesh-debug',
+		bits: [
+			PIXI.localUniformBit,
+			SHADER_NORMALS_BIT,
+			{
+				name: 'normal-mesh-debug-bit',
+				fragment: { main: 'outColor = vec4<f32>(packNormal(normal) * outColor.a, outColor.a);' },
+			},
+			PIXI.roundPixelsBit,
+		],
+	});
+});
+
+export interface NormalMeshShaderOptions {
+	texture: PIXI.Texture;
+	normalMapTexture: PIXI.Texture;
+	normalMapData: LayerNormalData;
+	color: number;
+	displayNormalMap?: boolean;
+	boneTransforms: Float32Array;
+	bonePalette?: GraphicsBonePalette;
+}
+
+/** Shared by the React component and renderer qualification, including live material updates. */
+export function CreateOrUpdateNormalMeshShader(existingShader: PIXI.Shader | null | undefined, {
+	texture, normalMapTexture, normalMapData, color, displayNormalMap, boneTransforms, bonePalette,
+}: NormalMeshShaderOptions): PIXI.Shader {
+	const glProgram = displayNormalMap ? GetNormalMeshDebugNormalsGlProgram() : GetNormalMeshGlProgram();
+	const gpuProgram = displayNormalMap ? GetNormalMeshDebugNormalsGpuProgram() : GetNormalMeshGpuProgram();
+	const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
+	// eslint-disable-next-line no-bitwise
+	const colorAlpha = PIXI.Color.shared.setValue(color).toBgrNumber() + (255 << 24);
+	if (existingShader?.glProgram === glProgram && existingShader.gpuProgram === gpuProgram) {
+		existingShader.resources.uTexture = texture.source;
+		existingShader.resources.uSampler = texture.source.style;
+		existingShader.resources.uNormalMap = normalMap.source;
+		existingShader.resources.uNormalSampler = normalMap.source.style;
+		UpdateGraphicsSkinningShaderPalette(existingShader, boneTransforms, bonePalette);
+		const textureUniforms = existingShader.resources.textureUniforms as PIXI.UniformGroup;
+		textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
+		PIXI.color32BitToUniform(colorAlpha, textureUniforms.uniforms.uBaseColor as Float32Array, 0);
+		textureUniforms.update();
+		const pbrUniforms = existingShader.resources.pbrUniforms as PIXI.UniformGroup | undefined;
+		if (pbrUniforms !== undefined) {
+			pbrUniforms.uniforms.uSpecularStrength = normalMapData.specularStrength;
+			pbrUniforms.uniforms.uRoughness = normalMapData.roughness;
+			pbrUniforms.update();
+		}
+		return existingShader;
+	}
+	const baseColor = new Float32Array(4);
+	PIXI.color32BitToUniform(colorAlpha, baseColor, 0);
+	return CreateGraphicsSkinningShader({
+		glProgram,
+		gpuProgram,
+		resources: {
+			uTexture: texture.source,
+			uSampler: texture.source.style,
+			uNormalMap: normalMap.source,
+			uNormalSampler: normalMap.source.style,
+			textureUniforms: new PIXI.UniformGroup({
+				uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+				uBaseColor: { type: 'vec4<f32>', value: baseColor },
+			}),
+			...(!displayNormalMap ? {
+				pbrUniforms: new PIXI.UniformGroup({
+					uAmbientStrength: { type: 'f32', value: 0.1 },
+					uSpecularStrength: { type: 'f32', value: normalMapData.specularStrength },
+					uRoughness: { type: 'f32', value: normalMapData.roughness },
+				}),
+			} : {}),
+		},
+	}, boneTransforms, bonePalette);
+}

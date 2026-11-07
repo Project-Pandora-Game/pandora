@@ -4,7 +4,8 @@ import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../../ass
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
+import { GraphicsRendererStatus } from '../../../graphics/graphicsRenderer.ts';
+import { GraphicsMaskSupportsAntialias, GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from '../../components/settings/settingsInputs.tsx';
@@ -50,6 +51,8 @@ function EffectsSettings(): ReactElement {
 function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
+		stencil: 'Stencil (experimental)',
+		directShader: 'Direct Pandora shader (experimental)',
 		pixi: 'Pixi.js',
 		customShader: 'Custom Pandora shader (recommended for less clipping)',
 		disabled: 'Ignore masks (recommended for avoiding lag)',
@@ -67,11 +70,35 @@ function QualitySettings(): ReactElement {
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
 	const upscalingDriver = useGraphicsSettingDriver('upscaling');
 	const currentGraphicsSettings = useGraphicsSettings();
+	const maskSupportsAntialias = GraphicsMaskSupportsAntialias(currentGraphicsSettings.alphamaskEngine);
+	const rendererStatus = useObservable(GraphicsRendererStatus);
 
 	return (
 		<fieldset>
 			<legend>Quality</legend>
 			<Column gap='large'>
+				<Column gap='none'>
+					<SelectSettingInput<GraphicsSettings['renderer']>
+						driver={ useGraphicsSettingDriver('renderer') }
+						label={ (
+							<>
+								Graphics renderer
+								<span className='warning-box inline slim' title='Changing this setting will reload the page'>↺</span>
+								<ContextHelpButton>
+									<p>WebGL is the default renderer. WebGPU is experimental and may change rendering or performance.</p>
+									<p>Changing this setting reloads the page. If WebGPU cannot start in your browser, Pandora uses WebGL.</p>
+								</ContextHelpButton>
+							</>
+						) }
+						stringify={ { webgl: 'WebGL (default)', webgpu: 'WebGPU (experimental)' } }
+						schema={ GraphicsSettingsSchema.shape.renderer }
+					/>
+					{ rendererStatus?.active === null ? (
+						<span className='warning-box slim'>A graphics view could not start.</span>
+					) : currentGraphicsSettings.renderer === 'webgpu' && rendererStatus?.webgpuFallback ? (
+						<span className='warning-box slim'>WebGPU could not start for a graphics view. WebGL is being used instead.</span>
+					) : null }
+				</Column>
 				<SelectSettingInput<GraphicsSettings['textureResolution']>
 					driver={ useGraphicsSettingDriver('textureResolution') }
 					label='Texture resolution'
@@ -104,9 +131,9 @@ function QualitySettings(): ReactElement {
 				<Column gap='none'>
 					<ToggleSettingInput
 						driver={ useGraphicsSettingDriver('antialias') }
-						disabled={ currentGraphicsSettings.alphamaskEngine !== 'disabled' }
+						disabled={ !maskSupportsAntialias }
 						label={
-							currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
+							!maskSupportsAntialias ? (
 								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
 							) : (
 								<>
@@ -119,8 +146,8 @@ function QualitySettings(): ReactElement {
 						}
 					/>
 					{
-						currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-							<span>Unavailable as "Alphamasking engine" is not set to "Ignore masks"</span>
+						!maskSupportsAntialias ? (
+							<span>Available with "Ignore masks", experimental stencil or direct shader masking</span>
 						) : null
 					}
 				</Column>
@@ -142,7 +169,8 @@ function QualitySettings(): ReactElement {
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
 									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
-									Our current implementation of alphamasking is also not compatible with Antialiasing.
+									The older masking engines are not compatible with Antialiasing. The experimental stencil and direct shader engines allow it.
+									Mask cutouts may still have hard edges.
 								</p>
 
 								<p>
@@ -156,7 +184,7 @@ function QualitySettings(): ReactElement {
 								</p>
 							</ContextHelpButton>
 							<br />
-							<strong>The current implementation is known to cause lag on most devices</strong>
+							<strong>{ currentGraphicsSettings.alphamaskEngine === 'stencil' || currentGraphicsSettings.alphamaskEngine === 'directShader' ? 'Experimental: clipping and performance are still being evaluated' : 'The current implementation is known to cause lag on most devices' }</strong>
 						</>
 					}
 					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }

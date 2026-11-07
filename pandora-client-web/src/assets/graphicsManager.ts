@@ -12,7 +12,7 @@ import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
-import { GetGraphicsEffectiveAntialias, GraphicsSettingsStorage } from '../graphics/graphicsSettings.tsx';
+import { GetGraphicsEffectiveAntialias, GetGraphicsRendererPreference, GraphicsSettingsStorage } from '../graphics/graphicsSettings.tsx';
 import { Observable, useObservable } from '../observable.ts';
 
 export interface IGraphicsLoaderStats {
@@ -58,7 +58,7 @@ export interface IGraphicsLoader extends ITypedEventEmitter<IGraphicsLoaderEvent
 	getDebugStats(): IGraphicsLoaderStats;
 }
 
-class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
+export class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
 	private readonly _loader: IGraphicsLoader;
 	private readonly _acceptedFormats: readonly string[];
 	private readonly _newFormat: string;
@@ -77,6 +77,9 @@ class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoad
 	}
 
 	private _transformPath(path: string): string {
+		// Keep exact mask red/alpha values; lossy alternatives are for legacy clients only.
+		if (/_mask_v1(?:_r[0-9.]+)?\.png$/.test(path))
+			return path;
 		for (const format of this._acceptedFormats) {
 			if (path.endsWith(format)) {
 				return path.slice(0, -format.length) + this._suffix + '.' + this._newFormat;
@@ -218,13 +221,14 @@ GraphicsSettingsStorage.subscribe(() => {
 	setTimeout(() => {
 		GraphicsManagerInstance.value?.loader.gc();
 
-		// Check if effective antialias changed and reload the page
-		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias()) {
+		// Renderer and antialias are initialized once; apply either change by reloading.
+		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias() || LOAD_TIME_RENDERER !== GetGraphicsRendererPreference()) {
 			globalThis.location.reload();
 		}
 	}, 500);
 });
 const LOAD_TIME_EFFECTIVE_ANTIALIAS = GetGraphicsEffectiveAntialias();
+const LOAD_TIME_RENDERER = GetGraphicsRendererPreference();
 
 export function useGraphicsUrl(path?: string): string | undefined {
 	const graphicsManger = useObservable(GraphicsManagerInstance);

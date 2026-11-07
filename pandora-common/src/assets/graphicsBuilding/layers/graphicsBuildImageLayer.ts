@@ -341,7 +341,7 @@ async function LoadAssetImageLayerSingle(
 		points: layer.points,
 		pointType: layer.pointType?.slice(),
 		pointFilterMask: layerPointFilterMask,
-		image: LoadLayerImageSetting(imageSetting, context, normalizedImageTrimArea),
+		image: LoadLayerImageSetting(imageSetting, context, normalizedImageTrimArea, layer.type === 'alphaImageMesh'),
 	};
 
 	// Some properties only exist for mesh layer

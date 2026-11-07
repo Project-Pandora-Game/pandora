@@ -58,7 +58,7 @@ export interface IGraphicsLoader extends ITypedEventEmitter<IGraphicsLoaderEvent
 	getDebugStats(): IGraphicsLoaderStats;
 }
 
-class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
+export class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
 	private readonly _loader: IGraphicsLoader;
 	private readonly _acceptedFormats: readonly string[];
 	private readonly _newFormat: string;
@@ -77,6 +77,9 @@ class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoad
 	}
 
 	private _transformPath(path: string): string {
+		// Keep exact mask red/alpha values; lossy alternatives are for legacy clients only.
+		if (/_mask_v1(?:_r[0-9.]+)?\.png$/.test(path))
+			return path;
 		for (const format of this._acceptedFormats) {
 			if (path.endsWith(format)) {
 				return path.slice(0, -format.length) + this._suffix + '.' + this._newFormat;

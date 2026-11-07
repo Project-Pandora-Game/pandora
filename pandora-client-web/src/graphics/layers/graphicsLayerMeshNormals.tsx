@@ -4,6 +4,7 @@ import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, type RefAttributes } from 'react';
 import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshProps, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
+import { CreateGraphicsSkinningShader, UpdateGraphicsSkinningShaderPalette, type GraphicsBonePalette } from '../graphicsBonePalette.ts';
 import type { LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
 import { DEFAULT_NORMAL_TEXTURE, GetNormalMeshDebugNormalsGlProgram, GetNormalMeshGlProgram } from './graphicsLayerMeshNormalsShader.ts';
 
@@ -16,6 +17,7 @@ export interface GraphicsLayerMeshNormalsProps extends RefAttributes<PIXI.Mesh<P
 	normalMapTexture: PIXI.Texture;
 	normalMapData: LayerNormalData;
 	state: PIXI.State;
+	bonePalette?: GraphicsBonePalette;
 	color: number;
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
@@ -31,16 +33,22 @@ export function GraphicsLayerMeshNormals({
 	state,
 	color,
 	debugConfig,
+	bonePalette,
 	...props
 }: GraphicsLayerMeshNormalsProps): ReactElement {
 
 	const geometry = useCallback<PixiCustomMeshGeometryCreator<PIXI.Geometry>>((existingGeometry) => {
 		if (existingGeometry) {
-			existingGeometry.getBuffer('aPosition').data = vertices.vertices;
-			existingGeometry.getBuffer('aUV').data = uvs;
-			existingGeometry.getBuffer('aBoneIndices').data = vertices.vertexSkinningBoneIndices;
-			existingGeometry.getBuffer('aBoneWeights').data = vertices.vertexSkinningBoneWeights;
-			existingGeometry.indexBuffer.data = triangles;
+			if (existingGeometry.getBuffer('aPosition').data !== vertices.vertices)
+				existingGeometry.getBuffer('aPosition').data = vertices.vertices;
+			if (existingGeometry.getBuffer('aUV').data !== uvs)
+				existingGeometry.getBuffer('aUV').data = uvs;
+			if (existingGeometry.getBuffer('aBoneIndices').data !== vertices.vertexSkinningBoneIndices)
+				existingGeometry.getBuffer('aBoneIndices').data = vertices.vertexSkinningBoneIndices;
+			if (existingGeometry.getBuffer('aBoneWeights').data !== vertices.vertexSkinningBoneWeights)
+				existingGeometry.getBuffer('aBoneWeights').data = vertices.vertexSkinningBoneWeights;
+			if (existingGeometry.indexBuffer.data !== triangles)
+				existingGeometry.indexBuffer.data = triangles;
 			return existingGeometry;
 		} else {
 			const positionBuffer = new PIXI.Buffer({
@@ -136,7 +144,7 @@ export function GraphicsLayerMeshNormals({
 				existingShader.resources.uSampler = texture.source.style;
 				existingShader.resources.uNormalMap = normalMap.source;
 				existingShader.resources.uNormalSampler = normalMap.source.style;
-				existingShader.resources.skinningUniforms.uniforms.uBoneQuat = vertices.boneTransforms;
+				UpdateGraphicsSkinningShaderPalette(existingShader, vertices.boneTransforms, bonePalette);
 				existingShader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
 				if (!debugConfig?.displayNormalMap) {
 					PIXI.color32BitToUniform(colorAlpha, existingShader.resources.textureUniforms.uniforms.uBaseColor as Float32Array, 0);
@@ -150,35 +158,28 @@ export function GraphicsLayerMeshNormals({
 				if (debugConfig?.displayNormalMap) {
 					const uBaseColor = new Float32Array([1, 1, 1, 1]);
 					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
-					return new PIXI.Shader({
+					return CreateGraphicsSkinningShader({
 						glProgram: program,
 						resources: {
 							uTexture: texture.source,
 							uSampler: texture.source.style,
 							uNormalMap: normalMap.source,
 							uNormalSampler: normalMap.source.style,
-							skinningUniforms: new PIXI.UniformGroup({
-								uBoneQuat: { type: 'vec4<f32>', size: 2 * MAX_BONE_COUNT, value: vertices.boneTransforms },
-							}),
 							textureUniforms: new PIXI.UniformGroup({
 								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
 							}),
 						},
-					});
+					}, vertices.boneTransforms, bonePalette);
 				} else {
 					const uBaseColor = new Float32Array([1, 1, 1, 1]);
 					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
-					return new PIXI.Shader({
+					return CreateGraphicsSkinningShader({
 						glProgram: program,
 						resources: {
 							uTexture: texture.source,
 							uSampler: texture.source.style,
 							uNormalMap: normalMap.source,
 							uNormalSampler: normalMap.source.style,
-							skinningUniforms: new PIXI.UniformGroup({
-								// The type actually is mat2x4<f32>, but pixi doesn't support it properly
-								uBoneQuat: { type: 'vec4<f32>', size: 2 * MAX_BONE_COUNT, value: vertices.boneTransforms },
-							}),
 							textureUniforms: new PIXI.UniformGroup({
 								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
 								uBaseColor: { value: uBaseColor, type: 'vec4<f32>' },
@@ -189,11 +190,11 @@ export function GraphicsLayerMeshNormals({
 								uRoughness: { type: 'f32', value: roughness },
 							}),
 						},
-					});
+					}, vertices.boneTransforms, bonePalette);
 				}
 			}
 		};
-	}, [texture, normalMapTexture, normalMapData, color, debugConfig, vertices]);
+	}, [texture, normalMapTexture, normalMapData, color, debugConfig, vertices, bonePalette]);
 
 	return (
 		<PixiCustomMesh

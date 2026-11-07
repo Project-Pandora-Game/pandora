@@ -34,7 +34,9 @@ const SHADER_NORMALS_BIT_GL: PIXI.HighShaderBit = {
 	vertex: {
 		header: /* glsl */`
 uniform mat3 uTextureMatrix;
-uniform vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+layout(std140) uniform skinningUniforms {
+	vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+};
 in uvec4 aBoneIndices; // Indices of bones, in uBoneQuat
 in vec4 aBoneWeights; // Weights of bones, in uBoneQuat
 out mat3 vTBN;

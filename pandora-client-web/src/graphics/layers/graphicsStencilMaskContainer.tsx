@@ -5,16 +5,18 @@ import { Container } from '../baseComponents/container.ts';
 import type { PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { GraphicsRasterStencilMask } from '../graphicsStencilMask.ts';
 import { GraphicsMaskScopeContext } from '../graphicsMaskScope.tsx';
+import type { MaskRasterFormat } from '../graphicsMaskTexture.ts';
 
 export interface GraphicsStencilMaskContainerProps extends ChildrenProps {
 	app: Application;
 	texture: Texture;
 	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
 	rasterScope?: object;
+	rasterFormat?: MaskRasterFormat;
 }
 
 /** Retain GPU resources across pose changes; only their input buffers change. */
-export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children, rasterScope }: GraphicsStencilMaskContainerProps): ReactElement {
+export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children, rasterScope, rasterFormat }: GraphicsStencilMaskContainerProps): ReactElement {
 	const contextScope = useContext(GraphicsMaskScopeContext);
 	const scope = rasterScope ?? contextScope;
 	const [target, setTarget] = useState<PixiContainer | null>(null);
@@ -31,7 +33,7 @@ export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children,
 		const geometry = new MeshGeometry({ positions: initial.maskMesh.vertices, uvs: initial.maskMesh.uvs, indices: initial.maskMesh.indices });
 		geometry.batchMode = 'no-batch';
 		geometry.getBuffer('aPosition').static = false;
-		const raster = new GraphicsRasterStencilMask(app, initial.texture, geometry, scope);
+		const raster = new GraphicsRasterStencilMask(app, initial.texture, geometry, scope, rasterFormat);
 		resource.current = { geometry, raster };
 		host.measurable = false;
 		host.addChild(raster.effect.root);
@@ -43,7 +45,7 @@ export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children,
 			raster.destroy();
 			geometry.destroy();
 		};
-	}, [target, host, active, app, scope]);
+	}, [target, host, active, app, scope, rasterFormat]);
 
 	useLayoutEffect(() => {
 		const current = resource.current;

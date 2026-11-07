@@ -6,6 +6,9 @@ import {
 import { RasterMaskGeometryState, type RasterMaskBounds } from './graphicsMaskGeometry.ts';
 import { GraphicsMaskRenderFrame } from './graphicsMaskRenderFrame.ts';
 import { ExactMaskRasterCache, type ExactMaskRasterRequest, type ExactMaskRasterSnapshot } from './graphicsExactMaskRasterCache.ts';
+import { GraphicsMaskPackingShader, type MaskRasterFormat } from './graphicsMaskTexture.ts';
+
+export type { MaskRasterFormat } from './graphicsMaskTexture.ts';
 
 // Legacy texture sampling clamps at the original canvas edges. When coverage
 // touches an outer edge, sample across the viewport rather than silently stop
@@ -58,7 +61,8 @@ export class GraphicsStencilMask implements Effect {
 	});
 	private readonly _textureUniforms = new UniformGroup({ uTextureMatrix: { type: 'mat3x3<f32>', value: new Matrix() } });
 
-	constructor(texture: Texture, geometry: MeshGeometry, raster: boolean = false) {
+	constructor(texture: Texture, geometry: MeshGeometry, raster: boolean = false, format: MaskRasterFormat = 'rgba8unorm') {
+		const packed = format === 'rg8unorm';
 		const state = State.for2d();
 		state.blend = false;
 		const fillGeometry = new MeshGeometry({
@@ -80,15 +84,15 @@ export class GraphicsStencilMask implements Effect {
 		});
 		const shader = new Shader({
 			gpuProgram: compileHighShaderGpuProgram({
-				name: 'pandora-stencil-cut', bits: [
+				name: packed ? 'pandora-stencil-cut-rg8' : 'pandora-stencil-cut', bits: [
 					localUniformBit, textureBit, roundPixelsBit, ...(raster ? [RASTER_EXTEND] : []),
-					{ name: 'pandora-cut', fragment: { end: 'if (!(outColor.a > 0.5 && outColor.r < 0.5)) { discard; }' } },
+					{ name: packed ? 'pandora-cut-rg8' : 'pandora-cut', fragment: { end: `if (!(outColor.${packed ? 'g' : 'a'} > 0.5 && outColor.r < 0.5)) { discard; }` } },
 				],
 			}),
 			glProgram: compileHighShaderGlProgram({
-				name: 'pandora-stencil-cut', bits: [
+				name: packed ? 'pandora-stencil-cut-rg8' : 'pandora-stencil-cut', bits: [
 					localUniformBitGl, textureBitGl, roundPixelsBitGl, ...(raster ? [RASTER_EXTEND_GL] : []),
-					{ name: 'pandora-cut', fragment: { end: 'if (!(outColor.a > 0.5 && outColor.r < 0.5)) discard;' } },
+					{ name: packed ? 'pandora-cut-rg8' : 'pandora-cut', fragment: { end: `if (!(outColor.${packed ? 'g' : 'a'} > 0.5 && outColor.r < 0.5)) discard;` } },
 				],
 			}),
 			resources: {
@@ -254,26 +258,29 @@ class MaskRasterQueue {
 	}
 }
 const maskRasterQueues = new WeakMap<MaskRenderer, MaskRasterQueue>();
-const maskRasterScopes = new WeakMap<MaskRenderer, WeakMap<object, MaskRasterCache>>();
+const maskRasterScopes = new WeakMap<MaskRenderer, WeakMap<object, Map<MaskRasterFormat, MaskRasterCache>>>();
 
 /** A shared raster owns its source geometry; clothing owners can safely disappear independently. */
 class MaskRasterResource {
-	public readonly texture = RenderTexture.create({ width: 1500, height: 1500 });
+	public readonly texture: RenderTexture;
 	private readonly _geometry: MeshGeometry;
-	private readonly _source: Mesh;
+	private readonly _source: Mesh<MeshGeometry, Shader>;
 	private readonly _state = new RasterMaskGeometryState();
 	private readonly _renderer: MaskRenderer;
+	private readonly _packingShader: GraphicsMaskPackingShader | undefined;
 
 	public get bounds(): Readonly<RasterMaskBounds> {
 		return this._state.bounds;
 	}
 
-	constructor(renderer: MaskRenderer, snapshot: ExactMaskRasterSnapshot<Texture>) {
+	constructor(renderer: MaskRenderer, snapshot: ExactMaskRasterSnapshot<Texture>, format: MaskRasterFormat) {
 		this._renderer = renderer;
+		this.texture = RenderTexture.create({ width: 1500, height: 1500, format });
 		this._geometry = new MeshGeometry({ positions: snapshot.positions, uvs: snapshot.uvs, indices: snapshot.indices });
 		this._geometry.batchMode = 'no-batch';
 		this._geometry.getBuffer('aPosition').static = false;
-		this._source = new Mesh({ geometry: this._geometry, texture: snapshot.texture });
+		this._packingShader = format === 'rg8unorm' ? new GraphicsMaskPackingShader(snapshot.texture) : undefined;
+		this._source = new Mesh({ geometry: this._geometry, texture: snapshot.texture, shader: this._packingShader });
 		this._source.position.set(250, 0);
 		try {
 			this.update(snapshot);
@@ -289,6 +296,7 @@ class MaskRasterResource {
 		if (geometry.uvs !== snapshot.uvs) geometry.uvs = snapshot.uvs;
 		if (geometry.indices !== snapshot.indices) geometry.indices = snapshot.indices;
 		this._source.texture = snapshot.texture;
+		this._packingShader?.updateTexture(snapshot.texture);
 		this._state.update(snapshot.positions, snapshot.uvs, snapshot.indices);
 		// Keep the original texture size/projection for identical threshold edges.
 		// Scissor only the union of current and previously drawn geometry bounds.
@@ -316,6 +324,7 @@ class MaskRasterResource {
 
 	public destroy(): void {
 		this._source.destroy({ texture: false, textureSource: false });
+		this._packingShader?.destroy();
 		this._geometry.destroy();
 		this.texture.destroy(true);
 	}
@@ -342,7 +351,7 @@ export class GraphicsRasterStencilMask {
 		this._queue.enqueue(this);
 	};
 
-	constructor(app: Application, texture: Texture, geometry: MeshGeometry, scope: object = {}) {
+	constructor(app: Application, texture: Texture, geometry: MeshGeometry, scope: object = {}, format: MaskRasterFormat = 'rg8unorm') {
 		const renderer = app.renderer;
 		if (!('gl' in renderer) && !('gpu' in renderer))
 			throw new Error('Stencil masking requires WebGL or WebGPU');
@@ -358,20 +367,25 @@ export class GraphicsRasterStencilMask {
 			scopes = new WeakMap();
 			maskRasterScopes.set(renderer, scopes);
 		}
-		let cache = scopes.get(scope);
+		let formats = scopes.get(scope);
+		if (!formats) {
+			formats = new Map();
+			scopes.set(scope, formats);
+		}
+		let cache = formats.get(format);
 		if (!cache) {
 			cache = new ExactMaskRasterCache({
-				create: (snapshot) => new MaskRasterResource(renderer, snapshot),
+				create: (snapshot) => new MaskRasterResource(renderer, snapshot, format),
 				update: (resource, snapshot) => resource.update(snapshot),
 				destroy: (resource) => resource.destroy(),
 			});
-			scopes.set(scope, cache);
+			formats.set(format, cache);
 		}
 		this.cache = cache;
 		this._inputTexture = texture;
 		this._inputGeometry = geometry;
 		this._listen(texture);
-		this.effect = new GraphicsStencilMask(Texture.EMPTY, this._geometry, true);
+		this.effect = new GraphicsStencilMask(Texture.EMPTY, this._geometry, true, format);
 		this._queue.enqueue(this);
 	}
 

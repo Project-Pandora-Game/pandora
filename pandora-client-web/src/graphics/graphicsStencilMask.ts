@@ -49,6 +49,7 @@ if (rasterUniforms.uMaskFullscreen > 0.5) {
 /** Experimental hard-cut mask. The PNG is sampled; transparent/white pixels never cut a triangle wholesale. */
 export class GraphicsStencilMask implements Effect {
 	public readonly pipe = 'pandoraStencilMask';
+	public readonly raster: boolean;
 	public readonly priority = 0;
 	public readonly root = new Container();
 	public readonly keep: StencilMask;
@@ -56,18 +57,20 @@ export class GraphicsStencilMask implements Effect {
 	private readonly _fill: Mesh<MeshGeometry, Shader>;
 	private readonly _cutShader: Shader;
 	private readonly _rasterUniforms = new UniformGroup({
-		uMaskRect: { type: 'vec4<f32>', value: new Float32Array(4) },
+		uMaskRect: { type: 'vec4<f32>', value: new Float32Array([-250, 0, 1500, 1500]) },
 		uMaskFullscreen: { type: 'f32', value: 0 },
 	});
 	private readonly _textureUniforms = new UniformGroup({ uTextureMatrix: { type: 'mat3x3<f32>', value: new Matrix() } });
 
 	constructor(texture: Texture, geometry: MeshGeometry, raster: boolean = false, format: MaskRasterFormat = 'rgba8unorm') {
+		this.raster = raster;
+		this._rasterUniforms.uniforms.uMaskFullscreen = raster ? 1 : 0;
 		const packed = format === 'rg8unorm';
 		const state = State.for2d();
 		state.blend = false;
 		const fillGeometry = new MeshGeometry({
 			positions: new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]),
-			uvs: new Float32Array(8),
+			uvs: new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]),
 			indices: new Uint32Array([0, 1, 2, 0, 2, 3]),
 		});
 		fillGeometry.batchMode = 'no-batch';
@@ -102,6 +105,29 @@ export class GraphicsStencilMask implements Effect {
 				...(raster ? { rasterUniforms: this._rasterUniforms } : {}),
 			},
 		});
+		if (raster) {
+			// Admit the complement directly: one masked draw on push and one on
+			// pop, preserving the normal stencil stack for overlapping/nested masks.
+			this._fill.shader?.destroy();
+			this._fill.shader = new Shader({
+				gpuProgram: compileHighShaderGpuProgram({
+					name: packed ? 'pandora-stencil-keep-rg8' : 'pandora-stencil-keep', bits: [
+						localUniformBit, textureBit, roundPixelsBit, RASTER_EXTEND,
+						{ name: 'pandora-keep', fragment: { end: `if (outColor.${packed ? 'g' : 'a'} > 0.5 && outColor.r < 0.5) { discard; }` } },
+					],
+				}),
+				glProgram: compileHighShaderGlProgram({
+					name: packed ? 'pandora-stencil-keep-rg8' : 'pandora-stencil-keep', bits: [
+						localUniformBitGl, textureBitGl, roundPixelsBitGl, RASTER_EXTEND_GL,
+						{ name: 'pandora-keep', fragment: { end: `if (outColor.${packed ? 'g' : 'a'} > 0.5 && outColor.r < 0.5) discard;` } },
+					],
+				}),
+				resources: {
+					uTexture: texture.source, uSampler: texture.source.style,
+					textureUniforms: this._textureUniforms, rasterUniforms: this._rasterUniforms,
+				},
+			});
+		}
 		this._cutShader = shader;
 		geometry.batchMode = 'no-batch';
 		this.cut = new Mesh({ geometry, shader, texture, state });
@@ -119,6 +145,11 @@ export class GraphicsStencilMask implements Effect {
 		this.cut.texture = texture;
 		this._cutShader.resources.uTexture = texture.source;
 		this._cutShader.resources.uSampler = texture.source.style;
+		if (this.raster) {
+			this._fill.texture = texture;
+			this._fill.shader!.resources.uTexture = texture.source;
+			this._fill.shader!.resources.uSampler = texture.source.style;
+		}
 		const uniforms = this._textureUniforms;
 		uniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
 		uniforms.update();
@@ -126,7 +157,7 @@ export class GraphicsStencilMask implements Effect {
 
 	public updateRasterBounds(bounds: Readonly<RasterMaskBounds>, coverage: Readonly<RasterMaskBounds> = bounds): void {
 		this._rasterUniforms.uniforms.uMaskRect.set([bounds.x - 250, bounds.y, bounds.width, bounds.height]);
-		this._rasterUniforms.uniforms.uMaskFullscreen = coverage.x === 0 || coverage.y === 0 ||
+		this._rasterUniforms.uniforms.uMaskFullscreen = this.raster || coverage.x === 0 || coverage.y === 0 ||
 			coverage.x + coverage.width === 1500 || coverage.y + coverage.height === 1500 ? 1 : 0;
 		this._rasterUniforms.update();
 	}
@@ -141,9 +172,9 @@ export class GraphicsStencilMask implements Effect {
 }
 
 /**
- * Use Pixi's normal stencil stack for nesting: admit the parent region, then
- * subtract the PNG's black texels. Pop only decrements admitted pixels. This
- * avoids the incorrect intersection of nested inverse stencil masks.
+ * Raster masks admit the complement in Pixi's normal stencil stack. Direct
+ * geometry masks admit the parent region, then subtract the PNG's black texels.
+ * Pop only decrements admitted pixels, preserving nested and overlapping cuts.
  * Geometry belongs to the caller; no color render textures are allocated here.
  */
 class PandoraStencilMaskPipe implements InstructionPipe<Instruction> {
@@ -159,6 +190,8 @@ class PandoraStencilMaskPipe implements InstructionPipe<Instruction> {
 			throw new Error('Unexpected stencil effect');
 		const renderer = this._renderer;
 		renderer.renderPipes.stencilMask.push(effect.keep, target, instructions);
+		if (effect.raster)
+			return;
 		instructions.add({ renderPipeId: effect.pipe, action: 'cutBegin', canBundle: false });
 		effect.root.includeInBuild = true;
 		effect.cut.includeInBuild = true;

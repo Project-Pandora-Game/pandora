@@ -10,11 +10,16 @@ import type { SettingDriver } from '../ui/components/settings/settingsInputs.tsx
 export const GraphicsUpscalingSettingSchema = z.enum(['smooth', 'crisp-edges', 'pixelated']);
 export type GraphicsUpscalingSetting = z.infer<typeof GraphicsUpscalingSettingSchema>;
 
+export const GraphicsRendererPreferenceSchema = z.enum(['webgl', 'webgpu']);
+export type GraphicsRendererPreference = z.infer<typeof GraphicsRendererPreferenceSchema>;
+
 export const GraphicsSettingsSchema = z.object({
 	// Effects
 	effectBlinking: z.boolean(),
 	smoothMovement: z.enum(['auto', 'enabled', 'disabled']),
 	// Quality
+	/** Rendering backend. Requires page reload; WebGPU remains opt-in. */
+	renderer: GraphicsRendererPreferenceSchema,
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	renderResolution: z.number().int().min(0).max(100),
 	upscaling: GraphicsUpscalingSettingSchema,
@@ -30,6 +35,7 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	effectBlinking: true,
 	smoothMovement: 'auto',
 	// Quality
+	renderer: 'webgl',
 	textureResolution: 'auto',
 	renderResolution: 100,
 	upscaling: 'smooth',
@@ -52,6 +58,10 @@ export function SetGraphicsSettings(changes: Partial<GraphicsSettings>): void {
 		...GraphicsSettingsStorage.value,
 		...changes,
 	};
+}
+
+export function GetGraphicsRendererPreference(): GraphicsRendererPreference {
+	return GraphicsSettingsStorage.value.renderer ?? GRAPHICS_SETTINGS_DEFAULT.renderer;
 }
 
 export function GetGraphicsEffectiveAntialias(): boolean {

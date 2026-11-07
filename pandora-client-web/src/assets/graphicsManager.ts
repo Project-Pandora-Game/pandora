@@ -12,7 +12,7 @@ import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import * as z from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
-import { GetGraphicsEffectiveAntialias, GraphicsSettingsStorage } from '../graphics/graphicsSettings.tsx';
+import { GetGraphicsEffectiveAntialias, GetGraphicsRendererPreference, GraphicsSettingsStorage } from '../graphics/graphicsSettings.tsx';
 import { Observable, useObservable } from '../observable.ts';
 
 export interface IGraphicsLoaderStats {
@@ -221,13 +221,14 @@ GraphicsSettingsStorage.subscribe(() => {
 	setTimeout(() => {
 		GraphicsManagerInstance.value?.loader.gc();
 
-		// Check if effective antialias changed and reload the page
-		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias()) {
+		// Renderer and antialias are initialized once; apply either change by reloading.
+		if (LOAD_TIME_EFFECTIVE_ANTIALIAS !== GetGraphicsEffectiveAntialias() || LOAD_TIME_RENDERER !== GetGraphicsRendererPreference()) {
 			globalThis.location.reload();
 		}
 	}, 500);
 });
 const LOAD_TIME_EFFECTIVE_ANTIALIAS = GetGraphicsEffectiveAntialias();
+const LOAD_TIME_RENDERER = GetGraphicsRendererPreference();
 
 export function useGraphicsUrl(path?: string): string | undefined {
 	const graphicsManger = useObservable(GraphicsManagerInstance);

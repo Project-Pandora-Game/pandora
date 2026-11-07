@@ -4,6 +4,7 @@ import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../../ass
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { GraphicsRendererStatus } from '../../../graphics/graphicsRenderer.ts';
 import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -68,11 +69,34 @@ function QualitySettings(): ReactElement {
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
 	const upscalingDriver = useGraphicsSettingDriver('upscaling');
 	const currentGraphicsSettings = useGraphicsSettings();
+	const rendererStatus = useObservable(GraphicsRendererStatus);
 
 	return (
 		<fieldset>
 			<legend>Quality</legend>
 			<Column gap='large'>
+				<Column gap='none'>
+					<SelectSettingInput<GraphicsSettings['renderer']>
+						driver={ useGraphicsSettingDriver('renderer') }
+						label={ (
+							<>
+								Graphics renderer
+								<span className='warning-box inline slim' title='Changing this setting will reload the page'>↺</span>
+								<ContextHelpButton>
+									<p>WebGL is the default renderer. WebGPU is experimental and may change rendering or performance.</p>
+									<p>Changing this setting reloads the page. If WebGPU cannot start in your browser, Pandora uses WebGL.</p>
+								</ContextHelpButton>
+							</>
+						) }
+						stringify={ { webgl: 'WebGL (default)', webgpu: 'WebGPU (experimental)' } }
+						schema={ GraphicsSettingsSchema.shape.renderer }
+					/>
+					{ rendererStatus?.active === null ? (
+						<span className='warning-box slim'>A graphics view could not start.</span>
+					) : currentGraphicsSettings.renderer === 'webgpu' && rendererStatus?.webgpuFallback ? (
+						<span className='warning-box slim'>WebGPU could not start for a graphics view. WebGL is being used instead.</span>
+					) : null }
+				</Column>
 				<SelectSettingInput<GraphicsSettings['textureResolution']>
 					driver={ useGraphicsSettingDriver('textureResolution') }
 					label='Texture resolution'

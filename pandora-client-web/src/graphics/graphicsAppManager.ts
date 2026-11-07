@@ -3,7 +3,8 @@ import { Assert, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
 import { DEVELOPMENT } from '../config/Environment.ts';
-import { GetGraphicsEffectiveAntialias } from './graphicsSettings.tsx';
+import { CreateGraphicsApplication } from './graphicsRenderer.ts';
+import { GetGraphicsEffectiveAntialias, GetGraphicsRendererPreference } from './graphicsSettings.tsx';
 import { ConfigurePixiSettings } from './pixiSettings.ts';
 
 ConfigurePixiSettings();
@@ -11,9 +12,11 @@ ConfigurePixiSettings();
 const SHARED_APP_MAX_COUNT = 2;
 
 export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
+const RENDERER_PREFERENCE_AT_LOAD = GetGraphicsRendererPreference();
 
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: DEFAULT_BACKGROUND_COLOR,
+	preference: RENDERER_PREFERENCE_AT_LOAD,
 	resolution: 1,
 	autoDensity: true,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
@@ -23,13 +26,11 @@ export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 };
 
 export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {
-	const app = new Application();
-	await app.init({
+	return CreateGraphicsApplication({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoStart: false,
 		multiView,
-	});
-	return app;
+	}, RENDERER_PREFERENCE_AT_LOAD);
 }
 
 function DestroyApplication(app: Application): void {

@@ -28,7 +28,7 @@
 	},
 	"dependencies": {
 		"@hcaptcha/react-hcaptcha": "2.2.0",
-		"bowser": "2.14.1",
+		"bowser": "2.15.0",
 		"classnames": "2.5.1",
 		"client-zip": "2.5.1",
 		"color-parse": "2.2.0",

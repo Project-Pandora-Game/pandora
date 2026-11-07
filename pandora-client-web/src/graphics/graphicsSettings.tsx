@@ -24,7 +24,7 @@ export const GraphicsSettingsSchema = z.object({
 	renderResolution: z.number().int().min(0).max(100),
 	upscaling: GraphicsUpscalingSettingSchema,
 	/** Legacy alphamasking engines suppress antialias. */
-	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled', 'stencil']),
+	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled', 'stencil', 'directShader']),
 	/** Whether to tell browser we prefer antialiasing. Requires page reload. */
 	antialias: z.boolean(),
 });
@@ -69,7 +69,11 @@ export function GetGraphicsEffectiveAntialias(): boolean {
 		...GRAPHICS_SETTINGS_DEFAULT,
 		...GraphicsSettingsStorage.value,
 	});
-	return antialias && (alphamaskEngine === 'disabled' || alphamaskEngine === 'stencil');
+	return antialias && GraphicsMaskSupportsAntialias(alphamaskEngine);
+}
+
+export function GraphicsMaskSupportsAntialias(engine: GraphicsSettings['alphamaskEngine']): boolean {
+	return engine === 'disabled' || engine === 'stencil' || engine === 'directShader';
 }
 
 export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {

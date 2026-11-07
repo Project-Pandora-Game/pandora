@@ -73,7 +73,7 @@ function MaskContainer({
 	// Rendering in background needs to create tree even without presence of pixi.js application, but masks require it
 	const hasApp = usePixiAppOptional() != null;
 
-	if (alphamaskEngine === 'stencil' && hasApp)
+	if ((alphamaskEngine === 'stencil' || alphamaskEngine === 'directShader') && hasApp)
 		return <MaskContainerStencil { ...props }>{ children }</MaskContainerStencil>;
 
 	if (alphamaskEngine === 'pixi' && hasApp)
@@ -88,8 +88,9 @@ function MaskContainer({
 
 function MaskContainerStencil({ children, maskImage, maskMesh }: MaskContainerProps): ReactElement {
 	const app = usePixiApp();
+	const { alphamaskEngine } = useGraphicsSettings();
 	const texture = useTexture(maskImage, true);
-	return <GraphicsStencilMaskContainer app={ app } texture={ texture } maskMesh={ maskMesh }>{ children }</GraphicsStencilMaskContainer>;
+	return <GraphicsStencilMaskContainer app={ app } texture={ texture } maskMesh={ maskMesh } directShader={ alphamaskEngine === 'directShader' }>{ children }</GraphicsStencilMaskContainer>;
 }
 
 function MaskContainerPixi({

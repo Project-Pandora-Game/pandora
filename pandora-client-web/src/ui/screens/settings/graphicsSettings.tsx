@@ -5,7 +5,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { GraphicsRendererStatus } from '../../../graphics/graphicsRenderer.ts';
-import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
+import { GraphicsMaskSupportsAntialias, GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from '../../components/settings/settingsInputs.tsx';
@@ -52,6 +52,7 @@ function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		stencil: 'Stencil (experimental)',
+		directShader: 'Direct Pandora shader (experimental)',
 		pixi: 'Pixi.js',
 		customShader: 'Custom Pandora shader (recommended for less clipping)',
 		disabled: 'Ignore masks (recommended for avoiding lag)',
@@ -69,6 +70,7 @@ function QualitySettings(): ReactElement {
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
 	const upscalingDriver = useGraphicsSettingDriver('upscaling');
 	const currentGraphicsSettings = useGraphicsSettings();
+	const maskSupportsAntialias = GraphicsMaskSupportsAntialias(currentGraphicsSettings.alphamaskEngine);
 	const rendererStatus = useObservable(GraphicsRendererStatus);
 
 	return (
@@ -129,9 +131,9 @@ function QualitySettings(): ReactElement {
 				<Column gap='none'>
 					<ToggleSettingInput
 						driver={ useGraphicsSettingDriver('antialias') }
-						disabled={ !['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) }
+						disabled={ !maskSupportsAntialias }
 						label={
-							!['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) ? (
+							!maskSupportsAntialias ? (
 								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
 							) : (
 								<>
@@ -144,8 +146,8 @@ function QualitySettings(): ReactElement {
 						}
 					/>
 					{
-						!['disabled', 'stencil'].includes(currentGraphicsSettings.alphamaskEngine) ? (
-							<span>Available with "Ignore masks" or experimental stencil masking</span>
+						!maskSupportsAntialias ? (
+							<span>Available with "Ignore masks", experimental stencil or direct shader masking</span>
 						) : null
 					}
 				</Column>
@@ -167,7 +169,8 @@ function QualitySettings(): ReactElement {
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
 									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
-									The older masking engines are not compatible with Antialiasing. The experimental stencil engine allows it.
+									The older masking engines are not compatible with Antialiasing. The experimental stencil and direct shader engines allow it.
+									Mask cutouts may still have hard edges.
 								</p>
 
 								<p>
@@ -181,7 +184,7 @@ function QualitySettings(): ReactElement {
 								</p>
 							</ContextHelpButton>
 							<br />
-							<strong>{ currentGraphicsSettings.alphamaskEngine === 'stencil' ? 'Experimental: clipping and performance are still being evaluated' : 'The current implementation is known to cause lag on most devices' }</strong>
+							<strong>{ currentGraphicsSettings.alphamaskEngine === 'stencil' || currentGraphicsSettings.alphamaskEngine === 'directShader' ? 'Experimental: clipping and performance are still being evaluated' : 'The current implementation is known to cause lag on most devices' }</strong>
 						</>
 					}
 					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }

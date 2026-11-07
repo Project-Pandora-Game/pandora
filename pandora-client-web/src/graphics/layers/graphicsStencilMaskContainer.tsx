@@ -4,6 +4,7 @@ import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { Container } from '../baseComponents/container.ts';
 import type { PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { GraphicsRasterStencilMask } from '../graphicsStencilMask.ts';
+import { GraphicsDirectMask } from '../graphicsDirectMask.ts';
 import { GraphicsMaskScopeContext } from '../graphicsMaskScope.tsx';
 import type { MaskRasterFormat } from '../graphicsMaskTexture.ts';
 
@@ -13,10 +14,11 @@ export interface GraphicsStencilMaskContainerProps extends ChildrenProps {
 	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
 	rasterScope?: object;
 	rasterFormat?: MaskRasterFormat;
+	directShader?: boolean;
 }
 
 /** Retain GPU resources across pose changes; only their input buffers change. */
-export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children, rasterScope, rasterFormat }: GraphicsStencilMaskContainerProps): ReactElement {
+export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children, rasterScope, rasterFormat, directShader = false }: GraphicsStencilMaskContainerProps): ReactElement {
 	const contextScope = useContext(GraphicsMaskScopeContext);
 	const scope = rasterScope ?? contextScope;
 	const [target, setTarget] = useState<PixiContainer | null>(null);
@@ -37,15 +39,18 @@ export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children,
 		resource.current = { geometry, raster };
 		host.measurable = false;
 		host.addChild(raster.effect.root);
-		target.addEffect(raster.effect);
+		if (!('gl' in app.renderer) && !('gpu' in app.renderer)) throw new Error('Direct masking requires WebGL or WebGPU');
+		const effect = directShader ? new GraphicsDirectMask(app.renderer, raster, rasterFormat) : raster.effect;
+		target.addEffect(effect);
 		return () => {
 			resource.current = null;
-			target.removeEffect(raster.effect);
+			target.removeEffect(effect);
+			if (effect instanceof GraphicsDirectMask) effect.destroy();
 			host.removeChild(raster.effect.root);
 			raster.destroy();
 			geometry.destroy();
 		};
-	}, [target, host, active, app, scope, rasterFormat]);
+	}, [target, host, active, app, scope, rasterFormat, directShader]);
 
 	useLayoutEffect(() => {
 		const current = resource.current;
@@ -62,4 +67,9 @@ export function GraphicsStencilMaskContainer({ app, texture, maskMesh, children,
 	}, [texture, maskMesh]);
 
 	return <Container ref={ setTarget }><Container ref={ setHost } />{ children }</Container>;
+}
+
+/** Experimental fused binary mask, sharing the stencil mode's retained RG8 raster cache. */
+export function GraphicsDirectMaskContainer(props: Omit<GraphicsStencilMaskContainerProps, 'directShader'>): ReactElement {
+	return <GraphicsStencilMaskContainer { ...props } directShader />;
 }

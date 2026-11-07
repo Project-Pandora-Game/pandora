@@ -10,6 +10,8 @@ import { GraphicsMaskPackingShader, type MaskRasterFormat } from './graphicsMask
 
 export type { MaskRasterFormat } from './graphicsMaskTexture.ts';
 
+const stencilHelperMeshes = new WeakSet<object>();
+
 // Legacy texture sampling clamps at the original canvas edges. When coverage
 // touches an outer edge, sample across the viewport rather than silently stop
 // cutting at the canvas boundary. Invert the 2D affine projection at four vertices.
@@ -48,6 +50,10 @@ if (rasterUniforms.uMaskFullscreen > 0.5) {
 
 /** Experimental hard-cut mask. The PNG is sampled; transparent/white pixels never cut a triangle wholesale. */
 export class GraphicsStencilMask implements Effect {
+	public static isHelperMesh(mesh: object): boolean {
+		return stencilHelperMeshes.has(mesh);
+	}
+
 	public readonly pipe = 'pandoraStencilMask';
 	public readonly raster: boolean;
 	public readonly priority = 0;
@@ -131,6 +137,8 @@ export class GraphicsStencilMask implements Effect {
 		this._cutShader = shader;
 		geometry.batchMode = 'no-batch';
 		this.cut = new Mesh({ geometry, shader, texture, state });
+		stencilHelperMeshes.add(this._fill);
+		stencilHelperMeshes.add(this.cut);
 		this.root.addChild(this._fill, this.cut);
 		this.keep = new StencilMask({ mask: this._fill });
 		this.cut.includeInBuild = false;

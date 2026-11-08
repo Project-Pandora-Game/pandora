@@ -249,7 +249,7 @@ function ItemFollowDialog({ roomState, item, close, setMenu }: {
 					} }
 					radioButton
 				/>
-				<label htmlFor={ id + ':typeHand' }>Hold in hand</label>
+				<label htmlFor={ id + ':typeHand' }>Move relative to hand</label>
 			</Row>
 			{ mode === 'hand' ? (
 				<>

@@ -492,7 +492,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 			this.characters.delete(character);
 			newState = newState.withCharacter(character.id, null);
-			newState = newState.runAutomaticActions();
+
+			// Let anything that was following the leaving character (characters, carried items) stop immediately.
+			// If the result is somehow invalid, keep the unprocessed state; the next tick will retry.
+			const processedState = newState.runAutomaticActions();
+			if (processedState.isValid()) {
+				newState = processedState;
+			}
 
 			// Update the target character
 			character.setSpace(null, characterAppearance);

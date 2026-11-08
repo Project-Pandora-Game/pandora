@@ -393,18 +393,16 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 						}
 					}
 
-					// Y and elevation stay in world units; X is converted through the projection to keep the visual distance
-					position.position[1] = followTarget.position.position[1] + position.following.delta[1];
+					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
+					// Y is clamped first, because X is derived from the final Y. X is converted through the projection to keep the visual distance.
+					position.position[1] = clamp(followTarget.position.position[1] + position.following.delta[1], minY, maxY);
 					position.position[2] = followTarget.position.position[2] + position.following.delta[2];
-					position.position[0] = Math.round(ApplyRelativeLockDeltaX(
+					position.position[0] = clamp(Math.round(ApplyRelativeLockDeltaX(
 						position.following.delta[0],
 						followTarget.position.position,
 						position.position[1],
 						targetCharacterRoom,
-					));
-					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
-					position.position[0] = clamp(position.position[0], minX, maxX);
-					position.position[1] = clamp(position.position[1], minY, maxY);
+					)), minX, maxX);
 					if (!isEqual(position, character.position)) {
 						character = character.produceWithSpacePosition(position);
 					}

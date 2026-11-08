@@ -373,7 +373,7 @@ function ItemMainMenu({ roomState, item, close, setMenu }: {
 			<OpenItemStorageMenu roomState={ roomState } item={ item } close={ close } />
 			<MoveItemMenu roomState={ roomState } item={ item } close={ close } />
 			<CarryItemMenu item={ item } setMenu={ setMenu } />
-			<StopCarryingMenu roomState={ roomState } item={ item } id={ id } close={ close } />
+			{ id ?? <StopCarryingMenu roomState={ roomState } item={ item } id={ id } close={ close } /> }
 			<HideItemMenu roomState={ roomState } item={ item } close={ close } />
 			<WearItemMenu roomState={ roomState } item={ item } close={ close } />
 		</>

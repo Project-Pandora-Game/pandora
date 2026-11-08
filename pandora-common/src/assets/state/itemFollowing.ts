@@ -1,16 +1,15 @@
 import { produce, type Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
-import type { CharacterId } from '../../character/characterTypes.ts';
 import { DEG_TO_RAD, Vector2 } from '../../math/index.ts';
 import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
-import { AppearanceItemProperties } from '../appearanceValidation.ts';
 import type { RoomId } from '../appearanceTypes.ts';
-// NOTE: Adjust the import paths of the two values below, if they live elsewhere in your tree
-import { CharacterPoseTransforms } from '../graphics/index.ts';
-import { RoomProjectionResolver } from '../../math/graphics/roomProjection.ts';
-import type { Item, ItemId } from '../item/index.ts';
-import type { PersonalItemDeployment, PersonalItemDeploymentFollow, PersonalItemFollowRequest } from '../item/personal.ts';
+import { AppearanceItemProperties } from '../appearanceValidation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { CharacterPoseTransforms } from '../graphics/transform/characterPoseTransforms.ts';
+import type { AppearanceItems, Item, ItemId } from '../item/index.ts';
+import type { PersonalItemDeploymentFollow, PersonalItemFollowRequest } from '../item/personal.ts';
 import { ValidateRoomInventoryItems } from '../roomValidation.ts';
+import { GetRoomProjectionResolver } from './characterFollowOffset.ts';
 import { CalculateCharacterPoseOffsets, CHARACTER_PIVOT_BASE } from './characterPoseOffsets.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
@@ -18,17 +17,9 @@ import type { RoomPosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 import type { AssetFrameworkSpaceState } from './spaceState.ts';
 
-//#region Helpers
+type RoomProjectionResolver = ReturnType<typeof GetRoomProjectionResolver>;
 
-const projectionResolverCache = new WeakMap<object, RoomProjectionResolver>();
-function GetProjectionResolver(room: AssetFrameworkRoomState): RoomProjectionResolver {
-	let resolver = projectionResolverCache.get(room.roomBackground);
-	if (resolver === undefined) {
-		resolver = new RoomProjectionResolver(room.roomBackground);
-		projectionResolverCache.set(room.roomBackground, resolver);
-	}
-	return resolver;
-}
+//#region Helpers
 
 /** Sign that flips the front-view-normalized values when the character is turned around */
 function GetViewSign(character: AssetFrameworkCharacterState): 1 | -1 {
@@ -151,7 +142,23 @@ function GetLockAnchor(character: AssetFrameworkCharacterState, resolver: RoomPr
 	return { x, y: y - yOffsetExtra * scale, scale };
 }
 
+function IsFiniteVector(values: readonly number[]): boolean {
+	return values.every((v) => Number.isFinite(v));
+}
+
 //#endregion
+
+/**
+ * Checks whether the follow mode can be used with the asset definitions at all
+ * (e.g. hand mode needs the bones of the arm to exist).
+ */
+export function PersonalItemFollowIsSupported(request: Immutable<PersonalItemFollowRequest>, assetManager: AssetManager): boolean {
+	if (request.followType === 'hand') {
+		const bone = GetElbowBone(request.hand);
+		return assetManager.getAllBones().some((b) => b.name === bone);
+	}
+	return true;
+}
 
 /**
  * Checks whether the character can currently carry items in the specified way.
@@ -185,13 +192,14 @@ export function PersonalItemFollowToRequest(follow: Immutable<PersonalItemDeploy
  * @param follow - The follow data of the item
  * @param target - State of the character being followed
  * @param room - The room the target is in (and so the item will be)
+ * @throws If the asset definitions don't support the follow (e.g. missing bones); use `PersonalItemFollowIsSupported` to check beforehand
  */
 export function ResolvePersonalItemFollowPosition(
 	follow: Immutable<PersonalItemDeploymentFollow>,
 	target: AssetFrameworkCharacterState,
 	room: AssetFrameworkRoomState,
 ): RoomPosition {
-	const resolver = GetProjectionResolver(room);
+	const resolver = GetRoomProjectionResolver(room);
 	const sign = GetViewSign(target);
 	const targetY = target.position.position[1];
 
@@ -222,23 +230,28 @@ export function ResolvePersonalItemFollowPosition(
  * @param target - State of the character that is to be followed
  * @param room - The room the item (and the target) is in
  * @param itemPosition - Current position of the item in the room
+ * @returns The follow data, or `null` if it cannot be created (unsupported by asset definitions or degenerate geometry)
  */
 export function CreatePersonalItemFollow(
 	request: Immutable<PersonalItemFollowRequest>,
 	target: AssetFrameworkCharacterState,
 	room: AssetFrameworkRoomState,
 	itemPosition: RoomPosition,
-): PersonalItemDeploymentFollow {
-	const resolver = GetProjectionResolver(room);
+): PersonalItemDeploymentFollow | null {
+	if (!PersonalItemFollowIsSupported(request, target.assetManager))
+		return null;
+
+	const resolver = GetRoomProjectionResolver(room);
 	const sign = GetViewSign(target);
 	const targetY = target.position.position[1];
 	const [itemX, itemY, itemYOffset] = itemPosition;
 
+	let result: PersonalItemDeploymentFollow;
 	if (request.followType === 'relativeLock') {
 		const anchor = GetLockAnchor(target, resolver);
 		const [itemCanvasX, itemFloorY] = resolver.transform(itemX, itemY, 0);
 
-		return {
+		result = {
 			followType: 'relativeLock',
 			target: target.id,
 			offset: [
@@ -254,16 +267,22 @@ export function CreatePersonalItemFollow(
 		const [localX, localY] = CanvasToCharacterLocal(frame, itemCanvasX, itemFloorY - itemYOffset);
 		const [offsetX, offsetY] = PoseLocalToBoneRest(frame.evaluator, GetElbowBone(request.hand), localX, localY);
 
-		return {
+		result = {
 			followType: 'hand',
 			target: target.id,
 			hand: request.hand,
 			offset: [Math.round(offsetX), Math.round(offsetY)],
 			depth: Math.round(sign * (itemY - targetY)),
 		};
+	} else {
+		AssertNever(request);
 	}
 
-	AssertNever(request);
+	// Degenerate geometry must never end up in the state
+	if (!IsFiniteVector([...result.offset, result.depth]))
+		return null;
+
+	return result;
 }
 
 //#region Automatic processing
@@ -271,7 +290,6 @@ export function CreatePersonalItemFollow(
 type FollowedItemRef = {
 	room: RoomId;
 	item: ItemId;
-	target: CharacterId;
 };
 
 function ReplaceItemInRoom(space: AssetFrameworkSpaceState, roomId: RoomId, oldItem: Item, newItem: Item): AssetFrameworkSpaceState {
@@ -285,9 +303,48 @@ function ClearFollow(item: Item): Item {
 	if (!item.isType('personal') || item.deployment == null)
 		return item;
 
-	return item.withDeployment(produce(item.deployment, (d: PersonalItemDeployment) => {
+	return item.withDeployment(produce(item.deployment, (d) => {
 		delete d.following;
 	}));
+}
+
+/**
+ * Tries to resolve the position, returning `null` instead of throwing, so a broken follow can never break processing of the whole state.
+ * This matters, because automatic actions run when a space loads - an exception there would prevent the space from loading.
+ */
+function TryResolvePersonalItemFollowPosition(
+	follow: Immutable<PersonalItemDeploymentFollow>,
+	target: AssetFrameworkCharacterState,
+	room: AssetFrameworkRoomState,
+	cachedFrame?: CharacterFrame, // S1 optimization: accept precomputed frame to avoid reconstructing evaluator
+): RoomPosition | null {
+	try {
+		const resolver = GetRoomProjectionResolver(room);
+		const sign = GetViewSign(target);
+		const targetY = target.position.position[1];
+
+		if (follow.followType === 'relativeLock') {
+			const anchor = GetLockAnchor(target, resolver);
+
+			return CanvasPointToItemPosition(
+				resolver,
+				anchor.x + sign * follow.offset[0] * anchor.scale,
+				anchor.y + follow.offset[1] * anchor.scale,
+				targetY + sign * follow.depth,
+			);
+		} else if (follow.followType === 'hand') {
+			const frame = cachedFrame ?? GetCharacterFrame(target, resolver);
+
+			const [localX, localY] = SkinPoint(frame.evaluator, GetElbowBone(follow.hand), follow.offset[0], follow.offset[1]);
+			const [handX, handY] = CharacterLocalToCanvas(frame, localX, localY);
+
+			return CanvasPointToItemPosition(resolver, handX, handY, targetY + sign * follow.depth);
+		}
+
+		AssertNever(follow);
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -295,11 +352,28 @@ function ClearFollow(item: Item): Item {
  * Needs to run after the characters have been processed, so it sees their final positions.
  */
 export function GlobalStateAutoProcessItemFollowing(globalState: AssetFrameworkGlobalState): AssetFrameworkGlobalState {
+	// Cache room item arrays to skip full scans when no items are following
+	const roomItemCache = new WeakMap<AppearanceItems, boolean>();
 	const followed: FollowedItemRef[] = [];
+
 	for (const room of globalState.space.rooms) {
+		let hasFollowing = roomItemCache.get(room.items);
+		if (hasFollowing === undefined) {
+			hasFollowing = false;
+			for (const item of room.items) {
+				if (item.isType('personal') && item.deployment?.following != null) {
+					hasFollowing = true;
+					break;
+				}
+			}
+			roomItemCache.set(room.items, hasFollowing);
+		}
+
+		if (!hasFollowing) continue; // Skip rooms already verified as empty of following items
+
 		for (const item of room.items) {
 			if (item.isType('personal') && item.deployment?.following != null) {
-				followed.push({ room: room.id, item: item.id, target: item.deployment.following.target });
+				followed.push({ room: room.id, item: item.id });
 			}
 		}
 	}
@@ -309,6 +383,9 @@ export function GlobalStateAutoProcessItemFollowing(globalState: AssetFrameworkG
 		return globalState;
 
 	let space = globalState.space;
+
+	// Cache frame evaluator and carry-check per target + follow mode combination
+	const cache = new Map<string, { frame: CharacterFrame; canCarry: boolean; }>();
 
 	for (const ref of followed) {
 		const room = space.getRoom(ref.room);
@@ -324,15 +401,35 @@ export function GlobalStateAutoProcessItemFollowing(globalState: AssetFrameworkG
 		if (
 			target == null ||
 			targetRoom == null ||
-			!item.deployment.deployed ||
-			!CharacterCanCarryItems(target, following.followType)
+			!item.deployment.deployed
 		) {
 			space = ReplaceItemInRoom(space, room.id, item, ClearFollow(item));
 			continue;
 		}
 
-		const position = ResolvePersonalItemFollowPosition(following, target, targetRoom);
-		const updatedItem: Item = isEqual(position, item.deployment.position) ? item : item.withDeployment(produce(item.deployment, (d: PersonalItemDeployment) => {
+		const cacheKey = `${following.target}:${following.followType}`;
+		let cachedData = cache.get(cacheKey);
+		if (!cachedData) {
+			const resolver = GetRoomProjectionResolver(targetRoom);
+			const frame = GetCharacterFrame(target, resolver);
+			const canCarry = CharacterCanCarryItems(target, following.followType);
+			cachedData = { frame, canCarry };
+			cache.set(cacheKey, cachedData);
+		}
+
+		if (!cachedData.canCarry) {
+			space = ReplaceItemInRoom(space, room.id, item, ClearFollow(item));
+			continue;
+		}
+
+		// Pass precomputed frame to avoid reconstructing CharacterPoseTransforms per item
+		const position = TryResolvePersonalItemFollowPosition(following, target, targetRoom, cachedData.frame);
+		if (position == null) {
+			space = ReplaceItemInRoom(space, room.id, item, ClearFollow(item));
+			continue;
+		}
+
+		const updatedItem: Item = isEqual(position, item.deployment.position) ? item : item.withDeployment(produce(item.deployment, (d) => {
 			d.position = CloneDeepMutable(position);
 		}));
 

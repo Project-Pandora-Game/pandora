@@ -2,8 +2,8 @@ import { produce } from 'immer';
 import { isEqual } from 'lodash-es';
 import * as z from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
-import { PersonalItemFollowRequestSchema, type PersonalItemDeployment } from '../../../assets/item/personal.ts';
-import { CreatePersonalItemFollow, PersonalItemFollowToRequest } from '../../../assets/state/itemFollowing.ts';
+import { PersonalItemFollowRequestSchema } from '../../../assets/item/personal.ts';
+import { CharacterCanCarryItems, CreatePersonalItemFollow, PersonalItemFollowIsSupported, PersonalItemFollowToRequest } from '../../../assets/state/itemFollowing.ts';
 import { RoomPositionSchema } from '../../../assets/state/roomGeometry.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
 import { CloneDeepMutable } from '../../../utility/misc.ts';
@@ -91,12 +91,19 @@ export function ActionMoveItem({
 			if (!(deploymentChange.deployed ?? currentItem.deployment.deployed))
 				return processingContext.invalid();
 
+			// The asset definitions must support the mode (e.g. hand mode needs the arm bones)
+			if (!PersonalItemFollowIsSupported(followRequest, processingContext.assetManager))
+				return processingContext.invalid();
+
 			// Characters in room devices cannot carry anything
 			if (playerRestrictions.getRoomDeviceLink() != null) {
 				processingContext.addRestriction({ type: 'inRoomDevice' });
+			} else if (!CharacterCanCarryItems(playerState, followRequest.followType)) {
+				// Same rule the automatic processing uses, so a follow that would be cleared immediately is rejected instead
+				processingContext.addRestriction({ type: 'blockedHands' });
 			}
 
-			// Holding in hand requires usable hands
+			// Holding in hand also requires usable hands in the sense of character modifiers (items were checked above)
 			if (followRequest.followType === 'hand') {
 				playerRestrictions.checkUseHands(processingContext, false);
 			}
@@ -108,7 +115,7 @@ export function ActionMoveItem({
 
 			const originalDeployment = it.deployment;
 
-			let deployment = produce(originalDeployment, (d: PersonalItemDeployment) => {
+			let deployment = produce(originalDeployment, (d) => {
 				if (deploymentChange.deployed != null) {
 					d.deployed = deploymentChange.deployed;
 				}
@@ -119,7 +126,7 @@ export function ActionMoveItem({
 
 			if (followRequest === null || !deployment.deployed) {
 				// Explicitly stopping or hiding the item
-				deployment = produce(deployment, (d: PersonalItemDeployment) => {
+				deployment = produce(deployment, (d) => {
 					delete d.following;
 				});
 			} else if (followRequest !== undefined) {
@@ -128,23 +135,27 @@ export function ActionMoveItem({
 					return null;
 
 				const newFollow = CreatePersonalItemFollow(followRequest, playerState, currentRoom, deployment.position);
-				deployment = produce(deployment, (d: PersonalItemDeployment) => {
+				if (newFollow == null)
+					return null;
+
+				deployment = produce(deployment, (d) => {
 					d.following = CloneDeepMutable(newFollow);
 				});
 			} else if (deployment.following != null && !isEqual(deployment.position, originalDeployment.position)) {
 				// Item that is following was moved - adjust the offset to the character instead of snapping it back
 				const followTarget = currentState.getCharacterState(deployment.following.target);
-				const followRequestFromCurrent = PersonalItemFollowToRequest(deployment.following);
-				if (followTarget == null || currentRoom == null) {
-					deployment = produce(deployment, (d: PersonalItemDeployment) => {
-						delete d.following;
-					});
-				} else {
-					const newFollow = CreatePersonalItemFollow(followRequestFromCurrent, followTarget, currentRoom, deployment.position);
-					deployment = produce(deployment, (d: PersonalItemDeployment) => {
+				// The target must be in the same room as the item, otherwise the offset would be calculated in the wrong room
+				const newFollow = (followTarget != null && currentRoom != null && followTarget.currentRoom === currentRoom.id) ?
+					CreatePersonalItemFollow(PersonalItemFollowToRequest(deployment.following), followTarget, currentRoom, deployment.position) :
+					null;
+
+				deployment = produce(deployment, (d) => {
+					if (newFollow != null) {
 						d.following = CloneDeepMutable(newFollow);
-					});
-				}
+					} else {
+						delete d.following;
+					}
+				});
 			}
 
 			return it.withDeployment(deployment);

@@ -291,8 +291,8 @@ importers:
         specifier: 2.2.0
         version: 2.2.0
       bowser:
-        specifier: 2.14.1
-        version: 2.14.1
+        specifier: 2.15.0
+        version: 2.15.0
       classnames:
         specifier: 2.5.1
         version: 2.5.1
@@ -2588,8 +2588,8 @@ packages:
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
 
-  bowser@2.14.1:
-    resolution: {integrity: sha512-tzPjzCxygAKWFOJP011oxFHs57HzIhOEracIgAePE4pqB3LikALKnSzUyU4MGs9/iCEUuHlAJTjTc5M+u7YEGg==}
+  bowser@2.15.0:
+    resolution: {integrity: sha512-xic6KSZglg/I4ymp45fdM4GWfYpBK79Fxd/TOvJktlaPgQqqDxvmGwOPZl2V0dyeS3Lj5c180bLhXF43iyAjZQ==}
 
   boxen@5.1.2:
     resolution: {integrity: sha512-9gYgQKXx+1nP8mP7CzFyaUARhg7D3n1dF/FnErWmu9l6JvGpNUN278h0aSb+QjoiKSWG+iZ3uHrcqk0qrY9RQQ==}
@@ -6302,7 +6302,7 @@ snapshots:
       '@smithy/core': 3.36.0
       '@smithy/signature-v4': 5.7.4
       '@smithy/types': 4.19.0
-      bowser: 2.14.1
+      bowser: 2.15.0
       tslib: 2.8.1
 
   '@aws-sdk/core@3.979.1':
@@ -6313,7 +6313,7 @@ snapshots:
       '@smithy/core': 3.38.1
       '@smithy/signature-v4': 5.7.5
       '@smithy/types': 4.19.0
-      bowser: 2.14.1
+      bowser: 2.15.0
       tslib: 2.8.1
 
   '@aws-sdk/credential-provider-env@3.972.74':
@@ -8563,7 +8563,7 @@ snapshots:
 
   boolbase@1.0.0: {}
 
-  bowser@2.14.1: {}
+  bowser@2.15.0: {}
 
   boxen@5.1.2:
     dependencies:

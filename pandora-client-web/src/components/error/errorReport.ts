@@ -1,4 +1,4 @@
-import bowser from 'bowser';
+import { parse as bowserParse } from 'bowser';
 import { IsNotNullable } from 'pandora-common';
 import { isWebGLSupported, isWebGPUSupported } from 'pixi.js';
 import { ErrorInfo } from 'react';
@@ -110,7 +110,7 @@ function BuildDiagnosticsSection(): ReportSection {
 }
 
 function BuildDeviceSection(): ReportSection {
-	return { heading: 'Device details', details: JSON.stringify(bowser.parse(window.navigator.userAgent), null, 4) };
+	return { heading: 'Device details', details: JSON.stringify(bowserParse(window.navigator.userAgent), null, 4) };
 }
 
 function TruncateStack(stack: string): string {

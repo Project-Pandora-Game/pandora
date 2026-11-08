@@ -52,7 +52,9 @@ Object.defineProperty(globalThis, 'matchMedia', {
 		matches: false,
 		media: query,
 		onchange: null,
+		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		addListener: jest.fn(),
+		// eslint-disable-next-line @typescript-eslint/no-deprecated
 		removeListener: jest.fn(),
 		addEventListener: jest.fn(),
 		removeEventListener: jest.fn(),

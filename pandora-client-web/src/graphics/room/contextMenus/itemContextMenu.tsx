@@ -1,12 +1,15 @@
 import classNames from 'classnames';
 import { AppearanceAction, EvalItemPath, ItemId, type ActionTargetSelector, type AssetFrameworkRoomState, type Item, type ItemContainerPath, type RoomId } from 'pandora-common';
-import { ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import movementIcon from '../../../assets/icons/movement.svg';
+import shirtIcon from '../../../assets/icons/shirt.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { Column } from '../../../components/common/container/container.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
 import { useContextMenuPosition } from '../../../components/contextMenu/index.ts';
 import { DialogInPortal, DraggableDialogPriorityContext } from '../../../components/dialog/dialog.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
@@ -14,14 +17,17 @@ import { ResolveItemDisplayName } from '../../../components/wardrobe/itemDetail/
 import { useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { ActionProblemsContent } from '../../../components/wardrobe/wardrobeActionProblems.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
+import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { useWardrobeContainerAccessCheck } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useGameState, useGameStateOptional, useGlobalState } from '../../../services/gameLogic/gameStateHooks.ts';
+import { useGameState, useGameStateOptional, useGlobalState, useResolveCharacterName } from '../../../services/gameLogic/gameStateHooks.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { PointLike } from '../../common/point.ts';
+
+type ItemMenuType = 'main' | 'follow';
 
 function HideItemMenu({ roomState, item, close }: {
 	roomState: AssetFrameworkRoomState;
@@ -85,7 +91,8 @@ function WearItemMenu({ roomState, item, close }: {
 			onClick={ execute }
 			disabled={ processing }
 		>
-			<div className='icon'>⇪</div><span>Wear item</span>
+			<img src={ shirtIcon } />
+			<span>Wear</span>
 		</Button>
 	);
 }
@@ -129,6 +136,173 @@ function MoveItemMenu({ roomState, item, close }: {
 			<img src={ arrowAllIcon } />
 			<span>Move</span>
 		</Button>
+	);
+}
+
+function CarryItemMenu({ item, setMenu }: {
+	item: Item;
+	setMenu: (menu: ItemMenuType) => void;
+}): ReactElement | null {
+	// Only items that are displayed in the room can be carried
+	if (!item.isType('personal') || !item.deployment?.deployed)
+		return null;
+
+	return (
+		<Button
+			theme='transparent'
+			className='withIcon'
+			onClick={ () => {
+				setMenu('follow');
+			} }
+		>
+			<img src={ movementIcon } />
+			<span>Carry</span>
+		</Button>
+	);
+}
+
+function StopCarryingMenu({ roomState, item, id, close }: {
+	roomState: AssetFrameworkRoomState;
+	item: Item;
+	id: `c${number}` | null;
+	close: () => void;
+}): ReactElement | null {
+	const action = useMemo((): AppearanceAction => ({
+		type: 'moveItem',
+		target: { type: 'room', roomId: roomState.id },
+		item: { container: [], itemId: item.id },
+		personalItemDeployment: { follow: null },
+	}), [item.id, roomState.id]);
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.valid;
+	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+	const name = useResolveCharacterName(id) ?? '[unknown]';
+
+	if (!item.isType('personal') || item.deployment?.following == null)
+		return null;
+
+	return (
+		<>
+			<span className='dim'>
+				Carried by { name } ({ item.deployment.following.target })
+			</span>
+			<Button
+				theme='transparent'
+				className={ classNames(
+					'withIcon',
+					available ? null : 'text-strikethrough',
+				) }
+				onClick={ execute }
+				disabled={ processing }
+			>
+				<img src={ movementIcon } />
+				<span>Stop carrying</span>
+			</Button>
+		</>
+	);
+}
+
+function ItemFollowDialog({ roomState, item, close, setMenu }: {
+	roomState: AssetFrameworkRoomState;
+	item: Item;
+	close: () => void;
+	setMenu: (menu: ItemMenuType) => void;
+}): ReactElement {
+	const id = useId();
+	const [mode, setMode] = useState<'relativeLock' | 'hand'>('relativeLock');
+	const [hand, setHand] = useState<'left' | 'right'>('right');
+
+	const action = useMemo((): AppearanceAction => ({
+		type: 'moveItem',
+		target: { type: 'room', roomId: roomState.id },
+		item: { container: [], itemId: item.id },
+		personalItemDeployment: {
+			follow: mode === 'hand' ? { followType: 'hand', hand } : { followType: 'relativeLock' },
+		},
+	}), [roomState.id, item.id, mode, hand]);
+
+	return (
+		<Column>
+			<hr className='fill-x' />
+			<div>Carry style:</div>
+			<Row alignY='center'>
+				<Checkbox
+					id={ id + ':typeRelativeLock' }
+					checked={ mode === 'relativeLock' }
+					onChange={ (checked) => {
+						if (checked) {
+							setMode('relativeLock');
+						}
+					} }
+					radioButton
+				/>
+				<label htmlFor={ id + ':typeRelativeLock' }>Keep relative position</label>
+			</Row>
+			<Row alignY='center'>
+				<Checkbox
+					id={ id + ':typeHand' }
+					checked={ mode === 'hand' }
+					onChange={ (checked) => {
+						if (checked) {
+							setMode('hand');
+						}
+					} }
+					radioButton
+				/>
+				<label htmlFor={ id + ':typeHand' }>Hold in hand</label>
+			</Row>
+			{ mode === 'hand' ? (
+				<>
+					<hr className='fill-x' />
+					<div>Hand:</div>
+					<Row alignY='center'>
+						<Checkbox
+							id={ id + ':handLeft' }
+							checked={ hand === 'left' }
+							onChange={ (checked) => {
+								if (checked) {
+									setHand('left');
+								}
+							} }
+							radioButton
+						/>
+						<label htmlFor={ id + ':handLeft' }>Left hand</label>
+					</Row>
+					<Row alignY='center'>
+						<Checkbox
+							id={ id + ':handRight' }
+							checked={ hand === 'right' }
+							onChange={ (checked) => {
+								if (checked) {
+									setHand('right');
+								}
+							} }
+							radioButton
+						/>
+						<label htmlFor={ id + ':handRight' }>Right hand</label>
+					</Row>
+				</>
+			) : null }
+			<hr className='fill-x' />
+			<Row alignX='space-between'>
+				<Button
+					onClick={ () => {
+						setMenu('main');
+					} }
+				>
+					Cancel
+				</Button>
+				<GameLogicActionButton
+					action={ action }
+					onExecute={ () => {
+						setMenu('main');
+						close();
+					} }
+				>
+					Carry
+				</GameLogicActionButton>
+			</Row>
+		</Column>
 	);
 }
 
@@ -182,16 +356,24 @@ function OpenItemStorageMenu({ roomState, item, close }: {
 	);
 }
 
-function ItemMainMenu({ roomState, item, close }: {
+function ItemMainMenu({ roomState, item, close, setMenu }: {
 	roomState: AssetFrameworkRoomState;
 	item: Item;
 	close: () => void;
+	setMenu: (menu: ItemMenuType) => void;
 }) {
+	let id = null;
+
+	if (item.isType('personal') && item.deployment?.following != null)
+		id = item.deployment.following.target;
+
 	return (
 		<>
 			<hr />
 			<OpenItemStorageMenu roomState={ roomState } item={ item } close={ close } />
 			<MoveItemMenu roomState={ roomState } item={ item } close={ close } />
+			<CarryItemMenu item={ item } setMenu={ setMenu } />
+			<StopCarryingMenu roomState={ roomState } item={ item } id={ id } close={ close } />
 			<HideItemMenu roomState={ roomState } item={ item } close={ close } />
 			<WearItemMenu roomState={ roomState } item={ item } close={ close } />
 		</>
@@ -207,7 +389,7 @@ function ItemContextMenuCurrent({ roomState, item, position, onClose }: {
 	const ref = useContextMenuPosition(position);
 	const player = usePlayer();
 	const gameState = useGameStateOptional();
-	const [menu, setMenu] = useState<'main'>('main');
+	const [menu, setMenu] = useState<ItemMenuType>('main');
 	const navigate = useNavigatePandora();
 	const priority = useContext(DraggableDialogPriorityContext);
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
@@ -237,12 +419,23 @@ function ItemContextMenuCurrent({ roomState, item, position, onClose }: {
 								roomState={ roomState }
 								item={ item }
 								close={ onCloseActual }
+								setMenu={ setMenu }
+							/>
+						) }
+						{ menu === 'follow' && (
+							<ItemFollowDialog
+								roomState={ roomState }
+								item={ item }
+								close={ onCloseActual }
+								setMenu={ setMenu }
 							/>
 						) }
 					</WardrobeActionContextProvider>
-					<Button theme='transparent' onClick={ onClose } >
-						Close
-					</Button>
+					{ menu !== 'follow' ? (
+						<Button theme='transparent' onClick={ onClose } >
+							Close
+						</Button>
+					) : null }
 				</Column>
 			</div>
 		</DialogInPortal>

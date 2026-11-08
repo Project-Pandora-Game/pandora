@@ -51,7 +51,7 @@ function ConditionInSpaceIdDialog({ condition, setCondition, close }: Pick<Chara
 							setDialogSpaceId(null);
 						} }
 						checked={ selectedSpace === null }
-						radioButtion
+						radioButton
 					/>
 					Their personal space
 				</label>
@@ -61,7 +61,7 @@ function ConditionInSpaceIdDialog({ condition, setCondition, close }: Pick<Chara
 							setDialogSpaceId((s) => s == null ? 's/' : s);
 						} }
 						checked={ selectedSpace !== null }
-						radioButtion
+						radioButton
 					/>
 					Specific space
 				</label>

@@ -492,6 +492,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 			this.characters.delete(character);
 			newState = newState.withCharacter(character.id, null);
+			newState = newState.runAutomaticActions();
 
 			// Update the target character
 			character.setSpace(null, characterAppearance);

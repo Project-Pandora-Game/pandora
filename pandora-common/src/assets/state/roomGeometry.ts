@@ -13,7 +13,6 @@ import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
 import { ROOM_NODE_RADIUS } from './roomLinkNodeDefinitions.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
-import { ApplyRelativeLockDeltaX } from './characterFollowOffset.ts';
 
 export const RoomBackground3dBoxSideSchema = z.object({
 	texture: z.string().catch('*'),
@@ -393,16 +392,12 @@ export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrame
 						}
 					}
 
+					for (let i = 0; i <= 2; i++) {
+						position.position[i] = followTarget.position.position[i] + position.following.delta[i];
+					}
 					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(targetCharacterRoom.roomBackground);
-					// Y is clamped first, because X is derived from the final Y. X is converted through the projection to keep the visual distance.
-					position.position[1] = clamp(followTarget.position.position[1] + position.following.delta[1], minY, maxY);
-					position.position[2] = followTarget.position.position[2] + position.following.delta[2];
-					position.position[0] = clamp(Math.round(ApplyRelativeLockDeltaX(
-						position.following.delta[0],
-						followTarget.position.position,
-						position.position[1],
-						targetCharacterRoom,
-					)), minX, maxX);
+					position.position[0] = clamp(position.position[0], minX, maxX);
+					position.position[1] = clamp(position.position[1], minY, maxY);
 					if (!isEqual(position, character.position)) {
 						character = character.produceWithSpacePosition(position);
 					}

@@ -9,7 +9,7 @@ import { CharacterPoseTransforms } from '../graphics/transform/characterPoseTran
 import type { AppearanceItems, Item, ItemId } from '../item/index.ts';
 import type { PersonalItemDeploymentFollow, PersonalItemFollowRequest } from '../item/personal.ts';
 import { ValidateRoomInventoryItems } from '../roomValidation.ts';
-import { GetRoomProjectionResolver } from './characterFollowOffset.ts';
+import { RoomProjectionResolver } from '../../math/graphics/roomProjection.ts';
 import { CalculateCharacterPoseOffsets, CHARACTER_PIVOT_BASE } from './characterPoseOffsets.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
@@ -17,9 +17,17 @@ import type { RoomPosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 import type { AssetFrameworkSpaceState } from './spaceState.ts';
 
-type RoomProjectionResolver = ReturnType<typeof GetRoomProjectionResolver>;
-
 //#region Helpers
+
+const projectionResolverCache = new WeakMap<object, RoomProjectionResolver>();
+function GetProjectionResolver(room: AssetFrameworkRoomState): RoomProjectionResolver {
+	let resolver = projectionResolverCache.get(room.roomBackground);
+	if (resolver === undefined) {
+		resolver = new RoomProjectionResolver(room.roomBackground);
+		projectionResolverCache.set(room.roomBackground, resolver);
+	}
+	return resolver;
+}
 
 /** Sign that flips the front-view-normalized values when the character is turned around */
 function GetViewSign(character: AssetFrameworkCharacterState): 1 | -1 {
@@ -199,7 +207,7 @@ export function ResolvePersonalItemFollowPosition(
 	target: AssetFrameworkCharacterState,
 	room: AssetFrameworkRoomState,
 ): RoomPosition {
-	const resolver = GetRoomProjectionResolver(room);
+	const resolver = GetProjectionResolver(room);
 	const sign = GetViewSign(target);
 	const targetY = target.position.position[1];
 
@@ -241,7 +249,7 @@ export function CreatePersonalItemFollow(
 	if (!PersonalItemFollowIsSupported(request, target.assetManager))
 		return null;
 
-	const resolver = GetRoomProjectionResolver(room);
+	const resolver = GetProjectionResolver(room);
 	const sign = GetViewSign(target);
 	const targetY = target.position.position[1];
 	const [itemX, itemY, itemYOffset] = itemPosition;
@@ -316,10 +324,10 @@ function TryResolvePersonalItemFollowPosition(
 	follow: Immutable<PersonalItemDeploymentFollow>,
 	target: AssetFrameworkCharacterState,
 	room: AssetFrameworkRoomState,
-	cachedFrame?: CharacterFrame, // S1 optimization: accept precomputed frame to avoid reconstructing evaluator
+	cachedFrame?: CharacterFrame,
 ): RoomPosition | null {
 	try {
-		const resolver = GetRoomProjectionResolver(room);
+		const resolver = GetProjectionResolver(room);
 		const sign = GetViewSign(target);
 		const targetY = target.position.position[1];
 
@@ -410,7 +418,7 @@ export function GlobalStateAutoProcessItemFollowing(globalState: AssetFrameworkG
 		const cacheKey = `${following.target}:${following.followType}`;
 		let cachedData = cache.get(cacheKey);
 		if (!cachedData) {
-			const resolver = GetRoomProjectionResolver(targetRoom);
+			const resolver = GetProjectionResolver(targetRoom);
 			const frame = GetCharacterFrame(target, resolver);
 			const canCarry = CharacterCanCarryItems(target, following.followType);
 			cachedData = { frame, canCarry };

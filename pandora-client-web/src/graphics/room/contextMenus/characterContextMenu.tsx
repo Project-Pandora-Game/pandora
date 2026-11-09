@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Immutable, produce } from 'immer';
-import { AssertNever, AssertNotNullable, CalculateRelativeLockDeltaX, CHARACTER_SETTINGS_DEFAULT, CharacterHideSettingSchema, ICharacterRoomData, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterHideSettingSchema, ICharacterRoomData, SpaceClientInfo, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterHideSetting, type CharacterRoomPositionFollow } from 'pandora-common';
 import type { IDirectoryAccountInfo } from 'pandora-common/networking/api/directory_client';
 import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -585,7 +585,7 @@ function CharacterFollowDialog(): ReactElement {
 		setMenu,
 	} = useCharacterMenuContext();
 
-	const { playerState, globalState } = usePlayerState();
+	const { playerState } = usePlayerState();
 
 	const id = useId();
 	const characterData = useCharacterData(character);
@@ -597,18 +597,14 @@ function CharacterFollowDialog(): ReactElement {
 		const target = playerFollowsTarget ? characterState : playerState;
 
 		if (type === 'relativeLock') {
-			const targetRoom = globalState.space.getRoom(target.currentRoom);
-			const delta: [number, number, number] = [
-				targetRoom != null ?
-					CalculateRelativeLockDeltaX(follower.position.position, target.position.position, targetRoom) :
-					follower.position.position[0] - target.position.position[0],
-				follower.position.position[1] - target.position.position[1],
-				follower.position.position[2] - target.position.position[2],
-			];
 			return {
 				followType: 'relativeLock',
 				target: target.id,
-				delta,
+				delta: [
+					follower.position.position[0] - target.position.position[0],
+					follower.position.position[1] - target.position.position[1],
+					follower.position.position[2] - target.position.position[2],
+				],
 				rotation: rotationLocked ? {
 					sameRotation: follower.actualPose.view === target.actualPose.view,
 					currentTargetView: target.actualPose.view,

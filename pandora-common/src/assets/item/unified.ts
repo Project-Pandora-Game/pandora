@@ -8,7 +8,7 @@ import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
 import { LockLogic } from '../../gameLogic/locks/lockLogic.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits.ts';
-import { Assert, AssertNever } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate, type ZodObjectShape } from '../../validation.ts';
 import { AssetIdSchema } from '../base.ts';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules.ts';
@@ -92,6 +92,20 @@ export const AssetFrameworkPosePresetSchema: z.ZodObject<ZodObjectShape<AssetFra
 	pose: PartialAppearancePoseSchema,
 	rotation: CenteredDegreesSchema.optional(),
 	yOffset: z.number().int().optional(),
+}).overwrite((value) => {
+	// Migrate old fake "character_rotation" bone
+	if (typeof value.pose.bones?.character_rotation === 'number' && value.rotation == null) {
+		const parsedRotation = CenteredDegreesSchema.safeParse(value.pose.bones.character_rotation === -180 ? 180 : value.pose.bones?.character_rotation);
+		if (parsedRotation.success) {
+			value = CloneDeepMutable(value);
+			value.rotation = parsedRotation.data;
+			delete value.pose.bones?.character_rotation;
+			if (value.pose.bones != null && Object.keys(value.pose.bones).length === 0) {
+				delete value.pose.bones;
+			}
+		}
+	}
+	return value;
 });
 
 export interface AssetFrameworkPosePresetWithId extends AssetFrameworkPosePreset {

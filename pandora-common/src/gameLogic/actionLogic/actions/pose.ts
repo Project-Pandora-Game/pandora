@@ -1,6 +1,7 @@
+import { produce } from 'immer';
 import * as z from 'zod';
-import { CharacterViewSchema } from '../../../assets/graphics/conditions.ts';
-import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearanceLegsPoseSchema, AppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
+import { PartialAppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
+import { CenteredDegreesSchema } from '../../../assets/state/roomGeometry.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -8,12 +9,10 @@ import type { AppearanceActionHandlerArg } from './_common.ts';
 export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
-	bones: AppearancePoseSchema.shape.bones.optional(),
-	leftArm: AppearanceArmPoseSchema.partial().optional(),
-	rightArm: AppearanceArmPoseSchema.partial().optional(),
-	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
-	legs: AppearanceLegsPoseSchema.partial().optional(),
-	view: CharacterViewSchema.optional(),
+	pose: PartialAppearancePoseSchema.optional(),
+	// Some parts of movement can be done through posing, too, to simplify things
+	rotation: CenteredDegreesSchema.optional(),
+	yOffset: z.number().int().optional(),
 });
 
 /** Change character's pose. */
@@ -28,7 +27,20 @@ export function ActionPose({
 	processingContext.checkInteractWithTarget(target);
 
 	if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
-		return character.produceWithPose(action, 'pose');
+		if (action.pose != null) {
+			character = character.produceWithPose(action.pose, 'pose');
+		}
+		if (action.rotation != null || action.yOffset != null) {
+			character = character.produceWithSpacePosition(produce(character.position, (d) => {
+				if (action.rotation != null) {
+					d.rotation = action.rotation;
+				}
+				if (action.yOffset != null) {
+					d.position[2] = action.yOffset;
+				}
+			}));
+		}
+		return character;
 	})) {
 		return processingContext.invalid();
 	}

@@ -45,14 +45,14 @@ export const COMMAND_POSEPRESET: IClientCommand<ICommandExecutionContextClient> 
 		})
 		.handler(({ player, gameState }, { pose }) => {
 			// Always specifying extends allows us to strip any non-pose properties
-			const { arms, leftArm, rightArm, ...copy } = MergePartialAppearancePoses(pose, pose.optional ?? {});
+			const mergedPose = MergePartialAppearancePoses(pose, pose.optional ?? {});
 
 			return CommandDoGameAction(gameState, {
 				type: 'pose',
 				target: player.id,
-				leftArm: { ...arms, ...leftArm },
-				rightArm: { ...arms, ...rightArm },
-				...copy,
+				pose: mergedPose,
+				rotation: pose.rotation,
+				yOffset: pose.yOffset,
 			});
 		}),
 };

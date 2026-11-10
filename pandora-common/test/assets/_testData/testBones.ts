@@ -22,10 +22,6 @@ const ASSET_TEST_BONE_DEFINITIONS_IMPL = {
 	},
 	breasts: { type: 'body' },
 	tiptoeing: { type: 'pose' },
-	character_rotation: {
-		baseRotation: -90,
-		type: 'pose',
-	},
 } as const satisfies Record<string, BoneDefinitionCompressed>;
 
 type Key = keyof typeof ASSET_TEST_BONE_DEFINITIONS_IMPL;

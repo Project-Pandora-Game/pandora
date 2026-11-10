@@ -494,6 +494,7 @@ function DisplayRoomsGrid({ playerState, globalState }: {
 											type: 'normal',
 											room: room.id,
 											position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
+											rotation: playerState.position.rotation,
 										},
 									} }
 								>
@@ -574,6 +575,7 @@ function DisplayRooms({ playerState, characters, globalState }: {
 															type: 'normal',
 															room: room.id,
 															position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
+															rotation: playerState.position.rotation,
 														},
 													} }
 													disabled={ playerState.position.following != null }
@@ -785,6 +787,7 @@ function DisplayCharacter({ char, globalState }: {
 									type: 'normal',
 									room: playerRoom.id,
 									position: GenerateInitialRoomPosition(playerRoom, playerRoom.getLinkToRoom(globalState.space.getRoom(state.currentRoom), true)?.direction, avoid),
+									rotation: state.position.rotation,
 								},
 							} }
 							disabled={ state.position.following != null }

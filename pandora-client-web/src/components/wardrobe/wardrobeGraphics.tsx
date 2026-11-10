@@ -49,10 +49,12 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 	showCharacterEffects?: boolean;
 }): ReactElement {
 	const id = useId();
-	const [onClick, processing] = useAppearanceActionEvent({
+	const [turnAround, processingTurnAround] = useAppearanceActionEvent({
 		type: 'pose',
 		target: character.id,
-		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+		pose: {
+			view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+		},
 	});
 
 	const [hideItems, setHideItems] = useState(false);
@@ -72,8 +74,8 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 				<Row className='pointer-events-enable flex' gap='medium'>
 					<Button className='slim iconButton'
 						title='Turn character around (also outside the wardrobe)'
-						onClick={ onClick }
-						disabled={ processing }
+						onClick={ turnAround }
+						disabled={ processingTurnAround }
 					>
 						↷
 					</Button>
@@ -117,7 +119,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 				<WardrobeActionAttemptOverlay character={ character } />
 			</Row>
 		</Column>
-	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, onClick, processing, character, globalState]);
+	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, turnAround, processingTurnAround, character, globalState]);
 
 	return (
 		<CharacterPreview

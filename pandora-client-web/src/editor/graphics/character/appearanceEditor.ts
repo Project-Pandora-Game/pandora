@@ -119,7 +119,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		return this.editorDoAction({
 			type: 'pose',
 			target: this.id,
-			view,
+			pose: { view },
 		}, context);
 	}
 }

@@ -429,7 +429,9 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
-					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
+					pose: {
+						view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
+					},
 				});
 			}),
 	},
@@ -447,8 +449,10 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
-					legs: {
-						pose: 'standing',
+					pose: {
+						legs: {
+							pose: 'standing',
+						},
 					},
 				});
 			}),
@@ -467,8 +471,10 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
-					legs: {
-						pose: 'kneeling',
+					pose: {
+						legs: {
+							pose: 'kneeling',
+						},
 					},
 				});
 			}),
@@ -487,8 +493,10 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return CommandDoGameAction(gameState, {
 					type: 'pose',
 					target: player.data.id,
-					legs: {
-						pose: 'sitting',
+					pose: {
+						legs: {
+							pose: 'sitting',
+						},
 					},
 				});
 			}),

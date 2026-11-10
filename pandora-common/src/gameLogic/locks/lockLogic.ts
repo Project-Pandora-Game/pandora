@@ -138,16 +138,17 @@ export class LockLogic {
 	}
 
 	public exportToClientBundle(): LockDataBundle {
-		if (this.lockData.hidden?.side === 'server') {
-			return {
-				...this.lockData,
-				hidden: {
+		return produce(this.lockData, (data) => {
+			if (data.hidden?.side === 'server') {
+				data.hidden = {
 					side: 'client',
-					hasPassword: this.lockData.hidden.password ? true : undefined,
-				},
-			};
-		}
-		return this.lockData;
+					hasPassword: data.hidden.password ? true : undefined,
+				};
+			}
+			if (data.locked?.hideRemainingTime) {
+				delete data.locked.lockedUntil;
+			}
+		});
 	}
 
 	public exportToServerBundle(): LockDataBundle {
@@ -265,6 +266,7 @@ export class LockLogic {
 				time: lockTime,
 				lockedUntil,
 				disallowEarlyUnlock: !timerOptions?.allowEarlyUnlock,
+				hideRemainingTime: timerOptions?.hideRemainingTime ?? false,
 			};
 		});
 

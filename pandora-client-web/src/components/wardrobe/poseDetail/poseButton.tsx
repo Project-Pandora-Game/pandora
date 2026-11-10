@@ -59,6 +59,12 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 				},
 				mergedPose,
 			),
+		) && (
+			pose.rotation == null ||
+			pose.rotation === characterState.position.rotation
+		) && (
+			pose.yOffset == null ||
+			pose.yOffset === characterState.position.position[2]
 		),
 		active: isEqual(
 			characterState.actualPose,
@@ -70,6 +76,12 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 				},
 				mergedPose,
 			),
+		) && (
+			pose.rotation == null ||
+			pose.rotation === characterState.getActualCharacterRotation()
+		) && (
+			pose.yOffset == null ||
+			pose.yOffset === characterState.position.position[2]
 		),
 		available: limits.validate(pose),
 		name: pose.name,

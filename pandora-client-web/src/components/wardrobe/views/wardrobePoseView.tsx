@@ -589,7 +589,7 @@ export function WardrobePoseGui({ character, characterState }: {
 										name='Character rotation'
 										requestedRotation={ characterState.position.rotation }
 										actualRotation={ characterState.getActualCharacterRotation() }
-										onChange={ (rotation) => setPose({ rotation }) }
+										onChange={ (rotation) => setPose({ rotation: rotation === -180 ? 180 : rotation }) }
 									/>
 									<br />
 									{

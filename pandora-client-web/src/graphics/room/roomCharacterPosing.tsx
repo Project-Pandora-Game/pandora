@@ -524,33 +524,29 @@ function PosingToolIKRotationHandle({
 		pivot,
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const bones = useMemo((): readonly BoneDefinition[] => {
-		const tmpBones: BoneDefinition[] = [
-			{
-				name: 'character_rotation',
-				x: pivot.x,
-				y: pivot.y - yOffsetExtra,
-				baseRotation: -90,
-				isMirror: false,
-				type: 'pose',
-			},
-		];
-
-		return tmpBones;
+	const rotationFakeBone = useMemo((): BoneDefinition => {
+		return {
+			name: 'character_rotation',
+			x: pivot.x,
+			y: pivot.y - yOffsetExtra,
+			baseRotation: -90,
+			isMirror: false,
+			type: 'pose',
+		};
 	}, [yOffsetExtra, pivot]);
 
 	const handlePosition = useMemo(() => [handleX, handleY] as const, [handleX, handleY]);
 
 	const onMove = useEvent((x: number, y: number): void => {
 		const result = FindInverseKinematicOptimum(
-			bones,
+			[rotationFakeBone],
 			handlePosition,
 			[x, y],
-			bones.map((b) => (characterState.actualPose.bones[b.name] ?? 0)),
+			[characterState.getActualCharacterRotation()],
 		);
 
 		Assert(result.length === 1);
-		setPose({ rotation: result[0] });
+		setPose({ rotation: result[0] === -180 ? 180 : result[0] });
 	});
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -611,10 +607,10 @@ function PosingToolIKRotationHandle({
 		const m = new PIXI.Matrix().identity();
 		const link = new PIXI.Point();
 		let tmpAngle = 0;
-		for (const b of bones) {
-			const value = (characterState.actualPose.bones[b.name] ?? 0) * (b.isMirror ? -1 : 1);
+		{
+			const value = characterState.getActualCharacterRotation();
 			tmpAngle += value;
-			link.set(b.x, b.y);
+			link.set(rotationFakeBone.x, rotationFakeBone.y);
 			m.apply(link, link);
 			m
 				.translate(-link.x, -link.y)
@@ -625,7 +621,7 @@ function PosingToolIKRotationHandle({
 			currentPosition: m.apply(point, point),
 			currentAngle: tmpAngle,
 		};
-	}, [handlePosition, bones, characterState.actualPose]);
+	}, [handlePosition, characterState, rotationFakeBone.x, rotationFakeBone.y]);
 
 	return (
 		<MovementHelperGraphics

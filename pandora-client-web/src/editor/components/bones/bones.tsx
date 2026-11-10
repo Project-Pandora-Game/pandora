@@ -108,7 +108,7 @@ export function BoneUI(): ReactElement {
 				name='Character rotation'
 				requestedRotation={ characterState.position.rotation }
 				actualRotation={ characterState.getActualCharacterRotation() }
-				onChange={ (rotation) => setPose({ rotation }) }
+				onChange={ (rotation) => setPose({ rotation: rotation === -180 ? 180 : rotation }) }
 			/>
 			<hr />
 			<h4>Body bones</h4>

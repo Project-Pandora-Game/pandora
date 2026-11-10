@@ -127,6 +127,7 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveIm
 				type: 'normal',
 				room: characterState.currentRoom,
 				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
+				rotation: characterState.position.rotation,
 				following: characterState.position.following,
 			},
 		};

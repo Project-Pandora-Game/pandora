@@ -62,7 +62,7 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		baseScale,
 		yOffset,
 		pivot,
-		rotationAngle: evaluator.getBoneLikeValue('character_rotation'),
+		rotationAngle: characterState.getActualCharacterRotation(),
 		evaluator,
 	};
 }
@@ -102,7 +102,7 @@ export function useRoomCharacterPosition(characterState: AssetFrameworkCharacter
 	} = useRoomCharacterOffsets(characterState);
 
 	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items, rotationAngle, false);
 
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 

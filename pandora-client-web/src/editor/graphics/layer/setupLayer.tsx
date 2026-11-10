@@ -23,7 +23,7 @@ import type { EditorAssetGraphics } from '../../assets/graphics/editorAssetGraph
 import { useEditorLayerStateOverride } from '../../editor.tsx';
 import { EditorUseTextureGetterOverride } from './editorLayer.tsx';
 
-export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
+export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, rotationAngle, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
 			previousLayers ??= [];
@@ -36,6 +36,7 @@ export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBui
 						state={ layer.state }
 						poseEvaluator={ poseEvaluator }
 						wornItems={ layer.wornItems }
+						rotationAngle={ rotationAngle }
 						characterBlinking={ characterBlinking }
 						debugConfig={ debugConfig }
 						displayUvPose
@@ -59,6 +60,7 @@ export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBui
 						state={ layer.state }
 						poseEvaluator={ poseEvaluator }
 						wornItems={ layer.wornItems }
+						rotationAngle={ rotationAngle }
 						characterBlinking={ characterBlinking }
 						debugConfig={ debugConfig }
 						displayUvPose
@@ -79,6 +81,7 @@ export const EditorSetupGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBui
 						state={ layer.state }
 						poseEvaluator={ poseEvaluator }
 						wornItems={ layer.wornItems }
+						rotationAngle={ rotationAngle }
 						characterBlinking={ characterBlinking }
 						debugConfig={ debugConfig }
 						displayUvPose
@@ -144,7 +147,7 @@ export function SetupMeshLayerSelected({
 	const { points, triangles } = useLayerMeshPoints(definition);
 
 	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items, characterState.getActualCharacterRotation(), false);
 
 	const {
 		image,
@@ -247,7 +250,7 @@ export function SetupAlphaImageMeshLayerSelected({
 	const { points, triangles } = useLayerMeshPoints(definition);
 
 	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items, characterState.getActualCharacterRotation(), false);
 
 	const {
 		image,

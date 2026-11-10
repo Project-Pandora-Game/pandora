@@ -228,7 +228,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 	@MemoizeNoArg
 	private _generateActualPose(): Immutable<AppearancePose> {
-		const limits = AppearanceItemProperties(this.items).limits;
+		const limits = AppearanceItemProperties(this.items).poseLimits;
 		if (!limits || limits.hasNoLimits())
 			return this.requestedPose;
 
@@ -251,6 +251,37 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		void this.assetManager.getBoneByName(bone);
 
 		return this.actualPose.bones[bone] || 0;
+	}
+
+	@MemoizeNoArg
+	public getActualCharacterRotation(): number {
+		const requestedRotation = this.position.rotation;
+		const limits = AppearanceItemProperties(this.items).rotationLimits;
+		if (limits.length === 0)
+			return requestedRotation; // Invalid sate - just pass through requested rotation
+
+		let minDiff = Infinity;
+		let minDiffValue = requestedRotation;
+		for (const [min, max] of limits) {
+			if (requestedRotation >= min && requestedRotation <= max) {
+				minDiff = 0;
+				minDiffValue = requestedRotation;
+				break;
+			}
+			const diffMin = Math.abs(requestedRotation - min);
+			if (diffMin < minDiff) {
+				minDiff = diffMin;
+				minDiffValue = min;
+			}
+			const diffMax = Math.abs(requestedRotation - max);
+			if (diffMax < minDiff) {
+				minDiff = diffMax;
+				minDiffValue = max;
+			}
+			// TODO: Should this maybe account for wrap-around?
+		}
+
+		return minDiffValue;
 	}
 
 	/**
@@ -401,6 +432,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 					undefined,
 					getAvoidedRoomPositions?.(roomState, characterId),
 				),
+				rotation: position.rotation,
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed
@@ -413,6 +445,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 					type: 'normal',
 					room: roomState.id,
 					position: GenerateInitialRoomPosition(roomState),
+					rotation: position.rotation,
 				};
 			}
 		}

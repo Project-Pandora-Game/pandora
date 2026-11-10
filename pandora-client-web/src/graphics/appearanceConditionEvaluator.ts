@@ -69,14 +69,17 @@ export function useCharacterPoseEvaluator(assetManager: AssetManager, pose: Immu
 export class AppearanceConditionEvaluator {
 	public readonly attributes: ReadonlySet<string>;
 
+	/** Rotation of character within the room or room device. */
+	public readonly characterRotation: number;
 	/** Whether the character is currently mid-blink */
 	public readonly blinking: boolean;
 
 	public readonly poseEvaluator: CharacterPoseEvaluator;
 
-	constructor(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, blinking: boolean) {
+	constructor(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, characterRotation: number, blinking: boolean) {
 		this.poseEvaluator = poseEvaluator;
 		this.attributes = AppearanceItemProperties(wornItems).attributes;
+		this.characterRotation = characterRotation;
 		this.blinking = blinking;
 	}
 
@@ -90,6 +93,24 @@ export class AppearanceConditionEvaluator {
 				return condition.operator === '!=';
 			}
 			return m.evalCondition(condition.operator, condition.value);
+		} else if ('characterRotation' in condition) {
+			Assert(condition.characterRotation != null);
+			const diff = this.characterRotation - condition.characterRotation;
+			switch (condition.operator) {
+				case '>':
+					return diff > 0;
+				case '<':
+					return diff < 0;
+				case '=':
+					return diff === 0;
+				case '!=':
+					return diff !== 0;
+				case '>=':
+					return diff >= 0;
+				case '<=':
+					return diff <= 0;
+			}
+			AssertNever(condition);
 		} else if ('attribute' in condition) {
 			Assert(condition.attribute != null);
 			if (condition.attribute[0] === '!') {
@@ -107,6 +128,7 @@ export class AppearanceConditionEvaluator {
 }
 
 type EvaluatorInstanceCacheValueEntry = {
+	characterRotation: number;
 	normal: AppearanceConditionEvaluator;
 	blink: AppearanceConditionEvaluator;
 };
@@ -118,7 +140,7 @@ const evaluatorInstanceCache = new WeakMap<CharacterPoseEvaluator, WeakMap<Appea
  * @param isBlinking - Whether the character is currently mid-blink
  * @returns The requested appearance condition evaluator
  */
-export function useAppearanceConditionEvaluator(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, isBlinking: boolean = false): AppearanceConditionEvaluator {
+export function useAppearanceConditionEvaluator(poseEvaluator: CharacterPoseEvaluator, wornItems: AppearanceItems<WearableAssetType>, characterRotation: number, isBlinking: boolean): AppearanceConditionEvaluator {
 	return useMemo((): AppearanceConditionEvaluator => {
 		let poseCacheEntry = evaluatorInstanceCache.get(poseEvaluator);
 		if (poseCacheEntry === undefined) {
@@ -127,16 +149,17 @@ export function useAppearanceConditionEvaluator(poseEvaluator: CharacterPoseEval
 		}
 
 		let cacheEntry: EvaluatorInstanceCacheValueEntry | undefined = poseCacheEntry.get(wornItems);
-		if (cacheEntry === undefined) {
+		if (cacheEntry === undefined || cacheEntry.characterRotation !== characterRotation) {
 			cacheEntry = {
-				normal: new AppearanceConditionEvaluator(poseEvaluator, wornItems, false),
-				blink: new AppearanceConditionEvaluator(poseEvaluator, wornItems, true),
+				characterRotation,
+				normal: new AppearanceConditionEvaluator(poseEvaluator, wornItems, characterRotation, false),
+				blink: new AppearanceConditionEvaluator(poseEvaluator, wornItems, characterRotation, true),
 			};
 			poseCacheEntry.set(wornItems, cacheEntry);
 		}
 
 		return isBlinking ? cacheEntry.blink : cacheEntry.normal;
-	}, [poseEvaluator, wornItems, isBlinking]);
+	}, [poseEvaluator, wornItems, characterRotation, isBlinking]);
 }
 
 export class StandaloneConditionEvaluator {
@@ -150,6 +173,9 @@ export class StandaloneConditionEvaluator {
 				return condition.operator === '!=';
 			}
 			return m.evalCondition(condition.operator, condition.value);
+		} else if ('characterRotation' in condition) {
+			Assert(condition.characterRotation != null);
+			return false;
 		} else if ('bone' in condition) {
 			Assert(condition.bone != null);
 			return false;

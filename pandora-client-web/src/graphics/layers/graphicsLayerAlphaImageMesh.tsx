@@ -27,13 +27,14 @@ export const GraphicsLayerAlphaImageMesh = memo(function GraphicsLayerAlphaImage
 	poseEvaluator,
 	wornItems,
 	displayUvPose = false,
+	rotationAngle,
 	characterBlinking,
 }: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps): ReactElement {
 
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, rotationAngle, currentlyBlinking);
 
 	const {
 		image,

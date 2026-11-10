@@ -7,10 +7,10 @@ import {
 	GetLogger,
 	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
+	type AppearanceAction,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
-	type PartialAppearancePose,
 } from 'pandora-common';
 import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
@@ -40,7 +40,7 @@ import { GeneratePosePreview } from './posePreview.tsx';
 import './storedPosePresets.scss';
 
 type WardrobeStoredPosePresetsProps = {
-	setPose: (pose: PartialAppearancePose) => void;
+	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
 	characterState: AssetFrameworkCharacterState;
 };
 
@@ -363,15 +363,17 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				</Row>
 				<br />
 				<PosePresetEditTable
-					preset={ preset.pose }
-					update={ (newPose) => {
+					preset={ preset }
+					update={ (newPreset) => {
 						setEdit({
 							...preset,
-							pose: newPose,
+							...newPreset,
 						});
 					} }
 					assetManager={ characterState.assetManager }
 					sourcePose={ characterState.actualPose }
+					sourceRotation={ characterState.getActualCharacterRotation() }
+					sourceYOffset={ characterState.position.position[2] }
 				/>
 				<Row alignX='space-between'>
 					<Button onClick={ close }>Cancel</Button>

@@ -21,7 +21,7 @@ import { EditorUseTextureGetterOverride } from './editorLayer.tsx';
 // Turns the wireframe much more visible, useful for making tutorial about asset creation
 const HIGHLIGHT_WIREFRAME = false;
 
-export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
+export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, rotationAngle, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
 			previousLayers ??= [];
@@ -33,6 +33,7 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>
@@ -53,6 +54,7 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				>
@@ -70,6 +72,7 @@ export const EditorResultGraphicsCharacterLayerBuilder: GraphicsCharacterLayerBu
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>

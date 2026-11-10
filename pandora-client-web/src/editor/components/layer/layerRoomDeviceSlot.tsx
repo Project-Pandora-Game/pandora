@@ -31,7 +31,7 @@ export function LayerRoomDeviceSlotUI({ layer }: {
 
 	const characterState = useEditorCharacterState();
 	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items, characterState.getActualCharacterRotation(), false);
 	const wornItem = characterState.items
 		.filter((i) => i.isType('roomDeviceWearablePart'))
 		.find((i) => i.roomDevice?.asset.id === layer.assetGraphics.id);

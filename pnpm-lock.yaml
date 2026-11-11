@@ -371,7 +371,7 @@ importers:
         version: 30.5.2(supports-color@8.1.1)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.6.3
-        version: 0.6.3(@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3))(react-refresh@0.19.0)(type-fest@5.10.0)(webpack-dev-server@6.1.0)(webpack@5.112.0)
+        version: 0.6.3(@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1))(react-refresh@0.19.0)(type-fest@5.10.0)(webpack-dev-server@6.1.0)(webpack@5.112.0)
       '@testing-library/dom':
         specifier: 10.4.2
         version: 10.4.2
@@ -410,7 +410,7 @@ importers:
         version: 0.34.0(@types/react@19.3.0)
       '@types/webpack':
         specifier: 5.28.5
-        version: 5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+        version: 5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
       autoprefixer:
         specifier: 10.6.1
         version: 10.6.1(postcss@8.5.30)
@@ -476,13 +476,13 @@ importers:
         version: 6.0.3
       webpack:
         specifier: 5.112.0
-        version: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+        version: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
       webpack-cli:
-        specifier: 7.2.3
-        version: 7.2.3(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
+        specifier: 7.3.1
+        version: 7.3.1(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
       webpack-dev-server:
         specifier: 6.1.0
-        version: 6.1.0(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.112.0)
+        version: 6.1.0(supports-color@8.1.1)(webpack-cli@7.3.1)(webpack@5.112.0)
 
   pandora-common:
     dependencies:
@@ -5164,9 +5164,9 @@ packages:
     resolution: {integrity: sha512-Kko+Y5XQ6fM+Ce3dq3m9YGxnacYZYl9cA1wZjaF3Vbry2L3i1qVg8+CAgNPsXRArPMUMCaOR7oa9Nqntc43JKA==}
     engines: {node: '>= 20.19.0'}
 
-  rechoir@0.8.0:
-    resolution: {integrity: sha512-/vxpCXddiX8NGfGO/mTafwjq4aFa/71pvamip0++IQk3zG8cbCj0fifNPrjjF1XMXUne91jL9OoxmdykoEtifQ==}
-    engines: {node: '>= 10.13.0'}
+  rechoir@1.0.0:
+    resolution: {integrity: sha512-vyBa7bWz11iJRwzJR0nGLt6r45bymWfYXAgd1FmP08BNP/DHAVabgpGPyEXQmBtKvhgxi17SQz2szhvkberQsg==}
+    engines: {node: '>= 22.15.0'}
 
   redent@3.0.0:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
@@ -5224,11 +5224,6 @@ packages:
   resolve-from@5.0.0:
     resolution: {integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==}
     engines: {node: '>=8'}
-
-  resolve@1.22.12:
-    resolution: {integrity: sha512-TyeJ1zif53BPfHootBGwPRYT1RUt6oGWsaQr8UyZW/eAm9bKoijtvruSDEmZHm92CwS9nj7/fWttqPCgzep8CA==}
-    engines: {node: '>= 0.4'}
-    hasBin: true
 
   resolve@2.0.0-next.7:
     resolution: {integrity: sha512-tqt+NBWwyaMgw3zDsnygx4CByWjQEJHOPMdslYhppaQSJUtL/D4JO9CcBBlhPoI8lz9oJIDXkwXfhF4aWqP8xQ==}
@@ -6032,11 +6027,12 @@ packages:
     resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
     engines: {node: '>=12'}
 
-  webpack-cli@7.2.3:
-    resolution: {integrity: sha512-vDFU7jrfCctnN7jJQWPl+V26B51GLp11prVZXg50oeonsgeBzSTJEWmXkjHsOjTgMjlPOQM8GWLh33X9RN/0ow==}
+  webpack-cli@7.3.1:
+    resolution: {integrity: sha512-enXzN0/2fWHX3tP2gpTV6U8/zz5RSbfWjSAc0VXOi0+hOY4ePdHanA+2kxrAC/SX0LHO4fOX5c9G1TdwpvUj/g==}
     engines: {node: '>=20.9.0'}
     hasBin: true
     peerDependencies:
+      '@bomb.sh/tab': ^0.0.22
       js-yaml: ^4.0.0 || ^5.0.0
       json5: ^2.2.3
       toml: ^3.0.0 || ^4.0.0 || ^5.0.0
@@ -6044,6 +6040,8 @@ packages:
       webpack-bundle-analyzer: ^4.0.0 || ^5.0.0
       webpack-dev-server: ^5.0.0 || ^6.0.0
     peerDependenciesMeta:
+      '@bomb.sh/tab':
+        optional: true
       js-yaml:
         optional: true
       json5:
@@ -7598,7 +7596,7 @@ snapshots:
     dependencies:
       playwright: 1.64.1
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.6.3(@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3))(react-refresh@0.19.0)(type-fest@5.10.0)(webpack-dev-server@6.1.0)(webpack@5.112.0)':
+  '@pmmmwh/react-refresh-webpack-plugin@0.6.3(@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1))(react-refresh@0.19.0)(type-fest@5.10.0)(webpack-dev-server@6.1.0)(webpack@5.112.0)':
     dependencies:
       anser: 2.3.5
       core-js-pure: 3.50.0
@@ -7607,11 +7605,11 @@ snapshots:
       react-refresh: 0.19.0
       schema-utils: 4.5.0
       source-map: 0.7.6
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
     optionalDependencies:
-      '@types/webpack': 5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      '@types/webpack': 5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
       type-fest: 5.10.0
-      webpack-dev-server: 6.1.0(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.112.0)
+      webpack-dev-server: 6.1.0(supports-color@8.1.1)(webpack-cli@7.3.1)(webpack@5.112.0)
 
   '@pnpm/config.env-replace@1.1.0': {}
 
@@ -7944,11 +7942,11 @@ snapshots:
 
   '@types/webidl-conversions@7.0.3': {}
 
-  '@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)':
+  '@types/webpack@5.28.5(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)':
     dependencies:
       '@types/node': 24.19.2
       tapable: 2.3.3
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@napi-rs/image'
@@ -8826,7 +8824,7 @@ snapshots:
       schema-utils: 4.5.0
       serialize-javascript: 7.1.2
       tinyglobby: 0.2.17
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   core-js-pure@3.50.0: {}
 
@@ -8877,7 +8875,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.8.5
     optionalDependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   css-select@4.3.0:
     dependencies:
@@ -9552,7 +9550,7 @@ snapshots:
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.3.0
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   fill-range@7.1.1:
     dependencies:
@@ -9639,7 +9637,7 @@ snapshots:
       semver: 7.8.5
       tapable: 2.3.3
       typescript: 6.0.3
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   forwarded@0.2.0: {}
 
@@ -9848,7 +9846,7 @@ snapshots:
       pretty-error: 4.0.0
       tapable: 2.3.3
     optionalDependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   htmlparser2@10.1.0:
     dependencies:
@@ -10794,7 +10792,7 @@ snapshots:
     dependencies:
       schema-utils: 4.5.0
       tapable: 2.3.3
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   minimatch@10.2.6:
     dependencies:
@@ -10820,7 +10818,7 @@ snapshots:
       jest-worker: 27.5.1
       schema-utils: 4.5.0
       terser: 5.51.2
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
     optionalDependencies:
       clean-css: 5.3.3
       html-minifier-terser: 6.1.0
@@ -11256,7 +11254,7 @@ snapshots:
       postcss: 8.5.30
       semver: 7.8.5
     optionalDependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
     transitivePeerDependencies:
       - typescript
 
@@ -11464,9 +11462,7 @@ snapshots:
 
   readdirp@5.1.1: {}
 
-  rechoir@0.8.0:
-    dependencies:
-      resolve: 1.22.12
+  rechoir@1.0.0: {}
 
   redent@3.0.0:
     dependencies:
@@ -11530,13 +11526,6 @@ snapshots:
   resolve-from@4.0.0: {}
 
   resolve-from@5.0.0: {}
-
-  resolve@1.22.12:
-    dependencies:
-      es-errors: 1.3.0
-      is-core-module: 2.17.0
-      path-parse: 1.0.7
-      supports-preserve-symlinks-flag: 1.0.0
 
   resolve@2.0.0-next.7:
     dependencies:
@@ -11683,7 +11672,7 @@ snapshots:
   sass-loader@17.1.0(sass-embedded@1.107.1)(webpack@5.112.0):
     optionalDependencies:
       sass-embedded: 1.107.1
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   saxes@6.0.0:
     dependencies:
@@ -11882,7 +11871,7 @@ snapshots:
     dependencies:
       iconv-lite: 0.6.3
       source-map-js: 1.2.2
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   source-map-support@0.5.21:
     dependencies:
@@ -12029,7 +12018,7 @@ snapshots:
 
   style-loader@4.0.0(webpack@5.112.0):
     dependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
 
   superstatic@11.1.0(supports-color@8.1.1):
     dependencies:
@@ -12211,7 +12200,7 @@ snapshots:
       picomatch: 4.0.7
       source-map: 0.7.6
       typescript: 6.0.3
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
     optionalDependencies:
       loader-utils: 2.0.4
 
@@ -12431,21 +12420,19 @@ snapshots:
 
   webidl-conversions@7.0.0: {}
 
-  webpack-cli@7.2.3(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0):
+  webpack-cli@7.3.1(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0):
     dependencies:
       '@discoveryjs/json-ext': 1.1.0
       commander: 14.0.3
-      cross-spawn: 7.0.6
       envinfo: 7.21.0
-      import-local: 3.2.0
       interpret: 3.1.1
-      rechoir: 0.8.0
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      rechoir: 1.0.0
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
       webpack-merge: 6.0.1
     optionalDependencies:
       js-yaml: 5.5.0
       json5: 2.2.3
-      webpack-dev-server: 6.1.0(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.112.0)
+      webpack-dev-server: 6.1.0(supports-color@8.1.1)(webpack-cli@7.3.1)(webpack@5.112.0)
 
   webpack-dev-middleware@8.6.0(webpack@5.112.0):
     dependencies:
@@ -12454,13 +12441,13 @@ snapshots:
       range-parser: 1.3.0
       schema-utils: 4.5.0
     optionalDependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
       ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  webpack-dev-server@6.1.0(supports-color@8.1.1)(webpack-cli@7.2.3)(webpack@5.112.0):
+  webpack-dev-server@6.1.0(supports-color@8.1.1)(webpack-cli@7.3.1)(webpack@5.112.0):
     dependencies:
       '@types/bonjour': 3.5.13
       '@types/connect-history-api-fallback': 1.5.4
@@ -12487,8 +12474,8 @@ snapshots:
       webpack-dev-middleware: 8.6.0(webpack@5.112.0)
       ws: 8.22.0
     optionalDependencies:
-      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3)
-      webpack-cli: 7.2.3(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
+      webpack: 5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1)
+      webpack-cli: 7.3.1(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -12502,7 +12489,7 @@ snapshots:
 
   webpack-sources@3.6.0: {}
 
-  webpack@5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.2.3):
+  webpack@5.112.0(clean-css@5.3.3)(html-minifier-terser@6.1.0)(postcss@8.5.30)(uglify-js@3.19.3)(webpack-cli@7.3.1):
     dependencies:
       '@types/estree': 1.0.9
       '@types/json-schema': 7.0.15
@@ -12522,7 +12509,7 @@ snapshots:
       watchpack: 2.6.3
       webpack-sources: 3.6.0
     optionalDependencies:
-      webpack-cli: 7.2.3(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
+      webpack-cli: 7.3.1(js-yaml@5.5.0)(json5@2.2.3)(webpack-dev-server@6.1.0)(webpack@5.112.0)
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@napi-rs/image'

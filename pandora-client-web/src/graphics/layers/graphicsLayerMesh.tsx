@@ -8,6 +8,7 @@ import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandalo
 import { PixiMesh } from '../baseComponents/mesh.tsx';
 import { PixiSkinnedMesh } from '../baseComponents/skinnedMesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
+import { useGraphicsBonePalette } from '../graphicsBonePaletteContext.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, useLayerVerticesTransformData, type GraphicsLayerProps, type LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
@@ -41,6 +42,7 @@ const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 	const evaluatorUvPose = useCharacterPoseEvaluator(evaluator.poseEvaluator.assetManager, imageUvPose);
 
 	const vertexEvaluator = displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator;
+	const bonePalette = useGraphicsBonePalette(vertexEvaluator);
 	const verticesData = useLayerVerticesTransformData(vertexEvaluator, points, layer, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
@@ -60,6 +62,7 @@ const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 	return (
 		layer.normalMap != null ? (
 			<GraphicsLayerMeshNormalsWithTexture
+				bonePalette={ bonePalette }
 				vertices={ verticesData }
 				uvs={ uv }
 				triangles={ triangles }
@@ -73,6 +76,7 @@ const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 			/>
 		) : (
 			<PixiSkinnedMesh
+				bonePalette={ bonePalette }
 				state={ cullingState }
 				vertices={ verticesData }
 				uvs={ uv }

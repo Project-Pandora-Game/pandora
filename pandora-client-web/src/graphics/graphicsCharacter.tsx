@@ -27,6 +27,7 @@ import type { PointLike } from './common/point.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
+import { GraphicsBonePaletteProvider } from './graphicsBonePaletteContext.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
 import { GraphicsCharacterDefaultLayerBuilder } from './layers/graphicsLayer.tsx';
@@ -341,9 +342,11 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirectionObservable swap={ swapCullingScale }>
-					<Container zIndex={ 0 }>
-						{ sortOrder.flatMap((priority) => priorityLayers.get(priority) ?? null) }
-					</Container>
+					<GraphicsBonePaletteProvider evaluator={ poseEvaluator }>
+						<Container zIndex={ 0 }>
+							{ sortOrder.flatMap((priority) => priorityLayers.get(priority) ?? null) }
+						</Container>
+					</GraphicsBonePaletteProvider>
 					{ children }
 				</SwapCullingDirectionObservable>
 			</GraphicsSuspense>

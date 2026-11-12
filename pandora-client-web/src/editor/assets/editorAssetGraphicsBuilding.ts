@@ -83,6 +83,10 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	public addDownscaledImage(_resolution: number): GraphicsBuildImageResource {
 		throw new Error('Transform addDownscaledImage is not supported in the editor.');
 	}
+	public addMaskImage(): GraphicsBuildImageResource {
+		// Editor textures already preserve source red/alpha; encoding happens during asset export.
+		return this;
+	}
 	public addSizeCheck(_exactWidth: number, _exactHeight: number): void {
 		// NOOP
 	}

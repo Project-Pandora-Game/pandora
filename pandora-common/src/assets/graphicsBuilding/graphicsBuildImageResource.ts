@@ -25,17 +25,23 @@ export interface GraphicsBuildImageResource {
 
 	addResizedImage(maxWidth: number, maxHeight: number, suffix: string): GraphicsBuildImageResource;
 	addDownscaledImage(resolution: number): GraphicsBuildImageResource;
+	/** Lossless resource preserving mask red and alpha values. */
+	addMaskImage(): GraphicsBuildImageResource;
 	addSizeCheck(exactWidth: number, exactHeight: number): void;
 
 	getSize(): Promise<Size>;
 	getContentBoundingBox(): Promise<ImageBoundingBox>;
 }
 
-export function LoadLayerImage(image: string, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea): string {
+export function LoadLayerImage(image: string, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea, mask = false): string {
 	let resource = context.loadImage(image);
 
 	if (imageTrimArea != null) {
 		resource = resource.addCutImageRelative(imageTrimArea[0], imageTrimArea[1], imageTrimArea[2], imageTrimArea[3]);
+	}
+
+	if (mask) {
+		resource = resource.addMaskImage();
 	}
 
 	for (const resolution of context.generateResolutions) {
@@ -61,17 +67,17 @@ export function ListLayerImageSettingImages(setting: Immutable<LayerImageSetting
 	return Array.from(resources);
 }
 
-export function LoadLayerImageSetting(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea): LayerImageSetting {
+export function LoadLayerImageSetting(setting: Immutable<LayerImageSetting>, context: GraphicsBuildContext<unknown>, imageTrimArea: LayerImageTrimArea, mask = false): LayerImageSetting {
 	const overrides: LayerImageOverride[] = setting.overrides
 		.map((override): LayerImageOverride => ({
-			image: override.image && LoadLayerImage(override.image, context, imageTrimArea),
+			image: override.image && LoadLayerImage(override.image, context, imageTrimArea, mask),
 			normalMapImage: override.normalMapImage && LoadLayerImage(override.normalMapImage, context, imageTrimArea),
 			uvPose: override.uvPose,
 			condition: CloneDeepMutable(override.condition),
 		}));
 	return {
 		...setting,
-		image: setting.image && LoadLayerImage(setting.image, context, imageTrimArea),
+		image: setting.image && LoadLayerImage(setting.image, context, imageTrimArea, mask),
 		normalMapImage: setting.normalMapImage && LoadLayerImage(setting.normalMapImage, context, imageTrimArea),
 		overrides,
 	};

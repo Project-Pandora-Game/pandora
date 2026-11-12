@@ -6,6 +6,7 @@ import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints 
 import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator, type StandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
+import { PixiSkinnedMesh } from '../baseComponents/skinnedMesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
@@ -41,7 +42,6 @@ const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 
 	const vertexEvaluator = displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator;
 	const verticesData = useLayerVerticesTransformData(vertexEvaluator, points, layer, false);
-	const vertices = useLayerVertices(vertexEvaluator, points, layer, false).vertices;
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
@@ -72,9 +72,9 @@ const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 				debugConfig={ debugConfig }
 			/>
 		) : (
-			<PixiMesh
+			<PixiSkinnedMesh
 				state={ cullingState }
-				vertices={ vertices }
+				vertices={ verticesData }
 				uvs={ uv }
 				indices={ triangles }
 				texture={ texture }

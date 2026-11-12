@@ -39,11 +39,16 @@ export function GraphicsLayerMeshNormals({
 
 	const geometry = useCallback<PixiCustomMeshGeometryCreator<PIXI.Geometry>>((existingGeometry) => {
 		if (existingGeometry) {
-			existingGeometry.getBuffer('aPosition').data = vertices.vertices;
-			existingGeometry.getBuffer('aUV').data = uvs;
-			existingGeometry.getBuffer('aBoneIndices').data = vertices.vertexSkinningBoneIndices;
-			existingGeometry.getBuffer('aBoneWeights').data = vertices.vertexSkinningBoneWeights;
-			existingGeometry.indexBuffer.data = triangles;
+			if (existingGeometry.getBuffer('aPosition').data !== vertices.vertices)
+				existingGeometry.getBuffer('aPosition').data = vertices.vertices;
+			if (existingGeometry.getBuffer('aUV').data !== uvs)
+				existingGeometry.getBuffer('aUV').data = uvs;
+			if (existingGeometry.getBuffer('aBoneIndices').data !== vertices.vertexSkinningBoneIndices)
+				existingGeometry.getBuffer('aBoneIndices').data = vertices.vertexSkinningBoneIndices;
+			if (existingGeometry.getBuffer('aBoneWeights').data !== vertices.vertexSkinningBoneWeights)
+				existingGeometry.getBuffer('aBoneWeights').data = vertices.vertexSkinningBoneWeights;
+			if (existingGeometry.indexBuffer.data !== triangles)
+				existingGeometry.indexBuffer.data = triangles;
 			return existingGeometry;
 		} else {
 			const positionBuffer = new PIXI.Buffer({

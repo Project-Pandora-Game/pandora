@@ -20,6 +20,25 @@ import { EvalLayerVerticesTransform, EvalLayerVerticesTransformData, type LayerV
 
 export { EvalLayerVerticesTransform, EvalLayerVerticesTransformData, type LayerVerticesResult, type LayerVerticesTransformData } from './graphicsLayerVertices.ts';
 
+const normalizedVertices = new WeakMap<Float32Array, WeakMap<Immutable<Rectangle>, Float32Array>>();
+function NormalizeVertices(vertices: Float32Array, area: Immutable<Rectangle>): Float32Array {
+	let areas = normalizedVertices.get(vertices);
+	if (areas === undefined) {
+		areas = new WeakMap();
+		normalizedVertices.set(vertices, areas);
+	}
+	let result = areas.get(area);
+	if (result === undefined) {
+		result = new Float32Array(vertices.length);
+		for (let i = 0; i < vertices.length; i++) {
+			const odd = i % 2 !== 0;
+			result[i] = (vertices[i] - (odd ? area.y : area.x)) / (odd ? area.height : area.width);
+		}
+		areas.set(area, result);
+	}
+	return result;
+}
+
 export function useLayerVertices(
 	evaluator: CharacterPoseEvaluator,
 	points: Immutable<PointDefinitionCalculated[]>,
@@ -32,15 +51,9 @@ export function useLayerVertices(
 
 		// Normalize
 		if (normalize) {
-			const normalizedResult = new Float32Array(result.vertices.length);
-			for (let i = 0; i < result.vertices.length; i++) {
-				const odd = (i % 2) !== 0;
-				normalizedResult[i] = (result.vertices[i] - (odd ? layerArea.y : layerArea.x)) /
-					(odd ? layerArea.height : layerArea.width);
-			}
 			return {
 				...result,
-				vertices: normalizedResult,
+				vertices: NormalizeVertices(result.vertices, layerArea),
 			};
 		}
 		return result;
@@ -59,15 +72,9 @@ export function useLayerVerticesTransformData(
 
 		// Normalize
 		if (normalize) {
-			const normalizedResult = new Float32Array(result.vertices.length);
-			for (let i = 0; i < result.vertices.length; i++) {
-				const odd = (i % 2) !== 0;
-				normalizedResult[i] = (result.vertices[i] - (odd ? layerArea.y : layerArea.x)) /
-					(odd ? layerArea.height : layerArea.width);
-			}
 			return {
 				...result,
-				vertices: normalizedResult,
+				vertices: NormalizeVertices(result.vertices, layerArea),
 			};
 		}
 		return result;

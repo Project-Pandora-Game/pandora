@@ -1,6 +1,7 @@
 import type { CharacterPoseTransforms } from 'pandora-common';
 import { createContext, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { GraphicsBonePalette } from './graphicsBonePalette.ts';
+import { GraphicsMaskScopeContext } from './graphicsMaskScope.tsx';
 
 const BonePaletteContext = createContext<{ evaluator: CharacterPoseTransforms; palette: GraphicsBonePalette; } | null>(null);
 
@@ -11,7 +12,7 @@ export function GraphicsBonePaletteProvider({ evaluator, children }: { evaluator
 	const value = useMemo(() => ({ evaluator, palette }), [evaluator, palette]);
 	return (
 		<BonePaletteContext.Provider value={ value }>
-			{ children }
+			<GraphicsMaskScopeContext.Provider value={ palette }>{ children }</GraphicsMaskScopeContext.Provider>
 		</BonePaletteContext.Provider>
 	);
 }

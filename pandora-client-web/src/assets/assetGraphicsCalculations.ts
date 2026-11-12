@@ -1,16 +1,12 @@
 import { Immutable } from 'immer';
 import {
-	APPEARANCE_POSE_DEFAULT,
 	Assert,
 	BitField,
 	CalculatePointsTrianglesFlat,
 	CloneDeepMutable,
 	Item,
-	LayerImageSetting,
 	MakeMirroredPoints,
 	PointDefinition,
-	ProduceAppearancePose,
-	type AppearancePose,
 	type GraphicsLayer,
 	type PointDefinitionCalculated,
 	type PointTemplate,
@@ -23,25 +19,17 @@ import { EvaluateCondition } from '../graphics/utility.ts';
 import { useObservable } from '../observable.ts';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolutionHooks.ts';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
+import { ResolveLayerImageSource, type LayerImageSource } from './assetGraphicsImageSource.ts';
 
 export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
 	{ image: setting }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image'>,
 	item: Item | null,
-): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; normalMapImage?: string; imageUvPose: Immutable<AppearancePose>; }> {
+): LayerImageSource {
 	return useMemo((): ReturnType<typeof useLayerImageSource> => {
 		const resultSetting = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item))) ?? setting;
 
-		return {
-			setting,
-			image: resultSetting.image,
-			normalMapImage: resultSetting.normalMapImage,
-			imageUvPose: resultSetting.uvPose ? ProduceAppearancePose(
-				APPEARANCE_POSE_DEFAULT,
-				{ assetManager: evaluator.poseEvaluator.assetManager },
-				resultSetting.uvPose,
-			) : APPEARANCE_POSE_DEFAULT,
-		};
+		return ResolveLayerImageSource(evaluator.poseEvaluator.assetManager, setting, resultSetting);
 	}, [evaluator, item, setting]);
 }
 

@@ -49,3 +49,108 @@ describe('SkinMeshPositions', () => {
 	});
 });
 
+const jest = import.meta.jest;
+const canvasProbe = jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+const { Texture } = await import('pixi.js');
+const { GraphicsSkinnedMesh, GetSkinnedMeshGlProgram } = await import('../../src/graphics/graphicsSkinnedMesh.ts');
+const { GraphicsBonePalette } = await import('../../src/graphics/graphicsBonePalette.ts');
+GetSkinnedMeshGlProgram();
+canvasProbe.mockRestore();
+
+function MeshData(offset = 0): LayerVerticesTransformData {
+	const bones = new Float32Array(8 * MAX_BONE_COUNT);
+	new DualQuaternion().fromRotationTranslation(
+		Quaternion.fromAxisAngle(new Vector3(0, 0, 1), 0.5), new Vector3(offset, 10, 0),
+	).toArray(bones);
+	return {
+		vertices: new Float32Array([0, 0, 20, 0, 0, 20]),
+		vertexSkinningBoneIndices: new Uint16Array(12),
+		vertexSkinningBoneWeights: new Float32Array(12),
+		boneTransforms: bones,
+	};
+}
+
+function Render(mesh: InstanceType<typeof GraphicsSkinnedMesh>, count: number): void {
+	for (let frame = 0; frame < count; frame++)
+		mesh.prepareForRender();
+}
+
+describe('settled mesh poses', () => {
+	const uvs = new Float32Array([0, 0, 1, 0, 0, 1]);
+	const indices = new Uint32Array([0, 1, 2]);
+
+	it('bakes a settled pose once and restores GPU skinning before a changed pose is drawn', () => {
+		const data = MeshData();
+		const mesh = new GraphicsSkinnedMesh(data, uvs, indices, Texture.WHITE);
+		const shader = mesh.shader;
+		try {
+			Render(mesh, 3);
+			expect(mesh.shader).toBe(shader);
+			Render(mesh, 5);
+			expect(mesh.shader).toBeNull();
+			expect(mesh.renderPipeId).toBe('mesh');
+			const positions = mesh.geometry.getBuffer('aPosition').data;
+			expect(positions).toEqual(SkinMeshPositions(data));
+			Render(mesh, 100);
+			expect(mesh.geometry.getBuffer('aPosition').data).toBe(positions);
+			expect(mesh.containsPoint({ x: (positions[0] + positions[2] + positions[4]) / 3, y: (positions[1] + positions[3] + positions[5]) / 3 })).toBe(true);
+
+			const next = { ...data, boneTransforms: MeshData(30).boneTransforms };
+			mesh.update(next, uvs, indices, Texture.WHITE);
+			expect(mesh.shader).toBe(shader);
+			expect(mesh.geometry.getBuffer('aPosition').data).toBe(next.vertices);
+			expect(mesh.renderPipeId).toBe('pandoraSkinnedMesh');
+			expect(mesh.bounds.minX).toBeGreaterThan(10);
+			Render(mesh, 8);
+			expect(mesh.shader).toBeNull();
+			expect(mesh.geometry.getBuffer('aPosition').data).toEqual(SkinMeshPositions(next));
+		} finally {
+			mesh.destroy();
+		}
+	});
+
+	it('keeps moving poses on the GPU and preserves a settled pose through UV and texture updates', () => {
+		let data = MeshData();
+		const mesh = new GraphicsSkinnedMesh(data, uvs, indices, Texture.WHITE);
+		const shader = mesh.shader;
+		const positionUpdates = jest.fn();
+		mesh.geometry.getBuffer('aPosition').on('update', positionUpdates);
+		try {
+			for (let pose = 0; pose < 20; pose++) {
+				data = { ...data, boneTransforms: MeshData(pose).boneTransforms };
+				mesh.update(data, uvs, indices, Texture.WHITE);
+				Render(mesh, 3);
+				expect(mesh.shader).toBe(shader);
+			}
+			expect(positionUpdates).not.toHaveBeenCalled();
+			Render(mesh, 8);
+			expect(positionUpdates).toHaveBeenCalledTimes(1);
+			const positions = mesh.geometry.getBuffer('aPosition').data;
+			mesh.update(data, uvs.slice(), indices.slice(), Texture.EMPTY);
+			expect(mesh.shader).toBeNull();
+			expect(mesh.geometry.getBuffer('aPosition').data).toBe(positions);
+			expect(mesh.texture).toBe(Texture.EMPTY);
+		} finally {
+			mesh.destroy();
+		}
+	});
+
+	it('invalidates settled positions for geometry and weight changes and releases its idle palette lease', () => {
+		const data = MeshData();
+		const palette = new GraphicsBonePalette();
+		const mesh = new GraphicsSkinnedMesh(data, uvs, indices, Texture.WHITE, undefined, palette);
+		try {
+			Render(mesh, 8);
+			expect(palette.referenceCount).toBe(1);
+			const changed = { ...data, vertices: data.vertices.slice(), vertexSkinningBoneWeights: data.vertexSkinningBoneWeights.slice() };
+			changed.vertices[0] = 5;
+			mesh.update(changed, uvs, indices, Texture.WHITE);
+			expect(mesh.shader).not.toBeNull();
+			Render(mesh, 8);
+			expect(mesh.geometry.getBuffer('aPosition').data).toEqual(SkinMeshPositions(changed));
+		} finally {
+			mesh.destroy();
+		}
+		expect(palette.referenceCount).toBe(0);
+	});
+});

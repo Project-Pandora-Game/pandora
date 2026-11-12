@@ -1,9 +1,9 @@
 import { MAX_BONE_COUNT } from 'pandora-common';
 import {
-	Bounds, Buffer, BufferUsage, Mesh, MeshGeometry, UniformGroup,
+	Bounds, Buffer, BufferUsage, ExtensionType, Mesh, MeshGeometry, UniformGroup, extensions,
 	compileHighShaderGlProgram, localUniformBitGl,
 	pointInTriangle, roundPixelsBitGl, textureBitGl,
-	type DestroyOptions, type HighShaderBit, type PointData, type State, type Texture, type TextureShader,
+	type DestroyOptions, type HighShaderBit, type InstructionSet, type PointData, type RenderPipe, type State, type Texture, type TextureShader, type WebGLRenderer,
 } from 'pixi.js';
 import type { LayerVerticesTransformData } from './layers/graphicsLayerVertices.ts';
 import { CreateGraphicsSkinningShader, UpdateGraphicsSkinningShaderPalette, type GraphicsBonePalette } from './graphicsBonePalette.ts';
@@ -72,6 +72,7 @@ function CreateGeometry(data: LayerVerticesTransformData, uvs: Float32Array, ind
 
 /** Owns its shader/geometry, retaining static buffers and the texture across pose updates. */
 export class GraphicsSkinnedMesh extends Mesh<MeshGeometry, TextureShader> {
+	public override renderPipeId = 'pandoraSkinnedMesh';
 	private _vertices: LayerVerticesTransformData;
 	private _uvs: Float32Array;
 	private _indices: Uint32Array;
@@ -79,6 +80,7 @@ export class GraphicsSkinnedMesh extends Mesh<MeshGeometry, TextureShader> {
 	private readonly _posedBounds = new Bounds();
 	private _bonePalette: GraphicsBonePalette | undefined;
 	private readonly _skinningShader: TextureShader;
+	private _unchangedRenders = 0;
 	private readonly _textureUniforms: UniformGroup<{ uTextureMatrix: { type: 'mat3x3<f32>'; value: Texture['textureMatrix']['mapCoord']; }; }>;
 
 	constructor(vertices: LayerVerticesTransformData, uvs: Float32Array, indices: Uint32Array, texture: Texture, state?: State, bonePalette?: GraphicsBonePalette) {
@@ -106,8 +108,13 @@ export class GraphicsSkinnedMesh extends Mesh<MeshGeometry, TextureShader> {
 			|| vertices.boneTransforms !== old.boneTransforms;
 		if (poseChanged) {
 			this._posedPositions = undefined;
+			this._unchangedRenders = 0;
+			// A settled mesh contains posed positions. Restore its rest positions
+			// and skinning shader together before drawing a new pose.
 			const positions = this.geometry.getBuffer('aPosition');
 			if (positions.data !== vertices.vertices) positions.data = vertices.vertices;
+			this.renderPipeId = 'pandoraSkinnedMesh';
+			this.shader = this._skinningShader;
 		}
 		if (vertices.vertexSkinningBoneIndices !== old.vertexSkinningBoneIndices) this.geometry.getBuffer('aBoneIndices').data = vertices.vertexSkinningBoneIndices;
 		if (vertices.vertexSkinningBoneWeights !== old.vertexSkinningBoneWeights) this.geometry.getBuffer('aBoneWeights').data = vertices.vertexSkinningBoneWeights;
@@ -127,6 +134,15 @@ export class GraphicsSkinnedMesh extends Mesh<MeshGeometry, TextureShader> {
 		this._uvs = uvs;
 		this._indices = indices;
 		this.onViewUpdate();
+	}
+
+	/** Moving meshes keep GPU skinning; settled poses reuse the ordinary mesh shader. */
+	public prepareForRender(): void {
+		if (this.shader === null || ++this._unchangedRenders < 8)
+			return;
+		this.geometry.getBuffer('aPosition').data = this._ensurePosedPositions();
+		this.shader = null;
+		this.renderPipeId = 'mesh';
 	}
 
 	public setBonePalette(palette: GraphicsBonePalette | undefined): void {
@@ -175,3 +191,37 @@ export class GraphicsSkinnedMesh extends Mesh<MeshGeometry, TextureShader> {
 	}
 }
 
+/**
+ * Keep pose settling in the normal draw path, without another per-frame scene traversal.
+ */
+class GraphicsSkinnedMeshPipe implements RenderPipe<GraphicsSkinnedMesh> {
+	public static readonly extension = { type: ExtensionType.WebGLPipes, name: 'pandoraSkinnedMesh' };
+	private readonly _renderer: WebGLRenderer;
+
+	constructor(renderer: WebGLRenderer) {
+		this._renderer = renderer;
+	}
+
+	public addRenderable(mesh: GraphicsSkinnedMesh, instructions: InstructionSet): void {
+		this._renderer.renderPipes.mesh.addRenderable(mesh, instructions);
+	}
+
+	public updateRenderable(mesh: GraphicsSkinnedMesh): void {
+		this._renderer.renderPipes.mesh.updateRenderable(mesh);
+	}
+
+	public validateRenderable(mesh: GraphicsSkinnedMesh): boolean {
+		return this._renderer.renderPipes.mesh.validateRenderable(mesh);
+	}
+
+	public execute(mesh: GraphicsSkinnedMesh): void {
+		if (!mesh.isRenderable)
+			return;
+		mesh.prepareForRender();
+		this._renderer.renderPipes.mesh.execute(mesh);
+	}
+
+	public destroy(): void { /* Pixi's mesh pipe owns its renderer resources. */ }
+}
+
+extensions.add(GraphicsSkinnedMeshPipe);

@@ -14,6 +14,7 @@ import { Container } from '../baseComponents/container.ts';
 import { type PixiMeshProps } from '../baseComponents/mesh.tsx';
 import { Sprite } from '../baseComponents/sprite.ts';
 import { GraphicsMaskLayer } from '../graphicsMaskLayer.ts';
+import { CompactMaskMeshPoints } from '../graphicsMaskGeometry.ts';
 import { useGraphicsSettings } from '../graphicsSettings.tsx';
 import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
@@ -41,7 +42,8 @@ function GraphicsLayerAlphaImageMeshEnabled(props: GraphicsLayerProps<'alphaImag
 function GraphicsLayerAlphaImageMeshGeometry({
 	children, layer, item, poseEvaluator, displayUvPose = false, evaluator,
 }: GraphicsLayerProps<'alphaImageMesh'> & ChildrenProps & { evaluator: AppearanceConditionEvaluator; }): ReactElement {
-	const { points, triangles } = useLayerMeshPoints(layer);
+	const mesh = useLayerMeshPoints(layer);
+	const { points, triangles } = CompactMaskMeshPoints(mesh.points, mesh.triangles);
 	const { image, imageUvPose } = useLayerImageSource(evaluator, layer, item);
 	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
 	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;

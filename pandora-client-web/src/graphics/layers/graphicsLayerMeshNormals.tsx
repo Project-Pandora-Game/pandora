@@ -1,11 +1,12 @@
 import type { Immutable } from 'immer';
-import { Assert, MAX_BONE_COUNT, type LayerNormalData } from 'pandora-common';
+import type { LayerNormalData } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, type RefAttributes } from 'react';
 import type { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { PixiCustomMesh, PixiCustomMeshGeometryCreator, type PixiCustomMeshProps, type PixiCustomMeshShaderCreator } from '../baseComponents/customMesh.tsx';
+import type { GraphicsBonePalette } from '../graphicsBonePalette.ts';
 import type { LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
-import { DEFAULT_NORMAL_TEXTURE, GetNormalMeshDebugNormalsGlProgram, GetNormalMeshGlProgram } from './graphicsLayerMeshNormalsShader.ts';
+import { CreateOrUpdateNormalMeshShader } from './graphicsLayerMeshNormalsShader.ts';
 
 export interface GraphicsLayerMeshNormalsProps extends RefAttributes<PIXI.Mesh<PIXI.Geometry, PIXI.Shader>>,
 	Omit<PixiCustomMeshProps<PIXI.Geometry, PIXI.Shader>, 'geometry' | 'shader' | 'state'> {
@@ -16,6 +17,7 @@ export interface GraphicsLayerMeshNormalsProps extends RefAttributes<PIXI.Mesh<P
 	normalMapTexture: PIXI.Texture;
 	normalMapData: LayerNormalData;
 	state: PIXI.State;
+	bonePalette?: GraphicsBonePalette;
 	color: number;
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 }
@@ -31,6 +33,7 @@ export function GraphicsLayerMeshNormals({
 	state,
 	color,
 	debugConfig,
+	bonePalette,
 	...props
 }: GraphicsLayerMeshNormalsProps): ReactElement {
 
@@ -119,81 +122,13 @@ export function GraphicsLayerMeshNormals({
 	}, [triangles, uvs, vertices]);
 
 	const shader = useMemo((): PixiCustomMeshShaderCreator<PIXI.Shader> => {
-		const program = debugConfig?.displayNormalMap ? GetNormalMeshDebugNormalsGlProgram() : GetNormalMeshGlProgram();
-
-		const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
-		const ambientStrength = 0.1;
-		const { specularStrength, roughness } = normalMapData;
-		// eslint-disable-next-line no-bitwise
-		const colorAlpha = PIXI.Color.shared.setValue(color).toBgrNumber() + (((255) | 0) << 24);
-
-		return (existingShader) => {
-			Assert(vertices.boneTransforms.length === 8 * MAX_BONE_COUNT, 'Invalid boneTransforms length');
-
-			if (existingShader && existingShader.glProgram === program) {
-				/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-				existingShader.resources.uTexture = texture.source;
-				existingShader.resources.uSampler = texture.source.style;
-				existingShader.resources.uNormalMap = normalMap.source;
-				existingShader.resources.uNormalSampler = normalMap.source.style;
-				existingShader.resources.skinningUniforms.uniforms.uBoneQuat = vertices.boneTransforms;
-				existingShader.resources.textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
-				if (!debugConfig?.displayNormalMap) {
-					PIXI.color32BitToUniform(colorAlpha, existingShader.resources.textureUniforms.uniforms.uBaseColor as Float32Array, 0);
-					existingShader.resources.pbrUniforms.uniforms.uAmbientStrength = ambientStrength;
-					existingShader.resources.pbrUniforms.uniforms.uSpecularStrength = specularStrength;
-					existingShader.resources.pbrUniforms.uniforms.uRoughness = roughness;
-				}
-				/* eslint-enable @typescript-eslint/no-unsafe-member-access */
-				return existingShader;
-			} else {
-				if (debugConfig?.displayNormalMap) {
-					const uBaseColor = new Float32Array([1, 1, 1, 1]);
-					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
-					return new PIXI.Shader({
-						glProgram: program,
-						resources: {
-							uTexture: texture.source,
-							uSampler: texture.source.style,
-							uNormalMap: normalMap.source,
-							uNormalSampler: normalMap.source.style,
-							skinningUniforms: new PIXI.UniformGroup({
-								uBoneQuat: { type: 'vec4<f32>', size: 2 * MAX_BONE_COUNT, value: vertices.boneTransforms },
-							}),
-							textureUniforms: new PIXI.UniformGroup({
-								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
-							}),
-						},
-					});
-				} else {
-					const uBaseColor = new Float32Array([1, 1, 1, 1]);
-					PIXI.color32BitToUniform(colorAlpha, uBaseColor, 0);
-					return new PIXI.Shader({
-						glProgram: program,
-						resources: {
-							uTexture: texture.source,
-							uSampler: texture.source.style,
-							uNormalMap: normalMap.source,
-							uNormalSampler: normalMap.source.style,
-							skinningUniforms: new PIXI.UniformGroup({
-								// The type actually is mat2x4<f32>, but pixi doesn't support it properly
-								uBoneQuat: { type: 'vec4<f32>', size: 2 * MAX_BONE_COUNT, value: vertices.boneTransforms },
-							}),
-							textureUniforms: new PIXI.UniformGroup({
-								uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
-								uBaseColor: { value: uBaseColor, type: 'vec4<f32>' },
-							}),
-							pbrUniforms: new PIXI.UniformGroup({
-								uAmbientStrength: { type: 'f32', value: ambientStrength },
-								uSpecularStrength: { type: 'f32', value: specularStrength },
-								uRoughness: { type: 'f32', value: roughness },
-							}),
-						},
-					});
-				}
-			}
-		};
-	}, [texture, normalMapTexture, normalMapData, color, debugConfig, vertices]);
+		return (existingShader) => CreateOrUpdateNormalMeshShader(existingShader, {
+			texture, normalMapTexture, normalMapData, color,
+			displayNormalMap: debugConfig?.displayNormalMap,
+			boneTransforms: vertices.boneTransforms,
+			bonePalette,
+		});
+	}, [texture, normalMapTexture, normalMapData, color, debugConfig, vertices, bonePalette]);
 
 	return (
 		<PixiCustomMesh

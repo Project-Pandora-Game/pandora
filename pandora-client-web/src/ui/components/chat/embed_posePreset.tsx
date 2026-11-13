@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
-import { AssetFrameworkPosePresetSchema, type AppearanceAction, type AssetFrameworkPosePreset } from 'pandora-common';
+import { AssetFrameworkPosePresetSchema, type AssetFrameworkPosePreset } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { useCallback, useState, type ReactElement } from 'react';
 import bodyIcon from '../../../assets/icons/body.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
@@ -92,14 +93,8 @@ function PosePresetEmbedDialog({ data, close }: {
 	}, [customPosePresets, updateCustomPosePresets, data, close]);
 
 	const [execute] = useWardrobeExecuteCallback();
-	const setPoseDirect = useEvent(({ pose, rotation, yOffset }: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => {
-		execute({
-			type: 'pose',
-			target: playerState.id,
-			pose,
-			rotation,
-			yOffset,
-		});
+	const setPoseDirect = useEvent((params: MoveCharacterActionParams) => {
+		execute(CreateMoveCharacterAction(params, playerState));
 	});
 
 	if (exporting) {

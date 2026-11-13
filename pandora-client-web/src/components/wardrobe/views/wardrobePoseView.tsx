@@ -16,12 +16,12 @@ import {
 	LegsPoseSchema,
 	PartialAppearancePose,
 	ProduceAppearancePose,
-	type AppearanceAction,
 	type ArmPose,
 	type AssetsPosePresetCategory,
 	type CenteredDegrees,
 	type ItemDisplayNameType,
 } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import * as z from 'zod';
 import bodyIcon from '../../../assets/icons/body.svg';
@@ -115,7 +115,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }: {
 	poseCategory: Immutable<AssetsPosePresetCategory>;
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	return (
 		<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
@@ -137,7 +137,7 @@ function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }:
 
 export function WardrobePoseCategories({ characterState, setPose }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
@@ -156,7 +156,7 @@ export function WardrobePoseCategories({ characterState, setPose }: {
 
 export function WardrobeViewPose({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }) {
 	return (
 		<table className='armPositioningTable'>
@@ -188,7 +188,7 @@ export function WardrobeViewPose({ setPose, characterState }: {
 
 export function WardrobeArmPoses({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	const [controlIndividually, setControlIndividually] = useBrowserStorage<boolean>('posing.arms-control-individually', false, z.boolean());
 
@@ -369,7 +369,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 
 export function WardrobeLegsPose({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }) {
 	return (
 		<>
@@ -431,7 +431,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 	);
 }
 
-export function WardrobePoseGui({ character, characterState }: {
+export function WardrobePoseGui({ characterState }: {
 	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
@@ -440,14 +440,8 @@ export function WardrobePoseGui({ character, characterState }: {
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
-	const setPoseDirect = useEvent(({ pose, rotation, yOffset }: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => {
-		execute({
-			type: 'pose',
-			target: character.id,
-			pose,
-			rotation,
-			yOffset,
-		});
+	const setPoseDirect = useEvent((params: MoveCharacterActionParams) => {
+		execute(CreateMoveCharacterAction(params, characterState));
 	});
 
 	const { wardrobePosingCategoryDefault } = useAccountSettings();
@@ -753,22 +747,10 @@ function RoomManualYOffsetControl({ characterState }: {
 		if (disableManualMove)
 			return;
 
-		const position = characterState.position.position;
 		setYOffsetLocal(newYOffset);
-		execute({
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId: characterState.id,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: [position[0], position[1], newYOffset],
-				rotation: characterState.position.rotation,
-				following: characterState.position.following,
-			},
-		});
+		execute(CreateMoveCharacterAction({
+			yOffset: newYOffset,
+		}, characterState));
 	});
 
 	return (

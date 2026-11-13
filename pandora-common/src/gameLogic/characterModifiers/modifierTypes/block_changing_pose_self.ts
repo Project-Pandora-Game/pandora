@@ -39,8 +39,8 @@ Other characters can still change the pose of this character normally, if they h
 	},
 
 	checkCharacterAction(config, action, player, _result) {
-		if (action.type === 'pose') {
-			if (action.target !== player.appearance.id)
+		if (action.type === 'moveCharacter') {
+			if (action.target.characterId !== player.appearance.id)
 				return 'allow';
 
 			if (config.limitTurning && action.pose?.view && action.pose.view !== player.appearance.characterState.requestedPose.view)
@@ -54,11 +54,8 @@ Other characters can still change the pose of this character normally, if they h
 
 			if (config.limitAllPosing)
 				return 'block';
-		} else if (action.type === 'moveCharacter') {
-			if (action.target.characterId !== player.appearance.id)
-				return 'allow';
 
-			if (config.limitRotating && action.moveTo.rotation !== player.appearance.characterState.position.rotation)
+			if (config.limitRotating && action.moveTo?.type === 'normal' && action.moveTo.rotation !== player.appearance.characterState.position.rotation)
 				return 'block';
 		}
 

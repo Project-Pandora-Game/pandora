@@ -4,7 +4,7 @@ import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../../ass
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from '../../components/settings/settingsInputs.tsx';
@@ -65,7 +65,6 @@ function QualitySettings(): ReactElement {
 
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
 	const upscalingDriver = useGraphicsSettingDriver('upscaling');
-	const currentGraphicsSettings = useGraphicsSettings();
 
 	return (
 		<fieldset>
@@ -100,48 +99,28 @@ function QualitySettings(): ReactElement {
 						schema={ GraphicsUpscalingSettingSchema }
 					/>
 				) : null }
-				<Column gap='none'>
-					<ToggleSettingInput
-						driver={ useGraphicsSettingDriver('antialias') }
-						disabled={ currentGraphicsSettings.alphamaskEngine !== 'disabled' }
-						label={
-							currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
-							) : (
-								<>
-									Use antialiasing (if supported by your browser)
-									<span className='warning-box inline slim' title='Changing this setting will reload the page'>
-										↺
-									</span>
-								</>
-							)
-						}
-					/>
-					{
-						currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-							<span>Unavailable as "Alphamasking engine" is not set to "Ignore masks"</span>
-						) : null
+				<ToggleSettingInput
+					driver={ useGraphicsSettingDriver('antialias') }
+					label={
+						<>
+							Use antialiasing (if supported by your browser)
+							<span className='warning-box inline slim' title='Changing this setting will reload the page'>
+								↺
+							</span>
+						</>
 					}
-				</Column>
+				/>
 				<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
 					driver={ useGraphicsSettingDriver('alphamaskEngine') }
 					label={
 						<>
 							Alphamasking engine
-							{
-								currentGraphicsSettings.antialias ? (
-									<span className='warning-box inline slim' title='Changing this setting might reload the page'>
-										↺
-									</span>
-								) : null
-							}
 							<ContextHelpButton>
 								<p>
 									Alphamasks allow assets to hide parts of other assets beneath them, so they do not clip through.<br />
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
 									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
-									Our current implementation of alphamasking is also not compatible with Antialiasing.
 								</p>
 
 								<p>

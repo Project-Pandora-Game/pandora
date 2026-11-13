@@ -205,9 +205,6 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 		};
 	}
 	if (parsed[1] === 'rot') {
-		if (!IsEqConditionOperator(parsed[2])) {
-			throw new Error(`Invalid operator in condition '${input}' (only = and != is supported)`);
-		}
 		return {
 			characterRotation: Number.parseInt(parsed[3]),
 			operator: parsed[2],

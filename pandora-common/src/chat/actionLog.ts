@@ -11,7 +11,6 @@ const GAME_LOGIC_ACTIONS_ENTRY_COOLDOWN = {
 	moveItem: 30_000,
 	roomDeviceDeploy: 30_000,
 	color: 30_000,
-	pose: 30_000,
 	body: 30_000,
 } as const satisfies Partial<Record<AppearanceActionType, number>>;
 
@@ -64,10 +63,15 @@ export function ActionLogShouldDeduplicate(action: Immutable<ChatMessageActionLo
 		switch (logicAction.type) {
 			case 'moveCharacter':
 				return lastLogicAction.type === 'moveCharacter' &&
+					// Target must match
 					isEqual(logicAction.target, lastLogicAction.target) &&
-					logicAction.moveTo.type === lastLogicAction.moveTo.type &&
-					logicAction.moveTo.following?.followType === lastLogicAction.moveTo.following?.followType &&
-					isEqual(logicAction.moveTo.following?.target, lastLogicAction.moveTo.following?.target);
+					// Both deduplicated actions must be about moving or not
+					logicAction.moveTo?.type === lastLogicAction.moveTo?.type &&
+					// Follow target must not change
+					logicAction.moveTo?.following?.followType === lastLogicAction.moveTo?.following?.followType &&
+					isEqual(logicAction.moveTo?.following?.target, lastLogicAction.moveTo?.following?.target) &&
+					// Both deduplicated actions must be about posing or not
+					(logicAction.pose != null) === (lastLogicAction.pose != null);
 
 			case 'moveItem':
 				return lastLogicAction.type === 'moveItem' &&
@@ -93,9 +97,8 @@ export function ActionLogShouldDeduplicate(action: Immutable<ChatMessageActionLo
 					isEqual(logicAction.target, lastLogicAction.target) &&
 					isEqual(logicAction.item, lastLogicAction.item);
 
-			case 'pose':
 			case 'body':
-				return (lastLogicAction.type === 'pose' || lastLogicAction.type === 'body') &&
+				return lastLogicAction.type === 'body' &&
 					isEqual(logicAction.target, lastLogicAction.target);
 		}
 	}

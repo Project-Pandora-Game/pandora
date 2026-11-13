@@ -636,6 +636,7 @@ function CharacterFollowDialog(): ReactElement {
 			type: 'normal',
 			room: (playerFollows ? characterState : playerState).currentRoom,
 			position: (playerFollows ? playerState : characterState).position.position,
+			rotation: (playerFollows ? playerState : characterState).position.rotation,
 			following: followData,
 		},
 	}), [followData, playerFollows, characterState, playerState]);

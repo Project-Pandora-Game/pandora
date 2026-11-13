@@ -12,6 +12,7 @@ import {
 	type Item,
 	type RoomProjectionResolver,
 } from 'pandora-common';
+import { CreateMoveCharacterAction } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Character } from '../../character/character.ts';
@@ -31,6 +32,7 @@ import { RoomGraphics } from '../../graphics/room/roomScene.tsx';
 import { UseTextureGetterOverride } from '../../graphics/useTexture.ts';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
+import { useIsPortrait } from '../../styles/mediaQueries.ts';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider.tsx';
@@ -38,7 +40,6 @@ import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextPr
 import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt.tsx';
 import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView.tsx';
 import { useWardrobeContext } from './wardrobeContext.tsx';
-import { useIsPortrait } from '../../styles/mediaQueries.ts';
 
 export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
 	character: Character;
@@ -49,11 +50,11 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 	showCharacterEffects?: boolean;
 }): ReactElement {
 	const id = useId();
-	const [onClick, processing] = useAppearanceActionEvent({
-		type: 'pose',
-		target: character.id,
-		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
-	});
+	const [turnAround, processingTurnAround] = useAppearanceActionEvent(CreateMoveCharacterAction({
+		pose: {
+			view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+		},
+	}, characterState));
 
 	const [hideItems, setHideItems] = useState(false);
 
@@ -72,8 +73,8 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 				<Row className='pointer-events-enable flex' gap='medium'>
 					<Button className='slim iconButton'
 						title='Turn character around (also outside the wardrobe)'
-						onClick={ onClick }
-						disabled={ processing }
+						onClick={ turnAround }
+						disabled={ processingTurnAround }
 					>
 						↷
 					</Button>
@@ -117,7 +118,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 				<WardrobeActionAttemptOverlay character={ character } />
 			</Row>
 		</Column>
-	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, onClick, processing, character, globalState]);
+	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, turnAround, processingTurnAround, character, globalState]);
 
 	return (
 		<CharacterPreview

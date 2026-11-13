@@ -1,9 +1,10 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkSpaceState,
 	AssetsPosePreset,
 	CharacterSize,
+	GetDefaultAppearanceBundle,
 	MergePartialAppearancePoses,
 	type AssetManager,
 	type AssetsPosePresetPreview,
@@ -71,7 +72,15 @@ export async function GeneratePosePreview(
 	const previewCharacterState = AssetFrameworkCharacterState
 		.createDefault(assetManager, 'c0', spaceState)
 		.produceWithPose(preview.basePose ?? {}, 'pose')
-		.produceWithPose(pose, 'pose');
+		.produceWithPose(pose, 'pose')
+		.produceWithSpacePosition(produce(GetDefaultAppearanceBundle().position, (d) => {
+			if (preset.rotation != null) {
+				d.rotation = preset.rotation;
+			}
+			if (preset.yOffset != null) {
+				d.position[2] = preset.yOffset;
+			}
+		}));
 
 	const scale = previewSize / preview.size;
 
@@ -81,7 +90,7 @@ export async function GeneratePosePreview(
 				position={ { x: previewSize / 2, y: previewSize / 2 } }
 				pivot={ { x: (preview.x ?? ((CharacterSize.WIDTH - preview.size) / 2)) + preview.size / 2, y: preview.y + preview.size / 2 } }
 				scale={ { x: scale * (previewCharacterState.actualPose.view === 'back' ? -1 : 1), y: scale } }
-				angle={ previewCharacterState.actualPose.bones.character_rotation || 0 }
+				angle={ previewCharacterState.getActualCharacterRotation() }
 				characterState={ previewCharacterState }
 				layerStateOverrideGetter={ layerStateOverrideGetter }
 				layerFilter={ layerFilter }

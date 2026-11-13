@@ -170,6 +170,11 @@ export const RoomPositionSchema: z.ZodType<RoomPosition> = z.tuple([z.number().i
 	.readonly();
 export type RoomPosition = readonly [x: number, y: number, yOffset: number];
 
+/** A number in range `(-180, 180]` (exclusive, inclusive) */
+export type CenteredDegrees = number;
+/** A number in range `(-180, 180]` (exclusive, inclusive) */
+export const CenteredDegreesSchema: z.ZodType<CenteredDegrees> = z.number().gt(-180).lte(180);
+
 export const FollowRotationSchema = z.object({
 	/** Whether we're facing the same way as the target or not */
 	sameRotation: z.boolean(),
@@ -204,6 +209,7 @@ export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 		type: z.literal('normal'),
 		room: RoomIdSchema.catch('room:default'),
 		position: RoomPositionSchema,
+		rotation: CenteredDegreesSchema.catch(0),
 		following: CharacterRoomPositionFollowSchema.optional(),
 	}),
 ]);

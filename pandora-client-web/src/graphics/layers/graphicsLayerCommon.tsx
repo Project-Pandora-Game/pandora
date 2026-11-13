@@ -206,6 +206,8 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 
 	poseEvaluator: CharacterPoseEvaluator;
 	wornItems: AppearanceItems<WearableAssetType>;
+	/** Angle (in degrees) of whole-character rotation */
+	rotationAngle: number;
 	/**
 	 * Observable for whether the character the layer belongs to is currently mid-blink.
 	 * If not passed, it is assumed to be `false`.

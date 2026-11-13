@@ -500,7 +500,7 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphi
 
 	const characterState = useEditorCharacterState();
 	const poseEvaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, characterState.items, characterState.getActualCharacterRotation(), false);
 	const wornItem = characterState.items
 		.find((i) => i.asset.id === layer.assetGraphics.id || (i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === layer.assetGraphics.id));
 

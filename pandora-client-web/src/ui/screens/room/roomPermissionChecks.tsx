@@ -113,8 +113,9 @@ export function useCanMoveCharacter(target: Character | null): 'allowed' | 'forb
  */
 export function useCanPoseCharacter(target: Character | null): 'allowed' | 'forbidden' | 'prompt' | null {
 	const action = useMemo((): AppearanceAction | null => target != null ? ({
-		type: 'pose',
-		target: target.id,
+		type: 'moveCharacter',
+		target: target.actionSelector,
+		pose: {}, // Empty pose change runs permission checks too
 	}) : null, [target]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 

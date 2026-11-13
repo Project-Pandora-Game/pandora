@@ -11,6 +11,7 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	type AssetGraphicsDefinition,
+	type CenteredDegrees,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
@@ -45,6 +46,8 @@ export type GraphicsCharacterLayerBuilder = (
 	previousLayers: ReactElement[] | undefined,
 	reverse: boolean,
 	poseEvaluator: CharacterPoseEvaluator,
+	/** Angle (in degrees) of whole-character rotation */
+	rotationAngle: CenteredDegrees,
 	characterBlinking?: ReadonlyObservable<boolean>,
 	debugConfig?: Immutable<ChatroomDebugConfig>,
 ) => ReactElement[];
@@ -297,6 +300,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 	const effectivePose = effectiveCharacterState.actualPose;
 	const { view } = effectivePose;
 	const sortOrder = useComputedLayerPriority(effectivePose);
+	const rotationAngle = effectiveCharacterState.getActualCharacterRotation();
 
 	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
 		const result = new Map<LayerPriority, ReactElement[]>();
@@ -306,10 +310,10 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
 
-			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, characterBlinking, debugConfig));
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, rotationAngle, characterBlinking, debugConfig));
 		}
 		return result;
-	}, [layerBuilder, poseEvaluator, layers, view, characterBlinking, debugConfig]);
+	}, [layerBuilder, poseEvaluator, layers, view, rotationAngle, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

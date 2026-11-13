@@ -17,7 +17,12 @@ Other characters can still change the pose of this character normally, if they h
 			default: true,
 		},
 		limitRotating: {
-			name: 'Prevent rotating the body and the arms/legs',
+			name: 'Prevent rotating the body',
+			type: 'toggle',
+			default: true,
+		},
+		limitBoneMovement: {
+			name: 'Prevent rotating the arms/legs',
 			type: 'toggle',
 			default: true,
 		},
@@ -34,23 +39,25 @@ Other characters can still change the pose of this character normally, if they h
 	},
 
 	checkCharacterAction(config, action, player, _result) {
-		if (action.type !== 'pose')
-			return 'allow';
+		if (action.type === 'moveCharacter') {
+			if (action.target.characterId !== player.appearance.id)
+				return 'allow';
 
-		if (action.target !== player.appearance.id)
-			return 'allow';
+			if (config.limitTurning && action.pose?.view && action.pose.view !== player.appearance.characterState.requestedPose.view)
+				return 'block';
 
-		if (config.limitTurning && action.view && action.view !== player.appearance.characterState.actualPose.view)
-			return 'block';
+			if (config.limitBoneMovement && action.pose?.bones && Object.entries(action.pose.bones).some(([bone, value]) => (player.appearance.characterState.requestedPose.bones[bone] ?? 0) !== value))
+				return 'block';
 
-		if (config.limitRotating && action.bones && action.bones.character_rotation !== player.appearance.characterState.actualPose.bones.character_rotation)
-			return 'block';
+			if (config.limitLegStates && action.pose?.legs?.pose && action.pose.legs.pose !== player.appearance.characterState.requestedPose.legs.pose)
+				return 'block';
 
-		if (config.limitLegStates && action.legs?.pose && action.legs?.pose !== player.appearance.characterState.actualPose.legs.pose)
-			return 'block';
+			if (config.limitAllPosing)
+				return 'block';
 
-		if (config.limitAllPosing)
-			return 'block';
+			if (config.limitRotating && action.moveTo?.type === 'normal' && action.moveTo.rotation !== player.appearance.characterState.position.rotation)
+				return 'block';
+		}
 
 		return 'allow';
 	},

@@ -133,6 +133,9 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 	if ('module' in condition) {
 		Assert(condition.module != null);
 		return `m_${condition.module}${condition.operator}${condition.value}`;
+	} else if ('characterRotation' in condition) {
+		Assert(condition.characterRotation != null);
+		return `rot${condition.operator}${condition.characterRotation}`;
 	} else if ('attribute' in condition) {
 		Assert(condition.attribute != null);
 		return `a_${condition.attribute}`;
@@ -199,6 +202,12 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 			module: parsed[1].slice(2),
 			operator: parsed[2],
 			value: parsed[3],
+		};
+	}
+	if (parsed[1] === 'rot') {
+		return {
+			characterRotation: Number.parseInt(parsed[3]),
+			operator: parsed[2],
 		};
 	}
 	if (parsed[1].startsWith('hand_')) {

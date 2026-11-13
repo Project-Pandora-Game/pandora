@@ -1,13 +1,26 @@
 import { Immutable } from 'immer';
-import { IsReadonlyArray } from '../utility/index.ts';
+import { IntervalSetIntersection, IsReadonlyArray } from '../utility/index.ts';
 import { AppearanceLimitTree, type ReadonlyAppearanceLimitTree } from './appearanceLimit.ts';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions.ts';
 import { EFFECTS_DEFAULT, EffectsDefinition, MergeEffects } from './effects.ts';
+import { BONE_MAX, BONE_MIN } from './state/characterStatePose.ts';
 
 export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 
 	/** Configuration of how the asset limits pose */
 	poseLimits?: AssetDefinitionPoseLimits<A> | AssetDefinitionPoseLimits<A>[];
+
+	/**
+	 * Limits how much a character can rotate in the slot. Either a single number, or list of allowed intervals (increasing, non-overlapping).
+	 * @example
+	 * // Forbid rotation
+	 * 0
+	 * // Allow only ± 15 degrees of rotation
+	 * [[-15, 15]]
+	 * // Allow either -90 or anything in range 60-90
+	 * [[-90, -90], [60, 90]]
+	 */
+	rotationLimits?: number | [number, number][];
 
 	/** The effects this item applies when worn */
 	effects?: Partial<EffectsDefinition>;
@@ -120,7 +133,8 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 }
 
 export interface AssetPropertiesResult {
-	readonly limits: ReadonlyAppearanceLimitTree;
+	readonly poseLimits: ReadonlyAppearanceLimitTree;
+	readonly rotationLimits: readonly (readonly [number, number])[];
 	readonly effects: Immutable<EffectsDefinition>;
 	readonly attributes: ReadonlySet<string>;
 	readonly attributesHides: ReadonlySet<string>;
@@ -128,7 +142,8 @@ export interface AssetPropertiesResult {
 }
 
 export interface AssetPropertiesIntermediateResult extends AssetPropertiesResult {
-	limits: AppearanceLimitTree;
+	poseLimits: AppearanceLimitTree;
+	rotationLimits: readonly (readonly [number, number])[];
 	effects: EffectsDefinition;
 	attributes: Set<string>;
 	attributesHides: Set<string>;
@@ -137,7 +152,8 @@ export interface AssetPropertiesIntermediateResult extends AssetPropertiesResult
 
 export function CreateAssetPropertiesResult(): AssetPropertiesIntermediateResult {
 	return {
-		limits: new AppearanceLimitTree(),
+		poseLimits: new AppearanceLimitTree(),
+		rotationLimits: [[BONE_MIN, BONE_MAX]],
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),
 		attributesHides: new Set(),
@@ -148,10 +164,13 @@ export function CreateAssetPropertiesResult(): AssetPropertiesIntermediateResult
 export function MergeAssetProperties<T extends AssetPropertiesIntermediateResult>(base: T, properties: Immutable<AssetProperties>): T {
 	if (IsReadonlyArray(properties.poseLimits)) {
 		for (const limit of properties.poseLimits) {
-			base.limits.merge(limit);
+			base.poseLimits.merge(limit);
 		}
 	} else {
-		base.limits.merge(properties.poseLimits);
+		base.poseLimits.merge(properties.poseLimits);
+	}
+	if (properties.rotationLimits != null) {
+		base.rotationLimits = IntervalSetIntersection(base.rotationLimits, typeof properties.rotationLimits === 'number' ? [[properties.rotationLimits, properties.rotationLimits]] : properties.rotationLimits);
 	}
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.provides?.forEach((a) => base.attributes.add(a));

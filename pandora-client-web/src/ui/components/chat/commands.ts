@@ -1,6 +1,7 @@
 import { capitalize } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandSelectorEnum, CommandStepProcessor, FilterItemType, IChatType, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, type ChatCharacterFullStatus } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/assets/modules/typed';
+import { CreateMoveCharacterAction } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import type { IClientDirectoryArgument, IClientDirectoryNormalResult } from 'pandora-common/networking/api/directory_client';
 import { toast } from 'react-toastify';
 import { AccountContactChangeHandleResult } from '../../../components/accountContacts/accountContactContext.ts';
@@ -426,11 +427,11 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				return CommandDoGameAction(gameState, {
-					type: 'pose',
-					target: player.data.id,
-					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
-				});
+				return CommandDoGameAction(gameState, CreateMoveCharacterAction({
+					pose: {
+						view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
+					},
+				}, playerState));
 			}),
 	},
 	{
@@ -444,13 +445,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				return CommandDoGameAction(gameState, {
-					type: 'pose',
-					target: player.data.id,
-					legs: {
-						pose: 'standing',
+				return CommandDoGameAction(gameState, CreateMoveCharacterAction({
+					pose: {
+						legs: {
+							pose: 'standing',
+						},
 					},
-				});
+				}, playerState));
 			}),
 	},
 	{
@@ -464,13 +465,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				return CommandDoGameAction(gameState, {
-					type: 'pose',
-					target: player.data.id,
-					legs: {
-						pose: 'kneeling',
+				return CommandDoGameAction(gameState, CreateMoveCharacterAction({
+					pose: {
+						legs: {
+							pose: 'kneeling',
+						},
 					},
-				});
+				}, playerState));
 			}),
 	},
 	{
@@ -484,13 +485,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				if (!playerState)
 					return false;
 
-				return CommandDoGameAction(gameState, {
-					type: 'pose',
-					target: player.data.id,
-					legs: {
-						pose: 'sitting',
+				return CommandDoGameAction(gameState, CreateMoveCharacterAction({
+					pose: {
+						legs: {
+							pose: 'sitting',
+						},
 					},
-				});
+				}, playerState));
 			}),
 	},
 	//#endregion

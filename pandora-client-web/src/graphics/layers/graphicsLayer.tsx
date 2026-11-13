@@ -4,7 +4,7 @@ import { GraphicsLayerAlphaImageMesh } from './graphicsLayerAlphaImageMesh.tsx';
 import { GraphicsLayerMesh } from './graphicsLayerMesh.tsx';
 import { GraphicsLayerText } from './graphicsLayerText.tsx';
 
-export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, characterBlinking, debugConfig) {
+export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder = function (layer, previousLayers, reverse, poseEvaluator, rotationAngle, characterBlinking, debugConfig) {
 	switch (layer.layer.type) {
 		case 'mesh': {
 			previousLayers ??= [];
@@ -16,6 +16,7 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>
@@ -36,6 +37,7 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				>
@@ -53,6 +55,7 @@ export const GraphicsCharacterDefaultLayerBuilder: GraphicsCharacterLayerBuilder
 					state={ layer.state }
 					poseEvaluator={ poseEvaluator }
 					wornItems={ layer.wornItems }
+					rotationAngle={ rotationAngle }
 					characterBlinking={ characterBlinking }
 					debugConfig={ debugConfig }
 				/>

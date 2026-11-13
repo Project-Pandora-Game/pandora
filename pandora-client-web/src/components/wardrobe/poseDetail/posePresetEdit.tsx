@@ -1,36 +1,53 @@
 import { produce, type Immutable } from 'immer';
 import { capitalize, upperFirst } from 'lodash-es';
-import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose, AssetManager, BoneDefinition, PartialAppearancePose } from 'pandora-common';
+import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose, AssetFrameworkPosePreset, AssetManager, BoneDefinition, CenteredDegrees, PartialAppearancePose } from 'pandora-common';
 import { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
 
 interface PosePresetEditTableProps {
-	preset: PartialAppearancePose;
-	update: ((newPreset: PartialAppearancePose) => void) | null;
+	preset: AssetFrameworkPosePreset;
+	update: ((newPreset: Partial<AssetFrameworkPosePreset>) => void) | null;
 	assetManager: AssetManager;
 	sourcePose: Immutable<AppearancePose>;
+	sourceRotation: CenteredDegrees;
+	sourceYOffset: number;
 }
 
-export function PosePresetEditTable({ preset, update, assetManager, sourcePose }: PosePresetEditTableProps): ReactElement {
+export function PosePresetEditTable({ preset, update, assetManager, sourcePose, sourceRotation, sourceYOffset }: PosePresetEditTableProps): ReactElement {
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
 	const onCheckAll = useCallback(() => {
 		const bones: Record<string, number> = {};
 		for (const bone of allBones) {
 			if (bone.type === 'pose') {
-				bones[bone.name] = preset.bones?.[bone.name] ?? (sourcePose.bones[bone.name] || 0);
+				bones[bone.name] = preset.pose.bones?.[bone.name] ?? (sourcePose.bones[bone.name] || 0);
 			}
 		}
 		update?.({
-			...sourcePose,
-			bones,
+			pose: {
+				...sourcePose,
+				bones,
+			},
+			rotation: sourceRotation,
+			yOffset: sourceYOffset,
 		});
-	}, [preset, update, allBones, sourcePose]);
+	}, [preset, update, allBones, sourcePose, sourceRotation, sourceYOffset]);
 
 	const onUncheckAll = useCallback(() => {
-		update?.({});
+		update?.({
+			pose: {},
+			rotation: undefined,
+			yOffset: undefined,
+		});
+	}, [update]);
+
+	const updatePose = useMemo((): PosePresetPoseEditRowProps['update'] => {
+		if (update == null)
+			return null;
+
+		return (pose) => update({ pose });
 	}, [update]);
 
 	return (
@@ -46,40 +63,36 @@ export function PosePresetEditTable({ preset, update, assetManager, sourcePose }
 				{ update != null ? (
 					<tr>
 						<td>
-							<Button onClick={ Object.keys(preset).length === 0 ? onCheckAll : onUncheckAll } slim>Toggle all</Button>
+							<Button onClick={ (Object.keys(preset.pose).length === 0 && preset.rotation == null && preset.yOffset == null) ? onCheckAll : onUncheckAll } slim>Toggle all</Button>
 						</td>
 						<td></td>
 						<td></td>
 					</tr>
 				) : null }
 				<PosePresetView
-					preset={ preset }
-					update={ update }
-					assetManager={ assetManager }
+					preset={ preset.pose }
+					update={ updatePose }
 					sourcePose={ sourcePose }
 				/>
 				<tr>
 					<td className='noPadding' colSpan={ 3 }><hr /></td>
 				</tr>
 				<PosePresetArmPoses
-					preset={ preset }
-					update={ update }
-					assetManager={ assetManager }
+					preset={ preset.pose }
+					update={ updatePose }
 					sourcePose={ sourcePose }
 				/>
 				<PosePresetArmsOrder
-					preset={ preset }
-					update={ update }
-					assetManager={ assetManager }
+					preset={ preset.pose }
+					update={ updatePose }
 					sourcePose={ sourcePose }
 				/>
 				<tr>
 					<td className='noPadding' colSpan={ 3 }><hr /></td>
 				</tr>
 				<PosePresetLegPoses
-					preset={ preset }
-					update={ update }
-					assetManager={ assetManager }
+					preset={ preset.pose }
+					update={ updatePose }
 					sourcePose={ sourcePose }
 				/>
 				<tr>
@@ -91,20 +104,36 @@ export function PosePresetEditTable({ preset, update, assetManager, sourcePose }
 						.map((bone) => (
 							<PosePresetBoneRow
 								key={ bone.name }
-								preset={ preset }
-								update={ update }
-								assetManager={ assetManager }
+								preset={ preset.pose }
+								update={ updatePose }
 								sourcePose={ sourcePose }
 								bone={ bone }
 							/>
 						))
 				}
+				<tr>
+					<td className='noPadding' colSpan={ 3 }><hr /></td>
+				</tr>
+				<PosePresetExtras
+					preset={ preset }
+					update={ update }
+					assetManager={ assetManager }
+					sourcePose={ sourcePose }
+					sourceRotation={ sourceRotation }
+					sourceYOffset={ sourceYOffset }
+				/>
 			</tbody>
 		</table>
 	);
 }
 
-function PosePresetView({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
+interface PosePresetPoseEditRowProps {
+	preset: PartialAppearancePose;
+	update: ((newPreset: PartialAppearancePose) => void) | null;
+	sourcePose: Immutable<AppearancePose>;
+}
+
+function PosePresetView({ preset, update, sourcePose }: PosePresetPoseEditRowProps): ReactNode {
 	return (
 		<tr>
 			<td>
@@ -131,7 +160,7 @@ function PosePresetView({ preset, update, sourcePose }: PosePresetEditTableProps
 	);
 }
 
-function PosePresetArmPoses({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
+function PosePresetArmPoses({ preset, update, sourcePose }: PosePresetPoseEditRowProps): ReactNode {
 
 	const Arm = useCallback(<TArmKey extends keyof AppearanceArmPose>({ side, part }: { side: 'left' | 'right'; part: TArmKey; }): ReactNode => (
 		<tr>
@@ -172,7 +201,7 @@ function PosePresetArmPoses({ preset, update, sourcePose }: PosePresetEditTableP
 	);
 }
 
-function PosePresetArmsOrder({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
+function PosePresetArmsOrder({ preset, update, sourcePose }: PosePresetPoseEditRowProps): ReactNode {
 
 	const Arm = useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
 		<tr>
@@ -204,7 +233,7 @@ function PosePresetArmsOrder({ preset, update, sourcePose }: PosePresetEditTable
 	);
 }
 
-function PosePresetLegPoses({ preset, update, sourcePose }: PosePresetEditTableProps): ReactNode {
+function PosePresetLegPoses({ preset, update, sourcePose }: PosePresetPoseEditRowProps): ReactNode {
 	return (
 		<>
 			<tr>
@@ -249,10 +278,9 @@ function PosePresetLegPoses({ preset, update, sourcePose }: PosePresetEditTableP
 			</tr>
 		</>
 	);
-
 }
 
-function PosePresetBoneRow({ preset, update, bone, sourcePose }: PosePresetEditTableProps & { bone: BoneDefinition; }): ReactNode {
+function PosePresetBoneRow({ preset, update, bone, sourcePose }: PosePresetPoseEditRowProps & { bone: BoneDefinition; }): ReactNode {
 	const storedValue = preset.bones?.[bone.name];
 	const currentValue = sourcePose.bones[bone.name] || 0;
 
@@ -278,5 +306,42 @@ function PosePresetBoneRow({ preset, update, bone, sourcePose }: PosePresetEditT
 				{ storedValue ?? (update != null ? currentValue : '') }
 			</td>
 		</tr>
+	);
+}
+
+function PosePresetExtras({ preset, update, sourceRotation, sourceYOffset }: PosePresetEditTableProps): ReactNode {
+	return (
+		<>
+			<tr>
+				<td>
+					<Checkbox
+						checked={ preset.rotation != null }
+						disabled={ update == null }
+						onChange={ (checked) => {
+							update?.({
+								rotation: checked ? sourceRotation : undefined,
+							});
+						} }
+					/>
+				</td>
+				<td>Character rotation</td>
+				<td>{ preset.rotation ?? (update != null ? sourceRotation : '') }</td>
+			</tr>
+			<tr>
+				<td>
+					<Checkbox
+						checked={ preset.yOffset != null }
+						disabled={ update == null }
+						onChange={ (checked) => {
+							update?.({
+								yOffset: checked ? sourceYOffset : undefined,
+							});
+						} }
+					/>
+				</td>
+				<td>Y Offset</td>
+				<td>{ preset.yOffset ?? (update != null ? sourceYOffset : '') }</td>
+			</tr>
+		</>
 	);
 }

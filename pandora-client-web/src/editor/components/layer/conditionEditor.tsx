@@ -1,5 +1,4 @@
 import { produce, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash-es';
 import {
 	ArmFingersSchema,
 	ArmRotationSchema,
@@ -10,6 +9,7 @@ import {
 	BONE_MAX,
 	BONE_MIN,
 	CharacterViewSchema,
+	CloneDeepMutable,
 	ConditionEqOperatorSchema,
 	ConditionOperatorSchema,
 	type Asset,
@@ -256,7 +256,8 @@ function ConditionInputEditor({ condition, update, conditionEvalutator }: {
 }
 
 const CONDITION_PRESETS: { name: string; value: Immutable<AtomicCondition>; }[] = [
-	{ name: 'Bone', value: { bone: 'character_rotation', operator: '=', value: 0 } },
+	{ name: 'Bone', value: { bone: '', operator: '=', value: 0 } },
+	{ name: 'Character rotation', value: { characterRotation: 0, operator: '=' } },
 	{ name: 'Module', value: { module: '', operator: '=', value: '' } },
 	{ name: 'Attribute', value: { attribute: '' } },
 	{ name: 'Arm Rotation', value: { armType: 'rotation', side: 'left', operator: '=', value: 'up' } },
@@ -292,12 +293,18 @@ function AddRoomDConditionInputAddDialog({ addCondition, close }: {
 	addCondition: (newCondition: AtomicCondition) => void;
 	close: () => void;
 }): ReactElement {
+	const assetManager = useAssetManager();
+
 	return (
 		<ModalDialog>
 			<Column>
 				{ CONDITION_PRESETS.map(({ name, value }, index) => (
 					<Button key={ index } onClick={ () => {
-						addCondition(cloneDeep(value));
+						const newValue = CloneDeepMutable(value);
+						if ('bone' in newValue) {
+							newValue.bone = assetManager.getAllBones().find((b) => b.type === 'pose')?.name ?? '';
+						}
+						addCondition(newValue);
 						close();
 					} }>
 						{ name }
@@ -371,6 +378,34 @@ function ConditionInputEntry({ condition, setCondition }: LogicConditionEditorCo
 						)) }
 					</datalist>
 				) : null }
+			</Row>
+		);
+	} else if ('characterRotation' in condition) {
+		Assert(condition.characterRotation != null);
+		return (
+			<Row className='flex-1' alignY='center' wrap>
+				{ 'Character rotation' }
+				<EnumSelect
+					schema={ ConditionOperatorSchema }
+					value={ condition.operator }
+					onChange={ (v) => {
+						setCondition?.(produce(condition, (d) => {
+							d.operator = v;
+						}));
+					} }
+				/>
+				<NumberInput
+					className='flex-1'
+					value={ condition.characterRotation }
+					min={ BONE_MIN }
+					max={ BONE_MAX }
+					step={ 0.1 }
+					onChange={ (v) => {
+						setCondition?.(produce(condition, (d) => {
+							d.characterRotation = v;
+						}));
+					} }
+				/>
 			</Row>
 		);
 	} else if ('bone' in condition) {

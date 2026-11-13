@@ -6,6 +6,7 @@ import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema, type BoneType, type CharacterView } from '../graphics/conditions.ts';
 import type { LayerPriority } from '../graphics/layers/common.ts';
+import type { CenteredDegrees } from './roomGeometry.ts';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
@@ -102,6 +103,9 @@ export type AssetsPosePresetPreview = {
 export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {
 	name: string;
 	optional?: PartialAppearancePose<Bones>;
+	// Some parts of movement can be done through posing, too, to simplify things
+	rotation?: CenteredDegrees;
+	yOffset?: number;
 	preview?: AssetsPosePresetPreview;
 };
 

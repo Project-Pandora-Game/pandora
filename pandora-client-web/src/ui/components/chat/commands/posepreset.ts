@@ -1,6 +1,7 @@
 import { Immutable } from 'immer';
 import { camelCase } from 'lodash-es';
 import { AssetsPosePresetCategory, CommandSelectorNamedValue, MergePartialAppearancePoses, type AssetsPosePreset } from 'pandora-common';
+import { CreateMoveCharacterAction } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { FixupStoredPosePreset, StoredPosePresets } from '../../../../components/wardrobe/poseDetail/customPosePresetStorage.ts';
 import { CommandDoGameAction } from '../commandHelpers/gameAction.tsx';
 import { CreateClientCommand } from '../commandsHelpers.ts';
@@ -43,16 +44,18 @@ export const COMMAND_POSEPRESET: IClientCommand<ICommandExecutionContextClient> 
 				]);
 			}
 		})
-		.handler(({ player, gameState }, { pose }) => {
+		.handler(({ player, gameState, globalState }, { pose }) => {
 			// Always specifying extends allows us to strip any non-pose properties
-			const { arms, leftArm, rightArm, ...copy } = MergePartialAppearancePoses(pose, pose.optional ?? {});
+			const mergedPose = MergePartialAppearancePoses(pose, pose.optional ?? {});
 
-			return CommandDoGameAction(gameState, {
-				type: 'pose',
-				target: player.id,
-				leftArm: { ...arms, ...leftArm },
-				rightArm: { ...arms, ...rightArm },
-				...copy,
-			});
+			const playerState = globalState.getCharacterState(player.id);
+			if (playerState == null)
+				return false;
+
+			return CommandDoGameAction(gameState, CreateMoveCharacterAction({
+				pose: mergedPose,
+				rotation: pose.rotation,
+				yOffset: pose.yOffset,
+			}, playerState));
 		}),
 };

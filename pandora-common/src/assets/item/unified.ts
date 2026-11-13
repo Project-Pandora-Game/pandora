@@ -8,11 +8,12 @@ import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
 import { LockLogic } from '../../gameLogic/locks/lockLogic.ts';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits.ts';
-import { Assert, AssertNever } from '../../utility/misc.ts';
-import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation.ts';
+import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate, type ZodObjectShape } from '../../validation.ts';
 import { AssetIdSchema } from '../base.ts';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules.ts';
-import { PartialAppearancePoseSchema } from '../state/characterStatePose.ts';
+import { PartialAppearancePoseSchema, type PartialAppearancePose } from '../state/characterStatePose.ts';
+import { CenteredDegreesSchema, type CenteredDegrees } from '../state/roomGeometry.ts';
 import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base.ts';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion.ts';
@@ -77,17 +78,43 @@ export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.exten
 });
 export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
 
-export const AssetFrameworkPosePresetSchema = z.object({
+/** Pose preset created by user */
+export interface AssetFrameworkPosePreset {
+	name: string;
+	pose: PartialAppearancePose;
+	// Some parts of movement can be done through posing, too, to simplify things
+	rotation?: CenteredDegrees;
+	yOffset?: number;
+}
+/** Pose preset created by user */
+export const AssetFrameworkPosePresetSchema: z.ZodObject<ZodObjectShape<AssetFrameworkPosePreset>> = z.object({
 	name: z.string().max(LIMIT_POSE_PRESET_NAME_LENGTH),
 	pose: PartialAppearancePoseSchema,
+	rotation: CenteredDegreesSchema.optional(),
+	yOffset: z.number().int().optional(),
+}).overwrite((value) => {
+	// Migrate old fake "character_rotation" bone
+	if (typeof value.pose.bones?.character_rotation === 'number' && value.rotation == null) {
+		const parsedRotation = CenteredDegreesSchema.safeParse(value.pose.bones.character_rotation === -180 ? 180 : value.pose.bones?.character_rotation);
+		if (parsedRotation.success) {
+			value = CloneDeepMutable(value);
+			value.rotation = parsedRotation.data;
+			delete value.pose.bones?.character_rotation;
+			if (value.pose.bones != null && Object.keys(value.pose.bones).length === 0) {
+				delete value.pose.bones;
+			}
+		}
+	}
+	return value;
 });
-export type AssetFrameworkPosePreset = z.infer<typeof AssetFrameworkPosePresetSchema>;
 
-export const AssetFrameworkPosePresetWithIdSchema = AssetFrameworkPosePresetSchema.extend({
+export interface AssetFrameworkPosePresetWithId extends AssetFrameworkPosePreset {
 	/** Random ID used to keep track of the poses to avoid having to address them by index */
+	id: string;
+}
+export const AssetFrameworkPosePresetWithIdSchema: z.ZodType<AssetFrameworkPosePresetWithId> = AssetFrameworkPosePresetSchema.extend({
 	id: z.string(),
 });
-export type AssetFrameworkPosePresetWithId = z.infer<typeof AssetFrameworkPosePresetWithIdSchema>;
 
 __internal_InitRecursiveItemSchemas(ItemBundleSchema, ItemTemplateSchema);
 

@@ -51,7 +51,7 @@ function WardrobeRouterPlayer(): ReactElement {
 	return (
 		<WardrobeActionContextProvider player={ player }>
 			<WardrobeContextProvider target={ player.actionSelector }>
-				<WardrobeCharacter character={ player } />
+				<WardrobeCharacter key={ player.id } character={ player } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
 	);
@@ -99,7 +99,7 @@ function WardrobeRouterCharacter(): ReactElement {
 	return (
 		<WardrobeActionContextProvider player={ player }>
 			<WardrobeContextProvider target={ character.actionSelector } initialFocus={ initialFocus }>
-				<WardrobeCharacter character={ character } />
+				<WardrobeCharacter key={ character.id } character={ character } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
 	);

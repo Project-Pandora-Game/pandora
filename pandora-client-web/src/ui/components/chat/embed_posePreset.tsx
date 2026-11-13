@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
-import { AssetFrameworkPosePresetSchema, type AssetFrameworkPosePreset, type PartialAppearancePose } from 'pandora-common';
+import { AssetFrameworkPosePresetSchema, type AssetFrameworkPosePreset } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { useCallback, useState, type ReactElement } from 'react';
 import bodyIcon from '../../../assets/icons/body.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
@@ -10,6 +11,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { DraggableDialog } from '../../../components/dialog/dialog.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { FixupStoredPosePreset } from '../../../components/wardrobe/poseDetail/customPosePresetStorage.ts';
 import { PoseButton } from '../../../components/wardrobe/poseDetail/poseButton.tsx';
 import { PosePresetEditTable } from '../../../components/wardrobe/poseDetail/posePresetEdit.tsx';
 import { PosePresetExportDialog, useSavedPosePresetsProvider } from '../../../components/wardrobe/poseDetail/storedPosePresets.tsx';
@@ -82,6 +84,8 @@ function PosePresetEmbedDialog({ data, close }: {
 				id: nanoid(),
 				name: data.name,
 				pose: data.pose,
+				rotation: data.rotation,
+				yOffset: data.yOffset,
 			},
 		], () => {
 			close();
@@ -89,14 +93,8 @@ function PosePresetEmbedDialog({ data, close }: {
 	}, [customPosePresets, updateCustomPosePresets, data, close]);
 
 	const [execute] = useWardrobeExecuteCallback();
-	const setPoseDirect = useEvent(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
-		execute({
-			type: 'pose',
-			target: playerState.id,
-			leftArm: { ...arms, ...leftArm },
-			rightArm: { ...arms, ...rightArm },
-			...copy,
-		});
+	const setPoseDirect = useEvent((params: MoveCharacterActionParams) => {
+		execute(CreateMoveCharacterAction(params, playerState));
 	});
 
 	if (exporting) {
@@ -124,14 +122,16 @@ function PosePresetEmbedDialog({ data, close }: {
 				</Row>
 				<br />
 				<PosePresetEditTable
-					preset={ data.pose }
+					preset={ data }
 					update={ null }
 					assetManager={ playerState.assetManager }
 					sourcePose={ playerState.actualPose }
+					sourceRotation={ playerState.getActualCharacterRotation() }
+					sourceYOffset={ playerState.position.position[2] }
 				/>
 				<PoseButton
 					preset={ {
-						...data.pose,
+						...FixupStoredPosePreset(data, playerState.assetManager),
 						name: 'Use this pose',
 					} }
 					setPose={ setPoseDirect }
@@ -144,7 +144,7 @@ function PosePresetEmbedDialog({ data, close }: {
 						<img src={ exportIcon } alt='Export' />
 						<span>&nbsp;Export</span>
 					</Button>
-					<Button onClick={ saveToPosePresets } disabled={ Object.keys(data.pose).length === 0 || customPosePresets == null }>
+					<Button onClick={ saveToPosePresets } disabled={ (Object.keys(data.pose).length === 0 && data.rotation == null && data.yOffset == null) || customPosePresets == null }>
 						<img src={ diskIcon } alt='Save' />
 						<span>&nbsp;Save</span>
 					</Button>

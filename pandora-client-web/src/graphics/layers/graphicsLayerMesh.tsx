@@ -20,12 +20,13 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 	displayUvPose = false,
 	state,
 	debugConfig,
+	rotationAngle,
 	characterBlinking,
 }: GraphicsLayerProps<'mesh'>): ReactElement | null {
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, rotationAngle, currentlyBlinking);
 
 	const {
 		image,

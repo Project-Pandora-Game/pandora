@@ -9,6 +9,7 @@ import {
 import { CreateDirectMaskResources, UnbindDirectMaskTexture, UpdateDirectMaskResources, type DirectMaskSample } from './graphicsDirectMaskResources.ts';
 import { GraphicsMaskRaster, ObserveMaskRasterRetirement } from './graphicsMaskRaster.ts';
 import { GraphicsDirectMaskCoverage } from './graphicsDirectMaskCoverage.ts';
+import { InstallDirectMaskDrawPipes } from './graphicsDirectMaskDrawPipes.ts';
 import { DIRECT_MASK_MAX_DEPTH, GetDirectMaskPrograms } from './graphicsDirectMaskShader.ts';
 
 type Renderer = WebGLRenderer;
@@ -99,7 +100,19 @@ class DirectMaskState {
 			if (pipe.execute === draw) pipe.execute = nativeDraw;
 		});
 		this._installScopes();
-
+		if (renderer.renderPipes.batch && renderer.renderPipes.graphics) {
+			this._restore.push(InstallDirectMaskDrawPipes(renderer, {
+				isBuildingMasked: (renderable) => {
+					if (this.building.length > 0) return true;
+					for (let parent = renderable; parent; parent = parent.parent ?? undefined)
+						if (parent.effects?.some((effect) => effect instanceof GraphicsDirectMask)) return true;
+					return false;
+				},
+				isRenderingMasked: () => this.active.length > 0,
+				getRenderGroupWorld: () => this._world,
+				prepare: (shader, transform) => this.active.length ? this.prepare(shader, transform.worldTransform, transform.groupTransform) : undefined,
+			}));
+		}
 	}
 
 	private _base(mesh: Mesh): Shader {

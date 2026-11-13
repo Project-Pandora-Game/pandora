@@ -6,6 +6,29 @@ const { GraphicsMaskRaster, ObserveMaskRasterRetirement } = await import('../../
 afterAll(() => canvasProbe.mockRestore());
 
 describe('RG8 mask raster ownership', () => {
+	it.each([
+		[1, 1500, [224, 0, 64, 32]],
+		[0.5, 750, [112, 0, 32, 16]],
+		[0.25, 375, [56, 0, 16, 8]],
+	] as const)('keeps logical mask coordinates at resolution %s while scaling storage and scissor', (resolution, pixels, scissor) => {
+		const prerender = new SystemRunner('prerender');
+		const setScissor = import.meta.jest.fn();
+		const app = { renderer: { gl: { isEnabled: () => false, enable: () => undefined, scissor: setScissor, disable: () => undefined }, runners: { prerender }, render: () => undefined } } as unknown as Application;
+		const geometry = new MeshGeometry({ positions: new Float32Array([0, 0, 10, 0, 0, 10]), uvs: new Float32Array([0, 0, 1, 0, 0, 1]), indices: new Uint32Array([0, 1, 2]) });
+		const raster = new GraphicsMaskRaster(app, Texture.WHITE, geometry, {}, resolution);
+		try {
+			const resource = raster.cache.reconcile([{ owner: raster, texture: Texture.WHITE, positions: geometry.positions, uvs: geometry.uvs, indices: geometry.indices }]).get(raster)!;
+			expect(resource.texture.width).toBe(1500);
+			expect(resource.texture.height).toBe(1500);
+			expect(resource.texture.source.pixelWidth).toBe(pixels);
+			expect(resource.texture.source.pixelHeight).toBe(pixels);
+			expect(setScissor).toHaveBeenCalledWith(...scissor);
+		} finally {
+			raster.destroy();
+			geometry.destroy();
+		}
+	});
+
 	it('notifies shader consumers before the last shared raster lease destroys its texture', () => {
 		const prerender = new SystemRunner('prerender');
 		const app = { renderer: { gl: { isEnabled: () => false, enable: () => undefined, scissor: () => undefined, disable: () => undefined }, runners: { prerender }, render: () => undefined } } as unknown as Application;
@@ -38,11 +61,15 @@ describe('RG8 mask raster ownership', () => {
 		const separate = new GraphicsMaskRaster(app, Texture.WHITE, geometry);
 		const rg = new GraphicsMaskRaster(app, Texture.WHITE, geometry, scope);
 		const anotherRg = new GraphicsMaskRaster(app, Texture.WHITE, geometry, scope);
+		const halfRg = new GraphicsMaskRaster(app, Texture.WHITE, geometry, scope, 0.5);
+		const anotherHalfRg = new GraphicsMaskRaster(app, Texture.WHITE, geometry, scope, 0.5);
 		const target = new Container();
 		target.addChild(separate.anchor, rg.anchor, anotherRg.anchor);
 		try {
 			expect(separate.cache).not.toBe(rg.cache);
 			expect(rg.cache).toBe(anotherRg.cache);
+			expect(halfRg.cache).toBe(anotherHalfRg.cache);
+			expect(halfRg.cache).not.toBe(rg.cache);
 			expect(prerender.items).toHaveLength(1);
 			// A pending mount or unmount must not allocate a render texture.
 			expect(separate.cache.resourceCount).toBe(0);
@@ -51,6 +78,8 @@ describe('RG8 mask raster ownership', () => {
 			separate.destroy();
 			rg.destroy();
 			anotherRg.destroy();
+			halfRg.destroy();
+			anotherHalfRg.destroy();
 			geometry.destroy();
 			target.destroy();
 		}

@@ -84,7 +84,7 @@ class MaskRasterQueue {
 	}
 }
 const maskRasterQueues = new WeakMap<MaskRenderer, MaskRasterQueue>();
-const maskRasterScopes = new WeakMap<MaskRenderer, WeakMap<object, MaskRasterCache>>();
+const maskRasterScopes = new WeakMap<MaskRenderer, WeakMap<object, Map<number, MaskRasterCache>>>();
 
 /** A shared raster owns its source geometry; clothing owners can safely disappear independently. */
 class MaskRasterResource {
@@ -99,9 +99,9 @@ class MaskRasterResource {
 		return this._state.bounds;
 	}
 
-	constructor(renderer: MaskRenderer, snapshot: ExactMaskRasterSnapshot<Texture>) {
+	constructor(renderer: MaskRenderer, snapshot: ExactMaskRasterSnapshot<Texture>, resolution: number) {
 		this._renderer = renderer;
-		this.texture = RenderTexture.create({ width: 1500, height: 1500, format: 'rg8unorm' });
+		this.texture = RenderTexture.create({ width: 1500, height: 1500, resolution, format: 'rg8unorm' });
 		this._geometry = new MeshGeometry({ positions: snapshot.positions, uvs: snapshot.uvs, indices: snapshot.indices });
 		this._geometry.batchMode = 'no-batch';
 		this._geometry.getBuffer('aPosition').static = false;
@@ -124,15 +124,18 @@ class MaskRasterResource {
 		this._source.texture = snapshot.texture;
 		this._packingShader.updateTexture(snapshot.texture);
 		this._state.update(snapshot.positions, snapshot.uvs, snapshot.indices);
-		// Keep the original texture size/projection for identical threshold edges.
+		// Keep skinning in logical character coordinates at every texture quality.
 		// Scissor only the union of current and previously drawn geometry bounds.
 		const renderer = this._renderer;
 		const gl = renderer.gl;
 		const wasEnabled = gl.isEnabled(gl.SCISSOR_TEST);
 		const previous = wasEnabled ? gl.getParameter(gl.SCISSOR_BOX) as Int32Array : null;
 		const area = this._state.bounds;
+		const resolution = this.texture.source.resolution;
+		const x = Math.floor(area.x * resolution);
+		const y = Math.floor(area.y * resolution);
 		gl.enable(gl.SCISSOR_TEST);
-		gl.scissor(area.x, area.y, area.width, area.height);
+		gl.scissor(x, y, Math.ceil((area.x + area.width) * resolution) - x, Math.ceil((area.y + area.height) * resolution) - y);
 		try {
 			renderer.render({ container: this._source, target: this.texture, clear: true });
 		} finally {
@@ -171,7 +174,7 @@ export class GraphicsMaskRaster {
 		this._queue.enqueue(this);
 	};
 
-	constructor(app: Application, texture: Texture, geometry: MeshGeometry, scope: object = {}) {
+	constructor(app: Application, texture: Texture, geometry: MeshGeometry, scope: object = {}, resolution: number = 1) {
 		const renderer = app.renderer;
 		if (!('gl' in renderer))
 			throw new Error('Masking requires WebGL');
@@ -187,14 +190,19 @@ export class GraphicsMaskRaster {
 			scopes = new WeakMap();
 			maskRasterScopes.set(renderer, scopes);
 		}
-		let cache = scopes.get(scope);
+		let resolutions = scopes.get(scope);
+		if (!resolutions) {
+			resolutions = new Map();
+			scopes.set(scope, resolutions);
+		}
+		let cache = resolutions.get(resolution);
 		if (!cache) {
 			cache = new ExactMaskRasterCache({
-				create: (snapshot) => new MaskRasterResource(renderer, snapshot),
+				create: (snapshot) => new MaskRasterResource(renderer, snapshot, resolution),
 				update: (resource, snapshot) => resource.update(snapshot),
 				destroy: (resource) => resource.destroy(),
 			});
-			scopes.set(scope, cache);
+			resolutions.set(resolution, cache);
 		}
 		this.cache = cache;
 		this._inputTexture = texture;

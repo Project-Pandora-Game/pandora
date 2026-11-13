@@ -1,5 +1,6 @@
 import { Application, MeshGeometry, Texture, type Container as PixiContainer } from 'pixi.js';
 import { useContext, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import { useGraphicsTextureResolution } from '../../assets/assetGraphicsCalculations.ts';
 import type { ChildrenProps } from '../../common/reactTypes.ts';
 import { Container } from '../baseComponents/container.ts';
 import type { PixiMeshProps } from '../baseComponents/mesh.tsx';
@@ -16,6 +17,7 @@ export interface GraphicsDirectMaskContainerProps extends ChildrenProps {
 
 /** Apply masks in mesh shaders, retaining the raster cache and shared clipping across native draw families. */
 export function GraphicsDirectMaskContainer({ app, texture, maskMesh, children, rasterScope }: GraphicsDirectMaskContainerProps): ReactElement {
+	const resolution = Number(useGraphicsTextureResolution());
 	const contextScope = useContext(GraphicsMaskScopeContext);
 	const scope = rasterScope ?? contextScope;
 	const [target, setTarget] = useState<PixiContainer | null>(null);
@@ -32,7 +34,7 @@ export function GraphicsDirectMaskContainer({ app, texture, maskMesh, children, 
 		const geometry = new MeshGeometry({ positions: initial.maskMesh.vertices, uvs: initial.maskMesh.uvs, indices: initial.maskMesh.indices });
 		geometry.batchMode = 'no-batch';
 		geometry.getBuffer('aPosition').static = false;
-		const raster = new GraphicsMaskRaster(app, initial.texture, geometry, scope);
+		const raster = new GraphicsMaskRaster(app, initial.texture, geometry, scope, resolution);
 		resource.current = { geometry, raster };
 		host.measurable = false;
 		host.addChild(raster.anchor);
@@ -47,7 +49,7 @@ export function GraphicsDirectMaskContainer({ app, texture, maskMesh, children, 
 			raster.destroy();
 			geometry.destroy();
 		};
-	}, [target, host, active, app, scope]);
+	}, [target, host, active, app, scope, resolution]);
 
 	useLayoutEffect(() => {
 		const current = resource.current;

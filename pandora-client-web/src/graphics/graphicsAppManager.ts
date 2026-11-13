@@ -14,6 +14,7 @@ export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
 
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: DEFAULT_BACKGROUND_COLOR,
+	preference: 'webgl',
 	resolution: 1,
 	autoDensity: true,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on

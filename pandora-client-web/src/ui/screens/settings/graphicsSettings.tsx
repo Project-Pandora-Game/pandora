@@ -50,7 +50,6 @@ function EffectsSettings(): ReactElement {
 function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
-		pixi: 'Pixi.js',
 		customShader: 'Custom Pandora shader (recommended for less clipping)',
 		disabled: 'Ignore masks (recommended for avoiding lag)',
 	};

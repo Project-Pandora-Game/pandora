@@ -42,11 +42,11 @@ import { PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { useCharacterDisplayFilters, useCharacterDisplayStyle } from '../common/visionFilters.tsx';
 import { GraphicsCharacter } from '../graphicsCharacter.tsx';
-import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition } from './roomCharacterPosition.ts';
+import { useRoomMovementTransitionDuration } from './roomMovementTransition.ts';
 
 export type RoomCharacterInteractiveProps = {
 	characterState: AssetFrameworkCharacterState;
@@ -77,8 +77,6 @@ type RoomCharacterDisplayProps = {
 };
 
 export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
-export const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
-export const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
 
 export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveImpl({
 	character,
@@ -273,8 +271,6 @@ export const RoomCharacter = memo(function RoomCharacterImpl({
 	onHitscanSelect,
 	onDrag,
 }: RoomCharacterDisplayProps): ReactElement | null {
-	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
-
 	const characterDisplayStyle = useCharacterDisplayStyle(character);
 	const characterFilters = useCharacterDisplayFilters(characterDisplayStyle);
 	const filters = useMemo(() => [...visionFilters(), ...characterFilters], [visionFilters, characterFilters]);
@@ -301,9 +297,7 @@ export const RoomCharacter = memo(function RoomCharacterImpl({
 	const roomDeviceLink = characterState.getRoomDeviceWearablePart()?.roomDeviceLink;
 
 	const transitionTickerRef = useTickerRef();
-	const movementTransitionDuration = !smoothMovementEnabled ? 0 :
-		quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION :
-		CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
+	const movementTransitionDuration = useRoomMovementTransitionDuration(quickTransitions);
 
 	const innerPosition = useMemo((): PointLike => ({ x: 0, y: -yOffsetExtra }), [yOffsetExtra]);
 	const innerScale = useMemo((): PointLike => ({ x: scaleX, y: 1 }), [scaleX]);

@@ -15,6 +15,7 @@ import { RoomPositionSchema, type RoomPosition } from '../state/roomGeometry.ts'
 import { QueryStateFlagCombinations, StateFlagCombinationAssetPropertiesGetter } from '../stateFlags.ts';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base.ts';
 import type { AppearanceItems } from './items.ts';
+import { CharacterIdSchema } from '../../character/characterTypes.ts';
 
 import { ItemBase, ItemBaseProps } from './_internal.ts';
 
@@ -27,6 +28,46 @@ declare module './_internal.ts' {
 export type PersonalItemDeploymentAutoDeploy = 'atCharacter' | 'keepPosition' | false;
 export const PersonalItemDeploymentAutoDeploySchema: z.ZodType<PersonalItemDeploymentAutoDeploy> = z.literal(['atCharacter', 'keepPosition', false]);
 
+export const PersonalItemFollowSideSchema = z.enum(['left', 'right']);
+export type PersonalItemFollowSide = z.infer<typeof PersonalItemFollowSideSchema>;
+
+/** What the player requests when making an item follow their character */
+export const PersonalItemFollowRequestSchema = z.discriminatedUnion('followType', [
+	z.object({
+		followType: z.literal('relativeLock'),
+	}),
+	z.object({
+		followType: z.literal('hand'),
+		hand: PersonalItemFollowSideSchema,
+	}),
+]);
+export type PersonalItemFollowRequest = z.infer<typeof PersonalItemFollowRequestSchema>;
+
+/** The state of an item following a character */
+export const PersonalItemDeploymentFollowSchema = z.discriminatedUnion('followType', [
+	z.object({
+		followType: z.literal('relativeLock'),
+		target: CharacterIdSchema,
+		/**
+		 * Offset on the room canvas from the character, in units of the character's depth scale, as seen when the character faces front
+		 * (x is negated if the character is turned around). Scaling keeps the item in place relative to the character's size.
+		 */
+		offset: z.tuple([z.number().int(), z.number().int()]),
+		/** Depth (room Y) relative to the character, as seen when the character faces front (negated if turned around) */
+		depth: z.number().int(),
+	}),
+	z.object({
+		followType: z.literal('hand'),
+		target: CharacterIdSchema,
+		hand: PersonalItemFollowSideSchema,
+		/** Position relative to the elbow bone of the hand, in the rest pose, in character pixels */
+		offset: z.tuple([z.number().int(), z.number().int()]),
+		/** Depth (room Y) relative to the character, as seen when the character faces front */
+		depth: z.number().int(),
+	}),
+]);
+export type PersonalItemDeploymentFollow = z.infer<typeof PersonalItemDeploymentFollowSchema>;
+
 export type PersonalItemDeployment = {
 	/** If set to anything other than `false`, the item will be automatically deployed upon being placed in the room inventory. */
 	autoDeploy: PersonalItemDeploymentAutoDeploy;
@@ -34,11 +75,14 @@ export type PersonalItemDeployment = {
 	deployed: boolean;
 	/** The position in the room. Remembered even if item isn't currently deployed. */
 	position: RoomPosition;
+	/** If set, the item follows the specified character. Only valid while deployed. */
+	following?: PersonalItemDeploymentFollow;
 };
 export const PersonalItemDeploymentSchema: z.ZodType<PersonalItemDeployment> = z.object({
 	autoDeploy: PersonalItemDeploymentAutoDeploySchema,
 	deployed: z.boolean(),
 	position: RoomPositionSchema,
+	following: PersonalItemDeploymentFollowSchema.optional().catch(undefined),
 });
 
 /** Data specific to personal items */

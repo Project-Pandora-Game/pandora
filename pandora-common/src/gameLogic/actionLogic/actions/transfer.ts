@@ -90,6 +90,7 @@ export function ActionTransferItem({
 
 			item = item.withDeployment(produce(item.deployment, (d) => {
 				d.deployed = true;
+				delete d.following;
 				if (d.autoDeploy === 'atCharacter') {
 					const inversion = playerState.actualPose.view === 'back' ? -1 : 1;
 					d.position = [
@@ -104,6 +105,7 @@ export function ActionTransferItem({
 			// We keep the position, as it can make sense. If user wants to avoid weird position, autoDeploy or manual deployments have option for that
 			item = item.withDeployment(produce(item.deployment, (d) => {
 				d.deployed = false;
+				delete d.following;
 			}));
 		}
 	}

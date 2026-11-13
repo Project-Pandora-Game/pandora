@@ -14,6 +14,7 @@ import type { AppearanceItems } from '../item/index.ts';
 import { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkCharacterState } from './characterState.ts';
 import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema, type AppearanceBundle, type AppearanceClientDeltaBundle } from './characterStateTypes.ts';
+import { GlobalStateAutoProcessItemFollowing } from './itemFollowing.ts';
 import { GlobalStateAutoProcessCharacterPositions } from './roomGeometry.ts';
 import { AssetFrameworkSpaceState, SpaceStateBundleSchema, SpaceStateClientDeltaBundleSchema, type SpaceStateClientBundle, type SpaceStateClientDeltaBundle } from './spaceState.ts';
 
@@ -385,6 +386,7 @@ export class AssetFrameworkGlobalState {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		let result: AssetFrameworkGlobalState = this;
 		result = GlobalStateAutoProcessCharacterPositions(result);
+		result = GlobalStateAutoProcessItemFollowing(result);
 		return result;
 	}
 

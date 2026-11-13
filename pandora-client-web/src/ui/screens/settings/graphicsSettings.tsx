@@ -4,7 +4,7 @@ import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../../ass
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
-import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, GraphicsUpscalingSettingSchema, useGraphicsSettingDriver, useGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings, type GraphicsUpscalingSetting } from '../../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useAutomaticResolution } from '../../../services/screenResolution/screenResolutionHooks.ts';
 import { NumberSettingInput, SelectSettingInput, ToggleSettingInput } from '../../components/settings/settingsInputs.tsx';
@@ -50,8 +50,8 @@ function EffectsSettings(): ReactElement {
 function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
-		customShader: 'Custom Pandora shader (recommended for less clipping)',
-		disabled: 'Ignore masks (recommended for avoiding lag)',
+		customShader: 'Custom Pandora shader (experimental)',
+		disabled: 'Ignore masks (default)',
 	};
 
 	const automaticTextureResolution = useAutomaticResolution();
@@ -65,6 +65,7 @@ function QualitySettings(): ReactElement {
 
 	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
 	const upscalingDriver = useGraphicsSettingDriver('upscaling');
+	const currentGraphicsSettings = useGraphicsSettings();
 
 	return (
 		<fieldset>
@@ -114,27 +115,22 @@ function QualitySettings(): ReactElement {
 					driver={ useGraphicsSettingDriver('alphamaskEngine') }
 					label={
 						<>
-							Alphamasking engine
+							Alphamasking
 							<ContextHelpButton>
 								<p>
 									Alphamasks allow assets to hide parts of other assets beneath them, so they do not clip through.<br />
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
-									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
+									masking remains disabled by default; performance depends on your device and the scene.<br />
+									Mask cutouts may still have hard edges.
 								</p>
 
 								<p>
-									We have a planned rework that should allow alphamasks to work again without the performance impact, <br />
-									but it will take some time until this is implemented and adopted by assets.
-								</p>
-
-								<p>
-									If you do have a powerful computer, you can attempt to re-enable this option. <br />
-									In that case we recommend using the "Custom Pandora shader" option.
+									Try the "Custom Pandora shader" option to reduce clothing clipping.
 								</p>
 							</ContextHelpButton>
 							<br />
-							<strong>The current implementation is known to cause lag on most devices</strong>
+							<strong>{ currentGraphicsSettings.alphamaskEngine === 'customShader' ? 'Experimental: clipping and performance are still being evaluated' : null }</strong>
 						</>
 					}
 					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }

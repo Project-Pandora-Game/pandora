@@ -17,6 +17,12 @@ export interface DirectMaskStatistics { directGroups: number; directDraws: numbe
 interface DirectInstruction extends Instruction { effect: GraphicsDirectMask; action: 'push' | 'pop'; }
 interface FusedShader { shader: Shader; uniforms: UniformGroup; }
 interface MeshBase { shader: Shader; onDestroyed: () => void; }
+interface FilterScope {
+	masks: GraphicsDirectMask[];
+	output: Renderer['renderTarget']['renderSurface'];
+	world: Matrix;
+	suspended: boolean;
+}
 const states = new WeakMap<Renderer, DirectMaskState>();
 
 export function GetDirectMaskStatistics(renderer: Renderer, reset = false): DirectMaskStatistics {
@@ -63,12 +69,16 @@ class DirectMaskState {
 	private readonly _bases = new Map<Mesh, MeshBase>();
 	private readonly _variants = new Map<Shader, Map<string, FusedShader>>();
 	private readonly _listeners = new Map<Shader, () => void>();
+	private readonly _identity = new Matrix();
 	private readonly _pixelToClip = new Matrix();
 	private readonly _maskToLocal = new Matrix();
 	private readonly _samplesByDepth = new Map<number, DirectMaskSample[]>();
 	private readonly _clipToLocal = new Matrix();
 	private readonly _worldUniform = new Matrix();
+	private readonly _filters: FilterScope[] = [];
 	private _world = new Matrix();
+	private _poppingFilter?: FilterScope;
+	private _coveragePass = false;
 
 	constructor(renderer: Renderer) {
 		this.renderer = renderer;
@@ -167,7 +177,12 @@ class DirectMaskState {
 	public prepare(base: Shader, world: Matrix, group: Matrix): Shader {
 		let samples = this._samples(world, group);
 		if (samples.length > DIRECT_MASK_MAX_DEPTH) {
-			samples = [this.coverage.compact(samples)];
+			this._coveragePass = true;
+			try {
+				samples = [this.coverage.compact(samples)];
+			} finally {
+				this._coveragePass = false;
+			}
 		}
 		const formats = samples.map((sample) => sample.format);
 		const key = formats.join(',');
@@ -211,6 +226,9 @@ class DirectMaskState {
 		const render = (options: Container | RenderOptions, legacy?: unknown) => {
 			const active = this.active.splice(0); const building = this.building.splice(0);
 			const world = this._world;
+			const filters = this._filters.splice(0);
+			const popping = this._poppingFilter;
+			this._poppingFilter = undefined;
 			const container = options instanceof Container ? options : options.container;
 			container.enableRenderGroup();
 			this._world = container.renderGroup.worldTransform;
@@ -219,7 +237,9 @@ class DirectMaskState {
 			} finally {
 				this.active.splice(0, this.active.length, ...active);
 				this.building.splice(0, this.building.length, ...building);
+				this._filters.splice(0, this._filters.length, ...filters);
 				this._world = world;
+				this._poppingFilter = popping;
 			}
 		};
 		renderer.render = render;
@@ -243,6 +263,48 @@ class DirectMaskState {
 			groupPipe.execute = execute;
 			this._restore.push(() => {
 				if (groupPipe.execute === execute) groupPipe.execute = native;
+			});
+		}
+		if (renderer.filter && renderer.encoder) {
+			const filter = renderer.filter;
+			const nativePush = filter.push; const nativePop = filter.pop; const nativeDraw = renderer.encoder.draw;
+			const push: typeof filter.push = (instruction) => {
+				const output = renderer.renderTarget.renderSurface;
+				const scope: FilterScope = { masks: this.active.slice(), output, world: this._world.clone(), suspended: false };
+				nativePush.call(filter, instruction);
+				scope.suspended = output !== renderer.renderTarget.renderSurface;
+				if (scope.suspended) this.active.length = 0;
+				this._filters.push(scope);
+			};
+			const pop: typeof filter.pop = () => {
+				const scope = this._filters.pop();
+				const previous = this._poppingFilter;
+				this._poppingFilter = scope;
+				try {
+					nativePop.call(filter);
+				} finally {
+					this._poppingFilter = previous;
+					if (scope?.suspended) this.active.splice(0, this.active.length, ...scope.masks);
+				}
+			};
+			const draw: typeof renderer.encoder.draw = (options: Parameters<WebGLRenderer['encoder']['draw']>[0]) => {
+				const scope = this._poppingFilter;
+				if (!this._coveragePass && scope?.suspended && scope.masks.length && renderer.renderTarget.renderSurface === scope.output) {
+					const active = this.active.splice(0, this.active.length, ...scope.masks);
+					try {
+						nativeDraw.call(renderer.encoder, { ...options, shader: this.prepare(options.shader, scope.world, this._identity) });
+					} finally {
+						this.active.splice(0, this.active.length, ...active);
+					}
+				} else nativeDraw.call(renderer.encoder, options);
+			};
+			filter.push = push;
+			filter.pop = pop;
+			renderer.encoder.draw = draw;
+			this._restore.push(() => {
+				if (filter.push === push) filter.push = nativePush;
+				if (filter.pop === pop) filter.pop = nativePop;
+				if (renderer.encoder.draw === draw) renderer.encoder.draw = nativeDraw;
 			});
 		}
 		/* eslint-enable @typescript-eslint/unbound-method */

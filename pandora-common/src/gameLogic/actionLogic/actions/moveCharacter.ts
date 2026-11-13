@@ -1,8 +1,10 @@
 import { isEqual, uniq } from 'lodash-es';
 import * as z from 'zod';
 import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
-import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition } from '../../../assets/state/roomGeometry.ts';
-import { Assert, AssertNever } from '../../../utility/misc.ts';
+import type { AssetFrameworkCharacterState } from '../../../assets/state/characterState.ts';
+import { PartialAppearancePoseSchema, type PartialAppearancePose } from '../../../assets/state/characterStatePose.ts';
+import { CharacterCanBeFollowed, CharacterCanFollow, CharacterSpacePositionSchema, IsValidRoomPosition, type CenteredDegrees } from '../../../assets/state/roomGeometry.ts';
+import { Assert, AssertNever, CloneDeepMutable } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -11,7 +13,9 @@ export const AppearanceActionMoveCharacter = z.object({
 	/** Target with the item to move */
 	target: CharacterSelectorSchema,
 	/** Where to move the character */
-	moveTo: CharacterSpacePositionSchema,
+	moveTo: CharacterSpacePositionSchema.optional(),
+	/** Pose change to apply to the character. Applied _after_ automatic pose changes, if they are allowed. */
+	pose: PartialAppearancePoseSchema.optional(),
 	/**
 	 * If this flag is set, the moved character will not have automatic pose changes (e.g. turning around when changing rooms) applied to it.
 	 * Note, that these changes will still affect automatically moved characters (those following the moved one).
@@ -34,149 +38,200 @@ export function ActionMoveCharacter({
 
 	const originalPosition = target.appearance.characterState.position;
 
-	if (target.getRoomDeviceLink() != null) {
-		processingContext.addRestriction({
-			type: 'inRoomDevice',
-		});
-	}
+	if (action.moveTo != null) {
+		const moveTo = action.moveTo;
 
-	if (target.character.id === player.character.id) {
-		// If moving self, must not be restricted by items
-		if (player.getEffects().blockRoomMovement) {
-			processingContext.addRestriction({
-				type: 'blockedMove',
-			});
-		}
-	} else {
-		// Admins can move others freely, non-admins need to be able to interact with target and a permission
-		// TODO: Maybe consider setting for this?
-		if (!player.hasSpaceRole('admin')) {
-			processingContext.checkInteractWithTarget(target.appearance);
-			processingContext.addInteraction(target.character, 'moveCharacter');
-		}
-	}
-
-	if (action.moveTo.type === 'normal') {
-		const spaceContext = processingContext.getSpaceContext();
-		// Target room must exist
-		const room = processingContext.manipulator.currentState.space.getRoom(action.moveTo.room);
-		if (room == null)
-			return processingContext.invalid();
-		// Additional changes when changing rooms
-		if (originalRoom.id !== room.id) {
-			const link = originalRoom.getLinkToRoom(room);
-			// And be reachable from both starting point and for current player (ignored for admins)
+		if (target.character.id === player.character.id) {
+			// If moving self, must not be restricted by items
+			if (player.getEffects().blockRoomMovement) {
+				processingContext.addRestriction({
+					type: 'blockedMove',
+				});
+			}
+		} else {
+			// Admins can move others freely, non-admins need to be able to interact with target and a permission
 			// TODO: Maybe consider setting for this?
-			if (!player.hasSpaceRole('admin') && !player.canUseRoomLink(originalRoom.getLinkToRoom(room))) {
+			if (!player.hasSpaceRole('admin')) {
+				processingContext.checkInteractWithTarget(target.appearance);
+				processingContext.addInteraction(target.character, 'moveCharacter');
+			}
+		}
+
+		if (moveTo.type === 'normal') {
+			const spaceContext = processingContext.getSpaceContext();
+			// Target room must exist
+			const room = processingContext.manipulator.currentState.space.getRoom(moveTo.room);
+			if (room == null)
+				return processingContext.invalid();
+			// Additional changes when changing rooms
+			if (originalRoom.id !== room.id) {
+				const link = originalRoom.getLinkToRoom(room);
+				// And be reachable from both starting point and for current player (ignored for admins)
+				// TODO: Maybe consider setting for this?
+				if (!player.hasSpaceRole('admin') && !player.canUseRoomLink(originalRoom.getLinkToRoom(room))) {
+					processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
+				}
+				// If changing room, character can be turned around
+				if (action.noPoseChange !== true && link != null && link.targetView !== 'keep') {
+					if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
+						Assert(link.targetView !== 'keep');
+						return character.produceWithPose({
+							view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
+								link.targetView,
+						}, 'pose');
+					})) {
+						return processingContext.invalid();
+					}
+				}
+			}
+			if (!player.hasSpaceRole('admin') && playerRoom.id !== room.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(room))) {
 				processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
 			}
-			// If changing room, character can be turned around
-			if (action.noPoseChange !== true && link != null && link.targetView !== 'keep') {
-				if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
-					Assert(link.targetView !== 'keep');
-					return character.produceWithPose({
-						view: link.targetView === 'turn-around' ? (character.actualPose.view === 'front' ? 'back' : 'front') :
-							link.targetView,
-					}, 'pose');
-				})) {
+			// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
+			if (!spaceContext.features.includes('development')) {
+				if (!IsValidRoomPosition(room.roomBackground, moveTo.position)) {
 					return processingContext.invalid();
 				}
 			}
-		}
-		if (!player.hasSpaceRole('admin') && playerRoom.id !== room.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(room))) {
-			processingContext.addRestriction({ type: 'tooFar', subtype: 'roomTarget' });
-		}
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!spaceContext.features.includes('development')) {
-			if (!IsValidRoomPosition(room.roomBackground, action.moveTo.position)) {
-				return processingContext.invalid();
-			}
-		}
-		// Additional checks if follow/leash changes
-		if (!isEqual(action.moveTo.following, originalPosition.following)) {
-			// Additional checks if follow/leash is in use
-			if (action.moveTo.following != null) {
-				// Cannot follow oneself
-				if (action.moveTo.following.target === target.character.id)
-					return processingContext.invalid();
-				// Check this character can follow
-				if (!CharacterCanFollow(target.appearance.characterState, target.appearance.gameState)) {
-					return processingContext.invalid('characterMoveCannotFollow');
-				}
+			// Additional checks if follow/leash changes
+			if (!isEqual(moveTo.following, originalPosition.following)) {
+				// Additional checks if follow/leash is in use
+				if (moveTo.following != null) {
+					// Cannot follow oneself
+					if (moveTo.following.target === target.character.id)
+						return processingContext.invalid();
+					// Check this character can follow
+					if (!CharacterCanFollow(target.appearance.characterState, target.appearance.gameState)) {
+						return processingContext.invalid('characterMoveCannotFollow');
+					}
 
-				// All follow modes need move permission (even if admin)
-				player.checkInteractWithTarget(processingContext, target.appearance);
-				processingContext.addInteraction(target.character, 'moveCharacter');
-				// ... and generic access permission to the follow target (to prevent people annoying people)
-				const followTarget = processingContext.getCharacter(action.moveTo.following.target);
-				const followTargetRoom = followTarget?.appearance.getCurrentRoom();
-				if (followTarget == null || followTargetRoom == null)
-					return processingContext.invalid();
-				player.checkInteractWithTarget(processingContext, followTarget.appearance);
-				// And check that the target can actually be followed
-				if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
-					return processingContext.invalid('characterMoveCannotFollowTarget');
-				}
-				// And check the follow target is reachable from the current player (not the player following)
-				if (playerRoom.id !== followTargetRoom.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(followTargetRoom))) {
-					processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
-				}
-				// Messages if follow starts
-				if ((originalPosition.following?.target) !== action.moveTo.following?.target) {
-					if (action.target.characterId === player.appearance.id) {
-						processingContext.queueMessage({
-							id: 'characterPositionFollowStartFollow',
-							rooms: uniq([originalRoom.id, followTargetRoom.id]),
-							target: {
-								type: 'character',
-								id: followTarget.appearance.id,
-							},
-						});
-					} else {
-						processingContext.queueMessage({
-							id: 'characterPositionFollowStartLead',
-							rooms: uniq([originalRoom.id, followTargetRoom.id]),
-							target: {
-								type: 'character',
-								id: target.appearance.id,
-							},
-						});
+					// All follow modes need move permission (even if admin)
+					player.checkInteractWithTarget(processingContext, target.appearance);
+					processingContext.addInteraction(target.character, 'moveCharacter');
+					// ... and generic access permission to the follow target (to prevent people annoying people)
+					const followTarget = processingContext.getCharacter(moveTo.following.target);
+					const followTargetRoom = followTarget?.appearance.getCurrentRoom();
+					if (followTarget == null || followTargetRoom == null)
+						return processingContext.invalid();
+					player.checkInteractWithTarget(processingContext, followTarget.appearance);
+					// And check that the target can actually be followed
+					if (!CharacterCanBeFollowed(followTarget.appearance.characterState)) {
+						return processingContext.invalid('characterMoveCannotFollowTarget');
 					}
-				}
-			} else {
-				// Message if follow stops
-				if (originalPosition.following != null) {
-					if (action.target.characterId === player.appearance.id) {
-						processingContext.queueMessage({
-							id: 'characterPositionFollowStopFollow',
-							rooms: [originalRoom.id],
-							target: {
-								type: 'character',
-								id: originalPosition.following.target,
-							},
-						});
-					} else {
-						processingContext.queueMessage({
-							id: 'characterPositionFollowStopLead',
-							rooms: [originalRoom.id],
-							target: {
-								type: 'character',
-								id: target.appearance.id,
-							},
-						});
+					// And check the follow target is reachable from the current player (not the player following)
+					if (playerRoom.id !== followTargetRoom.id && !player.canUseRoomLink(playerRoom.getLinkToRoom(followTargetRoom))) {
+						processingContext.addRestriction({ type: 'tooFar', subtype: 'followTarget' });
+					}
+					// Messages if follow starts
+					if ((originalPosition.following?.target) !== moveTo.following?.target) {
+						if (action.target.characterId === player.appearance.id) {
+							processingContext.queueMessage({
+								id: 'characterPositionFollowStartFollow',
+								rooms: uniq([originalRoom.id, followTargetRoom.id]),
+								target: {
+									type: 'character',
+									id: followTarget.appearance.id,
+								},
+							});
+						} else {
+							processingContext.queueMessage({
+								id: 'characterPositionFollowStartLead',
+								rooms: uniq([originalRoom.id, followTargetRoom.id]),
+								target: {
+									type: 'character',
+									id: target.appearance.id,
+								},
+							});
+						}
+					}
+				} else {
+					// Message if follow stops
+					if (originalPosition.following != null) {
+						if (action.target.characterId === player.appearance.id) {
+							processingContext.queueMessage({
+								id: 'characterPositionFollowStopFollow',
+								rooms: [originalRoom.id],
+								target: {
+									type: 'character',
+									id: originalPosition.following.target,
+								},
+							});
+						} else {
+							processingContext.queueMessage({
+								id: 'characterPositionFollowStopLead',
+								rooms: [originalRoom.id],
+								target: {
+									type: 'character',
+									id: target.appearance.id,
+								},
+							});
+						}
 					}
 				}
 			}
+		} else {
+			AssertNever(moveTo.type);
 		}
-	} else {
-		AssertNever(action.moveTo.type);
+
+		if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
+			return character.produceWithSpacePosition(moveTo);
+		})) {
+			return processingContext.invalid();
+		}
 	}
 
-	if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
-		return character.produceWithSpacePosition(action.moveTo);
-	})) {
-		return processingContext.invalid();
+	if (action.pose != null) {
+		const pose = action.pose;
+
+		processingContext.checkInteractWithTarget(target.appearance);
+
+		if (!processingContext.manipulator.produceCharacterState(target.character.id, (character) => {
+			return character.produceWithPose(pose, 'pose');
+		})) {
+			return processingContext.invalid();
+		}
 	}
 
 	return processingContext.finalize();
+}
+
+/** Params for constructing basic move action, preserving everything non-modified. Cannot be used to change follow mode. */
+export interface MoveCharacterActionParams {
+	x?: number;
+	y?: number;
+	yOffset?: number;
+	rotation?: CenteredDegrees;
+	/** Pose change to apply to the character. Applied _after_ automatic pose changes, if they are allowed. */
+	pose?: PartialAppearancePose;
+}
+
+export function CreateMoveCharacterAction({ x, y, yOffset, rotation, pose }: MoveCharacterActionParams, baseState: AssetFrameworkCharacterState): z.infer<typeof AppearanceActionMoveCharacter> {
+	const action: z.infer<typeof AppearanceActionMoveCharacter> = {
+		type: 'moveCharacter',
+		target: { type: 'character', characterId: baseState.id },
+	};
+
+	if (x != null || y != null || yOffset != null || rotation != null) {
+		const moveTo = CloneDeepMutable(baseState.position);
+		if (x != null) {
+			moveTo.position[0] = x;
+		}
+		if (y != null) {
+			moveTo.position[1] = y;
+		}
+		if (yOffset != null) {
+			moveTo.position[2] = yOffset;
+		}
+		if (rotation != null) {
+			moveTo.rotation = rotation;
+		}
+
+		action.moveTo = moveTo;
+	}
+
+	if (pose != null) {
+		action.pose = pose;
+	}
+
+	return action;
 }

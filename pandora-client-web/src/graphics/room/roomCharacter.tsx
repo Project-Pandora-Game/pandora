@@ -12,6 +12,7 @@ import {
 	type Coordinates,
 	type RoomProjectionResolver,
 } from 'pandora-common';
+import { CreateMoveCharacterAction } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { CanvasTextMetrics, GraphicsContext, Rectangle, TextStyle, type Cursor, type EventMode, type Filter } from 'pixi.js';
 import { memo, ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
@@ -89,7 +90,6 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveIm
 	visionFilters,
 }: RoomCharacterInteractiveProps): ReactElement | null {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const id = characterState.id;
 	const confirm = useConfirmDialog();
 
 	const {
@@ -117,20 +117,14 @@ export const RoomCharacterInteractive = memo(function RoomCharacterInteractiveIm
 			return;
 		}
 
-		const action: AppearanceAction = {
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId: id,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
-				rotation: characterState.position.rotation,
-				following: characterState.position.following,
-			},
-		};
+		let newYOffset;
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, yOffsetExtra]);
+
+		const action: AppearanceAction = CreateMoveCharacterAction({
+			x: newX,
+			y: newY,
+			yOffset: newYOffset,
+		}, characterState);
 
 		Promise.resolve()
 			.then(() => {

@@ -7,11 +7,11 @@ import {
 	GetLogger,
 	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
-	type AppearanceAction,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
 } from 'pandora-common';
+import type { MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
@@ -40,7 +40,7 @@ import { GeneratePosePreview } from './posePreview.tsx';
 import './storedPosePresets.scss';
 
 type WardrobeStoredPosePresetsProps = {
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 	characterState: AssetFrameworkCharacterState;
 };
 

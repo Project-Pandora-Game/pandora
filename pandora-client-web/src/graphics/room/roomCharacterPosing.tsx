@@ -1,6 +1,7 @@
 import type { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AppearanceAction, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
@@ -70,7 +71,6 @@ export function RoomCharacterMovePoseTool({
 	const { setRoomSceneMode } = useRoomScreenContext();
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
-	const characterId = characterState.id;
 	const { interfacePosingStyle } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
@@ -110,20 +110,13 @@ export function RoomCharacterMovePoseTool({
 		if (movingDisabled)
 			return;
 
-		execute({
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
-				following: characterState.position.following,
-				rotation: characterState.position.rotation,
-			},
-		});
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
+
+		execute(CreateMoveCharacterAction({
+			x: newX,
+			y: newY,
+			yOffset: newYOffset,
+		}, characterState));
 	});
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
@@ -217,48 +210,42 @@ export function RoomCharacterMovePoseTool({
 
 	//#region Posing
 
-	const setPoseDirect = useCallback(({ pose, rotation, yOffset }: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => {
-		execute({
-			type: 'pose',
-			target: characterId,
-			pose,
-			rotation,
-			yOffset,
-		});
-	}, [execute, characterId]);
+	const moveDirect = useCallback((params: MoveCharacterActionParams, originalCharacterState: AssetFrameworkCharacterState) => {
+		execute(CreateMoveCharacterAction(params, originalCharacterState));
+	}, [execute]);
 
 	// Pose updates from different sources (dragging bones, wheel stepping, buttons) are merged while waiting for the throttle,
 	// so a later update never replaces a still-pending update of a different field.
-	const pendingPose = useRef<Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'> | null>(null);
-	const flushPose = useEvent(() => {
-		const pose = pendingPose.current;
-		pendingPose.current = null;
+	const pendingMove = useRef<MoveCharacterActionParams | null>(null);
+	const flushMove = useEvent(() => {
+		const pose = pendingMove.current;
+		pendingMove.current = null;
 		if (pose != null) {
-			setPoseDirect(pose);
+			moveDirect(pose, characterState);
 		}
 	});
-	const flushPoseThrottled = useMemo(() => throttle(flushPose, LIVE_UPDATE_THROTTLE), [flushPose]);
-	const setPose = useCallback((newPose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => {
+	const flushMoveThrottled = useMemo(() => throttle(flushMove, LIVE_UPDATE_THROTTLE), [flushMove]);
+	const move = useCallback((params: MoveCharacterActionParams) => {
 		// Never dispatch pose actions while posing is blocked
 		if (posingDisabled)
 			return;
 
-		pendingPose.current = {
-			...newPose,
-			pose: pendingPose.current?.pose != null ? MergePartialAppearancePoses(pendingPose.current.pose, newPose.pose) : newPose.pose,
+		pendingMove.current = {
+			...params,
+			pose: pendingMove.current?.pose != null ? MergePartialAppearancePoses(pendingMove.current.pose, params.pose) : params.pose,
 		};
-		flushPoseThrottled();
-	}, [posingDisabled, flushPoseThrottled]);
+		flushMoveThrottled();
+	}, [posingDisabled, flushMoveThrottled]);
 
 	const stepLeftArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.leftArm.position,
-		useCallback((armPosition) => setPose({ pose: { leftArm: { position: armPosition } } }), [setPose]),
+		useCallback((armPosition) => move({ pose: { leftArm: { position: armPosition } } }), [move]),
 	);
 	const stepRightArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.rightArm.position,
-		useCallback((armPosition) => setPose({ pose: { rightArm: { position: armPosition } } }), [setPose]),
+		useCallback((armPosition) => move({ pose: { rightArm: { position: armPosition } } }), [move]),
 	);
 
 	//#endregion
@@ -284,7 +271,7 @@ export function RoomCharacterMovePoseTool({
 					y={ 650 - yOffsetExtra }
 					characterState={ characterState }
 					projectionResolver={ projectionResolver }
-					setPose={ setPose }
+					setPose={ move }
 				/>
 			</Container>
 
@@ -314,7 +301,7 @@ export function RoomCharacterMovePoseTool({
 									characterState={ characterState }
 									definition={ bone }
 									onRotate={ (newRotation) => {
-										setPose({
+										move({
 											pose: {
 												bones: {
 													[bone.name]: newRotation,
@@ -331,7 +318,7 @@ export function RoomCharacterMovePoseTool({
 								key={ i }
 								ikHandle={ h }
 								characterState={ characterState }
-								setPose={ setPose }
+								setPose={ move }
 								disabled={ posingDisabled }
 							/>
 						))
@@ -341,7 +328,7 @@ export function RoomCharacterMovePoseTool({
 						radiusSmall={ TURN_AROUND_RADIUS.small }
 						radiusBig={ TURN_AROUND_RADIUS.big }
 						onClick={ useEvent(() => {
-							setPose({
+							move({
 								pose: {
 									view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 								},
@@ -494,7 +481,7 @@ type PosingToolIKRotationHandleProps = {
 	y: number;
 	characterState: AssetFrameworkCharacterState;
 	projectionResolver: RoomProjectionResolver;
-	setPose: (newPose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 };
 
 /** A single inverse kinematics posing handle specially crafted for character rotation. */
@@ -651,7 +638,7 @@ function PosingToolIKRotationHandle({
 type PosingToolIKHandleProps = {
 	ikHandle: Immutable<InversePosingHandle>;
 	characterState: AssetFrameworkCharacterState;
-	setPose: (newPose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 	/** Posing is blocked: the handle must not react to the mouse wheel (and must not capture it) */
 	disabled?: boolean;
 };

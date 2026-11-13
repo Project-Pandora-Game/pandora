@@ -14,7 +14,6 @@ import { ActionModuleAction, AppearanceActionModuleAction } from './moduleAction
 import { ActionMoveCharacter, AppearanceActionMoveCharacter } from './moveCharacter.ts';
 import { ActionMoveItem, AppearanceActionMoveItem } from './moveItem.ts';
 import { ActionPoint, AppearanceActionPoint } from './point.ts';
-import { ActionPose, AppearanceActionPose } from './pose.ts';
 import { ActionAppearanceRandomize, AppearanceActionRandomize } from './randomize.ts';
 import { ActionRestrictionOverrideChange, AppearanceActionRestrictionOverrideChange } from './restrictionOverrideChange.ts';
 import { ActionRoomConfigure, AppearanceActionRoomConfigure } from './roomConfigure.ts';
@@ -30,7 +29,6 @@ const AppearanceActionSchemaBase = z.discriminatedUnion('type', [
 	AppearanceActionDeleteSchema,
 	AppearanceActionTransferSchema,
 	AppearanceActionMoveCharacter,
-	AppearanceActionPose,
 	AppearanceActionBody,
 	AppearanceActionMoveItem,
 	AppearanceActionColor,
@@ -101,8 +99,6 @@ function ApplyActionBase(
 			return ActionPoint({ ...arg, action });
 		case 'body':
 			return ActionBody({ ...arg, action });
-		case 'pose':
-			return ActionPose({ ...arg, action });
 		case 'restrictionOverrideChange':
 			return ActionRestrictionOverrideChange({ ...arg, action });
 		case 'randomize':

@@ -5,6 +5,7 @@ import {
 	AppearanceAction,
 	AppearanceActionProcessingContext,
 	ApplyAction,
+	AssertNever,
 	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
@@ -19,10 +20,11 @@ import {
 	ICharacterRoomData,
 	ItemId,
 	TypedEventEmitter,
-	type ActionTargetSelector,
+	type ActionCharacterSelector,
 	type AssetFrameworkGlobalState,
 	type ICharacterPrivateData,
 } from 'pandora-common';
+import { CreateMoveCharacterAction } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { CharacterEvents } from '../../../character/character.ts';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { Editor } from '../../editor.tsx';
@@ -65,11 +67,20 @@ export class AppearanceEditor extends CharacterAppearance {
 		if (definition == null)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
 
-		return this.editorDoAction({
-			type: this.assetManager.getBoneByName(bone).type,
-			target: this.id,
-			bones: { [bone]: value },
-		});
+		if (definition.type === 'pose') {
+			return this.editorDoAction(CreateMoveCharacterAction({
+				pose: { bones: { [bone]: value } },
+			}, this.characterState));
+		} else if (definition.type === 'body') {
+			return this.editorDoAction({
+				type: 'body',
+				target: this.id,
+				bones: { [bone]: value },
+			});
+		} else {
+			AssertNever(definition.type);
+		}
+
 	}
 
 	public addItem(asset: Asset, context: EditorActionContext = {}): boolean {
@@ -116,11 +127,9 @@ export class AppearanceEditor extends CharacterAppearance {
 	}
 
 	public setView(view: CharacterView, context: EditorActionContext = {}): boolean {
-		return this.editorDoAction({
-			type: 'pose',
-			target: this.id,
+		return this.editorDoAction(CreateMoveCharacterAction({
 			pose: { view },
-		}, context);
+		}, this.characterState), context);
 	}
 }
 
@@ -130,7 +139,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 	public readonly type = 'character';
 	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
-	public readonly actionSelector: ActionTargetSelector;
+	public readonly actionSelector: ActionCharacterSelector;
 
 	public readonly editor: Editor;
 	protected readonly logger = GetLogger('EditorCharacter');
@@ -141,7 +150,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 	constructor(editor: Editor) {
 		super();
 		this.editor = editor;
-		this.actionSelector = freeze<ActionTargetSelector>({ type: 'character', characterId: this.id }, true);
+		this.actionSelector = freeze<ActionCharacterSelector>({ type: 'character', characterId: this.id }, true);
 		this.data = {
 			id: this.id,
 			accountId: 1,

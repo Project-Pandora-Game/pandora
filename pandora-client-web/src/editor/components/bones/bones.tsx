@@ -1,4 +1,5 @@
-import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, type AppearanceAction } from 'pandora-common';
+import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -22,15 +23,9 @@ export function BoneUI(): ReactElement {
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 
-	const setPose = useCallback(({ pose, rotation, yOffset }: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => {
-		character.getAppearance()
-			.editorDoAction({
-				type: 'pose',
-				target: character.id,
-				pose,
-				rotation,
-				yOffset,
-			});
+	const setPose = useCallback((params: MoveCharacterActionParams) => {
+		const appearance = character.getAppearance();
+		appearance.editorDoAction(CreateMoveCharacterAction(params, appearance.characterState));
 	}, [character]);
 
 	return (

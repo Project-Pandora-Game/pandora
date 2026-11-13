@@ -13,7 +13,7 @@ export const block_prevent_room_leaving = DefineCharacterModifier({
 		if (action.type !== 'moveCharacter' || action.target.characterId !== player.appearance.id)
 			return 'allow';
 
-		if (action.moveTo.type === 'normal') {
+		if (action.moveTo?.type === 'normal') {
 			// Only block if the room actually changes - not movement within the room if brought there through other means
 			if (action.moveTo.room !== player.appearance.characterState.currentRoom) {
 				return 'block';

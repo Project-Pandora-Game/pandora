@@ -10,12 +10,12 @@ import {
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 	ProduceAppearancePose,
-	type AppearanceAction,
 	type AssetManager,
 	type AssetsPosePresetPreview,
 	type CenteredDegrees,
 	type ReadonlyAppearanceLimitTree,
 } from 'pandora-common';
+import type { MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { ReactElement, useEffect, useRef } from 'react';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -92,7 +92,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 	preset: Immutable<AssetsPosePreset>;
 	preview?: Immutable<AssetsPosePresetPreview>;
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: Pick<AppearanceAction<'pose'>, 'pose' | 'rotation' | 'yOffset'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	const { name, available, requested, active, pose, rotation, yOffset } = CheckPosePreset(preset, characterState);
 	return (

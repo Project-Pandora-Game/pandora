@@ -156,4 +156,88 @@ describe('direct mask draw family adapters', () => {
 		}
 	});
 
+	it('draws unbatched Graphics with native base color and separate local transform/tint', () => {
+		const f = Fixture();
+		const graphics = new P.Graphics().rect(0, 0, 10, 20).fill(0x336699);
+		const second = new P.Graphics(graphics.context);
+		graphics.context.batchMode = 'no-batch';
+		graphics.position.set(17, 23);
+		const source = new P.BatchableGraphics();
+		source.geometryData = { vertices: [0, 0, 10, 0, 0, 20], uvs: [0, 0, 1, 0, 0, 1], indices: [0, 1, 2] };
+		source.attributeOffset = 0;
+		source.attributeSize = 3;
+		source.indexOffset = 0;
+		source.indexSize = 3;
+		source.texture = P.Texture.WHITE;
+		source.baseColor = 0x336699;
+		source.alpha = 0.6;
+		const initialBatcher = source._batcher;
+		const getContext = jest.fn(() => ({ batches: [source] }));
+		f.renderer.graphicsContext.updateGpuContext = getContext as unknown as typeof f.renderer.graphicsContext.updateGpuContext;
+		try {
+			f.setMasked(false);
+			f.renderer.renderPipes.graphics.execute(graphics);
+			expect(f.nativeGraphics).toHaveBeenCalledWith(graphics);
+			f.setMasked(true);
+			f.renderer.renderPipes.graphics.execute(graphics);
+			expect(f.submitted).toHaveLength(1);
+			expect(f.submitted[0].size).toBe(3);
+			expect(source._batcher).toBe(initialBatcher);
+			const local = f.submitted[0].locals!;
+			expect(local.uniforms.uTransformMatrix).toBe(graphics.groupTransform);
+			expect(f.prepare).toHaveBeenCalledWith(f.submitted[0].shader, { worldTransform: graphics.worldTransform, groupTransform: graphics.groupTransform });
+			const vertices = f.submitted[0].geometry.buffers[0].data as Float32Array;
+			expect(Array.from(vertices.slice(0, 2))).toEqual([0, 0]);
+			expect(Array.from(vertices.slice(6, 8))).toEqual([10, 0]);
+			second.groupTransform.tx = 100;
+			f.renderer.renderPipes.graphics.execute(second);
+			expect(f.submitted[0].transform?.tx).toBe(0);
+			expect(f.submitted[1].transform?.tx).toBe(100);
+			f.renderer.renderPipes.graphics.execute(graphics);
+			expect(getContext).toHaveBeenCalledTimes(1);
+			graphics.context.clear();
+			f.renderer.renderPipes.graphics.execute(graphics);
+			expect(getContext).toHaveBeenCalledTimes(2);
+		} finally {
+			f.release();
+			second.destroy();
+			graphics.destroy(true);
+		}
+	});
+
+	it('splits textured Graphics at the mask sampler budget and releases owned uniforms', () => {
+		const f = Fixture();
+		const graphics = new P.Graphics();
+		const textures = Array.from({ length: 9 }, () => new P.Texture({ source: new P.TextureSource({ width: 1, height: 1 }) }));
+		const batches = textures.map((texture) => {
+			const batch = new P.BatchableGraphics();
+			batch.geometryData = { vertices: [0, 0, 10, 0, 0, 10], uvs: [0, 0, 1, 0, 0, 1], indices: [0, 1, 2] };
+			batch.attributeOffset = 0;
+			batch.attributeSize = 3;
+			batch.indexOffset = 0;
+			batch.indexSize = 3;
+			batch.texture = texture;
+			batch.baseColor = 0xffffff;
+			batch.alpha = 1;
+			return batch;
+		});
+		f.renderer.graphicsContext.updateGpuContext = jest.fn(() => ({ batches })) as unknown as typeof f.renderer.graphicsContext.updateGpuContext;
+		try {
+			f.setMasked(true);
+			f.renderer.renderPipes.graphics.execute(graphics);
+			expect(f.submitted.map((draw) => draw.size)).toEqual([24, 3]);
+			const ownSamplers = f.submitted[0].shader.resources.batchSamplers as InstanceType<typeof P.UniformGroup>;
+			expect(Array.from(ownSamplers.uniforms.uTextures as Int32Array)).toEqual([8, 9, 10, 11, 12, 13, 14, 15]);
+			const locals = f.submitted[0].locals!;
+			locals.buffer = new P.Buffer({ data: new Float32Array(16), usage: P.BufferUsage.UNIFORM });
+			const buffer = locals.buffer;
+			f.release();
+			expect(buffer.destroyed).toBe(true);
+			expect(textures.every((texture) => !texture.source.destroyed)).toBe(true);
+		} finally {
+			f.release();
+			graphics.destroy(true);
+			for (const texture of textures) texture.destroy(true);
+		}
+	});
 });

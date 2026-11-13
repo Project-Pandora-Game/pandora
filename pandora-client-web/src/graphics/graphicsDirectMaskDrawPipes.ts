@@ -1,11 +1,11 @@
 import { Assert } from 'pandora-common';
 import {
-	BatchGeometry, Batcher, DefaultBatcher,
-	Matrix, Shader, State, UniformGroup,
+	BatchableGraphics, BatchGeometry, Batcher, DefaultBatcher, InstructionSet,
+	Matrix, Shader, State, UniformGroup, color32BitToUniform,
 	colorBitGl, compileHighShaderGlProgram,
-	generateTextureBatchBitGl,
+	generateTextureBatchBitGl, localUniformBitGl,
 	roundPixelsBitGl,
-	type Batch, type Container, type InstructionSet, type WebGLRenderer,
+	type Batch, type Container, type Graphics, type GraphicsContext, type WebGLRenderer,
 } from 'pixi.js';
 import { DIRECT_MASK_MAX_DEPTH } from './graphicsDirectMaskShader.ts';
 
@@ -64,6 +64,17 @@ class MaskBatcher extends Batcher {
 	}
 }
 
+interface GraphicsData {
+	context: GraphicsContext;
+	batcher: MaskBatcher;
+	instructions: InstructionSet;
+	shader: Shader;
+	locals: UniformGroup;
+	dirty: boolean;
+	onUpdate: () => void;
+	onDestroy: () => void;
+}
+
 /**
  * Extend the native draw families rather than replacing sprites with meshes.
  * Geometry, packed color, atlas/trim UVs, blend mode and batch order stay native.
@@ -71,17 +82,19 @@ class MaskBatcher extends Batcher {
  */
 export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMaskDrawHooks): () => void {
 	const pipe = renderer.renderPipes.batch;
+	const graphicsPipe = renderer.renderPipes.graphics;
 	// Keep receiver-bound originals; teardown restores exactly these functions.
 	/* eslint-disable @typescript-eslint/unbound-method */
 	const original = {
 		addToBatch: pipe.addToBatch, break: pipe.break, buildStart: pipe.buildStart,
 		buildEnd: pipe.buildEnd, upload: pipe.upload, execute: pipe.execute,
-		destroyInstructionSet: pipe.destroyInstructionSet,
+		destroyInstructionSet: pipe.destroyInstructionSet, graphicsExecute: graphicsPipe.execute,
 	};
 	/* eslint-enable @typescript-eslint/unbound-method */
 	const maxTextures = renderer.limits.maxBatchableTextures - DIRECT_MASK_MAX_DEPTH;
 	Assert(maxTextures > 0, 'Renderer has no material samplers available for direct masks');
 	const batchers = new Map<InstructionSet, MaskBatcher>();
+	const graphics = new Map<GraphicsContext, GraphicsData>();
 	const groupRoots = new Map<Container, () => void>();
 	const state = State.for2d();
 	const identity = new Matrix();
@@ -103,6 +116,16 @@ export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMask
 		batcher.destroy();
 	}
 
+	function DestroyGraphics(data: GraphicsData): void {
+		data.context.off('update', data.onUpdate);
+		data.context.off('destroy', data.onDestroy);
+		data.shader.destroy();
+		data.locals.buffer?.destroy();
+		data.instructions.destroy();
+		DestroyBatcher(data.batcher);
+		graphics.delete(data.context);
+	}
+
 	function Draw(batch: Batch, shader: Shader, batcher: MaskBatcher): void {
 		shader.groups[0] = renderer.globalUniforms.bindGroup;
 		state.blendMode = batch.blendMode;
@@ -117,6 +140,30 @@ export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMask
 		// Native batches may resume with action=renderBatch. They must rebind their
 		// shader and geometry after our draw, including on WebGL.
 		nativeNeedsStart = true;
+	}
+
+	function GetGraphics(context: GraphicsContext): GraphicsData {
+		const existing = graphics.get(context);
+		if (existing) return existing;
+		const locals = new UniformGroup({
+			uTransformMatrix: { type: 'mat3x3<f32>', value: new Matrix() },
+			uColor: { type: 'vec4<f32>', value: new Float32Array([1, 1, 1, 1]) },
+			uRound: { type: 'f32', value: 0 },
+		});
+		const batcher = new MaskBatcher(maxTextures);
+		const glProgram = compileHighShaderGlProgram({
+			name: 'pandora-direct-graphics', bits: [colorBitGl, generateTextureBatchBitGl(maxTextures), localUniformBitGl, roundPixelsBitGl],
+		});
+		const shader = new Shader({ glProgram, resources: { localUniforms: locals, batchSamplers: batcher.shader.resources.batchSamplers as UniformGroup } });
+		const data: GraphicsData = { context, batcher, shader, locals, instructions: new InstructionSet(), dirty: true, onUpdate: () => undefined, onDestroy: () => undefined };
+		data.onUpdate = () => {
+			data.dirty = true;
+		};
+		data.onDestroy = () => DestroyGraphics(data);
+		context.on('update', data.onUpdate);
+		context.once('destroy', data.onDestroy);
+		graphics.set(context, data);
+		return data;
 	}
 
 	const wrappedAdd: typeof pipe.addToBatch = (element, instructions) => {
@@ -177,6 +224,44 @@ export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMask
 		batchers.delete(instructions);
 		original.destroyInstructionSet.call(pipe, instructions);
 	};
+	const wrappedGraphics: typeof graphicsPipe.execute = (renderable: Graphics) => {
+		if (!renderable.isRenderable || !hooks.isRenderingMasked()) {
+			original.graphicsExecute.call(graphicsPipe, renderable);
+			return;
+		}
+		const data = GetGraphics(renderable.context);
+		RememberGroups(renderable);
+		if (data.dirty) {
+			data.dirty = false;
+			const gpuContext = renderer.graphicsContext.updateGpuContext(renderable.context);
+			data.instructions.reset();
+			data.batcher.begin();
+			for (const source of gpuContext.batches) {
+				const batch = new BatchableGraphics();
+				source.copyTo(batch);
+				batch.applyTransform = false;
+				data.batcher.add(batch);
+			}
+			data.batcher.finish(data.instructions);
+			data.batcher.uploadGeometry();
+		}
+		data.locals.uniforms.uTransformMatrix = renderable.groupTransform;
+		// eslint-disable-next-line no-bitwise -- Match native Pixi round-pixel flags.
+		data.locals.uniforms.uRound = renderer._roundPixels | renderable._roundPixels;
+		color32BitToUniform(renderable.groupColorAlpha, data.locals.uniforms.uColor as Float32Array, 0);
+		data.locals.update();
+		if (data.instructions.instructionSize === 0) return;
+		const shader = hooks.prepare(data.shader, { worldTransform: renderable.worldTransform, groupTransform: renderable.groupTransform }) ?? data.shader;
+		for (let i = 0; i < data.instructions.instructionSize; i++) {
+			const batch = data.instructions.instructions[i] as Batch;
+			if (batch.size) {
+				// As in native GraphicsPipe, local uniforms apply the object's blend/tint;
+				// source batches themselves carry base shape color, not object color.
+				batch.blendMode = renderable.groupBlendMode;
+				Draw(batch, shader, data.batcher);
+			}
+		}
+	};
 	pipe.addToBatch = wrappedAdd;
 	pipe.break = wrappedBreak;
 	pipe.buildStart = wrappedBuildStart;
@@ -184,6 +269,7 @@ export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMask
 	pipe.upload = wrappedUpload;
 	pipe.execute = wrappedExecute;
 	pipe.destroyInstructionSet = wrappedDestroy;
+	graphicsPipe.execute = wrappedGraphics;
 
 	return () => {
 		if (released) return;
@@ -207,7 +293,9 @@ export function InstallDirectMaskDrawPipes(renderer: Renderer, hooks: DirectMask
 		if (pipe.upload === wrappedUpload) pipe.upload = original.upload;
 		if (pipe.execute === wrappedExecute) pipe.execute = original.execute;
 		if (pipe.destroyInstructionSet === wrappedDestroy) pipe.destroyInstructionSet = original.destroyInstructionSet;
+		if (graphicsPipe.execute === wrappedGraphics) graphicsPipe.execute = original.graphicsExecute;
 		for (const batcher of batchers.values()) DestroyBatcher(batcher);
 		batchers.clear();
+		for (const data of graphics.values()) DestroyGraphics(data);
 	};
 }

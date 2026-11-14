@@ -18,8 +18,7 @@ export const GraphicsSettingsSchema = z.object({
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	renderResolution: z.number().int().min(0).max(100),
 	upscaling: GraphicsUpscalingSettingSchema,
-	/** Non-disabled alphamasking suppresses antialias. */
-	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
+	alphamaskEngine: z.enum(['customShader', 'disabled']),
 	/** Whether to tell browser we prefer antialiasing. Requires page reload. */
 	antialias: z.boolean(),
 });
@@ -37,7 +36,12 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	antialias: true,
 } as const;
 
-export const GraphicsSettingsStorage = BrowserStorage.create<Partial<Immutable<GraphicsSettings>>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
+// Migrate retired masking engines without losing other saved preferences.
+const GraphicsSettingsStorageSchema = GraphicsSettingsSchema.partial().extend({
+	alphamaskEngine: z.enum(['pixi', 'stencil', 'directShader']).transform(() => 'customShader' as const)
+		.or(GraphicsSettingsSchema.shape.alphamaskEngine).optional(),
+});
+export const GraphicsSettingsStorage = BrowserStorage.create<Partial<Immutable<GraphicsSettings>>>('settings.graphics', {}, GraphicsSettingsStorageSchema);
 
 export function useGraphicsSettings(): GraphicsSettings {
 	const overrides = useObservable(GraphicsSettingsStorage);
@@ -54,12 +58,8 @@ export function SetGraphicsSettings(changes: Partial<GraphicsSettings>): void {
 	};
 }
 
-export function GetGraphicsEffectiveAntialias(): boolean {
-	const { antialias, alphamaskEngine } = ({
-		...GRAPHICS_SETTINGS_DEFAULT,
-		...GraphicsSettingsStorage.value,
-	});
-	return antialias && alphamaskEngine === 'disabled';
+export function GetGraphicsAntialias(): boolean {
+	return GraphicsSettingsStorage.value.antialias ?? GRAPHICS_SETTINGS_DEFAULT.antialias;
 }
 
 export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {

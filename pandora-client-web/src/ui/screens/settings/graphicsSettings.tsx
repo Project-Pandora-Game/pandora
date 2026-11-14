@@ -50,9 +50,8 @@ function EffectsSettings(): ReactElement {
 function QualitySettings(): ReactElement {
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
-		pixi: 'Pixi.js',
-		customShader: 'Custom Pandora shader (recommended for less clipping)',
-		disabled: 'Ignore masks (recommended for avoiding lag)',
+		customShader: 'Custom Pandora shader (experimental)',
+		disabled: 'Ignore masks (default)',
 	};
 
 	const automaticTextureResolution = useAutomaticResolution();
@@ -101,62 +100,37 @@ function QualitySettings(): ReactElement {
 						schema={ GraphicsUpscalingSettingSchema }
 					/>
 				) : null }
-				<Column gap='none'>
-					<ToggleSettingInput
-						driver={ useGraphicsSettingDriver('antialias') }
-						disabled={ currentGraphicsSettings.alphamaskEngine !== 'disabled' }
-						label={
-							currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-								<span className='text-strikethrough'>Use antialiasing (if supported by your browser)</span>
-							) : (
-								<>
-									Use antialiasing (if supported by your browser)
-									<span className='warning-box inline slim' title='Changing this setting will reload the page'>
-										↺
-									</span>
-								</>
-							)
-						}
-					/>
-					{
-						currentGraphicsSettings.alphamaskEngine !== 'disabled' ? (
-							<span>Unavailable as "Alphamasking engine" is not set to "Ignore masks"</span>
-						) : null
+				<ToggleSettingInput
+					driver={ useGraphicsSettingDriver('antialias') }
+					label={
+						<>
+							Use antialiasing (if supported by your browser)
+							<span className='warning-box inline slim' title='Changing this setting will reload the page'>
+								↺
+							</span>
+						</>
 					}
-				</Column>
+				/>
 				<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
 					driver={ useGraphicsSettingDriver('alphamaskEngine') }
 					label={
 						<>
-							Alphamasking engine
-							{
-								currentGraphicsSettings.antialias ? (
-									<span className='warning-box inline slim' title='Changing this setting might reload the page'>
-										↺
-									</span>
-								) : null
-							}
+							Alphamasking
 							<ContextHelpButton>
 								<p>
 									Alphamasks allow assets to hide parts of other assets beneath them, so they do not clip through.<br />
 									Common examples of this are various shoes hiding feet/socks and pants hiding normally wide end of tops.<br />
 									While not using an alphamasking engine will cause clipping with assets, <br />
-									we decided to disable it by default, as many people are encountering performance issues due to it.<br />
-									Our current implementation of alphamasking is also not compatible with Antialiasing.
+									masking remains disabled by default; performance depends on your device and the scene.<br />
+									Mask cutouts may still have hard edges.
 								</p>
 
 								<p>
-									We have a planned rework that should allow alphamasks to work again without the performance impact, <br />
-									but it will take some time until this is implemented and adopted by assets.
-								</p>
-
-								<p>
-									If you do have a powerful computer, you can attempt to re-enable this option. <br />
-									In that case we recommend using the "Custom Pandora shader" option.
+									Try the "Custom Pandora shader" option to reduce clothing clipping.
 								</p>
 							</ContextHelpButton>
 							<br />
-							<strong>The current implementation is known to cause lag on most devices</strong>
+							<strong>{ currentGraphicsSettings.alphamaskEngine === 'customShader' ? 'Experimental: clipping and performance are still being evaluated' : null }</strong>
 						</>
 					}
 					stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }

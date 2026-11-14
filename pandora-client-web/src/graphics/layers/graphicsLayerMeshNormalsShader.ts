@@ -1,6 +1,7 @@
 import { memoize, noop } from 'lodash-es';
-import { MAX_BONE_COUNT } from 'pandora-common';
+import { MAX_BONE_COUNT, type LayerNormalData } from 'pandora-common';
 import * as PIXI from 'pixi.js';
+import { CreateGraphicsSkinningShader, UpdateGraphicsSkinningShaderPalette, type GraphicsBonePalette } from '../graphicsBonePalette.ts';
 
 export const DEFAULT_NORMAL_TEXTURE = new PIXI.Texture({
 	source: new PIXI.BufferImageSource({
@@ -34,7 +35,9 @@ const SHADER_NORMALS_BIT_GL: PIXI.HighShaderBit = {
 	vertex: {
 		header: /* glsl */`
 uniform mat3 uTextureMatrix;
-uniform vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+layout(std140) uniform skinningUniforms {
+	vec4 uBoneQuat[${2 * MAX_BONE_COUNT}];
+};
 in uvec4 aBoneIndices; // Indices of bones, in uBoneQuat
 in vec4 aBoneWeights; // Weights of bones, in uBoneQuat
 out mat3 vTBN;
@@ -206,3 +209,63 @@ outColor.xyz = packNormal(normal) * outColor.w;
 		],
 	});
 });
+
+export interface NormalMeshShaderOptions {
+	texture: PIXI.Texture;
+	normalMapTexture: PIXI.Texture;
+	normalMapData: LayerNormalData;
+	color: number;
+	displayNormalMap?: boolean;
+	boneTransforms: Float32Array;
+	bonePalette?: GraphicsBonePalette;
+}
+
+/** Shared by the React component and renderer qualification, including live material updates. */
+export function CreateOrUpdateNormalMeshShader(existingShader: PIXI.Shader | null | undefined, {
+	texture, normalMapTexture, normalMapData, color, displayNormalMap, boneTransforms, bonePalette,
+}: NormalMeshShaderOptions): PIXI.Shader {
+	const glProgram = displayNormalMap ? GetNormalMeshDebugNormalsGlProgram() : GetNormalMeshGlProgram();
+	const normalMap = normalMapTexture === PIXI.Texture.WHITE ? DEFAULT_NORMAL_TEXTURE : normalMapTexture;
+	// eslint-disable-next-line no-bitwise
+	const colorAlpha = PIXI.Color.shared.setValue(color).toBgrNumber() + (255 << 24);
+	if (existingShader?.glProgram === glProgram) {
+		existingShader.resources.uTexture = texture.source;
+		existingShader.resources.uSampler = texture.source.style;
+		existingShader.resources.uNormalMap = normalMap.source;
+		existingShader.resources.uNormalSampler = normalMap.source.style;
+		UpdateGraphicsSkinningShaderPalette(existingShader, boneTransforms, bonePalette);
+		const textureUniforms = existingShader.resources.textureUniforms as PIXI.UniformGroup;
+		textureUniforms.uniforms.uTextureMatrix = texture.textureMatrix.mapCoord;
+		PIXI.color32BitToUniform(colorAlpha, textureUniforms.uniforms.uBaseColor as Float32Array, 0);
+		textureUniforms.update();
+		const pbrUniforms = existingShader.resources.pbrUniforms as PIXI.UniformGroup | undefined;
+		if (pbrUniforms !== undefined) {
+			pbrUniforms.uniforms.uSpecularStrength = normalMapData.specularStrength;
+			pbrUniforms.uniforms.uRoughness = normalMapData.roughness;
+			pbrUniforms.update();
+		}
+		return existingShader;
+	}
+	const baseColor = new Float32Array(4);
+	PIXI.color32BitToUniform(colorAlpha, baseColor, 0);
+	return CreateGraphicsSkinningShader({
+		glProgram,
+		resources: {
+			uTexture: texture.source,
+			uSampler: texture.source.style,
+			uNormalMap: normalMap.source,
+			uNormalSampler: normalMap.source.style,
+			textureUniforms: new PIXI.UniformGroup({
+				uTextureMatrix: { type: 'mat3x3<f32>', value: texture.textureMatrix.mapCoord },
+				uBaseColor: { type: 'vec4<f32>', value: baseColor },
+			}),
+			...(!displayNormalMap ? {
+				pbrUniforms: new PIXI.UniformGroup({
+					uAmbientStrength: { type: 'f32', value: 0.1 },
+					uSpecularStrength: { type: 'f32', value: normalMapData.specularStrength },
+					uRoughness: { type: 'f32', value: normalMapData.roughness },
+				}),
+			} : {}),
+		},
+	}, boneTransforms, bonePalette);
+}

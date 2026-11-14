@@ -3,7 +3,7 @@ import { Assert, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
 import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
 import { DEVELOPMENT } from '../config/Environment.ts';
-import { GetGraphicsEffectiveAntialias } from './graphicsSettings.tsx';
+import { GetGraphicsAntialias } from './graphicsSettings.tsx';
 import { ConfigurePixiSettings } from './pixiSettings.ts';
 
 ConfigurePixiSettings();
@@ -14,12 +14,13 @@ export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
 
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: DEFAULT_BACKGROUND_COLOR,
+	preference: 'webgl',
 	resolution: 1,
 	autoDensity: true,
 	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
 	backgroundAlpha: 0,
 	// Antialias is controlled by settings. See the settings for more details
-	antialias: GetGraphicsEffectiveAntialias(),
+	antialias: GetGraphicsAntialias(),
 };
 
 export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {

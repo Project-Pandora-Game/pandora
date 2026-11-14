@@ -327,8 +327,8 @@ importers:
         specifier: 6.1.5
         version: 6.1.5(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
       pixi-viewport:
-        specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
+        specifier: 7.0.1
+        version: 7.0.1(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
       pixi.js:
         specifier: 8.22.0
         version: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
@@ -4904,8 +4904,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8.0.0-0'
 
-  pixi-viewport@6.0.3:
-    resolution: {integrity: sha512-2+qPJ0/n+8hQYhWvY+795+x9y3MiUrCOWacK0DY53whowWaGdx9iDocy7z1pBwjkZhC52YvrJQuZKK0sdVLtBw==}
+  pixi-viewport@7.0.1:
+    resolution: {integrity: sha512-Pm85vBIqqUkSDS8KfOR+GirpR8gYIA/FRJgdPbrU3qx2imkod90GV64ycgO6v+mvfuUWYQICXYdWgQKHihBkoA==}
     peerDependencies:
       pixi.js: '>=8'
 
@@ -11228,7 +11228,7 @@ snapshots:
       '@types/gradient-parser': 0.1.5
       pixi.js: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
 
-  pixi-viewport@6.0.3(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
+  pixi-viewport@7.0.1(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
     dependencies:
       pixi.js: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
 

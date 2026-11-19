@@ -229,8 +229,8 @@ importers:
   pandora-api:
     dependencies:
       async-lock:
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.5.0
+        version: 1.5.0
       immer:
         specifier: 11.2.3
         version: 11.2.3
@@ -493,8 +493,8 @@ importers:
         specifier: 4.17.12
         version: 4.17.12
       async-lock:
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.5.0
+        version: 1.5.0
       delaunator:
         specifier: 5.1.0
         version: 5.1.0
@@ -554,8 +554,8 @@ importers:
         specifier: 0.45.1
         version: 0.45.1
       async-lock:
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.5.0
+        version: 1.5.0
       discord.js:
         specifier: 14.28.1
         version: 14.28.1
@@ -648,8 +648,8 @@ importers:
         specifier: 0.16.1
         version: 0.16.1
       async-lock:
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.5.0
+        version: 1.5.0
       express:
         specifier: 5.3.0
         version: 5.3.0(supports-color@8.1.1)
@@ -2470,8 +2470,8 @@ packages:
     resolution: {integrity: sha512-hsU18Ae8CDTR6Kgu9DYf0EbCr/a5iGL0rytQDobUcdpYOKokk8LEjVphnXkDkgpi0wYVsqrXuP0bZxJaTqdgoA==}
     engines: {node: '>= 0.4'}
 
-  async-lock@1.4.1:
-    resolution: {integrity: sha512-Az2ZTpuytrtqENulXwO3GGv1Bztugx6TT37NIo7imr/Qo0gsYiGtSdBa2B6fsXhTpVZDNfu1Qn3pk531e3q+nQ==}
+  async-lock@1.5.0:
+    resolution: {integrity: sha512-JgULma1mWaHlyJ67lvicyel5Cq+k55bXafE0gyvJBdHkH0vdE/IGGDF1glNyRInisNS6pZL2oho96S6Hw68kfQ==}
 
   async-mutex@0.5.0:
     resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
@@ -8438,7 +8438,7 @@ snapshots:
 
   async-function@1.0.0: {}
 
-  async-lock@1.4.1: {}
+  async-lock@1.5.0: {}
 
   async-mutex@0.5.0:
     dependencies:

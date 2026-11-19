@@ -35,7 +35,7 @@
 		"prepack": "pnpm --filter pandora-common run build && pnpm run build"
 	},
 	"dependencies": {
-		"async-lock": "1.4.1",
+		"async-lock": "1.5.0",
 		"immer": "11.2.3",
 		"socket.io-client": "4.8.4"
 	},

@@ -44,7 +44,7 @@
 		"@prometheus-io/client": "0.16.1",
 		"@simplewebauthn/server": "14.1.0",
 		"argon2": "0.45.1",
-		"async-lock": "1.4.1",
+		"async-lock": "1.5.0",
 		"discord.js": "14.28.1",
 		"express": "5.3.0",
 		"immer": "11.2.3",

@@ -12,7 +12,7 @@ import type { TransitionedContainerCustomProps } from '../common/transitions/tra
 import { useCharacterDisplayFilters, useCharacterDisplayStyle, usePlayerVisionFilters } from '../common/visionFilters.tsx';
 import { GraphicsCharacter } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL } from '../room/roomCharacter.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL } from '../room/roomMovementTransition.ts';
 import { CalculateCharacterDeviceSlotPosition, useRoomCharacterOffsets } from '../room/roomCharacterPosition.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { MASK_SIZE } from './graphicsLayerAlphaImageMesh.tsx';

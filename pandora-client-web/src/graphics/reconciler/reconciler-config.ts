@@ -2,7 +2,7 @@ import { Assert } from 'pandora-common';
 import type { Container as PixiContainer } from 'pixi.js';
 import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
-import type { EventPriority, ReactContext } from 'react-reconciler';
+import type { EventPriority } from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants.js';
 import { GIT_COMMIT_HASH } from '../../config/Environment.ts';
 import { PIXI_REGISTERED_COMPONENTS } from './component.ts';
@@ -296,7 +296,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	//#endregion
 
 	NotPendingTransition: null,
-	HostTransitionContext: createContext<null>(null) as unknown as ReactContext<null>,
+	HostTransitionContext: createContext<null>(null),
 
 	setCurrentUpdatePriority(newPriority) {
 		CurrentUpdatePriority = newPriority;

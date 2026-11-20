@@ -12,6 +12,9 @@ allowBuilds:
   unrs-resolver: true
   core-js-pure: false
   '@parcel/watcher': true
+permissions:
+  pixi.js:
+    skills: false
 
 allowUnusedPatches: false
 injectWorkspacePackages: false

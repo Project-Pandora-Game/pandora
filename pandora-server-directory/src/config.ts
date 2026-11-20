@@ -28,6 +28,9 @@ export const EnvParser = CreateEnvParser({
 
 	//#endregion
 
+	/** Optional token for read-only GitHub update announcement generation. */
+	PANDORA_UPDATES_GITHUB_TOKEN: z.string().default(''),
+
 	//#region Logging
 	/** The directory to store logs into */
 	LOG_DIR: z.string().default('./logs'),

@@ -32,6 +32,10 @@
 			"types": "./dist/gameLogic/characterModifiers/helpers/*.d.ts",
 			"default": "./dist/gameLogic/characterModifiers/helpers/*.js"
 		},
+		"./updates": {
+			"types": "./dist/updates/index.d.ts",
+			"default": "./dist/updates/index.js"
+		},
 		"./utility": {
 			"types": "./dist/utility/index.d.ts",
 			"default": "./dist/utility/index.js"

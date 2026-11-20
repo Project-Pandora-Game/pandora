@@ -10,8 +10,8 @@ import {
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
-	type PartialAppearancePose,
 } from 'pandora-common';
+import type { MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import React, { useCallback, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
@@ -40,7 +40,7 @@ import { GeneratePosePreview } from './posePreview.tsx';
 import './storedPosePresets.scss';
 
 type WardrobeStoredPosePresetsProps = {
-	setPose: (pose: PartialAppearancePose) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 	characterState: AssetFrameworkCharacterState;
 };
 
@@ -363,15 +363,17 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				</Row>
 				<br />
 				<PosePresetEditTable
-					preset={ preset.pose }
-					update={ (newPose) => {
+					preset={ preset }
+					update={ (newPreset) => {
 						setEdit({
 							...preset,
-							pose: newPose,
+							...newPreset,
 						});
 					} }
 					assetManager={ characterState.assetManager }
 					sourcePose={ characterState.actualPose }
+					sourceRotation={ characterState.getActualCharacterRotation() }
+					sourceYOffset={ characterState.position.position[2] }
 				/>
 				<Row alignX='space-between'>
 					<Button onClick={ close }>Cancel</Button>

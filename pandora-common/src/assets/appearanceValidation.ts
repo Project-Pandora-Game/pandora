@@ -164,7 +164,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	let hasDevicePart = false;
 	const assetCounts = new Map<AssetId, number>();
 	let globalProperties = CreateAssetPropertiesResult();
-	Assert(globalProperties.limits.valid);
+	Assert(globalProperties.poseLimits.valid);
 	for (const item of items) {
 		// All personal items have no limit. If we want to change this later, here is the place
 		const maxItemLimit = (item.isType('bodypart') || item.isType('personal')) ? Infinity : 1;
@@ -206,7 +206,14 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		assetCounts.set(item.asset.id, currentCount + 1);
 
 		// Check the pose is possible
-		if (!globalProperties.limits.valid)
+		if (!globalProperties.poseLimits.valid)
+			return {
+				success: false,
+				error: {
+					problem: 'poseConflict',
+				},
+			};
+		if (globalProperties.rotationLimits.length === 0)
 			return {
 				success: false,
 				error: {

@@ -17,12 +17,13 @@ export const GraphicsLayerText = memo(function GraphicsLayerTextImpl({
 	poseEvaluator,
 	wornItems,
 	state,
+	rotationAngle,
 	characterBlinking,
 }: GraphicsLayerProps<'text'>): ReactElement | null {
 	const app = usePixiAppOptional();
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
+	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, rotationAngle, currentlyBlinking);
 
 	const dataModule = item?.getModules().get(layer.dataModule);
 	const textModule = (dataModule != null && dataModule instanceof ItemModuleText) ? dataModule : undefined;

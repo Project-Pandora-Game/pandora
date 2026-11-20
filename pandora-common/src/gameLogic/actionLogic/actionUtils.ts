@@ -15,7 +15,6 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'delete':
 		case 'transfer':
 		case 'moveCharacter':
-		case 'pose':
 		case 'body':
 		case 'moveItem':
 		case 'color':

@@ -1,4 +1,5 @@
-import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, PartialAppearancePose } from 'pandora-common';
+import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -8,7 +9,7 @@ import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
-import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
+import { BoneRowBaseElement, BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -22,15 +23,9 @@ export function BoneUI(): ReactElement {
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 
-	const setPose = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
-		character.getAppearance()
-			.editorDoAction({
-				type: 'pose',
-				target: character.id,
-				leftArm: { ...arms, ...leftArm },
-				rightArm: { ...arms, ...rightArm },
-				...copy,
-			});
+	const setPose = useCallback((params: MoveCharacterActionParams) => {
+		const appearance = character.getAppearance();
+		appearance.editorDoAction(CreateMoveCharacterAction(params, appearance.characterState));
 	}, [character]);
 
 	return (
@@ -104,6 +99,12 @@ export function BoneUI(): ReactElement {
 					.filter((bone) => bone.type === 'pose')
 					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
+			<BoneRowBaseElement
+				name='Character rotation'
+				requestedRotation={ characterState.position.rotation }
+				actualRotation={ characterState.getActualCharacterRotation() }
+				onChange={ (rotation) => setPose({ rotation: rotation === -180 ? 180 : rotation }) }
+			/>
 			<hr />
 			<h4>Body bones</h4>
 			{

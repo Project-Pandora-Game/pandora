@@ -1,6 +1,7 @@
-import { produce, type Immutable } from 'immer';
+import type { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager.tsx';
@@ -70,7 +71,6 @@ export function RoomCharacterMovePoseTool({
 	const { setRoomSceneMode } = useRoomScreenContext();
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
-	const characterId = characterState.id;
 	const { interfacePosingStyle } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
@@ -104,28 +104,19 @@ export function RoomCharacterMovePoseTool({
 	// Distance of the movement handles from the character's anchor, for the drag maths
 	const moveHandlesLocalY = moveHandlesY - pivot.y;
 
-	const characterRotationBone = bones.find((bone) => bone.name === 'character_rotation');
-	Assert(characterRotationBone != null, 'Character rotation bone not found');
-
 	//#region Movement
 
 	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
 		if (movingDisabled)
 			return;
 
-		execute({
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
-				following: characterState.position.following,
-			},
-		});
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
+
+		execute(CreateMoveCharacterAction({
+			x: newX,
+			y: newY,
+			yOffset: newYOffset,
+		}, characterState));
 	});
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
@@ -219,53 +210,43 @@ export function RoomCharacterMovePoseTool({
 
 	//#region Posing
 
-	const setPoseDirect = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
-		execute({
-			type: 'pose',
-			target: characterId,
-			leftArm: { ...arms, ...leftArm },
-			rightArm: { ...arms, ...rightArm },
-			...copy,
-		});
-	}, [execute, characterId]);
+	const moveDirect = useCallback((params: MoveCharacterActionParams, originalCharacterState: AssetFrameworkCharacterState) => {
+		execute(CreateMoveCharacterAction(params, originalCharacterState));
+	}, [execute]);
 
 	// Pose updates from different sources (dragging bones, wheel stepping, buttons) are merged while waiting for the throttle,
 	// so a later update never replaces a still-pending update of a different field.
-	const pendingPose = useRef<PartialAppearancePose | null>(null);
-	const flushPose = useEvent(() => {
-		const pose = pendingPose.current;
-		pendingPose.current = null;
+	const pendingMove = useRef<MoveCharacterActionParams | null>(null);
+	const flushMove = useEvent(() => {
+		const pose = pendingMove.current;
+		pendingMove.current = null;
 		if (pose != null) {
-			setPoseDirect(pose);
+			moveDirect(pose, characterState);
 		}
 	});
-	const flushPoseThrottled = useMemo(() => throttle(flushPose, LIVE_UPDATE_THROTTLE), [flushPose]);
-	const setPose = useCallback((newPose: PartialAppearancePose) => {
+	const flushMoveThrottled = useMemo(() => throttle(flushMove, LIVE_UPDATE_THROTTLE), [flushMove]);
+	const move = useCallback((params: MoveCharacterActionParams) => {
 		// Never dispatch pose actions while posing is blocked
 		if (posingDisabled)
 			return;
 
-		pendingPose.current = pendingPose.current != null ? MergePartialAppearancePoses(pendingPose.current, newPose) : newPose;
-		flushPoseThrottled();
-	}, [posingDisabled, flushPoseThrottled]);
+		pendingMove.current = {
+			...params,
+			pose: pendingMove.current?.pose != null ? MergePartialAppearancePoses(pendingMove.current.pose, params.pose) : params.pose,
+		};
+		flushMoveThrottled();
+	}, [posingDisabled, flushMoveThrottled]);
 
 	const stepLeftArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.leftArm.position,
-		useCallback((armPosition) => setPose({ leftArm: { position: armPosition } }), [setPose]),
+		useCallback((armPosition) => move({ pose: { leftArm: { position: armPosition } } }), [move]),
 	);
 	const stepRightArmPosition = useCycleStepper(
 		ArmPoseSchema.options,
 		characterState.requestedPose.rightArm.position,
-		useCallback((armPosition) => setPose({ rightArm: { position: armPosition } }), [setPose]),
+		useCallback((armPosition) => move({ pose: { rightArm: { position: armPosition } } }), [move]),
 	);
-
-	const ikRotationHandle = useMemo(() => ({
-		parentBone: characterRotationBone.name,
-		style: 'left-right',
-		x: pivot.x,
-		y: 650 - yOffsetExtra,
-	} as const), [characterRotationBone, pivot.x, yOffsetExtra]);
 
 	//#endregion
 
@@ -285,12 +266,12 @@ export function RoomCharacterMovePoseTool({
 		>
 			{ /* Character rotation handle (outer frame) */ }
 			<Container { ...poseWrapperProps }>
-				<PosingToolIKHandle
-					ikHandle={ ikRotationHandle }
+				<PosingToolIKRotationHandle
+					x={ pivot.x }
+					y={ 650 - yOffsetExtra }
 					characterState={ characterState }
 					projectionResolver={ projectionResolver }
-					setPose={ setPose }
-					disabled={ posingDisabled }
+					setPose={ move }
 				/>
 			</Container>
 
@@ -320,9 +301,11 @@ export function RoomCharacterMovePoseTool({
 									characterState={ characterState }
 									definition={ bone }
 									onRotate={ (newRotation) => {
-										setPose({
-											bones: {
-												[bone.name]: newRotation,
+										move({
+											pose: {
+												bones: {
+													[bone.name]: newRotation,
+												},
 											},
 										});
 									} }
@@ -335,8 +318,7 @@ export function RoomCharacterMovePoseTool({
 								key={ i }
 								ikHandle={ h }
 								characterState={ characterState }
-								projectionResolver={ projectionResolver }
-								setPose={ setPose }
+								setPose={ move }
 								disabled={ posingDisabled }
 							/>
 						))
@@ -346,8 +328,10 @@ export function RoomCharacterMovePoseTool({
 						radiusSmall={ TURN_AROUND_RADIUS.small }
 						radiusBig={ TURN_AROUND_RADIUS.big }
 						onClick={ useEvent(() => {
-							setPose({
-								view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+							move({
+								pose: {
+									view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+								},
 							});
 						}) }
 					/>
@@ -492,11 +476,169 @@ function useCycleStepper<T>(
 	}, [apply, current, options]);
 }
 
+type PosingToolIKRotationHandleProps = {
+	x: number;
+	y: number;
+	characterState: AssetFrameworkCharacterState;
+	projectionResolver: RoomProjectionResolver;
+	setPose: (params: MoveCharacterActionParams) => void;
+};
+
+/** A single inverse kinematics posing handle specially crafted for character rotation. */
+function PosingToolIKRotationHandle({
+	x: handleX,
+	y: handleY,
+	characterState,
+	projectionResolver,
+	setPose,
+}: PosingToolIKRotationHandleProps): ReactElement {
+	const hitAreaRadius = 25;
+	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
+	const graphicsRef = useRef<PIXI.Graphics>(null);
+
+	const dragging = useRef<PIXI.Point | null>(null);
+	/** Time at which user pressed button/touched */
+	const pointerDown = useRef<number | null>(null);
+
+	const [held, setHeld] = useState(false);
+	const [hover, setHover] = useState(false);
+
+	/** Set when the wheel was used during the current press, so releasing doesn't count as a click */
+	const wheelUsedDuringPress = useRef(false);
+
+	const {
+		yOffsetExtra,
+		pivot,
+	} = useRoomCharacterPosition(characterState, projectionResolver);
+
+	const rotationFakeBone = useMemo((): BoneDefinition => {
+		return {
+			name: 'character_rotation',
+			x: pivot.x,
+			y: pivot.y - yOffsetExtra,
+			baseRotation: -90,
+			isMirror: false,
+			type: 'pose',
+		};
+	}, [yOffsetExtra, pivot]);
+
+	const handlePosition = useMemo(() => [handleX, handleY] as const, [handleX, handleY]);
+
+	const onMove = useEvent((x: number, y: number): void => {
+		const result = FindInverseKinematicOptimum(
+			[rotationFakeBone],
+			handlePosition,
+			[x, y],
+			[characterState.getActualCharacterRotation()],
+		);
+
+		Assert(result.length === 1);
+		setPose({ rotation: result[0] === -180 ? 180 : result[0] });
+	});
+
+	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (dragging.current || !graphicsRef.current?.parent) return;
+		dragging.current = event.getLocalPosition<PIXI.Point>(graphicsRef.current.parent);
+	}, []);
+
+	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
+		if (!dragging.current || !graphicsRef.current?.parent) return;
+
+		const dragPointerEnd = event.getLocalPosition(graphicsRef.current.parent);
+		onMove(
+			dragPointerEnd.x,
+			dragPointerEnd.y,
+		);
+	});
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (event.button !== 1) {
+			event.stopPropagation();
+			setHeld(true);
+			pointerDown.current = Date.now();
+			wheelUsedDuringPress.current = false;
+		}
+	}, []);
+
+	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
+		dragging.current = null;
+		if (
+			pointerDown.current !== null &&
+			!wheelUsedDuringPress.current &&
+			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			// Reset on short click
+			setPose({ rotation: 0 });
+		}
+		pointerDown.current = null;
+		wheelUsedDuringPress.current = false;
+		setHeld(false);
+	});
+
+	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (pointerDown.current !== null) {
+			event.stopPropagation();
+		}
+		if (dragging.current) {
+			onDragMove(event);
+		} else if (
+			pointerDown.current !== null &&
+			Date.now() >= pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			onDragStart(event);
+		}
+	}, [onDragMove, onDragStart]);
+
+	const { currentPosition, currentAngle } = useMemo((): { currentPosition: PIXI.Point; currentAngle: number; } => {
+		const point = new PIXI.Point(...handlePosition);
+		const m = new PIXI.Matrix().identity();
+		const link = new PIXI.Point();
+		let tmpAngle = 0;
+		{
+			const value = characterState.getActualCharacterRotation();
+			tmpAngle += value;
+			link.set(rotationFakeBone.x, rotationFakeBone.y);
+			m.apply(link, link);
+			m
+				.translate(-link.x, -link.y)
+				.rotate(value * PIXI.DEG_TO_RAD)
+				.translate(link.x, link.y);
+		}
+		return {
+			currentPosition: m.apply(point, point),
+			currentAngle: tmpAngle,
+		};
+	}, [handlePosition, characterState, rotationFakeBone.x, rotationFakeBone.y]);
+
+	return (
+		<MovementHelperGraphics
+			ref={ graphicsRef }
+			theme={ held ? 'active' : hover ? 'hover' : 'normal' }
+			radius={ hitAreaRadius }
+			colorLeftRight={ 0xcccccc }
+			angle={ currentAngle }
+			position={ useMemo((): PointLike => ({ x: currentPosition.x, y: currentPosition.y }), [currentPosition]) }
+			hitArea={ hitArea }
+			eventMode='static'
+			cursor='move'
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUp }
+			onglobalpointermove={ onPointerMove }
+			onpointerenter={ useCallback(() => {
+				setHover(true);
+			}, []) }
+			onpointerleave={ useCallback(() => {
+				setHover(false);
+			}, []) }
+		/>
+	);
+}
+
 type PosingToolIKHandleProps = {
 	ikHandle: Immutable<InversePosingHandle>;
 	characterState: AssetFrameworkCharacterState;
-	projectionResolver: RoomProjectionResolver;
-	setPose: (newPose: PartialAppearancePose) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 	/** Posing is blocked: the handle must not react to the mouse wheel (and must not capture it) */
 	disabled?: boolean;
 };
@@ -505,7 +647,6 @@ type PosingToolIKHandleProps = {
 function PosingToolIKHandle({
 	ikHandle,
 	characterState,
-	projectionResolver,
 	setPose,
 	disabled = false,
 }: PosingToolIKHandleProps): ReactElement {
@@ -531,7 +672,7 @@ function PosingToolIKHandle({
 	const stepRotation = useCycleStepper(
 		ArmRotationSchema.options,
 		characterState.requestedPose[armKey].rotation,
-		useCallback((armRotation) => setPose({ [armKey]: { rotation: armRotation } }), [armKey, setPose]),
+		useCallback((armRotation) => setPose({ pose: { [armKey]: { rotation: armRotation } } }), [armKey, setPose]),
 	);
 
 	// Works while hovering the handle, and also while holding/dragging it (but never while posing is blocked)
@@ -540,31 +681,17 @@ function PosingToolIKHandle({
 		stepRotation(direction);
 	});
 
-	const {
-		yOffsetExtra,
-		pivot,
-	} = useRoomCharacterPosition(characterState, projectionResolver);
-
 	const bones = useMemo((): readonly BoneDefinition[] => {
 		const tmpBones: BoneDefinition[] = [];
 
 		let parentBone: BoneDefinition | undefined = assetManager.getBoneByName(ikHandle.parentBone);
 		while (parentBone != null) {
-			// Special handling for the character rotation bone
-			if (parentBone.name === 'character_rotation') {
-				Assert(parentBone.x === 0 && parentBone.y === 0);
-				Assert(parentBone.parent == null);
-				parentBone = produce(parentBone, (d) => {
-					d.x = pivot.x;
-					d.y = pivot.y - yOffsetExtra;
-				});
-			}
 			tmpBones.unshift(parentBone);
 			parentBone = parentBone.parent;
 		}
 
 		return tmpBones;
-	}, [assetManager, ikHandle, yOffsetExtra, pivot]);
+	}, [assetManager, ikHandle]);
 
 	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 	const handlePosition = useMemo(() => evaluator.evalTransform([ikHandle.x, ikHandle.y], ikHandle.transforms ?? EMPTY_ARRAY), [ikHandle, evaluator]);
@@ -582,7 +709,7 @@ function PosingToolIKHandle({
 		for (let i = 0; i < bones.length; i++) {
 			newRotation[bones[i].name] = result[i];
 		}
-		setPose({ bones: newRotation });
+		setPose({ pose: { bones: newRotation } });
 	});
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -626,7 +753,7 @@ function PosingToolIKHandle({
 				for (const b of bones) {
 					newRotation[b.name] = 0;
 				}
-				setPose({ bones: newRotation });
+				setPose({ pose: { bones: newRotation } });
 			}
 		}
 		pointerDown.current = null;
@@ -724,8 +851,10 @@ function PosingToolIKHandle({
 								actualValue={ characterState.actualPose[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm'].rotation }
 								onChange={ (newValue) => {
 									setPose({
-										[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
-											rotation: newValue,
+										pose: {
+											[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
+												rotation: newValue,
+											},
 										},
 									});
 								} }
@@ -740,8 +869,10 @@ function PosingToolIKHandle({
 								centerValue={ 1 }
 								onChange={ (newValue) => {
 									setPose({
-										[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
-											fingers: newValue,
+										pose: {
+											[ikHandle.style === 'hand-left' ? 'leftArm' : 'rightArm']: {
+												fingers: newValue,
+											},
 										},
 									});
 								} }

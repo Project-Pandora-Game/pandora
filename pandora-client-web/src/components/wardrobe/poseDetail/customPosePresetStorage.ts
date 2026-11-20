@@ -17,6 +17,8 @@ export function FixupStoredPosePreset(preset: Immutable<AssetFrameworkPosePreset
 	const pose: AssetsPosePreset = {
 		...preset.pose,
 		name: preset.name,
+		rotation: preset.rotation,
+		yOffset: preset.yOffset,
 		preview: {
 			y: 0,
 			size: Math.max(CharacterSize.WIDTH, CharacterSize.HEIGHT),

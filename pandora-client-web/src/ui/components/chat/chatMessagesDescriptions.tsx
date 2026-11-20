@@ -45,8 +45,6 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionTransfer action={ action } { ...props } />;
 		case 'moveCharacter':
 			return <DescribeGameLogicActionMoveCharacter action={ action } { ...props } />;
-		case 'pose':
-			return <DescribeGameLogicActionPose action={ action } { ...props } />;
 		case 'body':
 			return <DescribeGameLogicActionBody action={ action } { ...props } />;
 		case 'moveItem':
@@ -133,10 +131,6 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 
 function DescribeGameLogicActionMoveCharacter({ action }: DescribeGameLogicActionProps<'moveCharacter'>): ReactElement {
 	return <>Move <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
-}
-
-function DescribeGameLogicActionPose({ action }: DescribeGameLogicActionProps<'pose'>): ReactElement {
-	return <>Change <DescribeSpaceCharacter id={ action.target } form='possessive' /> pose.</>;
 }
 
 function DescribeGameLogicActionBody({ action }: DescribeGameLogicActionProps<'body'>): ReactElement {

@@ -235,6 +235,7 @@ export function RoomLinkNodeGraphics({ projectionResolver, cardinalDirection, gl
 						type: 'normal',
 						room: neighborRoom.id,
 						position: GenerateInitialRoomPosition(neighborRoom, neighborRoom.getLinkToRoom(room, true)?.direction, avoid),
+						rotation: character.position.rotation,
 					},
 				});
 			}

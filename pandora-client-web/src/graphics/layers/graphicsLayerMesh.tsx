@@ -4,28 +4,34 @@ import * as PIXI from 'pixi.js';
 import { memo, ReactElement, useContext, useMemo } from 'react';
 import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { useNullableObservable } from '../../observable.ts';
-import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { useAppearanceConditionEvaluator, useCharacterPoseEvaluator, useStandaloneConditionEvaluator, type AppearanceConditionEvaluator, type StandaloneConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { PixiMesh } from '../baseComponents/mesh.tsx';
+import { PixiSkinnedMesh } from '../baseComponents/skinnedMesh.tsx';
 import { usePixiApplyMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
+import { useGraphicsBonePalette } from '../graphicsBonePaletteContext.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { ContextCullClockwise, useItemColor, useLayerVertices, useLayerVerticesTransformData, type GraphicsLayerProps, type LayerVerticesTransformData } from './graphicsLayerCommon.tsx';
-import { GraphicsLayerMeshNormals } from './graphicsLayerMeshNormals.tsx';
+import { GraphicsLayerMeshNormals, type GraphicsLayerMeshNormalsProps } from './graphicsLayerMeshNormals.tsx';
 
-export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
+export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl(props: GraphicsLayerProps<'mesh'>): ReactElement | null {
+	const currentlyBlinking = useNullableObservable(props.characterBlinking) ?? false;
+	const evaluator = useAppearanceConditionEvaluator(props.poseEvaluator, props.wornItems, currentlyBlinking);
+	if (props.layer.enableCond != null && !EvaluateCondition(props.layer.enableCond, (c) => evaluator.evalCondition(c, props.item)))
+		return null;
+	return <GraphicsLayerMeshEnabled { ...props } evaluator={ evaluator } />;
+});
+
+const GraphicsLayerMeshEnabled = memo(function GraphicsLayerMeshEnabledImpl({
 	layer,
 	item,
-	poseEvaluator,
 	wornItems,
 	displayUvPose = false,
 	state,
 	debugConfig,
-	characterBlinking,
-}: GraphicsLayerProps<'mesh'>): ReactElement | null {
+	evaluator,
+}: GraphicsLayerProps<'mesh'> & { evaluator: AppearanceConditionEvaluator; }): ReactElement {
 	const { points, triangles } = useLayerMeshPoints(layer);
-
-	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
-	const evaluator = useAppearanceConditionEvaluator(poseEvaluator, wornItems, currentlyBlinking);
 
 	const {
 		image,
@@ -33,14 +39,14 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 		normalMapImage,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useCharacterPoseEvaluator(poseEvaluator.assetManager, imageUvPose);
+	const evaluatorUvPose = useCharacterPoseEvaluator(evaluator.poseEvaluator.assetManager, imageUvPose);
 
-	const verticesData = useLayerVerticesTransformData(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false);
-	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator, points, layer, false).vertices;
+	const vertexEvaluator = displayUvPose ? evaluatorUvPose : evaluator.poseEvaluator;
+	const bonePalette = useGraphicsBonePalette(vertexEvaluator);
+	const verticesData = useLayerVerticesTransformData(vertexEvaluator, points, layer, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, true).vertices;
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
-	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
 
 	const { color, alpha } = useItemColor(wornItems, item, layer.colorizationKey, state);
 
@@ -53,17 +59,15 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 		return pixiState;
 	}, [cullClockwise]);
 
-	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
-		return null;
-
 	return (
 		layer.normalMap != null ? (
-			<GraphicsLayerMeshNormals
+			<GraphicsLayerMeshNormalsWithTexture
+				bonePalette={ bonePalette }
 				vertices={ verticesData }
 				uvs={ uv }
 				triangles={ triangles }
 				texture={ texture }
-				normalMapTexture={ normalMapTexture }
+				normalMapImage={ normalMapImage }
 				normalMapData={ layer.normalMap }
 				state={ cullingState }
 				color={ color }
@@ -71,9 +75,10 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 				debugConfig={ debugConfig }
 			/>
 		) : (
-			<PixiMesh
+			<PixiSkinnedMesh
+				bonePalette={ bonePalette }
 				state={ cullingState }
-				vertices={ vertices }
+				vertices={ verticesData }
 				uvs={ uv }
 				indices={ triangles }
 				texture={ texture }
@@ -84,18 +89,32 @@ export const GraphicsLayerMesh = memo(function GraphicsLayerMeshImpl({
 	);
 });
 
-export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMeshImpl({
-	item,
-	layer,
-	roomMask,
-	getFilters,
-}: {
+function GraphicsLayerMeshNormalsWithTexture({ normalMapImage, ...props }: Omit<GraphicsLayerMeshNormalsProps, 'normalMapTexture'> & { normalMapImage: string | undefined; }): ReactElement {
+	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
+	return <GraphicsLayerMeshNormals { ...props } normalMapTexture={ normalMapTexture } />;
+}
+
+interface GraphicsLayerRoomDeviceMeshProps {
 	item: Item;
 	layer: Immutable<RoomDeviceGraphicsLayerMesh>;
 	roomMask?: PixiMaskSource;
 	getFilters: () => (readonly PIXI.Filter[] | undefined);
-}): ReactElement | null {
+}
+
+export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDeviceMeshImpl(props: GraphicsLayerRoomDeviceMeshProps): ReactElement | null {
 	const evaluator = useStandaloneConditionEvaluator();
+	if (props.layer.enableCond != null && !EvaluateCondition(props.layer.enableCond, (c) => evaluator.evalCondition(c, props.item)))
+		return null;
+	return <GraphicsLayerRoomDeviceMeshEnabled { ...props } evaluator={ evaluator } />;
+});
+
+const GraphicsLayerRoomDeviceMeshEnabled = memo(function GraphicsLayerRoomDeviceMeshEnabledImpl({
+	item,
+	layer,
+	roomMask,
+	getFilters,
+	evaluator,
+}: GraphicsLayerRoomDeviceMeshProps & { evaluator: StandaloneConditionEvaluator; }): ReactElement {
 
 	const { image, normalMapImage } = useMemo<Immutable<RoomDeviceLayerImageSetting> | Immutable<RoomDeviceLayerImageOverride>>(() => {
 		return layer.image.overrides?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item))) ?? layer.image;
@@ -163,21 +182,17 @@ export const GraphicsLayerRoomDeviceMesh = memo(function GraphicsLayerRoomDevice
 	}, [cullClockwise]);
 
 	const texture = useTexture(useImageResolutionAlternative(image).image);
-	const normalMapTexture = useTexture(useImageResolutionAlternative(normalMapImage ?? '').image || '*');
-
-	if (layer.enableCond != null && !EvaluateCondition(layer.enableCond, (c) => evaluator.evalCondition(c, item)))
-		return null;
 
 	if (geometryData.type === '2d') {
 		return (
 			layer.normalMap != null ? (
-				<GraphicsLayerMeshNormals
+				<GraphicsLayerMeshNormalsWithTexture
 					ref={ layer.clipToRoom ? applyRoomMask : null }
 					vertices={ geometryData.vertexTransformData }
 					uvs={ geometryData.uvs }
 					triangles={ geometryData.indices }
 					texture={ texture }
-					normalMapTexture={ normalMapTexture }
+					normalMapImage={ normalMapImage }
 					normalMapData={ layer.normalMap }
 					state={ cullingState }
 					color={ color }

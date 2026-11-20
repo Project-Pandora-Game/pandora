@@ -4,8 +4,9 @@ export const PNPM_EXECUTABLE = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm
 export const NODE_EXECUTABLE = process.platform === 'win32' ? 'node.exe' : 'node';
 
 // Test assets
-/** URL for test assets download. Replace `%v` with expected sha256 base64url hash of the uncompressed archive file. */
-export const TEST_ASSETS_DOWNLOAD_URL = 'https://project-pandora.com/pandora-extra-assets/testing/test-assets-%v.tar.zst';
+/** Override with TEST_ASSETS_DOWNLOAD_URL. `%v` is replaced with the expected sha256 base64url hash of the uncompressed archive. */
+export const TEST_ASSETS_DOWNLOAD_URL = process.env.TEST_ASSETS_DOWNLOAD_URL ||
+	'https://github.com/Project-Pandora-Game/pandora-assets/releases/download/test-assets-%v/test-assets-%v.tar.zst';
 
 // Ports and addresses
 export const TEST_DIRECTORY_PORT = 25560;

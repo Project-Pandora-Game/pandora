@@ -78,7 +78,7 @@
 		"fork-ts-checker-webpack-plugin": "9.1.0",
 		"html-webpack-plugin": "5.6.8",
 		"mini-css-extract-plugin": "2.10.2",
-		"postcss": "8.5.32",
+		"postcss": "8.5.33",
 		"postcss-loader": "8.2.1",
 		"react-refresh": "0.19.0",
 		"react-refresh-typescript": "2.0.12",

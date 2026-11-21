@@ -325,13 +325,13 @@ importers:
         version: link:../pandora-common
       pixi-filters:
         specifier: 6.1.5
-        version: 6.1.5(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
+        version: 6.1.5(pixi.js@8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
+        version: 6.0.3(pixi.js@8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1))
       pixi.js:
-        specifier: 8.22.0
-        version: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
+        specifier: 8.23.0
+        version: 8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -1647,9 +1647,6 @@ packages:
     resolution: {integrity: sha512-m7X9U6BG2+J+R1lSOdCiITLLrxm+cWlNI3HUFA92oLO77ObGNzaKdh8pMLqdZcshtkKuV84olNNXDfMc4FezBQ==}
     engines: {node: '>=10'}
 
-  '@pixi/colord@2.9.6':
-    resolution: {integrity: sha512-nezytU2pw587fQstUu1AsJZDVEynjskwOL+kibwcdxsMBFqPsFFNA7xl0ii/gXuDi6M0xj3mfRJj8pBSc2jCfA==}
-
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2682,6 +2679,9 @@ packages:
 
   color-parse@2.2.0:
     resolution: {integrity: sha512-VnwiJDEGueFpC37QvftF8OiFUn+WstToFD7tylHHGi/zocuZsZTVvu2J0ZFkeV7HY0dGHhXVfHEOO7CmTsEUjg==}
+
+  colord@2.14.0:
+    resolution: {integrity: sha512-eSdMel9EBvdFxnchObp7gljRoqYQLr+zXhaxjkym7syVphw1FIhfQwgsA5Bv3jArflZPJEa1rmQtGpa7NRc7Rw==}
 
   colorjs.io@0.7.1:
     resolution: {integrity: sha512-LY7OHnJZxHwT5UlzNa9bbhHHDbzB6yE5+3MIPwJEQKRvSCt/T4G7epsj+9j2BExUIIfXFIJGsIXUKdfrK9Q5tA==}
@@ -4824,8 +4824,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.22.0:
-    resolution: {integrity: sha512-QbTANHMZ751MIjLiLSUSM8a7LNMWwMIf0KbRCqlW+SPS9hNLfSVS+cl1O2SEp9g1K/wyLzj/OJHv+1TUfiPr/w==}
+  pixi.js@8.23.0:
+    resolution: {integrity: sha512-RkWSwo+mAR0d7MKnJ20IjKkWGPdFh1C0adBRYYLa+SGdxTfbrr6RnQyZZRwjBaG/bDAIQqgBcTBbiNsN6iKFVQ==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -7373,8 +7373,6 @@ snapshots:
 
   '@phc/format@1.0.0': {}
 
-  '@pixi/colord@2.9.6': {}
-
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -8502,6 +8500,8 @@ snapshots:
   color-parse@2.2.0:
     dependencies:
       color-name: 2.1.1
+
+  colord@2.14.0: {}
 
   colorjs.io@0.7.1: {}
 
@@ -10980,20 +10980,20 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-filters@6.1.5(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
+  pixi-filters@6.1.5(pixi.js@8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
+      pixi.js: 8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
 
-  pixi-viewport@6.0.3(pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
+  pixi-viewport@6.0.3(pixi.js@8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)):
     dependencies:
-      pixi.js: 8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
+      pixi.js: 8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1)
 
-  pixi.js@8.22.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1):
+  pixi.js@8.23.0(patch_hash=7e9fa825a8fc0ef462b391cb4024efb650855d40fcfd3823ffa5d87ac04599d1):
     dependencies:
-      '@pixi/colord': 2.9.6
       '@types/earcut': 3.0.0
       '@xmldom/xmldom': 0.8.15
+      colord: 2.14.0
       earcut: 3.2.4
       eventemitter3: 5.0.4
       gifuct-js: 2.1.2

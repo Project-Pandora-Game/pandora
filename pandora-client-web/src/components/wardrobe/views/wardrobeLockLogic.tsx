@@ -93,7 +93,7 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 	const timerExpired = useMemo(() => (timeLeft == null || timeLeft <= 0), [timeLeft]);
 	const timerText = useMemo(() => {
 		if (lockLogic.lockData.locked?.hideRemainingTime)
-			return <>Remaining time: <i>Unknown</i></>;
+			return <>Remaining time: <i>Hidden</i></>;
 		if (timerExpired)
 			return <>Remaining time: <i>Timer expired</i></>;
 		return (

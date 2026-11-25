@@ -266,7 +266,7 @@ export class LockLogic {
 				time: lockTime,
 				lockedUntil,
 				disallowEarlyUnlock: !timerOptions?.allowEarlyUnlock,
-				hideRemainingTime: timerOptions?.hideRemainingTime ?? false,
+				hideRemainingTime: timerOptions?.hideRemainingTime ? true : undefined,
 			};
 		});
 

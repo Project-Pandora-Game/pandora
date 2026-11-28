@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, NormalizeCenteredDegrees, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, NormalizeCenteredDegrees, RAD_TO_DEG, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
 import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -516,29 +516,28 @@ function PosingToolIKRotationHandle({
 		pivot,
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const rotationFakeBone = useMemo((): BoneDefinition => {
-		return {
-			name: 'character_rotation',
-			x: pivot.x,
-			y: pivot.y - yOffsetExtra,
-			baseRotation: -90,
-			isMirror: false,
-			type: 'pose',
-		};
-	}, [yOffsetExtra, pivot]);
-
-	const handlePosition = useMemo(() => [handleX, handleY] as const, [handleX, handleY]);
+	const rotationPivot = useMemo((): PointLike => ({
+		x: pivot.x,
+		y: pivot.y - yOffsetExtra,
+	}), [yOffsetExtra, pivot]);
 
 	const onMove = useEvent((x: number, y: number): void => {
-		const result = FindInverseKinematicOptimum(
-			[rotationFakeBone],
-			handlePosition,
-			[x, y],
-			[characterState.getActualCharacterRotation()],
-		);
+		const ux = handleX - rotationPivot.x;
+		const uy = handleY - rotationPivot.y;
+		const vx = x - rotationPivot.x;
+		const vy = y - rotationPivot.y;
 
-		Assert(result.length === 1);
-		setPose({ rotation: NormalizeCenteredDegrees(result[0]) });
+		// Near the pivot the direction is unstable (and undefined at it), so keep the current pose
+		let resultRotation;
+		if (ux * ux + uy * uy < 1 || vx * vx + vy * vy < 1) {
+			resultRotation = characterState.getActualCharacterRotation();
+		} else {
+			resultRotation = NormalizeCenteredDegrees((Math.atan2(vy, vx) - Math.atan2(uy, ux)) * RAD_TO_DEG);
+			// Round it after
+			resultRotation = NormalizeCenteredDegrees(Math.round(resultRotation * 10) / 10);
+		}
+
+		setPose({ rotation: NormalizeCenteredDegrees(resultRotation) });
 	});
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
@@ -595,14 +594,14 @@ function PosingToolIKRotationHandle({
 	}, [onDragMove, onDragStart]);
 
 	const { currentPosition, currentAngle } = useMemo((): { currentPosition: PIXI.Point; currentAngle: number; } => {
-		const point = new PIXI.Point(...handlePosition);
+		const point = new PIXI.Point(handleX, handleY);
 		const m = new PIXI.Matrix().identity();
 		const link = new PIXI.Point();
 		let tmpAngle = 0;
 		{
 			const value = characterState.getActualCharacterRotation();
 			tmpAngle += value;
-			link.set(rotationFakeBone.x, rotationFakeBone.y);
+			link.set(rotationPivot.x, rotationPivot.y);
 			m.apply(link, link);
 			m
 				.translate(-link.x, -link.y)
@@ -613,7 +612,7 @@ function PosingToolIKRotationHandle({
 			currentPosition: m.apply(point, point),
 			currentAngle: tmpAngle,
 		};
-	}, [handlePosition, characterState, rotationFakeBone.x, rotationFakeBone.y]);
+	}, [handleX, handleY, characterState, rotationPivot.x, rotationPivot.y]);
 
 	return (
 		<MovementHelperGraphics

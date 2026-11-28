@@ -14,7 +14,7 @@ import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, I
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
-import { GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
+import { CenteredDegreesSchema, GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 import type { AssetFrameworkSpaceState } from './spaceState.ts';
 
@@ -447,6 +447,16 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 					position: GenerateInitialRoomPosition(roomState),
 					rotation: position.rotation,
 				};
+			} else {
+				// Migrate old fake "character_rotation" bone
+				if (Object.hasOwn(bundle.requestedPose.bones, 'character_rotation')) {
+					const rotation = CenteredDegreesSchema.safeParse(bundle.requestedPose.bones.character_rotation === -180 ? 180 : bundle.requestedPose.bones.character_rotation);
+					if (rotation.success) {
+						position.rotation = rotation.data;
+					} else {
+						logger?.warning('Failed to migrate rotation', rotation.error);
+					}
+				}
 			}
 		}
 

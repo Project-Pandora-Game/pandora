@@ -257,28 +257,25 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public getActualCharacterRotation(): number {
 		const requestedRotation = this.position.rotation;
 		const limits = AppearanceItemProperties(this.items).rotationLimits;
+
 		if (limits.length === 0)
-			return requestedRotation; // Invalid sate - just pass through requested rotation
+			return requestedRotation; // Invalid state - just pass through requested rotation
 
 		let minDiff = Infinity;
 		let minDiffValue = requestedRotation;
 		for (const [min, max] of limits) {
-			if (requestedRotation >= min && requestedRotation <= max) {
-				minDiff = 0;
-				minDiffValue = requestedRotation;
-				break;
+			if (requestedRotation >= min && requestedRotation <= max)
+				return requestedRotation;
+
+			// Use angular distance so the nearest bound can be found across the ±180 seam.
+			// This also covers a request of 180 against a bound of -180: distance 0, returned normalized as 180.
+			for (const bound of [min, max]) {
+				const diff = Math.abs(NormalizeCenteredDegrees(bound - requestedRotation));
+				if (diff < minDiff) {
+					minDiff = diff;
+					minDiffValue = NormalizeCenteredDegrees(bound);
+				}
 			}
-			const diffMin = Math.abs(requestedRotation - min);
-			if (diffMin < minDiff) {
-				minDiff = diffMin;
-				minDiffValue = min;
-			}
-			const diffMax = Math.abs(requestedRotation - max);
-			if (diffMax < minDiff) {
-				minDiff = diffMax;
-				minDiffValue = max;
-			}
-			// TODO: Should this maybe account for wrap-around?
 		}
 
 		return minDiffValue;

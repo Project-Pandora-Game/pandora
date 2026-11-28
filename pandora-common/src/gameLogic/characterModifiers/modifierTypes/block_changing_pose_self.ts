@@ -52,7 +52,7 @@ Other characters can still change the pose of this character normally, if they h
 			if (config.limitLegStates && action.pose?.legs?.pose && action.pose.legs.pose !== player.appearance.characterState.requestedPose.legs.pose)
 				return 'block';
 
-			if (config.limitAllPosing)
+			if (config.limitAllPosing && action.pose != null)
 				return 'block';
 
 			if (config.limitRotating && action.moveTo?.type === 'normal' && action.moveTo.rotation !== player.appearance.characterState.position.rotation)

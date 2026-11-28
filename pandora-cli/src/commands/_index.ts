@@ -2,6 +2,7 @@ import type { CliCommand, CliCommandExecutionContext } from '../cliCommandContex
 import { COMMAND_HELP } from './help.ts';
 import { COMMAND_SPACESEARCH } from './spaceSearch.ts';
 import { COMMAND_TEST } from './test.ts';
+import { COMMAND_UPDATES } from './updates.ts';
 import { COMMAND_TOKEN } from './token.ts';
 
 export const CLI_COMMANDS: readonly CliCommand<CliCommandExecutionContext>[] = [
@@ -9,5 +10,6 @@ export const CLI_COMMANDS: readonly CliCommand<CliCommandExecutionContext>[] = [
 	COMMAND_TEST,
 
 	COMMAND_SPACESEARCH,
+	COMMAND_UPDATES,
 	COMMAND_TOKEN,
 ];

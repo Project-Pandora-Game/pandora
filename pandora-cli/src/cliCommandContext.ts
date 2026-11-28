@@ -17,5 +17,5 @@ export type CliCommand<TCommandExecutionContext extends ICommandExecutionContext
 	hidden?: true;
 	usage: string;
 	description: string;
-	handler: CommandRunner<TCommandExecutionContext, IEmpty>;
+	handler: Pick<CommandRunner<TCommandExecutionContext, IEmpty>, 'runTokenized'>;
 };

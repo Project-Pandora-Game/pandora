@@ -378,7 +378,7 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				<Row alignX='space-between'>
 					<Button onClick={ close }>Cancel</Button>
 					<Button onClick={ onExport }>Export</Button>
-					<Button onClick={ onSave } disabled={ Object.keys(preset.pose).length === 0 }>Save</Button>
+					<Button onClick={ onSave } disabled={ Object.keys(preset.pose).length === 0 && preset.rotation == null && preset.yOffset == null }>Save</Button>
 				</Row>
 			</Column>
 			{ exported == null ? null : (

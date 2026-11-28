@@ -14,6 +14,7 @@ import {
 	CharacterViewSchema,
 	CloneDeepMutable,
 	LegsPoseSchema,
+	NormalizeCenteredDegrees,
 	PartialAppearancePose,
 	ProduceAppearancePose,
 	type ArmPose,
@@ -583,7 +584,7 @@ export function WardrobePoseGui({ characterState }: {
 										name='Character rotation'
 										requestedRotation={ characterState.position.rotation }
 										actualRotation={ characterState.getActualCharacterRotation() }
-										onChange={ (rotation) => setPose({ rotation: rotation === -180 ? 180 : rotation }) }
+										onChange={ (rotation) => setPose({ rotation: NormalizeCenteredDegrees(rotation) }) }
 									/>
 									<br />
 									{

@@ -10,6 +10,7 @@ import {
 	CommandSelectorEnum,
 	LegSideOrderSchema,
 	LegsPoseSchema,
+	NormalizeCenteredDegrees,
 	type PartialAppearancePose,
 	type Promisable,
 	type Satisfies,
@@ -189,13 +190,9 @@ export const COMMAND_POSEMANUAL: IClientCommand<ICommandExecutionContextClient> 
 							return false;
 						}
 
-						const rotation = clamp(
-							(
-								((restMatch[1] === '+' || restMatch[1] === '-') ? playerState.position.rotation : 0) +
-								(restMatch[1] === '-' ? -1 : 1) * restValue
-							),
-							BONE_MIN,
-							BONE_MAX,
+						const rotation = NormalizeCenteredDegrees(
+							((restMatch[1] === '+' || restMatch[1] === '-') ? playerState.position.rotation : 0) +
+							(restMatch[1] === '-' ? -1 : 1) * restValue,
 						);
 
 						return doPose(gameState, player, { rotation });

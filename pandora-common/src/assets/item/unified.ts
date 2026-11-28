@@ -13,7 +13,7 @@ import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate, type Zo
 import { AssetIdSchema } from '../base.ts';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules.ts';
 import { PartialAppearancePoseSchema, type PartialAppearancePose } from '../state/characterStatePose.ts';
-import { CenteredDegreesSchema, type CenteredDegrees } from '../state/roomGeometry.ts';
+import { CenteredDegreesSchema, NormalizeCenteredDegrees, type CenteredDegrees } from '../state/roomGeometry.ts';
 import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base.ts';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion.ts';
@@ -95,7 +95,7 @@ export const AssetFrameworkPosePresetSchema: z.ZodObject<ZodObjectShape<AssetFra
 }).overwrite((value) => {
 	// Migrate old fake "character_rotation" bone
 	if (typeof value.pose.bones?.character_rotation === 'number' && value.rotation == null) {
-		const parsedRotation = CenteredDegreesSchema.safeParse(value.pose.bones.character_rotation === -180 ? 180 : value.pose.bones?.character_rotation);
+		const parsedRotation = CenteredDegreesSchema.safeParse(NormalizeCenteredDegrees(value.pose.bones.character_rotation));
 		if (parsedRotation.success) {
 			value = CloneDeepMutable(value);
 			value.rotation = parsedRotation.data;

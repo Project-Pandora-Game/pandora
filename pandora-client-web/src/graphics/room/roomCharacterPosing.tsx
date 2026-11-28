@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, MergePartialAppearancePoses, NormalizeCenteredDegrees, Vector2, Vector2GetAngle, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type RoomProjectionResolver } from 'pandora-common';
 import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -533,7 +533,7 @@ function PosingToolIKRotationHandle({
 		);
 
 		Assert(result.length === 1);
-		setPose({ rotation: result[0] === -180 ? 180 : result[0] });
+		setPose({ rotation: NormalizeCenteredDegrees(result[0]) });
 	});
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {

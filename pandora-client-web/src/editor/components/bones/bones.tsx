@@ -1,4 +1,4 @@
-import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose } from 'pandora-common';
+import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, NormalizeCenteredDegrees } from 'pandora-common';
 import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
@@ -103,7 +103,7 @@ export function BoneUI(): ReactElement {
 				name='Character rotation'
 				requestedRotation={ characterState.position.rotation }
 				actualRotation={ characterState.getActualCharacterRotation() }
-				onChange={ (rotation) => setPose({ rotation: rotation === -180 ? 180 : rotation }) }
+				onChange={ (rotation) => setPose({ rotation: NormalizeCenteredDegrees(rotation) }) }
 			/>
 			<hr />
 			<h4>Body bones</h4>

@@ -174,6 +174,19 @@ export type RoomPosition = readonly [x: number, y: number, yOffset: number];
 export type CenteredDegrees = number;
 /** A number in range `(-180, 180]` (exclusive, inclusive) */
 export const CenteredDegreesSchema: z.ZodType<CenteredDegrees> = z.number().gt(-180).lte(180);
+/** Normalizes an angle in degrees to the range (-180, 180]. */
+export function NormalizeCenteredDegrees(deg: number): number {
+	// Result is in (-360, 360), with the sign of deg.
+	let result = deg % 360;
+
+	if (result > 180) {
+		result -= 360;
+	} else if (result <= -180) {
+		result += 360;
+	}
+
+	return result;
+}
 
 export const FollowRotationSchema = z.object({
 	/** Whether we're facing the same way as the target or not */

@@ -231,6 +231,7 @@ export function RoomCharacterMovePoseTool({
 			return;
 
 		pendingMove.current = {
+			...(pendingMove.current ?? {}),
 			...params,
 			pose: pendingMove.current?.pose != null ? MergePartialAppearancePoses(pendingMove.current.pose, params.pose) : params.pose,
 		};

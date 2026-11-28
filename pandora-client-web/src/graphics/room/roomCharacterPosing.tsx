@@ -256,6 +256,10 @@ export function RoomCharacterMovePoseTool({
 		alpha: posingDisabled ? 0.35 : 1,
 		eventMode: posingDisabled ? 'none' : 'passive',
 	} as const;
+	const moveWrapperProps = {
+		alpha: movingDisabled ? 0.35 : 1,
+		eventMode: movingDisabled ? 'none' : 'passive',
+	} as const;
 
 	return (
 		<TransitionedContainer
@@ -266,7 +270,7 @@ export function RoomCharacterMovePoseTool({
 			tickerRef={ outerTickerRef }
 		>
 			{ /* Character rotation handle (outer frame) */ }
-			<Container { ...poseWrapperProps }>
+			<Container { ...moveWrapperProps }>
 				<PosingToolIKRotationHandle
 					x={ pivot.x }
 					y={ 650 - yOffsetExtra }

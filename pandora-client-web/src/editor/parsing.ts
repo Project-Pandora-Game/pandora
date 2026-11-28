@@ -206,7 +206,7 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	}
 	if (parsed[1] === 'rot') {
 		return {
-			characterRotation: Number.parseInt(parsed[3]),
+			characterRotation: Number.parseFloat(parsed[3]),
 			operator: parsed[2],
 		};
 	}

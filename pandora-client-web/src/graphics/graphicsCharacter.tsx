@@ -1,4 +1,4 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import {
 	AssetFrameworkCharacterState,
@@ -26,7 +26,7 @@ import { Container } from './baseComponents/container.ts';
 import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
 import type { PointLike } from './common/point.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
-import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
+import { TRANSITION_PROCESSOR_CENTERED_DEGREES, TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
@@ -104,11 +104,21 @@ const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFram
 		// as it looks more natural with most of the item limits
 		const pose = CombineAppearancePoses(a.actualPose, b.actualPose, ratio);
 
-		// Optimization: If the pose matches target actual pose, simply return that instead
-		if (b.actualPose === pose)
-			return b;
+		let result = b;
 
-		return b.produceWithRequestedPose(pose);
+		if (b.actualPose !== pose) {
+			result = result.produceWithRequestedPose(pose);
+		}
+
+		// Animate rotation similarly
+		const rotation = TRANSITION_PROCESSOR_CENTERED_DEGREES.mix(a.getActualCharacterRotation(), b.getActualCharacterRotation(), ratio);
+		if (b.getActualCharacterRotation() !== rotation) {
+			result = result.produceWithSpacePosition(produce(result.position, (d) => {
+				d.rotation = rotation;
+			}));
+		}
+
+		return result;
 	},
 	isTransitionable(a, b) {
 		return a.id === b.id;

@@ -1,5 +1,5 @@
 import { clamp } from 'lodash-es';
-import { Assert } from 'pandora-common';
+import { Assert, NormalizeCenteredDegrees, type CenteredDegrees } from 'pandora-common';
 import type { TransitionTimingFunction } from './transitionTimingFunctions.ts';
 
 /*
@@ -21,6 +21,17 @@ export type TransitionHandlerValueProcessor<TValue> = {
 export const TRANSITION_PROCESSOR_NUMBER: Readonly<TransitionHandlerValueProcessor<number>> = {
 	mix(a, b, ratio) {
 		return (1 - ratio) * a + ratio * b;
+	},
+	isTransitionable(a, b) {
+		return Number.isFinite(a) && Number.isFinite(b);
+	},
+};
+
+export const TRANSITION_PROCESSOR_CENTERED_DEGREES: Readonly<TransitionHandlerValueProcessor<CenteredDegrees>> = {
+	mix(a, b, ratio) {
+		// Shortest signed angle from a to b, in (-180, 180]
+		const delta = NormalizeCenteredDegrees(b - a);
+		return NormalizeCenteredDegrees(a + ratio * delta);
 	},
 	isTransitionable(a, b) {
 		return Number.isFinite(a) && Number.isFinite(b);

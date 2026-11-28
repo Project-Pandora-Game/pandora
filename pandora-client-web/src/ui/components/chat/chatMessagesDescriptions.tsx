@@ -130,7 +130,17 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 }
 
 function DescribeGameLogicActionMoveCharacter({ action }: DescribeGameLogicActionProps<'moveCharacter'>): ReactElement {
-	return <>Move <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
+	if (action.moveTo != null) {
+		if (action.pose != null) {
+			return <>Move and pose <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
+		} else {
+			return <>Move <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
+		}
+	} else if (action.pose != null) {
+		return <>Change <DescribeSpaceCharacter id={ action.target.characterId } form='possessive' /> pose.</>;
+	}
+	// Technically valid, but should not happen
+	return <>Move or pose <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
 }
 
 function DescribeGameLogicActionBody({ action }: DescribeGameLogicActionProps<'body'>): ReactElement {

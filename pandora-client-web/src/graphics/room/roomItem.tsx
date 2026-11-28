@@ -25,6 +25,7 @@ import { PointLike } from '../common/point.ts';
 import { CalculateRoomDeviceGraphicsBounds } from '../common/roomDeviceBounds.ts';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { RoomItemGraphics } from './roomItemGraphics.tsx';
+import { useRoomMovementTransitionDuration } from './roomMovementTransition.ts';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -51,6 +52,7 @@ type RoomItemProps = {
 	hitArea?: PIXI.Rectangle;
 	cursor?: PIXI.Cursor;
 	eventMode?: PIXI.EventMode;
+	movementTransitionDuration?: number;
 };
 
 export function RoomItemMovementTool({
@@ -248,6 +250,15 @@ export const RoomItemInteractive = memo(function RoomItemInteractiveImpl({
 
 	const isBeingMoved = roomSceneMode.mode === 'moveItem' && roomSceneMode.itemId === item.id;
 
+	/** This item is following a character who has the move mode open */
+	const isFollowTargetFocused = item.isType('personal') &&
+		item.deployment?.following != null &&
+		roomSceneMode.mode === 'moveCharacter' &&
+		roomSceneMode.characterId === item.deployment.following.target;
+
+	// Same rules as for characters: quick while being manipulated (or following something that is), normal otherwise
+	const movementTransitionDuration = useRoomMovementTransitionDuration(isBeingMoved || isFollowTargetFocused);
+
 	const hitArea = useMemo(() => {
 		const graphics = graphicsManager?.assetGraphics[asset.id];
 
@@ -361,6 +372,7 @@ export const RoomItemInteractive = memo(function RoomItemInteractiveImpl({
 			hitArea={ hitArea }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
+			movementTransitionDuration={ movementTransitionDuration }
 		/>
 	);
 });
@@ -377,6 +389,7 @@ export const RoomItem = memo(function RoomItemImpl({
 	hitArea,
 	cursor,
 	eventMode,
+	movementTransitionDuration,
 }: RoomItemProps): ReactElement | null {
 	return (
 		<RoomItemGraphics
@@ -391,6 +404,7 @@ export const RoomItem = memo(function RoomItemImpl({
 			hitArea={ hitArea }
 			eventMode={ eventMode }
 			cursor={ cursor }
+			movementTransitionDuration={ movementTransitionDuration }
 		>
 			{ children }
 		</RoomItemGraphics>

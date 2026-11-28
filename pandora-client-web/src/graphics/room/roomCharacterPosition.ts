@@ -1,13 +1,12 @@
 import { Immutable } from 'immer';
 import {
 	AssetFrameworkCharacterState,
+	CalculateCharacterPoseOffsets,
 	CloneDeepMutable,
 	ItemRoomDevice,
-	LegsPose,
 	RoomDeviceGraphicsLayerSlot,
 	type RoomProjectionResolver,
 } from 'pandora-common';
-import { DEG_TO_RAD } from 'pixi.js';
 import { useMemo } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useObservable } from '../../observable.ts';
@@ -36,25 +35,8 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 } {
 	const evaluator = useCharacterPoseEvaluator(characterState.assetManager, characterState.actualPose);
 
-	let baseScale = 1;
-	if (evaluator.pose.legs.pose === 'sitting') {
-		baseScale *= 0.9;
-	}
-
-	const legEffectMap: Record<LegsPose, number> = {
-		standing: 600,
-		sitting: 0,
-		kneeling: 242,
-	};
-	const legEffectCharacterOffsetBase = evaluator.pose.legs.pose === 'sitting' ? 135 : legEffectMap.standing;
-	const legEffect = legEffectMap[evaluator.pose.legs.pose]
-		+ (evaluator.pose.legs.pose !== 'kneeling' ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
-
-	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
-
-	const yOffset = 0
-		+ legEffectCharacterOffsetBase
-		- legEffect * Math.cos(DEG_TO_RAD * effectiveLegAngle);
+	// The calculation is shared with game logic (items following a character), so both always agree
+	const { baseScale, yOffset, rotationAngle } = CalculateCharacterPoseOffsets(evaluator);
 
 	const pivot = useMemo((): PointLike => ({ x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y - yOffset }), [yOffset]);
 
@@ -62,7 +44,7 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		baseScale,
 		yOffset,
 		pivot,
-		rotationAngle: evaluator.getBoneLikeValue('character_rotation'),
+		rotationAngle,
 		evaluator,
 	};
 }

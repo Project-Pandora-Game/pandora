@@ -7,3 +7,5 @@ export * from './roomLinkNodeDefinitions.ts';
 export * from './roomLinkNodes.ts';
 export * from './roomState.ts';
 export * from './spaceState.ts';
+export * from './characterPoseOffsets.ts';
+export * from './itemFollowing.ts';

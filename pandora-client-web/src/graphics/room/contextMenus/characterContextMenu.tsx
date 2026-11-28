@@ -650,7 +650,7 @@ function CharacterFollowDialog(): ReactElement {
 						setPlayerFollows(!checked);
 						setFollowData(CalculateFollowDefault(!checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
-					radioButtion
+					radioButton
 				/>
 				<label htmlFor={ id + ':playerLeads' }>You lead { characterData.name } ({ characterData.id })</label>
 			</Row>
@@ -662,7 +662,7 @@ function CharacterFollowDialog(): ReactElement {
 						setPlayerFollows(checked);
 						setFollowData(CalculateFollowDefault(checked, followData.followType, followData.followType === 'relativeLock' && followData.rotation != null));
 					} }
-					radioButtion
+					radioButton
 				/>
 				<label htmlFor={ id + ':playerFollows' }>You follow { characterData.name } ({ characterData.id })</label>
 			</Row>
@@ -677,7 +677,7 @@ function CharacterFollowDialog(): ReactElement {
 							setFollowData(CalculateFollowDefault(playerFollows, 'relativeLock', true));
 						}
 					} }
-					radioButtion
+					radioButton
 				/>
 				<label htmlFor={ id + ':typeRelativeLock' }>Keep relative position</label>
 			</Row>
@@ -690,7 +690,7 @@ function CharacterFollowDialog(): ReactElement {
 							setFollowData(CalculateFollowDefault(playerFollows, 'leash', true));
 						}
 					} }
-					radioButtion
+					radioButton
 				/>
 				<label htmlFor={ id + ':typeLeash' }>Keep distance (leash)</label>
 			</Row>
@@ -752,7 +752,7 @@ function CharacterFollowDialog(): ReactElement {
 										}));
 									}
 								} }
-								radioButtion
+								radioButton
 							/>
 							<label htmlFor={ id + ':lockRotation' }>Rotate together</label>
 						</Row>
@@ -767,7 +767,7 @@ function CharacterFollowDialog(): ReactElement {
 										}));
 									}
 								} }
-								radioButtion
+								radioButton
 							/>
 							<label htmlFor={ id + ':freeRotation' }>Rotate freely</label>
 						</Row>

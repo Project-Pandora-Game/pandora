@@ -22,7 +22,9 @@ import { useObservable } from '../../observable.ts';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
+import { useAssetPreferenceVisibilityCheck } from '../common/assetVisibilityCheck.ts';
 import { PointLike } from '../common/point.ts';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { usePixiMaskSource } from '../common/useApplyMask.ts';
 import { type GraphicsGetterFunction } from '../graphicsCharacter.tsx';
 import { SwapCullingDirection } from '../layers/graphicsLayerCommon.tsx';
@@ -30,7 +32,7 @@ import { GraphicsLayerRoomDeviceMesh } from '../layers/graphicsLayerMesh.tsx';
 import { GraphicsLayerRoomDeviceSlot } from '../layers/graphicsLayerRoomDeviceSlot.tsx';
 import { GraphicsLayerRoomDeviceSprite } from '../layers/graphicsLayerRoomDeviceSprite.tsx';
 import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
-import { useAssetPreferenceVisibilityCheck } from '../common/assetVisibilityCheck.ts';
+import { useTickerRef } from '../reconciler/tick.ts';
 
 export interface RoomItemGraphicsProps extends ChildrenProps {
 	item: Item;
@@ -46,6 +48,11 @@ export interface RoomItemGraphicsProps extends ChildrenProps {
 	hitArea?: PIXI.Rectangle;
 	eventMode?: PIXI.EventMode;
 	cursor?: PIXI.Cursor;
+	/**
+	 * Duration (in ms) of the smooth transition when the item's position changes.
+	 * @default 0 (no transition)
+	 */
+	movementTransitionDuration?: number;
 
 	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
 	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
@@ -74,12 +81,14 @@ function RoomItemGraphicsWithManager({
 	cursor,
 	eventMode,
 	hitArea,
+	movementTransitionDuration = 0,
 	graphicsGetter,
 }: RoomItemGraphicsProps & {
 	graphicsGetter: GraphicsGetterFunction;
 }): ReactElement {
 	const debugConfig = useDebugConfig();
 	const asset = item.asset;
+	const transitionTickerRef = useTickerRef();
 
 	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition(position);
 
@@ -139,7 +148,7 @@ function RoomItemGraphicsWithManager({
 
 	return (
 		<>
-			<Container
+			<TransitionedContainer
 				position={ position2d }
 				pivot={ pivot }
 				scale={ scale }
@@ -148,6 +157,8 @@ function RoomItemGraphicsWithManager({
 				cursor={ cursor ?? 'default' }
 				eventMode={ eventMode ?? 'auto' }
 				hitArea={ hitArea ?? null }
+				transitionDuration={ movementTransitionDuration }
+				tickerRef={ transitionTickerRef }
 				onpointerdown={ onPointerDown }
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUpOutside }
@@ -177,7 +188,7 @@ function RoomItemGraphicsWithManager({
 						</Container>
 					) : null }
 				</SwapCullingDirection>
-			</Container>
+			</TransitionedContainer>
 			<Graphics
 				ref={ roomMask.maskRef }
 				draw={ maskDraw }

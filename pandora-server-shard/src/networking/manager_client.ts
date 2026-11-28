@@ -359,7 +359,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClientService 
 				const rolls: number[] = [];
 				for (let i = 0; i < game.dice; i++)
 					rolls.push(Math.floor(Math.random() * game.sides + 1));
-				const result = rolls.length > 1 ? `(${rolls.sort().join(', ')})` : rolls[0].toString();
+				const result = rolls.length > 1 ? `(${rolls.toSorted((a, b) => a - b).join(', ')})` : rolls[0].toString();
 
 				if (game.hidden) {
 					space.handleActionMessage({

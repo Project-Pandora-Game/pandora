@@ -6,12 +6,15 @@ patchedDependencies:
   pixi.js: patches/pixi.js.patch
   react-switch: patches/react-switch.patch
   # Zod's URL helper types must also compile without DOM or Node ambient globals.
-  zod@4.6.6: patches/zod@4.6.6.patch
+  zod: patches/zod.patch
 allowBuilds:
   argon2: true
   unrs-resolver: true
   core-js-pure: false
   '@parcel/watcher': true
+permissions:
+  pixi.js:
+    skills: false
 
 allowUnusedPatches: false
 injectWorkspacePackages: false

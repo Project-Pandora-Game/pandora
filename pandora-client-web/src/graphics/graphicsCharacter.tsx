@@ -1,4 +1,4 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import {
 	AssetFrameworkCharacterState,
@@ -11,6 +11,7 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	type AssetGraphicsDefinition,
+	type CenteredDegrees,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
@@ -25,7 +26,7 @@ import { Container } from './baseComponents/container.ts';
 import { useAssetPreferenceVisibilityCheck } from './common/assetVisibilityCheck.ts';
 import type { PointLike } from './common/point.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
-import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
+import { TRANSITION_PROCESSOR_CENTERED_DEGREES, TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
@@ -45,6 +46,8 @@ export type GraphicsCharacterLayerBuilder = (
 	previousLayers: ReactElement[] | undefined,
 	reverse: boolean,
 	poseEvaluator: CharacterPoseEvaluator,
+	/** Angle (in degrees) of whole-character rotation */
+	rotationAngle: CenteredDegrees,
 	characterBlinking?: ReadonlyObservable<boolean>,
 	debugConfig?: Immutable<ChatroomDebugConfig>,
 ) => ReactElement[];
@@ -101,11 +104,21 @@ const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFram
 		// as it looks more natural with most of the item limits
 		const pose = CombineAppearancePoses(a.actualPose, b.actualPose, ratio);
 
-		// Optimization: If the pose matches target actual pose, simply return that instead
-		if (b.actualPose === pose)
-			return b;
+		let result = b;
 
-		return b.produceWithRequestedPose(pose);
+		if (b.actualPose !== pose) {
+			result = result.produceWithRequestedPose(pose);
+		}
+
+		// Animate rotation similarly
+		const rotation = TRANSITION_PROCESSOR_CENTERED_DEGREES.mix(a.getActualCharacterRotation(), b.getActualCharacterRotation(), ratio);
+		if (b.getActualCharacterRotation() !== rotation) {
+			result = result.produceWithSpacePosition(produce(result.position, (d) => {
+				d.rotation = rotation;
+			}));
+		}
+
+		return result;
 	},
 	isTransitionable(a, b) {
 		return a.id === b.id;
@@ -297,6 +310,7 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 	const effectivePose = effectiveCharacterState.actualPose;
 	const { view } = effectivePose;
 	const sortOrder = useComputedLayerPriority(effectivePose);
+	const rotationAngle = effectiveCharacterState.getActualCharacterRotation();
 
 	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, readonly ReactElement[]>>(() => {
 		const result = new Map<LayerPriority, ReactElement[]>();
@@ -306,10 +320,10 @@ export const GraphicsCharacterWithManager = memo(function GraphicsCharacterWithM
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
 
-			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, characterBlinking, debugConfig));
+			result.set(priority, actualLayerBuilder(layerState, lowerLayer, reverse, poseEvaluator, rotationAngle, characterBlinking, debugConfig));
 		}
 		return result;
-	}, [layerBuilder, poseEvaluator, layers, view, characterBlinking, debugConfig]);
+	}, [layerBuilder, poseEvaluator, layers, view, rotationAngle, characterBlinking, debugConfig]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

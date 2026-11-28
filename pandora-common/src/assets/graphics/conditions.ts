@@ -45,6 +45,16 @@ export const AtomicConditionBoneSchema = z.object({
 	value: z.number(),
 });
 export type AtomicConditionBone = z.infer<typeof AtomicConditionBoneSchema>;
+
+export type AtomicConditionCharacterRotation = {
+	characterRotation: number;
+	operator: ConditionOperator;
+};
+export const AtomicConditionCharacterRotationSchema: z.ZodType<AtomicConditionCharacterRotation> = z.object({
+	characterRotation: z.number(),
+	operator: ConditionOperatorSchema,
+});
+
 export const AtomicConditionModuleSchema = z.object({
 	module: ModuleNameSchema,
 	operator: ConditionEqOperatorSchema,
@@ -113,6 +123,7 @@ export type PoseCondition = z.infer<typeof PoseConditionSchema>;
 /** Smallest condition segment that can be used graphics decisions */
 export const AtomicConditionSchema = z.union([
 	AtomicPoseConditionSchema,
+	AtomicConditionCharacterRotationSchema,
 	AtomicConditionModuleSchema,
 	AtomicConditionAttributeSchema,
 	AtomicConditionBlinkingSchema,

@@ -32,7 +32,8 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 	handler: CreateClientCommand()
 		.fork('targetType', (forkCtx) => {
 			function moveToRoom(gameState: GameState, player: PlayerCharacter, roomId: RoomId): Promisable<boolean> {
-				const playerRoom = player.getAppearance(gameState.globalState.currentState).getCurrentRoom();
+				const playerAppearance = player.getAppearance(gameState.globalState.currentState);
+				const playerRoom = playerAppearance.getCurrentRoom();
 				AssertNotNullable(playerRoom);
 				const room = gameState.globalState.currentState.space.getRoom(roomId);
 				if (room == null) {
@@ -51,6 +52,7 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 						type: 'normal',
 						room: room.id,
 						position: GenerateInitialRoomPosition(room, room.getLinkToRoom(playerRoom, true)?.direction, avoid),
+						rotation: playerAppearance.characterState.position.rotation,
 					},
 				});
 			}
@@ -155,6 +157,7 @@ export const COMMAND_MOVETO: IClientCommand<ICommandExecutionContextClient> = {
 									type: 'normal',
 									room: targetRoom.id,
 									position: targetPosition,
+									rotation: playerAppearance.characterState.position.rotation,
 								},
 							});
 						}),

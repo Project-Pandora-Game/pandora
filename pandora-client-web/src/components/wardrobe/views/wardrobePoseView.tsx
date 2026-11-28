@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { capitalize, isEqual, throttle } from 'lodash-es';
+import { capitalize, isEqual, snakeCase, throttle } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
 	ArmRotationSchema,
@@ -14,12 +14,15 @@ import {
 	CharacterViewSchema,
 	CloneDeepMutable,
 	LegsPoseSchema,
+	NormalizeCenteredDegrees,
 	PartialAppearancePose,
 	ProduceAppearancePose,
 	type ArmPose,
 	type AssetsPosePresetCategory,
+	type CenteredDegrees,
 	type ItemDisplayNameType,
 } from 'pandora-common';
+import { CreateMoveCharacterAction, type MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import * as z from 'zod';
 import bodyIcon from '../../../assets/icons/body.svg';
@@ -40,8 +43,10 @@ import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator.tsx';
+import { CreateExportedDataMatcher, ParseImportData } from '../../exportImport/exportImportUtils.ts';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName.tsx';
+import { FixupStoredPosePreset } from '../poseDetail/customPosePresetStorage.ts';
 import { PoseButton, PoseButtonPreview } from '../poseDetail/poseButton.tsx';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
@@ -49,7 +54,6 @@ import { ActionButtonHoverInfo, ActionProblemsContent } from '../wardrobeActionP
 import { CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 import { GetVisibleBoneName } from '../wardrobeUtils.ts';
-import { CreateExportedDataMatcher, ParseImportData } from '../../exportImport/exportImportUtils.ts';
 
 const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
 
@@ -88,10 +92,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 
 						const parsedData = AssetFrameworkPosePresetSchema.safeParse(parsedImport.data);
 						if (parsedData.success) {
-							poses.push({
-								...parsedData.data.pose,
-								name: parsedData.data.name,
-							});
+							poses.push(FixupStoredPosePreset(parsedData.data, assetManager));
 						}
 					} catch (_) {
 						// Ignore errors here
@@ -115,7 +116,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }: {
 	poseCategory: Immutable<AssetsPosePresetCategory>;
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: PartialAppearancePose) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	return (
 		<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
@@ -135,7 +136,10 @@ function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }:
 	);
 }
 
-export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
+export function WardrobePoseCategories({ characterState, setPose }: {
+	characterState: AssetFrameworkCharacterState;
+	setPose: (params: MoveCharacterActionParams) => void;
+}): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	return (
@@ -153,7 +157,7 @@ export function WardrobePoseCategories({ characterState, setPose }: { characterS
 
 export function WardrobeViewPose({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }) {
 	return (
 		<table className='armPositioningTable'>
@@ -185,7 +189,7 @@ export function WardrobeViewPose({ setPose, characterState }: {
 
 export function WardrobeArmPoses({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
 	const [controlIndividually, setControlIndividually] = useBrowserStorage<boolean>('posing.arms-control-individually', false, z.boolean());
 
@@ -366,7 +370,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 
 export function WardrobeLegsPose({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
-	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }) {
 	return (
 		<>
@@ -428,7 +432,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 	);
 }
 
-export function WardrobePoseGui({ character, characterState }: {
+export function WardrobePoseGui({ characterState }: {
 	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
@@ -437,14 +441,8 @@ export function WardrobePoseGui({ character, characterState }: {
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
-	const setPoseDirect = useEvent(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
-		execute({
-			type: 'pose',
-			target: character.id,
-			leftArm: { ...arms, ...leftArm },
-			rightArm: { ...arms, ...rightArm },
-			...copy,
-		});
+	const setPoseDirect = useEvent((params: MoveCharacterActionParams) => {
+		execute(CreateMoveCharacterAction(params, characterState));
 	});
 
 	const { wardrobePosingCategoryDefault } = useAccountSettings();
@@ -551,7 +549,7 @@ export function WardrobePoseGui({ character, characterState }: {
 						<Button
 							slim
 							onClick={ () => {
-								setPose(CloneDeepMutable(actualPosePreset));
+								setPose({ pose: CloneDeepMutable(actualPosePreset) });
 							} }
 						>
 							Stay in it
@@ -582,6 +580,12 @@ export function WardrobePoseGui({ character, characterState }: {
 									<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
 									<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
 									<RoomManualYOffsetControl characterState={ characterState } />
+									<BoneRowBaseElement
+										name='Character rotation'
+										requestedRotation={ characterState.position.rotation }
+										actualRotation={ characterState.getActualCharacterRotation() }
+										onChange={ (rotation) => setPose({ rotation: NormalizeCenteredDegrees(rotation) }) }
+									/>
 									<br />
 									{
 										allBones
@@ -589,8 +593,10 @@ export function WardrobePoseGui({ character, characterState }: {
 											.map((bone) => (
 												<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
 													setPose({
-														bones: {
-															[bone.name]: value,
+														pose: {
+															bones: {
+																[bone.name]: value,
+															},
 														},
 													});
 												} } />
@@ -670,19 +676,36 @@ export function BoneRowElement({ definition, onChange, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 	onChange: (value: number) => void;
 }): ReactElement {
-	const id = 'bone-input-' + useId();
-
 	const visibleName = useMemo(() => GetVisibleBoneName(definition.name), [definition]);
 	const requestedRotation = characterState.getRequestedPoseBoneValue(definition.name);
 	const actualRotation = characterState.getActualPoseBoneValue(definition.name);
+
+	return (
+		<BoneRowBaseElement
+			name={ visibleName }
+			requestedRotation={ requestedRotation }
+			actualRotation={ actualRotation }
+			onChange={ onChange }
+		/>
+	);
+}
+
+export function BoneRowBaseElement({ name, requestedRotation, actualRotation, onChange }: {
+	name: string;
+	requestedRotation: CenteredDegrees;
+	actualRotation: CenteredDegrees;
+	onChange: (value: number) => void;
+}): ReactElement {
+	const id = 'bone-input-' + useId();
+
 	const markerPosition = useDebouncedValue(actualRotation, 1000);
 
-	const [value, setValue] = useRemotelyUpdatedUserInput(requestedRotation, [characterState.id, definition], {
+	const [value, setValue] = useRemotelyUpdatedUserInput(requestedRotation, [], {
 		updateCallback: onChange,
 	});
 
 	return (
-		<FieldsetToggle legend={ visibleName } persistent={ 'bone-ui-' + definition.name }>
+		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + snakeCase(name) }>
 			<div className='bone-rotation'>
 				<NumberInput
 					id={ id }
@@ -725,21 +748,10 @@ function RoomManualYOffsetControl({ characterState }: {
 		if (disableManualMove)
 			return;
 
-		const position = characterState.position.position;
 		setYOffsetLocal(newYOffset);
-		execute({
-			type: 'moveCharacter',
-			target: {
-				type: 'character',
-				characterId: characterState.id,
-			},
-			moveTo: {
-				type: 'normal',
-				room: characterState.currentRoom,
-				position: [position[0], position[1], newYOffset],
-				following: characterState.position.following,
-			},
-		});
+		execute(CreateMoveCharacterAction({
+			yOffset: newYOffset,
+		}, characterState));
 	});
 
 	return (

@@ -83,6 +83,11 @@ export function FindInverseKinematicOptimum(
 
 		// If we are still in the bone chain guess the movement (trying smallest first) and recurse into the next chain link
 		const p = initialPosition[index];
+
+		// First try zero cost (no change for this bone)
+		optimizePosition[index] = p;
+		optimize(currentCost, index + 1);
+
 		const movementFactor = Math.pow(INERTIA_FACTOR, bones.length - index - 1);
 		for (let shift = 1; ; shift++) {
 			let valid = false;

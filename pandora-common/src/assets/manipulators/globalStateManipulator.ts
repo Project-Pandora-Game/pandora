@@ -1,5 +1,5 @@
 import type { CharacterId } from '../../character/index.ts';
-import { AssertNever } from '../../utility/misc.ts';
+import { Assert, AssertNever } from '../../utility/misc.ts';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers.ts';
 import { ActionTargetSelector, type RoomId } from '../appearanceTypes.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -28,7 +28,8 @@ export class AssetFrameworkGlobalStateManipulator {
 	}
 
 	public produceCharacterState(characterId: CharacterId, producer: (currentState: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null): boolean {
-		const newState = this.currentState.produceCharacterState(
+		const currentState = this.currentState;
+		const newState = currentState.produceCharacterState(
 			characterId,
 			producer,
 		);
@@ -36,6 +37,7 @@ export class AssetFrameworkGlobalStateManipulator {
 		if (!newState)
 			return false;
 
+		Assert(this.currentState === currentState);
 		this.currentState = newState;
 		return true;
 	}

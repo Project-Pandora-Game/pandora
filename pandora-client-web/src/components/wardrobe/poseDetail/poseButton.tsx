@@ -12,8 +12,10 @@ import {
 	ProduceAppearancePose,
 	type AssetManager,
 	type AssetsPosePresetPreview,
+	type CenteredDegrees,
 	type ReadonlyAppearanceLimitTree,
 } from 'pandora-common';
+import type { MoveCharacterActionParams } from 'pandora-common/gameLogic/actionLogic/actions/moveCharacter';
 import { ReactElement, useEffect, useRef } from 'react';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useDevicePixelRatio } from '../../../services/screenResolution/screenResolutionHooks.ts';
@@ -27,6 +29,8 @@ type CheckedPosePreset = {
 	requested: boolean;
 	available: boolean;
 	pose: PartialAppearancePose;
+	rotation?: CenteredDegrees;
+	yOffset?: number;
 	name: string;
 };
 
@@ -38,11 +42,13 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	// Cache the limits calculation as we have many buttons that can reuse this
 	let limits: ReadonlyAppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
 	if (limits === undefined) {
-		limits = AppearanceItemProperties(characterState.items).limits;
+		limits = AppearanceItemProperties(characterState.items).poseLimits;
 		CHARACTER_STATE_LIMITS_CACHE.set(characterState, limits);
 	}
 	return {
 		pose: mergedPose,
+		rotation: pose.rotation,
+		yOffset: pose.yOffset,
 		requested: isEqual(
 			characterState.requestedPose,
 			ProduceAppearancePose(
@@ -53,6 +59,12 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 				},
 				mergedPose,
 			),
+		) && (
+			pose.rotation == null ||
+			pose.rotation === characterState.position.rotation
+		) && (
+			pose.yOffset == null ||
+			pose.yOffset === characterState.position.position[2]
 		),
 		active: isEqual(
 			characterState.actualPose,
@@ -64,6 +76,12 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 				},
 				mergedPose,
 			),
+		) && (
+			pose.rotation == null ||
+			pose.rotation === characterState.getActualCharacterRotation()
+		) && (
+			pose.yOffset == null ||
+			pose.yOffset === characterState.position.position[2]
 		),
 		available: limits.validate(pose),
 		name: pose.name,
@@ -74,9 +92,9 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 	preset: Immutable<AssetsPosePreset>;
 	preview?: Immutable<AssetsPosePresetPreview>;
 	characterState: AssetFrameworkCharacterState;
-	setPose: (pose: PartialAppearancePose) => void;
+	setPose: (params: MoveCharacterActionParams) => void;
 }): ReactElement {
-	const { name, available, requested, active, pose } = CheckPosePreset(preset, characterState);
+	const { name, available, requested, active, pose, rotation, yOffset } = CheckPosePreset(preset, characterState);
 	return (
 		<SelectionIndicator
 			selected={ requested }
@@ -91,7 +109,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 		>
 			<Button
 				slim
-				onClick={ () => setPose(pose) }
+				onClick={ () => setPose({ pose, rotation, yOffset }) }
 				className={ preview != null ? 'IconButton PoseButton flex-1' : 'flex-1 PoseButton' }
 			>
 				{

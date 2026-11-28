@@ -28,7 +28,7 @@ Note that this modifier will not work well on owners and admins within a space o
 		if (action.type !== 'moveCharacter')
 			return 'allow';
 
-		if (action.moveTo.type === 'normal') {
+		if (action.moveTo?.type === 'normal') {
 			const targetRoom = player.appearance.gameState.space.getRoom(action.moveTo.room);
 			// Only limit if the room actually changes - not movement within the room if brought there through other means
 			if (targetRoom != null && targetRoom.id !== result.originalState.getCharacterState(player.appearance.id)?.currentRoom) {

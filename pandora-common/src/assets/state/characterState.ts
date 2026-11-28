@@ -14,7 +14,7 @@ import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, I
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
-import { GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
+import { CenteredDegreesSchema, GenerateInitialRoomPosition, IsValidRoomPosition, NormalizeCenteredDegrees, type CharacterSpacePosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 import type { AssetFrameworkSpaceState } from './spaceState.ts';
 
@@ -228,7 +228,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 	@MemoizeNoArg
 	private _generateActualPose(): Immutable<AppearancePose> {
-		const limits = AppearanceItemProperties(this.items).limits;
+		const limits = AppearanceItemProperties(this.items).poseLimits;
 		if (!limits || limits.hasNoLimits())
 			return this.requestedPose;
 
@@ -251,6 +251,34 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		void this.assetManager.getBoneByName(bone);
 
 		return this.actualPose.bones[bone] || 0;
+	}
+
+	@MemoizeNoArg
+	public getActualCharacterRotation(): number {
+		const requestedRotation = this.position.rotation;
+		const limits = AppearanceItemProperties(this.items).rotationLimits;
+
+		if (limits.length === 0)
+			return requestedRotation; // Invalid state - just pass through requested rotation
+
+		let minDiff = Infinity;
+		let minDiffValue = requestedRotation;
+		for (const [min, max] of limits) {
+			if (requestedRotation >= min && requestedRotation <= max)
+				return requestedRotation;
+
+			// Use angular distance so the nearest bound can be found across the ±180 seam.
+			// This also covers a request of 180 against a bound of -180: distance 0, returned normalized as 180.
+			for (const bound of [min, max]) {
+				const diff = Math.abs(NormalizeCenteredDegrees(bound - requestedRotation));
+				if (diff < minDiff) {
+					minDiff = diff;
+					minDiffValue = NormalizeCenteredDegrees(bound);
+				}
+			}
+		}
+
+		return minDiffValue;
 	}
 
 	/**
@@ -401,6 +429,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 					undefined,
 					getAvoidedRoomPositions?.(roomState, characterId),
 				),
+				rotation: position.rotation,
 			};
 		} else if (fixup) {
 			// Put the character into correct place if needed
@@ -413,7 +442,18 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 					type: 'normal',
 					room: roomState.id,
 					position: GenerateInitialRoomPosition(roomState),
+					rotation: position.rotation,
 				};
+			} else {
+				// Migrate old fake "character_rotation" bone
+				if (Object.hasOwn(bundle.requestedPose.bones, 'character_rotation') && typeof bundle.requestedPose.bones.character_rotation === 'number') {
+					const rotation = CenteredDegreesSchema.safeParse(NormalizeCenteredDegrees(bundle.requestedPose.bones.character_rotation));
+					if (rotation.success) {
+						position.rotation = rotation.data;
+					} else {
+						logger?.warning('Failed to migrate rotation', rotation.error);
+					}
+				}
 			}
 		}
 

@@ -68,6 +68,7 @@ export function ActionRoomConfigure({
 							type: 'normal',
 							room: room.id,
 							position,
+							rotation: c.position.rotation,
 						});
 					}
 					avoid.push(c.position.position);

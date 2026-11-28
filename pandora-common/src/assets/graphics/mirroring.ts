@@ -44,7 +44,12 @@ export function MirrorAtomicPoseCondition(c: Immutable<AtomicPoseCondition>): At
 }
 
 export function MirrorAtomicCondition(c: Immutable<AtomicCondition>): AtomicCondition {
-	if ('module' in c) {
+	if ('characterRotation' in c) {
+		Assert(c.characterRotation != null);
+		return {
+			...c,
+		};
+	} else if ('module' in c) {
 		Assert(c.module != null);
 		return {
 			...c,

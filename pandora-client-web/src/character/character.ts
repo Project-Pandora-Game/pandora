@@ -17,7 +17,7 @@ import {
 	ITypedEventEmitter,
 	Logger,
 	TypedEventEmitter,
-	type ActionTargetSelector,
+	type ActionCharacterSelector,
 	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -28,7 +28,7 @@ export interface Character<T extends ICharacterRoomData = ICharacterRoomData> ex
 	readonly id: CharacterId;
 	readonly name: string;
 	readonly data: Readonly<T>;
-	readonly actionSelector: ActionTargetSelector;
+	readonly actionSelector: ActionCharacterSelector;
 	readonly gameLogicCharacter: GameLogicCharacter;
 
 	isPlayer(): this is PlayerCharacter;
@@ -47,7 +47,7 @@ export class CharacterImpl<T extends ICharacterRoomData = ICharacterRoomData> ex
 		return this.data.name;
 	}
 
-	public readonly actionSelector: ActionTargetSelector;
+	public readonly actionSelector: ActionCharacterSelector;
 
 	protected readonly logger: Logger;
 
@@ -62,7 +62,7 @@ export class CharacterImpl<T extends ICharacterRoomData = ICharacterRoomData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.actionSelector = freeze<ActionTargetSelector>({ type: 'character', characterId: data.id }, true);
+		this.actionSelector = freeze<ActionCharacterSelector>({ type: 'character', characterId: data.id }, true);
 
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this._data, this.logger.prefixMessages('[GameLogic]'));
 
